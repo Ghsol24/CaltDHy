@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trần Gia Huy - Sinh viên Đại học Công nghệ Thông tin | Portfolio">
+    <meta name="keywords" content="Trần Gia Huy, Portfolio, Web Developer, UIT, Student">
+    <meta name="author" content="Trần Gia Huy">
+    <title>Trần Gia Huy | Portfolio</title>
+    <link rel="stylesheet" href="styde.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="logo-text">GH</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#about" class="nav-link">Giới thiệu</a></li>
+                <li><a href="#skills" class="nav-link">Kỹ năng</a></li>
+                <li><a href="#projects" class="nav-link">Dự án</a></li>
+                <li><a href="#achievements" class="nav-link">Thành tích</a></li>
+                <li><a href="#contact" class="nav-link">Liên hệ</a></li>
+            </ul>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+                <span class="hamburger"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Particles Background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Shooting Stars Container -->
+    <div class="shooting-stars" id="shootingStars"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero / Profile Card -->
+        <section class="profile-card" id="about">
+            <!-- Avatar Section -->
+            <div class="avatar-section">
+                <div class="avatar-wrapper">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNW-EtVSDpyixzrjtJ2IdS0N6dQPoIWf04bw&s"
+                        alt="Avatar" class="avatar" id="avatar">
+                    <div class="avatar-glow"></div>
+                    <div class="avatar-ring"></div>
+                </div>
+                <h1 class="name">Trần Gia Huy</h1>
+                <div class="tagline-wrapper">
+                    <span class="tagline" id="typingText"></span>
+                    <span class="typing-cursor">|</span>
+                </div>
+                <div class="hero-buttons">
+                    <a href="#contact" class="btn btn-primary magnetic-btn">
+                        <i class="fas fa-envelope"></i> Liên hệ ngay
+                    </a>
+                    <a href="#projects" class="btn btn-secondary magnetic-btn">
+                        <i class="fas fa-folder-open"></i> Xem dự án
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Sections -->
+        <div class="sections-container">
+            <!-- Skills Section -->
+            <section class="section" id="skills">
+                <h2 class="section-title">
+                    <i class="fas fa-code"></i>
+                    Kỹ Năng
+                </h2>
+                <div class="skills-grid">
+                    <div class="skill-item" data-tilt>
+                        <div class="skill-icon"><i class="fab fa-html5"></i></div>
+                        <span>HTML</span>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-progress="80"></div>
+                        </div>
+                        <span class="skill-percent">80%</span>
+                    </div>
+                    <div class="skill-item" data-tilt>
+                        <div class="skill-icon"><i class="fab fa-css3-alt"></i></div>
+                        <span>CSS</span>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-progress="75"></div>
+                        </div>
+                        <span class="skill-percent">75%</span>
+                    </div>
+                    <div class="skill-item" data-tilt>
+                        <div class="skill-icon"><i class="fab fa-js"></i></div>
+                        <span>JavaScript</span>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-progress="60"></div>
+                        </div>
+                        <span class="skill-percent">60%</span>
+                    </div>
+                    <div class="skill-item" data-tilt>
+                        <div class="skill-icon"><i class="fab fa-python"></i></div>
+                        <span>Python</span>
+                        <div class="skill-bar">
+                            <div class="skill-progress" data-progress="70"></div>
+                        </div>
+                        <span class="skill-percent">70%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section (NEW) -->
+            <section class="section" id="projects">
+                <h2 class="section-title">
+                    <i class="fas fa-folder-open"></i>
+                    Dự Án
+                </h2>
+                <div class="projects-grid">
+                    <div class="project-card" data-tilt>
+                        <div class="project-image">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="project-content">
+                            <h3>Portfolio Website</h3>
+                            <p>Trang web cá nhân giới thiệu bản thân và các dự án</p>
+                            <div class="project-tags">
+                                <span>HTML</span>
+                                <span>CSS</span>
+                                <span>JavaScript</span>
+                            </div>
+                        </div>
+                        <div class="project-overlay">
+                            <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+                            <a href="https://github.com/giahuyz3sta-oss" target="_blank" class="project-link"><i
+                                    class="fab fa-github"></i></a>
+                        </div>
+                    </div>
+                    <div class="project-card" data-tilt>
+                        <div class="project-image">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="project-content">
+                            <h3>Calculator App</h3>
+                            <p>Ứng dụng máy tính với giao diện hiện đại</p>
+                            <div class="project-tags">
+                                <span>JavaScript</span>
+                                <span>CSS</span>
+                            </div>
+                        </div>
+                        <div class="project-overlay">
+                            <a href="#" class="project-link"><i class="fas fa-external-link-alt"></i></a>
+                            <a href="https://github.com/giahuyz3sta-oss" target="_blank" class="project-link"><i
+                                    class="fab fa-github"></i></a>
+                        </div>
+                    </div>
+                    <div class="project-card" data-tilt>
+                        <div class="project-image">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <div class="project-content">
+                            <h3>Coming Soon</h3>
+                            <p>Dự án tiếp theo sẽ sớm được cập nhật...</p>
+                            <div class="project-tags">
+                                <span>???</span>
+                            </div>
+                        </div>
+                        <div class="project-overlay">
+                            <span class="coming-soon-text">Sắp ra mắt</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Achievements Section -->
+            <section class="section" id="achievements">
+                <h2 class="section-title">
+                    <i class="fas fa-trophy"></i>
+                    Thành Tích Học Tập
+                </h2>
+                <div class="achievements-list">
+                    <div class="achievement-item">
+                        <div class="achievement-icon gold">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <div class="achievement-content">
+                            <h3>GPA</h3>
+                            <p>8.75</p>
+                        </div>
+                        <div class="achievement-badge">⭐</div>
+                    </div>
+                    <div class="achievement-item">
+                        <div class="achievement-icon silver">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="achievement-content">
+                            <h3>Giải Ba kỳ thi chọn học sinh giỏi Hóa</h3>
+                            <p>Cấp tỉnh</p>
+                        </div>
+                        <div class="achievement-badge">🥈</div>
+                    </div>
+                    <div class="achievement-item">
+                        <div class="achievement-icon bronze">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="achievement-content">
+                            <h3>Chứng chỉ IELTS</h3>
+                            <p>Slepping 9.0</p>
+                        </div>
+                        <div class="achievement-badge">📜</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section class="section" id="contact">
+                <h2 class="section-title">
+                    <i class="fas fa-envelope"></i>
+                    Liên Hệ
+                </h2>
+                <div class="contact-grid">
+                    <a href="mailto:giahuyz3sta@gmail.com" class="contact-item magnetic-btn">
+                        <i class="fas fa-envelope"></i>
+                        <span>giahuyz3sta@gmail.com</span>
+                    </a>
+                    <a href="tel:0836857836" class="contact-item magnetic-btn">
+                        <i class="fas fa-phone"></i>
+                        <span>0836 857 836</span>
+                    </a>
+                    <a href="https://web.facebook.com/ghuyy.10/" target="_blank" class="contact-item magnetic-btn">
+                        <i class="fab fa-facebook"></i>
+                        <span>Facebook: Gia Huy</span>
+                    </a>
+                    <a href="https://github.com/giahuyz3sta-oss" target="_blank" class="contact-item magnetic-btn">
+                        <i class="fab fa-github"></i>
+                        <span>GitHub: Gia Huy</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>© 2026 - Trần Gia Huy. Made with <span class="heart">❤</span></p>
+                <div class="footer-links">
+                    <a href="https://github.com/giahuyz3sta-oss" target="_blank"><i class="fab fa-github"></i></a>
+                    <a href="https://web.facebook.com/ghuyy.10/" target="_blank"><i class="fab fa-facebook"></i></a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="index.js"></script>
+</body>
+
+</html>
