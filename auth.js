@@ -113,11 +113,12 @@ function handleRegister() {
         users.push(newUser);
         saveUsers(users);
 
-        showMessage('registerSuccess', '✅ Đăng ký thành công! Đang chuyển đến bộ chọn tháng...', false);
+        showMessage('registerSuccess', '✅ Đăng ký thành công! Đang chuyển đến trang chính...', false);
         localStorage.setItem('pcn_token', 'demo_token_' + newUser.id);
         localStorage.setItem('pcn_user', JSON.stringify({ id: newUser.id, name: newUser.name, email: newUser.email }));
+        localStorage.setItem('caltdhy_user', JSON.stringify({ username: newUser.name, id: newUser.id, email: newUser.email }));
 
-        setTimeout(() => { window.location.href = 'month-picker.html'; }, 1000);
+        setTimeout(() => { window.location.href = 'hub.html'; }, 1000);
         setLoading('registerBtn', false, 'Tạo tài khoản');
     }, 600);
 }
@@ -148,7 +149,8 @@ function handleLogin() {
 
         localStorage.setItem('pcn_token', 'demo_token_' + user.id);
         localStorage.setItem('pcn_user', JSON.stringify({ id: user.id, name: user.name, email: user.email }));
-        window.location.href = 'month-picker.html';
+        localStorage.setItem('caltdhy_user', JSON.stringify({ username: user.name, id: user.id, email: user.email }));
+        window.location.href = 'hub.html';
     }, 600);
 }
 
@@ -182,10 +184,12 @@ function handleForgotPassword() {
     }, 600);
 }
 
-// ---- Redirect nếu đã đăng nhập ----
+// ---- Redirect nếu đã đăng nhập (bỏ qua nếu có ?force=true) ----
 (function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('force') === 'true') return; // Người dùng chủ động muốn vào trang login
     const token = localStorage.getItem('pcn_token');
-    if (token) window.location.href = 'month-picker.html';
+    if (token) window.location.href = 'hub.html';
 })();
 
 

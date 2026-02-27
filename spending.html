@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CaltDHy – Quản lý chi tiêu</title>
+    <meta name="description" content="CaltDHy – Theo dõi và quản lý chi tiêu cá nhân." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ============================================================
+           RESET & BASE
+        ============================================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        body {
+            background:
+                radial-gradient(ellipse at 8% 12%, rgba(0, 200, 170, .28) 0%, transparent 45%),
+                radial-gradient(ellipse at 78% 82%, rgba(110, 0, 180, .35) 0%, transparent 48%),
+                radial-gradient(ellipse at 55% 45%, rgba(170, 20, 90, .18) 0%, transparent 42%),
+                radial-gradient(ellipse at 90% 10%, rgba(80, 0, 140, .22) 0%, transparent 40%),
+                #07101e;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ============================================================
+           FLOATING ORBS
+        ============================================================ */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+            animation: drift 14s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(0, 200, 170, .10);
+            top: -120px;
+            left: -80px;
+            animation-duration: 16s;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(110, 0, 180, .15);
+            bottom: -60px;
+            right: 0;
+            animation-duration: 19s;
+            animation-delay: -6s;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translate(0, 0);
+            }
+
+            to {
+                transform: translate(22px, -18px);
+            }
+        }
+
+        /* ============================================================
+           PAGE WRAPPER
+        ============================================================ */
+        #spending-page {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            transition: opacity .55s ease, transform .55s ease;
+        }
+
+        #spending-page.fade-out {
+            opacity: 0;
+            transform: scale(1.04);
+            pointer-events: none;
+        }
+
+        /* ============================================================
+           LEFT SIDEBAR (Clock)
+        ============================================================ */
+        .sp-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 20px;
+            background: rgba(6, 13, 26, .55);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-right: 1px solid rgba(255, 255, 255, .07);
+            gap: 0;
+        }
+
+        /* ── Logo inside sidebar ── */
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            align-self: flex-start;
+        }
+
+        .sidebar-logo svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .sidebar-logo-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00dcc0 0%, #7b2fff 60%, #e054b0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ============================================================
+           CLOCK WIDGET (reused from month-picker.html)
+        ============================================================ */
+        .clock-widget {
+            background: radial-gradient(ellipse at 35% 25%, rgba(0, 180, 160, .14) 0%, rgba(4, 10, 28, .98) 68%);
+            border: 1.5px solid rgba(0, 220, 190, .28);
+            border-radius: 22px;
+            padding: 18px 20px 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-shadow:
+                0 0 0 1px rgba(0, 220, 190, .1),
+                0 0 48px rgba(0, 200, 170, .20),
+                0 0 100px rgba(0, 200, 170, .06),
+                inset 0 0 36px rgba(0, 200, 170, .04);
+        }
+
+        .clock-brand {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .28);
+        }
+
+        .clock-face-wrap {
+            position: relative;
+            width: 164px;
+            height: 164px;
+        }
+
+        .clock-svg {
+            width: 164px;
+            height: 164px;
+            overflow: visible;
+        }
+
+        #hand-hour,
+        #hand-min,
+        #hand-sec {
+            transform-origin: 0 0;
+        }
+
+        .clock-digital {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #00f5d4 0%, #a855f7 55%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 10px rgba(0, 220, 190, .55));
+            line-height: 1;
+        }
+
+        .clock-date {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, .38);
+            letter-spacing: .5px;
+            text-align: center;
+            margin-top: -4px;
+        }
+
+        .progress-rings {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .ring-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ring-svg {
+            width: 46px;
+            height: 46px;
+            transform: rotate(-90deg);
+            overflow: visible;
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, .07);
+            stroke-width: 3.5;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            transition: stroke-dashoffset .25s linear;
+        }
+
+        #ring-fill-h {
+            stroke: url(#rg-h);
+        }
+
+        #ring-fill-m {
+            stroke: url(#rg-m);
+        }
+
+        #ring-fill-s {
+            stroke: url(#rg-s);
+        }
+
+        .ring-num-wrap {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring-inner-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .82);
+            line-height: 1;
+        }
+
+        .ring-lbl {
+            font-size: 7.5px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+        }
+
+        /* ============================================================
+           RIGHT PANEL
+        ============================================================ */
+        .sp-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Navbar ── */
+        .sp-navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            height: 58px;
+            background: rgba(6, 13, 26, .65);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 18px;
+            border-radius: 22px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .55);
+            transition: all .22s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background: rgba(0, 200, 170, .1);
+            border-color: rgba(0, 220, 190, .5);
+            color: #00dcc0;
+            transform: translateY(-1px);
+        }
+
+        .nav-tab.active {
+            background: rgba(0, 200, 170, .16);
+            border-color: rgba(0, 220, 190, .65);
+            color: #00f5d4;
+            box-shadow: 0 0 20px rgba(0, 200, 170, .28);
+        }
+
+        .nav-logout {
+            padding: 8px 18px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: rgba(255, 255, 255, .05);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .55);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .22s ease;
+        }
+
+        .nav-logout:hover {
+            border-color: rgba(255, 80, 100, .5);
+            color: #ff6080;
+            background: rgba(255, 80, 100, .1);
+        }
+
+        /* ── Main area ── */
+        .sp-main {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            padding: 32px 36px;
+            gap: 24px;
+            overflow-y: auto;
+        }
+
+        /* ── Expense Cards ── */
+        .exp-card {
+            flex: 1;
+            min-width: 0;
+            background: rgba(255, 255, 255, .04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 20px;
+            padding: 26px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            box-shadow:
+                0 4px 32px rgba(0, 0, 0, .35),
+                inset 0 0 20px rgba(255, 255, 255, .02);
+            transition: border-color .25s ease, box-shadow .25s ease;
+            min-height: 420px;
+        }
+
+        .exp-card:hover {
+            border-color: rgba(0, 220, 190, .28);
+            box-shadow: 0 4px 40px rgba(0, 200, 170, .12), inset 0 0 20px rgba(255, 255, 255, .02);
+        }
+
+        /* Card header */
+        .exp-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .exp-card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, .9);
+            letter-spacing: -.3px;
+        }
+
+        .exp-card-title.long-term {
+            color: #a78bfa;
+        }
+
+        .exp-card-title.monthly {
+            color: #34d399;
+        }
+
+        .exp-card-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .badge-long {
+            background: rgba(167, 139, 250, .15);
+            color: #a78bfa;
+            border: 1px solid rgba(167, 139, 250, .3);
+        }
+
+        .badge-month {
+            background: rgba(52, 211, 153, .12);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, .28);
+        }
+
+        /* Expense list */
+        .exp-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            flex: 1;
+        }
+
+        .exp-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            transition: background .18s ease;
+            cursor: pointer;
+            border-radius: 8px;
+            padding-left: 4px;
+            padding-right: 4px;
+            margin: 0 -4px;
+        }
+
+        .exp-item:last-child {
+            border-bottom: none;
+        }
+
+        .exp-item:hover {
+            background: rgba(255, 255, 255, .035);
+        }
+
+        .exp-bullet {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .bullet-long {
+            background: #a78bfa;
+            box-shadow: 0 0 6px rgba(167, 139, 250, .6);
+        }
+
+        .bullet-month {
+            background: #34d399;
+            box-shadow: 0 0 6px rgba(52, 211, 153, .6);
+        }
+
+        .exp-item-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .exp-item-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .75);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .exp-item-sub {
+            font-size: 11px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, .3);
+        }
+
+        .exp-item-amount {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .amount-long {
+            color: #a78bfa;
+        }
+
+        .amount-month {
+            color: #34d399;
+        }
+
+        /* Add item CTA */
+        .exp-add-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 11px 16px;
+            border-radius: 12px;
+            border: 1px dashed rgba(255, 255, 255, .15);
+            background: transparent;
+            color: rgba(255, 255, 255, .35);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .2s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .exp-add-btn:hover {
+            border-color: rgba(0, 220, 190, .4);
+            color: #00dcc0;
+            background: rgba(0, 200, 170, .06);
+        }
+
+        /* Summary row */
+        .exp-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .exp-summary-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, .35);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .exp-summary-total {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .total-long {
+            color: #a78bfa;
+        }
+
+        .total-month {
+            color: #34d399;
+        }
+
+        /* ============================================================
+           SCROLLBAR
+        ============================================================ */
+        .sp-main::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sp-main::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sp-main::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .12);
+            border-radius: 10px;
+        }
+
+        /* ── Amount inline input ── */
+        .amount-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #c4b5fd;
+            width: 96px;
+            text-align: right;
+            caret-color: #a78bfa;
+            display: none;
+            /* toggled by JS */
+        }
+
+        .amount-input::placeholder {
+            color: rgba(167, 139, 250, .38);
+            font-weight: 400;
+        }
+
+        /* Amount display button (shows "+" or formatted value) */
+        .amount-display {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(167, 139, 250, .65);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            flex-shrink: 0;
+            transition: color .18s;
+            min-width: 28px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .amount-display:hover {
+            color: #c4b5fd;
+        }
+
+        .amount-display.has-value {
+            color: #a78bfa;
+        }
+
+        /* In edit mode the display becomes a delete trigger */
+        .amount-display.del-mode {
+            color: rgba(248, 113, 113, .7);
+            letter-spacing: 0;
+        }
+
+        .amount-display.del-mode:hover {
+            color: #f87171;
+        }
+
+        /* Delete btn (hidden by default) */
+        .exp-item-del {
+            background: transparent;
+            border: none;
+            color: rgba(248, 113, 113, .55);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 2px;
+            line-height: 1;
+            transition: color .15s;
+            flex-shrink: 0;
+            display: none;
+            /* shown only in edit mode */
+        }
+
+        .exp-item-del:hover {
+            color: #f87171;
+        }
+
+        /* Drag handle (the purple bullet) */
+        .drag-handle {
+            cursor: grab;
+            flex-shrink: 0;
+            transition: transform .15s, box-shadow .15s;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .exp-item.dragging {
+            opacity: .4;
+        }
+
+        .exp-item.drag-over {
+            border-top: 2px solid rgba(167, 139, 250, .5);
+        }
+
+        /* Edit-mode button */
+        .edit-mode-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, .42);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .2s;
+            letter-spacing: .5px;
+        }
+
+        .edit-mode-btn:hover,
+        .edit-mode-btn.active {
+            border-color: rgba(248, 113, 113, .5);
+            color: #f87171;
+            background: rgba(248, 113, 113, .08);
+        }
+
+        /* Summary total font sync */
+        .exp-summary-total {
+            font-family: 'Times New Roman', Times, serif !important;
+        }
+
+        /* ── Custom Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(4, 8, 20, .72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: rgba(15, 20, 40, .9);
+            border: 1px solid rgba(167, 139, 250, .3);
+            border-radius: 20px;
+            padding: 32px 30px 26px;
+            width: 380px;
+            max-width: 90vw;
+            box-shadow:
+                0 0 0 1px rgba(167, 139, 250, .1),
+                0 12px 60px rgba(0, 0, 0, .6),
+                0 0 60px rgba(100, 60, 200, .18);
+            animation: modalIn .25s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(-14px) scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            color: #c4b5fd;
+            margin-bottom: 20px;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(255, 255, 255, .055);
+            border: 1px solid rgba(167, 139, 250, .3);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            color: rgba(255, 255, 255, .88);
+            outline: none;
+            transition: border-color .2s;
+            margin-bottom: 20px;
+        }
+
+        .modal-input::placeholder {
+            color: rgba(255, 255, 255, .28);
+        }
+
+        .modal-input:focus {
+            border-color: rgba(167, 139, 250, .65);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 9px 22px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all .18s;
+        }
+
+        .modal-btn-cancel {
+            background: transparent;
+            border-color: rgba(255, 255, 255, .12);
+            color: rgba(255, 255, 255, .45);
+        }
+
+        .modal-btn-cancel:hover {
+            border-color: rgba(255, 255, 255, .28);
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .modal-btn-confirm {
+            background: rgba(167, 139, 250, .18);
+            border-color: rgba(167, 139, 250, .55);
+            color: #c4b5fd;
+        }
+
+        .modal-btn-confirm:hover {
+            background: rgba(167, 139, 250, .3);
+            border-color: #a78bfa;
+            color: #fff;
+        }
+
+        /* ── Mini Calculator Popup ── */
+        #miniCalc {
+            position: fixed;
+            z-index: 1200;
+            background: rgba(12, 18, 38, .94);
+            border: 1px solid rgba(167, 139, 250, .4);
+            border-radius: 18px;
+            padding: 14px 14px 12px;
+            width: 220px;
+            box-shadow: 0 8px 48px rgba(0, 0, 0, .7), 0 0 40px rgba(120, 60, 220, .22);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            animation: calcIn .18s ease;
+        }
+
+        @keyframes calcIn {
+            from {
+                opacity: 0;
+                transform: scale(.92) translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        #miniCalc.open {
+            display: flex;
+        }
+
+        #calcDisplay {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(167, 139, 250, .25);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #c4b5fd;
+            text-align: right;
+            min-height: 40px;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+
+        #calcDisplay .calc-expr {
+            font-size: 10px;
+            color: rgba(196, 181, 253, .45);
+            display: block;
+            min-height: 14px;
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .calc-btn {
+            padding: 9px 0;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .75);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            text-align: center;
+        }
+
+        .calc-btn:hover {
+            background: rgba(167, 139, 250, .2);
+            color: #fff;
+        }
+
+        .calc-btn.op {
+            color: #a78bfa;
+        }
+
+        .calc-btn.op:hover {
+            background: rgba(167, 139, 250, .3);
+        }
+
+        .calc-btn.clr {
+            color: #f87171;
+        }
+
+        .calc-btn.clr:hover {
+            background: rgba(248, 113, 113, .18);
+        }
+
+        .calc-btn.eq {
+            grid-column: span 2;
+            background: rgba(167, 139, 250, .22);
+            border-color: rgba(167, 139, 250, .45);
+            color: #c4b5fd;
+        }
+
+        .calc-btn.eq:hover {
+            background: rgba(167, 139, 250, .38);
+            color: #fff;
+        }
+
+        /* calc confirm footer */
+        .calc-confirm-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .calc-enter-hint {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .25);
+            padding-top: 2px;
+        }
+
+        /* ── Note Popover ── */
+        #notePopover {
+            position: fixed;
+            z-index: 1100;
+            background: rgba(12, 18, 38, .94);
+            border: 1px solid rgba(0, 220, 190, .28);
+            border-radius: 14px;
+            padding: 14px;
+            width: 260px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, .6), 0 0 30px rgba(0, 180, 160, .12);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            animation: calcIn .18s ease;
+        }
+
+        #notePopover.open {
+            display: flex;
+        }
+
+        .note-pop-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(0, 220, 190, .55);
+        }
+
+        #noteTextarea {
+            width: 100%;
+            min-height: 80px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(0, 220, 190, .2);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-family: inherit;
+            color: rgba(255, 255, 255, .78);
+            resize: vertical;
+            outline: none;
+            transition: border-color .2s;
+            line-height: 1.55;
+        }
+
+        #noteTextarea::placeholder {
+            color: rgba(255, 255, 255, .22);
+        }
+
+        #noteTextarea:focus {
+            border-color: rgba(0, 220, 190, .45);
+        }
+
+        .note-pop-foot {
+            font-size: 10px;
+            color: rgba(255, 255, 255, .2);
+        }
+
+        /* Clickable item name */
+        .exp-item-name {
+            cursor: pointer;
+            transition: color .18s;
+        }
+
+        .exp-item-name:hover {
+            color: rgba(0, 220, 190, .75) !important;
+        }
+
+        .exp-item.has-note .exp-item-name::after {
+            content: ' 📝';
+            font-size: 10px;
+            opacity: .6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div id="spending-page">
+
+        <!-- ══════════════════════════════
+             LEFT SIDEBAR
+        ══════════════════════════════ -->
+        <aside class="sp-sidebar">
+
+            <!-- Logo -->
+            <a href="hub.html" class="sidebar-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="nlg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#00dcc0" />
+                            <stop offset="100%" stop-color="#7b2fff" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="16" cy="16" r="14" stroke="url(#nlg)" stroke-width="2" fill="none" />
+                    <line x1="16" y1="16" x2="16" y2="8" stroke="url(#nlg)" stroke-width="2.2" stroke-linecap="round" />
+                    <line x1="16" y1="16" x2="22" y2="19" stroke="url(#nlg)" stroke-width="1.8" stroke-linecap="round"
+                        opacity=".8" />
+                    <circle cx="16" cy="16" r="2" fill="url(#nlg)" />
+                </svg>
+                <span class="sidebar-logo-text">CaltDHy</span>
+            </a>
+
+            <!-- ────────────────────────────
+                 CLOCK WIDGET
+                 (reused from month-picker.html)
+            ──────────────────────────── -->
+            <div class="clock-widget">
+
+                <div class="clock-brand">✦ GHTUDE ✦</div>
+
+                <div class="clock-face-wrap">
+                    <svg class="clock-svg" viewBox="0 0 164 164" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <radialGradient id="faceBg" cx="40%" cy="35%" r="65%">
+                                <stop offset="0%" stop-color="#0c1e30" />
+                                <stop offset="100%" stop-color="#030810" />
+                            </radialGradient>
+                            <linearGradient id="rimG" x1="0" y1="0" x2="164" y2="164" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#00f5d4" />
+                                <stop offset="40%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#ec4899" />
+                            </linearGradient>
+                            <filter id="cglow" x="-30%" y="-30%" width="160%" height="160%">
+                                <feGaussianBlur stdDeviation="3.2" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <filter id="cglowSoft" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="2" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <filter id="cglowStrong" x="-100%" y="-100%" width="300%" height="300%">
+                                <feGaussianBlur stdDeviation="5.5" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <!-- Hands: local coord, center = (82,82) -->
+                            <linearGradient id="chHand" x1="0" y1="6" x2="0" y2="-36" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(14,165,233,0)" />
+                                <stop offset="35%" stop-color="#38bdf8" stop-opacity=".9" />
+                                <stop offset="100%" stop-color="#bfdbfe" />
+                            </linearGradient>
+                            <linearGradient id="cmHand" x1="0" y1="8" x2="0" y2="-55" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(0,220,190,0)" />
+                                <stop offset="30%" stop-color="#00dcc0" stop-opacity=".85" />
+                                <stop offset="100%" stop-color="#10f5d8" />
+                            </linearGradient>
+                            <linearGradient id="csHand" x1="0" y1="13" x2="0" y2="-63" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(200,240,255,0)" />
+                                <stop offset="50%" stop-color="rgba(180,235,255,.55)" />
+                                <stop offset="100%" stop-color="rgba(255,255,255,.88)" />
+                            </linearGradient>
+                            <!-- Progress ring gradients -->
+                            <linearGradient id="rg-h" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#ec4899" />
+                            </linearGradient>
+                            <linearGradient id="rg-m" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#00f5d4" />
+                                <stop offset="100%" stop-color="#0ea5e9" />
+                            </linearGradient>
+                            <linearGradient id="rg-s" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#ec4899" />
+                                <stop offset="100%" stop-color="#f97316" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Face -->
+                        <circle cx="82" cy="82" r="80" fill="url(#faceBg)" />
+                        <circle cx="82" cy="82" r="78" stroke="url(#rimG)" stroke-width="3" fill="none"
+                            filter="url(#cglow)" opacity=".9" />
+                        <circle cx="82" cy="82" r="69" stroke="rgba(255,255,255,0.04)" stroke-width="1" fill="none" />
+
+                        <!-- Major ticks -->
+                        <g stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round">
+                            <line x1="82" y1="5" x2="82" y2="17" />
+                            <line x1="82" y1="147" x2="82" y2="159" />
+                            <line x1="5" y1="82" x2="17" y2="82" />
+                            <line x1="147" y1="82" x2="159" y2="82" />
+                        </g>
+                        <!-- Medium ticks -->
+                        <g stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-linecap="round">
+                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(60,82,82)" />
+                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(120,82,82)" />
+                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(240,82,82)" />
+                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(300,82,82)" />
+                        </g>
+                        <!-- Minute ticks (JS) -->
+                        <g id="cMinTicks"></g>
+
+                        <!-- Hands -->
+                        <g id="chand-hour">
+                            <line x1="0" y1="6" x2="0" y2="-36" stroke="url(#chHand)" stroke-width="5"
+                                stroke-linecap="round" transform="translate(82,82)" />
+                        </g>
+                        <g id="chand-min">
+                            <line x1="0" y1="8" x2="0" y2="-55" stroke="url(#cmHand)" stroke-width="3"
+                                stroke-linecap="round" transform="translate(82,82)" />
+                        </g>
+                        <g id="chand-sec">
+                            <line x1="0" y1="13" x2="0" y2="-63" stroke="url(#csHand)" stroke-width="1.2"
+                                stroke-linecap="round" transform="translate(82,82)" />
+                        </g>
+
+                        <!-- Center dot -->
+                        <circle cx="82" cy="82" r="9" fill="rgba(0,230,200,.18)" />
+                        <circle cx="82" cy="82" r="6" fill="rgba(0,220,190,.6)" filter="url(#cglowStrong)" />
+                        <circle cx="82" cy="82" r="3.5" fill="#00dcc0" filter="url(#cglow)" />
+                        <circle cx="82" cy="82" r="1.8" fill="#ffffff" />
+                    </svg>
+                </div>
+
+                <!-- Digital time -->
+                <div class="clock-digital" id="sp-digitalTime">00:00:00</div>
+
+                <!-- Date -->
+                <div class="clock-date" id="sp-clockDate">Thứ Hai – 27 Tháng 2</div>
+
+                <!-- Progress rings -->
+                <div class="progress-rings">
+                    <!-- HOUR -->
+                    <div class="ring-wrap">
+                        <div class="ring-num-wrap">
+                            <svg class="ring-svg" viewBox="0 0 50 50">
+                                <defs>
+                                    <linearGradient id="rg-h2" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#a855f7" />
+                                        <stop offset="100%" stop-color="#ec4899" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="ring-bg" cx="25" cy="25" r="20" />
+                                <circle class="ring-fill" cx="25" cy="25" r="20" id="sp-ring-h" stroke="url(#rg-h2)"
+                                    stroke-dasharray="125.66" stroke-dashoffset="125.66" />
+                            </svg>
+                            <span class="ring-inner-val" id="sp-valH">00</span>
+                        </div>
+                        <span class="ring-lbl">HOUR</span>
+                    </div>
+                    <!-- MIN -->
+                    <div class="ring-wrap">
+                        <div class="ring-num-wrap">
+                            <svg class="ring-svg" viewBox="0 0 50 50">
+                                <defs>
+                                    <linearGradient id="rg-m2" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#00f5d4" />
+                                        <stop offset="100%" stop-color="#0ea5e9" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="ring-bg" cx="25" cy="25" r="20" />
+                                <circle class="ring-fill" cx="25" cy="25" r="20" id="sp-ring-m" stroke="url(#rg-m2)"
+                                    stroke-dasharray="125.66" stroke-dashoffset="125.66" />
+                            </svg>
+                            <span class="ring-inner-val" id="sp-valM">00</span>
+                        </div>
+                        <span class="ring-lbl">MIN</span>
+                    </div>
+                    <!-- SEC -->
+                    <div class="ring-wrap">
+                        <div class="ring-num-wrap">
+                            <svg class="ring-svg" viewBox="0 0 50 50">
+                                <defs>
+                                    <linearGradient id="rg-s2" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#ec4899" />
+                                        <stop offset="100%" stop-color="#f97316" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="ring-bg" cx="25" cy="25" r="20" />
+                                <circle class="ring-fill" cx="25" cy="25" r="20" id="sp-ring-s" stroke="url(#rg-s2)"
+                                    stroke-dasharray="125.66" stroke-dashoffset="125.66" />
+                            </svg>
+                            <span class="ring-inner-val" id="sp-valS">00</span>
+                        </div>
+                        <span class="ring-lbl">SEC</span>
+                    </div>
+                </div>
+
+            </div><!-- /.clock-widget -->
+        </aside>
+
+        <!-- ══════════════════════════════
+             RIGHT PANEL
+        ══════════════════════════════ -->
+        <div class="sp-right">
+
+            <!-- Navbar -->
+            <nav class="sp-navbar">
+                <div class="nav-tabs">
+                    <a href="spending.html" class="nav-tab active">💰 Quản lý chi tiêu</a>
+                    <a href="month-picker.html" class="nav-tab">📅 Sắp xếp lịch trình</a>
+                </div>
+                <button class="nav-logout" onclick="handleLogout()">Đăng xuất</button>
+            </nav>
+
+            <!-- Main cards -->
+            <main class="sp-main">
+
+                <!-- ── Card 1: Dài hạn ── -->
+                <div class="exp-card">
+                    <div class="exp-card-header">
+                        <h2 class="exp-card-title long-term">Dài hạn</h2>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="edit-mode-btn" id="longEditBtn">Chỉnh sửa</button>
+                            <span class="exp-card-badge badge-long">Long-term</span>
+                        </div>
+                    </div>
+
+                    <ul class="exp-list" id="longList">
+                        <li class="exp-item" data-amount="0" draggable="true">
+                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Tiền thuê nhà / ký túc xá</div>
+                                <div class="exp-item-sub">Hàng tháng</div>
+                            </div>
+                            <input class="amount-input" type="number" min="0" placeholder="Nhập số..." />
+                            <button class="amount-display">+</button>
+                        </li>
+                        <li class="exp-item" data-amount="0" draggable="true">
+                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Học phí / đào tạo</div>
+                                <div class="exp-item-sub">Theo kỳ</div>
+                            </div>
+                            <input class="amount-input" type="number" min="0" placeholder="Nhập số..." />
+                            <button class="amount-display">+</button>
+                        </li>
+                        <li class="exp-item" data-amount="0" draggable="true">
+                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Bảo hiểm</div>
+                                <div class="exp-item-sub">Hàng năm</div>
+                            </div>
+                            <input class="amount-input" type="number" min="0" placeholder="Nhập số..." />
+                            <button class="amount-display">+</button>
+                        </li>
+                        <li class="exp-item" data-amount="0" draggable="true">
+                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Tiết kiệm / đầu tư</div>
+                                <div class="exp-item-sub">Hàng tháng</div>
+                            </div>
+                            <input class="amount-input" type="number" min="0" placeholder="Nhập số..." />
+                            <button class="amount-display">+</button>
+                        </li>
+                        <li class="exp-item" data-amount="0" draggable="true">
+                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Mục tiêu dài hạn khác</div>
+                                <div class="exp-item-sub">Tùy chỉnh</div>
+                            </div>
+                            <input class="amount-input" type="number" min="0" placeholder="Nhập số..." />
+                            <button class="amount-display">+</button>
+                        </li>
+                    </ul>
+
+                    <button class="exp-add-btn">＋ Thêm khoản chi</button>
+
+                    <div class="exp-summary">
+                        <span class="exp-summary-label">Tổng cộng</span>
+                        <span class="exp-summary-total total-long">0 ₫</span>
+                    </div>
+                </div>
+
+                <!-- ── Card 2: Trong tháng ── -->
+                <div class="exp-card">
+                    <div class="exp-card-header">
+                        <h2 class="exp-card-title monthly">Trong tháng</h2>
+                        <span class="exp-card-badge badge-month">Monthly</span>
+                    </div>
+
+                    <ul class="exp-list" id="monthList">
+                        <li class="exp-item">
+                            <span class="exp-bullet bullet-month"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Ăn uống / cà phê</div>
+                                <div class="exp-item-sub">Hàng ngày</div>
+                            </div>
+                            <span class="exp-item-amount amount-month">—</span>
+                        </li>
+                        <li class="exp-item">
+                            <span class="exp-bullet bullet-month"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Di chuyển / xăng xe</div>
+                                <div class="exp-item-sub">Hàng tuần</div>
+                            </div>
+                            <span class="exp-item-amount amount-month">—</span>
+                        </li>
+                        <li class="exp-item">
+                            <span class="exp-bullet bullet-month"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Điện / nước / internet</div>
+                                <div class="exp-item-sub">Cuối tháng</div>
+                            </div>
+                            <span class="exp-item-amount amount-month">—</span>
+                        </li>
+                        <li class="exp-item">
+                            <span class="exp-bullet bullet-month"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Mua sắm / giải trí</div>
+                                <div class="exp-item-sub">Phát sinh</div>
+                            </div>
+                            <span class="exp-item-amount amount-month">—</span>
+                        </li>
+                        <li class="exp-item">
+                            <span class="exp-bullet bullet-month"></span>
+                            <div class="exp-item-body">
+                                <div class="exp-item-name">Khoản phát sinh khác</div>
+                                <div class="exp-item-sub">Tùy chỉnh</div>
+                            </div>
+                            <span class="exp-item-amount amount-month">—</span>
+                        </li>
+                    </ul>
+
+                    <button class="exp-add-btn">＋ Thêm khoản chi</button>
+
+                    <div class="exp-summary">
+                        <span class="exp-summary-label">Tổng cộng</span>
+                        <span class="exp-summary-total total-month">0 ₫</span>
+                    </div>
+                </div>
+
+            </main>
+        </div><!-- /.sp-right -->
+
+    </div><!-- /#spending-page -->
+
+    <script>
+        /* ============================================================
+           CLOCK
+        ============================================================ */
+        const WEEKDAYS_VI = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const CIRCUMFERENCE = 2 * Math.PI * 20; // r=20
+
+        function setRing(id, val, max) {
+            const offset = CIRCUMFERENCE - (val / max) * CIRCUMFERENCE;
+            document.getElementById(id).style.strokeDashoffset = offset;
+        }
+
+        /* Draw minute ticks for this page's SVG (center 82,82, r=73) */
+        (function () {
+            const ns = 'http://www.w3.org/2000/svg';
+            const grp = document.getElementById('cMinTicks');
+            const cx = 82, cy = 82, r = 73;
+            for (let i = 0; i < 60; i++) {
+                if (i % 5 === 0) continue; // hour positions already drawn
+                const rad = (i * 6 - 90) * Math.PI / 180;
+                const x1 = cx + r * Math.cos(rad);
+                const y1 = cy + r * Math.sin(rad);
+                const x2 = cx + (r - 4) * Math.cos(rad);
+                const y2 = cy + (r - 4) * Math.sin(rad);
+                const ln = document.createElementNS(ns, 'line');
+                ln.setAttribute('x1', x1.toFixed(2)); ln.setAttribute('y1', y1.toFixed(2));
+                ln.setAttribute('x2', x2.toFixed(2)); ln.setAttribute('y2', y2.toFixed(2));
+                ln.setAttribute('stroke', 'rgba(255,255,255,0.15)');
+                ln.setAttribute('stroke-width', '0.8');
+                ln.setAttribute('stroke-linecap', 'round');
+                grp.appendChild(ln);
+            }
+        })();
+
+        function updateClock() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+            const ms = now.getMilliseconds();
+
+            const secDeg = (s + ms / 1000) * 6;
+            const minDeg = (m + (s + ms / 1000) / 60) * 6;
+            const hourDeg = ((h % 12) + m / 60) * 30;
+
+            document.getElementById('chand-hour').setAttribute('transform', `rotate(${hourDeg},82,82)`);
+            document.getElementById('chand-min').setAttribute('transform', `rotate(${minDeg},82,82)`);
+            document.getElementById('chand-sec').setAttribute('transform', `rotate(${secDeg},82,82)`);
+
+            const pad = n => String(n).padStart(2, '0');
+            document.getElementById('sp-digitalTime').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+            const wd = WEEKDAYS_VI[now.getDay()];
+            document.getElementById('sp-clockDate').textContent = `${wd} – ${now.getDate()} Tháng ${now.getMonth() + 1}`;
+
+            setRing('sp-ring-h', h % 12 + m / 60, 12);
+            setRing('sp-ring-m', m + s / 60, 60);
+            setRing('sp-ring-s', s + ms / 1000, 60);
+
+            document.getElementById('sp-valH').textContent = pad(h);
+            document.getElementById('sp-valM').textContent = pad(m);
+            document.getElementById('sp-valS').textContent = pad(s);
+        }
+
+        setInterval(updateClock, 50);
+        updateClock();
+
+        /* ============================================================
+           DÀI HẠN – EXPENSE LOGIC (v2)
+        ============================================================ */
+
+        const longList = document.getElementById('longList');
+        const longTotal = longList.closest('.exp-card').querySelector('.exp-summary-total');
+        const longAddBtn = longList.closest('.exp-card').querySelector('.exp-add-btn');
+        const longEditBtn = document.getElementById('longEditBtn');
+        let longEditMode = false;
+
+        /** Recalculate long-term total from data-amount attributes */
+        function recalcLong() {
+            let total = 0;
+            longList.querySelectorAll('.exp-item').forEach(li => {
+                const v = parseFloat(li.dataset.amount);
+                if (!isNaN(v) && v > 0) total += v;
+            });
+            longTotal.textContent = total > 0 ? Number(total).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
+        }
+
+        /** Sync the .amount-display button for one item */
+        function syncDisplay(li) {
+            const disp = li.querySelector('.amount-display');
+            if (!disp) return;
+            const amt = parseFloat(li.dataset.amount);
+            if (longEditMode) {
+                disp.textContent = '✕';
+                disp.classList.add('del-mode');
+                disp.classList.remove('has-value');
+            } else {
+                disp.classList.remove('del-mode');
+                if (!isNaN(amt) && amt > 0) {
+                    disp.textContent = Number(amt).toLocaleString('vi-VN') + ' ₫';
+                    disp.classList.add('has-value');
+                } else {
+                    disp.textContent = '+';
+                    disp.classList.remove('has-value');
+                }
+            }
+        }
+
+        /** Wire amount-toggle UX for one <li> item */
+        function wireItem(li) {
+            const disp = li.querySelector('.amount-display');
+            const input = li.querySelector('.amount-input');
+            if (!disp || !input) return;
+
+            disp.addEventListener('click', () => {
+                if (longEditMode) {
+                    /* Edit mode: click = delete */
+                    li.style.transition = 'opacity .2s, transform .2s';
+                    li.style.opacity = '0';
+                    li.style.transform = 'translateX(14px)';
+                    setTimeout(() => { li.remove(); recalcLong(); }, 210);
+                    return;
+                }
+                /* Normal mode: show input */
+                disp.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                input.select();
+            });
+
+            function saveAmount() {
+                const v = parseFloat(input.value);
+                li.dataset.amount = (!isNaN(v) && v > 0) ? v : '0';
+                input.style.display = 'none';
+                disp.style.display = '';
+                syncDisplay(li);
+                recalcLong();
+            }
+
+            input.addEventListener('blur', saveAmount);
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                if (e.key === 'Escape') { input.value = ''; input.blur(); }
+            });
+            input.addEventListener('mousedown', e => e.stopPropagation());
+        }
+
+        /* Wire existing 5 items */
+        longList.querySelectorAll('.exp-item').forEach(li => {
+            wireItem(li);
+            initDragItem(li);
+        });
+
+        /** Build a new long-term item <li> */
+        function buildLongItem(name, sub) {
+            const li = document.createElement('li');
+            li.className = 'exp-item';
+            li.dataset.amount = '0';
+            li.setAttribute('draggable', 'true');
+            li.innerHTML = `
+                <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
+                <div class="exp-item-body">
+                    <div class="exp-item-name">${name}</div>
+                    <div class="exp-item-sub">${sub || 'Tùy chỉnh'}</div>
+                </div>
+                <input class="amount-input" type="number" min="0" placeholder="Nhập số..." />
+                <button class="amount-display">+</button>`;
+            wireItem(li);
+            initDragItem(li);
+            if (longEditMode) syncDisplay(li);
+            return li;
+        }
+
+        /* ── EDIT MODE ── */
+        longEditBtn.addEventListener('click', () => {
+            longEditMode = !longEditMode;
+            longEditBtn.textContent = longEditMode ? 'Xong' : 'Chỉnh sửa';
+            longEditBtn.classList.toggle('active', longEditMode);
+            longList.querySelectorAll('.exp-item').forEach(li => {
+                /* Close any open input */
+                const inp = li.querySelector('.amount-input');
+                if (inp && inp.style.display === 'block') inp.blur();
+                syncDisplay(li);
+            });
+        });
+
+        /* ── DRAG & DROP (HTML5) ── */
+        let dragSrc = null;
+
+        function initDragItem(li) {
+            li.addEventListener('dragstart', e => {
+                if (longEditMode) { e.preventDefault(); return; }
+                dragSrc = li;
+                li.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            li.addEventListener('dragend', () => {
+                li.classList.remove('dragging');
+                longList.querySelectorAll('.exp-item').forEach(i => i.classList.remove('drag-over'));
+                dragSrc = null;
+            });
+            li.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (!dragSrc || li === dragSrc) return;
+                e.dataTransfer.dropEffect = 'move';
+                longList.querySelectorAll('.exp-item').forEach(i => i.classList.remove('drag-over'));
+                li.classList.add('drag-over');
+            });
+            li.addEventListener('drop', e => {
+                e.preventDefault();
+                if (!dragSrc || li === dragSrc) return;
+                li.classList.remove('drag-over');
+                const items = [...longList.querySelectorAll('.exp-item')];
+                const si = items.indexOf(dragSrc), di = items.indexOf(li);
+                if (si < di) longList.insertBefore(dragSrc, li.nextSibling);
+                else longList.insertBefore(dragSrc, li);
+            });
+        }
+
+        /* ── CUSTOM MODAL ── */
+        const addModal = document.getElementById('addItemModal');
+        const modalInput = document.getElementById('modalItemName');
+        const modalBox_ = document.getElementById('modalBox');
+        const confirmBtn = document.getElementById('modalConfirmBtn');
+
+        function openAddModal() {
+            addModal.classList.add('open');
+            modalInput.value = '';
+            setTimeout(() => modalInput.focus(), 80);
+        }
+        function closeAddModal() { addModal.classList.remove('open'); }
+
+        /* Click overlay (outside box) → close */
+        addModal.addEventListener('click', e => {
+            if (!modalBox_.contains(e.target)) closeAddModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && addModal.classList.contains('open')) closeAddModal();
+        });
+
+        function confirmAddItem() {
+            const name = modalInput.value.trim() || 'Khoản chi mới';
+            closeAddModal();
+            const li = buildLongItem(name, 'Tùy chỉnh');
+            li.style.opacity = '0';
+            li.style.transform = 'translateY(-8px)';
+            longList.appendChild(li);
+            requestAnimationFrame(() => {
+                li.style.transition = 'opacity .25s, transform .25s';
+                li.style.opacity = '1';
+                li.style.transform = 'translateY(0)';
+            });
+            /* Immediately open amount input */
+            setTimeout(() => li.querySelector('.amount-display').click(), 280);
+        }
+
+        confirmBtn.addEventListener('click', confirmAddItem);
+        modalInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmAddItem(); });
+        longAddBtn.addEventListener('click', openAddModal);
+
+        /* ============================================================
+           LOGOUT
+        ============================================================ */
+        function handleLogout() {
+            ['caltdhy_token', 'caltdhy_user', 'pcn_token', 'pcn_user'].forEach(k => localStorage.removeItem(k));
+            ['caltdhy_token', 'caltdhy_user'].forEach(k => sessionStorage.removeItem(k));
+            window.location.href = 'welcome.html';
+        }
+
+        /* ============================================================
+           NAVIGATION
+        ============================================================ */
+        function navigateTo(url) {
+            const page = document.getElementById('spending-page');
+            page.classList.add('fade-out');
+            setTimeout(() => { window.location.href = url; }, 540);
+        }
+
+        /* ============================================================
+           PAGE ENTRANCE
+        ============================================================ */
+        window.addEventListener('load', () => {
+            const page = document.getElementById('spending-page');
+            page.style.opacity = '0';
+            page.style.transform = 'translateY(10px)';
+            page.style.transition = 'opacity .55s ease, transform .55s ease';
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                page.style.opacity = '1';
+                page.style.transform = 'translateY(0)';
+            }));
+        });
+    </script>
+
+    <!-- ══ CUSTOM MODAL (Add item) ══ -->
+    <div id="addItemModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-title">💰 Thêm khoản chi</div>
+            <input class="modal-input" id="modalItemName" type="text" placeholder="Tên khoản chi (VD: Khám sức khỏe)"
+                maxlength="60" />
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Hủy</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MINI CALCULATOR ══ -->
+    <div id="miniCalc">
+        <div id="calcDisplay">
+            <span class="calc-expr" id="calcExpr"></span>
+            <span id="calcVal">0</span>
+        </div>
+        <div class="calc-grid">
+            <button class="calc-btn clr" data-action="clr">CLR</button>
+            <button class="calc-btn" data-action="del">⌫</button>
+            <button class="calc-btn op" data-action="op" data-v="%">%</button>
+            <button class="calc-btn op" data-action="op" data-v="/">÷</button>
+
+            <button class="calc-btn" data-action="num" data-v="7">7</button>
+            <button class="calc-btn" data-action="num" data-v="8">8</button>
+            <button class="calc-btn" data-action="num" data-v="9">9</button>
+            <button class="calc-btn op" data-action="op" data-v="*">×</button>
+
+            <button class="calc-btn" data-action="num" data-v="4">4</button>
+            <button class="calc-btn" data-action="num" data-v="5">5</button>
+            <button class="calc-btn" data-action="num" data-v="6">6</button>
+            <button class="calc-btn op" data-action="op" data-v="-">−</button>
+
+            <button class="calc-btn" data-action="num" data-v="1">1</button>
+            <button class="calc-btn" data-action="num" data-v="2">2</button>
+            <button class="calc-btn" data-action="num" data-v="3">3</button>
+            <button class="calc-btn op" data-action="op" data-v="+">+</button>
+
+            <button class="calc-btn" data-action="num" data-v="0">0</button>
+            <button class="calc-btn" data-action="num" data-v=".">,</button>
+            <button class="calc-btn eq" data-action="eq">= Enter</button>
+        </div>
+        <div class="calc-confirm-row">
+            <span class="calc-enter-hint">Enter → xác nhận • Esc → hủy</span>
+        </div>
+    </div>
+
+    <!-- ══ NOTE POPOVER ══ -->
+    <div id="notePopover">
+        <div class="note-pop-title">Ghi chú 📌</div>
+        <textarea id="noteTextarea" placeholder="VD: Tháng 2 nộp 3.000.000đ | Tháng 3 nộp 4.500.000đ..."></textarea>
+        <div class="note-pop-foot">Tự lưu khi đóng • Click ra ngoài để đóng</div>
+    </div>
+
+</body>
+
+<!-- ══════════════ CUSTOM MODAL ══════════════ -->
+<div id="addItemModal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box" id="modalBox">
+        <div class="modal-title">💰 Thêm khoản chi</div>
+        <input class="modal-input" id="modalItemName" type="text" placeholder="Tên khoản chi (VD: Khám sức khỏe)"
+            maxlength="60" />
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeAddModal()">Hủy</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+</body>
+
+</html>

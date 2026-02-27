@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=Caveat:wght@600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Syne:wght@700;800&display=swap"
         rel="stylesheet" />
     <style>
         /* ============================================================
@@ -132,9 +132,9 @@
         .wl-left {
             position: relative;
             z-index: 1;
-            width: 20%;
-            min-width: 220px;
-            padding: 48px 28px 40px;
+            width: 22%;
+            min-width: 260px;
+            padding: 48px 32px 40px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -162,10 +162,10 @@
 
         .brand-name-large {
             font-family: 'Syne', sans-serif;
-            font-size: clamp(36px, 4.5vw, 46px);
+            font-size: clamp(28px, 3.2vw, 40px);
             font-weight: 800;
             line-height: 1.05;
-            letter-spacing: -1.5px;
+            letter-spacing: -1px;
             white-space: nowrap;
             overflow: visible;
             background: linear-gradient(135deg, #00dcc0 0%, #7b2fff 60%, #e054b0 100%);
@@ -440,7 +440,7 @@
         .v-sep {
             position: absolute;
             top: 0;
-            left: 20%;
+            left: 22%;
             width: 1px;
             height: 100%;
             background: linear-gradient(to bottom, transparent 0%, rgba(0, 220, 190, 0.3) 30%, rgba(123, 47, 255, 0.3) 70%, transparent 100%);
@@ -622,12 +622,13 @@
         }
 
         function goToLogin() {
-            navigateTo('index.html');
+            // Truyền force=true để auth.js không tự động redirect khi đã có token
+            navigateTo('index.html?force=true');
         }
 
         function goToRegister() {
             // Open index.html and let auth.js handle pre-selecting the register tab
-            navigateTo('index.html?tab=register');
+            navigateTo('index.html?tab=register&force=true');
         }
 
         /* ============================================================

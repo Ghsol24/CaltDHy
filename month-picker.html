@@ -5,13 +5,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaltDHy – Chọn tháng</title>
+    <meta name="description" content="CaltDHy – Chọn tháng để quản lý lịch trình." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Syne:wght@700;800&display=swap"
         rel="stylesheet" />
     <style>
-        /* ── RESET ── */
+        /* ============================================================
+           RESET & BASE
+        ============================================================ */
         *,
         *::before,
         *::after {
@@ -23,7 +26,7 @@
         html,
         body {
             height: 100%;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
         }
 
@@ -39,7 +42,9 @@
             min-height: 100vh;
         }
 
-        /* ── ORBS ── */
+        /* ============================================================
+           FLOATING ORBS
+        ============================================================ */
         .orb {
             position: fixed;
             border-radius: 50%;
@@ -52,7 +57,7 @@
         .orb-1 {
             width: 500px;
             height: 500px;
-            background: rgba(0, 200, 170, .13);
+            background: rgba(0, 200, 170, .12);
             top: -120px;
             left: -80px;
             animation-duration: 16s;
@@ -61,7 +66,7 @@
         .orb-2 {
             width: 400px;
             height: 400px;
-            background: rgba(110, 0, 180, .2);
+            background: rgba(110, 0, 180, .18);
             bottom: -60px;
             right: 0;
             animation-duration: 19s;
@@ -70,22 +75,24 @@
 
         @keyframes drift {
             from {
-                transform: translate(0, 0)
+                transform: translate(0, 0);
             }
 
             to {
-                transform: translate(22px, -18px)
+                transform: translate(22px, -18px);
             }
         }
 
-        /* ── PAGE ── */
+        /* ============================================================
+           PAGE WRAPPER
+        ============================================================ */
         #picker-page {
             position: relative;
             z-index: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
             flex: 1;
+            height: 100vh;
             transition: opacity .55s ease, transform .55s ease;
         }
 
@@ -95,61 +102,62 @@
             pointer-events: none;
         }
 
-        /* ══════════════════════════════
-        NAVBAR
-    ══════════════════════════════ */
+        /* ============================================================
+           NAVBAR
+        ============================================================ */
         .mp-navbar {
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 28px;
-            height: 56px;
-            background: rgba(6, 13, 26, .65);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            height: 60px;
+            background: rgba(6, 13, 26, .7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
             flex-shrink: 0;
-            gap: 16px;
-            position: relative;
             z-index: 50;
+            gap: 16px;
         }
 
+        /* Logo */
         .mp-logo {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 9px;
             text-decoration: none;
             flex-shrink: 0;
         }
 
         .mp-logo svg {
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
         }
 
         .mp-logo-text {
             font-family: 'Syne', sans-serif;
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 800;
-            background: linear-gradient(135deg, #00dcc0, #7b2fff);
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #00dcc0 0%, #7b2fff 60%, #e054b0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        /* Glassmorphism tab pills */
-        .nav-tabs {
+        /* Nav center + right */
+        .nav-center-right {
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 10px;
         }
 
         .nav-tab {
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            padding: 8px 18px;
+            padding: 9px 20px;
             border-radius: 24px;
             font-size: 13px;
             font-weight: 600;
@@ -158,7 +166,6 @@
             border: 1px solid rgba(255, 255, 255, .12);
             background: rgba(255, 255, 255, .05);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             color: rgba(255, 255, 255, .65);
             transition: all .25s ease;
             text-decoration: none;
@@ -168,578 +175,472 @@
         .nav-tab:hover {
             background: rgba(0, 200, 170, .12);
             border-color: rgba(0, 220, 190, .55);
-            color: rgba(0, 220, 190, 1);
-            box-shadow: 0 0 14px rgba(0, 200, 170, .25), inset 0 0 8px rgba(0, 200, 170, .06);
+            color: #00dcc0;
+            box-shadow: 0 0 14px rgba(0, 200, 170, .25);
             transform: translateY(-1px);
         }
 
         .nav-tab.active {
             background: rgba(0, 200, 170, .14);
             border-color: rgba(0, 220, 190, .6);
-            color: rgba(0, 220, 190, 1);
+            color: #00dcc0;
             box-shadow: 0 0 18px rgba(0, 200, 170, .3);
         }
 
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
         .nav-logout {
-            padding: 7px 14px;
-            border: 1px solid rgba(255, 255, 255, .15);
+            padding: 9px 18px;
+            border: 1px solid rgba(255, 255, 255, .14);
             background: rgba(255, 255, 255, .05);
-            border-radius: 8px;
-            font-size: 12px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 600;
-            color: rgba(255, 255, 255, .55);
+            color: rgba(255, 255, 255, .6);
             cursor: pointer;
             font-family: inherit;
-            transition: all .2s ease;
+            transition: all .22s ease;
         }
 
         .nav-logout:hover {
-            border-color: rgba(231, 76, 60, .6);
-            color: rgba(231, 76, 60, .9);
-            background: rgba(231, 76, 60, .08);
+            border-color: rgba(255, 80, 100, .5);
+            color: #ff6080;
+            background: rgba(255, 80, 100, .1);
         }
 
-        /* ══════════════════════════════
-        HEADER LABEL
-    ══════════════════════════════ */
-        .mp-header {
-            text-align: center;
-            padding: 24px 0 6px;
-            flex-shrink: 0;
-        }
-
-        .mp-header h2 {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(12px, 1.4vw, 15px);
-            font-weight: 600;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: rgba(0, 220, 190, .55);
-            margin-bottom: 4px;
-        }
-
-        .mp-header p {
-            font-size: 12px;
-            color: rgba(255, 255, 255, .25);
-        }
-
-        /* ══════════════════════════════
-        SCENE
-    ══════════════════════════════ */
-        .scene {
+        /* ============================================================
+           MAIN CONTENT – 2 columns
+        ============================================================ */
+        .mp-content {
             flex: 1;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+            align-items: stretch;
+            overflow: hidden;
         }
 
-        /* ══════════════════════════════
-        ORBIT SYSTEM
-        Bubbles are positioned via JS translate() only — no rotation applied,
-        so text is ALWAYS upright regardless of orbit position.
-    ══════════════════════════════ */
-        .orbit-system {
-            position: relative;
-            width: 550px;
-            height: 550px;
-            /* orbit diameter 210*2 + bubble 72 + padding */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Decorative orbit track */
-        .orbit-track {
-            position: absolute;
-            width: 420px;
-            height: 420px;
-            border-radius: 50%;
-            border: 1px dashed rgba(255, 255, 255, .07);
-            pointer-events: none;
-        }
-
-        /* ── YEAR HUB ─ max size: orbit_r(210) - bubble_r(36) - gap(18) = 156px → dia 312px ── */
-        .year-hub {
-            position: absolute;
-            width: 312px;
-            height: 312px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 40% 35%, rgba(0, 200, 170, .15), rgba(6, 13, 26, .92) 70%);
-            border: 2px solid rgba(0, 220, 190, .42);
-            box-shadow: 0 0 64px rgba(0, 200, 170, .25), 0 0 24px rgba(0, 200, 170, .15), inset 0 0 50px rgba(0, 200, 170, .08);
+        /* ── LEFT: Clock column ── */
+        .col-clock {
+            width: 340px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(20px);
-            z-index: 5;
+            padding: 32px 28px;
+            border-right: 1px solid rgba(255, 255, 255, .07);
+            background: rgba(6, 13, 26, .45);
+            backdrop-filter: blur(16px);
+            gap: 24px;
         }
 
-        .year-number {
-            font-family: 'Syne', sans-serif;
-            font-size: 52px;
+        /* ── RIGHT: Month grid column ── */
+        .col-months {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 36px 48px;
+            gap: 28px;
+        }
+
+        /* ============================================================
+           CLOCK WIDGET – CYBERPUNK / NEON EDITION
+        ============================================================ */
+        .clock-widget {
+            background: radial-gradient(ellipse at 35% 25%, rgba(0, 180, 160, .14) 0%, rgba(4, 10, 28, .98) 68%);
+            border: 1.5px solid rgba(0, 220, 190, .28);
+            border-radius: 22px;
+            padding: 20px 22px 22px;
+            width: 100%;
+            max-width: 268px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow:
+                0 0 0 1px rgba(0, 220, 190, .1),
+                0 0 48px rgba(0, 200, 170, .22),
+                0 0 100px rgba(0, 200, 170, .07),
+                inset 0 0 36px rgba(0, 200, 170, .04);
+        }
+
+        /* ── GHTUDE title ── */
+        .clock-brand {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .28);
+            text-align: center;
+        }
+
+        /* ── Analog face ── */
+        .clock-face-wrap {
+            position: relative;
+            width: 176px;
+            height: 176px;
+        }
+
+        .clock-svg {
+            width: 176px;
+            height: 176px;
+            overflow: visible;
+        }
+
+        /* ── Hands: pivot at local origin (center of translate group) ── */
+        #hand-hour,
+        #hand-min,
+        #hand-sec {
+            transform-origin: 0 0;
+        }
+
+        /* ── Digital time ── */
+        .clock-digital {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 34px;
             font-weight: 800;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #00f5d4 0%, #a855f7 55%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 10px rgba(0, 220, 190, .55));
             line-height: 1;
-            letter-spacing: -2px;
-            background: linear-gradient(135deg, #00dcc0 0%, #7b2fff 100%);
+        }
+
+        /* ── Date line ── */
+        .clock-date {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, .38);
+            letter-spacing: 0.5px;
+            text-align: center;
+            margin-top: -4px;
+        }
+
+        /* ── Circular progress rings ── */
+        .progress-rings {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+        }
+
+        .ring-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ring-svg {
+            width: 50px;
+            height: 50px;
+            transform: rotate(-90deg);
+            /* start from 12 o'clock */
+            overflow: visible;
+        }
+
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, .07);
+            stroke-width: 3.5;
+        }
+
+        .ring-fill {
+            fill: none;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            transition: stroke-dashoffset .25s linear;
+        }
+
+        /* ring colors */
+        #ring-fill-h {
+            stroke: url(#rg-h);
+        }
+
+        #ring-fill-m {
+            stroke: url(#rg-m);
+        }
+
+        #ring-fill-s {
+            stroke: url(#rg-s);
+        }
+
+        /* number inside ring */
+        .ring-num {
+            position: absolute;
+            font-family: 'Syne', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .75);
+            /* centered via transform on the inner span */
+        }
+
+        .ring-num-wrap {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring-inner-val {
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .82);
+            line-height: 1;
+        }
+
+        .ring-lbl {
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+        }
+
+        /* ============================================================
+           MONTH GRID SECTION
+        ============================================================ */
+        .months-title {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(28px, 3.8vw, 44px);
+            font-weight: 800;
+            color: rgba(255, 255, 255, .92);
+            text-align: center;
+            letter-spacing: -0.5px;
+            margin-top: -18px;
+        }
+
+        .months-title span {
+            background: linear-gradient(90deg, #00dcc0, #7b2fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .year-label {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, .3);
-            margin-top: 4px;
+        .year-nav {
+            display: flex;
+            align-items: center;
+            gap: 18px;
         }
 
-        /* Today's date line */
-        .year-today {
-            font-size: 11px;
-            font-weight: 500;
-            color: rgba(0, 220, 190, 0.65);
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-            white-space: nowrap;
-        }
-
-        /* Edge arrows – absolutely positioned at left/right of hub */
-        .year-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: none;
-            border-radius: 0;
+        .year-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .6);
+            font-size: 16px;
             cursor: pointer;
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
-            font-family: inherit;
-            opacity: 0.45;
-            transition: opacity 0.2s ease, color 0.2s ease;
-            z-index: 6;
+            transition: all .2s ease;
         }
 
-        .year-btn.btn-prev {
-            left: 14px;
+        .year-nav-btn:hover {
+            border-color: rgba(0, 220, 190, .55);
+            color: #00dcc0;
+            background: rgba(0, 200, 170, .1);
         }
 
-        .year-btn.btn-next {
-            right: 14px;
+        .year-display {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .75);
         }
 
-        .year-btn:hover {
-            opacity: 1;
-            color: rgba(0, 220, 190, 1);
+        /* The 4×3 grid */
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 640px;
         }
 
-        /* ── MONTH BUBBLE ── */
-        /* Positioned by JS via style.left / style.top (translate from center).
-       NO rotation is ever applied → text stays 0° upright always. */
-        .month-bubble {
-            position: absolute;
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
+        .month-card {
+            position: relative;
+            border-radius: 18px;
+            border: 1.5px solid rgba(255, 255, 255, .1);
             background: rgba(255, 255, 255, .04);
-            border: 1.5px solid rgba(255, 255, 255, .13);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            padding: 20px 12px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background .22s ease, border-color .22s ease,
-                box-shadow .22s ease, opacity .22s ease, transform .22s ease;
-            /* Center: JS sets left/top to (cx - 36, cy - 36) */
-            transform: translate(0, 0);
+            gap: 6px;
+            text-align: center;
+            overflow: hidden;
+            transition:
+                transform .3s cubic-bezier(.34, 1.56, .64, 1),
+                border-color .25s ease,
+                background .25s ease,
+                box-shadow .25s ease,
+                opacity .25s ease;
         }
 
-        .month-bubble .mon-num {
+        /* Shine overlay */
+        .month-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* PAST months – faded */
+        .month-card.past {
+            opacity: 0.32;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, .06);
+        }
+
+        .month-card.past:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* CURRENT month highlight */
+        .month-card.current {
+            border-color: rgba(0, 220, 190, .6);
+            background: rgba(0, 200, 170, .1);
+            box-shadow: 0 0 24px rgba(0, 200, 170, .25), inset 0 0 12px rgba(0, 200, 170, .06);
+        }
+
+        .month-card.current .month-num {
+            color: #00dcc0;
+        }
+
+        /* FUTURE months – interactive */
+        .month-card.future:hover,
+        .month-card.current:hover {
+            transform: translateY(-4px) scale(1.04);
+            border-color: rgba(0, 220, 190, .55);
+            background: rgba(0, 200, 170, .12);
+            box-shadow: 0 12px 36px rgba(0, 200, 170, .25);
+        }
+
+        .month-num {
             font-family: 'Syne', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
+            font-size: 15px;
+            font-weight: 800;
             color: rgba(255, 255, 255, .85);
             line-height: 1;
         }
 
-        .month-bubble .mon-name {
-            font-size: 9px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, .4);
-            margin-top: 3px;
-            letter-spacing: .5px;
-            text-transform: uppercase;
+        .month-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .45);
+            letter-spacing: 0.5px;
         }
 
-        .month-bubble.current-month {
-            border-color: rgba(0, 220, 190, .55);
-            background: rgba(0, 200, 170, .1);
-            box-shadow: 0 0 14px rgba(0, 200, 170, .22);
+        /* Current month badge */
+        .current-badge {
+            position: absolute;
+            top: 7px;
+            right: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #00dcc0;
+            box-shadow: 0 0 6px rgba(0, 220, 190, .8);
+            animation: pulseDot 2s ease-in-out infinite;
         }
 
-        /* Orbit-system is "hovered" class → dim non-hovered, pause handled by JS */
-        .orbit-system.is-hovered .month-bubble {
-            opacity: .22;
-        }
+        @keyframes pulseDot {
 
-        .orbit-system.is-hovered .month-bubble:hover {
-            opacity: 1 !important;
-            transform: scale(1.32) !important;
-            background: rgba(0, 200, 170, .22) !important;
-            border-color: rgba(0, 220, 190, .9) !important;
-            box-shadow: 0 0 0 5px rgba(0, 200, 170, .18), 0 8px 36px rgba(0, 200, 170, .42) !important;
-            z-index: 10;
-        }
-
-        .mp-hint {
-            padding: 12px 0 18px;
-            font-size: 11px;
-            color: rgba(255, 255, 255, .18);
-            letter-spacing: .5px;
-        }
-
-        /* ══════════════════════════════
-        EXPENSE TRACKER MODAL
-    ══════════════════════════════ */
-        .exp-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 900;
-            background: rgba(0, 0, 0, .6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            animation: fadeIn .18s ease;
-        }
-
-        .exp-overlay.hidden {
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
             }
 
-            to {
-                opacity: 1
+            50% {
+                transform: scale(1.5);
+                opacity: .6;
             }
         }
 
-        .exp-modal {
-            background: rgba(10, 18, 36, .97);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 18px;
-            width: 100%;
-            max-width: 660px;
-            max-height: 88vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
-            backdrop-filter: blur(22px);
-            animation: slideUp .22s ease;
-        }
-
+        /* ============================================================
+           ENTRANCE ANIMATION
+        ============================================================ */
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(18px) scale(.98)
+                transform: translateY(24px);
             }
 
             to {
                 opacity: 1;
-                transform: none
+                transform: translateY(0);
             }
         }
 
-        .exp-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 22px 26px 0;
+        .month-card {
+            animation: slideUp .45s cubic-bezier(.22, 1, .36, 1) both;
         }
 
-        .exp-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #00dcc0, #7b2fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        /* Stagger: each card delayed by index (set via JS) */
 
-        .exp-close {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(255, 255, 255, .08);
-            color: rgba(255, 255, 255, .6);
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all .2s ease;
-        }
-
-        .exp-close:hover {
-            background: rgba(231, 76, 60, .25);
-            color: rgba(231, 76, 60, .9);
-        }
-
-        .exp-body {
-            padding: 18px 26px 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* Budget progress */
-        .budget-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-
-        .budget-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, .7);
-        }
-
-        .budget-vals {
-            font-size: 12px;
-            color: rgba(255, 255, 255, .4);
-        }
-
-        .progress-bar-wrap {
-            width: 100%;
-            height: 8px;
-            border-radius: 99px;
-            background: rgba(255, 255, 255, .08);
-            overflow: hidden;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            border-radius: 99px;
-            background: linear-gradient(90deg, #00dcc0, #7b2fff);
-            transition: width .5s ease;
-        }
-
-        /* Budget input row */
-        .budget-input-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .budget-input-row label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, .5);
-            white-space: nowrap;
-        }
-
-        .exp-input {
-            flex: 1;
-            background: rgba(255, 255, 255, .06);
-            border: 1.5px solid rgba(255, 255, 255, .12);
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: rgba(255, 255, 255, .88);
-            font-size: 14px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color .2s;
-        }
-
-        .exp-input:focus {
-            border-color: rgba(0, 220, 190, .6);
-            box-shadow: 0 0 0 3px rgba(0, 200, 170, .12);
-        }
-
-        .exp-input::placeholder {
-            color: rgba(255, 255, 255, .25);
-        }
-
-        .exp-select {
-            appearance: none;
-            cursor: pointer;
-        }
-
-        /* Add expense form */
-        .add-exp-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            background: rgba(255, 255, 255, .03);
-            border: 1px solid rgba(255, 255, 255, .07);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .add-exp-form .form-row-full {
-            grid-column: 1/-1;
-        }
-
-        .field-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, .45);
-            margin-bottom: 4px;
-            letter-spacing: .5px;
-            text-transform: uppercase;
-        }
-
-        .btn-add-exp {
-            grid-column: 1/-1;
-            padding: 11px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #00dcc0, #7b2fff);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            transition: opacity .2s, transform .2s;
-        }
-
-        .btn-add-exp:hover {
-            opacity: .88;
-            transform: translateY(-1px);
-        }
-
-        /* Expense table */
-        .exp-table-wrap {
-            overflow-x: auto;
-        }
-
-        .exp-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        .exp-table thead th {
-            padding: 8px 12px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: .6px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, .35);
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .exp-table tbody tr {
-            border-bottom: 1px solid rgba(255, 255, 255, .05);
-            transition: background .15s;
-        }
-
-        .exp-table tbody tr:hover {
-            background: rgba(255, 255, 255, .03);
-        }
-
-        .exp-table td {
-            padding: 10px 12px;
-            color: rgba(255, 255, 255, .75);
-            vertical-align: middle;
-        }
-
-        .td-amount {
-            font-weight: 700;
-            color: #00dcc0;
-        }
-
-        .cat-badge {
-            display: inline-block;
-            padding: 2px 9px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-            background: rgba(123, 47, 255, .2);
-            border: 1px solid rgba(123, 47, 255, .3);
-            color: rgba(180, 140, 255, .9);
-        }
-
-        .btn-del {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: rgba(231, 76, 60, .5);
-            font-size: 15px;
-            transition: color .2s;
-            padding: 0;
-        }
-
-        .btn-del:hover {
-            color: rgba(231, 76, 60, .95);
-        }
-
-        .empty-exp {
-            text-align: center;
-            padding: 28px 0;
-            color: rgba(255, 255, 255, .25);
-            font-size: 13px;
-        }
-
-        /* Scrollbar */
-        .exp-modal::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .exp-modal::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .exp-modal::-webkit-scrollbar-thumb {
-            background: rgba(0, 220, 190, .25);
-            border-radius: 10px;
-        }
-
-        @media (max-width:640px) {
-            .orbit-system {
-                width: 340px;
-                height: 340px;
-            }
-
-            .orbit-track {
+        /* ============================================================
+           RESPONSIVE
+        ============================================================ */
+        @media (max-width: 900px) {
+            .col-clock {
                 width: 260px;
-                height: 260px;
+                padding: 24px 16px;
             }
 
-            .year-hub {
-                width: 180px;
-                height: 180px;
+            .col-months {
+                padding: 28px 24px;
             }
 
-            .year-number {
-                font-size: 30px;
+            .month-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 380px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .mp-content {
+                flex-direction: column;
+                overflow-y: auto;
             }
 
-            .nav-tab .label {
+            .col-clock {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, .07);
+                padding: 20px;
+            }
+
+            .clock-widget {
+                flex-direction: row;
+                flex-wrap: wrap;
+                max-width: 100%;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .col-months {
+                padding: 20px 16px;
+            }
+
+            .month-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .nav-tab .lbl {
                 display: none;
             }
         }
@@ -751,90 +652,15 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 
-    <!-- ══════════════════════════════════════
-     EXPENSE TRACKER MODAL
-══════════════════════════════════════ -->
-    <div class="exp-overlay hidden" id="expOverlay">
-        <div class="exp-modal" id="expModal">
-            <div class="exp-header">
-                <span class="exp-title">💰 Quản lý chi tiêu</span>
-                <button class="exp-close" onclick="closeExpModal()" title="Đóng">×</button>
-            </div>
-            <div class="exp-body">
-
-                <!-- Budget & progress -->
-                <div>
-                    <div class="budget-row">
-                        <span class="budget-label">Ngân sách tháng</span>
-                        <span class="budget-vals" id="budgetVals">0 / 0 ₫</span>
-                    </div>
-                    <div class="progress-bar-wrap">
-                        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
-                    </div>
-                    <div class="budget-input-row" style="margin-top:10px;">
-                        <label>Ngân sách (₫):</label>
-                        <input class="exp-input" id="budgetInput" type="number" placeholder="VD: 5000000" min="0"
-                            oninput="saveBudget()" />
-                    </div>
-                </div>
-
-                <!-- Add expense form -->
-                <div class="add-exp-form">
-                    <div>
-                        <div class="field-label">Tên khoản chi</div>
-                        <input class="exp-input" id="newName" placeholder="VD: Ăn sáng..." />
-                    </div>
-                    <div>
-                        <div class="field-label">Số tiền (₫)</div>
-                        <input class="exp-input" id="newAmt" type="number" min="0" placeholder="VD: 50000" />
-                    </div>
-                    <div>
-                        <div class="field-label">Phân loại</div>
-                        <select class="exp-input exp-select" id="newCat">
-                            <option value="Ăn uống">🍜 Ăn uống</option>
-                            <option value="Di chuyển">🚗 Di chuyển</option>
-                            <option value="Mua sắm">🛍️ Mua sắm</option>
-                            <option value="Giải trí">🎮 Giải trí</option>
-                            <option value="Sức khỏe">💊 Sức khỏe</option>
-                            <option value="Khác">📦 Khác</option>
-                        </select>
-                    </div>
-                    <div>
-                        <div class="field-label">Thời gian</div>
-                        <input class="exp-input" id="newTime" type="datetime-local" style="color-scheme:dark;" />
-                    </div>
-                    <button class="btn-add-exp" onclick="addExpense()">＋ Thêm khoản chi</button>
-                </div>
-
-                <!-- Expenses table -->
-                <div class="exp-table-wrap">
-                    <table class="exp-table">
-                        <thead>
-                            <tr>
-                                <th>Tên khoản chi</th>
-                                <th>Số tiền</th>
-                                <th>Phân loại</th>
-                                <th>Thời gian</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="expTableBody"></tbody>
-                    </table>
-                    <div class="empty-exp" id="expEmpty">Chưa có khoản chi nào. Hãy thêm ngay!</div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- ══════════════════════════════════════
-     MAIN PAGE
-══════════════════════════════════════ -->
     <div id="picker-page">
 
-        <!-- NAVBAR -->
+        <!-- ══════════════════════════════
+             NAVBAR
+        ══════════════════════════════ -->
         <nav class="mp-navbar">
-            <a href="welcome.html" class="mp-logo">
+
+            <!-- Logo -->
+            <a href="hub.html" class="mp-logo">
                 <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="nlg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
@@ -844,311 +670,468 @@
                     </defs>
                     <circle cx="16" cy="16" r="14" stroke="url(#nlg)" stroke-width="2" fill="none" />
                     <line x1="16" y1="16" x2="16" y2="8" stroke="url(#nlg)" stroke-width="2.2" stroke-linecap="round" />
-                    <line x1="16" y1="16" x2="22" y2="19" stroke="url(#nlg)" stroke-width="1.8"
-                        stroke-linecap="round" />
+                    <line x1="16" y1="16" x2="22" y2="19" stroke="url(#nlg)" stroke-width="1.8" stroke-linecap="round"
+                        opacity=".8" />
                     <circle cx="16" cy="16" r="2" fill="url(#nlg)" />
                 </svg>
                 <span class="mp-logo-text">CaltDHy</span>
             </a>
 
-            <div class="nav-tabs">
-                <!-- Expense tab – opens modal -->
-                <button class="nav-tab" onclick="openExpModal()" title="Quản lý chi tiêu">
-                    <span>💰</span><span class="label">Quản lý chi tiêu</span>
-                </button>
-                <!-- Calendar tab – current page -->
-                <a href="#" class="nav-tab active" title="Lịch trình">
-                    <span>📅</span><span class="label">Lịch trình</span>
+            <!-- Center + Right nav -->
+            <div class="nav-center-right">
+                <a href="spending.html" class="nav-tab">
+                    <span>💰</span><span class="lbl">Quản lý chi tiêu</span>
                 </a>
-            </div>
-
-            <div class="nav-right">
+                <a href="month-picker.html" class="nav-tab active">
+                    <span>📅</span><span class="lbl">Sắp xếp lịch trình</span>
+                </a>
                 <button class="nav-logout" onclick="handleLogout()">Đăng xuất</button>
             </div>
         </nav>
 
-        <!-- HEADER -->
-        <div class="mp-header">
-            <h2>Chọn tháng của bạn</h2>
-            <p>Hover to stopped the weels · Click month to open calendar</p>
-        </div>
+        <!-- ══════════════════════════════
+             MAIN CONTENT
+        ══════════════════════════════ -->
+        <div class="mp-content">
 
-        <!-- SCENE -->
-        <div class="scene">
-            <div class="orbit-system" id="orbitSystem">
-                <div class="orbit-track"></div>
+            <!-- ── LEFT: Clock ── -->
+            <div class="col-clock">
+                <div class="clock-widget">
 
-                <!-- Year hub -->
-                <div class="year-hub">
-                    <!-- Edge arrows – absolutely at hub left/right, opacity 0.45 default -->
-                    <button class="year-btn btn-prev" onclick="changeYear(-1)" title="Năm trước">&#8592;</button>
-                    <button class="year-btn btn-next" onclick="changeYear(1)" title="Năm sau">&#8594;</button>
-                    <!-- Today date label -->
-                    <div class="year-today" id="todayDate">Hôm nay: --/--/----</div>
-                    <div class="year-number" id="yearDisplay">2026</div>
+                    <!-- Brand title -->
+                    <div class="clock-brand">✦ GHTUDE ✦</div>
+
+                    <!-- Analog face -->
+                    <div class="clock-face-wrap">
+                        <svg class="clock-svg" viewBox="0 0 176 176" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <!-- Face background -->
+                                <radialGradient id="faceBg" cx="40%" cy="35%" r="65%">
+                                    <stop offset="0%" stop-color="#0c1e30" />
+                                    <stop offset="100%" stop-color="#030810" />
+                                </radialGradient>
+                                <!-- Neon rim gradient -->
+                                <linearGradient id="rimG" x1="0" y1="0" x2="176" y2="176"
+                                    gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#00f5d4" />
+                                    <stop offset="40%" stop-color="#a855f7" />
+                                    <stop offset="100%" stop-color="#ec4899" />
+                                </linearGradient>
+                                <!-- Glow filter -->
+                                <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                                    <feGaussianBlur stdDeviation="3.5" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <filter id="glowSoft" x="-50%" y="-50%" width="200%" height="200%">
+                                    <feGaussianBlur stdDeviation="2" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <!-- Extra strong glow for center dot -->
+                                <filter id="glowStrong" x="-100%" y="-100%" width="300%" height="300%">
+                                    <feGaussianBlur stdDeviation="6" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                                <!--
+                                  HAND GRADIENTS – LOCAL COORDINATE SPACE
+                                  Each hand sits in a <g transform="translate(88,88)">
+                                  so y=0 is the pivot (clock center).
+                                  Negative y = toward 12 o’clock.
+                                -->
+                                <!-- Hour: blue, short (0 → -40), tail at y=6 -->
+                                <linearGradient id="hHand" x1="0" y1="6" x2="0" y2="-40" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="rgba(14,165,233,0)" />
+                                    <stop offset="35%" stop-color="#38bdf8" stop-opacity="0.9" />
+                                    <stop offset="100%" stop-color="#bfdbfe" />
+                                </linearGradient>
+                                <!-- Minute: cyan, medium (0 → -60), tail at y=8 -->
+                                <linearGradient id="mHand" x1="0" y1="8" x2="0" y2="-60" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="rgba(0,220,190,0)" />
+                                    <stop offset="30%" stop-color="#00dcc0" stop-opacity="0.85" />
+                                    <stop offset="100%" stop-color="#10f5d8" />
+                                </linearGradient>
+                                <!-- Second: pale white-teal, long (0 → -68), tail at y=14 -->
+                                <linearGradient id="sHand" x1="0" y1="14" x2="0" y2="-68"
+                                    gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="rgba(200,240,255,0)" />
+                                    <stop offset="50%" stop-color="rgba(180,235,255,0.55)" />
+                                    <stop offset="100%" stop-color="rgba(255,255,255,0.88)" />
+                                </linearGradient>
+                                <!-- Progress ring gradients -->
+                                <linearGradient id="rg-h" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#a855f7" />
+                                    <stop offset="100%" stop-color="#ec4899" />
+                                </linearGradient>
+                                <linearGradient id="rg-m" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#00f5d4" />
+                                    <stop offset="100%" stop-color="#0ea5e9" />
+                                </linearGradient>
+                                <linearGradient id="rg-s" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#ec4899" />
+                                    <stop offset="100%" stop-color="#f97316" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Face bg -->
+                            <circle cx="88" cy="88" r="86" fill="url(#faceBg)" />
+
+                            <!-- Neon rim (glow) -->
+                            <circle cx="88" cy="88" r="84" stroke="url(#rimG)" stroke-width="3" fill="none"
+                                filter="url(#glow)" opacity=".9" />
+                            <!-- Thin inner ring -->
+                            <circle cx="88" cy="88" r="74" stroke="rgba(255,255,255,0.05)" stroke-width="1"
+                                fill="none" />
+
+                            <!-- Major tick marks (hour positions) -->
+                            <g stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-linecap="round">
+                                <line x1="88" y1="6" x2="88" y2="18" /> <!-- 12 -->
+                                <line x1="88" y1="158" x2="88" y2="170" /> <!-- 6 -->
+                                <line x1="6" y1="88" x2="18" y2="88" /> <!-- 9 -->
+                                <line x1="158" y1="88" x2="170" y2="88" /> <!-- 3 -->
+                            </g>
+                            <!-- Medium ticks (2,4,8,10) -->
+                            <g stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round">
+                                <line x1="88" y1="6" x2="88" y2="14" transform="rotate(60,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="14" transform="rotate(120,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="14" transform="rotate(240,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="14" transform="rotate(300,88,88)" />
+                            </g>
+                            <!-- Minor ticks (5-min positions) -->
+                            <g stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-linecap="round">
+                                <line x1="88" y1="6" x2="88" y2="11" transform="rotate(30,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="11" transform="rotate(90,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="11" transform="rotate(150,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="11" transform="rotate(210,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="11" transform="rotate(270,88,88)" />
+                                <line x1="88" y1="6" x2="88" y2="11" transform="rotate(330,88,88)" />
+                            </g>
+
+                            <!-- 60 minute tick marks (JS draws into #minTicks) -->
+                            <g id="minTicks"></g>
+
+                            <!--
+                              HANDS: wrapped in translate(88,88) so local y=0 is clock center.
+                              Each hand is rotated via style.transform='rotate(Xdeg)' in JS.
+                              transform-origin:0 0 pivots around the translate origin = clock center.
+                            -->
+                            <!-- HOUR hand: shortest, thickest, blue gradient -->
+                            <g id="hand-hour">
+                                <line x1="0" y1="6" x2="0" y2="-40" stroke="url(#hHand)" stroke-width="5.5"
+                                    stroke-linecap="round" transform="translate(88,88)" />
+                            </g>
+
+                            <!-- MINUTE hand: medium length, cyan -->
+                            <g id="hand-min">
+                                <line x1="0" y1="8" x2="0" y2="-60" stroke="url(#mHand)" stroke-width="3"
+                                    stroke-linecap="round" transform="translate(88,88)" />
+                            </g>
+
+                            <!-- SECOND hand: longest, lightest -->
+                            <g id="hand-sec">
+                                <line x1="0" y1="14" x2="0" y2="-68" stroke="url(#sHand)" stroke-width="1.2"
+                                    stroke-linecap="round" transform="translate(88,88)" />
+                            </g>
+
+                            <!-- Center dot: 3-layer halo for rực sáng -->
+                            <circle cx="88" cy="88" r="10" fill="rgba(0,230,200,0.18)" />
+                            <circle cx="88" cy="88" r="6.5" fill="rgba(0,220,190,0.6)" filter="url(#glowStrong)" />
+                            <circle cx="88" cy="88" r="3.8" fill="#00dcc0" filter="url(#glow)" />
+                            <circle cx="88" cy="88" r="2" fill="#ffffff" />
+                        </svg>
+                    </div>
+
+                    <!-- Digital time -->
+                    <div class="clock-digital" id="digitalTime">00:00:00</div>
+
+                    <!-- Date line -->
+                    <div class="clock-date" id="clockDate">Thứ Hai, 27 Tháng 2</div>
+
+                    <!-- Circular progress rings -->
+                    <div class="progress-rings">
+
+                        <!-- HOUR ring -->
+                        <div class="ring-wrap">
+                            <div class="ring-num-wrap">
+                                <svg class="ring-svg" viewBox="0 0 50 50">
+                                    <defs>
+                                        <linearGradient id="rg-h" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stop-color="#a855f7" />
+                                            <stop offset="100%" stop-color="#ec4899" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle class="ring-bg" cx="25" cy="25" r="20" />
+                                    <circle id="ring-fill-h" class="ring-fill" cx="25" cy="25" r="20"
+                                        stroke-dasharray="125.66" stroke-dashoffset="125.66" />
+                                </svg>
+                                <span class="ring-inner-val" id="valH">00</span>
+                            </div>
+                            <span class="ring-lbl">HOUR</span>
+                        </div>
+
+                        <!-- MIN ring -->
+                        <div class="ring-wrap">
+                            <div class="ring-num-wrap">
+                                <svg class="ring-svg" viewBox="0 0 50 50">
+                                    <defs>
+                                        <linearGradient id="rg-m" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stop-color="#00f5d4" />
+                                            <stop offset="100%" stop-color="#0ea5e9" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle class="ring-bg" cx="25" cy="25" r="20" />
+                                    <circle id="ring-fill-m" class="ring-fill" cx="25" cy="25" r="20"
+                                        stroke-dasharray="125.66" stroke-dashoffset="125.66" />
+                                </svg>
+                                <span class="ring-inner-val" id="valM">00</span>
+                            </div>
+                            <span class="ring-lbl">MIN</span>
+                        </div>
+
+                        <!-- SEC ring -->
+                        <div class="ring-wrap">
+                            <div class="ring-num-wrap">
+                                <svg class="ring-svg" viewBox="0 0 50 50">
+                                    <defs>
+                                        <linearGradient id="rg-s" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stop-color="#ec4899" />
+                                            <stop offset="100%" stop-color="#f97316" />
+                                        </linearGradient>
+                                    </defs>
+                                    <circle class="ring-bg" cx="25" cy="25" r="20" />
+                                    <circle id="ring-fill-s" class="ring-fill" cx="25" cy="25" r="20"
+                                        stroke-dasharray="125.66" stroke-dashoffset="125.66" />
+                                </svg>
+                                <span class="ring-inner-val" id="valS">00</span>
+                            </div>
+                            <span class="ring-lbl">SEC</span>
+                        </div>
+
+                    </div><!-- /.progress-rings -->
+
+                </div><!-- /.clock-widget -->
+            </div>
+
+            <!-- ── RIGHT: Month picker ── -->
+            <div class="col-months">
+
+                <div class="months-title">Chọn <span>tháng</span> của bạn</div>
+
+                <!-- Year selector -->
+                <div class="year-nav">
+                    <button class="year-nav-btn" id="prevYearBtn" onclick="changeYear(-1)">‹</button>
+                    <span class="year-display" id="yearDisplay">2026</span>
+                    <button class="year-nav-btn" id="nextYearBtn" onclick="changeYear(+1)">›</button>
                 </div>
 
+                <!-- 4×3 month grid -->
+                <div class="month-grid" id="monthGrid"></div>
 
-                <!-- Month bubbles injected by JS -->
             </div>
-        </div>
+        </div><!-- /.mp-content -->
 
-        <p class="mp-hint">Vòng quay dừng khi di chuột &nbsp;·&nbsp; Click để xem lịch chi tiết</p>
-    </div>
+    </div><!-- /#picker-page -->
 
     <script>
-        /* ════════════════════════════════════════════
-           CONFIG & STATE
-        ════════════════════════════════════════════ */
-        const MONTH_NUMS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
-        const SHORT_MON = ['Th.1', 'Th.2', 'Th.3', 'Th.4', 'Th.5', 'Th.6', 'Th.7', 'Th.8', 'Th.9', 'Th.10', 'Th.11', 'Th.12'];
+        /* ============================================================
+           CONSTANTS
+        ============================================================ */
+        const MONTH_NAMES = [
+            'January', 'February', 'March', 'April',
+            'May', 'June', 'July', 'August',
+            'September', 'October', 'November', 'December'
+        ];
+        const WEEKDAYS_VI = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
-        const now = new Date();
-        let year = now.getFullYear();
-        const curM = now.getMonth(); // 0-indexed
+        /* ============================================================
+           CLOCK (ANALOG + DIGITAL + PROGRESS RINGS)
+        ============================================================ */
+        const CIRCUMFERENCE = 2 * Math.PI * 20; // r=20 → 125.66
 
-        /* Orbit parameters */
-        const ORBIT_R = 210;   // px – radius of orbit
-        const BUBBLE_R = 36;    // px – half bubble size (72/2)
-        const DEG_PER_MS = 360 / (22 * 1000); // full revolution in 22 seconds
-
-        let orbitAngle = 0;   // current rotation degrees
-        let lastTs = null;
-        let paused = false;
-        let rafId = null;
-        let bubbles = [];  // DOM nodes
-
-        /* ════════════════════════════════════════════
-           BUILD BUBBLES (appended to .orbit-system, NOT .orbit-ring)
-           Positioned via JS style.transform = translate(x, y)
-           NO element rotation → text ALWAYS upright
-        ════════════════════════════════════════════ */
-        function buildBubbles() {
-            const system = document.getElementById('orbitSystem');
-            // Remove old bubbles
-            system.querySelectorAll('.month-bubble').forEach(b => b.remove());
-            bubbles = [];
-
-            const cx = system.offsetWidth / 2;  // centre of system
-            const cy = system.offsetHeight / 2;
-
-            for (let i = 0; i < 12; i++) {
-                const b = document.createElement('div');
-                b.className = 'month-bubble' + (i === curM ? ' current-month' : '');
-                b.innerHTML = `<span class="mon-num">${MONTH_NUMS[i]}</span><span class="mon-name">${SHORT_MON[i]}</span>`;
-                b.dataset.idx = i;
-
-                // Hover: pause immediately + highlight
-                b.addEventListener('mouseenter', () => {
-                    paused = true;
-                    system.classList.add('is-hovered');
-                });
-                system.addEventListener('mouseleave', () => {
-                    paused = false;
-                    system.classList.remove('is-hovered');
-                    lastTs = null; // reset timestamp so speed stays constant
-                });
-
-                b.addEventListener('click', () => goToCalendar(i + 1));
-
-                system.appendChild(b);
-                bubbles.push({ el: b, initAngle: (i / 12) * 360 }); // evenly spaced start angles
-            }
-
-            positionBubbles(cx, cy);
+        function setRing(id, value, max) {
+            const offset = CIRCUMFERENCE - (value / max) * CIRCUMFERENCE;
+            document.getElementById(id).style.strokeDashoffset = offset;
         }
 
-        function positionBubbles(cx, cy) {
-            bubbles.forEach(({ el, initAngle }) => {
-                const θ = (initAngle + orbitAngle) * (Math.PI / 180);
-                const x = cx + ORBIT_R * Math.cos(θ - Math.PI / 2); // start at top
-                const y = cy + ORBIT_R * Math.sin(θ - Math.PI / 2);
-                // Place bubble so its center is at (x, y) via absolute positioning
-                el.style.left = (x - BUBBLE_R) + 'px';
-                el.style.top = (y - BUBBLE_R) + 'px';
+        /* ── Draw 60 minute tick marks ── */
+        (function drawMinuteTicks() {
+            const ns = 'http://www.w3.org/2000/svg';
+            const grp = document.getElementById('minTicks');
+            const cx = 88, cy = 88, r = 79; // radius of the tick ring (just inside rim)
+            for (let i = 0; i < 60; i++) {
+                const isHour = (i % 5 === 0);
+                const angleDeg = i * 6 - 90; // 0° = 12 o'clock
+                const angleRad = angleDeg * Math.PI / 180;
+                const len = isHour ? 0 : 5;   // hour ticks already drawn; minor tick length
+                const inner = isHour ? 0 : 5;
+                const tickLen = isHour ? 0 : 4;    // skip at hour positions (already have major ticks)
+                if (isHour) continue;
+                const x1 = cx + r * Math.cos(angleRad);
+                const y1 = cy + r * Math.sin(angleRad);
+                const x2 = cx + (r - 4) * Math.cos(angleRad);
+                const y2 = cy + (r - 4) * Math.sin(angleRad);
+                const line = document.createElementNS(ns, 'line');
+                line.setAttribute('x1', x1.toFixed(2));
+                line.setAttribute('y1', y1.toFixed(2));
+                line.setAttribute('x2', x2.toFixed(2));
+                line.setAttribute('y2', y2.toFixed(2));
+                line.setAttribute('stroke', 'rgba(255,255,255,0.18)');
+                line.setAttribute('stroke-width', '0.8');
+                line.setAttribute('stroke-linecap', 'round');
+                grp.appendChild(line);
+            }
+        })();
+
+        function updateClock() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+            const ms = now.getMilliseconds();
+
+            /* ── Analog hands ──
+               <g id="hand-X"> bao <line transform="translate(88,88)"> nên xoay <g>
+               quanh tâm đồng hồ (88,88) bằng SVG attribute rotate(deg, cx, cy).
+               Gradient dùng tọa độ cục bộ (y âm = hướng 12h) → hiển thị đúng. ── */
+            const secDeg = (s + ms / 1000) * 6;
+            const minDeg = (m + (s + ms / 1000) / 60) * 6;
+            const hourDeg = ((h % 12) + m / 60) * 30;
+
+            document.getElementById('hand-hour').setAttribute('transform', `rotate(${hourDeg},88,88)`);
+            document.getElementById('hand-min').setAttribute('transform', `rotate(${minDeg},88,88)`);
+            document.getElementById('hand-sec').setAttribute('transform', `rotate(${secDeg},88,88)`);
+
+            /* ── Digital clock ── */
+            const pad = n => String(n).padStart(2, '0');
+            document.getElementById('digitalTime').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+            /* ── Date label ── */
+            const wd = WEEKDAYS_VI[now.getDay()];
+            const day = now.getDate();
+            const mon = now.getMonth() + 1;
+            document.getElementById('clockDate').textContent = `${wd} - ${day} Tháng ${mon}`;
+
+            /* ── Progress rings ── */
+            setRing('ring-fill-h', h % 12 + m / 60, 12); // 12h cycle
+            setRing('ring-fill-m', m + s / 60, 60);
+            setRing('ring-fill-s', s + ms / 1000, 60);
+
+            document.getElementById('valH').textContent = pad(h);
+            document.getElementById('valM').textContent = pad(m);
+            document.getElementById('valS').textContent = pad(s);
+        }
+
+        setInterval(updateClock, 50);
+        updateClock();
+
+        /* ============================================================
+           MONTH GRID
+        ============================================================ */
+        const realNow = new Date();
+        const realYear = realNow.getFullYear();
+        const realMonth = realNow.getMonth() + 1; // 1-based
+
+        let displayYear = realYear;
+
+        function renderMonthGrid() {
+            const grid = document.getElementById('monthGrid');
+            grid.innerHTML = '';
+            document.getElementById('yearDisplay').textContent = displayYear;
+
+            MONTH_NAMES.forEach((name, i) => {
+                const monthNum = i + 1; // 1-based
+
+                let stateClass = 'future';
+                if (displayYear < realYear || (displayYear === realYear && monthNum < realMonth)) {
+                    stateClass = 'past';
+                } else if (displayYear === realYear && monthNum === realMonth) {
+                    stateClass = 'current';
+                }
+
+                const card = document.createElement('div');
+                card.className = `month-card ${stateClass}`;
+                card.style.animationDelay = `${i * 0.04}s`;
+
+                if (stateClass === 'current') {
+                    const dot = document.createElement('div');
+                    dot.className = 'current-badge';
+                    card.appendChild(dot);
+                }
+
+                const numEl = document.createElement('div');
+                numEl.className = 'month-num';
+                numEl.textContent = MONTH_NAMES[i]; // Hiển thị tên tiếng Anh đầy đủ
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'month-name';
+                nameEl.textContent = `Tháng ${monthNum}`;
+
+                card.appendChild(numEl);
+                card.appendChild(nameEl);
+
+                if (stateClass !== 'past') {
+                    card.addEventListener('click', () => {
+                        navigateTo(`dashboard.html?month=${monthNum}&year=${displayYear}`);
+                    });
+                }
+
+                grid.appendChild(card);
             });
         }
 
-        /* ════════════════════════════════════════════
-           ANIMATION LOOP
-        ════════════════════════════════════════════ */
-        function tick(ts) {
-            if (!paused) {
-                if (lastTs !== null) {
-                    const dt = ts - lastTs;
-                    orbitAngle = (orbitAngle + DEG_PER_MS * dt) % 360;
-                }
-                lastTs = ts;
-            } else {
-                lastTs = null;
-            }
-
-            const system = document.getElementById('orbitSystem');
-            const cx = system.offsetWidth / 2;
-            const cy = system.offsetHeight / 2;
-            positionBubbles(cx, cy);
-
-            rafId = requestAnimationFrame(tick);
-        }
-
-        /* ════════════════════════════════════════════
-           YEAR NAVIGATION
-        ════════════════════════════════════════════ */
         function changeYear(delta) {
-            year += delta;
-            document.getElementById('yearDisplay').textContent = year;
+            displayYear += delta;
+            renderMonthGrid();
         }
 
-        /* Fill today's date in the hub */
-        (function fillTodayDate() {
-            const now = new Date();
-            const dd = String(now.getDate()).padStart(2, '0');
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const yyyy = now.getFullYear();
-            const el = document.getElementById('todayDate');
-            if (el) el.textContent = `Hôm nay là ngày ${dd}/${mm}/${yyyy}`;
-        })();
+        renderMonthGrid();
 
-
-        /* ════════════════════════════════════════════
-           NAVIGATE TO CALENDAR
-        ════════════════════════════════════════════ */
-        function goToCalendar(month) {
-            cancelAnimationFrame(rafId);
+        /* ============================================================
+           NAVIGATION (fade-out transition)
+        ============================================================ */
+        function navigateTo(url) {
             const page = document.getElementById('picker-page');
             page.classList.add('fade-out');
-            setTimeout(() => { window.location.href = `dashboard.html?y=${year}&m=${month}`; }, 580);
+            setTimeout(() => { window.location.href = url; }, 540);
         }
 
-        /* ════════════════════════════════════════════
-           AUTH GUARD + LOGOUT
-        ════════════════════════════════════════════ */
-        (function () {
-            if (!localStorage.getItem('pcn_token')) window.location.href = 'index.html';
-        })();
-
+        /* ============================================================
+           LOGOUT
+        ============================================================ */
         function handleLogout() {
+            localStorage.removeItem('caltdhy_token');
+            localStorage.removeItem('caltdhy_user');
             localStorage.removeItem('pcn_token');
             localStorage.removeItem('pcn_user');
-            window.location.href = 'index.html';
+            sessionStorage.removeItem('caltdhy_token');
+            sessionStorage.removeItem('caltdhy_user');
+            window.location.href = 'welcome.html';
         }
 
-        /* ════════════════════════════════════════════
-           EXPENSE TRACKER  (localStorage)
-        ════════════════════════════════════════════ */
-        function expKey() { return 'caltdhy_expenses'; }
-        function budgetKey() { return 'caltdhy_budget'; }
-
-        function getExpenses() { return JSON.parse(localStorage.getItem(expKey()) || '[]'); }
-        function saveExpenses(arr) { localStorage.setItem(expKey(), JSON.stringify(arr)); }
-        function getBudget() { return parseFloat(localStorage.getItem(budgetKey()) || '0'); }
-        function saveBudget() {
-            const v = parseFloat(document.getElementById('budgetInput').value) || 0;
-            localStorage.setItem(budgetKey(), v);
-            renderExpenses();
-        }
-
-        function openExpModal() {
-            document.getElementById('budgetInput').value = getBudget() || '';
-            // Prefill datetime to now
-            const dtInput = document.getElementById('newTime');
-            const now2 = new Date();
-            now2.setMinutes(now2.getMinutes() - now2.getTimezoneOffset());
-            dtInput.value = now2.toISOString().slice(0, 16);
-            renderExpenses();
-            document.getElementById('expOverlay').classList.remove('hidden');
-        }
-        function closeExpModal() { document.getElementById('expOverlay').classList.add('hidden'); }
-
-        // Close on overlay click
-        document.getElementById('expOverlay').addEventListener('click', function (e) {
-            if (e.target === this) closeExpModal();
-        });
-
-        function addExpense() {
-            const name = document.getElementById('newName').value.trim();
-            const amt = parseFloat(document.getElementById('newAmt').value);
-            const cat = document.getElementById('newCat').value;
-            const time = document.getElementById('newTime').value;
-
-            if (!name || isNaN(amt) || amt <= 0) {
-                alert('Vui lòng nhập tên khoản chi và số tiền hợp lệ.');
-                return;
-            }
-
-            const expenses = getExpenses();
-            expenses.unshift({ id: Date.now(), name, amt, cat, time });
-            saveExpenses(expenses);
-
-            document.getElementById('newName').value = '';
-            document.getElementById('newAmt').value = '';
-            renderExpenses();
-        }
-
-        function deleteExpense(id) {
-            saveExpenses(getExpenses().filter(e => e.id !== id));
-            renderExpenses();
-        }
-
-        function renderExpenses() {
-            const expenses = getExpenses();
-            const budget = getBudget();
-            const total = expenses.reduce((s, e) => s + e.amt, 0);
-            const pct = budget > 0 ? Math.min((total / budget) * 100, 100) : 0;
-
-            document.getElementById('budgetVals').textContent =
-                `${fmtMoney(total)} / ${fmtMoney(budget)} ₫`;
-            document.getElementById('progressFill').style.width = pct + '%';
-
-            const tbody = document.getElementById('expTableBody');
-            const empty = document.getElementById('expEmpty');
-
-            if (expenses.length === 0) {
-                tbody.innerHTML = '';
-                empty.style.display = 'block';
-                return;
-            }
-            empty.style.display = 'none';
-            tbody.innerHTML = expenses.map(e => `
-        <tr>
-            <td>${escHtml(e.name)}</td>
-            <td class="td-amount">${fmtMoney(e.amt)} ₫</td>
-            <td><span class="cat-badge">${escHtml(e.cat)}</span></td>
-            <td>${fmtDateTime(e.time)}</td>
-            <td><button class="btn-del" onclick="deleteExpense(${e.id})" title="Xóa">🗑</button></td>
-        </tr>
-    `).join('');
-        }
-
-        function fmtMoney(n) { return Number(n).toLocaleString('vi-VN'); }
-        function fmtDateTime(s) {
-            if (!s) return '—';
-            const d = new Date(s);
-            return isNaN(d) ? s : d.toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
-        }
-        function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-
-        /* ════════════════════════════════════════════
-           INIT
-        ════════════════════════════════════════════ */
+        /* ============================================================
+           PAGE ENTRANCE ANIMATION
+        ============================================================ */
         window.addEventListener('load', () => {
-            document.getElementById('yearDisplay').textContent = year;
-            buildBubbles();
-            rafId = requestAnimationFrame(tick);
-
-            // Entrance fade-in
             const page = document.getElementById('picker-page');
             page.style.opacity = '0';
-            page.style.transform = 'scale(0.97)';
-            page.style.transition = 'opacity .5s ease, transform .5s ease';
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                page.style.opacity = '1';
-                page.style.transform = 'scale(1)';
-            }));
+            page.style.transform = 'translateY(10px)';
+            page.style.transition = 'opacity .55s ease, transform .55s ease';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    page.style.opacity = '1';
+                    page.style.transform = 'translateY(0)';
+                });
+            });
         });
-
-        window.addEventListener('resize', () => { buildBubbles(); });
     </script>
+
 </body>
 
 </html>
