@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CaltDHy – Tuần chi tiêu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        /* ── RESET ── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Times New Roman', Times, serif;
+            background: #021108;
+            color: #e0ffe0;
+            overflow-x: hidden;
+        }
+
+        body {
+            background:
+                radial-gradient(ellipse at 5% 10%, rgba(0, 130, 60, .38) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 90%, rgba(0, 90, 40, .42) 0%, transparent 50%),
+                #021108;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══════════════════════════════
+           HEADER
+        ══════════════════════════════ */
+        .wk-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 56px;
+            background: rgba(0, 20, 10, .82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 200, 90, .18);
+            flex-shrink: 0;
+            gap: 16px;
+        }
+
+        /* Left cluster: logo + daily limit */
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 1px;
+            flex-shrink: 0;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .logo-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00dcc0 0%, #00a855 60%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: .5px;
+        }
+
+        .daily-limit-text {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11px;
+            color: rgba(74, 222, 128, .5);
+            padding-left: 25px;
+            letter-spacing: .2px;
+        }
+
+        /* Center: page title + month label */
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .header-page-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #4ade80;
+            white-space: nowrap;
+        }
+
+        .header-month-label {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            color: rgba(255, 255, 255, .45);
+            font-weight: 400;
+        }
+
+        /* Right: buttons */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .hdr-btn {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(74, 222, 128, .28);
+            background: rgba(0, 100, 50, .14);
+            color: rgba(74, 222, 128, .8);
+            cursor: pointer;
+            transition: all .18s;
+            letter-spacing: .2px;
+        }
+
+        .hdr-btn:hover {
+            background: rgba(0, 160, 80, .22);
+            border-color: rgba(74, 222, 128, .55);
+            color: #4ade80;
+        }
+
+        .hdr-btn.logout {
+            border-color: rgba(255, 255, 255, .14);
+            background: rgba(255, 255, 255, .05);
+            color: rgba(255, 255, 255, .55);
+        }
+
+        .hdr-btn.logout:hover {
+            border-color: rgba(255, 80, 100, .45);
+            color: #ff6080;
+            background: rgba(255, 80, 100, .1);
+        }
+
+        /* ══════════════════════════════
+           MAIN
+        ══════════════════════════════ */
+        .wk-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 20px 24px;
+            gap: 22px;
+        }
+
+        /* Section heading */
+        .section-heading {
+            text-align: center;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(20px, 3vw, 32px);
+            font-weight: 700;
+            color: rgba(74, 222, 128, .75);
+            letter-spacing: .5px;
+            text-transform: uppercase;
+        }
+
+        /* ══════════════════════════════
+           WEEK CARDS ROW
+        ══════════════════════════════ */
+        .weeks-row {
+            display: flex;
+            gap: 14px;
+            align-items: stretch;
+            /* Fill full width */
+            flex: 1;
+        }
+
+        /* Each card stretches equally */
+        .week-card {
+            flex: 1;
+            min-width: 0;
+            background: linear-gradient(160deg, rgba(0, 60, 30, .70) 0%, rgba(0, 40, 20, .80) 100%);
+            border: 1.5px solid rgba(0, 190, 90, .22);
+            border-radius: 18px;
+            padding: 22px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), box-shadow .3s ease, border-color .25s;
+        }
+
+        .week-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2.5px;
+            background: linear-gradient(90deg, #00c864 0%, #34d399 100%);
+            border-radius: 18px 18px 0 0;
+            opacity: .45;
+            transition: opacity .25s;
+        }
+
+        .week-card.current-week {
+            border-color: rgba(74, 222, 128, .6);
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, .2), 0 8px 36px rgba(0, 180, 80, .22);
+        }
+
+        .week-card.current-week::before {
+            opacity: 1;
+        }
+
+        /* Hover: hovered scales UP, others dim */
+        .weeks-row:hover .week-card:not(:hover) {
+            transform: scale(.94);
+            opacity: .72;
+        }
+
+        .weeks-row .week-card:hover {
+            transform: scale(1.04) !important;
+            opacity: 1 !important;
+            border-color: rgba(74, 222, 128, .65);
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, .25), 0 14px 48px rgba(0, 200, 90, .28);
+            z-index: 2;
+        }
+
+        .week-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Card contents */
+        .wc-label {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(16px, 1.8vw, 22px);
+            font-weight: 700;
+            color: rgba(255, 255, 255, .9);
+        }
+
+        .week-card.current-week .wc-label {
+            color: #4ade80;
+        }
+
+        .wc-current-badge {
+            display: inline-block;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: #4ade80;
+            background: rgba(74, 222, 128, .12);
+            border: 1px solid rgba(74, 222, 128, .3);
+            border-radius: 20px;
+            padding: 3px 9px;
+            width: fit-content;
+        }
+
+        .wc-dates {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(11px, 1.1vw, 13px);
+            color: rgba(255, 255, 255, .45);
+        }
+
+        .wc-divider {
+            height: 1px;
+            background: rgba(0, 200, 90, .12);
+        }
+
+        /* Category list */
+        .wc-cats {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .wc-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wc-cat-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #34d399;
+            flex-shrink: 0;
+        }
+
+        .wc-cat-name {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(11px, 1.1vw, 13px);
+            color: rgba(255, 255, 255, .55);
+            flex: 1;
+        }
+
+        .wc-cat-val {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(11px, 1.1vw, 13px);
+            font-weight: 600;
+            color: rgba(74, 222, 128, .65);
+        }
+
+        /* Total row */
+        .wc-total-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 200, 90, .13);
+            margin-top: auto;
+        }
+
+        .wc-total-lbl {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, .28);
+        }
+
+        .wc-total-val {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: clamp(14px, 1.5vw, 18px);
+            font-weight: 700;
+            color: #4ade80;
+        }
+
+        .wc-total-val.zero {
+            color: rgba(255, 255, 255, .18);
+            font-size: clamp(12px, 1.2vw, 15px);
+        }
+
+        /* ══════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════ */
+        @media (max-width: 900px) {
+            .weeks-row {
+                flex-wrap: wrap;
+            }
+
+            .week-card {
+                flex: 0 0 calc(50% - 7px);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .week-card {
+                flex: 0 0 100%;
+            }
+
+            .header-center {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══ HEADER ══ -->
+    <header class="wk-header">
+
+        <!-- Left: Logo + Daily limit -->
+        <div class="header-left">
+            <div class="logo-row">
+                <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
+                    <defs>
+                        <linearGradient id="wklg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#00dcc0" />
+                            <stop offset="100%" stop-color="#00a855" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="16" cy="16" r="13" stroke="url(#wklg)" stroke-width="2" fill="none" />
+                    <line x1="16" y1="16" x2="16" y2="8" stroke="url(#wklg)" stroke-width="2.2"
+                        stroke-linecap="round" />
+                    <line x1="16" y1="16" x2="22" y2="19" stroke="url(#wklg)" stroke-width="1.8" stroke-linecap="round"
+                        opacity=".8" />
+                    <circle cx="16" cy="16" r="2" fill="url(#wklg)" />
+                </svg>
+                <span class="logo-text">CaltDHy</span>
+            </div>
+            <div class="daily-limit-text" id="limitText">Hạn mức ngày: —</div>
+        </div>
+
+        <!-- Center: Title + Month -->
+        <div class="header-center">
+            <span class="header-page-title">📅 Tuần chi tiêu</span>
+            <span class="header-month-label" id="hdrMonthLabel">Tháng 3 / 2026</span>
+        </div>
+
+        <!-- Right: Buttons -->
+        <div class="header-right">
+            <button class="hdr-btn" id="backBtn">← Quay lại</button>
+            <button class="hdr-btn logout" onclick="handleLogout()">Đăng xuất</button>
+        </div>
+
+    </header>
+
+    <!-- ══ MAIN ══ -->
+    <main class="wk-main">
+        <h1 class="section-heading" id="sectionHeading">Các tuần trong tháng 3 năm 2026</h1>
+        <div class="weeks-row" id="weeksRow">
+            <!-- JS renders cards here -->
+        </div>
+    </main>
+
+    <script>
+        /* ── URL PARAMS ── */
+        const params = new URLSearchParams(window.location.search);
+        const month = parseInt(params.get('month')) || new Date().getMonth() + 1;
+        const year = parseInt(params.get('year')) || new Date().getFullYear();
+
+        const MONTH_NAMES_VI = [
+            'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+        ];
+        const DOW_SHORT = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        const CAT_KEYS = ['food', 'gas', 'coffee', 'misc'];
+        const CAT_NAMES = ['Ăn uống', 'Xăng xe', 'Cà phê', 'Linh tinh'];
+
+        function numFmt(n) {
+            if (!n || n <= 0) return '0 ₫';
+            return Number(n).toLocaleString('vi-VN') + ' ₫';
+        }
+
+        /* ── BUILD WEEKS ── */
+        function buildWeeks(y, m) {
+            const totalDays = new Date(y, m, 0).getDate();
+            const weeks = [];
+            let wn = 1, d = 1;
+            while (d <= totalDays) {
+                const start = new Date(y, m - 1, d);
+                let endD = d;
+                while (endD < totalDays) {
+                    const next = new Date(y, m - 1, endD + 1);
+                    if (next.getDay() === 0) break; // stop before Sunday
+                    endD++;
+                }
+                const end = new Date(y, m - 1, endD);
+                const days = [];
+                for (let i = d; i <= endD; i++) days.push(i);
+                weeks.push({ wn, start, end, days });
+                wn++;
+                d = endD + 1;
+            }
+            return weeks;
+        }
+
+        /* ── LOCALSTORAGE ── */
+        function dayKey(y, m, d) {
+            return `caltdhy_daily_${y}_${String(m).padStart(2, '0')}_${String(d).padStart(2, '0')}`;
+        }
+
+        function loadDay(d) {
+            try { return JSON.parse(localStorage.getItem(dayKey(year, month, d))) || {}; }
+            catch { return {}; }
+        }
+
+        function weekCatTotals(days) {
+            const t = { food: 0, gas: 0, coffee: 0, misc: 0 };
+            days.forEach(d => {
+                const r = loadDay(d);
+                CAT_KEYS.forEach(k => { t[k] += parseFloat(r[k]) || 0; });
+            });
+            return t;
+        }
+
+        function getDailyLimit() {
+            return parseFloat(localStorage.getItem('caltdhy_budget_daily')) || 0;
+        }
+
+        /* ── CURRENT WEEK ── */
+        function currentWeekIdx(weeks) {
+            const today = new Date();
+            if (today.getFullYear() !== year || today.getMonth() + 1 !== month) return -1;
+            return weeks.findIndex(w => w.days.includes(today.getDate()));
+        }
+
+        /* ── RENDER ── */
+        function render() {
+            // Update header labels
+            document.getElementById('hdrMonthLabel').textContent = `${MONTH_NAMES_VI[month - 1]} / ${year}`;
+            document.getElementById('sectionHeading').textContent =
+                `Các tuần trong ${MONTH_NAMES_VI[month - 1].toLowerCase()} năm ${year}`;
+            document.title = `CaltDHy – ${MONTH_NAMES_VI[month - 1]} ${year}`;
+
+            const limit = getDailyLimit();
+            document.getElementById('limitText').textContent =
+                limit > 0
+                    ? `Hạn mức ngày: ${numFmt(limit)}`
+                    : 'Hạn mức ngày: Chưa đặt';
+
+            const weeks = buildWeeks(year, month);
+            const curIdx = currentWeekIdx(weeks);
+            const row = document.getElementById('weeksRow');
+            row.innerHTML = '';
+
+            weeks.forEach((wk, idx) => {
+                const cats = weekCatTotals(wk.days);
+                const total = CAT_KEYS.reduce((s, k) => s + cats[k], 0);
+                const isCur = idx === curIdx;
+
+                const startFmt = `${DOW_SHORT[wk.start.getDay()]} ${wk.start.getDate()}`;
+                const endFmt = `${DOW_SHORT[wk.end.getDay()]} ${wk.end.getDate()}/${String(month).padStart(2, '0')}`;
+
+                const card = document.createElement('div');
+                card.className = 'week-card' + (isCur ? ' current-week' : '');
+
+                card.innerHTML = `
+                    <div class="wc-label">Tuần ${wk.wn}</div>
+                    ${isCur ? '<div class="wc-current-badge">Tuần này</div>' : ''}
+                    <div class="wc-dates">${startFmt} – ${endFmt}</div>
+                    <div class="wc-divider"></div>
+                    <div class="wc-cats">
+                        ${CAT_KEYS.map((k, i) => `
+                            <div class="wc-cat-row">
+                                <span class="wc-cat-dot"></span>
+                                <span class="wc-cat-name">${CAT_NAMES[i]}:</span>
+                                <span class="wc-cat-val">${cats[k] > 0 ? numFmt(cats[k]) : '–'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="wc-total-row">
+                        <span class="wc-total-lbl">Tổng</span>
+                        <span class="wc-total-val${total === 0 ? ' zero' : ''}">${numFmt(total)}</span>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    window.location.href =
+                        `spending_daily.html?week=${wk.wn}&month=${month}&year=${year}&startDay=${wk.days[0]}&endDay=${wk.days[wk.days.length - 1]}`;
+                });
+
+                row.appendChild(card);
+            });
+        }
+
+        /* ── NAVIGATION ── */
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = `spending-detail.html`;
+        });
+
+        function handleLogout() {
+            ['caltdhy_token', 'caltdhy_user', 'pcn_token', 'pcn_user'].forEach(k => localStorage.removeItem(k));
+            ['caltdhy_token', 'caltdhy_user'].forEach(k => sessionStorage.removeItem(k));
+            window.location.href = 'welcome.html';
+        }
+
+        render();
+    </script>
+
+</body>
+
+</html>

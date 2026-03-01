@@ -1131,6 +1131,118 @@
         #miniCalc.monthly-mode .calc-btn.eq:hover {
             background: rgba(52, 211, 153, .38);
         }
+
+        /* ============================================================
+           RESPONSIVE – MOBILE (max-width: 768px)
+        ============================================================ */
+        @media screen and (max-width: 768px) {
+
+            html,
+            body {
+                overflow: auto;
+            }
+
+            body {
+                flex-direction: column;
+            }
+
+            #spending-page {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            /* ── Sidebar becomes a top-bar ── */
+            .sp-sidebar {
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 16px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, .08);
+                gap: 10px;
+                height: auto;
+                flex-wrap: wrap;
+            }
+
+            .sidebar-logo {
+                margin-bottom: 0;
+                align-self: center;
+            }
+
+            .clock-widget {
+                display: none;
+            }
+
+            /* ── Navbar ── */
+            .sp-navbar {
+                padding: 0 14px;
+                height: auto;
+                min-height: 50px;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .nav-tab {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+
+            .nav-logout {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+
+            /* ── Main area ── */
+            .sp-main {
+                flex-direction: column;
+                padding: 16px 14px;
+                gap: 16px;
+                overflow-y: auto;
+            }
+
+            .exp-card {
+                min-height: auto;
+                padding: 18px 14px;
+            }
+
+            .exp-card-title {
+                font-size: 15px;
+            }
+
+            .exp-summary-total {
+                font-size: 14px;
+            }
+
+            /* ── Mini calc positioning on mobile ── */
+            #miniCalc {
+                width: calc(100vw - 32px);
+                left: 16px !important;
+                right: 16px !important;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .sp-sidebar {
+                padding: 8px 12px;
+            }
+
+            .exp-item-name {
+                font-size: 12px;
+            }
+
+            .exp-item-sub {
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 
@@ -1418,7 +1530,7 @@
                         </li>
                     </ul>
 
-                    <button class="exp-add-btn">＋ Thêm khoản chi</button>
+                    <button class="exp-add-btn" id="longAddBtn">＋ Thêm khoản chi</button>
 
                     <div class="exp-summary">
                         <span class="exp-summary-label">Tổng cộng</span>
@@ -1483,6 +1595,58 @@
         </div><!-- /.sp-right -->
 
     </div><!-- /#spending-page -->
+
+    <!-- ══ CUSTOM MODAL (Add item) ══ -->
+    <div id="addItemModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-title">💰 Thêm khoản chi</div>
+            <input class="modal-input" id="modalItemName" type="text" placeholder="Tên khoản chi (VD: Khám sức khỏe)"
+                maxlength="60" />
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Hủy</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ MINI CALCULATOR ══ -->
+    <div id="miniCalc">
+        <div id="calcDisplay">
+            <span class="calc-expr" id="calcExpr"></span>
+            <span id="calcVal">0</span>
+        </div>
+        <div class="calc-grid">
+            <button class="calc-btn clr" data-action="clr">CLR</button>
+            <button class="calc-btn" data-action="del">⌫</button>
+            <button class="calc-btn op" data-action="op" data-v="%">%</button>
+            <button class="calc-btn op" data-action="op" data-v="/">÷</button>
+            <button class="calc-btn" data-action="num" data-v="7">7</button>
+            <button class="calc-btn" data-action="num" data-v="8">8</button>
+            <button class="calc-btn" data-action="num" data-v="9">9</button>
+            <button class="calc-btn op" data-action="op" data-v="*">×</button>
+            <button class="calc-btn" data-action="num" data-v="4">4</button>
+            <button class="calc-btn" data-action="num" data-v="5">5</button>
+            <button class="calc-btn" data-action="num" data-v="6">6</button>
+            <button class="calc-btn op" data-action="op" data-v="-">−</button>
+            <button class="calc-btn" data-action="num" data-v="1">1</button>
+            <button class="calc-btn" data-action="num" data-v="2">2</button>
+            <button class="calc-btn" data-action="num" data-v="3">3</button>
+            <button class="calc-btn op" data-action="op" data-v="+">+</button>
+            <button class="calc-btn" data-action="num" data-v="0">0</button>
+            <button class="calc-btn" data-action="num" data-v=".">,</button>
+            <button class="calc-btn eq" data-action="eq">= Enter</button>
+        </div>
+        <div class="calc-confirm-row">
+            <span class="calc-enter-hint">Enter → xác nhận • Esc → hủy</span>
+        </div>
+    </div>
+
+    <!-- ══ NOTE POPOVER ══ -->
+    <div id="notePopover">
+        <div class="note-pop-title">Ghi chú 📌</div>
+        <textarea id="noteTextarea" placeholder="VD: Tháng 2 nộp 3.000.000đ | Tháng 3 nộp 4.500.000đ..."></textarea>
+        <div class="note-pop-foot">Tự lưu khi đóng • Click ra ngoài để đóng</div>
+    </div>
 
     <script>
         /* ============================================================
@@ -1936,62 +2100,6 @@
             }));
         });
     </script>
-
-    <!-- ══ CUSTOM MODAL (Add item) ══ -->
-    <div id="addItemModal" class="modal-overlay" role="dialog" aria-modal="true">
-        <div class="modal-box" id="modalBox">
-            <div class="modal-title">💰 Thêm khoản chi</div>
-            <input class="modal-input" id="modalItemName" type="text" placeholder="Tên khoản chi (VD: Khám sức khỏe)"
-                maxlength="60" />
-            <div class="modal-actions">
-                <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Hủy</button>
-                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Xác nhận</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ══ MINI CALCULATOR ══ -->
-    <div id="miniCalc">
-        <div id="calcDisplay">
-            <span class="calc-expr" id="calcExpr"></span>
-            <span id="calcVal">0</span>
-        </div>
-        <div class="calc-grid">
-            <button class="calc-btn clr" data-action="clr">CLR</button>
-            <button class="calc-btn" data-action="del">⌫</button>
-            <button class="calc-btn op" data-action="op" data-v="%">%</button>
-            <button class="calc-btn op" data-action="op" data-v="/">÷</button>
-
-            <button class="calc-btn" data-action="num" data-v="7">7</button>
-            <button class="calc-btn" data-action="num" data-v="8">8</button>
-            <button class="calc-btn" data-action="num" data-v="9">9</button>
-            <button class="calc-btn op" data-action="op" data-v="*">×</button>
-
-            <button class="calc-btn" data-action="num" data-v="4">4</button>
-            <button class="calc-btn" data-action="num" data-v="5">5</button>
-            <button class="calc-btn" data-action="num" data-v="6">6</button>
-            <button class="calc-btn op" data-action="op" data-v="-">−</button>
-
-            <button class="calc-btn" data-action="num" data-v="1">1</button>
-            <button class="calc-btn" data-action="num" data-v="2">2</button>
-            <button class="calc-btn" data-action="num" data-v="3">3</button>
-            <button class="calc-btn op" data-action="op" data-v="+">+</button>
-
-            <button class="calc-btn" data-action="num" data-v="0">0</button>
-            <button class="calc-btn" data-action="num" data-v=".">,</button>
-            <button class="calc-btn eq" data-action="eq">= Enter</button>
-        </div>
-        <div class="calc-confirm-row">
-            <span class="calc-enter-hint">Enter → xác nhận • Esc → hủy</span>
-        </div>
-    </div>
-
-    <!-- ══ NOTE POPOVER ══ -->
-    <div id="notePopover">
-        <div class="note-pop-title">Ghi chú 📌</div>
-        <textarea id="noteTextarea" placeholder="VD: Tháng 2 nộp 3.000.000đ | Tháng 3 nộp 4.500.000đ..."></textarea>
-        <div class="note-pop-foot">Tự lưu khi đóng • Click ra ngoài để đóng</div>
-    </div>
 
 </body>
 
