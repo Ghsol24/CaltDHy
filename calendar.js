@@ -36,28 +36,23 @@ if (userStr) {
 let currentDate = window.currentDate;
 let editingEventId = null;
 let currentDayDetailDate = null; // ngày đang mở trong Day Detail Popup
-
-
 // =============================================
-// localStorage helpers
+// API HELPERS (ĐÃ NÂNG CẤP LÊN MONGODB BỞI AI)
 // =============================================
-function getStorageKey() {
-    return `pcn_events_${currentUser ? currentUser.id : 'guest'}`;
-}
+const API_BASE = 'https://caltdhy.onrender.com/api/events';
 
-function getAllEvents() {
-    return JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+async function fetchEventsFromServer(year, month) {
+    try {
+        const res = await fetch(`${API_BASE}?year=${year}&month=${month}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        return data.success ? data.data : [];
+    } catch (err) {
+        console.error("Lỗi lấy lịch trình từ server:", err);
+        return [];
+    }
 }
-
-function saveAllEvents(events) {
-    localStorage.setItem(getStorageKey(), JSON.stringify(events));
-}
-
-function getEventsForMonth(year, month) {
-    const prefix = `${year}-${String(month).padStart(2, '0')}`;
-    return getAllEvents().filter(e => e.date && e.date.startsWith(prefix));
-}
-
 // =============================================
 // Toast
 // =============================================
@@ -302,20 +297,25 @@ function createEventPill(evt) {
     return pill;
 }
 
-function loadCalendar() {
-    document.getElementById('calendarLoading').style.display = 'flex';
-    document.getElementById('calendarWrapper').style.display = 'none';
+// ---- Cập nhật hàm Load Lịch sang bản ASYNC (MỚI) ----
+async function loadCalendar() {
+    const loadingEl = document.getElementById('calendarLoading');
+    const wrapperEl = document.getElementById('calendarWrapper');
+
+    if (loadingEl) loadingEl.style.display = 'flex';
+    if (wrapperEl) wrapperEl.style.display = 'none';
 
     updateMonthTitle();
 
-    const events = getEventsForMonth(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1
-    );
+    // Triệu hồi dữ liệu từ Server Render thay vì localStorage
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const events = await fetchEventsFromServer(year, month);
+
     renderCalendar(events);
 
-    document.getElementById('calendarLoading').style.display = 'none';
-    document.getElementById('calendarWrapper').style.display = 'block';
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (wrapperEl) wrapperEl.style.display = 'block';
 }
 
 // =============================================
@@ -630,84 +630,59 @@ function getSelectedColor() {
 }
 
 // ---- Lưu (Thêm hoặc Sửa) ----
-function handleSaveEvent() {
-    const title = document.getElementById('eventTitle').value.trim();
-    const date = document.getElementById('eventDate').value;
-    const startTime = document.getElementById('eventStart').value;
-    const endTime = document.getElementById('eventEnd').value;
-    const description = document.getElementById('eventDesc').value.trim();
-    const color = getSelectedColor();
-    const notifyEl = document.getElementById('notifyToggle');
-    const notify = notifyEl ? notifyEl.checked : false;
+async function handleSaveEvent() {// --- ĐOẠN CODE LƯU LỊCH TRÌNH LÊN MONGODB (MỚI) ---
+    const eventData = { title, date, startTime, endTime, description, color, notify };
+    const url = editingEventId ? `${API_BASE}/${editingEventId}` : API_BASE;
+    const method = editingEventId ? 'PUT' : 'POST';
 
-    if (!title) { showModalError('Vui lòng nhập tên công việc.'); return; }
-    if (!date) { showModalError('Vui lòng chọn ngày.'); return; }
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(eventData)
+        });
+        const result = await res.json();
 
-    // Request notification permission if user enabled notify
-    if (notify) requestNotificationPermission();
-
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.disabled = true;
-    saveBtn.textContent = '⏳ Đang lưu...';
-
-    const events = getAllEvents();
-
-    if (editingEventId) {
-        // Sửa – giữ nguyên status & notified
-        const idx = events.findIndex(e => e.id === editingEventId);
-        if (idx !== -1) {
-            events[idx] = {
-                ...events[idx],
-                title, date, startTime, endTime, description, color,
-                notify,
-                notified: false // reset so notification fires again
-            };
+        if (result.success) {
+            showToast(editingEventId ? '✅ Đã cập nhật lịch!' : '✅ Đã thêm lịch trình!', 'success');
+            closeModal();
+            loadCalendar(); // Load lại để đồng bộ ID từ Database
+        } else {
+            showModalError(result.message || 'Lỗi khi lưu dữ liệu.');
         }
-        saveAllEvents(events);
-        showToast('✅ Đã cập nhật lịch trình!', 'success');
-    } else {
-        // Thêm mới
-        const newEvent = {
-            id: 'evt_' + Date.now(),
-            title, date, startTime, endTime, description, color,
-            notify,
-            status: '',
-            notified: false
-        };
-        events.push(newEvent);
-        saveAllEvents(events);
-        showToast('✅ Đã thêm lịch trình!', 'success');
-    }
-
-    saveBtn.disabled = false;
-    saveBtn.textContent = '💾 Lưu';
-    closeModal();
-    loadCalendar();
-
-    // Nếu Day Detail Popup đang mở đúng ngày này → refresh
-    if (currentDayDetailDate === date) {
-        renderDayDetailBody(date);
+    } catch (err) {
+        showModalError('Không thể kết nối server Render.');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Lưu';
     }
 }
 
 // ---- Xóa ----
-function handleDeleteEvent() {
+async function handleDeleteEvent() {
     if (!editingEventId) return;
     if (!confirm('Bạn có chắc muốn xóa lịch trình này không?')) return;
 
-    const events = getAllEvents().filter(e => e.id !== editingEventId);
-    saveAllEvents(events);
+    try {
+        const res = await fetch(`${API_BASE}/${editingEventId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await res.json();
 
-    showToast('🗑 Đã xóa lịch trình!');
-    closeModal();
-    loadCalendar();
-
-    // Nếu Day Detail đang mở → refresh
-    if (currentDayDetailDate) {
-        renderDayDetailBody(currentDayDetailDate);
+        if (result.success) {
+            showToast('🗑 Đã xóa khỏi hệ thống!');
+            closeModal();
+            loadCalendar();
+            if (currentDayDetailDate) renderDayDetailBody(currentDayDetailDate);
+        }
+    } catch (err) {
+        showToast('Lỗi khi xóa dữ liệu!', 'error');
     }
 }
-
 function showModalError(message) {
     const err = document.getElementById('modalError');
     err.textContent = message;
