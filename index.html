@@ -1,244 +1,1060 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CaltDHy – Quản lý lịch trình cá nhân</title>
-    <meta name="description" content="CaltDHy – Quản lý lịch trình cá nhân thông minh." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-    <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CaltDHy – Expense Management System</title>
+  <meta name="description" content="CaltDHy – Industrial-grade personal expense management. Track, analyse, and command your finances." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- ANTI-FOUC: apply saved theme before first paint -->
+  <script src="theme-manager.js"></script>
+
+  <style>
+    /* ============================================================
+       DESIGN TOKEN SYSTEM — Industrial Skeuomorphism
+       ============================================================ */
+    :root {
+      --chassis:        #e0e5ec;
+      --panel:          #f0f2f5;
+      --recessed:       #d1d9e6;
+      --text-primary:   #2d3436;
+      --text-muted:     #4a5568;
+      --accent:         #ff4757;
+      --accent-dark:    #a6323c;
+      --accent-glow:    rgba(255, 71, 87, 0.35);
+      --border-shadow:  #babecc;
+      --border-light:   #ffffff;
+      --led-green:      #00e676;
+      --led-glow:       rgba(0, 230, 118, 0.5);
+
+      /* Neumorphic shadow recipes */
+      --shadow-card:     8px 8px 16px var(--border-shadow), -8px -8px 16px var(--border-light);
+      --shadow-float:    12px 12px 24px var(--border-shadow), -12px -12px 24px var(--border-light), inset 1px 1px 0 rgba(255,255,255,0.5);
+      --shadow-pressed:  inset 6px 6px 12px var(--border-shadow), inset -6px -6px 12px var(--border-light);
+      --shadow-accent:   4px 4px 8px rgba(166,50,60,0.4), -4px -4px 8px rgba(255,100,110,0.4);
+
+      /* Radii */
+      --r-md:  8px;
+      --r-lg:  16px;
+      --r-xl:  24px;
+      --r-full: 9999px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* NO SCROLLING — single viewport lock */
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--chassis);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    /* ============================================================
+       BACKGROUND GRAIN TEXTURE (subtle industrial feel)
+       ============================================================ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' x='0' y='0' fill='rgba(0,0,0,0.03)'/%3E%3Crect width='1' height='1' x='2' y='2' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============================================================
+       HEADER STATUS BAR
+       ============================================================ */
+    .status-bar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--panel);
+      border-radius: var(--r-full);
+      padding: 8px 20px;
+      box-shadow: var(--shadow-card);
+      z-index: 10;
+    }
+
+    .led {
+      width: 9px;
+      height: 9px;
+      border-radius: var(--r-full);
+      background: var(--led-green);
+      box-shadow: 0 0 6px 2px var(--led-glow);
+      animation: ledPulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes ledPulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px 2px var(--led-glow); }
+      50%       { opacity: 0.55; box-shadow: 0 0 3px 1px var(--led-glow); }
+    }
+
+    .status-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .status-divider {
+      width: 1px;
+      height: 14px;
+      background: var(--border-shadow);
+    }
+
+    .status-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--border-shadow);
+      letter-spacing: 0.08em;
+    }
+
+    /* ============================================================
+       CORNER SCREWS (signature detail)
+       ============================================================ */
+    .screw {
+      position: fixed;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
+      box-shadow: 1px 1px 2px rgba(0,0,0,0.25), inset 1px 1px 1px rgba(255,255,255,0.5);
+      z-index: 5;
+    }
+    .screw::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%) rotate(45deg);
+      width: 8px; height: 1.5px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 1px;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+    }
+    .screw-tl { top: 16px; left: 16px; }
+    .screw-tr { top: 16px; right: 16px; }
+    .screw-bl { bottom: 16px; left: 16px; }
+    .screw-br { bottom: 16px; right: 16px; }
+
+    /* ============================================================
+       MAIN HERO LAYOUT
+       ============================================================ */
+    .hero-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1152px;
+      padding: 0 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 64px;
+    }
+
+    /* ============================================================
+       LEFT — CONTENT PANEL
+       ============================================================ */
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .brand-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .brand-name {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(44px, 5.5vw, 72px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+
+    .brand-name span {
+      color: var(--accent);
+    }
+
+    .brand-tagline {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 420px;
+    }
+
+    /* ============================================================
+       METRIC BADGES
+       ============================================================ */
+    .metric-strip {
+      display: flex;
+      gap: 12px;
+    }
+
+    .metric-badge {
+      background: var(--panel);
+      border-radius: var(--r-md);
+      padding: 10px 16px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .metric-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ============================================================
+       VENT SLOTS (decorative industrial detail)
+       ============================================================ */
+    .vent-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .vent-slot {
+      height: 3px;
+      border-radius: 2px;
+      background: var(--recessed);
+      box-shadow: inset 1px 1px 2px var(--border-shadow), inset -1px -1px 2px var(--border-light);
+    }
+
+    .vent-slot:nth-child(1) { width: 60px; }
+    .vent-slot:nth-child(2) { width: 48px; }
+    .vent-slot:nth-child(3) { width: 36px; }
+
+    /* ============================================================
+       CALL-TO-ACTION BUTTONS
+       ============================================================ */
+    .cta-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Primary — LOG IN — Safety Orange */
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 40px;
+      background: var(--accent);
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--r-md);
+      box-shadow: var(--shadow-accent);
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+      border-radius: inherit;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 6px 6px 12px rgba(166,50,60,0.5), -6px -6px 12px rgba(255,120,130,0.5);
+    }
+
+    .btn-login:active {
+      transform: translateY(2px);
+      box-shadow: var(--shadow-pressed);
+    }
+
+    /* Secondary — SIGN UP — Chassis */
+    .btn-signup {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 40px;
+      background: var(--chassis);
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--r-md);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .btn-signup:hover {
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-signup:active {
+      transform: translateY(2px);
+      box-shadow: var(--shadow-pressed);
+    }
+
+    /* ============================================================
+       RIGHT — CSS 3D DEVICE MOCKUP
+       ============================================================ */
+    .device-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .device-bezel {
+      width: 100%;
+      max-width: 420px;
+      aspect-ratio: 4/3;
+      background: var(--panel);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-float);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+    }
+
+    /* Device top bar */
+    .device-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .device-dots {
+      display: flex;
+      gap: 7px;
+    }
+
+    .device-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      box-shadow: inset 1px 1px 2px rgba(255,255,255,0.6), inset -1px -1px 2px rgba(0,0,0,0.1);
+    }
+
+    .device-dot.red    { background: #ff5f56; }
+    .device-dot.yellow { background: #ffbd2e; }
+    .device-dot.green  { background: #27c93f; }
+
+    .device-title-bar {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      background: var(--recessed);
+      padding: 4px 12px;
+      border-radius: var(--r-full);
+      box-shadow: var(--shadow-pressed);
+    }
+
+    .device-signal {
+      display: flex;
+      gap: 3px;
+      align-items: flex-end;
+    }
+
+    .signal-bar {
+      width: 4px;
+      background: var(--text-muted);
+      border-radius: 2px;
+      opacity: 0.4;
+    }
+
+    .signal-bar:nth-child(1) { height: 5px;  opacity: 1; }
+    .signal-bar:nth-child(2) { height: 8px;  opacity: 0.8; }
+    .signal-bar:nth-child(3) { height: 11px; opacity: 0.6; }
+    .signal-bar:nth-child(4) { height: 14px; opacity: 0.3; }
+
+    /* Device screen */
+    .device-screen {
+      flex: 1;
+      background: #1a1e23;
+      border-radius: var(--r-lg);
+      box-shadow: inset 4px 4px 12px rgba(0,0,0,0.6), inset -2px -2px 6px rgba(255,255,255,0.05);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* Screen header row */
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .screen-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #4a5568;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .screen-led {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .screen-led-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--led-green);
+      box-shadow: 0 0 5px var(--led-glow);
+      animation: ledPulse 2s ease-in-out infinite;
+    }
+
+    .screen-led-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: var(--led-green);
+      letter-spacing: 0.1em;
+    }
+
+    /* Balance display */
+    .screen-balance {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .balance-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #4a5568;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .balance-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(22px, 3.5vw, 32px);
+      font-weight: 700;
+      color: #e0e5ec;
+      letter-spacing: -0.02em;
+    }
+
+    .balance-amount .currency {
+      font-size: 0.55em;
+      color: #4a5568;
+      vertical-align: super;
+      margin-right: 3px;
+    }
+
+    /* Mini metrics row on screen */
+    .screen-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .screen-metric {
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--r-md);
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .sm-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #4a5568;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sm-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .sm-value.income { color: #00e676; }
+    .sm-value.expense { color: var(--accent); }
+
+    /* Mini transaction bars */
+    .screen-txns {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+
+    .screen-txn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border-radius: 6px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.05);
+      animation: txnSlide 0.4s ease both;
+    }
+
+    @keyframes txnSlide {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .screen-txn:nth-child(2) { animation-delay: 0.1s; }
+    .screen-txn:nth-child(3) { animation-delay: 0.2s; }
+
+    .txn-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #8896a8;
+    }
+
+    .txn-bar {
+      flex: 1;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      margin: 0 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .txn-bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      border-radius: 2px;
+      animation: barGrow 1.2s ease both;
+    }
+
+    @keyframes barGrow {
+      from { width: 0; }
+    }
+
+    .txn-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .txn-amount.neg { color: var(--accent); }
+    .txn-amount.pos { color: #00e676; }
+
+    /* ============================================================
+       RESPONSIVE — stacked on small screens
+       ============================================================ */
+    @media (max-width: 768px) {
+      .hero-wrapper {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 0 24px;
+        text-align: center;
+      }
+      .brand-tagline { margin: 0 auto; }
+      .metric-strip  { justify-content: center; }
+      .cta-row       { justify-content: center; }
+      .vent-group    { align-items: center; }
+      .device-wrap   { display: none; }
+    }
+
+    /* ============================================================
+       DARK THEME OVERRIDE
+       ============================================================ */
+    body.dark-theme {
+      --chassis:       #2d3436;
+      --panel:         #353b3c;
+      --recessed:      #252a2b;
+      --text-primary:  #e0e5ec;
+      --text-muted:    #8896a8;
+      --border-shadow: rgba(0,0,0,.65);
+      --border-light:  rgba(255,255,255,.04);
+      --shadow-card:    8px 8px 20px rgba(0,0,0,.65), -4px -4px 12px rgba(255,255,255,.04);
+      --shadow-float:  12px 12px 28px rgba(0,0,0,.8), -4px -4px 12px rgba(255,255,255,.04);
+      --shadow-pressed: inset 4px 4px 10px rgba(0,0,0,.7), inset -2px -2px 6px rgba(255,255,255,.04);
+    }
+    body.dark-theme .screw {
+      background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
+      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
+    }
+    body.dark-theme .device-title-bar { color: #8896a8; background: #252a2b; }
+    body.dark-theme .device-bezel     { background: #353b3c; }
+    body.dark-theme .btn-signup       { background: #353b3c; color: #e0e5ec; }
+    body.dark-theme .metric-badge     { background: #353b3c; }
+    body.dark-theme .metric-value     { color: #e0e5ec; }
+    body.dark-theme .metric-label     { color: #8896a8; }
+    body.dark-theme .status-bar       { background: #353b3c; }
+
+    /* ============================================================
+       SETTINGS BUTTON & MODAL (index page)
+       ============================================================ */
+    .idx-settings-btn {
+      position: fixed;
+      top: 16px; right: 16px;
+      width: 38px; height: 38px;
+      background: var(--panel);
+      border: none; border-radius: 8px;
+      box-shadow: var(--shadow-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 20;
+      transition: color 150ms, transform 120ms;
+    }
+    .idx-settings-btn:hover  { color: var(--accent); }
+    .idx-settings-btn:active { transform: translateY(1px); box-shadow: var(--shadow-pressed); }
+
+    /* Modal overlay */
+    .idx-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; padding: 24px;
+    }
+    .idx-modal-overlay.open { display: flex; }
+
+    /* Modal card */
+    .idx-modal-card {
+      background: var(--panel);
+      border-radius: 20px;
+      box-shadow: var(--shadow-float);
+      width: 100%; max-width: 340px;
+      padding: 32px 36px;
+      position: relative;
+      animation: idxModalIn .22s ease both;
+    }
+    @keyframes idxModalIn {
+      from { opacity: 0; transform: scale(.95) translateY(8px); }
+      to   { opacity: 1; transform: scale(1)   translateY(0); }
+    }
+
+    /* Modal screws */
+    .idx-screw {
+      position: absolute;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
+      box-shadow: 1px 1px 2px rgba(0,0,0,.2), inset 1px 1px 1px rgba(255,255,255,.5);
+    }
+    .idx-screw::after {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%) rotate(-45deg);
+      width: 6px; height: 1px;
+      background: rgba(0,0,0,.25);
+      box-shadow: 0 2px 0 rgba(0,0,0,.25);
+    }
+    body.dark-theme .idx-screw {
+      background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
+      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
+    }
+    .idx-sc-tl { top: 10px; left: 10px; }
+    .idx-sc-tr { top: 10px; right: 10px; }
+    .idx-sc-bl { bottom: 10px; left: 10px; }
+    .idx-sc-br { bottom: 10px; right: 10px; }
+
+    /* Modal title */
+    .idx-modal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-primary); text-align: center; margin-bottom: 6px;
+    }
+    /* Vents */
+    .idx-vents { display: flex; gap: 5px; margin-bottom: 24px; }
+    .idx-vent  { flex: 1; height: 2px; border-radius: 1px; background: var(--recessed); box-shadow: var(--shadow-pressed); }
+
+    /* Settings group */
+    .idx-group { margin-bottom: 20px; }
+    .idx-group-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 10px;
+    }
+
+    /* Language buttons */
+    .idx-lang-row { display: flex; gap: 8px; }
+    .idx-lang-btn {
+      flex: 1; padding: 10px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      background: var(--recessed); color: var(--text-muted);
+      border: 2px solid transparent; border-radius: 8px;
+      cursor: pointer; box-shadow: var(--shadow-pressed);
+      transition: border-color 150ms, color 150ms;
+    }
+    .idx-lang-btn:hover { color: var(--text-primary); }
+    .idx-lang-btn.active {
+      border-color: var(--accent); color: var(--accent);
+    }
+
+    /* Theme toggle */
+    .idx-theme-row { display: flex; gap: 8px; }
+    .idx-theme-btn {
+      flex: 1; padding: 10px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      background: var(--recessed); color: var(--text-muted);
+      border: 2px solid transparent; border-radius: 8px;
+      cursor: pointer; box-shadow: var(--shadow-pressed);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: border-color 150ms, color 150ms;
+    }
+    .idx-theme-btn:hover { color: var(--text-primary); }
+    .idx-theme-btn.active {
+      border-color: var(--accent); color: var(--accent);
+    }
+
+    /* Done button */
+    .idx-done-btn {
+      width: 100%; margin-top: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 4px 4px 8px rgba(166,50,60,.4), -4px -4px 8px rgba(255,100,110,.4);
+      position: relative; overflow: hidden;
+      transition: transform 120ms;
+    }
+    .idx-done-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%); }
+    .idx-done-btn:hover  { transform: translateY(-1px); }
+    .idx-done-btn:active { transform: translateY(2px); }
+  </style>
 </head>
 
-<body class="auth-body">
+<body>
 
-    <!-- Shooting stars canvas -->
-    <canvas id="shootingStarsCanvas"></canvas>
+  <!-- ── CORNER SCREWS ── -->
+  <div class="screw screw-tl" aria-hidden="true"></div>
+  <div class="screw screw-tr" aria-hidden="true"></div>
+  <div class="screw screw-bl" aria-hidden="true"></div>
+  <div class="screw screw-br" aria-hidden="true"></div>
 
-    <!-- Color mode toggle (bottom-left) -->
-    <button class="color-mode-toggle" id="colorModeToggle" onclick="toggleColorMode()" title="Chuyển chế độ màu">
-        <span class="toggle-icon" id="modeIcon">🌙</span>
-        <div class="toggle-track">
-            <div class="toggle-thumb" id="toggleThumb"></div>
+  <!-- ── SETTINGS GEAR BUTTON (top-right) ── -->
+  <button class="idx-settings-btn" id="idxSettingsBtn" onclick="openIdxSettings()" aria-label="Settings" aria-haspopup="dialog">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+
+  <!-- ── SYSTEM STATUS BAR ── -->
+  <header class="status-bar" role="banner" aria-label="System status">
+    <div class="led" aria-hidden="true"></div>
+    <span class="status-label">System Operational</span>
+    <div class="status-divider" aria-hidden="true"></div>
+    <span class="status-version">v2.0.0</span>
+  </header>
+
+  <!-- ── MAIN HERO ── -->
+  <main class="hero-wrapper" role="main">
+
+    <!-- LEFT — COPY & CTA -->
+    <section class="hero-content" aria-labelledby="brand-heading">
+
+      <div class="brand-lockup">
+        <p class="brand-eyebrow">Expense Management System</p>
+        <h1 class="brand-name" id="brand-heading">Calt<span>D</span>Hy</h1>
+        <p class="brand-tagline">
+          Command-grade financial tracking. Industrial precision. Every transaction — accounted for.
+        </p>
+      </div>
+
+      <!-- Metric badges (decorative previews) -->
+      <div class="metric-strip" role="complementary" aria-label="System metrics">
+        <div class="metric-badge">
+          <span class="metric-value">$24,811</span>
+          <span class="metric-label">Total Balance</span>
         </div>
-        <span id="modeLabel">Chế độ: Tối</span>
-    </button>
+        <div class="metric-badge">
+          <span class="metric-value">312</span>
+          <span class="metric-label">Transactions</span>
+        </div>
+        <div class="metric-badge">
+          <span class="metric-value" style="color:var(--accent);">↓ 7.2%</span>
+          <span class="metric-label">vs. Last Mo.</span>
+        </div>
+      </div>
 
-    <!-- ====== AUTH PAGE ====== -->
-    <div class="auth-page" id="authPage">
+      <!-- Decorative vent slots -->
+      <div class="vent-group" aria-hidden="true">
+        <div class="vent-slot"></div>
+        <div class="vent-slot"></div>
+        <div class="vent-slot"></div>
+      </div>
 
-        <!-- Left: Branding -->
-        <div class="auth-brand">
-            <div class="brand-content">
-                <!-- CaltDHy SVG clock logo -->
-                <svg style="width:52px;height:52px;margin-bottom:12px;" viewBox="0 0 32 32" fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="alg1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stop-color="#00dcc0" />
-                            <stop offset="100%" stop-color="#7b2fff" />
-                        </linearGradient>
-                    </defs>
-                    <circle cx="16" cy="16" r="14" stroke="url(#alg1)" stroke-width="2" fill="none" />
-                    <line x1="16" y1="16" x2="16" y2="8" stroke="url(#alg1)" stroke-width="2.2"
-                        stroke-linecap="round" />
-                    <line x1="16" y1="16" x2="22" y2="19" stroke="url(#alg1)" stroke-width="1.8"
-                        stroke-linecap="round" />
-                    <circle cx="16" cy="16" r="2" fill="url(#alg1)" />
-                </svg>
-                <h1 class="brand-name"
-                    style="background:linear-gradient(135deg,#00dcc0,#7b2fff,#e054b0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:42px;">
-                    CaltDHy</h1>
-                <p class="brand-tagline">Quản lý dòng tiền và thời gian một cách thông minh và dễ dàng.</p>
+      <!-- PRIMARY CTAs -->
+      <div class="cta-row">
+        <a href="login.html" id="btn-login" class="btn-login" role="button">
+          <!-- Arrow icon -->
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          LOG IN
+        </a>
+        <a href="signup.html" id="btn-signup" class="btn-signup" role="button">
+          SIGN UP
+        </a>
+      </div>
+
+    </section>
+
+    <!-- RIGHT — CSS 3D DEVICE MOCKUP -->
+    <aside class="device-wrap" aria-label="App preview" role="complementary">
+      <div class="device-bezel">
+
+        <!-- Top bar of device -->
+        <div class="device-topbar">
+          <div class="device-dots" aria-hidden="true">
+            <div class="device-dot red"></div>
+            <div class="device-dot yellow"></div>
+            <div class="device-dot green"></div>
+          </div>
+          <div class="device-title-bar">CALTDHY // FINANCE_OS</div>
+          <div class="device-signal" aria-hidden="true">
+            <div class="signal-bar"></div>
+            <div class="signal-bar"></div>
+            <div class="signal-bar"></div>
+            <div class="signal-bar"></div>
+          </div>
+        </div>
+
+        <!-- Inner screen -->
+        <div class="device-screen" role="img" aria-label="Dashboard preview">
+
+          <div class="screen-header">
+            <span class="screen-label">DASHBOARD // APR 2026</span>
+            <div class="screen-led">
+              <div class="screen-led-dot"></div>
+              <span class="screen-led-text">LIVE</span>
             </div>
-        </div>
+          </div>
 
-        <!-- Right: Form Panel -->
-        <div class="auth-panel">
-            <div class="auth-card">
+          <div class="screen-balance">
+            <span class="balance-label">Total Balance</span>
+            <span class="balance-amount">
+              <span class="currency">$</span>24,811.50
+            </span>
+          </div>
 
-                <!-- Tab buttons -->
-                <div class="auth-tabs">
-                    <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Đăng nhập</button>
-                    <button class="tab-btn" id="registerTab" onclick="switchTab('register')">Đăng ký</button>
-                </div>
-
-                <!-- ĐĂNG NHẬP -->
-                <div class="auth-form" id="loginForm">
-                    <div class="form-group">
-                        <input type="email" id="loginEmail" class="form-input" placeholder="Email"
-                            autocomplete="email" />
-                    </div>
-                    <div class="form-group">
-                        <div class="input-with-toggle">
-                            <input type="password" id="loginPassword" class="form-input" placeholder="Mật khẩu"
-                                autocomplete="current-password" />
-                            <button type="button" class="toggle-pass"
-                                onclick="togglePassword('loginPassword', this)">👁</button>
-                        </div>
-                    </div>
-                    <div id="loginError" class="form-message error" style="display:none;"></div>
-                    <button class="btn-primary btn-full" id="loginBtn" onclick="handleLogin()">Đăng nhập</button>
-                    <div class="auth-divider"><span>hoặc</span></div>
-                    <button class="btn-link" onclick="switchTab('forgot')">Quên mật khẩu?</button>
-                </div>
-
-                <!-- ĐĂNG KÝ -->
-                <div class="auth-form" id="registerForm" style="display:none;">
-                    <div class="form-group">
-                        <input type="text" id="regName" class="form-input" placeholder="Họ và tên"
-                            autocomplete="name" />
-                    </div>
-                    <div class="form-group">
-                        <input type="email" id="regEmail" class="form-input" placeholder="Email" autocomplete="email" />
-                    </div>
-                    <div class="form-group">
-                        <div class="input-with-toggle">
-                            <input type="password" id="regPassword" class="form-input"
-                                placeholder="Mật khẩu (ít nhất 6 ký tự)" autocomplete="new-password" />
-                            <button type="button" class="toggle-pass"
-                                onclick="togglePassword('regPassword', this)">👁</button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <input type="password" id="regConfirm" class="form-input" placeholder="Xác nhận mật khẩu"
-                            autocomplete="new-password" />
-                    </div>
-                    <div id="registerError" class="form-message error" style="display:none;"></div>
-                    <div id="registerSuccess" class="form-message success" style="display:none;"></div>
-                    <button class="btn-primary btn-full" id="registerBtn" onclick="handleRegister()">Tạo tài
-                        khoản</button>
-                </div>
-
-                <!-- QUÊN MẬT KHẨU -->
-                <div class="auth-form" id="forgotForm" style="display:none;">
-                    <p class="forgot-desc">Nhập email đã đăng ký, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.</p>
-                    <div class="form-group">
-                        <input type="email" id="forgotEmail" class="form-input" placeholder="Email đã đăng ký" />
-                    </div>
-                    <div id="forgotError" class="form-message error" style="display:none;"></div>
-                    <div id="forgotSuccess" class="form-message success" style="display:none;"></div>
-                    <button class="btn-primary btn-full" id="forgotBtn" onclick="handleForgotPassword()">Gửi email đặt
-                        lại</button>
-                    <button class="btn-link" onclick="switchTab('login')">← Quay lại đăng nhập</button>
-                </div>
-
+          <div class="screen-metrics">
+            <div class="screen-metric">
+              <div class="sm-label">Income</div>
+              <div class="sm-value income">+$6,200</div>
             </div>
+            <div class="screen-metric">
+              <div class="sm-label">Expenses</div>
+              <div class="sm-value expense">-$1,843</div>
+            </div>
+          </div>
 
-            <p class="auth-footer">
-                © 2026 <strong>CaltDHy</strong> · Quản lý lịch trình cá nhân
-            </p>
+          <div class="screen-txns">
+            <div class="screen-txn">
+              <span class="txn-name">FOOD &amp; DINING</span>
+              <div class="txn-bar"><div class="txn-bar-fill" style="width:72%;background:#ff4757;"></div></div>
+              <span class="txn-amount neg">-$340</span>
+            </div>
+            <div class="screen-txn">
+              <span class="txn-name">TRANSPORT</span>
+              <div class="txn-bar"><div class="txn-bar-fill" style="width:38%;background:#ff7043;"></div></div>
+              <span class="txn-amount neg">-$180</span>
+            </div>
+            <div class="screen-txn">
+              <span class="txn-name">SALARY</span>
+              <div class="txn-bar"><div class="txn-bar-fill" style="width:100%;background:#00e676;"></div></div>
+              <span class="txn-amount pos">+$6,200</span>
+            </div>
+          </div>
+
+        </div><!-- /device-screen -->
+      </div><!-- /device-bezel -->
+    </aside>
+
+  </main><!-- /hero-wrapper -->
+
+  <!-- ── SETTINGS MODAL ── -->
+  <div class="idx-modal-overlay" id="idxSettingsModal" role="dialog" aria-modal="true" aria-labelledby="idx-settings-title" onclick="closeIdxSettingsOnOverlay(event)">
+    <div class="idx-modal-card">
+
+      <!-- screws -->
+      <div class="idx-screw idx-sc-tl" aria-hidden="true"></div>
+      <div class="idx-screw idx-sc-tr" aria-hidden="true"></div>
+      <div class="idx-screw idx-sc-bl" aria-hidden="true"></div>
+      <div class="idx-screw idx-sc-br" aria-hidden="true"></div>
+
+      <h2 class="idx-modal-title" id="idx-settings-title">Settings</h2>
+
+      <!-- vents -->
+      <div class="idx-vents" aria-hidden="true">
+        <div class="idx-vent"></div><div class="idx-vent"></div>
+        <div class="idx-vent"></div><div class="idx-vent"></div>
+      </div>
+
+      <!-- Language -->
+      <div class="idx-group">
+        <p class="idx-group-label">Language / Ngôn ngữ / 语言</p>
+        <div class="idx-lang-row" role="group" aria-label="Language selection">
+          <button class="idx-lang-btn" id="idx-lang-en" onclick="setIdxLang('en')">EN</button>
+          <button class="idx-lang-btn" id="idx-lang-vi" onclick="setIdxLang('vi')">VI</button>
+          <button class="idx-lang-btn" id="idx-lang-zh" onclick="setIdxLang('zh')">ZH</button>
         </div>
+      </div>
+
+      <!-- Theme -->
+      <div class="idx-group">
+        <p class="idx-group-label">Theme / Giao diện</p>
+        <div class="idx-theme-row" role="group" aria-label="Theme selection">
+          <button class="idx-theme-btn" id="idx-theme-light" onclick="setIdxTheme('light')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Light
+          </button>
+          <button class="idx-theme-btn" id="idx-theme-dark" onclick="setIdxTheme('dark')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            Dark
+          </button>
+        </div>
+      </div>
+
+      <button class="idx-done-btn" onclick="closeIdxSettings()">DONE</button>
+
     </div>
+  </div><!-- /idxSettingsModal -->
 
-    <script src="auth.js"></script>
+  <script>
+    /* ============================================================
+       INDEX PAGE — Settings: Theme + Language
+       ============================================================ */
+    const IDX_THEME_KEY = 'caltdhy_theme';
+    const IDX_LANG_KEY  = 'caltdhy_lang';
 
-    <script>
-        /* ── SHOOTING STARS ── */
-        (function () {
-            const canvas = document.getElementById('shootingStarsCanvas');
-            const ctx = canvas.getContext('2d');
-            let stars = [];
+    /* --- Theme --- */
+    function applyIdxTheme(theme) {
+      document.body.classList.toggle('dark-theme', theme === 'dark');
+      ['light','dark'].forEach(k => {
+        const btn = document.getElementById('idx-theme-' + k);
+        if (btn) btn.classList.toggle('active', k === theme);
+      });
+    }
+    function setIdxTheme(theme) {
+      try { localStorage.setItem(IDX_THEME_KEY, theme); } catch(_) {}
+      applyIdxTheme(theme);
+    }
+    function loadIdxTheme() {
+      const saved = localStorage.getItem(IDX_THEME_KEY) || 'light';
+      applyIdxTheme(saved);
+    }
 
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
+    /* --- Language (syncs with dashboard) --- */
+    function applyIdxLang(lang) {
+      ['en','vi','zh'].forEach(code => {
+        const btn = document.getElementById('idx-lang-' + code);
+        if (btn) btn.classList.toggle('active', code === lang);
+      });
+    }
+    function setIdxLang(lang) {
+      try { localStorage.setItem(IDX_LANG_KEY, lang); } catch(_) {}
+      applyIdxLang(lang);
+    }
+    function loadIdxLang() {
+      const saved = localStorage.getItem(IDX_LANG_KEY) || 'en';
+      applyIdxLang(saved);
+    }
 
-            function randomBetween(a, b) { return a + Math.random() * (b - a); }
+    /* --- Modal open/close --- */
+    function openIdxSettings() {
+      document.getElementById('idxSettingsModal').classList.add('open');
+    }
+    function closeIdxSettings() {
+      document.getElementById('idxSettingsModal').classList.remove('open');
+    }
+    function closeIdxSettingsOnOverlay(e) {
+      if (e.target === document.getElementById('idxSettingsModal')) closeIdxSettings();
+    }
 
-            function spawnStar() {
-                const startX = randomBetween(0, canvas.width);
-                const startY = randomBetween(0, canvas.height * 0.5); // top half
-                const length = randomBetween(80, 200);
-                const angle = randomBetween(30, 50) * Math.PI / 180; // diagonal down-right
-                const speed = randomBetween(280, 520); // px/s
-                const life = length / speed; // seconds until gone
-                return {
-                    x: startX, y: startY, length, angle, speed, life, age: 0,
-                    tailX: Math.cos(angle), tailY: Math.sin(angle)
-                };
-            }
-
-            let lastTime = null;
-
-            function loop(ts) {
-                if (!lastTime) lastTime = ts;
-                const dt = Math.min((ts - lastTime) / 1000, 0.05);
-                lastTime = ts;
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Spawn new star randomly
-                if (Math.random() < dt * 1.8) stars.push(spawnStar()); // avg ~1.8 per second
-
-                // Update & draw
-                stars = stars.filter(s => s.age < s.life);
-                stars.forEach(s => {
-                    s.age += dt;
-                    const progress = s.age / s.life;          // 0 → 1
-                    const alpha = Math.sin(progress * Math.PI); // fade in + out
-                    const traveled = s.speed * s.age;
-                    const headX = s.x + s.tailX * traveled;
-                    const headY = s.y + s.tailY * traveled;
-                    const tailX = headX - s.tailX * s.length * (1 - progress * 0.4);
-                    const tailY = headY - s.tailY * s.length * (1 - progress * 0.4);
-
-                    const grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-                    grad.addColorStop(0, `rgba(255,255,255,0)`);
-                    grad.addColorStop(0.6, `rgba(200,240,255,${alpha * 0.55})`);
-                    grad.addColorStop(1, `rgba(255,255,255,${alpha * 0.9})`);
-
-                    ctx.beginPath();
-                    ctx.moveTo(tailX, tailY);
-                    ctx.lineTo(headX, headY);
-                    ctx.strokeStyle = grad;
-                    ctx.lineWidth = randomBetween(0.5, 1.5);
-                    ctx.stroke();
-
-                    // Head glow dot
-                    ctx.beginPath();
-                    ctx.arc(headX, headY, 1.5, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255,255,255,${alpha * 0.9})`;
-                    ctx.fill();
-                });
-
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        })();
-
-        /* ── COLOR MODE TOGGLE ── */
-        function toggleColorMode() {
-            const body = document.body;
-            const isLight = body.classList.toggle('light-mode');
-            document.getElementById('modeIcon').textContent = isLight ? '☀️' : '🌙';
-            document.getElementById('modeLabel').textContent = isLight ? 'Chế độ: Sáng' : 'Chế độ: Tối';
-            localStorage.setItem('caltdhy_theme', isLight ? 'light' : 'dark');
+    /* --- ESC: close modal, or if closed go back (noop on landing) --- */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('idxSettingsModal');
+        if (modal && modal.classList.contains('open')) {
+          closeIdxSettings();
         }
+      }
+    });
 
-        // Restore saved theme on load
-        (function () {
-            const saved = localStorage.getItem('caltdhy_theme');
-            if (saved === 'light') {
-                document.body.classList.add('light-mode');
-                document.getElementById('modeIcon').textContent = '☀️';
-                document.getElementById('modeLabel').textContent = 'Chế độ: Sáng';
-            }
-        })();
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
+    /* --- Boot --- */
+    loadIdxTheme();
+    loadIdxLang();
+
+    /* Service Worker registration */
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+
 </body>
-
 </html>

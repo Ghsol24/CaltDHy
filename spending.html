@@ -1,2211 +1,470 @@
 <!DOCTYPE html>
-<html lang="vi">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CaltDHy – Quản lý chi tiêu</title>
-    <meta name="description" content="CaltDHy – Theo dõi và quản lý chi tiêu cá nhân." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap"
-        rel="stylesheet" />
-    <style>
-        /* ============================================================
-           RESET & BASE
-        ============================================================ */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html,
-        body {
-            height: 100%;
-            font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
-            overflow: hidden;
-        }
-
-        body {
-            background:
-                radial-gradient(ellipse at 8% 12%, rgba(0, 200, 170, .28) 0%, transparent 45%),
-                radial-gradient(ellipse at 78% 82%, rgba(110, 0, 180, .35) 0%, transparent 48%),
-                radial-gradient(ellipse at 55% 45%, rgba(170, 20, 90, .18) 0%, transparent 42%),
-                radial-gradient(ellipse at 90% 10%, rgba(80, 0, 140, .22) 0%, transparent 40%),
-                #07101e;
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* ============================================================
-           FLOATING ORBS
-        ============================================================ */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(90px);
-            pointer-events: none;
-            z-index: 0;
-            animation: drift 14s ease-in-out infinite alternate;
-        }
-
-        .orb-1 {
-            width: 500px;
-            height: 500px;
-            background: rgba(0, 200, 170, .10);
-            top: -120px;
-            left: -80px;
-            animation-duration: 16s;
-        }
-
-        .orb-2 {
-            width: 400px;
-            height: 400px;
-            background: rgba(110, 0, 180, .15);
-            bottom: -60px;
-            right: 0;
-            animation-duration: 19s;
-            animation-delay: -6s;
-        }
-
-        @keyframes drift {
-            from {
-                transform: translate(0, 0);
-            }
-
-            to {
-                transform: translate(22px, -18px);
-            }
-        }
-
-        /* ============================================================
-           PAGE WRAPPER
-        ============================================================ */
-        #spending-page {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            width: 100%;
-            height: 100vh;
-            transition: opacity .55s ease, transform .55s ease;
-        }
-
-        #spending-page.fade-out {
-            opacity: 0;
-            transform: scale(1.04);
-            pointer-events: none;
-        }
-
-        /* ============================================================
-           LEFT SIDEBAR (Clock)
-        ============================================================ */
-        .sp-sidebar {
-            width: 280px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px 20px;
-            background: rgba(6, 13, 26, .55);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-right: 1px solid rgba(255, 255, 255, .07);
-            gap: 0;
-        }
-
-        /* ── Logo inside sidebar ── */
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            margin-bottom: 24px;
-            align-self: flex-start;
-        }
-
-        .sidebar-logo svg {
-            width: 26px;
-            height: 26px;
-        }
-
-        .sidebar-logo-text {
-            font-family: 'Syne', sans-serif;
-            font-size: 18px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #00dcc0 0%, #7b2fff 60%, #e054b0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* ============================================================
-           CLOCK WIDGET (reused from month-picker.html)
-        ============================================================ */
-        .clock-widget {
-            background: radial-gradient(ellipse at 35% 25%, rgba(0, 180, 160, .14) 0%, rgba(4, 10, 28, .98) 68%);
-            border: 1.5px solid rgba(0, 220, 190, .28);
-            border-radius: 22px;
-            padding: 18px 20px 20px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            box-shadow:
-                0 0 0 1px rgba(0, 220, 190, .1),
-                0 0 48px rgba(0, 200, 170, .20),
-                0 0 100px rgba(0, 200, 170, .06),
-                inset 0 0 36px rgba(0, 200, 170, .04);
-        }
-
-        .clock-brand {
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, .28);
-        }
-
-        .clock-face-wrap {
-            position: relative;
-            width: 164px;
-            height: 164px;
-        }
-
-        .clock-svg {
-            width: 164px;
-            height: 164px;
-            overflow: visible;
-        }
-
-        #hand-hour,
-        #hand-min,
-        #hand-sec {
-            transform-origin: 0 0;
-        }
-
-        .clock-digital {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 30px;
-            font-weight: 800;
-            letter-spacing: 4px;
-            background: linear-gradient(90deg, #00f5d4 0%, #a855f7 55%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 10px rgba(0, 220, 190, .55));
-            line-height: 1;
-        }
-
-        .clock-date {
-            font-size: 11px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, .38);
-            letter-spacing: .5px;
-            text-align: center;
-            margin-top: -4px;
-        }
-
-        .progress-rings {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            justify-content: center;
-            margin-top: 4px;
-        }
-
-        .ring-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .ring-svg {
-            width: 46px;
-            height: 46px;
-            transform: rotate(-90deg);
-            overflow: visible;
-        }
-
-        .ring-bg {
-            fill: none;
-            stroke: rgba(255, 255, 255, .07);
-            stroke-width: 3.5;
-        }
-
-        .ring-fill {
-            fill: none;
-            stroke-width: 3.5;
-            stroke-linecap: round;
-            transition: stroke-dashoffset .25s linear;
-        }
-
-        #ring-fill-h {
-            stroke: url(#rg-h);
-        }
-
-        #ring-fill-m {
-            stroke: url(#rg-m);
-        }
-
-        #ring-fill-s {
-            stroke: url(#rg-s);
-        }
-
-        .ring-num-wrap {
-            position: relative;
-            width: 46px;
-            height: 46px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .ring-inner-val {
-            font-family: 'Syne', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            color: rgba(255, 255, 255, .82);
-            line-height: 1;
-        }
-
-        .ring-lbl {
-            font-size: 7.5px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, .3);
-        }
-
-        /* ============================================================
-           RIGHT PANEL
-        ============================================================ */
-        .sp-right {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* ── Navbar ── */
-        .sp-navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 28px;
-            height: 58px;
-            background: rgba(6, 13, 26, .65);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-            flex-shrink: 0;
-            gap: 12px;
-        }
-
-        .nav-tabs {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-tab {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 8px 18px;
-            border-radius: 22px;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, .12);
-            background: rgba(255, 255, 255, .05);
-            color: rgba(255, 255, 255, .55);
-            transition: all .22s ease;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
-        .nav-tab:hover {
-            background: rgba(0, 200, 170, .1);
-            border-color: rgba(0, 220, 190, .5);
-            color: #00dcc0;
-            transform: translateY(-1px);
-        }
-
-        .nav-tab.active {
-            background: rgba(0, 200, 170, .16);
-            border-color: rgba(0, 220, 190, .65);
-            color: #00f5d4;
-            box-shadow: 0 0 20px rgba(0, 200, 170, .28);
-        }
-
-        .nav-logout {
-            padding: 8px 18px;
-            border: 1px solid rgba(255, 255, 255, .14);
-            background: rgba(255, 255, 255, .05);
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, .55);
-            cursor: pointer;
-            font-family: inherit;
-            transition: all .22s ease;
-        }
-
-        .nav-logout:hover {
-            border-color: rgba(255, 80, 100, .5);
-            color: #ff6080;
-            background: rgba(255, 80, 100, .1);
-        }
-
-        /* ── Main area ── */
-        .sp-main {
-            flex: 1;
-            display: flex;
-            align-items: flex-start;
-            padding: 32px 36px;
-            gap: 24px;
-            overflow-y: auto;
-        }
-
-        /* ── Expense Cards ── */
-        .exp-card {
-            flex: 1;
-            min-width: 0;
-            background: rgba(255, 255, 255, .04);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: 20px;
-            padding: 26px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            box-shadow:
-                0 4px 32px rgba(0, 0, 0, .35),
-                inset 0 0 20px rgba(255, 255, 255, .02);
-            transition: border-color .25s ease, box-shadow .25s ease;
-            min-height: 420px;
-        }
-
-        .exp-card:hover {
-            border-color: rgba(0, 220, 190, .28);
-            box-shadow: 0 4px 40px rgba(0, 200, 170, .12), inset 0 0 20px rgba(255, 255, 255, .02);
-        }
-
-        /* Card header */
-        .exp-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .exp-card-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 18px;
-            font-weight: 800;
-            color: rgba(255, 255, 255, .9);
-            letter-spacing: -.3px;
-        }
-
-        .exp-card-title.long-term {
-            color: #a78bfa;
-        }
-
-        .exp-card-title.monthly {
-            color: #34d399;
-        }
-
-        .exp-card-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 20px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .badge-long {
-            background: rgba(167, 139, 250, .15);
-            color: #a78bfa;
-            border: 1px solid rgba(167, 139, 250, .3);
-        }
-
-        .badge-month {
-            background: rgba(52, 211, 153, .12);
-            color: #34d399;
-            border: 1px solid rgba(52, 211, 153, .28);
-        }
-
-        /* Expense list */
-        .exp-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            flex: 1;
-        }
-
-        .exp-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 13px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, .05);
-            transition: background .18s ease;
-            cursor: pointer;
-            border-radius: 8px;
-            padding-left: 4px;
-            padding-right: 4px;
-            margin: 0 -4px;
-        }
-
-        .exp-item:last-child {
-            border-bottom: none;
-        }
-
-        .exp-item:hover {
-            background: rgba(255, 255, 255, .035);
-        }
-
-        .exp-bullet {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .bullet-long {
-            background: #a78bfa;
-            box-shadow: 0 0 6px rgba(167, 139, 250, .6);
-        }
-
-        .bullet-month {
-            background: #34d399;
-            box-shadow: 0 0 6px rgba(52, 211, 153, .6);
-        }
-
-        .exp-item-body {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .exp-item-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, .75);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 2px;
-        }
-
-        .exp-item-sub {
-            font-size: 11px;
-            font-weight: 400;
-            color: rgba(255, 255, 255, .3);
-        }
-
-        .exp-item-amount {
-            font-family: 'Syne', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .amount-long {
-            color: #a78bfa;
-        }
-
-        .amount-month {
-            color: #34d399;
-        }
-
-        /* Add item CTA */
-        .exp-add-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 16px;
-            padding: 11px 16px;
-            border-radius: 12px;
-            border: 1px dashed rgba(255, 255, 255, .15);
-            background: transparent;
-            color: rgba(255, 255, 255, .35);
-            font-size: 13px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all .2s ease;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .exp-add-btn:hover {
-            border-color: rgba(0, 220, 190, .4);
-            color: #00dcc0;
-            background: rgba(0, 200, 170, .06);
-        }
-
-        /* Summary row */
-        .exp-summary {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .exp-summary-label {
-            font-size: 11px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, .35);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .exp-summary-total {
-            font-family: 'Syne', sans-serif;
-            font-size: 16px;
-            font-weight: 800;
-        }
-
-        .total-long {
-            color: #a78bfa;
-        }
-
-        .total-month {
-            color: #34d399;
-        }
-
-        /* ============================================================
-           SCROLLBAR
-        ============================================================ */
-        .sp-main::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .sp-main::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sp-main::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, .12);
-            border-radius: 10px;
-        }
-
-        /* ── Amount inline input ── */
-        .amount-input {
-            background: transparent;
-            border: none;
-            outline: none;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 13px;
-            font-weight: 700;
-            color: #c4b5fd;
-            width: 96px;
-            text-align: right;
-            caret-color: #a78bfa;
-            display: none;
-            /* toggled by JS */
-        }
-
-        .amount-input::placeholder {
-            color: rgba(167, 139, 250, .38);
-            font-weight: 400;
-        }
-
-        /* Amount display button (shows "+" or formatted value) */
-        .amount-display {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 13px;
-            font-weight: 700;
-            color: rgba(167, 139, 250, .65);
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            flex-shrink: 0;
-            transition: color .18s;
-            min-width: 28px;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .amount-display:hover {
-            color: #c4b5fd;
-        }
-
-        .amount-display.has-value {
-            color: #a78bfa;
-        }
-
-        /* In edit mode the display becomes a delete trigger */
-        .amount-display.del-mode {
-            color: rgba(248, 113, 113, .7);
-            letter-spacing: 0;
-        }
-
-        .amount-display.del-mode:hover {
-            color: #f87171;
-        }
-
-        /* Delete btn (hidden by default) */
-        .exp-item-del {
-            background: transparent;
-            border: none;
-            color: rgba(248, 113, 113, .55);
-            font-size: 14px;
-            cursor: pointer;
-            padding: 0 2px;
-            line-height: 1;
-            transition: color .15s;
-            flex-shrink: 0;
-            display: none;
-            /* shown only in edit mode */
-        }
-
-        .exp-item-del:hover {
-            color: #f87171;
-        }
-
-        /* Drag handle (the purple bullet) */
-        .drag-handle {
-            cursor: grab;
-            flex-shrink: 0;
-            transition: transform .15s, box-shadow .15s;
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .exp-item.dragging {
-            opacity: .4;
-        }
-
-        .exp-item.drag-over {
-            border-top: 2px solid rgba(167, 139, 250, .5);
-        }
-
-        /* Edit-mode button */
-        .edit-mode-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, .12);
-            border-radius: 8px;
-            color: rgba(255, 255, 255, .42);
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 10px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all .2s;
-            letter-spacing: .5px;
-        }
-
-        .edit-mode-btn:hover,
-        .edit-mode-btn.active {
-            border-color: rgba(248, 113, 113, .5);
-            color: #f87171;
-            background: rgba(248, 113, 113, .08);
-        }
-
-        /* Summary total font sync */
-        .exp-summary-total {
-            font-family: 'Times New Roman', Times, serif !important;
-        }
-
-        /* ── Custom Modal ── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 999;
-            background: rgba(4, 8, 20, .72);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-        }
-
-        .modal-box {
-            background: rgba(15, 20, 40, .9);
-            border: 1px solid rgba(167, 139, 250, .3);
-            border-radius: 20px;
-            padding: 32px 30px 26px;
-            width: 380px;
-            max-width: 90vw;
-            box-shadow:
-                0 0 0 1px rgba(167, 139, 250, .1),
-                0 12px 60px rgba(0, 0, 0, .6),
-                0 0 60px rgba(100, 60, 200, .18);
-            animation: modalIn .25s ease;
-        }
-
-        @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: translateY(-14px) scale(.96);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .modal-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 17px;
-            font-weight: 800;
-            color: #c4b5fd;
-            margin-bottom: 20px;
-        }
-
-        .modal-input {
-            width: 100%;
-            background: rgba(255, 255, 255, .055);
-            border: 1px solid rgba(167, 139, 250, .3);
-            border-radius: 10px;
-            padding: 11px 14px;
-            font-size: 14px;
-            font-family: inherit;
-            color: rgba(255, 255, 255, .88);
-            outline: none;
-            transition: border-color .2s;
-            margin-bottom: 20px;
-        }
-
-        .modal-input::placeholder {
-            color: rgba(255, 255, 255, .28);
-        }
-
-        .modal-input:focus {
-            border-color: rgba(167, 139, 250, .65);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .modal-btn {
-            padding: 9px 22px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            border: 1px solid;
-            transition: all .18s;
-        }
-
-        .modal-btn-cancel {
-            background: transparent;
-            border-color: rgba(255, 255, 255, .12);
-            color: rgba(255, 255, 255, .45);
-        }
-
-        .modal-btn-cancel:hover {
-            border-color: rgba(255, 255, 255, .28);
-            color: rgba(255, 255, 255, .7);
-        }
-
-        .modal-btn-confirm {
-            background: rgba(167, 139, 250, .18);
-            border-color: rgba(167, 139, 250, .55);
-            color: #c4b5fd;
-        }
-
-        .modal-btn-confirm:hover {
-            background: rgba(167, 139, 250, .3);
-            border-color: #a78bfa;
-            color: #fff;
-        }
-
-        /* ── Mini Calculator Popup ── */
-        #miniCalc {
-            position: fixed;
-            z-index: 1200;
-            background: linear-gradient(145deg, rgba(10, 30, 20, .97) 0%, rgba(16, 40, 28, .95) 60%, rgba(8, 24, 16, .97) 100%);
-            border: 1px solid rgba(52, 211, 153, .45);
-            border-radius: 18px;
-            padding: 14px 14px 12px;
-            width: 220px;
-            box-shadow: 0 8px 48px rgba(0, 0, 0, .7), 0 0 40px rgba(20, 160, 90, .22);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            animation: calcIn .18s ease;
-        }
-
-        @keyframes calcIn {
-            from {
-                opacity: 0;
-                transform: scale(.92) translateY(-6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        #miniCalc.open {
-            display: flex;
-        }
-
-        #calcDisplay {
-            background: rgba(20, 60, 40, .55);
-            border: 1px solid rgba(52, 211, 153, .35);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 18px;
-            font-weight: 700;
-            color: #6ee7b7;
-            text-align: right;
-            min-height: 40px;
-            word-break: break-all;
-            line-height: 1.3;
-        }
-
-        #calcDisplay .calc-expr {
-            font-size: 10px;
-            color: rgba(110, 231, 183, .5);
-            display: block;
-            min-height: 14px;
-        }
-
-        .calc-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-        }
-
-        .calc-btn {
-            padding: 9px 0;
-            border: 1px solid rgba(52, 211, 153, .12);
-            border-radius: 9px;
-            background: rgba(30, 80, 55, .35);
-            color: rgba(200, 255, 220, .8);
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: background .15s, color .15s;
-            text-align: center;
-        }
-
-        .calc-btn:hover {
-            background: rgba(52, 211, 153, .2);
-            color: #fff;
-        }
-
-        .calc-btn.op {
-            color: #34d399;
-        }
-
-        .calc-btn.op:hover {
-            background: rgba(52, 211, 153, .3);
-        }
-
-        .calc-btn.clr {
-            color: #f87171;
-        }
-
-        .calc-btn.clr:hover {
-            background: rgba(248, 113, 113, .18);
-        }
-
-        .calc-btn.eq {
-            grid-column: span 2;
-            background: rgba(52, 211, 153, .22);
-            border-color: rgba(52, 211, 153, .5);
-            color: #6ee7b7;
-        }
-
-        .calc-btn.eq:hover {
-            background: rgba(52, 211, 153, .38);
-            color: #fff;
-        }
-
-        /* calc confirm footer */
-        .calc-confirm-row {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .calc-enter-hint {
-            font-size: 10px;
-            color: rgba(255, 255, 255, .25);
-            padding-top: 2px;
-        }
-
-        /* ── Note Popover ── */
-        #notePopover {
-            position: fixed;
-            z-index: 1100;
-            background: rgba(12, 18, 38, .94);
-            border: 1px solid rgba(0, 220, 190, .28);
-            border-radius: 14px;
-            padding: 14px;
-            width: 260px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, .6), 0 0 30px rgba(0, 180, 160, .12);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            animation: calcIn .18s ease;
-        }
-
-        #notePopover.open {
-            display: flex;
-        }
-
-        .note-pop-title {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(0, 220, 190, .55);
-        }
-
-        #noteTextarea {
-            width: 100%;
-            min-height: 80px;
-            background: rgba(255, 255, 255, .05);
-            border: 1px solid rgba(0, 220, 190, .2);
-            border-radius: 8px;
-            padding: 8px 10px;
-            font-size: 12px;
-            font-family: inherit;
-            color: rgba(255, 255, 255, .78);
-            resize: vertical;
-            outline: none;
-            transition: border-color .2s;
-            line-height: 1.55;
-        }
-
-        #noteTextarea::placeholder {
-            color: rgba(255, 255, 255, .22);
-        }
-
-        #noteTextarea:focus {
-            border-color: rgba(0, 220, 190, .45);
-        }
-
-        .note-pop-foot {
-            font-size: 10px;
-            color: rgba(255, 255, 255, .2);
-        }
-
-        /* Clickable item name */
-        .exp-item-name {
-            cursor: pointer;
-            transition: color .18s;
-        }
-
-        .exp-item-name:hover {
-            color: rgba(0, 220, 190, .75) !important;
-        }
-
-        .exp-item.has-note .exp-item-name::after {
-            content: ' 📝';
-            font-size: 10px;
-            opacity: .6;
-        }
-
-        /* ── Monthly Card Redesign ── */
-        .monthly-item {
-            align-items: center;
-        }
-
-        .monthly-item-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, .82);
-            margin-bottom: 3px;
-        }
-
-        .monthly-item-amount {
-            font-size: 12px;
-            font-weight: 400;
-            color: rgba(52, 211, 153, .55);
-            letter-spacing: .3px;
-        }
-
-        .month-add-btn {
-            background: rgba(52, 211, 153, .1);
-            border: 1px solid rgba(52, 211, 153, .28);
-            border-radius: 8px;
-            color: #34d399;
-            font-size: 16px;
-            font-weight: 700;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: background .18s, border-color .18s, transform .15s;
-            padding: 0;
-            line-height: 1;
-        }
-
-        .month-add-btn:hover {
-            background: rgba(52, 211, 153, .22);
-            border-color: rgba(52, 211, 153, .55);
-            transform: scale(1.12);
-        }
-
-        /* "click để xem chi tiết" link */
-        .month-detail-link {
-            margin-top: 14px;
-            padding: 11px 16px;
-            border-radius: 12px;
-            border: 1px dashed rgba(52, 211, 153, .25);
-            background: rgba(52, 211, 153, .04);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: border-color .2s, background .2s;
-        }
-
-        .month-detail-link span {
-            font-size: 13px;
-            color: rgba(52, 211, 153, .5);
-            font-weight: 500;
-            transition: color .2s;
-        }
-
-        .month-detail-link:hover {
-            border-color: rgba(52, 211, 153, .5);
-            background: rgba(52, 211, 153, .08);
-        }
-
-        .month-detail-link:hover span {
-            color: #34d399;
-        }
-
-        /* Mini calc – long-term mode uses purple accent on eq button only */
-        #miniCalc:not(.monthly-mode) .calc-btn.eq {
-            background: rgba(52, 211, 153, .25);
-            border-color: rgba(52, 211, 153, .55);
-            color: #a7f3d0;
-        }
-
-        /* Mini calc for monthly section – slightly brighter green tones */
-        #miniCalc.monthly-mode #calcDisplay {
-            border-color: rgba(52, 211, 153, .45);
-            color: #34d399;
-        }
-
-        #miniCalc.monthly-mode .calc-btn.eq {
-            background: rgba(52, 211, 153, .22);
-            border-color: rgba(52, 211, 153, .55);
-            color: #34d399;
-        }
-
-        #miniCalc.monthly-mode .calc-btn.eq:hover {
-            background: rgba(52, 211, 153, .38);
-        }
-
-        /* ============================================================
-           RESPONSIVE – MOBILE (max-width: 768px)
-        ============================================================ */
-        @media screen and (max-width: 768px) {
-
-            html,
-            body {
-                overflow: auto;
-            }
-
-            body {
-                flex-direction: column;
-            }
-
-            #spending-page {
-                flex-direction: column;
-                height: auto;
-                min-height: 100vh;
-            }
-
-            /* ── Sidebar becomes a top-bar ── */
-            .sp-sidebar {
-                width: 100%;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                padding: 10px 16px;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, .08);
-                gap: 10px;
-                height: auto;
-                flex-wrap: wrap;
-            }
-
-            .sidebar-logo {
-                margin-bottom: 0;
-                align-self: center;
-            }
-
-            .clock-widget {
-                display: none;
-            }
-
-            /* ── Navbar ── */
-            .sp-navbar {
-                padding: 0 14px;
-                height: auto;
-                min-height: 50px;
-                flex-wrap: wrap;
-                gap: 8px;
-                padding-top: 8px;
-                padding-bottom: 8px;
-            }
-
-            .nav-tabs {
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-
-            .nav-tab {
-                font-size: 11px;
-                padding: 6px 12px;
-            }
-
-            .nav-logout {
-                font-size: 11px;
-                padding: 6px 12px;
-            }
-
-            /* ── Main area ── */
-            .sp-main {
-                flex-direction: column;
-                padding: 16px 14px;
-                gap: 16px;
-                overflow-y: auto;
-            }
-
-            .exp-card {
-                min-height: auto;
-                padding: 18px 14px;
-            }
-
-            .exp-card-title {
-                font-size: 15px;
-            }
-
-            .exp-summary-total {
-                font-size: 14px;
-            }
-
-            /* ── Mini calc positioning on mobile ── */
-            #miniCalc {
-                width: calc(100vw - 32px);
-                left: 16px !important;
-                right: 16px !important;
-            }
-        }
-
-        @media screen and (max-width: 480px) {
-            .sp-sidebar {
-                padding: 8px 12px;
-            }
-
-            .exp-item-name {
-                font-size: 12px;
-            }
-
-            .exp-item-sub {
-                font-size: 10px;
-            }
-        }
-    </style>
-    <link rel="manifest" href="manifest.json">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – CaltDHy Expense Manager</title>
+  <meta name="description" content="CaltDHy – Track, manage, and analyse your personal expenses." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- ANTI-FOUC: apply saved theme before first paint -->
+  <script src="theme-manager.js"></script>
+  <link rel="stylesheet" href="spending.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="manifest" href="manifest.json" />
 </head>
 
-<body>
+<body class="dark-panel">
 
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+  <!-- ═══════════════════════════════════════════
+       TOPBAR
+  ═══════════════════════════════════════════ -->
+  <header class="topbar" role="banner">
 
-    <div id="spending-page">
+    <div class="tb-brand">
+      <a href="spending.html" class="tb-logo-link" aria-label="Go to dashboard">
+        <span class="tb-logo">Calt<span class="tb-logo-accent">D</span>Hy</span>
+      </a>
+      <span class="tb-badge">FINANCE_OS</span>
+    </div>
 
-        <!-- ══════════════════════════════
-             LEFT SIDEBAR
-        ══════════════════════════════ -->
-        <aside class="sp-sidebar">
+    <div class="tb-center" aria-label="System status">
+      <div class="led led--green" aria-hidden="true"></div>
+      <span class="led-label">SYNC ACTIVE</span>
+    </div>
 
-            <!-- Logo -->
-            <a href="hub.html" class="sidebar-logo">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="nlg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stop-color="#00dcc0" />
-                            <stop offset="100%" stop-color="#7b2fff" />
-                        </linearGradient>
-                    </defs>
-                    <circle cx="16" cy="16" r="14" stroke="url(#nlg)" stroke-width="2" fill="none" />
-                    <line x1="16" y1="16" x2="16" y2="8" stroke="url(#nlg)" stroke-width="2.2" stroke-linecap="round" />
-                    <line x1="16" y1="16" x2="22" y2="19" stroke="url(#nlg)" stroke-width="1.8" stroke-linecap="round"
-                        opacity=".8" />
-                    <circle cx="16" cy="16" r="2" fill="url(#nlg)" />
-                </svg>
-                <span class="sidebar-logo-text">CaltDHy</span>
-            </a>
+    <div class="tb-right">
+      <span class="user-chip" id="userChip">USER</span>
+      <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" aria-label="Switch theme" title="Toggle light/dark">
+        <span id="themeIcon">🌙</span>
+      </button>
+      <button class="btn-settings" id="btnSettings" onclick="openSettings()" aria-label="Settings" aria-haspopup="dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <button class="btn-logout" id="btnLogout" onclick="handleLogout()" data-i18n="logOut">LOG OUT</button>
+    </div>
 
-            <!-- ────────────────────────────
-                 CLOCK WIDGET
-                 (reused from month-picker.html)
-            ──────────────────────────── -->
-            <div class="clock-widget">
+  </header>
 
-                <div class="clock-brand">✦ GHTUDE ✦</div>
+  <!-- ═══════════════════════════════════════════
+       APP BODY  (2-column grid)
+  ═══════════════════════════════════════════ -->
+  <div class="app-body">
 
-                <div class="clock-face-wrap">
-                    <svg class="clock-svg" viewBox="0 0 164 164" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <radialGradient id="faceBg" cx="40%" cy="35%" r="65%">
-                                <stop offset="0%" stop-color="#0c1e30" />
-                                <stop offset="100%" stop-color="#030810" />
-                            </radialGradient>
-                            <linearGradient id="rimG" x1="0" y1="0" x2="164" y2="164" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#00f5d4" />
-                                <stop offset="40%" stop-color="#a855f7" />
-                                <stop offset="100%" stop-color="#ec4899" />
-                            </linearGradient>
-                            <filter id="cglow" x="-30%" y="-30%" width="160%" height="160%">
-                                <feGaussianBlur stdDeviation="3.2" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                            <filter id="cglowSoft" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="2" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                            <filter id="cglowStrong" x="-100%" y="-100%" width="300%" height="300%">
-                                <feGaussianBlur stdDeviation="5.5" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                            <!-- Hands: local coord, center = (82,82) -->
-                            <linearGradient id="chHand" x1="0" y1="6" x2="0" y2="-36" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="rgba(14,165,233,0)" />
-                                <stop offset="35%" stop-color="#38bdf8" stop-opacity=".9" />
-                                <stop offset="100%" stop-color="#bfdbfe" />
-                            </linearGradient>
-                            <linearGradient id="cmHand" x1="0" y1="8" x2="0" y2="-55" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="rgba(0,220,190,0)" />
-                                <stop offset="30%" stop-color="#00dcc0" stop-opacity=".85" />
-                                <stop offset="100%" stop-color="#10f5d8" />
-                            </linearGradient>
-                            <linearGradient id="csHand" x1="0" y1="13" x2="0" y2="-63" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="rgba(200,240,255,0)" />
-                                <stop offset="50%" stop-color="rgba(180,235,255,.55)" />
-                                <stop offset="100%" stop-color="rgba(255,255,255,.88)" />
-                            </linearGradient>
-                            <!-- Progress ring gradients -->
-                            <linearGradient id="rg-h" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#a855f7" />
-                                <stop offset="100%" stop-color="#ec4899" />
-                            </linearGradient>
-                            <linearGradient id="rg-m" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#00f5d4" />
-                                <stop offset="100%" stop-color="#0ea5e9" />
-                            </linearGradient>
-                            <linearGradient id="rg-s" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#ec4899" />
-                                <stop offset="100%" stop-color="#f97316" />
-                            </linearGradient>
-                        </defs>
+    <!-- ─── LEFT RAIL ─── -->
+    <aside class="rail" aria-label="Financial overview">
 
-                        <!-- Face -->
-                        <circle cx="82" cy="82" r="80" fill="url(#faceBg)" />
-                        <circle cx="82" cy="82" r="78" stroke="url(#rimG)" stroke-width="3" fill="none"
-                            filter="url(#cglow)" opacity=".9" />
-                        <circle cx="82" cy="82" r="69" stroke="rgba(255,255,255,0.04)" stroke-width="1" fill="none" />
+      <!-- 1. HERO METRICS DISPLAY -->
+      <section class="rail-section" aria-labelledby="metrics-heading">
+        <h2 class="section-label" id="metrics-heading" data-i18n="financialOverview">Financial Overview</h2>
 
-                        <!-- Major ticks -->
-                        <g stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-linecap="round">
-                            <line x1="82" y1="5" x2="82" y2="17" />
-                            <line x1="82" y1="147" x2="82" y2="159" />
-                            <line x1="5" y1="82" x2="17" y2="82" />
-                            <line x1="147" y1="82" x2="159" y2="82" />
-                        </g>
-                        <!-- Medium ticks -->
-                        <g stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-linecap="round">
-                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(60,82,82)" />
-                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(120,82,82)" />
-                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(240,82,82)" />
-                            <line x1="82" y1="5" x2="82" y2="13" transform="rotate(300,82,82)" />
-                        </g>
-                        <!-- Minute ticks (JS) -->
-                        <g id="cMinTicks"></g>
+        <div class="metrics-stack">
 
-                        <!-- Hands -->
-                        <g id="chand-hour">
-                            <line x1="0" y1="6" x2="0" y2="-36" stroke="url(#chHand)" stroke-width="5"
-                                stroke-linecap="round" transform="translate(82,82)" />
-                        </g>
-                        <g id="chand-min">
-                            <line x1="0" y1="8" x2="0" y2="-55" stroke="url(#cmHand)" stroke-width="3"
-                                stroke-linecap="round" transform="translate(82,82)" />
-                        </g>
-                        <g id="chand-sec">
-                            <line x1="0" y1="13" x2="0" y2="-63" stroke="url(#csHand)" stroke-width="1.2"
-                                stroke-linecap="round" transform="translate(82,82)" />
-                        </g>
+          <div class="metric-card metric-card--balance">
+            <div class="metric-card__screw mc-screw--tl" aria-hidden="true"></div>
+            <div class="metric-card__screw mc-screw--tr" aria-hidden="true"></div>
+            <p class="metric-card__label" data-i18n="totalBalance">Total Balance</p>
+            <p class="metric-card__value metric-card__value--balance" id="metricBalance">0 ₫</p>
+            <p class="metric-card__sub" data-i18n="allTimeNet">All-time net</p>
+            <button class="btn-quick-deposit" id="btnQuickDeposit" onclick="openNumpad()" aria-label="Quick Deposit" aria-haspopup="dialog">+</button>
+          </div>
 
-                        <!-- Center dot -->
-                        <circle cx="82" cy="82" r="9" fill="rgba(0,230,200,.18)" />
-                        <circle cx="82" cy="82" r="6" fill="rgba(0,220,190,.6)" filter="url(#cglowStrong)" />
-                        <circle cx="82" cy="82" r="3.5" fill="#00dcc0" filter="url(#cglow)" />
-                        <circle cx="82" cy="82" r="1.8" fill="#ffffff" />
-                    </svg>
-                </div>
+          <div class="metric-card metric-card--income">
+            <p class="metric-card__label" data-i18n="monthlyIncome">Monthly Income</p>
+            <p class="metric-card__value metric-card__value--income" id="metricIncome">+0 ₫</p>
+            <p class="metric-card__sub" id="metricMonthLabel">APR 2026</p>
+          </div>
 
-                <!-- Digital time -->
-                <div class="clock-digital" id="sp-digitalTime">00:00:00</div>
+          <div class="metric-card metric-card--expense">
+            <p class="metric-card__label" data-i18n="monthlyExpense">Monthly Expense</p>
+            <p class="metric-card__value metric-card__value--expense" id="metricExpense">-0 ₫</p>
+            <p class="metric-card__sub" data-i18n="thisMonth">This month</p>
+          </div>
 
-                <!-- Date -->
-                <div class="clock-date" id="sp-clockDate">Thứ Hai – 27 Tháng 2</div>
+        </div>
+      </section>
 
-                <!-- Progress rings -->
-                <div class="progress-rings">
-                    <!-- HOUR -->
-                    <div class="ring-wrap">
-                        <div class="ring-num-wrap">
-                            <svg class="ring-svg" viewBox="0 0 50 50">
-                                <defs>
-                                    <linearGradient id="rg-h2" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#a855f7" />
-                                        <stop offset="100%" stop-color="#ec4899" />
-                                    </linearGradient>
-                                </defs>
-                                <circle class="ring-bg" cx="25" cy="25" r="20" />
-                                <circle class="ring-fill" cx="25" cy="25" r="20" id="sp-ring-h" stroke="url(#rg-h2)"
-                                    stroke-dasharray="125.66" stroke-dashoffset="125.66" />
-                            </svg>
-                            <span class="ring-inner-val" id="sp-valH">00</span>
-                        </div>
-                        <span class="ring-lbl">HOUR</span>
-                    </div>
-                    <!-- MIN -->
-                    <div class="ring-wrap">
-                        <div class="ring-num-wrap">
-                            <svg class="ring-svg" viewBox="0 0 50 50">
-                                <defs>
-                                    <linearGradient id="rg-m2" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#00f5d4" />
-                                        <stop offset="100%" stop-color="#0ea5e9" />
-                                    </linearGradient>
-                                </defs>
-                                <circle class="ring-bg" cx="25" cy="25" r="20" />
-                                <circle class="ring-fill" cx="25" cy="25" r="20" id="sp-ring-m" stroke="url(#rg-m2)"
-                                    stroke-dasharray="125.66" stroke-dashoffset="125.66" />
-                            </svg>
-                            <span class="ring-inner-val" id="sp-valM">00</span>
-                        </div>
-                        <span class="ring-lbl">MIN</span>
-                    </div>
-                    <!-- SEC -->
-                    <div class="ring-wrap">
-                        <div class="ring-num-wrap">
-                            <svg class="ring-svg" viewBox="0 0 50 50">
-                                <defs>
-                                    <linearGradient id="rg-s2" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#ec4899" />
-                                        <stop offset="100%" stop-color="#f97316" />
-                                    </linearGradient>
-                                </defs>
-                                <circle class="ring-bg" cx="25" cy="25" r="20" />
-                                <circle class="ring-fill" cx="25" cy="25" r="20" id="sp-ring-s" stroke="url(#rg-s2)"
-                                    stroke-dasharray="125.66" stroke-dashoffset="125.66" />
-                            </svg>
-                            <span class="ring-inner-val" id="sp-valS">00</span>
-                        </div>
-                        <span class="ring-lbl">SEC</span>
-                    </div>
-                </div>
+      <!-- 2. PRIMARY ACTION -->
+      <section class="rail-section">
+        <button class="btn-add-txn" id="btnAddTxn" onclick="openModal()" aria-haspopup="dialog">
+          <span class="btn-add-txn__icon" aria-hidden="true">+</span>
+          <span data-i18n="addTransaction">ADD TRANSACTION</span>
+        </button>
+      </section>
 
-            </div><!-- /.clock-widget -->
-        </aside>
+      <!-- 3. CATEGORY BREAKDOWN — Live Doughnut Chart -->
+      <section class="rail-section rail-section--grow" aria-labelledby="cat-heading">
+        <h2 class="section-label" id="cat-heading" data-i18n="categoryBreakdown">Category Breakdown</h2>
 
-        <!-- ══════════════════════════════
-             RIGHT PANEL
-        ══════════════════════════════ -->
-        <div class="sp-right">
+        <div class="chassis-frame chassis-frame--chart" aria-label="Category breakdown chart">
+          <div class="chassis-frame__screw cf-screw--tl" aria-hidden="true"></div>
+          <div class="chassis-frame__screw cf-screw--tr" aria-hidden="true"></div>
+          <div class="chassis-frame__screw cf-screw--bl" aria-hidden="true"></div>
+          <div class="chassis-frame__screw cf-screw--br" aria-hidden="true"></div>
 
-            <!-- Navbar -->
-            <nav class="sp-navbar">
-                <div class="nav-tabs">
-                    <a href="spending.html" class="nav-tab active">💰 Quản lý chi tiêu</a>
-                    <a href="month-picker.html" class="nav-tab">📅 Sắp xếp lịch trình</a>
-                </div>
-                <button class="nav-logout" onclick="handleLogout()">Đăng xuất</button>
-            </nav>
-
-            <!-- Main cards -->
-            <main class="sp-main">
-
-                <!-- ── Card 1: Dài hạn ── -->
-                <div class="exp-card">
-                    <div class="exp-card-header">
-                        <h2 class="exp-card-title long-term">Dài hạn</h2>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <button class="edit-mode-btn" id="longEditBtn">Chỉnh sửa</button>
-                            <span class="exp-card-badge badge-long">Long-term</span>
-                        </div>
-                    </div>
-
-                    <ul class="exp-list" id="longList">
-                        <li class="exp-item" data-amount="0" draggable="true">
-                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name">Tiền thuê nhà / ký túc xá</div>
-                                <div class="exp-item-sub">Hàng tháng</div>
-                            </div>
-                            <button class="amount-display">+</button>
-                        </li>
-                        <li class="exp-item" data-amount="0" draggable="true">
-                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name">Học phí / đào tạo</div>
-                                <div class="exp-item-sub">Theo kỳ</div>
-                            </div>
-                            <button class="amount-display">+</button>
-                        </li>
-                        <li class="exp-item" data-amount="0" draggable="true">
-                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name">Bảo hiểm</div>
-                                <div class="exp-item-sub">Hàng năm</div>
-                            </div>
-                            <button class="amount-display">+</button>
-                        </li>
-                        <li class="exp-item" data-amount="0" draggable="true">
-                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name">Tiết kiệm / đầu tư</div>
-                                <div class="exp-item-sub">Hàng tháng</div>
-                            </div>
-                            <button class="amount-display">+</button>
-                        </li>
-                        <li class="exp-item" data-amount="0" draggable="true">
-                            <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name">Mục tiêu dài hạn khác</div>
-                                <div class="exp-item-sub">Tùy chỉnh</div>
-                            </div>
-                            <button class="amount-display">+</button>
-                        </li>
-                    </ul>
-
-                    <button class="exp-add-btn" id="longAddBtn">＋ Thêm khoản chi</button>
-
-                    <div class="exp-summary">
-                        <span class="exp-summary-label">Tổng cộng</span>
-                        <span class="exp-summary-total total-long">0 ₫</span>
-                    </div>
-                </div>
-
-                <!-- ── Card 2: Trong tháng ── -->
-                <div class="exp-card monthly-card">
-                    <div class="exp-card-header">
-                        <h2 class="exp-card-title monthly">Trong tháng</h2>
-                        <span class="exp-card-badge badge-month">Monthly</span>
-                    </div>
-
-                    <ul class="exp-list monthly-list" id="monthList">
-                        <li class="exp-item monthly-item" data-amount="0">
-                            <span class="exp-bullet bullet-month"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name monthly-item-name">Ăn uống</div>
-                                <div class="monthly-item-amount" id="m-amount-0">0 ₫</div>
-                            </div>
-                            <button class="month-add-btn" data-idx="0">+</button>
-                        </li>
-                        <li class="exp-item monthly-item" data-amount="0">
-                            <span class="exp-bullet bullet-month"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name monthly-item-name">Xăng xe</div>
-                                <div class="monthly-item-amount" id="m-amount-1">0 ₫</div>
-                            </div>
-                            <button class="month-add-btn" data-idx="1">+</button>
-                        </li>
-                        <li class="exp-item monthly-item" data-amount="0">
-                            <span class="exp-bullet bullet-month"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name monthly-item-name">Cà phê</div>
-                                <div class="monthly-item-amount" id="m-amount-2">0 ₫</div>
-                            </div>
-                            <button class="month-add-btn" data-idx="2">+</button>
-                        </li>
-                        <li class="exp-item monthly-item" data-amount="0">
-                            <span class="exp-bullet bullet-month"></span>
-                            <div class="exp-item-body">
-                                <div class="exp-item-name monthly-item-name">Linh tinh vụn vặt</div>
-                                <div class="monthly-item-amount" id="m-amount-3">0 ₫</div>
-                            </div>
-                            <button class="month-add-btn" data-idx="3">+</button>
-                        </li>
-                    </ul>
-
-                    <div class="month-detail-link" onclick="window.location.href='spending-detail.html'"
-                        style="cursor:pointer">
-                        <span>🔍 Click để xem chi tiết</span>
-                    </div>
-
-                    <div class="exp-summary">
-                        <span class="exp-summary-label">Tổng cộng</span>
-                        <span class="exp-summary-total total-month" id="monthTotal">0 ₫</span>
-                    </div>
-                </div>
-
-            </main>
-        </div><!-- /.sp-right -->
-
-    </div><!-- /#spending-page -->
-
-    <!-- ══ CUSTOM MODAL (Add item) ══ -->
-    <div id="addItemModal" class="modal-overlay" role="dialog" aria-modal="true">
-        <div class="modal-box" id="modalBox">
-            <div class="modal-title">💰 Thêm khoản chi</div>
-            <input class="modal-input" id="modalItemName" type="text" placeholder="Tên khoản chi (VD: Khám sức khỏe)"
-                maxlength="60" />
-            <div class="modal-actions">
-                <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Hủy</button>
-                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Xác nhận</button>
+          <!-- machine-etched inner border -->
+          <div class="chart-panel">
+            <div class="chart-canvas-wrap">
+              <canvas id="categoryChart" aria-label="Category Breakdown Doughnut Chart" role="img"></canvas>
             </div>
+            <!-- legend injected by JS -->
+            <div class="chart-legend" id="chartLegend" aria-label="Chart legend"></div>
+            <!-- empty state -->
+            <p class="chart-empty" id="chartEmpty">// NO EXPENSE DATA</p>
+          </div>
         </div>
+      </section>
+
+    </aside>
+
+    <!-- ─── MAIN CONTENT ─── -->
+    <main class="main-content" role="main" aria-labelledby="feed-heading">
+
+      <!-- Feed toolbar -->
+      <div class="feed-toolbar">
+        <h2 class="section-label" id="feed-heading" data-i18n="transactionFeed">Transaction Feed</h2>
+        <div class="filter-group" role="group" aria-label="Filter transactions">
+          <button class="filter-btn filter-btn--active" id="f-all"     onclick="setFilter('all',this)"     data-i18n="filterAll">ALL</button>
+          <button class="filter-btn"                    id="f-income"  onclick="setFilter('income',this)"  data-i18n="filterIncome">INCOME</button>
+          <button class="filter-btn"                    id="f-expense" onclick="setFilter('expense',this)" data-i18n="filterExpense">EXPENSE</button>
+        </div>
+      </div>
+
+      <!-- ── BUDGET ENVELOPE PANEL ── -->
+      <section class="budget-section" aria-labelledby="budget-heading">
+        <div class="budget-section__header">
+          <h2 class="section-label" id="budget-heading" data-i18n="budgetPanel">Envelope Budgets</h2>
+          <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET BUDGETS</button>
+        </div>
+        <div class="budget-panel" id="budgetPanel" aria-live="polite">
+          <!-- Budget cards injected by JS -->
+        </div>
+      </section>
+
+      <!-- 4. TRANSACTION FEED (scrollable) -->
+      <div class="txn-feed" id="txnFeed" aria-live="polite" aria-label="Recent transactions">
+        <!-- Slots injected by JS -->
+      </div>
+
+    </main>
+
+  </div><!-- /app-body -->
+
+
+  <!-- ═══════════════════════════════════════════
+       ADD TRANSACTION MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="closeModalOnOverlay(event)">
+    <div class="modal-card">
+
+      <!-- Card screws -->
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="modal-title" data-i18n="newTransaction">New Transaction</h2>
+
+      <!-- Vent slots -->
+      <div class="modal-vents" aria-hidden="true">
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+      </div>
+
+      <!-- Type toggle -->
+      <div class="type-row" role="group" aria-label="Transaction type">
+        <button class="type-btn type-btn--expense type-btn--active-expense" id="typeExpense" onclick="setType('expense')" data-i18n="typeExpense">EXPENSE</button>
+        <button class="type-btn type-btn--income"                            id="typeIncome"  onclick="setType('income')"  data-i18n="typeIncome">INCOME</button>
+      </div>
+
+      <form id="txnForm" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="txnDesc" data-i18n="description">Description</label>
+          <input id="txnDesc" class="form-input" type="text" placeholder="e.g. Grocery run..." maxlength="80" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="txnAmount" data-i18n="amountVND">Amount (VND)</label>
+          <input id="txnAmount" class="form-input" type="number" min="0.01" step="0.01" placeholder="0.00" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="txnCat" data-i18n="category">Category</label>
+          <select id="txnCat" class="form-select">
+            <option>Food &amp; Dining</option>
+            <option>Transport</option>
+            <option>Shopping</option>
+            <option>Entertainment</option>
+            <option>Health</option>
+            <option>Utilities</option>
+            <option>Salary</option>
+            <option>Freelance</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="txnDate" data-i18n="date">Date</label>
+          <input id="txnDate" class="form-input" type="date" />
+        </div>
+
+        <div id="formError" class="form-error" role="alert"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal()" data-i18n="cancel">CANCEL</button>
+          <button type="submit" class="btn-save" data-i18n="saveTransaction">SAVE TRANSACTION</button>
+        </div>
+
+      </form>
     </div>
+  </div><!-- /modal -->
 
-    <!-- ══ MINI CALCULATOR ══ -->
-    <div id="miniCalc">
-        <div id="calcDisplay">
-            <span class="calc-expr" id="calcExpr"></span>
-            <span id="calcVal">0</span>
-        </div>
-        <div class="calc-grid">
-            <button class="calc-btn clr" data-action="clr">CLR</button>
-            <button class="calc-btn" data-action="del">⌫</button>
-            <button class="calc-btn op" data-action="op" data-v="%">%</button>
-            <button class="calc-btn op" data-action="op" data-v="/">÷</button>
-            <button class="calc-btn" data-action="num" data-v="7">7</button>
-            <button class="calc-btn" data-action="num" data-v="8">8</button>
-            <button class="calc-btn" data-action="num" data-v="9">9</button>
-            <button class="calc-btn op" data-action="op" data-v="*">×</button>
-            <button class="calc-btn" data-action="num" data-v="4">4</button>
-            <button class="calc-btn" data-action="num" data-v="5">5</button>
-            <button class="calc-btn" data-action="num" data-v="6">6</button>
-            <button class="calc-btn op" data-action="op" data-v="-">−</button>
-            <button class="calc-btn" data-action="num" data-v="1">1</button>
-            <button class="calc-btn" data-action="num" data-v="2">2</button>
-            <button class="calc-btn" data-action="num" data-v="3">3</button>
-            <button class="calc-btn op" data-action="op" data-v="+">+</button>
-            <button class="calc-btn" data-action="num" data-v="0">0</button>
-            <button class="calc-btn" data-action="num" data-v=".">,</button>
-            <button class="calc-btn eq" data-action="eq">= Enter</button>
-        </div>
-        <div class="calc-confirm-row">
-            <span class="calc-enter-hint">Enter → xác nhận • Esc → hủy</span>
-        </div>
+
+  <!-- ═══════════════════════════════════════════
+       QUICK DEPOSIT NUMPAD MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay modal-overlay--numpad" id="numpadModal" role="dialog" aria-modal="true" aria-labelledby="numpad-title" onclick="closeNumpadOnOverlay(event)">
+    <div class="numpad-device">
+
+      <!-- device screws -->
+      <div class="numpad-screw nd-screw--tl" aria-hidden="true"></div>
+      <div class="numpad-screw nd-screw--tr" aria-hidden="true"></div>
+      <div class="numpad-screw nd-screw--bl" aria-hidden="true"></div>
+      <div class="numpad-screw nd-screw--br" aria-hidden="true"></div>
+
+      <!-- display -->
+      <div class="numpad-display" aria-live="polite">
+        <p class="numpad-display__label" data-i18n="quickDeposit">QUICK DEPOSIT</p>
+        <p class="numpad-display__value" id="numpadDisplay">0</p>
+        <p class="numpad-display__unit">₫</p>
+      </div>
+
+      <!-- vent slots -->
+      <div class="numpad-vents" aria-hidden="true">
+        <div class="numpad-vent"></div><div class="numpad-vent"></div><div class="numpad-vent"></div>
+      </div>
+
+      <!-- keypad grid -->
+      <div class="numpad-grid" role="group" aria-label="Numeric keypad">
+        <button class="nk" onclick="numpadKey('7')" aria-label="7">7</button>
+        <button class="nk" onclick="numpadKey('8')" aria-label="8">8</button>
+        <button class="nk" onclick="numpadKey('9')" aria-label="9">9</button>
+        <button class="nk" onclick="numpadKey('4')" aria-label="4">4</button>
+        <button class="nk" onclick="numpadKey('5')" aria-label="5">5</button>
+        <button class="nk" onclick="numpadKey('6')" aria-label="6">6</button>
+        <button class="nk" onclick="numpadKey('1')" aria-label="1">1</button>
+        <button class="nk" onclick="numpadKey('2')" aria-label="2">2</button>
+        <button class="nk" onclick="numpadKey('3')" aria-label="3">3</button>
+        <button class="nk nk--wide" onclick="numpadKey('0')" aria-label="0">0</button>
+        <button class="nk nk--clear" onclick="numpadKey('C')" aria-label="Clear">C</button>
+        <button class="nk nk--submit" id="numpadSubmit" onclick="numpadSubmit()" aria-label="Submit deposit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+
     </div>
+  </div><!-- /numpadModal -->
 
-    <!-- ══ NOTE POPOVER ══ -->
-    <div id="notePopover">
-        <div class="note-pop-title">Ghi chú 📌</div>
-        <textarea id="noteTextarea" placeholder="VD: Tháng 2 nộp 3.000.000đ | Tháng 3 nộp 4.500.000đ..."></textarea>
-        <div class="note-pop-foot">Tự lưu khi đóng • Click ra ngoài để đóng</div>
+
+  <!-- ═══════════════════════════════════════════
+       SETTINGS MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="closeSettingsOnOverlay(event)">
+    <div class="modal-card modal-card--settings">
+
+      <!-- screws -->
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="settings-title" data-i18n="settings">Settings</h2>
+
+      <!-- vents -->
+      <div class="modal-vents" aria-hidden="true">
+        <div class="modal-vent"></div><div class="modal-vent"></div>
+        <div class="modal-vent"></div><div class="modal-vent"></div>
+      </div>
+
+      <!-- Language Switcher -->
+      <div class="settings-group">
+        <p class="settings-group__label" data-i18n="language">Language / Ngôn ngữ / 语言</p>
+        <div class="lang-switch" role="group" aria-label="Language selection">
+          <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" id="lang-vi" onclick="setLang('vi')">VI</button>
+          <button class="lang-btn" id="lang-zh" onclick="setLang('zh')">ZH</button>
+        </div>
+      </div>
+
+      <!-- Currency Toggle -->
+      <div class="settings-group">
+        <p class="settings-group__label" data-i18n="currency">Display Currency</p>
+        <div class="lang-switch" role="group" aria-label="Currency selection">
+          <button class="lang-btn" id="curr-VND" onclick="setCurrency('VND')">VND ₫</button>
+          <button class="lang-btn" id="curr-USD" onclick="setCurrency('USD')">USD $</button>
+          <button class="lang-btn" id="curr-CNY" onclick="setCurrency('CNY')">CNY ¥</button>
+        </div>
+        <p class="settings-info" style="margin-top:8px;font-size:10px;">1 USD = 27,000 VND &nbsp;|&nbsp; 1 CNY = 3,750 VND</p>
+      </div>
+
+      <!-- Set Budgets shortcut -->
+      <div class="settings-group" style="margin-bottom:0">
+        <button class="btn-set-budgets btn-set-budgets--full" onclick="closeSettings(); openBudgetModal();" data-i18n="setBudgets">SET BUDGETS</button>
+      </div>
+
+      <div class="modal-actions" style="margin-top:24px">
+        <button type="button" class="btn-save" onclick="closeSettings()" data-i18n="done">DONE</button>
+      </div>
+
     </div>
+  </div><!-- /settingsModal -->
 
-    <script>
-        /* ============================================================
-           AUTH GUARD
-        ============================================================ */
-        (function () {
-            if (!localStorage.getItem('pcn_token')) {
-                window.location.href = 'index.html';
-            }
-        })();
 
-        /* ============================================================
-           CLOCK
-        ============================================================ */
-        const WEEKDAYS_VI = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-        const CIRCUMFERENCE = 2 * Math.PI * 20; // r=20
+  <!-- ═══════════════════════════════════════════
+       BUDGET MODAL (Set Budgets)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title" onclick="closeBudgetOnOverlay(event)">
+    <div class="modal-card modal-card--budget">
 
-        function setRing(id, val, max) {
-            const offset = CIRCUMFERENCE - (val / max) * CIRCUMFERENCE;
-            document.getElementById(id).style.strokeDashoffset = offset;
-        }
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
 
-        /* Draw minute ticks for this page's SVG (center 82,82, r=73) */
-        (function () {
-            const ns = 'http://www.w3.org/2000/svg';
-            const grp = document.getElementById('cMinTicks');
-            const cx = 82, cy = 82, r = 73;
-            for (let i = 0; i < 60; i++) {
-                if (i % 5 === 0) continue; // hour positions already drawn
-                const rad = (i * 6 - 90) * Math.PI / 180;
-                const x1 = cx + r * Math.cos(rad);
-                const y1 = cy + r * Math.sin(rad);
-                const x2 = cx + (r - 4) * Math.cos(rad);
-                const y2 = cy + (r - 4) * Math.sin(rad);
-                const ln = document.createElementNS(ns, 'line');
-                ln.setAttribute('x1', x1.toFixed(2)); ln.setAttribute('y1', y1.toFixed(2));
-                ln.setAttribute('x2', x2.toFixed(2)); ln.setAttribute('y2', y2.toFixed(2));
-                ln.setAttribute('stroke', 'rgba(255,255,255,0.15)');
-                ln.setAttribute('stroke-width', '0.8');
-                ln.setAttribute('stroke-linecap', 'round');
-                grp.appendChild(ln);
-            }
-        })();
+      <h2 class="modal-title" id="budget-modal-title" data-i18n="setBudgets">SET BUDGETS</h2>
 
-        function updateClock() {
-            const now = new Date();
-            const h = now.getHours();
-            const m = now.getMinutes();
-            const s = now.getSeconds();
-            const ms = now.getMilliseconds();
+      <div class="modal-vents" aria-hidden="true">
+        <div class="modal-vent"></div><div class="modal-vent"></div>
+        <div class="modal-vent"></div><div class="modal-vent"></div>
+      </div>
 
-            const secDeg = (s + ms / 1000) * 6;
-            const minDeg = (m + (s + ms / 1000) / 60) * 6;
-            const hourDeg = ((h % 12) + m / 60) * 30;
+      <p class="budget-modal__hint">Enter monthly limits per category. Leave blank to disable.</p>
 
-            document.getElementById('chand-hour').setAttribute('transform', `rotate(${hourDeg},82,82)`);
-            document.getElementById('chand-min').setAttribute('transform', `rotate(${minDeg},82,82)`);
-            document.getElementById('chand-sec').setAttribute('transform', `rotate(${secDeg},82,82)`);
+      <form id="budgetForm" novalidate>
 
-            const pad = n => String(n).padStart(2, '0');
-            document.getElementById('sp-digitalTime').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+        <!-- Dynamic grid: populated by openBudgetModal() -->
+        <div class="budget-form-grid" id="budgetFormGrid"></div>
 
-            const wd = WEEKDAYS_VI[now.getDay()];
-            document.getElementById('sp-clockDate').textContent = `${wd} – ${now.getDate()} Tháng ${now.getMonth() + 1}`;
+        <!-- Add Custom Category row -->
+        <div class="budget-add-cat">
+          <p class="budget-add-cat__label">+ Add Custom Category</p>
+          <div class="budget-add-cat__row">
+            <input class="budget-form-input budget-add-cat__name" id="newCatName"
+              type="text" placeholder="Category name" maxlength="40" />
+            <input class="budget-form-input budget-add-cat__limit" id="newCatLimit"
+              type="number" min="0" step="1" placeholder="Limit (0 = track only)" />
+            <button type="button" class="btn-add-cat" onclick="addCustomCategory()">ADD</button>
+          </div>
+        </div>
 
-            setRing('sp-ring-h', h % 12 + m / 60, 12);
-            setRing('sp-ring-m', m + s / 60, 60);
-            setRing('sp-ring-s', s + ms / 1000, 60);
+        <div class="modal-actions" style="margin-top:20px">
+          <button type="button" class="btn-cancel" onclick="closeBudgetModal()" data-i18n="cancel">CANCEL</button>
+          <button type="submit" class="btn-save" data-i18n="setBudgets">SAVE BUDGETS</button>
+        </div>
 
-            document.getElementById('sp-valH').textContent = pad(h);
-            document.getElementById('sp-valM').textContent = pad(m);
-            document.getElementById('sp-valS').textContent = pad(s);
-        }
+      </form>
+    </div>
+  </div><!-- /budgetModal -->
 
-        setInterval(updateClock, 50);
-        updateClock();
 
-        /* ============================================================
-           DÀI HẠN – EXPENSE LOGIC (v3 – mini-calc driven)
-        ============================================================ */
+  <!-- Toast notification (simple) -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        const longList = document.getElementById('longList');
-        const longTotal = longList.closest('.exp-card').querySelector('.exp-summary-total');
-        const longAddBtn = longList.closest('.exp-card').querySelector('.exp-add-btn');
-        const longEditBtn = document.getElementById('longEditBtn');
-        let longEditMode = false;
+  <!-- Undo Delete Toast -->
+  <div class="undo-toast" id="undoToast" role="alert" aria-live="assertive">
+    <span class="undo-toast__label">Transaction removed.</span>
+    <button class="undo-toast__btn" onclick="undoDelete()">UNDO</button>
+  </div>
 
-        /** Recalculate long-term total from data-amount attributes */
-        function recalcLong() {
-            let total = 0;
-            longList.querySelectorAll('.exp-item').forEach(li => {
-                const v = parseFloat(li.dataset.amount);
-                if (!isNaN(v) && v > 0) total += v;
-            });
-            longTotal.textContent = total > 0 ? Number(total).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
-        }
+  <!-- ═══════════════════════════════════════════
+       FLOATING ACTION BUTTON (FAB)
+  ═══════════════════════════════════════════ -->
+  <button class="fab" id="fab" onclick="openQuickLog()" aria-label="Quick log transaction" aria-haspopup="dialog">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
+  </button>
 
-        /** Sync the .amount-display button for one item */
-        function syncDisplay(li) {
-            const disp = li.querySelector('.amount-display');
-            if (!disp) return;
-            const amt = parseFloat(li.dataset.amount);
-            if (longEditMode) {
-                disp.textContent = '✕';
-                disp.classList.add('del-mode');
-                disp.classList.remove('has-value');
-            } else {
-                disp.classList.remove('del-mode');
-                if (!isNaN(amt) && amt > 0) {
-                    disp.textContent = Number(amt).toLocaleString('vi-VN') + ' ₫';
-                    disp.classList.add('has-value');
-                } else {
-                    disp.textContent = '+';
-                    disp.classList.remove('has-value');
-                }
-            }
-        }
+  <!-- ═══════════════════════════════════════════
+       QUICK LOG MODAL (FAB)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="quickLogModal" role="dialog" aria-modal="true" aria-labelledby="ql-title" onclick="closeQuickLogOnOverlay(event)">
+    <div class="modal-card modal-card--ql">
 
-        /* ============================================================
-           MINI CALCULATOR (shared for long-term & monthly)
-        ============================================================ */
-        const miniCalc = document.getElementById('miniCalc');
-        const calcExpr = document.getElementById('calcExpr');
-        const calcVal = document.getElementById('calcVal');
+      <!-- screws -->
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
 
-        let calcCurrent = '';   // digits being entered
-        let calcExprStr = '';   // expression string shown above
-        let calcTargetLi = null; // which <li> to update
-        let calcMode = 'long'; // 'long' | 'monthly'
-        let calcMonthIdx = -1;  // monthly item index
+      <h2 class="modal-title" id="ql-title" data-i18n="quickLog">Quick Log</h2>
 
-        function calcUpdateDisplay() {
-            calcVal.textContent = calcCurrent !== '' ? calcCurrent : '0';
-            calcExpr.textContent = calcExprStr;
-        }
+      <!-- vents -->
+      <div class="modal-vents" aria-hidden="true">
+        <div class="modal-vent"></div><div class="modal-vent"></div>
+        <div class="modal-vent"></div><div class="modal-vent"></div>
+      </div>
 
-        function calcEvaluate() {
-            const expr = calcExprStr + calcCurrent;
-            if (!expr) return 0;
-            try {
-                // Replace % with /100 for simple percent
-                const safe = expr.replace(/[^0-9+\-*/.%()]/g, '')
-                    .replace(/(\d+)%/g, '($1/100)');
-                // eslint-disable-next-line no-new-func
-                const result = Function('"use strict"; return (' + safe + ')')();
-                return isFinite(result) ? Math.max(0, Math.round(result)) : 0;
-            } catch { return 0; }
-        }
+      <!-- Type toggle -->
+      <div class="type-row" role="group" aria-label="Transaction type">
+        <button class="type-btn type-btn--expense type-btn--active-expense" id="qlTypeExpense" onclick="setQlType('expense')" data-i18n="typeExpense">EXPENSE</button>
+        <button class="type-btn type-btn--income" id="qlTypeIncome" onclick="setQlType('income')" data-i18n="typeIncome">INCOME</button>
+      </div>
 
-        function calcConfirm() {
-            const result = calcEvaluate();
-            if (calcMode === 'long' && calcTargetLi) {
-                calcTargetLi.dataset.amount = result;
-                syncDisplay(calcTargetLi);
-                recalcLong();
-            } else if (calcMode === 'monthly' && calcMonthIdx >= 0) {
-                const items = document.querySelectorAll('#monthList .monthly-item');
-                if (items[calcMonthIdx]) {
-                    items[calcMonthIdx].dataset.amount = result;
-                    const amtEl = document.getElementById('m-amount-' + calcMonthIdx);
-                    if (amtEl) amtEl.textContent = result > 0 ? Number(result).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
-                }
-                recalcMonth();
-            }
-            closeCalc();
-        }
+      <form id="qlForm" novalidate>
 
-        function closeCalc() {
-            miniCalc.classList.remove('open', 'monthly-mode');
-            calcCurrent = '';
-            calcExprStr = '';
-            calcTargetLi = null;
-            calcMonthIdx = -1;
-            calcUpdateDisplay();
-        }
+        <div class="form-group">
+          <label class="form-label" for="qlAmount">
+            Amount <span id="qlCurrHint" style="color:var(--green);font-size:9px;">(VND)</span>
+          </label>
+          <input id="qlAmount" class="form-input" type="number" min="1" step="1" placeholder="0" />
+        </div>
 
-        function openCalc(anchorEl, mode, li, idx) {
-            calcMode = mode;
-            calcTargetLi = li || null;
-            calcMonthIdx = idx !== undefined ? idx : -1;
+        <div class="form-group">
+          <label class="form-label" for="qlDesc" data-i18n="description">Description</label>
+          <input id="qlDesc" class="form-input" type="text" placeholder="e.g. Coffee..." maxlength="80" />
+        </div>
 
-            // Seed display with current value
-            const seedVal = (mode === 'long' && li)
-                ? parseFloat(li.dataset.amount) || 0
-                : (mode === 'monthly' && idx >= 0)
-                    ? parseFloat(document.querySelectorAll('#monthList .monthly-item')[idx]?.dataset.amount) || 0
-                    : 0;
+        <div class="form-group">
+          <label class="form-label" for="qlCat" data-i18n="category">Category</label>
+          <select id="qlCat" class="form-select">
+            <option>Food &amp; Dining</option>
+            <option>Transport</option>
+            <option>Shopping</option>
+            <option>Entertainment</option>
+            <option>Health</option>
+            <option>Utilities</option>
+            <option>Salary</option>
+            <option>Freelance</option>
+            <option>Other</option>
+          </select>
+        </div>
 
-            calcCurrent = seedVal > 0 ? String(seedVal) : '';
-            calcExprStr = '';
-            calcUpdateDisplay();
+        <div id="qlError" class="form-error" role="alert"></div>
 
-            if (mode === 'monthly') {
-                miniCalc.classList.add('monthly-mode');
-            } else {
-                miniCalc.classList.remove('monthly-mode');
-            }
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeQuickLog()" data-i18n="cancel">CANCEL</button>
+          <button type="submit" class="btn-save" data-i18n="saveTransaction">SAVE</button>
+        </div>
 
-            // Position near anchor
-            const rect = anchorEl.getBoundingClientRect();
-            let top = rect.bottom + 6;
-            let left = rect.left - 220 + anchorEl.offsetWidth;
-            if (left < 8) left = 8;
-            if (top + 320 > window.innerHeight) top = rect.top - 320;
-            miniCalc.style.top = top + 'px';
-            miniCalc.style.left = left + 'px';
-            miniCalc.classList.add('open');
-        }
+      </form>
+    </div>
+  </div><!-- /quickLogModal -->
 
-        // Calculator button handler
-        miniCalc.addEventListener('click', e => {
-            const btn = e.target.closest('.calc-btn');
-            if (!btn) return;
-            e.stopPropagation();
-            const action = btn.dataset.action;
-
-            if (action === 'num') {
-                const v = btn.dataset.v;
-                if (v === '.' && calcCurrent.includes('.')) return;
-                calcCurrent += v;
-            } else if (action === 'op') {
-                const op = btn.dataset.v;
-                if (calcCurrent !== '') {
-                    calcExprStr += calcCurrent + op;
-                    calcCurrent = '';
-                } else if (calcExprStr !== '') {
-                    // Replace last operator
-                    calcExprStr = calcExprStr.replace(/[+\-*/%]$/, op);
-                }
-            } else if (action === 'clr') {
-                calcCurrent = '';
-                calcExprStr = '';
-            } else if (action === 'del') {
-                if (calcCurrent.length > 0) calcCurrent = calcCurrent.slice(0, -1);
-                else calcExprStr = calcExprStr.slice(0, -1);
-            } else if (action === 'eq') {
-                calcConfirm();
-                return;
-            }
-            calcUpdateDisplay();
-        });
-
-        // Keyboard support for calc
-        document.addEventListener('keydown', e => {
-            if (!miniCalc.classList.contains('open')) return;
-            if (e.key === 'Escape') { closeCalc(); return; }
-            if (e.key === 'Enter') { calcConfirm(); return; }
-            if (e.key === 'Backspace') {
-                if (calcCurrent.length > 0) calcCurrent = calcCurrent.slice(0, -1);
-                else calcExprStr = calcExprStr.slice(0, -1);
-                calcUpdateDisplay(); return;
-            }
-            if ('0123456789'.includes(e.key)) {
-                calcCurrent += e.key; calcUpdateDisplay();
-            } else if (['+', '-', '*', '/', '%'].includes(e.key)) {
-                if (calcCurrent !== '') { calcExprStr += calcCurrent + e.key; calcCurrent = ''; }
-                else if (calcExprStr !== '') { calcExprStr = calcExprStr.replace(/[+\-*/%]$/, e.key); }
-                calcUpdateDisplay();
-            } else if (e.key === '.') {
-                if (!calcCurrent.includes('.')) { calcCurrent += '.'; calcUpdateDisplay(); }
-            }
-        });
-
-        // Track whether the calc was just opened (same click cycle)
-        let _calcJustOpened = false;
-
-        // Close calc when clicking outside – but not on the very click that opened it
-        document.addEventListener('click', e => {
-            if (_calcJustOpened) { _calcJustOpened = false; return; }
-            if (miniCalc.classList.contains('open') && !miniCalc.contains(e.target)) {
-                closeCalc();
-            }
-        });
-
-        /* ── Wire long-term items (mini-calc instead of plain input) ── */
-        function wireItem(li) {
-            const disp = li.querySelector('.amount-display');
-            if (!disp) return;
-
-            disp.addEventListener('click', function (e) {
-                e.stopPropagation();
-                if (longEditMode) {
-                    li.style.transition = 'opacity .2s, transform .2s';
-                    li.style.opacity = '0';
-                    li.style.transform = 'translateX(14px)';
-                    setTimeout(() => { li.remove(); recalcLong(); }, 210);
-                    return;
-                }
-                // Toggle: if already open for this item, close it
-                if (miniCalc.classList.contains('open') && calcTargetLi === li) {
-                    closeCalc();
-                    return;
-                }
-                _calcJustOpened = true;
-                openCalc(disp, 'long', li);
-            });
-        }
-
-        /* Wire existing 5 items */
-        longList.querySelectorAll('.exp-item').forEach(li => {
-            wireItem(li);
-            initDragItem(li);
-        });
-
-        /** Build a new long-term item <li> */
-        function buildLongItem(name, sub) {
-            const li = document.createElement('li');
-            li.className = 'exp-item';
-            li.dataset.amount = '0';
-            li.setAttribute('draggable', 'true');
-            li.innerHTML = `
-                <span class="drag-handle exp-bullet bullet-long" title="Kéo để sắp xếp"></span>
-                <div class="exp-item-body">
-                    <div class="exp-item-name">${name}</div>
-                    <div class="exp-item-sub">${sub || 'Tùy chỉnh'}</div>
-                </div>
-                <button class="amount-display">+</button>`;
-            wireItem(li);
-            initDragItem(li);
-            if (longEditMode) syncDisplay(li);
-            return li;
-        }
-
-        /* ── EDIT MODE ── */
-        longEditBtn.addEventListener('click', () => {
-            longEditMode = !longEditMode;
-            longEditBtn.textContent = longEditMode ? 'Xong' : 'Chỉnh sửa';
-            longEditBtn.classList.toggle('active', longEditMode);
-            if (miniCalc.classList.contains('open') && calcMode === 'long') closeCalc();
-            longList.querySelectorAll('.exp-item').forEach(li => syncDisplay(li));
-        });
-
-        /* ── DRAG & DROP (HTML5) ── */
-        let dragSrc = null;
-
-        function initDragItem(li) {
-            li.addEventListener('dragstart', e => {
-                if (longEditMode) { e.preventDefault(); return; }
-                dragSrc = li;
-                li.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            li.addEventListener('dragend', () => {
-                li.classList.remove('dragging');
-                longList.querySelectorAll('.exp-item').forEach(i => i.classList.remove('drag-over'));
-                dragSrc = null;
-            });
-            li.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (!dragSrc || li === dragSrc) return;
-                e.dataTransfer.dropEffect = 'move';
-                longList.querySelectorAll('.exp-item').forEach(i => i.classList.remove('drag-over'));
-                li.classList.add('drag-over');
-            });
-            li.addEventListener('drop', e => {
-                e.preventDefault();
-                if (!dragSrc || li === dragSrc) return;
-                li.classList.remove('drag-over');
-                const items = [...longList.querySelectorAll('.exp-item')];
-                const si = items.indexOf(dragSrc), di = items.indexOf(li);
-                if (si < di) longList.insertBefore(dragSrc, li.nextSibling);
-                else longList.insertBefore(dragSrc, li);
-            });
-        }
-
-        /* ── CUSTOM MODAL (Thêm khoản chi dài hạn) ── */
-        const addModal = document.getElementById('addItemModal');
-        const modalInput = document.getElementById('modalItemName');
-        const modalBox_ = document.getElementById('modalBox');
-        const confirmBtn = document.getElementById('modalConfirmBtn');
-        const cancelBtn = document.getElementById('modalCancelBtn');
-
-        function openAddModal() {
-            addModal.classList.add('open');
-            modalInput.value = '';
-            setTimeout(() => modalInput.focus(), 80);
-        }
-        function closeAddModal() { addModal.classList.remove('open'); }
-
-        addModal.addEventListener('click', e => { if (!modalBox_.contains(e.target)) closeAddModal(); });
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && addModal.classList.contains('open')) closeAddModal();
-        });
-
-        function confirmAddItem() {
-            const name = modalInput.value.trim() || 'Khoản chi mới';
-            closeAddModal();
-            const li = buildLongItem(name, 'Tùy chỉnh');
-            li.style.opacity = '0';
-            li.style.transform = 'translateY(-8px)';
-            longList.appendChild(li);
-            requestAnimationFrame(() => {
-                li.style.transition = 'opacity .25s, transform .25s';
-                li.style.opacity = '1';
-                li.style.transform = 'translateY(0)';
-            });
-            setTimeout(() => li.querySelector('.amount-display').click(), 280);
-        }
-
-        confirmBtn.addEventListener('click', confirmAddItem);
-        if (cancelBtn) cancelBtn.addEventListener('click', closeAddModal);
-        modalInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmAddItem(); });
-        if (longAddBtn) longAddBtn.addEventListener('click', openAddModal);
-
-        /* ============================================================
-           TRONG THÁNG – Logic (mini-calc driven)
-        ============================================================ */
-        const monthTotalEl = document.getElementById('monthTotal');
-
-        function recalcMonth() {
-            let total = 0;
-            document.querySelectorAll('#monthList .monthly-item').forEach(li => {
-                const v = parseFloat(li.dataset.amount);
-                if (!isNaN(v) && v > 0) total += v;
-            });
-            if (monthTotalEl) {
-                monthTotalEl.textContent = total > 0 ? Number(total).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
-            }
-        }
-
-        // Wire + buttons in monthly section
-        document.querySelectorAll('.month-add-btn').forEach(btn => {
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const idx = parseInt(btn.dataset.idx, 10);
-                _calcJustOpened = true;
-                openCalc(btn, 'monthly', null, idx);
-            });
-        });
-
-        /* ============================================================
-           LOGOUT
-        ============================================================ */
-        function handleLogout() {
-            ['caltdhy_token', 'caltdhy_user', 'pcn_token', 'pcn_user'].forEach(k => localStorage.removeItem(k));
-            ['caltdhy_token', 'caltdhy_user'].forEach(k => sessionStorage.removeItem(k));
-            window.location.href = 'index.html';
-        }
-
-        /* ============================================================
-           NAVIGATION
-        ============================================================ */
-        function navigateTo(url) {
-            const page = document.getElementById('spending-page');
-            page.classList.add('fade-out');
-            setTimeout(() => { window.location.href = url; }, 540);
-        }
-
-        /* ============================================================
-           PAGE ENTRANCE
-        ============================================================ */
-        window.addEventListener('load', () => {
-            const page = document.getElementById('spending-page');
-            page.style.opacity = '0';
-            page.style.transform = 'translateY(10px)';
-            page.style.transition = 'opacity .55s ease, transform .55s ease';
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                page.style.opacity = '1';
-                page.style.transform = 'translateY(0)';
-            }));
-        });
-        /* ============================================================
-                  KẾT NỐI API: ĐỒNG BỘ CẢ TRONG THÁNG & DÀI HẠN (FIXED)
-               ============================================================ */
-        async function loadOverviewData() {
-            const token = localStorage.getItem('pcn_token');
-            if (!token) return;
-
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1;
-            const dateKey = `${year}-${String(month).padStart(2, '0')}-01`; // Mặc định lưu Dài hạn vào ngày mùng 1
-
-            try {
-                const res = await fetch(`https://caltdhy.onrender.com/api/spending?year=${year}&month=${month}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    let totalFood = 0, totalGas = 0, totalCoffee = 0, totalMisc = 0;
-                    let dbLongTerm = {};
-
-                    data.data.forEach(record => {
-                        totalFood += record.food || 0;
-                        totalGas += record.gas || 0;
-                        totalCoffee += record.coffee || 0;
-                        totalMisc += record.misc || 0;
-                        // Nếu record có chứa mục dài hạn, lấy nó ra
-                        if (record.longTerm && Object.keys(record.longTerm).length > 0) {
-                            dbLongTerm = record.longTerm;
-                        }
-                    });
-
-                    // 1. Cập nhật "Trong tháng"
-                    const monthItems = document.querySelectorAll('#monthList .monthly-item');
-                    if (monthItems.length >= 4) {
-                        const vals = [totalFood, totalGas, totalCoffee, totalMisc];
-                        vals.forEach((v, i) => {
-                            monthItems[i].dataset.amount = v;
-                            document.getElementById(`m-amount-${i}`).textContent = v > 0 ? v.toLocaleString('vi-VN') + ' ₫' : '0 ₫';
-                        });
-                    }
-
-                    // 2. Cập nhật "Dài hạn" - Khớp tên khoản chi với dữ liệu từ DB
-                    document.querySelectorAll('#longList .exp-item').forEach(li => {
-                        const name = li.querySelector('.exp-item-name').textContent.trim();
-                        if (dbLongTerm[name] !== undefined) {
-                            li.dataset.amount = dbLongTerm[name];
-                        }
-                        syncDisplay(li); // Cập nhật hiển thị số tiền hoặc dấu +
-                    });
-
-                    recalcMonth();
-                    recalcLong();
-                }
-            } catch (err) { console.error("Lỗi load data:", err); }
-        }
-
-        // HÀM MỚI: Tự động gửi dữ liệu Dài hạn lên MongoDB mỗi khi thay đổi
-        async function saveLongTermToServer() {
-            const token = localStorage.getItem('pcn_token');
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-
-            const longTermData = {};
-            document.querySelectorAll('#longList .exp-item').forEach(li => {
-                const name = li.querySelector('.exp-item-name').textContent.trim();
-                const amount = parseFloat(li.dataset.amount) || 0;
-                longTermData[name] = amount;
-            });
-
-            try {
-                await fetch(`https://caltdhy.onrender.com/api/spending/${dateStr}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ longTerm: longTermData })
-                });
-            } catch (err) { console.error("Lỗi save dài hạn:", err); }
-        }
-
-        // Cập nhật hàm calcConfirm cũ để nó biết đường lưu lên Server
-        const oldCalcConfirm = calcConfirm;
-        calcConfirm = function () {
-            oldCalcConfirm(); // Chạy logic cũ để cập nhật UI
-            if (calcMode === 'long') saveLongTermToServer(); // Nếu là mục dài hạn thì đẩy lên DB luôn
-        };
-        // Tự động chạy hàm lấy dữ liệu khi mở trang
-        document.addEventListener('DOMContentLoaded', loadOverviewData);
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
-
+  <script src="spending.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
 
 </body>
-
 </html>

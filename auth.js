@@ -111,7 +111,7 @@ async function handleRegister() {
         localStorage.setItem('pcn_user', JSON.stringify(data.user));
 
         showMessage('registerSuccess', '✅ Đăng ký thành công! Đang chuyển đến trang chính...', false);
-        setTimeout(() => { window.location.href = 'hub.html'; }, 1000);
+        setTimeout(() => { window.location.href = 'spending.html'; }, 1000);
 
     } catch (err) {
         showMessage('registerError', 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
@@ -152,7 +152,7 @@ async function handleLogin() {
         localStorage.setItem('pcn_token', data.token);
         localStorage.setItem('pcn_user', JSON.stringify(data.user));
 
-        window.location.href = 'hub.html';
+        window.location.href = 'spending.html';
 
     } catch (err) {
         showMessage('loginError', 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
@@ -200,7 +200,7 @@ async function handleForgotPassword() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('force') === 'true') return;
     const token = localStorage.getItem('pcn_token');
-    if (token) window.location.href = 'hub.html';
+    if (token) window.location.href = 'spending.html';
 })();
 
 // ---- Enter key ----

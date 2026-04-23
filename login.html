@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In – CaltDHy</title>
+  <meta name="description" content="Log in to your CaltDHy expense management account." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- ANTI-FOUC: apply saved theme before first paint -->
+  <script src="theme-manager.js"></script>
+  <style>
+    :root {
+      --chassis:#e0e5ec; --panel:#f0f2f5; --recessed:#d1d9e6;
+      --txt:#2d3436; --muted:#4a5568; --accent:#ff4757;
+      --sh:#babecc; --hi:#ffffff;
+      --shadow-card:8px 8px 16px var(--sh),-8px -8px 16px var(--hi);
+      --shadow-float:12px 12px 24px var(--sh),-12px -12px 24px var(--hi),inset 1px 1px 0 rgba(255,255,255,.5);
+      --shadow-pressed:inset 6px 6px 12px var(--sh),inset -6px -6px 12px var(--hi);
+      --shadow-accent:4px 4px 8px rgba(166,50,60,.4),-4px -4px 8px rgba(255,100,110,.4);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'Inter',sans-serif;background:var(--chassis);color:var(--txt);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' x='0' y='0' fill='rgba(0,0,0,0.03)'/%3E%3Crect width='1' height='1' x='2' y='2' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
+    }
+
+    .pg-screw{position:fixed;width:14px;height:14px;border-radius:50%;z-index:5;
+      background:radial-gradient(circle at 40% 35%,#d0d5dc,#b0b6c0);
+      box-shadow:1px 1px 2px rgba(0,0,0,.25),inset 1px 1px 1px rgba(255,255,255,.5);}
+    .pg-screw::after{content:'';position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%) rotate(45deg);width:8px;height:1.5px;
+      background:rgba(0,0,0,.3);border-radius:1px;box-shadow:0 3px 0 rgba(0,0,0,.3);}
+    .s-tl{top:16px;left:16px} .s-tr{top:16px;right:16px}
+    .s-bl{bottom:16px;left:16px} .s-br{bottom:16px;right:16px}
+
+    .status-bar{
+      position:fixed;top:20px;left:50%;transform:translateX(-50%);
+      display:flex;align-items:center;gap:10px;background:var(--panel);
+      border-radius:9999px;padding:8px 20px;box-shadow:var(--shadow-card);z-index:10;
+    }
+    .led{width:9px;height:9px;border-radius:50%;background:#00e676;
+      box-shadow:0 0 6px 2px rgba(0,230,118,.5);animation:pulse 2s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 6px 2px rgba(0,230,118,.5)}50%{opacity:.55;box-shadow:0 0 3px 1px rgba(0,230,118,.5)}}
+    .status-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;
+      letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+
+    .module{
+      position:relative;z-index:1;background:var(--panel);border-radius:24px;
+      box-shadow:var(--shadow-float);padding:44px 48px 40px;width:100%;max-width:420px;
+    }
+    .c-screw{position:absolute;width:12px;height:12px;border-radius:50%;
+      background:radial-gradient(circle at 40% 35%,#d0d5dc,#b0b6c0);
+      box-shadow:1px 1px 2px rgba(0,0,0,.2),inset 1px 1px 1px rgba(255,255,255,.5);}
+    .c-screw::after{content:'';position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%) rotate(-45deg);width:7px;height:1.2px;
+      background:rgba(0,0,0,.25);border-radius:1px;box-shadow:0 2.5px 0 rgba(0,0,0,.25);}
+    .c-tl{top:12px;left:12px} .c-tr{top:12px;right:12px}
+    .c-bl{bottom:12px;left:12px} .c-br{bottom:12px;right:12px}
+
+    .mod-header{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:24px;}
+    .mod-eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;
+      color:var(--muted);text-transform:uppercase;}
+    .mod-title{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;
+      letter-spacing:.05em;color:var(--txt);text-transform:uppercase;}
+
+    .vents{display:flex;gap:6px;margin-bottom:28px;}
+    .vent{flex:1;height:3px;border-radius:2px;background:var(--recessed);
+      box-shadow:inset 3px 3px 7px var(--sh),inset -3px -3px 7px var(--hi);}
+
+    .fg{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .flabel{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+      letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding-left:2px;}
+    .finput{
+      width:100%;background:var(--recessed);border:none;border-radius:8px;
+      padding:13px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--txt);
+      box-shadow:var(--shadow-pressed);outline:none;transition:box-shadow 180ms ease;appearance:none;
+    }
+    .finput::placeholder{color:#8a98a8;}
+    .finput:focus{box-shadow:var(--shadow-pressed),0 0 0 2px rgba(255,71,87,.25);}
+    .iw{position:relative;}
+    .iw .finput{padding-right:44px;}
+    .eye-btn{
+      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      background:none;border:none;cursor:pointer;color:var(--muted);
+      display:flex;align-items:center;padding:4px;transition:color 150ms ease;
+    }
+    .eye-btn:hover{color:var(--accent);}
+
+    /* Forgot password link */
+    .forgot-row{text-align:right;margin-top:-8px;margin-bottom:16px;}
+    .forgot-lnk{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;
+      color:var(--muted);text-decoration:none;transition:color 150ms ease;}
+    .forgot-lnk:hover{color:var(--accent);}
+
+    .form-err{
+      font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);
+      letter-spacing:.05em;padding:8px 12px;background:rgba(255,71,87,.08);
+      border-radius:6px;border-left:3px solid var(--accent);display:none;margin-bottom:12px;
+    }
+    .form-err.show{display:block;}
+
+    .btn-cta{
+      width:100%;padding:15px;background:var(--accent);color:#fff;
+      font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;
+      letter-spacing:.15em;text-transform:uppercase;border:none;border-radius:8px;
+      box-shadow:var(--shadow-accent);cursor:pointer;
+      transition:transform 120ms ease,box-shadow 120ms ease;
+      position:relative;overflow:hidden;margin-top:8px;
+    }
+    .btn-cta::before{content:'';position:absolute;inset:0;
+      background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%);}
+    .btn-cta:hover{transform:translateY(-1px);box-shadow:6px 6px 12px rgba(166,50,60,.5),-6px -6px 12px rgba(255,120,130,.5);}
+    .btn-cta:active{transform:translateY(2px);box-shadow:var(--shadow-pressed);}
+    .btn-cta:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+    /* Divider */
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--sh);}
+    .divider span{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.1em;}
+
+    /* Back to home ghost */
+    .btn-ghost{
+      width:100%;padding:12px;background:var(--chassis);color:var(--muted);
+      font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+      letter-spacing:.12em;text-transform:uppercase;border:none;border-radius:8px;
+      box-shadow:var(--shadow-card);cursor:pointer;text-decoration:none;
+      display:block;text-align:center;transition:transform 120ms ease,color 120ms ease,box-shadow 120ms ease;
+    }
+    .btn-ghost:hover{color:var(--txt);transform:translateY(-1px);}
+    .btn-ghost:active{transform:translateY(2px);box-shadow:var(--shadow-pressed);}
+
+    .mod-footer{margin-top:22px;text-align:center;
+      font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.04em;}
+    .lnk{color:var(--txt);font-weight:700;text-decoration:none;
+      border-bottom:1.5px solid var(--sh);padding-bottom:1px;
+      transition:color 150ms ease,border-color 150ms ease;}
+    .lnk:hover{color:var(--accent);border-color:var(--accent);}
+  </style>
+</head>
+<body>
+
+  <div class="pg-screw s-tl" aria-hidden="true"></div>
+  <div class="pg-screw s-tr" aria-hidden="true"></div>
+  <div class="pg-screw s-bl" aria-hidden="true"></div>
+  <div class="pg-screw s-br" aria-hidden="true"></div>
+
+  <header class="status-bar" aria-label="System status">
+    <div class="led" aria-hidden="true"></div>
+    <span class="status-label">Auth Module Active</span>
+  </header>
+
+  <main>
+    <div class="module" role="region" aria-labelledby="mod-title">
+      <div class="c-screw c-tl" aria-hidden="true"></div>
+      <div class="c-screw c-tr" aria-hidden="true"></div>
+      <div class="c-screw c-bl" aria-hidden="true"></div>
+      <div class="c-screw c-br" aria-hidden="true"></div>
+
+      <div class="mod-header">
+        <span class="mod-eyebrow">CaltDHy // Auth</span>
+        <h1 class="mod-title" id="mod-title">Access System</h1>
+      </div>
+
+      <div class="vents" aria-hidden="true">
+        <div class="vent"></div><div class="vent"></div><div class="vent"></div>
+        <div class="vent"></div><div class="vent"></div>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="fg">
+          <label class="flabel" for="emailIn">Email Address</label>
+          <input id="emailIn" class="finput" type="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+
+        <div class="fg">
+          <label class="flabel" for="pwIn">Password</label>
+          <div class="iw">
+            <input id="pwIn" class="finput" type="password" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="eye-btn" onclick="togglePw('pwIn',this)" aria-label="Toggle password visibility">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="forgot-row">
+          <a href="reset-password.html" class="forgot-lnk">FORGOT PASSWORD?</a>
+        </div>
+
+        <div id="formErr" class="form-err" role="alert"></div>
+
+        <button type="submit" class="btn-cta" id="submitBtn">LOG IN</button>
+      </form>
+
+      <div class="divider"><span>OR</span></div>
+      <a href="index.html" class="btn-ghost">← BACK TO HOME</a>
+
+      <p class="mod-footer">No account yet? <a href="signup.html" class="lnk">SIGN UP</a></p>
+    </div>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      const open  = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      const slash = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      const svg = btn.querySelector('svg');
+      if (inp.type === 'password') { inp.type = 'text';     svg.innerHTML = slash; }
+      else                         { inp.type = 'password'; svg.innerHTML = open;  }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('formErr');
+      const btn   = document.getElementById('submitBtn');
+      const email = document.getElementById('emailIn').value.trim();
+      const pw    = document.getElementById('pwIn').value;
+
+      errEl.classList.remove('show');
+      function showErr(msg) { errEl.textContent = '⚠ ' + msg; errEl.classList.add('show'); }
+
+      if (!/\S+@\S+\.\S+/.test(email)) { showErr('EMAIL address is invalid.'); return; }
+      if (!pw)                          { showErr('PASSWORD is required.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'AUTHENTICATING...';
+
+      /* Persist a minimal session token so the dashboard knows the user is logged in */
+      try {
+        localStorage.setItem('caltdhy_token', 'local_' + Date.now());
+        localStorage.setItem('caltdhy_user', JSON.stringify({ name: email.split('@')[0] }));
+      } catch (_) {}
+
+      setTimeout(() => { window.location.href = 'spending.html'; }, 900);
+    });
+
+    /* ESC → go back to index */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
