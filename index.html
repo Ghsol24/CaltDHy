@@ -5,12 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CaltDHy – Expense Management System</title>
-  <meta name="description" content="CaltDHy – Industrial-grade personal expense management. Track, analyse, and command your finances." />
-
+  <meta name="description"
+    content="CaltDHy – Industrial-grade personal expense management. Track, analyse, and command your finances." />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet" />
 
   <!-- ANTI-FOUC: apply saved theme before first paint -->
   <script src="theme-manager.js"></script>
@@ -20,41 +25,49 @@
        DESIGN TOKEN SYSTEM — Industrial Skeuomorphism
        ============================================================ */
     :root {
-      --chassis:        #e0e5ec;
-      --panel:          #f0f2f5;
-      --recessed:       #d1d9e6;
-      --text-primary:   #2d3436;
-      --text-muted:     #4a5568;
-      --accent:         #ff4757;
-      --accent-dark:    #a6323c;
-      --accent-glow:    rgba(255, 71, 87, 0.35);
-      --border-shadow:  #babecc;
-      --border-light:   #ffffff;
-      --led-green:      #00e676;
-      --led-glow:       rgba(0, 230, 118, 0.5);
+      --chassis: #e0e5ec;
+      --panel: #f0f2f5;
+      --recessed: #d1d9e6;
+      --text-primary: #2d3436;
+      --text-muted: #4a5568;
+      --accent: #ff4757;
+      --accent-dark: #a6323c;
+      --accent-glow: rgba(255, 71, 87, 0.35);
+      --border-shadow: #babecc;
+      --border-light: #ffffff;
+      --led-green: #00e676;
+      --led-glow: rgba(0, 230, 118, 0.5);
 
       /* Neumorphic shadow recipes */
-      --shadow-card:     8px 8px 16px var(--border-shadow), -8px -8px 16px var(--border-light);
-      --shadow-float:    12px 12px 24px var(--border-shadow), -12px -12px 24px var(--border-light), inset 1px 1px 0 rgba(255,255,255,0.5);
-      --shadow-pressed:  inset 6px 6px 12px var(--border-shadow), inset -6px -6px 12px var(--border-light);
-      --shadow-accent:   4px 4px 8px rgba(166,50,60,0.4), -4px -4px 8px rgba(255,100,110,0.4);
+      --shadow-card: 8px 8px 16px var(--border-shadow), -8px -8px 16px var(--border-light);
+      --shadow-float: 12px 12px 24px var(--border-shadow), -12px -12px 24px var(--border-light), inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+      --shadow-pressed: inset 6px 6px 12px var(--border-shadow), inset -6px -6px 12px var(--border-light);
+      --shadow-accent: 4px 4px 8px rgba(166, 50, 60, 0.4), -4px -4px 8px rgba(255, 100, 110, 0.4);
 
       /* Radii */
-      --r-md:  8px;
-      --r-lg:  16px;
-      --r-xl:  24px;
+      --r-md: 8px;
+      --r-lg: 16px;
+      --r-xl: 24px;
       --r-full: 9999px;
     }
 
     /* ============================================================
        RESET & BASE
        ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body {
+    html,
+    body {
       width: 100%;
       height: 100%;
-      overflow: hidden; /* NO SCROLLING — single viewport lock */
+      overflow: hidden;
+      /* NO SCROLLING — single viewport lock */
     }
 
     body {
@@ -109,8 +122,17 @@
     }
 
     @keyframes ledPulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 6px 2px var(--led-glow); }
-      50%       { opacity: 0.55; box-shadow: 0 0 3px 1px var(--led-glow); }
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 6px 2px var(--led-glow);
+      }
+
+      50% {
+        opacity: 0.55;
+        box-shadow: 0 0 3px 1px var(--led-glow);
+      }
     }
 
     .status-label {
@@ -144,23 +166,42 @@
       height: 14px;
       border-radius: 50%;
       background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
-      box-shadow: 1px 1px 2px rgba(0,0,0,0.25), inset 1px 1px 1px rgba(255,255,255,0.5);
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25), inset 1px 1px 1px rgba(255, 255, 255, 0.5);
       z-index: 5;
     }
+
     .screw::after {
       content: '';
       position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%,-50%) rotate(45deg);
-      width: 8px; height: 1.5px;
-      background: rgba(0,0,0,0.3);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 8px;
+      height: 1.5px;
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 1px;
-      box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
     }
-    .screw-tl { top: 16px; left: 16px; }
-    .screw-tr { top: 16px; right: 16px; }
-    .screw-bl { bottom: 16px; left: 16px; }
-    .screw-br { bottom: 16px; right: 16px; }
+
+    .screw-tl {
+      top: 16px;
+      left: 16px;
+    }
+
+    .screw-tr {
+      top: 16px;
+      right: 16px;
+    }
+
+    .screw-bl {
+      bottom: 16px;
+      left: 16px;
+    }
+
+    .screw-br {
+      bottom: 16px;
+      right: 16px;
+    }
 
     /* ============================================================
        MAIN HERO LAYOUT
@@ -271,9 +312,17 @@
       box-shadow: inset 1px 1px 2px var(--border-shadow), inset -1px -1px 2px var(--border-light);
     }
 
-    .vent-slot:nth-child(1) { width: 60px; }
-    .vent-slot:nth-child(2) { width: 48px; }
-    .vent-slot:nth-child(3) { width: 36px; }
+    .vent-slot:nth-child(1) {
+      width: 60px;
+    }
+
+    .vent-slot:nth-child(2) {
+      width: 48px;
+    }
+
+    .vent-slot:nth-child(3) {
+      width: 36px;
+    }
 
     /* ============================================================
        CALL-TO-ACTION BUTTONS
@@ -312,13 +361,13 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
       border-radius: inherit;
     }
 
     .btn-login:hover {
       transform: translateY(-1px);
-      box-shadow: 6px 6px 12px rgba(166,50,60,0.5), -6px -6px 12px rgba(255,120,130,0.5);
+      box-shadow: 6px 6px 12px rgba(166, 50, 60, 0.5), -6px -6px 12px rgba(255, 120, 130, 0.5);
     }
 
     .btn-login:active {
@@ -396,12 +445,20 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      box-shadow: inset 1px 1px 2px rgba(255,255,255,0.6), inset -1px -1px 2px rgba(0,0,0,0.1);
+      box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6), inset -1px -1px 2px rgba(0, 0, 0, 0.1);
     }
 
-    .device-dot.red    { background: #ff5f56; }
-    .device-dot.yellow { background: #ffbd2e; }
-    .device-dot.green  { background: #27c93f; }
+    .device-dot.red {
+      background: #ff5f56;
+    }
+
+    .device-dot.yellow {
+      background: #ffbd2e;
+    }
+
+    .device-dot.green {
+      background: #27c93f;
+    }
 
     .device-title-bar {
       font-family: 'JetBrains Mono', monospace;
@@ -427,17 +484,32 @@
       opacity: 0.4;
     }
 
-    .signal-bar:nth-child(1) { height: 5px;  opacity: 1; }
-    .signal-bar:nth-child(2) { height: 8px;  opacity: 0.8; }
-    .signal-bar:nth-child(3) { height: 11px; opacity: 0.6; }
-    .signal-bar:nth-child(4) { height: 14px; opacity: 0.3; }
+    .signal-bar:nth-child(1) {
+      height: 5px;
+      opacity: 1;
+    }
+
+    .signal-bar:nth-child(2) {
+      height: 8px;
+      opacity: 0.8;
+    }
+
+    .signal-bar:nth-child(3) {
+      height: 11px;
+      opacity: 0.6;
+    }
+
+    .signal-bar:nth-child(4) {
+      height: 14px;
+      opacity: 0.3;
+    }
 
     /* Device screen */
     .device-screen {
       flex: 1;
       background: #1a1e23;
       border-radius: var(--r-lg);
-      box-shadow: inset 4px 4px 12px rgba(0,0,0,0.6), inset -2px -2px 6px rgba(255,255,255,0.05);
+      box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.05);
       padding: 18px;
       display: flex;
       flex-direction: column;
@@ -520,10 +592,10 @@
     }
 
     .screen-metric {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.04);
       border-radius: var(--r-md);
       padding: 8px 10px;
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .sm-label {
@@ -541,8 +613,13 @@
       font-weight: 700;
     }
 
-    .sm-value.income { color: #00e676; }
-    .sm-value.expense { color: var(--accent); }
+    .sm-value.income {
+      color: #00e676;
+    }
+
+    .sm-value.expense {
+      color: var(--accent);
+    }
 
     /* Mini transaction bars */
     .screen-txns {
@@ -556,20 +633,32 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 6px;
       padding: 6px 10px;
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid rgba(255, 255, 255, 0.05);
       animation: txnSlide 0.4s ease both;
     }
 
     @keyframes txnSlide {
-      from { opacity: 0; transform: translateX(-6px); }
-      to   { opacity: 1; transform: translateX(0); }
+      from {
+        opacity: 0;
+        transform: translateX(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
-    .screen-txn:nth-child(2) { animation-delay: 0.1s; }
-    .screen-txn:nth-child(3) { animation-delay: 0.2s; }
+    .screen-txn:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .screen-txn:nth-child(3) {
+      animation-delay: 0.2s;
+    }
 
     .txn-name {
       font-family: 'JetBrains Mono', monospace;
@@ -580,7 +669,7 @@
     .txn-bar {
       flex: 1;
       height: 3px;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
       border-radius: 2px;
       margin: 0 10px;
       position: relative;
@@ -589,13 +678,17 @@
 
     .txn-bar-fill {
       position: absolute;
-      left: 0; top: 0; bottom: 0;
+      left: 0;
+      top: 0;
+      bottom: 0;
       border-radius: 2px;
       animation: barGrow 1.2s ease both;
     }
 
     @keyframes barGrow {
-      from { width: 0; }
+      from {
+        width: 0;
+      }
     }
 
     .txn-amount {
@@ -604,8 +697,13 @@
       font-weight: 700;
     }
 
-    .txn-amount.neg { color: var(--accent); }
-    .txn-amount.pos { color: #00e676; }
+    .txn-amount.neg {
+      color: var(--accent);
+    }
+
+    .txn-amount.pos {
+      color: #00e676;
+    }
 
     /* ============================================================
        RESPONSIVE — stacked on small screens
@@ -617,175 +715,343 @@
         padding: 0 24px;
         text-align: center;
       }
-      .brand-tagline { margin: 0 auto; }
-      .metric-strip  { justify-content: center; }
-      .cta-row       { justify-content: center; }
-      .vent-group    { align-items: center; }
-      .device-wrap   { display: none; }
+
+      .brand-tagline {
+        margin: 0 auto;
+      }
+
+      .metric-strip {
+        justify-content: center;
+      }
+
+      .cta-row {
+        justify-content: center;
+      }
+
+      .vent-group {
+        align-items: center;
+      }
+
+      .device-wrap {
+        display: none;
+      }
     }
 
     /* ============================================================
        DARK THEME OVERRIDE
        ============================================================ */
     body.dark-theme {
-      --chassis:       #2d3436;
-      --panel:         #353b3c;
-      --recessed:      #252a2b;
-      --text-primary:  #e0e5ec;
-      --text-muted:    #8896a8;
-      --border-shadow: rgba(0,0,0,.65);
-      --border-light:  rgba(255,255,255,.04);
-      --shadow-card:    8px 8px 20px rgba(0,0,0,.65), -4px -4px 12px rgba(255,255,255,.04);
-      --shadow-float:  12px 12px 28px rgba(0,0,0,.8), -4px -4px 12px rgba(255,255,255,.04);
-      --shadow-pressed: inset 4px 4px 10px rgba(0,0,0,.7), inset -2px -2px 6px rgba(255,255,255,.04);
+      --chassis: #2d3436;
+      --panel: #353b3c;
+      --recessed: #252a2b;
+      --text-primary: #e0e5ec;
+      --text-muted: #8896a8;
+      --border-shadow: rgba(0, 0, 0, .65);
+      --border-light: rgba(255, 255, 255, .04);
+      --shadow-card: 8px 8px 20px rgba(0, 0, 0, .65), -4px -4px 12px rgba(255, 255, 255, .04);
+      --shadow-float: 12px 12px 28px rgba(0, 0, 0, .8), -4px -4px 12px rgba(255, 255, 255, .04);
+      --shadow-pressed: inset 4px 4px 10px rgba(0, 0, 0, .7), inset -2px -2px 6px rgba(255, 255, 255, .04);
     }
+
     body.dark-theme .screw {
       background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
-      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, .6), inset 1px 1px 1px rgba(255, 255, 255, .06);
     }
-    body.dark-theme .device-title-bar { color: #8896a8; background: #252a2b; }
-    body.dark-theme .device-bezel     { background: #353b3c; }
-    body.dark-theme .btn-signup       { background: #353b3c; color: #e0e5ec; }
-    body.dark-theme .metric-badge     { background: #353b3c; }
-    body.dark-theme .metric-value     { color: #e0e5ec; }
-    body.dark-theme .metric-label     { color: #8896a8; }
-    body.dark-theme .status-bar       { background: #353b3c; }
+
+    body.dark-theme .device-title-bar {
+      color: #8896a8;
+      background: #252a2b;
+    }
+
+    body.dark-theme .device-bezel {
+      background: #353b3c;
+    }
+
+    body.dark-theme .btn-signup {
+      background: #353b3c;
+      color: #e0e5ec;
+    }
+
+    body.dark-theme .metric-badge {
+      background: #353b3c;
+    }
+
+    body.dark-theme .metric-value {
+      color: #e0e5ec;
+    }
+
+    body.dark-theme .metric-label {
+      color: #8896a8;
+    }
+
+    body.dark-theme .status-bar {
+      background: #353b3c;
+    }
 
     /* ============================================================
        SETTINGS BUTTON & MODAL (index page)
        ============================================================ */
     .idx-settings-btn {
       position: fixed;
-      top: 16px; right: 16px;
-      width: 38px; height: 38px;
+      top: 16px;
+      right: 16px;
+      width: 38px;
+      height: 38px;
       background: var(--panel);
-      border: none; border-radius: 8px;
+      border: none;
+      border-radius: 8px;
       box-shadow: var(--shadow-card);
       color: var(--text-muted);
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       z-index: 20;
       transition: color 150ms, transform 120ms;
     }
-    .idx-settings-btn:hover  { color: var(--accent); }
-    .idx-settings-btn:active { transform: translateY(1px); box-shadow: var(--shadow-pressed); }
+
+    .idx-settings-btn:hover {
+      color: var(--accent);
+    }
+
+    .idx-settings-btn:active {
+      transform: translateY(1px);
+      box-shadow: var(--shadow-pressed);
+    }
 
     /* Modal overlay */
     .idx-modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
       backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center;
-      z-index: 100; padding: 24px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
     }
-    .idx-modal-overlay.open { display: flex; }
+
+    .idx-modal-overlay.open {
+      display: flex;
+    }
 
     /* Modal card */
     .idx-modal-card {
       background: var(--panel);
       border-radius: 20px;
       box-shadow: var(--shadow-float);
-      width: 100%; max-width: 340px;
+      width: 100%;
+      max-width: 340px;
       padding: 32px 36px;
       position: relative;
       animation: idxModalIn .22s ease both;
     }
+
     @keyframes idxModalIn {
-      from { opacity: 0; transform: scale(.95) translateY(8px); }
-      to   { opacity: 1; transform: scale(1)   translateY(0); }
+      from {
+        opacity: 0;
+        transform: scale(.95) translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     /* Modal screws */
     .idx-screw {
       position: absolute;
-      width: 10px; height: 10px; border-radius: 50%;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
       background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
-      box-shadow: 1px 1px 2px rgba(0,0,0,.2), inset 1px 1px 1px rgba(255,255,255,.5);
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, .2), inset 1px 1px 1px rgba(255, 255, 255, .5);
     }
+
     .idx-screw::after {
       content: '';
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%,-50%) rotate(-45deg);
-      width: 6px; height: 1px;
-      background: rgba(0,0,0,.25);
-      box-shadow: 0 2px 0 rgba(0,0,0,.25);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      width: 6px;
+      height: 1px;
+      background: rgba(0, 0, 0, .25);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, .25);
     }
+
     body.dark-theme .idx-screw {
       background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
-      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, .6), inset 1px 1px 1px rgba(255, 255, 255, .06);
     }
-    .idx-sc-tl { top: 10px; left: 10px; }
-    .idx-sc-tr { top: 10px; right: 10px; }
-    .idx-sc-bl { bottom: 10px; left: 10px; }
-    .idx-sc-br { bottom: 10px; right: 10px; }
+
+    .idx-sc-tl {
+      top: 10px;
+      left: 10px;
+    }
+
+    .idx-sc-tr {
+      top: 10px;
+      right: 10px;
+    }
+
+    .idx-sc-bl {
+      bottom: 10px;
+      left: 10px;
+    }
+
+    .idx-sc-br {
+      bottom: 10px;
+      right: 10px;
+    }
 
     /* Modal title */
     .idx-modal-title {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-      color: var(--text-primary); text-align: center; margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: 6px;
     }
+
     /* Vents */
-    .idx-vents { display: flex; gap: 5px; margin-bottom: 24px; }
-    .idx-vent  { flex: 1; height: 2px; border-radius: 1px; background: var(--recessed); box-shadow: var(--shadow-pressed); }
+    .idx-vents {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 24px;
+    }
+
+    .idx-vent {
+      flex: 1;
+      height: 2px;
+      border-radius: 1px;
+      background: var(--recessed);
+      box-shadow: var(--shadow-pressed);
+    }
 
     /* Settings group */
-    .idx-group { margin-bottom: 20px; }
+    .idx-group {
+      margin-bottom: 20px;
+    }
+
     .idx-group-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
-      color: var(--text-muted); margin-bottom: 10px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
     }
 
     /* Language buttons */
-    .idx-lang-row { display: flex; gap: 8px; }
+    .idx-lang-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .idx-lang-btn {
-      flex: 1; padding: 10px 0;
+      flex: 1;
+      padding: 10px 0;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-      background: var(--recessed); color: var(--text-muted);
-      border: 2px solid transparent; border-radius: 8px;
-      cursor: pointer; box-shadow: var(--shadow-pressed);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      background: var(--recessed);
+      color: var(--text-muted);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: var(--shadow-pressed);
       transition: border-color 150ms, color 150ms;
     }
-    .idx-lang-btn:hover { color: var(--text-primary); }
+
+    .idx-lang-btn:hover {
+      color: var(--text-primary);
+    }
+
     .idx-lang-btn.active {
-      border-color: var(--accent); color: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     /* Theme toggle */
-    .idx-theme-row { display: flex; gap: 8px; }
+    .idx-theme-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .idx-theme-btn {
-      flex: 1; padding: 10px 0;
+      flex: 1;
+      padding: 10px 0;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-      background: var(--recessed); color: var(--text-muted);
-      border: 2px solid transparent; border-radius: 8px;
-      cursor: pointer; box-shadow: var(--shadow-pressed);
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--recessed);
+      color: var(--text-muted);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: var(--shadow-pressed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       transition: border-color 150ms, color 150ms;
     }
-    .idx-theme-btn:hover { color: var(--text-primary); }
+
+    .idx-theme-btn:hover {
+      color: var(--text-primary);
+    }
+
     .idx-theme-btn.active {
-      border-color: var(--accent); color: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     /* Done button */
     .idx-done-btn {
-      width: 100%; margin-top: 8px;
+      width: 100%;
+      margin-top: 8px;
       padding: 12px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      box-shadow: 4px 4px 8px rgba(166,50,60,.4), -4px -4px 8px rgba(255,100,110,.4);
-      position: relative; overflow: hidden;
+      box-shadow: 4px 4px 8px rgba(166, 50, 60, .4), -4px -4px 8px rgba(255, 100, 110, .4);
+      position: relative;
+      overflow: hidden;
       transition: transform 120ms;
     }
-    .idx-done-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%); }
-    .idx-done-btn:hover  { transform: translateY(-1px); }
-    .idx-done-btn:active { transform: translateY(2px); }
+
+    .idx-done-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .15) 0%, transparent 60%);
+    }
+
+    .idx-done-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .idx-done-btn:active {
+      transform: translateY(2px);
+    }
   </style>
 </head>
 
@@ -798,10 +1064,13 @@
   <div class="screw screw-br" aria-hidden="true"></div>
 
   <!-- ── SETTINGS GEAR BUTTON (top-right) ── -->
-  <button class="idx-settings-btn" id="idxSettingsBtn" onclick="openIdxSettings()" aria-label="Settings" aria-haspopup="dialog">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  <button class="idx-settings-btn" id="idxSettingsBtn" onclick="openIdxSettings()" aria-label="Settings"
+    aria-haspopup="dialog">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path
+        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   </button>
 
@@ -854,7 +1123,12 @@
       <div class="cta-row">
         <a href="login.html" id="btn-login" class="btn-login" role="button">
           <!-- Arrow icon -->
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
+          </svg>
           LOG IN
         </a>
         <a href="signup.html" id="btn-signup" class="btn-signup" role="button">
@@ -916,17 +1190,23 @@
           <div class="screen-txns">
             <div class="screen-txn">
               <span class="txn-name">FOOD &amp; DINING</span>
-              <div class="txn-bar"><div class="txn-bar-fill" style="width:72%;background:#ff4757;"></div></div>
+              <div class="txn-bar">
+                <div class="txn-bar-fill" style="width:72%;background:#ff4757;"></div>
+              </div>
               <span class="txn-amount neg">-$340</span>
             </div>
             <div class="screen-txn">
               <span class="txn-name">TRANSPORT</span>
-              <div class="txn-bar"><div class="txn-bar-fill" style="width:38%;background:#ff7043;"></div></div>
+              <div class="txn-bar">
+                <div class="txn-bar-fill" style="width:38%;background:#ff7043;"></div>
+              </div>
               <span class="txn-amount neg">-$180</span>
             </div>
             <div class="screen-txn">
               <span class="txn-name">SALARY</span>
-              <div class="txn-bar"><div class="txn-bar-fill" style="width:100%;background:#00e676;"></div></div>
+              <div class="txn-bar">
+                <div class="txn-bar-fill" style="width:100%;background:#00e676;"></div>
+              </div>
               <span class="txn-amount pos">+$6,200</span>
             </div>
           </div>
@@ -938,7 +1218,8 @@
   </main><!-- /hero-wrapper -->
 
   <!-- ── SETTINGS MODAL ── -->
-  <div class="idx-modal-overlay" id="idxSettingsModal" role="dialog" aria-modal="true" aria-labelledby="idx-settings-title" onclick="closeIdxSettingsOnOverlay(event)">
+  <div class="idx-modal-overlay" id="idxSettingsModal" role="dialog" aria-modal="true"
+    aria-labelledby="idx-settings-title" onclick="closeIdxSettingsOnOverlay(event)">
     <div class="idx-modal-card">
 
       <!-- screws -->
@@ -951,8 +1232,10 @@
 
       <!-- vents -->
       <div class="idx-vents" aria-hidden="true">
-        <div class="idx-vent"></div><div class="idx-vent"></div>
-        <div class="idx-vent"></div><div class="idx-vent"></div>
+        <div class="idx-vent"></div>
+        <div class="idx-vent"></div>
+        <div class="idx-vent"></div>
+        <div class="idx-vent"></div>
       </div>
 
       <!-- Language -->
@@ -970,11 +1253,25 @@
         <p class="idx-group-label">Theme / Giao diện</p>
         <div class="idx-theme-row" role="group" aria-label="Theme selection">
           <button class="idx-theme-btn" id="idx-theme-light" onclick="setIdxTheme('light')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
             Light
           </button>
           <button class="idx-theme-btn" id="idx-theme-dark" onclick="setIdxTheme('dark')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
             Dark
           </button>
         </div>
@@ -990,18 +1287,18 @@
        INDEX PAGE — Settings: Theme + Language
        ============================================================ */
     const IDX_THEME_KEY = 'caltdhy_theme';
-    const IDX_LANG_KEY  = 'caltdhy_lang';
+    const IDX_LANG_KEY = 'caltdhy_lang';
 
     /* --- Theme --- */
     function applyIdxTheme(theme) {
       document.body.classList.toggle('dark-theme', theme === 'dark');
-      ['light','dark'].forEach(k => {
+      ['light', 'dark'].forEach(k => {
         const btn = document.getElementById('idx-theme-' + k);
         if (btn) btn.classList.toggle('active', k === theme);
       });
     }
     function setIdxTheme(theme) {
-      try { localStorage.setItem(IDX_THEME_KEY, theme); } catch(_) {}
+      try { localStorage.setItem(IDX_THEME_KEY, theme); } catch (_) { }
       applyIdxTheme(theme);
     }
     function loadIdxTheme() {
@@ -1011,13 +1308,13 @@
 
     /* --- Language (syncs with dashboard) --- */
     function applyIdxLang(lang) {
-      ['en','vi','zh'].forEach(code => {
+      ['en', 'vi', 'zh'].forEach(code => {
         const btn = document.getElementById('idx-lang-' + code);
         if (btn) btn.classList.toggle('active', code === lang);
       });
     }
     function setIdxLang(lang) {
-      try { localStorage.setItem(IDX_LANG_KEY, lang); } catch(_) {}
+      try { localStorage.setItem(IDX_LANG_KEY, lang); } catch (_) { }
       applyIdxLang(lang);
     }
     function loadIdxLang() {
@@ -1037,7 +1334,7 @@
     }
 
     /* --- ESC: close modal, or if closed go back (noop on landing) --- */
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         const modal = document.getElementById('idxSettingsModal');
         if (modal && modal.classList.contains('open')) {
@@ -1052,9 +1349,10 @@
 
     /* Service Worker registration */
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js').catch(() => { });
     }
   </script>
 
 </body>
+
 </html>
