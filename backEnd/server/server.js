@@ -2,33 +2,24 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-// const connectDB = require('./db');
-
-// Kết nối MongoDB
-//connectDB();
 
 const app = express();
 
 // Middleware
 app.use(cors({
-    origin: '*', // Trong production, thay bằng domain cụ thể
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
 // Serve static files (Frontend)
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..', '..', 'frontEnd')));
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/spending', require('./routes/spending'));
-
-// Route fallback cho SPA
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'dashboard.html'));
-});
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -47,5 +38,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
-    console.log(`📅 projectcanhan – Personal Schedule Manager`);
+    console.log(`📅 CaltDHy – Offline-first / JSON DB`);
 });

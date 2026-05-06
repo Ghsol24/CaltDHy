@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +8,9 @@
   <meta name="description" content="CaltDHy – Track, manage, and analyse your personal expenses." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet" />
   <!-- ANTI-FOUC: apply saved theme before first paint -->
   <script src="theme-manager.js"></script>
   <link rel="stylesheet" href="spending.css" />
@@ -37,13 +40,17 @@
 
     <div class="tb-right">
       <span class="user-chip" id="userChip">USER</span>
-      <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" aria-label="Switch theme" title="Toggle light/dark">
+      <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" aria-label="Switch theme"
+        title="Toggle light/dark">
         <span id="themeIcon">🌙</span>
       </button>
-      <button class="btn-settings" id="btnSettings" onclick="openSettings()" aria-label="Settings" aria-haspopup="dialog">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      <button class="btn-settings" id="btnSettings" onclick="openSettings()" aria-label="Settings"
+        aria-haspopup="dialog">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       </button>
       <button class="btn-logout" id="btnLogout" onclick="handleLogout()" data-i18n="logOut">LOG OUT</button>
@@ -71,7 +78,8 @@
             <p class="metric-card__label" data-i18n="totalBalance">Total Balance</p>
             <p class="metric-card__value metric-card__value--balance" id="metricBalance">0 ₫</p>
             <p class="metric-card__sub" data-i18n="allTimeNet">All-time net</p>
-            <button class="btn-quick-deposit" id="btnQuickDeposit" onclick="openNumpad()" aria-label="Quick Deposit" aria-haspopup="dialog">+</button>
+            <button class="btn-quick-deposit" id="btnQuickDeposit" onclick="openNumpad()" aria-label="Quick Deposit"
+              aria-haspopup="dialog">+</button>
           </div>
 
           <div class="metric-card metric-card--income">
@@ -129,9 +137,12 @@
       <div class="feed-toolbar">
         <h2 class="section-label" id="feed-heading" data-i18n="transactionFeed">Transaction Feed</h2>
         <div class="filter-group" role="group" aria-label="Filter transactions">
-          <button class="filter-btn filter-btn--active" id="f-all"     onclick="setFilter('all',this)"     data-i18n="filterAll">ALL</button>
-          <button class="filter-btn"                    id="f-income"  onclick="setFilter('income',this)"  data-i18n="filterIncome">INCOME</button>
-          <button class="filter-btn"                    id="f-expense" onclick="setFilter('expense',this)" data-i18n="filterExpense">EXPENSE</button>
+          <button class="filter-btn filter-btn--active" id="f-all" onclick="setFilter('all',this)"
+            data-i18n="filterAll">ALL</button>
+          <button class="filter-btn" id="f-income" onclick="setFilter('income',this)"
+            data-i18n="filterIncome">INCOME</button>
+          <button class="filter-btn" id="f-expense" onclick="setFilter('expense',this)"
+            data-i18n="filterExpense">EXPENSE</button>
         </div>
       </div>
 
@@ -139,7 +150,8 @@
       <section class="budget-section" aria-labelledby="budget-heading">
         <div class="budget-section__header">
           <h2 class="section-label" id="budget-heading" data-i18n="budgetPanel">Envelope Budgets</h2>
-          <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET BUDGETS</button>
+          <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET
+            BUDGETS</button>
         </div>
         <div class="budget-panel" id="budgetPanel" aria-live="polite">
           <!-- Budget cards injected by JS -->
@@ -159,7 +171,8 @@
   <!-- ═══════════════════════════════════════════
        ADD TRANSACTION MODAL
   ═══════════════════════════════════════════ -->
-  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="closeModalOnOverlay(event)">
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"
+    onclick="closeModalOnOverlay(event)">
     <div class="modal-card">
 
       <!-- Card screws -->
@@ -180,8 +193,10 @@
 
       <!-- Type toggle -->
       <div class="type-row" role="group" aria-label="Transaction type">
-        <button class="type-btn type-btn--expense type-btn--active-expense" id="typeExpense" onclick="setType('expense')" data-i18n="typeExpense">EXPENSE</button>
-        <button class="type-btn type-btn--income"                            id="typeIncome"  onclick="setType('income')"  data-i18n="typeIncome">INCOME</button>
+        <button class="type-btn type-btn--expense type-btn--active-expense" id="typeExpense"
+          onclick="setType('expense')" data-i18n="typeExpense">EXPENSE</button>
+        <button class="type-btn type-btn--income" id="typeIncome" onclick="setType('income')"
+          data-i18n="typeIncome">INCOME</button>
       </div>
 
       <form id="txnForm" novalidate>
@@ -231,7 +246,8 @@
   <!-- ═══════════════════════════════════════════
        QUICK DEPOSIT NUMPAD MODAL
   ═══════════════════════════════════════════ -->
-  <div class="modal-overlay modal-overlay--numpad" id="numpadModal" role="dialog" aria-modal="true" aria-labelledby="numpad-title" onclick="closeNumpadOnOverlay(event)">
+  <div class="modal-overlay modal-overlay--numpad" id="numpadModal" role="dialog" aria-modal="true"
+    aria-labelledby="numpad-title" onclick="closeNumpadOnOverlay(event)">
     <div class="numpad-device">
 
       <!-- device screws -->
@@ -249,7 +265,9 @@
 
       <!-- vent slots -->
       <div class="numpad-vents" aria-hidden="true">
-        <div class="numpad-vent"></div><div class="numpad-vent"></div><div class="numpad-vent"></div>
+        <div class="numpad-vent"></div>
+        <div class="numpad-vent"></div>
+        <div class="numpad-vent"></div>
       </div>
 
       <!-- keypad grid -->
@@ -266,7 +284,10 @@
         <button class="nk nk--wide" onclick="numpadKey('0')" aria-label="0">0</button>
         <button class="nk nk--clear" onclick="numpadKey('C')" aria-label="Clear">C</button>
         <button class="nk nk--submit" id="numpadSubmit" onclick="numpadSubmit()" aria-label="Submit deposit">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </button>
       </div>
 
@@ -277,7 +298,8 @@
   <!-- ═══════════════════════════════════════════
        SETTINGS MODAL
   ═══════════════════════════════════════════ -->
-  <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="closeSettingsOnOverlay(event)">
+  <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settings-title"
+    onclick="closeSettingsOnOverlay(event)">
     <div class="modal-card modal-card--settings">
 
       <!-- screws -->
@@ -290,8 +312,10 @@
 
       <!-- vents -->
       <div class="modal-vents" aria-hidden="true">
-        <div class="modal-vent"></div><div class="modal-vent"></div>
-        <div class="modal-vent"></div><div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
       </div>
 
       <!-- Language Switcher -->
@@ -312,12 +336,14 @@
           <button class="lang-btn" id="curr-USD" onclick="setCurrency('USD')">USD $</button>
           <button class="lang-btn" id="curr-CNY" onclick="setCurrency('CNY')">CNY ¥</button>
         </div>
-        <p class="settings-info" style="margin-top:8px;font-size:10px;">1 USD = 27,000 VND &nbsp;|&nbsp; 1 CNY = 3,750 VND</p>
+        <p class="settings-info" style="margin-top:8px;font-size:10px;">1 USD = 27,000 VND &nbsp;|&nbsp; 1 CNY = 3,750
+          VND</p>
       </div>
 
       <!-- Set Budgets shortcut -->
       <div class="settings-group" style="margin-bottom:0">
-        <button class="btn-set-budgets btn-set-budgets--full" onclick="closeSettings(); openBudgetModal();" data-i18n="setBudgets">SET BUDGETS</button>
+        <button class="btn-set-budgets btn-set-budgets--full" onclick="closeSettings(); openBudgetModal();"
+          data-i18n="setBudgets">SET BUDGETS</button>
       </div>
 
       <div class="modal-actions" style="margin-top:24px">
@@ -331,7 +357,8 @@
   <!-- ═══════════════════════════════════════════
        BUDGET MODAL (Set Budgets)
   ═══════════════════════════════════════════ -->
-  <div class="modal-overlay" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title" onclick="closeBudgetOnOverlay(event)">
+  <div class="modal-overlay" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title"
+    onclick="closeBudgetOnOverlay(event)">
     <div class="modal-card modal-card--budget">
 
       <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
@@ -342,8 +369,10 @@
       <h2 class="modal-title" id="budget-modal-title" data-i18n="setBudgets">SET BUDGETS</h2>
 
       <div class="modal-vents" aria-hidden="true">
-        <div class="modal-vent"></div><div class="modal-vent"></div>
-        <div class="modal-vent"></div><div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
       </div>
 
       <p class="budget-modal__hint">Enter monthly limits per category. Leave blank to disable.</p>
@@ -357,10 +386,10 @@
         <div class="budget-add-cat">
           <p class="budget-add-cat__label">+ Add Custom Category</p>
           <div class="budget-add-cat__row">
-            <input class="budget-form-input budget-add-cat__name" id="newCatName"
-              type="text" placeholder="Category name" maxlength="40" />
-            <input class="budget-form-input budget-add-cat__limit" id="newCatLimit"
-              type="number" min="0" step="1" placeholder="Limit (0 = track only)" />
+            <input class="budget-form-input budget-add-cat__name" id="newCatName" type="text"
+              placeholder="Category name" maxlength="40" />
+            <input class="budget-form-input budget-add-cat__limit" id="newCatLimit" type="number" min="0" step="1"
+              placeholder="Limit (0 = track only)" />
             <button type="button" class="btn-add-cat" onclick="addCustomCategory()">ADD</button>
           </div>
         </div>
@@ -388,15 +417,18 @@
        FLOATING ACTION BUTTON (FAB)
   ═══════════════════════════════════════════ -->
   <button class="fab" id="fab" onclick="openQuickLog()" aria-label="Quick log transaction" aria-haspopup="dialog">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
     </svg>
   </button>
 
   <!-- ═══════════════════════════════════════════
        QUICK LOG MODAL (FAB)
   ═══════════════════════════════════════════ -->
-  <div class="modal-overlay" id="quickLogModal" role="dialog" aria-modal="true" aria-labelledby="ql-title" onclick="closeQuickLogOnOverlay(event)">
+  <div class="modal-overlay" id="quickLogModal" role="dialog" aria-modal="true" aria-labelledby="ql-title"
+    onclick="closeQuickLogOnOverlay(event)">
     <div class="modal-card modal-card--ql">
 
       <!-- screws -->
@@ -409,14 +441,18 @@
 
       <!-- vents -->
       <div class="modal-vents" aria-hidden="true">
-        <div class="modal-vent"></div><div class="modal-vent"></div>
-        <div class="modal-vent"></div><div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
       </div>
 
       <!-- Type toggle -->
       <div class="type-row" role="group" aria-label="Transaction type">
-        <button class="type-btn type-btn--expense type-btn--active-expense" id="qlTypeExpense" onclick="setQlType('expense')" data-i18n="typeExpense">EXPENSE</button>
-        <button class="type-btn type-btn--income" id="qlTypeIncome" onclick="setQlType('income')" data-i18n="typeIncome">INCOME</button>
+        <button class="type-btn type-btn--expense type-btn--active-expense" id="qlTypeExpense"
+          onclick="setQlType('expense')" data-i18n="typeExpense">EXPENSE</button>
+        <button class="type-btn type-btn--income" id="qlTypeIncome" onclick="setQlType('income')"
+          data-i18n="typeIncome">INCOME</button>
       </div>
 
       <form id="qlForm" novalidate>
@@ -462,9 +498,10 @@
   <script src="spending.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js').catch(() => { });
     }
   </script>
 
 </body>
+
 </html>

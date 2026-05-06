@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const User = require('../models/User');
+const { readData, writeData } = require('../utils/fileDB');
 
 // Helper: Tạo JWT token
 const createToken = (userId) => {
@@ -30,8 +31,20 @@ router.post('/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin.' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự.' });
+        }
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'Email không hợp lệ.' });
+        }
+
+        const db = await readData();
+
         // Kiểm tra email đã tồn tại chưa
-        const existingUser = await User.findOne({ email });
+        const existingUser = db.users.find(u => u.email === email.toLowerCase().trim());
         if (existingUser) {
             return res.status(400).json({
                 success: false,
@@ -39,26 +52,38 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Tạo user mới (password sẽ được hash tự động qua pre-save hook)
-        const user = await User.create({ name, email, password });
+        // Hash mật khẩu
+        const salt = await bcrypt.genSalt(12);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        const token = createToken(user._id);
+        // Tạo user mới
+        const newUser = {
+            id: Date.now().toString(),
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            password: hashedPassword,
+            resetPasswordToken: undefined,
+            resetPasswordExpiry: undefined,
+            createdAt: new Date().toISOString()
+        };
+
+        db.users.push(newUser);
+        await writeData(db);
+
+        const token = createToken(newUser.id);
 
         res.status(201).json({
             success: true,
             message: 'Đăng ký thành công!',
             token,
             user: {
-                id: user._id,
-                name: user.name,
-                email: user.email
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email
             }
         });
     } catch (error) {
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(e => e.message);
-            return res.status(400).json({ success: false, message: messages.join('. ') });
-        }
+        console.error('POST /register error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
     }
 });
@@ -77,8 +102,9 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Lấy user kèm password (mặc định bị ẩn)
-        const user = await User.findOne({ email }).select('+password');
+        const db = await readData();
+
+        const user = db.users.find(u => u.email === email.toLowerCase().trim());
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -86,7 +112,7 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        const isMatch = await user.comparePassword(password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
@@ -94,19 +120,20 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        const token = createToken(user._id);
+        const token = createToken(user.id);
 
         res.json({
             success: true,
             message: 'Đăng nhập thành công!',
             token,
             user: {
-                id: user._id,
+                id: user.id,
                 name: user.name,
                 email: user.email
             }
         });
     } catch (error) {
+        console.error('POST /login error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
     }
 });
@@ -118,8 +145,10 @@ router.post('/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
 
-        const user = await User.findOne({ email });
-        if (!user) {
+        const db = await readData();
+        const userIndex = db.users.findIndex(u => u.email === email?.toLowerCase().trim());
+
+        if (userIndex === -1) {
             // Không tiết lộ email có tồn tại hay không (bảo mật)
             return res.json({
                 success: true,
@@ -131,10 +160,11 @@ router.post('/forgot-password', async (req, res) => {
         const resetToken = crypto.randomBytes(32).toString('hex');
         const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-        user.resetPasswordToken = hashedToken;
-        user.resetPasswordExpiry = Date.now() + 15 * 60 * 1000; // Hết hạn sau 15 phút
-        await user.save({ validateBeforeSave: false });
+        db.users[userIndex].resetPasswordToken = hashedToken;
+        db.users[userIndex].resetPasswordExpiry = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        await writeData(db);
 
+        const user = db.users[userIndex];
         const resetUrl = `${process.env.CLIENT_URL}/reset-password.html?token=${resetToken}&email=${email}`;
 
         // Gửi email
@@ -191,33 +221,38 @@ router.post('/reset-password', async (req, res) => {
             });
         }
 
-        // Hash token để so sánh với token đã lưu
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-        const user = await User.findOne({
-            email,
-            resetPasswordToken: hashedToken,
-            resetPasswordExpiry: { $gt: Date.now() } // Token còn hạn
-        });
+        const db = await readData();
 
-        if (!user) {
+        const userIndex = db.users.findIndex(u =>
+            u.email === email.toLowerCase().trim() &&
+            u.resetPasswordToken === hashedToken &&
+            u.resetPasswordExpiry &&
+            new Date(u.resetPasswordExpiry) > new Date() // Token còn hạn
+        );
+
+        if (userIndex === -1) {
             return res.status(400).json({
                 success: false,
                 message: 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'
             });
         }
 
-        // Cập nhật mật khẩu mới
-        user.password = newPassword;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpiry = undefined;
-        await user.save();
+        // Hash mật khẩu mới
+        const salt = await bcrypt.genSalt(12);
+        db.users[userIndex].password = await bcrypt.hash(newPassword, salt);
+        db.users[userIndex].resetPasswordToken = undefined;
+        db.users[userIndex].resetPasswordExpiry = undefined;
+
+        await writeData(db);
 
         res.json({
             success: true,
             message: 'Mật khẩu đã được đặt lại thành công! Vui lòng đăng nhập lại.'
         });
     } catch (error) {
+        console.error('POST /reset-password error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
     }
 });
