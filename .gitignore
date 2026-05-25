@@ -2,8 +2,9 @@
 node_modules/
 npm-debug.log*
 
-# Environment variables – KHÔNG commit file này!
-server/.env
+# Environment variables – TUYỆT ĐỐI KHÔNG commit file này!
+**/.env
+backEnd/server/.env
 
 # OS
 .DS_Store

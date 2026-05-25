@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -23,7 +24,7 @@ app.use('/api/spending', require('./routes/spending'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'projectcanhan server đang chạy!' });
+    res.json({ status: 'OK', message: 'CaltDHy server đang chạy!', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
 // Global error handler
@@ -35,8 +36,28 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
-    console.log(`📅 CaltDHy – Offline-first / JSON DB`);
-});
+// =============================================
+// Kết nối MongoDB rồi mới start server
+// =============================================
+const PORT = process.env.PORT || 24127;
+
+mongoose
+    .connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000
+    })
+    .then(() => {
+        console.log('✅ Connected to MongoDB Atlas successfully');
+        console.log(`   URI: ${process.env.MONGODB_URI?.replace(/:([^@]+)@/, ':****@')}`); // ẩn password trong log
+
+        app.listen(PORT, () => {
+            console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+            console.log(`🗄️  CaltDHy – MongoDB Atlas mode`);
+        });
+    })
+    .catch((error) => {
+        console.error('❌ Không thể kết nối MongoDB Atlas. Chi tiết lỗi:');
+        console.error('   Message :', error.message);
+        console.error('   Code    :', error.code ?? 'N/A');
+        console.error('   Reason  :', error.reason ?? 'Kiểm tra lại MONGODB_URI trong file .env');
+        process.exit(1);
+    });

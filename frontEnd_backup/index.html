@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" translate="no" class="notranslate">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CaltDHy – Expense Management System</title>
-  <meta name="google" content="notranslate" />
   <meta name="description"
     content="CaltDHy – Industrial-grade personal expense management. Track, analyse, and command your finances." />
   <link rel="manifest" href="/manifest.json">
@@ -20,12 +19,6 @@
 
   <!-- ANTI-FOUC: apply saved theme before first paint -->
   <script src="theme-manager.js"></script>
-  <script>
-    (function () {
-      const savedLang = localStorage.getItem('caltdhy_lang') || 'en';
-      document.documentElement.lang = savedLang;
-    })();
-  </script>
 
   <style>
     /* ============================================================
@@ -37,9 +30,9 @@
       --recessed: #F8F8FA;
       --text-primary: #0F172A;
       --text-muted: #64748B;
-      --accent: #FF4B72;
-      --accent-dark: #E63660;
-      --accent-glow: rgba(255, 75, 114, 0.35);
+      --accent: #4F46E5;
+      --accent-dark: #3730A3;
+      --accent-glow: rgba(79, 70, 229, 0.35);
       --border-shadow: rgba(0, 0, 0, 0.04);
       --border-light: rgba(255, 255, 255, 0.8);
       --led-green: #10B981;
@@ -49,7 +42,7 @@
       --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
       --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
       --shadow-pressed: inset 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.02);
-      --shadow-accent: 0 4px 12px rgba(255, 75, 114, 0.25);
+      --shadow-accent: 0 4px 12px rgba(79, 70, 229, 0.2);
 
       /* Radii */
       --r-md: 8px;
@@ -248,13 +241,13 @@
 
     .brand-name span {
       color: var(--accent);
-      text-shadow: 0 0 30px rgba(255, 75, 114, .35), 0 0 60px rgba(255, 75, 114, .15);
+      text-shadow: 0 0 30px rgba(255, 71, 87, .35), 0 0 60px rgba(255, 71, 87, .15);
       display: inline-block;
       transition: text-shadow 300ms ease;
     }
 
     .brand-name:hover span {
-      text-shadow: 0 0 40px rgba(255, 75, 114, .55), 0 0 80px rgba(255, 75, 114, .25);
+      text-shadow: 0 0 40px rgba(255, 71, 87, .55), 0 0 80px rgba(255, 71, 87, .25);
     }
 
     .brand-tagline {
@@ -386,7 +379,7 @@
 
     .btn-login:hover {
       transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 8px 24px rgba(255, 75, 114, 0.5), 0 2px 8px rgba(255, 75, 114, 0.25);
+      box-shadow: 8px 8px 16px rgba(166, 50, 60, 0.55), -8px -8px 16px rgba(255, 120, 130, 0.55);
     }
 
     .btn-login:active {
@@ -845,23 +838,7 @@
     }
 
     body.dark-theme .brand-name span {
-      text-shadow: 0 0 30px rgba(255, 75, 114, .5), 0 0 70px rgba(255, 75, 114, .2);
-    }
-
-    @keyframes ventGlow {
-      0%, 100% {
-        opacity: 0.15;
-        filter: drop-shadow(0 0 1px rgba(255, 75, 114, 0));
-      }
-      50% {
-        opacity: 0.35;
-        filter: drop-shadow(0 0 3px rgba(255, 75, 114, 0.4));
-      }
-    }
-
-    body.dark-theme .idx-vent,
-    body.dark-theme .vent-slot {
-      animation: ventGlow 4s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(255,71,87,.5), 0 0 70px rgba(255,71,87,.2);
     }
 
     /* ============================================================
@@ -1108,7 +1085,7 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(255, 75, 114, .4), 0 1px 4px rgba(255, 75, 114, .2);
+      box-shadow: 4px 4px 8px rgba(166, 50, 60, .4), -4px -4px 8px rgba(255, 100, 110, .4);
       position: relative;
       overflow: hidden;
       transition: transform 120ms;
@@ -1162,9 +1139,9 @@
     <section class="hero-content" aria-labelledby="brand-heading">
 
       <div class="brand-lockup">
-        <p class="brand-eyebrow" data-i18n="eyebrow">Expense Management System</p>
+        <p class="brand-eyebrow">Expense Management System</p>
         <h1 class="brand-name" id="brand-heading">Calt<span>D</span>Hy</h1>
-        <p class="brand-tagline" data-i18n="tagline">
+        <p class="brand-tagline">
           Command-grade financial tracking. Industrial precision. Every transaction — accounted for.
         </p>
       </div>
@@ -1173,15 +1150,15 @@
       <div class="metric-strip" role="complementary" aria-label="System metrics">
         <div class="metric-badge">
           <span class="metric-value">$24,811</span>
-          <span class="metric-label" data-i18n="totalBalance">Total Balance</span>
+          <span class="metric-label">Total Balance</span>
         </div>
         <div class="metric-badge">
           <span class="metric-value">312</span>
-          <span class="metric-label" data-i18n="transactions">Transactions</span>
+          <span class="metric-label">Transactions</span>
         </div>
         <div class="metric-badge">
           <span class="metric-value" style="color:var(--accent);">↓ 7.2%</span>
-          <span class="metric-label" data-i18n="vsLastMo">vs. Last Mo.</span>
+          <span class="metric-label">vs. Last Mo.</span>
         </div>
       </div>
 
@@ -1202,9 +1179,9 @@
             <polyline points="10 17 15 12 10 7" />
             <line x1="15" y1="12" x2="3" y2="12" />
           </svg>
-          <span data-i18n="loginBtn">LOG IN</span>
+          LOG IN
         </a>
-        <a href="signup.html" id="btn-signup" class="btn-signup" role="button" data-i18n="signupBtn">
+        <a href="signup.html" id="btn-signup" class="btn-signup" role="button">
           SIGN UP
         </a>
       </div>
@@ -1235,15 +1212,15 @@
         <div class="device-screen" role="img" aria-label="Dashboard preview">
 
           <div class="screen-header">
-            <span class="screen-label" data-i18n="previewTitle">DASHBOARD // APR 2026</span>
+            <span class="screen-label">DASHBOARD // APR 2026</span>
             <div class="screen-led">
               <div class="screen-led-dot"></div>
-              <span class="screen-led-text" data-i18n="previewLive">LIVE</span>
+              <span class="screen-led-text">LIVE</span>
             </div>
           </div>
 
           <div class="screen-balance">
-            <span class="balance-label" data-i18n="totalBalance">Total Balance</span>
+            <span class="balance-label">Total Balance</span>
             <span class="balance-amount">
               <span class="currency">$</span>24,811.50
             </span>
@@ -1251,32 +1228,32 @@
 
           <div class="screen-metrics">
             <div class="screen-metric">
-              <div class="sm-label" data-i18n="previewIncome">Income</div>
+              <div class="sm-label">Income</div>
               <div class="sm-value income">+$6,200</div>
             </div>
             <div class="screen-metric">
-              <div class="sm-label" data-i18n="previewExpenses">Expenses</div>
+              <div class="sm-label">Expenses</div>
               <div class="sm-value expense">-$1,843</div>
             </div>
           </div>
 
           <div class="screen-txns">
             <div class="screen-txn">
-              <span class="txn-name" data-i18n="previewFood">FOOD &amp; DINING</span>
+              <span class="txn-name">FOOD &amp; DINING</span>
               <div class="txn-bar">
                 <div class="txn-bar-fill" style="width:72%;background:#ff4757;"></div>
               </div>
               <span class="txn-amount neg">-$340</span>
             </div>
             <div class="screen-txn">
-              <span class="txn-name" data-i18n="previewTransport">TRANSPORT</span>
+              <span class="txn-name">TRANSPORT</span>
               <div class="txn-bar">
                 <div class="txn-bar-fill" style="width:38%;background:#ff7043;"></div>
               </div>
               <span class="txn-amount neg">-$180</span>
             </div>
             <div class="screen-txn">
-              <span class="txn-name" data-i18n="previewSalary">SALARY</span>
+              <span class="txn-name">SALARY</span>
               <div class="txn-bar">
                 <div class="txn-bar-fill" style="width:100%;background:#00e676;"></div>
               </div>
@@ -1301,7 +1278,7 @@
       <div class="idx-screw idx-sc-bl" aria-hidden="true"></div>
       <div class="idx-screw idx-sc-br" aria-hidden="true"></div>
 
-      <h2 class="idx-modal-title" id="idx-settings-title" data-i18n="settingsTitle">Settings</h2>
+      <h2 class="idx-modal-title" id="idx-settings-title">Settings</h2>
 
       <!-- vents -->
       <div class="idx-vents" aria-hidden="true">
@@ -1313,7 +1290,7 @@
 
       <!-- Language -->
       <div class="idx-group">
-        <p class="idx-group-label" data-i18n="langLabel">Language / Ngôn ngữ / 语言</p>
+        <p class="idx-group-label">Language / Ngôn ngữ / 语言</p>
         <div class="idx-lang-row" role="group" aria-label="Language selection">
           <button class="idx-lang-btn" id="idx-lang-en" onclick="setIdxLang('en')">EN</button>
           <button class="idx-lang-btn" id="idx-lang-vi" onclick="setIdxLang('vi')">VI</button>
@@ -1323,7 +1300,7 @@
 
       <!-- Theme -->
       <div class="idx-group">
-        <p class="idx-group-label" data-i18n="themeLabel">Theme / Giao diện</p>
+        <p class="idx-group-label">Theme / Giao diện</p>
         <div class="idx-theme-row" role="group" aria-label="Theme selection">
           <button class="idx-theme-btn" id="idx-theme-light" onclick="setIdxTheme('light')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1338,19 +1315,19 @@
               <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
             </svg>
-            <span data-i18n="themeLight">Light</span>
+            Light
           </button>
           <button class="idx-theme-btn" id="idx-theme-dark" onclick="setIdxTheme('dark')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" aria-hidden="true">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
-            <span data-i18n="themeDark">Dark</span>
+            Dark
           </button>
         </div>
       </div>
 
-      <button class="idx-done-btn" onclick="closeIdxSettings()" data-i18n="doneBtn">DONE</button>
+      <button class="idx-done-btn" onclick="closeIdxSettings()">DONE</button>
 
     </div>
   </div><!-- /idxSettingsModal -->
@@ -1380,89 +1357,10 @@
     }
 
     /* --- Language (syncs with dashboard) --- */
-    const INDEX_I18N = {
-      en: {
-        eyebrow: 'Expense Management System',
-        tagline: 'Command-grade financial tracking. Industrial precision. Every transaction — accounted for.',
-        totalBalance: 'Total Balance',
-        transactions: 'Transactions',
-        vsLastMo: 'vs. Last Mo.',
-        loginBtn: 'LOG IN',
-        signupBtn: 'SIGN UP',
-        previewTitle: 'DASHBOARD // APR 2026',
-        previewLive: 'LIVE',
-        previewIncome: 'Income',
-        previewExpenses: 'Expenses',
-        previewFood: 'FOOD & DINING',
-        previewTransport: 'TRANSPORT',
-        previewSalary: 'SALARY',
-        settingsTitle: 'Settings',
-        langLabel: 'Language / Ngôn ngữ / 语言',
-        themeLabel: 'Theme / Giao diện',
-        themeLight: 'Light',
-        themeDark: 'Dark',
-        doneBtn: 'DONE'
-      },
-      vi: {
-        eyebrow: 'Hệ thống quản lý chi tiêu',
-        tagline: 'Quản lý tài chính cấp độ chuyên nghiệp. Độ chính xác cao. Mọi giao dịch đều được kiểm soát.',
-        totalBalance: 'Tổng Số Dư',
-        transactions: 'Giao Dịch',
-        vsLastMo: 'so với tháng trước',
-        loginBtn: 'ĐĂNG NHẬP',
-        signupBtn: 'ĐĂNG KÝ',
-        previewTitle: 'BẢNG ĐIỀU KHIỂN // THÁNG 4, 2026',
-        previewLive: 'TRỰC TUYẾN',
-        previewIncome: 'Thu nhập',
-        previewExpenses: 'Chi tiêu',
-        previewFood: 'ĂN UỐNG & ẨM THỰC',
-        previewTransport: 'DI CHUYỂN',
-        previewSalary: 'LƯƠNG',
-        settingsTitle: 'Cài Đặt',
-        langLabel: 'Language / Ngôn ngữ / 语言',
-        themeLabel: 'Theme / Giao diện',
-        themeLight: 'Sáng',
-        themeDark: 'Tối',
-        doneBtn: 'XONG'
-      },
-      zh: {
-        eyebrow: '个人记账与财务管理系统',
-        tagline: '专业级财务管理。工业级精度。掌控每一笔收支交易。',
-        totalBalance: '总余额',
-        transactions: '交易数',
-        vsLastMo: '环比上月',
-        loginBtn: '登 录',
-        signupBtn: '注 册',
-        previewTitle: '仪表盘 // 2026 年 4 月',
-        previewLive: '实时',
-        previewIncome: '收入',
-        previewExpenses: '支出',
-        previewFood: '餐饮与美食',
-        previewTransport: '交通出行',
-        previewSalary: '薪资收入',
-        settingsTitle: '设置',
-        langLabel: 'Language / Ngôn ngữ / 语言',
-        themeLabel: 'Theme / Giao diện',
-        themeLight: '浅色',
-        themeDark: '深色',
-        doneBtn: '完成'
-      }
-    };
-
     function applyIdxLang(lang) {
-      document.documentElement.lang = lang;
-
       ['en', 'vi', 'zh'].forEach(code => {
         const btn = document.getElementById('idx-lang-' + code);
         if (btn) btn.classList.toggle('active', code === lang);
-      });
-
-      const dict = INDEX_I18N[lang] || INDEX_I18N['en'];
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (dict[key]) {
-          el.textContent = dict[key];
-        }
       });
     }
     function setIdxLang(lang) {

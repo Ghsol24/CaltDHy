@@ -1,30 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { readData, writeData } = require('../utils/fileDB');
+const Transaction = require('../models/Transaction');
+const Budget = require('../models/Budget');
 
-// Tất cả routes đều yêu cầu đăng nhập
+// Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
 
 // =============================================
-// GET /api/spending/budget  (phải đặt TRƯỚC /:date để không bị conflict)
+// GET /api/spending/budget - Lấy hạn mức ngân sách theo danh mục
 // =============================================
 router.get('/budget', async (req, res) => {
     try {
-        const db = await readData();
-        const allBudgets = db.budgets || [];
-
-        const budget = allBudgets.find(b => b.userId === req.user.id);
+        const budgets = await Budget.find({ userId: req.user.id });
+        const budgetObj = {};
+        budgets.forEach(b => {
+            budgetObj[b.category] = b.limit;
+        });
 
         res.json({
             success: true,
-            data: budget ? {
-                monthlyLimit: budget.monthlyLimit,
-                dailyLimit: budget.dailyLimit
-            } : {
-                monthlyLimit: 0,
-                dailyLimit: 0
-            }
+            data: budgetObj
         });
     } catch (error) {
         console.error('GET /api/spending/budget error:', error);
@@ -33,39 +29,37 @@ router.get('/budget', async (req, res) => {
 });
 
 // =============================================
-// PUT /api/spending/budget
+// PUT /api/spending/budget - Cập nhật hạn mức ngân sách
+// Ghi đè toàn bộ danh sách ngân sách của user đó
 // =============================================
 router.put('/budget', async (req, res) => {
     try {
-        const { monthlyLimit = 0, dailyLimit = 0 } = req.body;
+        const budgetsObj = req.body; // Cấu trúc: { "Food & Dining": 500000, "Cà phê": 200000 }
 
-        const db = await readData();
-        if (!db.budgets) db.budgets = [];
-
-        const index = db.budgets.findIndex(b => b.userId === req.user.id);
-
-        let savedBudget;
-
-        if (index >= 0) {
-            db.budgets[index].monthlyLimit = monthlyLimit || 0;
-            db.budgets[index].dailyLimit = dailyLimit || 0;
-            savedBudget = db.budgets[index];
-        } else {
-            savedBudget = {
-                id: Date.now().toString(),
-                userId: req.user.id,
-                monthlyLimit: monthlyLimit || 0,
-                dailyLimit: dailyLimit || 0
-            };
-            db.budgets.push(savedBudget);
+        if (!budgetsObj || typeof budgetsObj !== 'object') {
+            return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ.' });
         }
 
-        await writeData(db);
+        // Xóa các ngân sách cũ của user này
+        await Budget.deleteMany({ userId: req.user.id });
+
+        // Chuẩn bị dữ liệu để insert mới
+        const insertData = Object.entries(budgetsObj)
+            .filter(([_, limit]) => limit && Number(limit) > 0)
+            .map(([category, limit]) => ({
+                userId: req.user.id,
+                category,
+                limit: Number(limit)
+            }));
+
+        if (insertData.length > 0) {
+            await Budget.insertMany(insertData);
+        }
 
         res.json({
             success: true,
-            message: 'Đã lưu hạn mức chi tiêu!',
-            data: { monthlyLimit: savedBudget.monthlyLimit, dailyLimit: savedBudget.dailyLimit }
+            message: 'Đã cập nhật hạn mức chi tiêu thành công!',
+            data: budgetsObj
         });
     } catch (error) {
         console.error('PUT /api/spending/budget error:', error);
@@ -74,28 +68,28 @@ router.put('/budget', async (req, res) => {
 });
 
 // =============================================
-// GET /api/spending?year=2026&month=3
+// GET /api/spending - Lấy danh sách giao dịch của user
+// Hỗ trợ lọc theo query: ?year=2026&month=5
 // =============================================
 router.get('/', async (req, res) => {
     try {
         const { year, month } = req.query;
+        let filter = { userId: req.user.id };
 
-        if (!year || !month) {
-            return res.status(400).json({ success: false, message: 'Thiếu tham số year hoặc month.' });
+        // Lọc theo năm/tháng nếu có tham số
+        if (year && month) {
+            const paddedMonth = String(month).padStart(2, '0');
+            const prefix = `${year}-${paddedMonth}`;
+            // Dùng regex để khớp trường date bắt đầu bằng YYYY-MM
+            filter.date = { $regex: `^${prefix}` };
         }
 
-        const db = await readData();
-        const allSpendings = db.spendings || [];
+        const records = await Transaction.find(filter).sort({ date: -1, createdAt: -1 });
 
-        const records = allSpendings.filter(item =>
-            item.userId === req.user.id &&
-            item.year === parseInt(year) &&
-            item.month === parseInt(month)
-        );
-
-        records.sort((a, b) => a.day - b.day);
-
-        res.json({ success: true, data: records });
+        res.json({
+            success: true,
+            data: records.map(r => r.toJSON())
+        });
     } catch (error) {
         console.error('GET /api/spending error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi lấy dữ liệu chi tiêu.' });
@@ -103,68 +97,68 @@ router.get('/', async (req, res) => {
 });
 
 // =============================================
-// PUT /api/spending/:date
+// POST /api/spending - Tạo giao dịch mới
 // =============================================
-router.put('/:date', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const { date } = req.params;
+        const { type, desc, amount, category, date } = req.body;
 
+        // Validation
+        if (!type || !amount || !category || !date) {
+            return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ các thông tin bắt buộc.' });
+        }
+        if (!['income', 'expense'].includes(type)) {
+            return res.status(400).json({ success: false, message: 'Loại giao dịch không hợp lệ.' });
+        }
+        if (Number(amount) <= 0) {
+            return res.status(400).json({ success: false, message: 'Số tiền phải lớn hơn 0.' });
+        }
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
             return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ (YYYY-MM-DD).' });
         }
 
-        const [year, month, day] = date.split('-').map(Number);
-        const { food = 0, gas = 0, coffee = 0, misc = 0, longTerm = {} } = req.body;
+        const newRecord = await Transaction.create({
+            userId: req.user.id,
+            type,
+            desc: (desc || '').trim(),
+            amount: Number(amount),
+            category: category.trim(),
+            date
+        });
 
-        const ltTotal = Object.values(longTerm).reduce((a, b) => a + (Number(b) || 0), 0);
-        const total = (food || 0) + (gas || 0) + (coffee || 0) + (misc || 0) + ltTotal;
+        res.status(201).json({
+            success: true,
+            message: 'Đã lưu giao dịch!',
+            data: newRecord.toJSON()
+        });
+    } catch (error) {
+        console.error('POST /api/spending error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi tạo giao dịch.' });
+    }
+});
 
-        const db = await readData();
-        if (!db.spendings) db.spendings = [];
+// =============================================
+// DELETE /api/spending/:id - Xóa giao dịch theo ID
+// =============================================
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Transaction.findOneAndDelete({ _id: id, userId: req.user.id });
 
-        const index = db.spendings.findIndex(item =>
-            item.userId === req.user.id &&
-            item.date === date
-        );
-
-        let savedRecord;
-
-        if (index >= 0) {
-            db.spendings[index] = {
-                ...db.spendings[index],
-                food: food || 0,
-                gas: gas || 0,
-                coffee: coffee || 0,
-                misc: misc || 0,
-                longTerm: longTerm,
-                total: total
-            };
-            savedRecord = db.spendings[index];
-        } else {
-            savedRecord = {
-                id: Date.now().toString(),
-                userId: req.user.id,
-                date, year, month, day,
-                food: food || 0,
-                gas: gas || 0,
-                coffee: coffee || 0,
-                misc: misc || 0,
-                longTerm: longTerm,
-                total: total
-            };
-            db.spendings.push(savedRecord);
+        if (!deleted) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy giao dịch hoặc bạn không có quyền xóa.'
+            });
         }
-
-        await writeData(db);
 
         res.json({
             success: true,
-            message: `Đã lưu chi tiêu ngày ${date}!`,
-            data: savedRecord
+            message: 'Đã xóa giao dịch thành công!'
         });
     } catch (error) {
-        console.error('PUT /api/spending/:date error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi khi lưu dữ liệu chi tiêu.' });
+        console.error('DELETE /api/spending/:id error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi xóa giao dịch.' });
     }
 });
 

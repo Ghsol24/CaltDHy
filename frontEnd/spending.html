@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no" class="notranslate">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – CaltDHy Expense Manager</title>
+  <meta name="google" content="notranslate" />
   <meta name="description" content="CaltDHy – Track, manage, and analyse your personal expenses." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,8 +13,19 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet" />
   <!-- ANTI-FOUC: apply saved theme before first paint -->
-  <script src="theme-manager.js"></script>
-  <link rel="stylesheet" href="spending.css" />
+  <script src="theme-manager.js?v=2.0.2"></script>
+  <script>
+    (function () {
+      const token = localStorage.getItem('pcn_token') || localStorage.getItem('caltdhy_token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const savedLang = localStorage.getItem('caltdhy_lang') || 'en';
+      document.documentElement.lang = savedLang;
+    })();
+  </script>
+  <link rel="stylesheet" href="spending.css?v=2.0.3" />
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <link rel="manifest" href="manifest.json" />
@@ -33,16 +45,21 @@
       <span class="tb-badge">FINANCE_OS</span>
     </div>
 
+    <!-- Main Segmented Navigation -->
+    <div class="tb-nav" role="navigation" aria-label="Main Navigation">
+      <button class="tb-nav-btn active" id="nav-home" onclick="switchView('home')" data-i18n="navHome">DASHBOARD</button>
+      <button class="tb-nav-btn" id="nav-analytics" onclick="switchView('analytics')" data-i18n="navAnalytics">ANALYTICS</button>
+    </div>
+
     <div class="tb-center" aria-label="System status">
       <div class="led led--green" aria-hidden="true"></div>
-      <span class="led-label">SYNC ACTIVE</span>
+      <span class="led-label" data-i18n="syncActive">SYNC ACTIVE</span>
     </div>
 
     <div class="tb-right">
       <span class="user-chip" id="userChip">USER</span>
-      <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" aria-label="Switch theme"
-        title="Toggle light/dark">
-        <span id="themeIcon">🌙</span>
+      <button class="btn-help" id="btnHelp" onclick="openGuide()" aria-label="Hướng dẫn sử dụng" aria-haspopup="dialog" title="Hướng dẫn sử dụng">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </button>
       <button class="btn-settings" id="btnSettings" onclick="openSettings()" aria-label="Settings"
         aria-haspopup="dialog">
@@ -107,7 +124,9 @@
 
       <!-- 3. CATEGORY BREAKDOWN — Live Doughnut Chart -->
       <section class="rail-section rail-section--grow" aria-labelledby="cat-heading">
-        <h2 class="section-label" id="cat-heading" data-i18n="categoryBreakdown">Category Breakdown</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <h2 class="section-label" id="cat-heading" data-i18n="categoryBreakdown">Category Breakdown</h2>
+        </div>
 
         <div class="chassis-frame chassis-frame--chart" aria-label="Category breakdown chart">
           <div class="chassis-frame__screw cf-screw--tl" aria-hidden="true"></div>
@@ -124,6 +143,10 @@
             <div class="chart-legend" id="chartLegend" aria-label="Chart legend"></div>
             <!-- empty state -->
             <p class="chart-empty" id="chartEmpty">// NO EXPENSE DATA</p>
+            <!-- Detailed transactions button -->
+            <button class="btn-view-month-detail" id="btnViewMonthDetail" onclick="openMonthDetailModal()" aria-haspopup="dialog" style="display: none;">
+              <span data-i18n="viewMonthDetail">VIEW MONTH DETAIL</span>
+            </button>
           </div>
         </div>
       </section>
@@ -131,37 +154,113 @@
     </aside>
 
     <!-- ─── MAIN CONTENT ─── -->
-    <main class="main-content" role="main" aria-labelledby="feed-heading">
+    <main class="main-content" role="main">
 
-      <!-- Feed toolbar -->
-      <div class="feed-toolbar">
-        <h2 class="section-label" id="feed-heading" data-i18n="transactionFeed">Transaction Feed</h2>
-        <div class="filter-group" role="group" aria-label="Filter transactions">
-          <button class="filter-btn filter-btn--active" id="f-all" onclick="setFilter('all',this)"
-            data-i18n="filterAll">ALL</button>
-          <button class="filter-btn" id="f-income" onclick="setFilter('income',this)"
-            data-i18n="filterIncome">INCOME</button>
-          <button class="filter-btn" id="f-expense" onclick="setFilter('expense',this)"
-            data-i18n="filterExpense">EXPENSE</button>
-        </div>
-      </div>
+      <!-- ==========================================
+           1. HOME VIEW (TRANG CHỦ - DAILY LOGS)
+           ========================================== -->
+      <div id="view-home" class="dashboard-view active">
+        <!-- Envelope Budgets -->
+        <section class="budget-section" aria-labelledby="budget-heading">
+          <div class="budget-section__header">
+            <h2 class="section-label" id="budget-heading" data-i18n="budgetPanel">Envelope Budgets</h2>
+            <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET
+              BUDGETS</button>
+          </div>
+          <div class="budget-panel" id="budgetPanel" aria-live="polite">
+            <!-- Budget cards injected by JS -->
+          </div>
+        </section>
 
-      <!-- ── BUDGET ENVELOPE PANEL ── -->
-      <section class="budget-section" aria-labelledby="budget-heading">
-        <div class="budget-section__header">
-          <h2 class="section-label" id="budget-heading" data-i18n="budgetPanel">Envelope Budgets</h2>
-          <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET
-            BUDGETS</button>
-        </div>
-        <div class="budget-panel" id="budgetPanel" aria-live="polite">
-          <!-- Budget cards injected by JS -->
-        </div>
-      </section>
+        <!-- Transaction Feed -->
+        <section class="feed-section" aria-labelledby="feed-heading" style="margin-top: 24px;">
+          <div class="feed-toolbar">
+            <h2 class="section-label" id="feed-heading" data-i18n="transactionFeed">Transaction Feed</h2>
+            <div class="filter-group" role="group" aria-label="Filter transactions">
+              <button class="filter-btn filter-btn--active" id="f-all" onclick="setFilter('all',this)"
+                data-i18n="filterAll">ALL</button>
+              <button class="filter-btn" id="f-income" onclick="setFilter('income',this)"
+                data-i18n="filterIncome">INCOME</button>
+              <button class="filter-btn" id="f-expense" onclick="setFilter('expense',this)"
+                data-i18n="filterExpense">EXPENSE</button>
+            </div>
+          </div>
+          <div class="txn-feed" id="txnFeed" aria-live="polite" aria-label="Recent transactions">
+            <!-- Slots injected by JS -->
+          </div>
+        </section>
+      </div><!-- /view-home -->
 
-      <!-- 4. TRANSACTION FEED (scrollable) -->
-      <div class="txn-feed" id="txnFeed" aria-live="polite" aria-label="Recent transactions">
-        <!-- Slots injected by JS -->
-      </div>
+
+      <!-- ==========================================
+           2. ANALYTICS VIEW (TRANG PHÂN TÍCH)
+           ========================================== -->
+      <div id="view-analytics" class="dashboard-view">
+        <!-- Month Selector Section (Idea 2 - Dropdown Grid Picker) -->
+        <section class="month-selector-section" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <h2 class="section-label" style="margin-bottom: 0;" data-i18n="analyticsMonth">SELECT MONTH</h2>
+          <div class="month-picker-wrapper" id="monthPickerWrapper">
+            <button class="month-picker-trigger" id="monthPickerTrigger" onclick="toggleMonthPicker(event)" aria-haspopup="dialog" aria-expanded="false">
+              <span class="month-picker-icon" aria-hidden="true">📅</span>
+              <span id="monthPickerLabel">MAY 2026</span>
+              <span class="month-picker-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="month-picker-dropdown" id="monthPickerDropdown" role="dialog" aria-modal="false" aria-label="Choose month" onclick="event.stopPropagation()">
+              <div class="month-picker-grid" id="monthPickerGrid">
+                <!-- Injected dynamically by JS (3x4 grid) -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Cash Flow Trend Chart -->
+        <section class="trend-section" aria-labelledby="trend-heading">
+          <div class="trend-section__header">
+            <h2 class="section-label" id="trend-heading" data-i18n="trendPanel">Cash Flow Trends</h2>
+            <div class="trend-controls">
+              <!-- Time range select -->
+              <select id="trendRange" onchange="changeTrendRange(parseInt(this.value))" class="trend-select" aria-label="Select trend time range">
+                <option value="1" data-i18n="range1M">1 Month</option>
+                <option value="3" selected data-i18n="range3M">3 Months</option>
+                <option value="6" data-i18n="range6M">6 Months</option>
+                <option value="12" data-i18n="range12M">12 Months</option>
+              </select>
+              <!-- Chart type switcher -->
+              <div class="trend-type-group" role="group" aria-label="Trend chart type">
+                <button class="trend-type-btn active" id="trend-btn-bar" onclick="setTrendType('bar')" aria-label="Bar Chart" title="Bar Chart">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </button>
+                <button class="trend-type-btn" id="trend-btn-line" onclick="setTrendType('line')" aria-label="Line Chart" title="Line Chart">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="chassis-frame chassis-frame--trend" aria-label="Cash flow trend chart">
+            <div class="chassis-frame__screw cf-screw--tl" aria-hidden="true"></div>
+            <div class="chassis-frame__screw cf-screw--tr" aria-hidden="true"></div>
+            <div class="chassis-frame__screw cf-screw--bl" aria-hidden="true"></div>
+            <div class="chassis-frame__screw cf-screw--br" aria-hidden="true"></div>
+
+            <div class="trend-panel">
+              <div class="trend-canvas-wrap">
+                <canvas id="trendChart" aria-label="Monthly Cash Flow Trend Chart" role="img"></canvas>
+              </div>
+              <!-- empty state -->
+              <p class="trend-empty" id="trendEmpty">// NO DATA IN RANGE</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dynamic Analytics Summary Grid -->
+        <section class="analytics-summary-section" style="margin-top: 24px;">
+          <h2 class="section-label" data-i18n="analyticsSummary">Analytics Summary</h2>
+          <div class="analytics-grid" id="analyticsGrid">
+            <!-- Dynamically injected analytics cards -->
+          </div>
+        </section>
+      </div><!-- /view-analytics -->
 
     </main>
 
@@ -174,6 +273,7 @@
   <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"
     onclick="closeModalOnOverlay(event)">
     <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close modal">✕</button>
 
       <!-- Card screws -->
       <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
@@ -203,12 +303,12 @@
 
         <div class="form-group">
           <label class="form-label" for="txnDesc" data-i18n="description">Description</label>
-          <input id="txnDesc" class="form-input" type="text" placeholder="e.g. Grocery run..." maxlength="80" />
+          <input id="txnDesc" class="form-input" type="text" data-i18n="placeholderDesc" placeholder="e.g. Grocery run..." maxlength="80" />
         </div>
 
         <div class="form-group">
           <label class="form-label" for="txnAmount" data-i18n="amountVND">Amount (VND)</label>
-          <input id="txnAmount" class="form-input" type="number" min="0.01" step="0.01" placeholder="0.00" />
+          <input id="txnAmount" class="form-input" type="text" data-i18n="placeholderAmount" placeholder="e.g. 50000 or 5000+20000" />
         </div>
 
         <div class="form-group">
@@ -301,6 +401,7 @@
   <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settings-title"
     onclick="closeSettingsOnOverlay(event)">
     <div class="modal-card modal-card--settings">
+      <button class="modal-close" onclick="closeSettings()" aria-label="Close settings">✕</button>
 
       <!-- screws -->
       <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
@@ -328,6 +429,54 @@
         </div>
       </div>
 
+      <!-- Theme Selector -->
+      <div class="settings-group">
+        <p class="settings-group__label" data-i18n="appearance">Appearance</p>
+        <div class="theme-grid" role="group" aria-label="Theme selection" id="themeGrid">
+
+          <button class="theme-card" id="theme-btn-dark" onclick="pickTheme('dark')"
+            aria-pressed="false" aria-label="Dark theme" type="button">
+            <span class="theme-card__swatch" style="background:linear-gradient(135deg,#353b3c,#2d3436)"></span>
+            <span class="theme-card__name" data-i18n="darkTheme">Dark</span>
+            <svg class="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="theme-card" id="theme-btn-light" onclick="pickTheme('light')"
+            aria-pressed="false" aria-label="Light theme" type="button">
+            <span class="theme-card__swatch" style="background:linear-gradient(135deg,#ffffff,#f5f7fa); border:1.5px solid #E2E8F0"></span>
+            <span class="theme-card__name" data-i18n="lightTheme">Light</span>
+            <svg class="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="theme-card" id="theme-btn-cream" onclick="pickTheme('cream')"
+            aria-pressed="false" aria-label="Cream theme" type="button">
+            <span class="theme-card__swatch" style="background:linear-gradient(135deg,#fdf8f2,#f5ede0); border:1.5px solid #E0D4C4"></span>
+            <span class="theme-card__name" data-i18n="creamTheme">Cream</span>
+            <svg class="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="theme-card" id="theme-btn-sky" onclick="pickTheme('sky')"
+            aria-pressed="false" aria-label="Sky theme" type="button">
+            <span class="theme-card__swatch" style="background:linear-gradient(135deg,#f0f8ff,#ebf5fb); border:1.5px solid #C8E4F5"></span>
+            <span class="theme-card__name" data-i18n="skyTheme">Sky</span>
+            <svg class="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+        </div>
+      </div>
+
       <!-- Currency Toggle -->
       <div class="settings-group">
         <p class="settings-group__label" data-i18n="currency">Display Currency</p>
@@ -341,9 +490,28 @@
       </div>
 
       <!-- Set Budgets shortcut -->
-      <div class="settings-group" style="margin-bottom:0">
+      <div class="settings-group">
         <button class="btn-set-budgets btn-set-budgets--full" onclick="closeSettings(); openBudgetModal();"
           data-i18n="setBudgets">SET BUDGETS</button>
+      </div>
+
+      <!-- Backup & Restore -->
+      <div class="settings-group" style="margin-bottom:0">
+        <div class="settings-group__label-row">
+          <p class="settings-group__label" data-i18n="backupRestore">Backup &amp; Restore</p>
+          <div class="info-btn" id="backupInfoBtn" tabindex="0" role="button" aria-label="Hướng dẫn sao lưu" onclick="toggleBackupTooltip(event)">?
+            <div class="info-tooltip" id="backupTooltip">
+              <p class="info-tooltip__title">💾 Sao Lưu &amp; Khôi Phục</p>
+              <p class="info-tooltip__body"><strong>Sao lưu (Export JSON):</strong> Tải về file <code>.json</code> chứa toàn bộ giao dịch, ngân sách và danh mục. Giữ file này để tránh mất dữ liệu khi xóa cache hoặc đổi thiết bị.</p>
+              <p class="info-tooltip__body"><strong>Khôi phục (Import JSON):</strong> Chọn file backup đã tải về để phục hồi lại toàn bộ dữ liệu ngay lập tức.</p>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn-set-budgets btn-set-budgets--full" style="flex:1; padding: 10px 0; font-size:10px;" onclick="exportData()" data-i18n="exportBackup">EXPORT JSON</button>
+          <button type="button" class="btn-set-budgets btn-set-budgets--full" style="flex:1; padding: 10px 0; font-size:10px; background:var(--recessed); color:var(--muted);" onclick="triggerImport()" data-i18n="importBackup">IMPORT JSON</button>
+        </div>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
       </div>
 
       <div class="modal-actions" style="margin-top:24px">
@@ -360,6 +528,7 @@
   <div class="modal-overlay" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title"
     onclick="closeBudgetOnOverlay(event)">
     <div class="modal-card modal-card--budget">
+      <button class="modal-close" onclick="closeBudgetModal()" aria-label="Close budget settings">✕</button>
 
       <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
       <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
@@ -375,7 +544,7 @@
         <div class="modal-vent"></div>
       </div>
 
-      <p class="budget-modal__hint">Enter monthly limits per category. Leave blank to disable.</p>
+      <p class="budget-modal__hint" data-i18n="budgetHint">Enter monthly limits per category. Leave blank to disable.</p>
 
       <form id="budgetForm" novalidate>
 
@@ -384,13 +553,13 @@
 
         <!-- Add Custom Category row -->
         <div class="budget-add-cat">
-          <p class="budget-add-cat__label">+ Add Custom Category</p>
+          <p class="budget-add-cat__label" data-i18n="addCustomCatLabel">+ Add Custom Category</p>
           <div class="budget-add-cat__row">
             <input class="budget-form-input budget-add-cat__name" id="newCatName" type="text"
-              placeholder="Category name" maxlength="40" />
+              data-i18n="placeholderCatName" placeholder="Category name" maxlength="40" />
             <input class="budget-form-input budget-add-cat__limit" id="newCatLimit" type="number" min="0" step="1"
-              placeholder="Limit (0 = track only)" />
-            <button type="button" class="btn-add-cat" onclick="addCustomCategory()">ADD</button>
+              data-i18n="placeholderCatLimit" placeholder="Limit (0 = track only)" />
+            <button type="button" class="btn-add-cat" onclick="addCustomCategory()" data-i18n="addBtn">ADD</button>
           </div>
         </div>
 
@@ -430,6 +599,7 @@
   <div class="modal-overlay" id="quickLogModal" role="dialog" aria-modal="true" aria-labelledby="ql-title"
     onclick="closeQuickLogOnOverlay(event)">
     <div class="modal-card modal-card--ql">
+      <button class="modal-close" onclick="closeQuickLog()" aria-label="Close quick log">✕</button>
 
       <!-- screws -->
       <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
@@ -459,14 +629,14 @@
 
         <div class="form-group">
           <label class="form-label" for="qlAmount">
-            Amount <span id="qlCurrHint" style="color:var(--green);font-size:9px;">(VND)</span>
+            <span data-i18n="amount">Amount</span> <span id="qlCurrHint" style="color:var(--green);font-size:9px;">(VND)</span>
           </label>
-          <input id="qlAmount" class="form-input" type="number" min="1" step="1" placeholder="0" />
+          <input id="qlAmount" class="form-input" type="text" data-i18n="placeholderAmount" placeholder="e.g. 50000 or 5000+20000" />
         </div>
 
         <div class="form-group">
           <label class="form-label" for="qlDesc" data-i18n="description">Description</label>
-          <input id="qlDesc" class="form-input" type="text" placeholder="e.g. Coffee..." maxlength="80" />
+          <input id="qlDesc" class="form-input" type="text" data-i18n="placeholderCoffee" placeholder="e.g. Coffee..." maxlength="80" />
         </div>
 
         <div class="form-group">
@@ -495,7 +665,372 @@
     </div>
   </div><!-- /quickLogModal -->
 
-  <script src="spending.js"></script>
+  <!-- ═══════════════════════════════════════════
+       MONTH DETAIL MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="monthDetailModal" role="dialog" aria-modal="true" aria-labelledby="month-detail-title" onclick="closeMonthDetailOnOverlay(event)">
+    <div class="modal-card modal-card--detail">
+      <button class="modal-close" onclick="closeMonthDetailModal()" aria-label="Close month detail">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+      
+      <h2 class="modal-title" id="month-detail-title">MONTH DETAIL</h2>
+      
+      <div class="modal-vents" aria-hidden="true">
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+      </div>
+      
+      <div class="txn-feed" id="monthTxnFeed" aria-live="polite" style="max-height: 400px; overflow-y: auto; padding-right: 4px;">
+        <!-- Dynamically populated transaction slots -->
+      </div>
+      
+      <div class="modal-actions" style="margin-top: 20px;">
+        <button type="button" class="btn-save" onclick="closeMonthDetailModal()" data-i18n="done">DONE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       USER GUIDE MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="guide-overlay" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guide-title"
+    onclick="closeGuideOnOverlay(event)">
+    <div class="guide-panel">
+
+      <!-- Corner screws -->
+      <div class="guide-panel__screw gp-screw--tl" aria-hidden="true"></div>
+      <div class="guide-panel__screw gp-screw--tr" aria-hidden="true"></div>
+      <div class="guide-panel__screw gp-screw--bl" aria-hidden="true"></div>
+      <div class="guide-panel__screw gp-screw--br" aria-hidden="true"></div>
+
+      <!-- Header -->
+      <div class="guide-header">
+        <div class="guide-header__left">
+          <div class="guide-header__badge" data-i18n="guideBadge">DOCS v2.0</div>
+          <h2 class="guide-title" id="guide-title">
+            <span class="guide-title__logo">Calt<span class="guide-title__accent">D</span>Hy</span>
+            <span class="guide-title__sub" data-i18n="guideSub">— Hướng Dẫn Sử Dụng</span>
+          </h2>
+        </div>
+        <button class="guide-close" onclick="closeGuide()" aria-label="Đóng hướng dẫn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Vent decoration -->
+      <div class="guide-vents" aria-hidden="true">
+        <div class="guide-vent"></div><div class="guide-vent"></div><div class="guide-vent"></div>
+        <div class="guide-vent"></div><div class="guide-vent"></div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <nav class="guide-tabs" role="tablist" aria-label="Các mục hướng dẫn">
+        <button class="guide-tab active" id="gtab-overview" role="tab" aria-selected="true" aria-controls="gsec-overview" onclick="switchGuideTab('overview', this)" data-i18n="gTab_overview">📊 Tổng Quan</button>
+        <button class="guide-tab" id="gtab-txn" role="tab" aria-selected="false" aria-controls="gsec-txn" onclick="switchGuideTab('txn', this)" data-i18n="gTab_txn">💳 Giao Dịch</button>
+        <button class="guide-tab" id="gtab-budget" role="tab" aria-selected="false" aria-controls="gsec-budget" onclick="switchGuideTab('budget', this)" data-i18n="gTab_budget">🎯 Ngân Sách</button>
+        <button class="guide-tab" id="gtab-analytics" role="tab" aria-selected="false" aria-controls="gsec-analytics" onclick="switchGuideTab('analytics', this)" data-i18n="gTab_analytics">📈 Phân Tích</button>
+        <button class="guide-tab" id="gtab-settings" role="tab" aria-selected="false" aria-controls="gsec-settings" onclick="switchGuideTab('settings', this)" data-i18n="gTab_settings">⚙️ Cài Đặt</button>
+        <button class="guide-tab" id="gtab-tips" role="tab" aria-selected="false" aria-controls="gsec-tips" onclick="switchGuideTab('tips', this)" data-i18n="gTab_tips">💡 Mẹo Hay</button>
+      </nav>
+
+      <!-- Scrollable Content Area -->
+      <div class="guide-body">
+
+        <!-- ── TAB: OVERVIEW ── -->
+        <section class="guide-section active" id="gsec-overview" role="tabpanel" aria-labelledby="gtab-overview">
+          <div class="guide-hero">
+            <div class="guide-hero__icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <p class="guide-hero__tagline" data-i18n="gHeroTagline">Hệ thống quản lý tài chính cá nhân — <strong>đơn giản, nhanh chóng, hiệu quả</strong></p>
+          </div>
+
+          <div class="guide-cards-grid">
+            <div class="guide-card">
+              <div class="guide-card__icon">📊</div>
+              <div class="guide-card__content">
+                <h3 class="guide-card__title" data-i18n="gCard_dashboard_title">Dashboard</h3>
+                <p class="guide-card__desc" data-i18n="gCard_dashboard_desc">Xem tổng quan số dư, thu nhập và chi tiêu theo tháng ngay trên màn hình chính.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card__icon">⚡</div>
+              <div class="guide-card__content">
+                <h3 class="guide-card__title" data-i18n="gCard_quicklog_title">Quick Log</h3>
+                <p class="guide-card__desc" data-i18n="gCard_quicklog_desc">Bấm nút ✏️ góc phải dưới để ghi giao dịch nhanh chỉ trong 3 giây.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card__icon">🎯</div>
+              <div class="guide-card__content">
+                <h3 class="guide-card__title" data-i18n="gCard_budget_title">Ngân Sách</h3>
+                <p class="guide-card__desc" data-i18n="gCard_budget_desc">Đặt ngân sách theo danh mục, theo dõi mức độ chi tiêu bằng thanh tiến độ màu sắc.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card__icon">📈</div>
+              <div class="guide-card__content">
+                <h3 class="guide-card__title" data-i18n="gCard_analytics_title">Phân Tích</h3>
+                <p class="guide-card__desc" data-i18n="gCard_analytics_desc">Biểu đồ dòng tiền theo thời gian, phân tích xu hướng thu chi theo tháng.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card__icon">💾</div>
+              <div class="guide-card__content">
+                <h3 class="guide-card__title" data-i18n="gCard_backup_title">Sao Lưu</h3>
+                <p class="guide-card__desc" data-i18n="gCard_backup_desc">Xuất/nhập dữ liệu dưới dạng JSON để bảo toàn dữ liệu khi đổi thiết bị.</p>
+              </div>
+            </div>
+            <div class="guide-card">
+              <div class="guide-card__icon">🌐</div>
+              <div class="guide-card__content">
+                <h3 class="guide-card__title" data-i18n="gCard_lang_title">Đa Ngôn Ngữ</h3>
+                <p class="guide-card__desc" data-i18n="gCard_lang_desc">Hỗ trợ tiếng Việt (VI), tiếng Anh (EN) và tiếng Trung (ZH).</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-note guide-note--info">
+            <span class="guide-note__icon">ℹ️</span>
+            <span data-i18n="gNoteOffline">CaltDHy hoạt động <strong>offline hoàn toàn</strong> — dữ liệu lưu trong trình duyệt của bạn, không cần internet sau lần đăng nhập đầu tiên.</span>
+          </div>
+        </section>
+
+        <!-- ── TAB: GIAO DỊCH ── -->
+        <section class="guide-section" id="gsec-txn" role="tabpanel" aria-labelledby="gtab-txn">
+          <h3 class="guide-section-title" data-i18n="gTxn_title">💳 Quản Lý Giao Dịch</h3>
+
+          <div class="guide-step-list">
+            <div class="guide-step">
+              <div class="guide-step__num">01</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gStep1_title">Thêm Giao Dịch Mới</h4>
+                <p class="guide-step__desc" data-i18n="gStep1_desc">Bấm nút <span class="guide-kbd">+ ADD TRANSACTION</span> ở cột trái, hoặc dùng <span class="guide-kbd">✏️ FAB</span> (nút bút chì góc phải màn hình) để mở Quick Log nhanh hơn.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">02</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gStep2_title">Chọn Loại Giao Dịch</h4>
+                <p class="guide-step__desc" data-i18n="gStep2_desc">Chọn <span class="guide-badge guide-badge--expense">EXPENSE</span> cho chi tiêu hoặc <span class="guide-badge guide-badge--income">INCOME</span> cho thu nhập. Màu sắc sẽ thay đổi để phân biệt.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">03</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gStep3_title">Nhập Số Tiền</h4>
+                <p class="guide-step__desc" data-i18n="gStep3_desc">Hỗ trợ nhập biểu thức toán học! Ví dụ: <code class="guide-code">50000+20000</code> sẽ tự động tính thành <code class="guide-code">70,000 ₫</code>.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">04</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gStep4_title">Chọn Danh Mục & Ngày</h4>
+                <p class="guide-step__desc" data-i18n="gStep4_desc">Chọn danh mục phù hợp (Food, Transport, Shopping...) và ngày giao dịch. Ngày mặc định là hôm nay.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">05</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gStep5_title">Xóa / Hoàn Tác</h4>
+                <p class="guide-step__desc" data-i18n="gStep5_desc">Bấm <span class="guide-kbd">✕</span> trên mỗi giao dịch để xóa. Một thông báo <strong>UNDO</strong> sẽ xuất hiện trong 5 giây để hoàn tác nếu nhỡ tay.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-note guide-note--tip">
+            <span class="guide-note__icon">💡</span>
+            <span data-i18n="gTxnTip"><strong>Mẹo nhanh:</strong> Nút <span class="guide-kbd">+</span> trên thẻ <em>Total Balance</em> mở màn hình nạp tiền số (numpad) để ghi thu nhập nhanh.</span>
+          </div>
+        </section>
+
+        <!-- ── TAB: NGÂN SÁCH ── -->
+        <section class="guide-section" id="gsec-budget" role="tabpanel" aria-labelledby="gtab-budget">
+          <h3 class="guide-section-title" data-i18n="gBudget_title">🎯 Quản Lý Ngân Sách (Envelope Method)</h3>
+
+          <p class="guide-para" data-i18n="gBudget_intro">CaltDHy sử dụng phương pháp <strong>Envelope Budgeting</strong> — phân chia ngân sách theo từng "phong bì" danh mục cụ thể.</p>
+
+          <div class="guide-step-list">
+            <div class="guide-step">
+              <div class="guide-step__num">01</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gBudgetStep1_title">Đặt Ngân Sách</h4>
+                <p class="guide-step__desc" data-i18n="gBudgetStep1_desc">Bấm <span class="guide-kbd">SET BUDGETS</span> trên Dashboard hoặc trong Settings. Nhập giới hạn chi tiêu theo tháng cho từng danh mục.</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">02</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gBudgetStep2_title">Theo Dõi Thanh Tiến Độ</h4>
+                <p class="guide-step__desc" data-i18n="gBudgetStep2_desc">Mỗi thẻ ngân sách có thanh tiến độ màu: <span style="color:#10B981">■ Xanh</span> (an toàn), <span style="color:#F59E0B">■ Vàng</span> (gần đủ), <span style="color:#FF4B72">■ Đỏ</span> (vượt giới hạn).</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">03</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gBudgetStep3_title">Thêm Danh Mục Tùy Chỉnh</h4>
+                <p class="guide-step__desc" data-i18n="gBudgetStep3_desc">Trong Budget Modal, cuộn xuống phần <strong>+ Add Custom Category</strong> để tạo danh mục riêng (ví dụ: Học Phí, Du Lịch...).</p>
+              </div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step__num">04</div>
+              <div class="guide-step__content">
+                <h4 class="guide-step__title" data-i18n="gBudgetStep4_title">Giới Hạn = 0</h4>
+                <p class="guide-step__desc" data-i18n="gBudgetStep4_desc">Đặt giới hạn <code class="guide-code">0</code> nghĩa là <em>theo dõi nhưng không giới hạn</em> — vẫn hiện thẻ ngân sách nhưng không cảnh báo vượt mức.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-note guide-note--warning">
+            <span class="guide-note__icon">⚠️</span>
+            <span data-i18n="gBudgetWarning">Ngân sách được reset về <strong>0 chi tiêu</strong> vào đầu mỗi tháng. Lịch sử giao dịch vẫn được giữ nguyên.</span>
+          </div>
+        </section>
+
+        <!-- ── TAB: PHÂN TÍCH ── -->
+        <section class="guide-section" id="gsec-analytics" role="tabpanel" aria-labelledby="gtab-analytics">
+          <h3 class="guide-section-title" data-i18n="gAnalytics_title">📈 Trang Phân Tích (Analytics)</h3>
+
+          <p class="guide-para" data-i18n="gAnalytics_intro">Chuyển sang tab <span class="guide-kbd">ANALYTICS</span> trên thanh điều hướng để xem phân tích dòng tiền chi tiết.</p>
+
+          <div class="guide-feature-list">
+            <div class="guide-feature">
+              <div class="guide-feature__icon">📊</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat1_title">Biểu Đồ Cột / Đường</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat1_desc">Chọn kiểu biểu đồ Bar hoặc Line bằng các nút góc phải. Trực quan hóa thu/chi theo từng tháng.</p>
+              </div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature__icon">🗓️</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat2_title">Khoảng Thời Gian</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat2_desc">Lọc theo <strong>1 tháng</strong>, <strong>3 tháng</strong>, <strong>6 tháng</strong> hoặc <strong>12 tháng</strong> bằng dropdown bên trái.</p>
+              </div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature__icon">🍩</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat3_title">Biểu Đồ Tròn Danh Mục</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat3_desc">Cột trái (sidebar) luôn hiển thị biểu đồ phân bổ chi tiêu theo danh mục của tháng hiện tại.</p>
+              </div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature__icon">📋</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat4_title">Analytics Summary</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat4_desc">Phần bên dưới biểu đồ hiển thị các chỉ số tổng hợp: trung bình tháng, tháng chi nhiều nhất, tháng tiết kiệm nhất...</p>
+              </div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature__icon">📅</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat5_title">Lưới Chọn Tháng</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat5_desc">Bấm vào ô hiển thị tháng ở góc trên bên phải để mở lưới chọn tháng 3x4, giúp đổi nhanh dữ liệu hiển thị của tháng bất kỳ.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB: CÀI ĐẶT ── -->
+        <section class="guide-section" id="gsec-settings" role="tabpanel" aria-labelledby="gtab-settings">
+          <h3 class="guide-section-title" data-i18n="gSettings_title">⚙️ Cài Đặt & Tùy Chỉnh</h3>
+
+          <p class="guide-para" data-i18n="gSettings_intro">Bấm nút <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;display:inline"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <strong>Settings</strong> trên thanh trên để mở cài đặt.</p>
+
+          <div class="guide-settings-table">
+            <div class="guide-settings-row">
+              <div class="guide-settings-row__key" data-i18n="gRow_lang_key">🌐 Ngôn Ngữ</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_lang_val">Chọn EN / VI / ZH — giao diện đổi ngay lập tức, không cần reload.</div>
+            </div>
+            <div class="guide-settings-row">
+              <div class="guide-settings-row__key" data-i18n="gRow_theme_key">🎨 Giao Diện</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_theme_val">4 theme: <strong>Dark</strong> (mặc định), <strong>Light</strong>, <strong>Cream</strong>, <strong>Sky</strong>. Thay đổi lưu tự động.</div>
+            </div>
+            <div class="guide-settings-row">
+              <div class="guide-settings-row__key" data-i18n="gRow_curr_key">💰 Tiền Tệ</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_curr_val">Hiển thị theo VND ₫, USD $, hoặc CNY ¥. Tỉ lệ quy đổi cố định: 1 USD = 27,000₫, 1 CNY = 3,750₫.</div>
+            </div>
+            <div class="guide-settings-row">
+              <div class="guide-settings-row__key" data-i18n="gRow_export_key">💾 Xuất Dữ Liệu</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_export_val"><strong>EXPORT JSON</strong> — tải về file backup toàn bộ giao dịch và ngân sách.</div>
+            </div>
+            <div class="guide-settings-row">
+              <div class="guide-settings-row__key" data-i18n="gRow_import_key">📥 Nhập Dữ Liệu</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_import_val"><strong>IMPORT JSON</strong> — chọn file backup để phục hồi dữ liệu. <span style="color:var(--accent)">Sẽ ghi đè dữ liệu hiện tại!</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB: MẸO HAY ── -->
+        <section class="guide-section" id="gsec-tips" role="tabpanel" aria-labelledby="gtab-tips">
+          <h3 class="guide-section-title" data-i18n="gTips_title">💡 Mẹo & Thủ Thuật</h3>
+
+          <div class="guide-tips-grid">
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">01</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip1_title">Biểu Thức Toán Học</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip1_desc">Nhập <code class="guide-code">30000*3+15000</code> vào ô số tiền — CaltDHy tự tính cho bạn.</p>
+            </div>
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">02</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip2_title">Quick Deposit</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip2_desc">Bấm <strong>+</strong> trên thẻ Total Balance để mở bàn phím số ghi thu nhập cực nhanh.</p>
+            </div>
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">03</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip3_title">Sao Lưu Định Kỳ</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip3_desc">Export JSON ít nhất 1 lần/tuần. Dữ liệu lưu trong localStorage — xóa cache trình duyệt sẽ mất dữ liệu.</p>
+            </div>
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">04</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip4_title">Lọc Giao Dịch</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip4_desc">Dùng các nút <span class="guide-kbd">ALL</span> / <span class="guide-kbd">INCOME</span> / <span class="guide-kbd">EXPENSE</span> để lọc nhanh danh sách.</p>
+            </div>
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">05</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip5_title">Cài Làm App</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip5_desc">Trên mobile: <em>Share → Add to Home Screen</em> để cài CaltDHy như một ứng dụng gốc (PWA).</p>
+            </div>
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">06</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip6_title">Đổi Theme Nhanh</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip6_desc">Settings → Appearance → chọn theme ngay. Thay đổi có hiệu lực tức thì trên toàn bộ giao diện.</p>
+            </div>
+          </div>
+
+          <div class="guide-note guide-note--success">
+            <span class="guide-note__icon">✅</span>
+            <span data-i18n="gTipsNote"><strong>Bắt đầu ngay:</strong> Đóng cửa sổ này và bấm <span class="guide-kbd">+ ADD TRANSACTION</span> để ghi giao dịch đầu tiên của bạn!</span>
+          </div>
+        </section>
+
+      </div><!-- /guide-body -->
+
+      <!-- Banner for Optimal Clarity -->
+      <div class="guide-banner">
+        DESIGNED FOR OPTIMAL CLARITY AND CONSISTENT TAB ASPECT RATIO.
+      </div>
+
+      <!-- Footer -->
+      <div class="guide-footer">
+        <span class="guide-footer__brand">CaltDHy <span style="color:var(--accent)">Finance OS</span></span>
+        <span class="guide-footer__version">v2.0.2 — Personal Finance Manager</span>
+        <button class="guide-footer__close" onclick="closeGuide()" data-i18n="gFooterClose">Đóng Hướng Dẫn ✕</button>
+      </div>
+
+    </div>
+  </div><!-- /guideModal -->
+
+  <script src="spending.js?v=2.0.2"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => { });

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { readData, writeData } = require('../utils/fileDB');
+const Event = require('../models/Event');
 
 // Tất cả routes đều yêu cầu đăng nhập
 router.use(protect);
@@ -15,23 +15,19 @@ router.get('/', async (req, res) => {
         const { year, month } = req.query;
         const userId = req.user.id;
 
-        const db = await readData();
-        let events = db.events.filter(e => e.userId === userId);
+        let filter = { userId };
 
         // Lọc theo tháng nếu có truyền year & month
         if (year && month) {
             const paddedMonth = String(month).padStart(2, '0');
             const prefix = `${year}-${paddedMonth}`;
-            events = events.filter(e => e.date && e.date.startsWith(prefix));
+            // Dùng regex để match date bắt đầu bằng prefix "YYYY-MM"
+            filter.date = { $regex: `^${prefix}` };
         }
 
-        // Sắp xếp tăng dần theo date và startTime
-        events.sort((a, b) => {
-            if (a.date !== b.date) return a.date.localeCompare(b.date);
-            return (a.startTime || '').localeCompare(b.startTime || '');
-        });
+        const events = await Event.find(filter).sort({ date: 1, startTime: 1 });
 
-        res.json({ success: true, data: events });
+        res.json({ success: true, data: events.map(e => e.toJSON()) });
     } catch (error) {
         console.error('GET /api/events error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi lấy dữ liệu lịch trình.' });
@@ -57,27 +53,20 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Tên công việc không được quá 100 ký tự.' });
         }
 
-        const db = await readData();
-
-        const newEvent = {
-            id: Date.now().toString(),
+        const newEvent = await Event.create({
             userId,
             title: title.trim(),
             date,
             startTime: startTime || '',
             endTime: endTime || '',
             description: (description || '').trim().slice(0, 500),
-            color: color || '#1877F2',
-            createdAt: new Date().toISOString()
-        };
-
-        db.events.push(newEvent);
-        await writeData(db);
+            color: color || '#1877F2'
+        });
 
         res.status(201).json({
             success: true,
             message: 'Đã thêm lịch trình!',
-            data: newEvent
+            data: newEvent.toJSON()
         });
     } catch (error) {
         console.error('POST /api/events error:', error);
@@ -93,36 +82,34 @@ router.put('/:id', async (req, res) => {
         const { id } = req.params;
         const userId = req.user.id;
 
-        const db = await readData();
+        const { title, date, startTime, endTime, description, color } = req.body;
 
-        const index = db.events.findIndex(e => e.id === id && e.userId === userId);
+        // Xây dựng object update chỉ gồm các field được gửi lên
+        const updateFields = {};
+        if (title !== undefined)       updateFields.title = title.trim();
+        if (date !== undefined)        updateFields.date = date;
+        if (startTime !== undefined)   updateFields.startTime = startTime;
+        if (endTime !== undefined)     updateFields.endTime = endTime;
+        if (description !== undefined) updateFields.description = description.trim().slice(0, 500);
+        if (color !== undefined)       updateFields.color = color;
 
-        if (index === -1) {
+        const updatedEvent = await Event.findOneAndUpdate(
+            { _id: id, userId },  // đảm bảo chỉ owner mới update được
+            updateFields,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedEvent) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy lịch trình hoặc bạn không có quyền chỉnh sửa.'
             });
         }
 
-        const { title, date, startTime, endTime, description, color } = req.body;
-        const existing = db.events[index];
-
-        db.events[index] = {
-            ...existing,
-            title: title !== undefined ? title.trim() : existing.title,
-            date: date !== undefined ? date : existing.date,
-            startTime: startTime !== undefined ? startTime : existing.startTime,
-            endTime: endTime !== undefined ? endTime : existing.endTime,
-            description: description !== undefined ? description.trim().slice(0, 500) : existing.description,
-            color: color !== undefined ? color : existing.color
-        };
-
-        await writeData(db);
-
         res.json({
             success: true,
             message: 'Đã cập nhật lịch trình!',
-            data: db.events[index]
+            data: updatedEvent.toJSON()
         });
     } catch (error) {
         console.error('PUT /api/events/:id error:', error);
@@ -138,19 +125,14 @@ router.delete('/:id', async (req, res) => {
         const { id } = req.params;
         const userId = req.user.id;
 
-        const db = await readData();
+        const deleted = await Event.findOneAndDelete({ _id: id, userId });
 
-        const index = db.events.findIndex(e => e.id === id && e.userId === userId);
-
-        if (index === -1) {
+        if (!deleted) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy lịch trình hoặc bạn không có quyền xóa.'
             });
         }
-
-        db.events.splice(index, 1);
-        await writeData(db);
 
         res.json({ success: true, message: 'Đã xóa lịch trình!' });
     } catch (error) {

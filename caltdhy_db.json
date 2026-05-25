@@ -1,0 +1,44 @@
+{
+  "transactions": [
+    {
+      "id": "mpjhbcpeiqfbg",
+      "type": "expense",
+      "desc": "cf",
+      "amount": 35000,
+      "category": "Cà phê",
+      "date": "2026-05-24"
+    },
+    {
+      "id": "mpjhdt1oyzo7n",
+      "type": "income",
+      "desc": "Quick Deposit",
+      "amount": 670000,
+      "category": "Salary",
+      "date": "2026-05-24"
+    },
+    {
+      "id": "mpkgz2jexf1dn",
+      "type": "expense",
+      "desc": "cơm",
+      "amount": 30000,
+      "category": "Food & Dining",
+      "date": "2026-05-25"
+    },
+    {
+      "id": "mpkgzclc13srt",
+      "type": "expense",
+      "desc": "cf",
+      "amount": 35000,
+      "category": "Cà phê",
+      "date": "2026-05-25"
+    }
+  ],
+  "budgets": {
+    "Cà phê": 285000,
+    "Food & Dining": 400000,
+    "Health": 20000
+  },
+  "customCategories": [
+    "Cà phê"
+  ]
+}

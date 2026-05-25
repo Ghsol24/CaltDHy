@@ -11,20 +11,8 @@
   <!-- ANTI-FOUC: apply saved theme before first paint -->
   <script src="theme-manager.js"></script>
   <style>
-    /* ── Dark theme (Default) ── */
+    /* ── Design Tokens ── */
     :root {
-      --chassis: #090A0F; --panel: #12131C; --recessed: #05060A;
-      --txt: #F3F4F6; --muted: #8F9CAE; --accent: #FF4B72;
-      --sh: rgba(0,0,0,.60); --hi: rgba(255,255,255,.04);
-      --shadow-card: 0 8px 30px rgba(0,0,0,.60);
-      --shadow-float: 0 20px 48px rgba(0,0,0,.80);
-      --shadow-pressed: inset 0 2px 8px rgba(0,0,0,.70);
-      --shadow-accent: 0 0 20px rgba(255, 75, 114, .35);
-      --green: #10B981;
-    }
-
-    /* ── Light theme ── */
-    html.light-theme {
       --chassis: #FAFAFB; --panel: #FFFFFF; --recessed: #F8F8FA;
       --txt: #0F172A; --muted: #64748B; --accent: #4F46E5;
       --sh: rgba(0,0,0,.04); --hi: #ffffff;
@@ -32,33 +20,8 @@
       --shadow-float: 0 12px 32px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.5);
       --shadow-pressed: inset 0 1px 3px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.02);
       --shadow-accent: 0 4px 12px rgba(79,70,229,.2);
-      --green: #16A34A;
+      --green: #10B981;
     }
-
-    /* ── Cream theme ── */
-    html.cream-theme {
-      --chassis: #F5EDE0; --panel: #FDF8F2; --recessed: #FAF3EA;
-      --txt: #2C1D10; --muted: #584133; --accent: #C0531E;
-      --sh: rgba(100,60,20,.10); --hi: #ffffff;
-      --shadow-card: 0 2px 8px rgba(100,60,20,.10), 0 6px 20px rgba(100,60,20,.07);
-      --shadow-float: 0 12px 44px rgba(100,60,20,.16), 0 2px 10px rgba(100,60,20,.08);
-      --shadow-pressed: inset 0 1px 5px rgba(100,60,20,.12), inset 0 0 0 1px rgba(100,60,20,.05);
-      --shadow-accent: 0 4px 16px rgba(192,83,30,.28);
-      --green: #2D7A3E;
-    }
-
-    /* ── Sky theme ── */
-    html.sky-theme {
-      --chassis: #EBF5FB; --panel: #F0F8FF; --recessed: #F5FBFF;
-      --txt: #0D2137; --muted: #4D7899; --accent: #0078C8;
-      --sh: rgba(0,80,140,.10); --hi: #ffffff;
-      --shadow-card: 0 2px 8px rgba(0,80,140,.10), 0 6px 20px rgba(0,80,140,.07);
-      --shadow-float: 0 12px 44px rgba(0,80,140,.15), 0 2px 10px rgba(0,80,140,.08);
-      --shadow-pressed: inset 0 1px 5px rgba(0,80,140,.12), inset 0 0 0 1px rgba(0,80,140,.05);
-      --shadow-accent: 0 4px 16px rgba(0,120,200,.3);
-      --green: #0D7252;
-    }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ── Animated background ── */
@@ -73,7 +36,6 @@
       padding: 24px;
       position: relative;
       overflow: hidden;
-      transition: background 250ms ease, color 250ms ease;
     }
 
     /* Animated gradient orbs */
@@ -123,21 +85,9 @@
     /* ── Page screws ── */
     .pg-screw {
       position: fixed; width: 14px; height: 14px; border-radius: 50%; z-index: 5;
-      background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
-      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
-      transition: transform 300ms ease;
-    }
-    html.light-theme .pg-screw {
       background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
       box-shadow: 1px 1px 2px rgba(0,0,0,.25), inset 1px 1px 1px rgba(255,255,255,.5);
-    }
-    html.cream-theme .pg-screw {
-      background: radial-gradient(circle at 40% 35%, #D8CCBE, #b8ac9e);
-      box-shadow: 1px 1px 2px rgba(100,60,20,.15), inset 1px 1px 1px rgba(255,255,255,.6);
-    }
-    html.sky-theme .pg-screw {
-      background: radial-gradient(circle at 40% 35%, #C8E4F5, #a8c4d5);
-      box-shadow: 1px 1px 2px rgba(0,80,140,.15), inset 1px 1px 1px rgba(255,255,255,.6);
+      transition: transform 300ms ease;
     }
     .pg-screw:hover { transform: rotate(90deg); }
     .pg-screw::after {
@@ -154,7 +104,6 @@
       display: flex; align-items: center; gap: 10px;
       background: var(--panel); border-radius: 9999px; padding: 8px 20px;
       box-shadow: var(--shadow-card); z-index: 10;
-      transition: background 250ms ease;
     }
     .led {
       width: 9px; height: 9px; border-radius: 50%; background: var(--green);
@@ -177,17 +126,8 @@
       box-shadow: var(--shadow-float);
       padding: 44px 48px 40px; width: 100%; max-width: 420px;
       animation: moduleIn .4s cubic-bezier(.34, 1.2, .64, 1) both;
-      background-image: linear-gradient(180deg, rgba(255,255,255,.035) 0%, transparent 80px);
-      transition: background 250ms ease, box-shadow 250ms ease;
-    }
-    html.light-theme .module {
+      /* Subtle top highlight */
       background-image: linear-gradient(180deg, rgba(255,255,255,.6) 0%, transparent 80px);
-    }
-    html.cream-theme .module {
-      background-image: linear-gradient(180deg, rgba(255,255,255,.5) 0%, transparent 80px);
-    }
-    html.sky-theme .module {
-      background-image: linear-gradient(180deg, rgba(255,255,255,.5) 0%, transparent 80px);
     }
     @keyframes moduleIn {
       from { opacity: 0; transform: translateY(20px) scale(.97); }
@@ -197,21 +137,9 @@
     /* Card screws */
     .c-screw {
       position: absolute; width: 12px; height: 12px; border-radius: 50%;
-      background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
-      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
-      transition: transform 300ms ease;
-    }
-    html.light-theme .c-screw {
       background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
       box-shadow: 1px 1px 2px rgba(0,0,0,.2), inset 1px 1px 1px rgba(255,255,255,.5);
-    }
-    html.cream-theme .c-screw {
-      background: radial-gradient(circle at 40% 35%, #D8CCBE, #b8ac9e);
-      box-shadow: 1px 1px 2px rgba(100,60,20,.15), inset 1px 1px 1px rgba(255,255,255,.6);
-    }
-    html.sky-theme .c-screw {
-      background: radial-gradient(circle at 40% 35%, #C8E4F5, #a8c4d5);
-      box-shadow: 1px 1px 2px rgba(0,80,140,.15), inset 1px 1px 1px rgba(255,255,255,.6);
+      transition: transform 300ms ease;
     }
     .c-screw:hover { transform: rotate(90deg); }
     .c-screw::after {
@@ -235,20 +163,13 @@
       font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700;
       letter-spacing: .05em; color: var(--txt); text-transform: uppercase;
     }
-    .mod-title span { color: var(--accent); text-shadow: var(--shadow-accent); }
+    .mod-title span { color: var(--accent); text-shadow: 0 0 12px rgba(255,71,87,.4); }
 
     /* ── Vent slots ── */
     .vents { display: flex; gap: 6px; margin-bottom: 28px; }
     .vent {
       flex: 1; height: 3px; border-radius: 2px; background: var(--recessed);
       box-shadow: inset 3px 3px 7px var(--sh), inset -3px -3px 7px var(--hi);
-    }
-    @keyframes ventGlow {
-      0%, 100% { opacity: 0.15; filter: drop-shadow(0 0 1px rgba(255, 75, 114, 0)); }
-      50% { opacity: 0.35; filter: drop-shadow(0 0 3px rgba(255, 75, 114, 0.4)); }
-    }
-    html:not(.light-theme):not(.cream-theme):not(.sky-theme) .vent {
-      animation: ventGlow 4s ease-in-out infinite;
     }
 
     /* ── Floating label form groups ── */
@@ -274,6 +195,7 @@
       padding: 0 4px;
     }
 
+    /* Float up when focused or has value */
     .fg:focus-within .flabel,
     .finput:not(:placeholder-shown) ~ .flabel,
     .fg--active .flabel {
@@ -295,24 +217,17 @@
     }
     .finput::placeholder { color: transparent; }
     .finput:focus {
-      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(255, 75, 114, 0.2);
-      border-color: var(--accent);
-    }
-    html.light-theme .finput:focus {
-      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
-    html.cream-theme .finput:focus {
-      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(192, 83, 30, 0.2);
-    }
-    html.sky-theme .finput:focus {
-      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(0, 120, 200, 0.2);
+      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(255,71,87,.2);
+      border-color: rgba(255,71,87,.3);
     }
 
+    /* Validation states */
     .finput.valid {
-      border-color: var(--green);
-      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(16, 185, 129, .15);
+      border-color: rgba(0,230,118,.4);
+      box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(0,230,118,.15);
     }
 
+    /* Password wrapper */
     .iw { position: relative; }
     .iw .finput { padding-right: 48px; }
     .eye-btn {
@@ -323,6 +238,7 @@
     }
     .eye-btn:hover { color: var(--accent); transform: translateY(-50%) scale(1.1); }
 
+    /* Checkmark icon (success) */
     .fg-check {
       position: absolute;
       right: 14px;
@@ -335,6 +251,7 @@
     }
     .finput.valid ~ .fg-check { opacity: 1; }
 
+    /* ── Forgot password ── */
     .forgot-row { text-align: right; margin-top: -10px; margin-bottom: 20px; }
     .forgot-lnk {
       font-family: 'JetBrains Mono', monospace; font-size: 9px;
@@ -343,9 +260,10 @@
     }
     .forgot-lnk:hover { color: var(--accent); }
 
+    /* ── Error ── */
     .form-err {
       font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent);
-      letter-spacing: .05em; padding: 10px 14px; background: rgba(255, 75, 114, 0.08);
+      letter-spacing: .05em; padding: 10px 14px; background: rgba(255,71,87,.08);
       border-radius: 8px; border-left: 3px solid var(--accent); display: none;
       margin-bottom: 14px; animation: errShake .3s ease both;
     }
@@ -356,6 +274,7 @@
       75%       { transform: translateX(6px); }
     }
 
+    /* ── CTA Button ── */
     .btn-cta {
       width: 100%; padding: 16px; background: var(--accent); color: #fff;
       font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
@@ -372,11 +291,12 @@
     }
     .btn-cta:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow-accent);
+      box-shadow: 6px 6px 14px rgba(166,50,60,.5), -6px -6px 14px rgba(255,120,130,.5);
     }
     .btn-cta:active { transform: translateY(2px); box-shadow: var(--shadow-pressed); }
     .btn-cta:disabled { opacity: .65; cursor: not-allowed; transform: none; }
 
+    /* Loading spinner */
     .btn-cta .spinner {
       width: 14px; height: 14px;
       border: 2px solid rgba(255,255,255,.3);
@@ -389,6 +309,7 @@
     .btn-cta.loading .btn-text { opacity: 0.7; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Divider ── */
     .divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; }
     .divider::before, .divider::after {
       content: ''; flex: 1; height: 1px; background: var(--sh);
@@ -398,6 +319,7 @@
       color: var(--muted); letter-spacing: .1em;
     }
 
+    /* ── Back button (ghost) ── */
     .btn-ghost {
       width: 100%; padding: 13px; background: var(--chassis); color: var(--muted);
       font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
@@ -410,6 +332,7 @@
     .btn-ghost:hover { color: var(--txt); transform: translateY(-1px); }
     .btn-ghost:active { transform: translateY(2px); box-shadow: var(--shadow-pressed); }
 
+    /* ── Footer ── */
     .mod-footer {
       margin-top: 22px; text-align: center;
       font-family: 'JetBrains Mono', monospace; font-size: 11px;
@@ -421,7 +344,30 @@
       transition: color 150ms ease, border-color 150ms ease;
     }
     .lnk:hover { color: var(--accent); border-color: var(--accent); }
-    html.dark-theme input { color-scheme: dark; }
+
+    /* ── Dark theme overrides ── */
+    body.dark-theme {
+      --chassis: #090A0F; --panel: #12131C; --recessed: #05060A;
+      --txt: #F3F4F6; --muted: #8F9CAE; --accent: #FF4B72;
+      --sh: rgba(0,0,0,.60); --hi: rgba(255,255,255,.04);
+      --shadow-card: 0 8px 30px rgba(0,0,0,.60);
+      --shadow-float: 0 20px 48px rgba(0,0,0,.80);
+      --shadow-pressed: inset 0 2px 8px rgba(0,0,0,.70);
+    }
+    body.dark-theme .module { background-image: linear-gradient(180deg, rgba(255,255,255,.035) 0%, transparent 80px); }
+    body.dark-theme .pg-screw {
+      background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
+      box-shadow: 1px 1px 2px rgba(0,0,0,.6), inset 1px 1px 1px rgba(255,255,255,.06);
+    }
+    body.dark-theme .c-screw {
+      background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
+    }
+    body.dark-theme .fg:focus-within .flabel,
+    body.dark-theme .finput:not(:placeholder-shown) ~ .flabel {
+      background: #353b3c;
+    }
+    body.dark-theme .status-bar { background: #353b3c; }
+    body.dark-theme input { color-scheme: dark; }
   </style>
 </head>
 <body>
@@ -528,7 +474,7 @@
     }
 
     /* ── Form submit ── */
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const errEl  = document.getElementById('formErr');
       const btn    = document.getElementById('submitBtn');
@@ -546,27 +492,11 @@
       btn.querySelector('.btn-text').textContent = 'AUTHENTICATING...';
 
       try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: pw })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || 'Email hoặc mật khẩu không hợp lệ.');
-        }
+        localStorage.setItem('caltdhy_token', 'local_' + Date.now());
+        localStorage.setItem('caltdhy_user', JSON.stringify({ name: email.split('@')[0] }));
+      } catch (_) {}
 
-        // Lưu JWT token và thông tin user thực tế
-        localStorage.setItem('pcn_token', data.token);
-        localStorage.setItem('pcn_user', JSON.stringify(data.user));
-
-        setTimeout(() => { window.location.href = 'spending.html'; }, 300);
-      } catch (err) {
-        showErr(err.message || 'Lỗi kết nối server.');
-        btn.disabled = false;
-        btn.classList.remove('loading');
-        btn.querySelector('.btn-text').textContent = 'LOG IN';
-      }
+      setTimeout(() => { window.location.href = 'spending.html'; }, 900);
     });
 
     /* ESC → go back to index */

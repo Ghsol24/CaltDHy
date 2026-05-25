@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
-const { readData } = require('../utils/fileDB');
+const User = require('../models/User');
 
 /**
  * Middleware xác thực JWT
- * Thay thế User.findById() của Mongoose bằng readData() + .find()
+ * Dùng User.findById() của Mongoose thay cho readData() + .find()
  */
 const protect = async (req, res, next) => {
     try {
@@ -23,9 +23,8 @@ const protect = async (req, res, next) => {
         // Xác minh token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Tìm user trong data.json thay vì MongoDB
-        const db = await readData();
-        const user = db.users.find(u => u.id === decoded.id);
+        // Tìm user trong MongoDB – không select password (select: false ở schema)
+        const user = await User.findById(decoded.id);
 
         if (!user) {
             return res.status(401).json({
@@ -36,7 +35,7 @@ const protect = async (req, res, next) => {
 
         // Gắn user vào request (không kèm password)
         req.user = {
-            id: user.id,
+            id: user._id.toString(),
             name: user.name,
             email: user.email
         };
