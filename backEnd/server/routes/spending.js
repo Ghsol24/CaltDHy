@@ -3,9 +3,69 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const Budget = require('../models/Budget');
+const User = require('../models/User');
 
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
+
+// =============================================
+// GET /api/spending/categories – Lấy danh mục tự định nghĩa của user
+// =============================================
+router.get('/categories', async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('customCategories');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy user.' });
+        }
+        res.json({
+            success: true,
+            data: user.customCategories || []
+        });
+    } catch (error) {
+        console.error('GET /api/spending/categories error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi lấy danh mục.' });
+    }
+});
+
+// =============================================
+// PUT /api/spending/categories – Cập nhật danh mục tự định nghĩa của user
+// Body: { categories: ['Cat1', 'Cat2', ...] }
+// =============================================
+router.put('/categories', async (req, res) => {
+    try {
+        const { categories } = req.body;
+
+        if (!Array.isArray(categories)) {
+            return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ. Cần mảng categories.' });
+        }
+
+        // Lọc: chỉ giữ string hợp lệ, trim whitespace, loại bỏ trùng lặp
+        const cleaned = [...new Set(
+            categories
+                .filter(c => typeof c === 'string' && c.trim().length > 0)
+                .map(c => c.trim())
+        )];
+
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { customCategories: cleaned },
+            { new: true, select: 'customCategories' }
+        );
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy user.' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Cập nhật danh mục thành công!',
+            data: user.customCategories
+        });
+    } catch (error) {
+        console.error('PUT /api/spending/categories error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi cập nhật danh mục.' });
+    }
+});
 
 // =============================================
 // GET /api/spending/budget - Lấy hạn mức ngân sách theo danh mục
@@ -30,31 +90,39 @@ router.get('/budget', async (req, res) => {
 
 // =============================================
 // PUT /api/spending/budget - Cập nhật hạn mức ngân sách
-// Ghi đè toàn bộ danh sách ngân sách của user đó
+// Dùng bulkWrite upsert thay vì delete-all + reinsert để tránh mất data
 // =============================================
 router.put('/budget', async (req, res) => {
     try {
         const budgetsObj = req.body; // Cấu trúc: { "Food & Dining": 500000, "Cà phê": 200000 }
 
-        if (!budgetsObj || typeof budgetsObj !== 'object') {
+        if (!budgetsObj || typeof budgetsObj !== 'object' || Array.isArray(budgetsObj)) {
             return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ.' });
         }
 
-        // Xóa các ngân sách cũ của user này
-        await Budget.deleteMany({ userId: req.user.id });
+        // Lọc các category hợp lệ (limit > 0)
+        const validEntries = Object.entries(budgetsObj)
+            .filter(([_, limit]) => limit && Number(limit) > 0);
 
-        // Chuẩn bị dữ liệu để insert mới
-        const insertData = Object.entries(budgetsObj)
-            .filter(([_, limit]) => limit && Number(limit) > 0)
-            .map(([category, limit]) => ({
-                userId: req.user.id,
-                category,
-                limit: Number(limit)
+        const validCategories = validEntries.map(([cat]) => cat);
+
+        // Bước 1: Upsert tất cả budget hợp lệ (atomic từng item)
+        if (validEntries.length > 0) {
+            const bulkOps = validEntries.map(([category, limit]) => ({
+                updateOne: {
+                    filter: { userId: req.user.id, category },
+                    update: { $set: { limit: Number(limit) } },
+                    upsert: true
+                }
             }));
-
-        if (insertData.length > 0) {
-            await Budget.insertMany(insertData);
+            await Budget.bulkWrite(bulkOps);
         }
+
+        // Bước 2: Xóa các category không còn trong list mới (hoặc limit = 0)
+        await Budget.deleteMany({
+            userId: req.user.id,
+            category: { $nin: validCategories }
+        });
 
         res.json({
             success: true,
@@ -69,26 +137,46 @@ router.put('/budget', async (req, res) => {
 
 // =============================================
 // GET /api/spending - Lấy danh sách giao dịch của user
-// Hỗ trợ lọc theo query: ?year=2026&month=5
+// Hỗ trợ lọc: ?year=2026&month=5
+// Hỗ trợ phân trang: ?page=1&limit=50 (mặc định trả về tất cả nếu không có page)
 // =============================================
 router.get('/', async (req, res) => {
     try {
-        const { year, month } = req.query;
+        const { year, month, page, limit } = req.query;
         let filter = { userId: req.user.id };
 
         // Lọc theo năm/tháng nếu có tham số
         if (year && month) {
             const paddedMonth = String(month).padStart(2, '0');
             const prefix = `${year}-${paddedMonth}`;
-            // Dùng regex để khớp trường date bắt đầu bằng YYYY-MM
             filter.date = { $regex: `^${prefix}` };
         }
 
-        const records = await Transaction.find(filter).sort({ date: -1, createdAt: -1 });
+        const query = Transaction.find(filter).sort({ date: -1, createdAt: -1 });
+
+        // Phân trang nếu có truyền `page`
+        let pagination = null;
+        if (page) {
+            const pageNum  = Math.max(1, parseInt(page) || 1);
+            const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
+            const skip     = (pageNum - 1) * limitNum;
+            const total    = await Transaction.countDocuments(filter);
+
+            query.skip(skip).limit(limitNum);
+            pagination = {
+                page: pageNum,
+                limit: limitNum,
+                total,
+                totalPages: Math.ceil(total / limitNum)
+            };
+        }
+
+        const records = await query;
 
         res.json({
             success: true,
-            data: records.map(r => r.toJSON())
+            data: records.map(r => r.toJSON()),
+            ...(pagination && { pagination })
         });
     } catch (error) {
         console.error('GET /api/spending error:', error);

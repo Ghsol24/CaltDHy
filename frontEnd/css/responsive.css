@@ -1,0 +1,236 @@
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+/* ============================================================
+   RESPONSIVE — Intermediate Desktop / Laptop (769px – 1100px)
+   Targets older Windows laptops (1366×768, 1280×800) and
+   any browser window narrowed to a mid-range width.
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .app-body {
+    grid-template-columns: 240px 1fr; /* Shrink sidebar from 280px → 240px */
+  }
+
+  .rail {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  .main-content {
+    padding: 20px 22px;
+    gap: 16px;
+  }
+
+  .topbar {
+    padding: 0 20px;
+  }
+
+  /* Hide greeting text to reclaim topbar space */
+  .tb-center {
+    display: none;
+  }
+
+  .metric-card {
+    padding: 14px 16px;
+  }
+
+  .metric-card__value {
+    font-size: clamp(14px, 2.2vw, 22px);
+  }
+
+  .budget-panel {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — Topbar only: hide greeting at 1024px
+   (covers MacBooks with smaller window sizes too)
+   ============================================================ */
+@media (max-width: 1024px) {
+  .tb-center {
+    display: none;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — Narrow topbar: collapse logout button text
+   ============================================================ */
+@media (max-width: 900px) {
+  .btn-logout {
+    font-size: 0; /* Hide text */
+    padding: 8px 10px;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Show LOG OUT icon — power/exit SVG thay vì arrow */
+  .btn-logout::after {
+    /* SVG logout icon as background — semantic and theme-aware */
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: var(--muted);
+    /* Power icon mask */
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+  .btn-logout:hover::after {
+    background-color: var(--accent);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile (≤768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .app-body {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+
+  .rail {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+    scrollbar-gutter: auto; /* On mobile, full-width so gutter isn't needed */
+  }
+
+  .topbar {
+    padding: 0 16px;
+    position: relative;
+  }
+
+  .tb-badge {
+    display: none;
+  }
+
+  .tb-center {
+    display: none; /* Already hidden by 1024px breakpoint, keep explicit */
+  }
+
+  .tb-right {
+    gap: 6px;
+  }
+
+  .main-content {
+    padding: 20px 16px;
+    scrollbar-gutter: auto;
+  }
+
+  .modal-card {
+    padding: 28px 24px;
+  }
+
+  .metric-card__value {
+    font-size: clamp(13px, 4.5vw, 20px);
+  }
+
+  .numpad-device {
+    width: calc(100vw - 48px);
+    max-width: 340px;
+  }
+
+  .lang-btn {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  .nk {
+    min-height: 56px;
+  }
+
+  .modal-card--settings {
+    width: calc(100vw - 48px);
+  }
+
+  /* Feed toolbar stacks on mobile */
+  .feed-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .filter-group {
+    align-self: flex-end;
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE — Guide panel
+   ============================================================ */
+@media (max-width: 860px) {
+  .guide-panel { width: 94%; }
+  .guide-cards-grid { grid-template-columns: repeat(2, 1fr); }
+  .guide-tips-grid  { grid-template-columns: repeat(2, 1fr); }
+  .guide-feature-list { grid-template-columns: 1fr; }
+  .guide-title__sub { display: none; }
+}
+
+@media (max-width: 560px) {
+  .guide-panel { width: 100%; max-height: 96vh; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+  .guide-overlay { align-items: flex-end; padding: 0; }
+  .guide-cards-grid { grid-template-columns: 1fr; }
+  .guide-tips-grid  { grid-template-columns: 1fr; }
+  .guide-header { padding: 16px 20px 12px; }
+  .guide-body { padding: 16px 20px; }
+  .guide-footer { padding: 12px 20px; }
+  .guide-settings-row { grid-template-columns: 1fr; gap: 4px; }
+}
+
+@media (max-width: 680px) {
+  .guide-tabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 12px 20px;
+    gap: 8px;
+  }
+  .guide-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .guide-tab {
+    width: 120px !important; /* Force a slightly smaller fixed aspect-ratio button on mobile scroll */
+    flex-shrink: 0 !important;
+    padding: 10px 8px;
+    min-height: 40px;
+  }
+}
+
+/* ── Guide Banner ── */
+.guide-banner {
+  background: rgba(255, 75, 114, .08);
+  border-top: 1px solid rgba(255, 75, 114, .2);
+  border-bottom: 1px solid rgba(255, 75, 114, .2);
+  padding: 10px 24px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--accent);
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+html.light-theme .guide-banner {
+  background: rgba(0, 0, 0, .03);
+  border-color: rgba(0, 0, 0, .08);
+  color: var(--muted);
+}
+
+html.cream-theme .guide-banner {
+  background: rgba(217, 119, 6, .05);
+  border-color: rgba(217, 119, 6, .15);
+  color: #B57D1A;
+}
+
+html.green-theme .guide-banner {
+  background: rgba(5, 150, 105, .05);
+  border-color: rgba(5, 150, 105, .15);
+  color: #059669;
+}

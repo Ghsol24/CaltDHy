@@ -33,6 +33,19 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: undefined,
             select: false
+        },
+        passwordChangedAt: {
+            type: Date,
+            default: undefined
+        },
+        // Danh mục chi tiêu tự định nghĩa – lưu trữ trên server để đồng bộ đa thiết bị
+        customCategories: {
+            type: [String],
+            default: []
+        },
+        avatar: {
+            type: String,
+            default: ''
         }
     },
     {

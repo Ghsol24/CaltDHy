@@ -52,6 +52,8 @@ router.post('/', async (req, res) => {
         if (title.trim().length > 100) {
             return res.status(400).json({ success: false, message: 'Tên công việc không được quá 100 ký tự.' });
         }
+        // Validate màu hex (chỉ chấp nhận #RRGGBB)
+        const safeColor = (color && /^#[0-9A-Fa-f]{6}$/.test(color)) ? color : '#1877F2';
 
         const newEvent = await Event.create({
             userId,
@@ -60,7 +62,7 @@ router.post('/', async (req, res) => {
             startTime: startTime || '',
             endTime: endTime || '',
             description: (description || '').trim().slice(0, 500),
-            color: color || '#1877F2'
+            color: safeColor
         });
 
         res.status(201).json({
@@ -91,7 +93,13 @@ router.put('/:id', async (req, res) => {
         if (startTime !== undefined)   updateFields.startTime = startTime;
         if (endTime !== undefined)     updateFields.endTime = endTime;
         if (description !== undefined) updateFields.description = description.trim().slice(0, 500);
-        if (color !== undefined)       updateFields.color = color;
+        // Validate màu hex trước khi lưu
+        if (color !== undefined) {
+            if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                return res.status(400).json({ success: false, message: 'Màu không hợp lệ. Phải theo định dạng #RRGGBB.' });
+            }
+            updateFields.color = color;
+        }
 
         const updatedEvent = await Event.findOneAndUpdate(
             { _id: id, userId },  // đảm bảo chỉ owner mới update được

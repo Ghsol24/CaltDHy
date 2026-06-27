@@ -25,20 +25,27 @@ echo [V] Da tim thay Node.js.
 echo.
 
 :: Di chuyen vao backend
-cd /d "%~dp0"
-cd backEnd\server
+cd /d "%~dp0backEnd\server"
 
-:: Cai dat dependencies neu chua co
-if not exist node_modules (
-    echo [⚙] Dang tai cac thu vien can thiet (lan dau tien chay, mat 1-2 phut)...
+:: Tu dong don dep va dong bo hoa thu vien Mac sang Windows
+if not exist .windows_ready (
+    echo [⚙] Phat hien day la lan dau tien chay tren Windows.
+    echo [⚙] Dang tu dong thiet lap lai thu vien tuong thich cho Windows...
+    if exist node_modules (
+        rmdir /s /q node_modules
+    )
     call npm install
     if %errorlevel% neq 0 (
-        echo [X] LOI: Khong the cai dat thu vien. Vui long kiem tra ket noi mang.
+        echo [X] LOI: Khong the thiet lap thu vien. Vui long kiem tra ket noi mang.
         pause
         exit /b
     )
+    echo ready > .windows_ready
+    if exist .mac_ready (
+        del /f /q .mac_ready
+    )
 ) else (
-    echo [V] Cac thu vien da duoc cai dat day du.
+    echo [V] Cac thu vien da duoc dong bo hoa Windows day du.
 )
 
 echo.

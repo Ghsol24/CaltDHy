@@ -1,0 +1,377 @@
+/* ============================================================
+   RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+/* ============================================================
+   BODY — Dark Technical Panel
+   ============================================================ */
+body.dark-panel {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--txt);
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 58px 1fr;
+  overflow-x: hidden;
+  /* ── Cross-platform font rendering (fixes blurry/thin fonts on Windows) ── */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Global Sleek Scrollbar (overrides chunky Windows default) ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+@keyframes ledPulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 6px 2px rgba(0, 230, 118, .55);
+  }
+  50% {
+    opacity: .45;
+    box-shadow: 0 0 3px 1px rgba(0, 230, 118, .3);
+  }
+}
+
+@keyframes slotIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(.96) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, .4); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 71, 87, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes checkmark {
+  0% { stroke-dashoffset: 50; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes budgetBarLoad {
+  from { width: 0 !important; }
+}
+
+
+/* ============================================================
+   TACTILE MECHANICAL CLICK FEEDBACK (OPTION B)
+   ============================================================ */
+
+/* Đồng bộ hóa transition cho cảm giác nhả chuột mượt mà nhưng nhấn sập tức thì */
+.nk,
+.nk--submit,
+.nk--clear,
+.btn-save,
+.btn-cancel,
+.btn-add-txn,
+.btn-primary,
+.fab,
+.filter-btn,
+.btn-set-budgets,
+.type-btn,
+.lang-btn,
+.btn-logout,
+.btn-theme,
+.btn-settings {
+  transition: transform 120ms cubic-bezier(.25, .8, .25, 1), box-shadow 120ms cubic-bezier(.25, .8, .25, 1), background-color 150ms, color 150ms, filter 150ms !important;
+}
+
+/* Khi nhấn sập (:active), triệt tiêu hoàn toàn transition để lún sập tức thời */
+.nk:active,
+.nk--submit:active,
+.nk--clear:active,
+.btn-save:active,
+.btn-cancel:active,
+.btn-add-txn:active,
+.btn-primary:active,
+.fab:active,
+.filter-btn:active,
+.btn-set-budgets:active,
+.type-btn:active,
+.lang-btn:active,
+.btn-logout:active,
+.btn-theme:active,
+.btn-settings:active {
+  transition: none !important;
+  transform: translateY(2px) scale(0.97) !important;
+  box-shadow: var(--sh-press) !important;
+  filter: brightness(0.92) !important;
+}
+
+/* Một số tinh chỉnh đặc biệt cho từng loại nút */
+.btn-theme:active {
+  /* nút theme hình tròn nhỏ, scale nhỏ hơn chút */
+  transform: translateY(1.5px) scale(0.92) !important;
+}
+
+.fab:active {
+  /* nút tròn nổi FAB */
+  transform: translateY(2px) scale(0.95) !important;
+}
+
+.btn-add-txn:active {
+  /* Nút thêm giao dịch lớn */
+  transform: translateY(2px) scale(0.98) !important;
+}
+
+/* Override đặc biệt cho phím số để hiển thị màu phản hồi theo từng theme */
+html.cream-theme .nk:active {
+  color: var(--green) !important;
+}
+
+html.green-theme .nk:active {
+  color: var(--green) !important;
+}
+
+html.light-theme .nk:active {
+  color: var(--green) !important;
+}
+
+
+/* ============================================================
+   FOCUS-VISIBLE — Accessibility outline
+   ============================================================ */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ============================================================
+   UTILITY / LAYOUT HELPER CLASSES
+   (replaces inline styles in spending.html)
+   ============================================================ */
+.u-mt-24 { margin-top: 24px; }
+.u-mb-20 { margin-bottom: 20px; }
+.u-mb-0  { margin-bottom: 0; }
+.u-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.u-flex-center-gap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.u-flex-gap-8 {
+  display: flex;
+  gap: 8px;
+}
+.u-flex-1 { flex: 1; }
+
+/* Month selector section — replaces inline style */
+.month-selector-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Analytics summary section — replaces inline margin-top: 24px */
+.analytics-summary-section {
+  margin-top: 24px;
+}
+
+/* Section label no-margin variant */
+.section-label--inline {
+  margin-bottom: 0;
+}
+
+
+/* ============================================================
+   CROSS-PLATFORM SCROLLBAR — Light / Cream / Green theme overrides
+   Ensures scrollbars use dark-on-light colors (not white-on-white)
+   ============================================================ */
+html.light-theme * {
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+html.light-theme *::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+}
+html.light-theme *::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.30);
+}
+
+html.cream-theme * {
+  scrollbar-color: rgba(100, 60, 20, 0.2) transparent;
+}
+html.cream-theme *::-webkit-scrollbar-thumb {
+  background: rgba(100, 60, 20, 0.2);
+}
+html.cream-theme *::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 60, 20, 0.36);
+}
+
+html.green-theme * {
+  scrollbar-color: rgba(5, 150, 105, 0.22) transparent;
+}
+html.green-theme *::-webkit-scrollbar-thumb {
+  background: rgba(5, 150, 105, 0.22);
+}
+html.green-theme *::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 150, 105, 0.38);
+}
+
+/* ============================================================
+   WINDOWS DPI / SCALE-FACTOR COMPENSATION
+   On Windows with 125%/150% display scale, browsers report a
+   smaller viewport. Use min-width guards to avoid layout breaks
+   at the edge of the intermediate breakpoint.
+   ============================================================ */
+@media (min-width: 1101px) and (max-width: 1280px) {
+  .tb-center {
+    display: none;
+  }
+  .topbar {
+    padding: 0 24px;
+  }
+  .main-content {
+    padding: 24px 28px;
+  }
+}
+
+
+/* ============================================================
+   ACCESSIBILITY — prefers-reduced-motion
+   Người dùng có thể tắt animation qua system settings.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ============================================================
+   UTILITY — Additional helpers
+   ============================================================ */
+.u-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.u-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.u-flex-gap-4 {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.u-flex-gap-12 {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.u-relative {
+  position: relative;
+}
+
+.u-w-full {
+  width: 100%;
+}
+
+.u-text-muted {
+  color: var(--muted);
+}

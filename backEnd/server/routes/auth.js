@@ -5,10 +5,23 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
+const Budget = require('../models/Budget');
+const { protect } = require('../middleware/authMiddleware');
 
+// ─────────────────────────────────────────────────────────────────
 // Helper: Tạo JWT token
-const createToken = (userId) => {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+// Nhúng name + email vào payload để middleware không cần query DB
+// Nhúng pca (passwordChangedAt timestamp) để detect token bị thu hồi
+// ─────────────────────────────────────────────────────────────────
+const createToken = (user) => {
+    const payload = {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        // pca = passwordChangedAt (ms). Dùng để invalidate token sau khi đổi mật khẩu.
+        pca: user.passwordChangedAt ? user.passwordChangedAt.getTime() : 0
+    };
+    return jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || '7d'
     });
 };
@@ -23,6 +36,10 @@ const createTransporter = () => {
         }
     });
 };
+
+// Giới hạn kích thước avatar: 1MB cho Base64 string (≈ 1.37MB raw → ~1MB ảnh)
+// Base64 overhead ≈ 33%, nên 1MB ảnh ≈ 1.37MB string
+const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024; // 1.5MB string limit
 
 // =============================================
 // POST /api/auth/register – Đăng ký tài khoản
@@ -50,9 +67,8 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Hash mật khẩu
-        const salt = await bcrypt.genSalt(12);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // Hash mật khẩu – truyền rounds trực tiếp (gọn hơn genSalt riêng)
+        const hashedPassword = await bcrypt.hash(password, 12);
 
         // Tạo user mới
         const newUser = await User.create({
@@ -61,7 +77,15 @@ router.post('/register', async (req, res) => {
             password: hashedPassword
         });
 
-        const token = createToken(newUser._id.toString());
+        // Tạo một số danh mục ngân sách mặc định để tránh người dùng mới bị ngợp
+        await Budget.insertMany([
+            { userId: newUser._id, category: 'Food & Dining', limit: 3000000 },
+            { userId: newUser._id, category: 'Transport', limit: 1000000 },
+            { userId: newUser._id, category: 'Utilities', limit: 1500000 },
+            { userId: newUser._id, category: 'Entertainment', limit: 800000 }
+        ]);
+
+        const token = createToken(newUser);
 
         res.status(201).json({
             success: true,
@@ -110,7 +134,7 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        const token = createToken(user._id.toString());
+        const token = createToken(user);
 
         res.json({
             success: true,
@@ -119,7 +143,8 @@ router.post('/login', async (req, res) => {
             user: {
                 id: user._id.toString(),
                 name: user.name,
-                email: user.email
+                email: user.email,
+                avatar: user.avatar
             }
         });
     } catch (error) {
@@ -161,26 +186,26 @@ router.post('/forgot-password', async (req, res) => {
         try {
             const transporter = createTransporter();
             const mailOptions = {
-                from: `"projectcanhan" <${process.env.GMAIL_USER}>`,
+                from: `"CaltDHy" <${process.env.GMAIL_USER}>`,
                 to: email,
-                subject: '🔑 Đặt lại mật khẩu – projectcanhan',
+                subject: '🔑 Đặt lại mật khẩu – CaltDHy',
                 html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f0f2f5; padding: 20px; border-radius: 8px;">
-              <div style="background: #1877F2; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">📅 projectcanhan</h1>
+              <div style="background: #FF4B72; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">📅 CaltDHy</h1>
               </div>
               <div style="background: white; padding: 30px; border-radius: 0 0 8px 8px;">
                 <h2 style="color: #1c1e21;">Xin chào ${user.name},</h2>
                 <p style="color: #606770; font-size: 15px;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
                 <p style="color: #606770; font-size: 15px;">Nhấn vào nút bên dưới để đặt lại mật khẩu. Link này sẽ hết hạn sau <strong>15 phút</strong>.</p>
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="${resetUrl}" style="background: #1877F2; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
+                  <a href="${resetUrl}" style="background: #FF4B72; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
                     Đặt lại mật khẩu
                   </a>
                 </div>
                 <p style="color: #606770; font-size: 13px;">Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>
                 <hr style="border: none; border-top: 1px solid #e4e6eb; margin: 20px 0;">
-                <p style="color: #8a8d91; font-size: 12px; text-align: center;">© 2024 projectcanhan.com</p>
+                <p style="color: #8a8d91; font-size: 12px; text-align: center;">© 2024 CaltDHy</p>
               </div>
             </div>
           `
@@ -217,6 +242,12 @@ router.post('/reset-password', async (req, res) => {
                 message: 'Thông tin không đầy đủ.'
             });
         }
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mật khẩu mới phải có ít nhất 6 ký tự.'
+            });
+        }
 
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -234,10 +265,11 @@ router.post('/reset-password', async (req, res) => {
         }
 
         // Hash mật khẩu mới
-        const salt = await bcrypt.genSalt(12);
-        user.password = await bcrypt.hash(newPassword, salt);
+        user.password = await bcrypt.hash(newPassword, 12);
         user.resetPasswordToken = undefined;
         user.resetPasswordExpiry = undefined;
+        // Ghi lại thời điểm đổi mật khẩu → vô hiệu hóa các JWT cũ
+        user.passwordChangedAt = new Date();
         await user.save();
 
         res.json({
@@ -246,6 +278,108 @@ router.post('/reset-password', async (req, res) => {
         });
     } catch (error) {
         console.error('POST /reset-password error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
+    }
+});
+
+// =============================================
+// PUT /api/auth/profile – Cập nhật tài khoản
+// =============================================
+router.put('/profile', protect, async (req, res) => {
+    try {
+        const { name, email, avatar, currentPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        // Tìm user trong database
+        const user = await User.findById(userId).select('+password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
+        }
+
+        // 1. Validate và cập nhật mật khẩu (nếu có yêu cầu)
+        if (newPassword) {
+            if (!currentPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Vui lòng nhập mật khẩu hiện tại để đặt mật khẩu mới.'
+                });
+            }
+            if (newPassword.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Mật khẩu mới phải có ít nhất 6 ký tự.'
+                });
+            }
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Mật khẩu hiện tại không chính xác.'
+                });
+            }
+            // Hash mật khẩu mới
+            user.password = await bcrypt.hash(newPassword, 12);
+            // Ghi lại thời điểm đổi mật khẩu → vô hiệu hóa các JWT cũ
+            user.passwordChangedAt = new Date();
+        }
+
+        // 2. Cập nhật email (nếu có yêu cầu thay đổi)
+        if (email && email.toLowerCase().trim() !== user.email) {
+            const trimmedEmail = email.toLowerCase().trim();
+            if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+                return res.status(400).json({ success: false, message: 'Email không hợp lệ.' });
+            }
+            // Kiểm tra email đã có người sử dụng chưa
+            const emailExists = await User.findOne({ email: trimmedEmail });
+            if (emailExists) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email này đã được sử dụng bởi tài khoản khác.'
+                });
+            }
+            user.email = trimmedEmail;
+            // ⚠️ Bảo mật: đổi email ⇒ vô hiệu hóa toàn bộ JWT token cũ được cấp trước đó
+            user.passwordChangedAt = new Date();
+        }
+
+        // 3. Cập nhật tên hiển thị
+        if (name && name.trim() && name.trim() !== user.name) {
+            user.name = name.trim();
+            // ⚠️ Bảo mật: đổi tên ⇒ vô hiệu hóa toàn bộ JWT token cũ (tên được nhúng trong payload token)
+            user.passwordChangedAt = new Date();
+        }
+
+        // 4. Validate và cập nhật ảnh đại diện (Base64 string)
+        if (avatar !== undefined) {
+            // Server-side: kiểm tra kích thước avatar (tối đa ~1.5MB string)
+            if (avatar && Buffer.byteLength(avatar, 'utf8') > MAX_AVATAR_BYTES) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 1MB.'
+                });
+            }
+            user.avatar = avatar;
+        }
+
+        // Lưu thông tin cập nhật
+        await user.save();
+
+        // Tạo token mới (bao gồm thông tin mới + pca mới)
+        const token = createToken(user);
+
+        res.json({
+            success: true,
+            message: 'Cập nhật tài khoản thành công!',
+            token,
+            user: {
+                id: user._id.toString(),
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar
+            }
+        });
+    } catch (error) {
+        console.error('PUT /profile error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
     }
 });

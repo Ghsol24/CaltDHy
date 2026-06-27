@@ -1,0 +1,64 @@
+/* ============================================================
+   DESIGN TOKENS — Dark Technical Panel
+   ============================================================ */
+:root {
+  /* ── Surfaces ── */
+  --bg: #090A0F;
+  --surface: #12131C;
+  --surface2: #1C1E2D;
+  --recessed: #05060A;
+
+  /* ── Text ── */
+  --txt: #F3F4F6;
+  --muted: #8F9CAE;
+
+  /* ── Accent ── */
+  --accent: #FF4B72;
+  --green: #10B981;
+  --warn: #f1c40f;
+
+  /* ── Shadows — sleek obsidian glow ── */
+  --sh-raise: 0 8px 30px rgba(0,0,0,.60), inset 0 1px 0 rgba(255, 255, 255, .05);
+  --sh-press: inset 0 2px 8px rgba(0,0,0,.70), inset 0 0 0 1px rgba(255, 255, 255, .02);
+  --sh-accent: 0 0 20px rgba(255, 75, 114, .35), 0 2px 6px rgba(255, 75, 114, .15);
+  --sh-float: 0 20px 48px rgba(0, 0, 0, .80), inset 0 1px 0 rgba(255, 255, 255, .05);
+
+  /* ── Radii ── */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+
+  /* ── Animation durations ── */
+  --dur-fast: 120ms;
+  --dur-mid: 250ms;
+  --dur-slow: 400ms;
+
+  /* ── Font Scale ── */
+  --font-2xs: 8px;
+  --font-xs:  9px;
+  --font-sm:  10px;
+  --font-md:  11px;
+  --font-base: 13px;
+  --font-lg:  15px;
+  --font-xl:  16px;
+  --font-2xl: 18px;
+  --font-3xl: 26px;
+
+  /* ── Spacing Scale ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* ── Z-Index Layers ── */
+  --z-base: 1;
+  --z-fab: 90;
+  --z-modal: 100;
+  --z-dropdown: 200;
+  --z-toast: 300;
+}

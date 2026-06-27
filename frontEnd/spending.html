@@ -16,7 +16,7 @@
   <script src="theme-manager.js?v=2.0.2"></script>
   <script>
     (function () {
-      const token = localStorage.getItem('pcn_token') || localStorage.getItem('caltdhy_token');
+      const token = localStorage.getItem('caltdhy_token');
       if (!token) {
         window.location.href = 'login.html';
         return;
@@ -25,9 +25,16 @@
       document.documentElement.lang = savedLang;
     })();
   </script>
-  <link rel="stylesheet" href="spending.css?v=2.0.3" />
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Modular CSS — cascade order matters -->
+  <link rel="stylesheet" href="css/tokens.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/base.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/layout.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/components.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/modals.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/themes.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/responsive.css?v=2.1.0" />
+  <!-- Chart.js — pinned version with crossorigin for future SRI -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
   <link rel="manifest" href="manifest.json" />
 </head>
 
@@ -43,6 +50,14 @@
         <span class="tb-logo">Calt<span class="tb-logo-accent">D</span>Hy</span>
       </a>
       <span class="tb-badge">FINANCE_OS</span>
+      <button class="btn-wrapup-history" id="btnWrapupHistory" onclick="openWrapupModal()" aria-label="Lịch sử tổng kết" title="Lịch sử tổng kết" type="button" aria-haspopup="dialog">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="8" y1="8" x2="16" y2="8"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+          <line x1="8" y1="16" x2="13" y2="16"/>
+        </svg>
+      </button>
     </div>
 
     <!-- Main Segmented Navigation -->
@@ -51,13 +66,16 @@
       <button class="tb-nav-btn" id="nav-analytics" onclick="switchView('analytics')" data-i18n="navAnalytics">ANALYTICS</button>
     </div>
 
-    <div class="tb-center" aria-label="System status">
-      <div class="led led--green" aria-hidden="true"></div>
-      <span class="led-label" data-i18n="syncActive">SYNC ACTIVE</span>
+    <div class="tb-center" aria-label="Welcome and Date">
+      <span class="user-greeting" id="userGreeting">Welcome, USER!</span>
+      <span class="system-date" id="systemDate">Thursday, May 28, 2026</span>
     </div>
 
     <div class="tb-right">
-      <span class="user-chip" id="userChip">USER</span>
+      <button class="user-chip" id="userChip" onclick="openAccountModal()" aria-label="Quản lý tài khoản" type="button">
+        <span class="user-chip-avatar" id="userChipAvatar">US</span>
+        <span class="user-chip-name" id="userChipName">USER</span>
+      </button>
       <button class="btn-help" id="btnHelp" onclick="openGuide()" aria-label="Hướng dẫn sử dụng" aria-haspopup="dialog" title="Hướng dẫn sử dụng">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </button>
@@ -124,7 +142,7 @@
 
       <!-- 3. CATEGORY BREAKDOWN — Live Doughnut Chart -->
       <section class="rail-section rail-section--grow" aria-labelledby="cat-heading">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+        <div class="cat-heading-row">
           <h2 class="section-label" id="cat-heading" data-i18n="categoryBreakdown">Category Breakdown</h2>
         </div>
 
@@ -144,7 +162,7 @@
             <!-- empty state -->
             <p class="chart-empty" id="chartEmpty">// NO EXPENSE DATA</p>
             <!-- Detailed transactions button -->
-            <button class="btn-view-month-detail" id="btnViewMonthDetail" onclick="openMonthDetailModal()" aria-haspopup="dialog" style="display: none;">
+            <button class="btn-view-month-detail" id="btnViewMonthDetail" onclick="openMonthDetailModal()" aria-haspopup="dialog" hidden>
               <span data-i18n="viewMonthDetail">VIEW MONTH DETAIL</span>
             </button>
           </div>
@@ -173,9 +191,35 @@
         </section>
 
         <!-- Transaction Feed -->
-        <section class="feed-section" aria-labelledby="feed-heading" style="margin-top: 24px;">
+        <section class="feed-section" aria-labelledby="feed-heading">
           <div class="feed-toolbar">
-            <h2 class="section-label" id="feed-heading" data-i18n="transactionFeed">Transaction Feed</h2>
+            <div class="feed-header-left">
+              <h2 class="section-label" id="feed-heading" data-i18n="transactionFeed">Transaction Feed</h2>
+              <!-- Period Filter -->
+              <div class="feed-period-group" role="group" aria-label="Period filter">
+                <button class="period-btn period-btn--active" id="period-this-month" onclick="setPeriodFilter('month', this)" data-i18n="periodThisMonth">THIS MONTH</button>
+                <button class="period-btn" id="period-all-time" onclick="setPeriodFilter('all', this)" data-i18n="periodAllTime">ALL TIME</button>
+              </div>
+              <!-- Sort Dropdown Trigger -->
+              <div class="feed-sort-wrapper" id="feedSortWrapper">
+                <button class="feed-sort-btn" id="feedSortBtn"
+                  onclick="toggleFeedSort(event)"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-label="Sắp xếp giao dịch"
+                  title="Sắp xếp giao dịch">
+                  <svg class="feed-sort-icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <polygon points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                <div class="feed-sort-dropdown" id="feedSortDropdown"
+                  role="listbox" aria-label="Lựa chọn sắp xếp" onclick="event.stopPropagation()">
+                  <!-- Injected by renderFeedSortDropdown() in JS -->
+                </div>
+              </div>
+            </div>
             <div class="filter-group" role="group" aria-label="Filter transactions">
               <button class="filter-btn filter-btn--active" id="f-all" onclick="setFilter('all',this)"
                 data-i18n="filterAll">ALL</button>
@@ -197,8 +241,8 @@
            ========================================== -->
       <div id="view-analytics" class="dashboard-view">
         <!-- Month Selector Section (Idea 2 - Dropdown Grid Picker) -->
-        <section class="month-selector-section" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-          <h2 class="section-label" style="margin-bottom: 0;" data-i18n="analyticsMonth">SELECT MONTH</h2>
+        <section class="month-selector-section" aria-labelledby="analytics-month-heading">
+          <h2 class="section-label" id="analytics-month-heading" data-i18n="analyticsMonth">SELECT MONTH</h2>
           <div class="month-picker-wrapper" id="monthPickerWrapper">
             <button class="month-picker-trigger" id="monthPickerTrigger" onclick="toggleMonthPicker(event)" aria-haspopup="dialog" aria-expanded="false">
               <span class="month-picker-icon" aria-hidden="true">📅</span>
@@ -254,10 +298,27 @@
         </section>
 
         <!-- Dynamic Analytics Summary Grid -->
-        <section class="analytics-summary-section" style="margin-top: 24px;">
-          <h2 class="section-label" data-i18n="analyticsSummary">Analytics Summary</h2>
+        <section class="analytics-summary-section" aria-labelledby="analytics-summary-heading">
+          <div class="analytics-summary-header">
+            <h2 class="section-label" data-i18n="analyticsSummary">Analytics Summary</h2>
+            <div class="compare-wrapper" id="compareWrapper">
+              <button class="btn-compare-add" id="btnCompareAdd" onclick="toggleCompareMenu(event)" aria-label="Compare with another month" title="So sánh với tháng khác">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </button>
+              <button class="btn-compare-clear" id="btnCompareClear" onclick="clearCompareMonth(event)" aria-label="Clear comparison" hidden title="Tắt so sánh">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+              <div class="compare-dropdown" id="compareDropdown" role="listbox" onclick="event.stopPropagation()">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
           <div class="analytics-grid" id="analyticsGrid">
             <!-- Dynamically injected analytics cards -->
+          </div>
+          <!-- Compare Analytics Grid -->
+          <div class="analytics-grid analytics-grid--compare analytics-compare-grid" id="analyticsCompareGrid">
+            <!-- Dynamically injected compare analytics cards -->
           </div>
         </section>
       </div><!-- /view-analytics -->
@@ -464,10 +525,10 @@
             </svg>
           </button>
 
-          <button class="theme-card" id="theme-btn-sky" onclick="pickTheme('sky')"
-            aria-pressed="false" aria-label="Sky theme" type="button">
-            <span class="theme-card__swatch" style="background:linear-gradient(135deg,#f0f8ff,#ebf5fb); border:1.5px solid #C8E4F5"></span>
-            <span class="theme-card__name" data-i18n="skyTheme">Sky</span>
+          <button class="theme-card" id="theme-btn-green" onclick="pickTheme('green')"
+            aria-pressed="false" aria-label="Green theme" type="button">
+            <span class="theme-card__swatch" style="background:linear-gradient(135deg,#f0f9f4,#e3f2e9); border:1.5px solid #a7f3d0"></span>
+            <span class="theme-card__name" data-i18n="greenTheme">Green</span>
             <svg class="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
               <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -485,7 +546,7 @@
           <button class="lang-btn" id="curr-USD" onclick="setCurrency('USD')">USD $</button>
           <button class="lang-btn" id="curr-CNY" onclick="setCurrency('CNY')">CNY ¥</button>
         </div>
-        <p class="settings-info" style="margin-top:8px;font-size:10px;">1 USD = 27,000 VND &nbsp;|&nbsp; 1 CNY = 3,750
+        <p class="settings-info settings-rate-info">1 USD = 27,000 VND &nbsp;|&nbsp; 1 CNY = 3,750
           VND</p>
       </div>
 
@@ -496,7 +557,7 @@
       </div>
 
       <!-- Backup & Restore -->
-      <div class="settings-group" style="margin-bottom:0">
+      <div class="settings-group settings-group--last">
         <div class="settings-group__label-row">
           <p class="settings-group__label" data-i18n="backupRestore">Backup &amp; Restore</p>
           <div class="info-btn" id="backupInfoBtn" tabindex="0" role="button" aria-label="Hướng dẫn sao lưu" onclick="toggleBackupTooltip(event)">?
@@ -507,14 +568,14 @@
             </div>
           </div>
         </div>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="btn-set-budgets btn-set-budgets--full" style="flex:1; padding: 10px 0; font-size:10px;" onclick="exportData()" data-i18n="exportBackup">EXPORT JSON</button>
-          <button type="button" class="btn-set-budgets btn-set-budgets--full" style="flex:1; padding: 10px 0; font-size:10px; background:var(--recessed); color:var(--muted);" onclick="triggerImport()" data-i18n="importBackup">IMPORT JSON</button>
+        <div class="settings-backup-row">
+          <button type="button" class="btn-set-budgets btn-set-budgets--full btn-backup" onclick="exportData()" data-i18n="exportBackup">EXPORT JSON</button>
+          <button type="button" class="btn-set-budgets btn-set-budgets--full btn-backup btn-backup--import" onclick="triggerImport()" data-i18n="importBackup">IMPORT JSON</button>
         </div>
-        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+        <input type="file" id="importFileInput" accept=".json" hidden onchange="importData(event)">
       </div>
 
-      <div class="modal-actions" style="margin-top:24px">
+      <div class="modal-actions settings-modal-actions">
         <button type="button" class="btn-save" onclick="closeSettings()" data-i18n="done">DONE</button>
       </div>
 
@@ -559,11 +620,32 @@
               data-i18n="placeholderCatName" placeholder="Category name" maxlength="40" />
             <input class="budget-form-input budget-add-cat__limit" id="newCatLimit" type="number" min="0" step="1"
               data-i18n="placeholderCatLimit" placeholder="Limit (0 = track only)" />
-            <button type="button" class="btn-add-cat" onclick="addCustomCategory()" data-i18n="addBtn">ADD</button>
+            <!-- Type toggle + ADD button row -->
+            <div class="budget-add-cat__actions">
+              <!-- Type dropdown panel (opens upward) -->
+              <div class="budget-add-cat__type-dropdown" id="newCatTypeDropdown" role="listbox" aria-label="Category type">
+                <button type="button" class="budget-type-option budget-type-option--expense selected"
+                  id="typeOptExpense" role="option" aria-selected="true"
+                  onclick="setNewCatType('expense')">💸 <span data-i18n="typeExpense">EXPENSE</span></button>
+                <button type="button" class="budget-type-option budget-type-option--income"
+                  id="typeOptIncome" role="option" aria-selected="false"
+                  onclick="setNewCatType('income')">💰 <span data-i18n="typeIncome">INCOME</span></button>
+              </div>
+              <!-- Type toggle trigger -->
+              <button type="button" class="btn-new-cat-type is-expense" id="btnNewCatType"
+                onclick="toggleNewCatTypeDropdown(event)"
+                aria-haspopup="listbox" aria-expanded="false"
+                title="Select category type">
+                <span id="newCatTypeLabel">💸 <span data-i18n="typeExpense">EXPENSE</span></span>
+              </button>
+              <!-- ADD button -->
+              <button type="button" class="btn-add-cat" onclick="addCustomCategory()" data-i18n="addBtn">ADD</button>
+            </div>
           </div>
+
         </div>
 
-        <div class="modal-actions" style="margin-top:20px">
+        <div class="modal-actions budget-modal-actions">
           <button type="button" class="btn-cancel" onclick="closeBudgetModal()" data-i18n="cancel">CANCEL</button>
           <button type="submit" class="btn-save" data-i18n="setBudgets">SAVE BUDGETS</button>
         </div>
@@ -629,7 +711,7 @@
 
         <div class="form-group">
           <label class="form-label" for="qlAmount">
-            <span data-i18n="amount">Amount</span> <span id="qlCurrHint" style="color:var(--green);font-size:9px;">(VND)</span>
+            <span data-i18n="amount">Amount</span> <span id="qlCurrHint" class="ql-curr-hint">(VND)</span>
           </label>
           <input id="qlAmount" class="form-input" type="text" data-i18n="placeholderAmount" placeholder="e.g. 50000 or 5000+20000" />
         </div>
@@ -685,11 +767,11 @@
         <div class="modal-vent"></div>
       </div>
       
-      <div class="txn-feed" id="monthTxnFeed" aria-live="polite" style="max-height: 400px; overflow-y: auto; padding-right: 4px;">
+      <div class="txn-feed month-txn-feed-container" id="monthTxnFeed" aria-live="polite">
         <!-- Dynamically populated transaction slots -->
       </div>
       
-      <div class="modal-actions" style="margin-top: 20px;">
+      <div class="modal-actions month-detail-actions">
         <button type="button" class="btn-save" onclick="closeMonthDetailModal()" data-i18n="done">DONE</button>
       </div>
     </div>
@@ -937,6 +1019,20 @@
                 <p class="guide-feature__desc" data-i18n="gFeat5_desc">Bấm vào ô hiển thị tháng ở góc trên bên phải để mở lưới chọn tháng 3x4, giúp đổi nhanh dữ liệu hiển thị của tháng bất kỳ.</p>
               </div>
             </div>
+            <div class="guide-feature">
+              <div class="guide-feature__icon">⚖️</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat6_title">So Sánh Tháng</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat6_desc">Bấm nút [+] trong phần Analytics Summary để so sánh số liệu với các tháng trước đó.</p>
+              </div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature__icon">🔍</div>
+              <div class="guide-feature__content">
+                <h4 class="guide-feature__title" data-i18n="gFeat7_title">Chi Tiết Tháng</h4>
+                <p class="guide-feature__desc" data-i18n="gFeat7_desc">Bấm vào hàng thông tin tháng trong phần Analytics Summary để xem danh sách toàn bộ giao dịch của tháng đó.</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -948,12 +1044,16 @@
 
           <div class="guide-settings-table">
             <div class="guide-settings-row">
+              <div class="guide-settings-row__key" data-i18n="gRow_account_key">👤 Tài Khoản</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_account_val">Quản lý hồ sơ cá nhân: đổi tên hiển thị, ảnh đại diện (avatar), hoặc đăng xuất.</div>
+            </div>
+            <div class="guide-settings-row">
               <div class="guide-settings-row__key" data-i18n="gRow_lang_key">🌐 Ngôn Ngữ</div>
               <div class="guide-settings-row__val" data-i18n="gRow_lang_val">Chọn EN / VI / ZH — giao diện đổi ngay lập tức, không cần reload.</div>
             </div>
             <div class="guide-settings-row">
               <div class="guide-settings-row__key" data-i18n="gRow_theme_key">🎨 Giao Diện</div>
-              <div class="guide-settings-row__val" data-i18n="gRow_theme_val">4 theme: <strong>Dark</strong> (mặc định), <strong>Light</strong>, <strong>Cream</strong>, <strong>Sky</strong>. Thay đổi lưu tự động.</div>
+              <div class="guide-settings-row__val" data-i18n="gRow_theme_val">4 theme: <strong>Dark</strong> (mặc định), <strong>Light</strong>, <strong>Cream</strong>, <strong>Green</strong>. Thay đổi lưu tự động.</div>
             </div>
             <div class="guide-settings-row">
               <div class="guide-settings-row__key" data-i18n="gRow_curr_key">💰 Tiền Tệ</div>
@@ -1005,6 +1105,11 @@
               <h4 class="guide-tip-card__title" data-i18n="gTip6_title">Đổi Theme Nhanh</h4>
               <p class="guide-tip-card__desc" data-i18n="gTip6_desc">Settings → Appearance → chọn theme ngay. Thay đổi có hiệu lực tức thì trên toàn bộ giao diện.</p>
             </div>
+            <div class="guide-tip-card">
+              <div class="guide-tip-card__num">07</div>
+              <h4 class="guide-tip-card__title" data-i18n="gTip7_title">Lọc Theo Tháng</h4>
+              <p class="guide-tip-card__desc" data-i18n="gTip7_desc">Ở danh sách giao dịch, dùng nút THÁNG NÀY / TẤT CẢ để xem riêng dữ liệu tháng hiện tại hoặc toàn bộ lịch sử.</p>
+            </div>
           </div>
 
           <div class="guide-note guide-note--success">
@@ -1030,7 +1135,215 @@
     </div>
   </div><!-- /guideModal -->
 
-  <script src="spending.js?v=2.0.2"></script>
+  <!-- ═══════════════════════════════════════════
+       ACCOUNT MODAL (Manage Profile)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="accountModal" role="dialog" aria-modal="true" aria-labelledby="account-title"
+    onclick="closeAccountModalOnOverlay(event)">
+    <div class="modal-card modal-card--account">
+      <button class="modal-close" onclick="closeAccountModal()" aria-label="Close profile">✕</button>
+
+      <!-- screws -->
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="account-title">QUẢN LÝ TÀI KHOẢN</h2>
+
+      <!-- vents -->
+      <div class="modal-vents" aria-hidden="true">
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+        <div class="modal-vent"></div>
+      </div>
+
+      <form id="accountForm" onsubmit="handleSaveProfile(event)" novalidate>
+        <!-- Avatar Section -->
+        <div class="account-avatar-section">
+          <div class="account-avatar-wrapper" id="accountAvatarPreview" onclick="triggerAvatarSelection()" data-hover-label="ĐỔI ẢNH">
+            <!-- Displayed background or fallback to initials -->
+            <span class="account-avatar-placeholder" id="accountAvatarPlaceholder">TG</span>
+          </div>
+          <input type="file" id="accountAvatarInput" accept="image/*" hidden onchange="handleAvatarChange(event)" />
+          <p class="account-avatar-hint">Nhấp để tải ảnh đại diện từ thiết bị lên (Tối đa 1MB)</p>
+        </div>
+
+        <!-- Alert messages inside modal -->
+        <div class="account-alert alert--error" id="accountAlertError" hidden role="alert"></div>
+        <div class="account-alert alert--success" id="accountAlertSuccess" hidden role="alert"></div>
+
+        <!-- Input Groups -->
+        <div class="form-group">
+          <label class="form-label" for="accountName">Tên hiển thị</label>
+          <input class="form-input" id="accountName" type="text" placeholder="Tên của bạn" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="accountEmail">Email</label>
+          <input class="form-input" id="accountEmail" type="email" placeholder="email@example.com" required />
+        </div>
+
+        <div class="form-divider-label">Đổi mật khẩu (Để trống nếu không đổi)</div>
+
+        <div class="form-group">
+          <label class="form-label" for="accountCurrentPassword">Mật khẩu hiện tại</label>
+          <input class="form-input" id="accountCurrentPassword" type="password" placeholder="••••••" autocomplete="current-password" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="accountNewPassword">Mật khẩu mới</label>
+          <input class="form-input" id="accountNewPassword" type="password" placeholder="••••••" autocomplete="new-password" />
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button class="btn-cancel" type="button" onclick="closeAccountModal()">HỦY</button>
+          <button class="btn-save" type="submit" id="btnSaveAccount">LƯU THAY ĐỔI</button>
+        </div>
+      </form>
+
+    </div>
+  </div><!-- /accountModal -->
+
+  <!-- ═══════════════════════════════════════════
+       WRAP-UP MODAL (Monthly / Quarterly / Annual)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="monthlyReportModal" role="dialog" aria-modal="true" aria-labelledby="report-title" hidden onclick="closeWrapupOnOverlay(event)">
+    <div class="modal-card modal-card--report">
+      <div class="report-confetti" id="reportConfetti" aria-hidden="true"></div>
+
+      <!-- Close button (manual mode only) -->
+      <button class="modal-close" id="reportCloseBtn" onclick="closeMonthlyReport()" aria-label="Đóng báo cáo" style="display:none;">✕</button>
+
+      <!-- screws -->
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <div class="report-header">
+        <h2 class="report-title" id="report-title">MONTHLY WRAP-UP</h2>
+        <p class="report-subtitle" id="reportMonthLabel">APRIL 2026</p>
+      </div>
+
+      <!-- Period Tab Navigation -->
+      <nav class="report-tabs" role="tablist" aria-label="Chọn chu kỳ báo cáo">
+        <button class="report-tab active" id="rtab-month" role="tab" aria-selected="true"
+          onclick="switchReportTab('month', this)" type="button" data-i18n="reportTabMonth">Tháng</button>
+        <button class="report-tab" id="rtab-quarter" role="tab" aria-selected="false"
+          onclick="switchReportTab('quarter', this)" type="button" data-i18n="reportTabQuarter">Quý</button>
+        <button class="report-tab" id="rtab-year" role="tab" aria-selected="false"
+          onclick="switchReportTab('year', this)" type="button" data-i18n="reportTabYear">Năm</button>
+      </nav>
+
+      <!-- Period Selector Dropdown (used for Year tab) -->
+      <div class="report-period-selector-wrapper" id="reportPeriodSelectorWrapper">
+        <select id="reportPeriodSelect" class="report-period-select" onchange="handleReportPeriodChange()" style="display: none;">
+          <!-- Populated dynamically by JS -->
+        </select>
+
+        <!-- Custom Dropdown Component (Year only) -->
+        <div class="custom-dropdown" id="reportPeriodDropdown">
+          <button class="custom-dropdown-trigger" type="button">
+            <span class="custom-dropdown-value">--</span>
+            <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M7.41 8.58L12 13.17l4.59-4.59L18 10l-6 6-6-6 1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="custom-dropdown-menu">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Month Slide Selector (Tab: Tháng) ── -->
+      <div class="report-month-slider-wrapper" id="reportMonthSliderWrapper" style="display: none;" aria-label="Chọn tháng">
+        <div class="report-month-slider" id="reportMonthSlider">
+          <button class="month-slider-trigger" id="monthSliderTrigger" type="button" aria-expanded="false" aria-haspopup="listbox">
+            <span class="month-slider-trigger__icon">📅</span>
+            <span class="month-slider-trigger__text" id="activeMonthText">Tháng 6</span>
+            <span class="month-slider-trigger__caret">›</span>
+          </button>
+          <div class="month-slider-track" id="monthSliderTrack" role="listbox" aria-label="Danh sách tháng">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Quarter Grid Selector (Tab: Quý) ── -->
+      <div class="report-quarter-selector" id="reportQuarterSelector" style="display: none;" aria-label="Chọn quý">
+        <div class="quarter-year-nav">
+          <button class="q-year-btn" id="qYearPrev" type="button" aria-label="Năm trước">&#9664;</button>
+          <span class="q-year-display" id="qYearDisplay">2026</span>
+          <button class="q-year-btn" id="qYearNext" type="button" aria-label="Năm sau">&#9654;</button>
+        </div>
+        <div class="quarter-grid" role="group" aria-label="Các quý">
+          <button class="quarter-btn" id="qBtn1" data-q="1" type="button">
+            <span class="q-btn-seasons">❄️🌸</span>
+            <span class="q-btn-label">Q1</span>
+            <span class="q-btn-months">T1–T3</span>
+            <span class="q-btn-tooltip">Bạn bỏ quên tui vào quý này rồi 😢</span>
+          </button>
+          <button class="quarter-btn" id="qBtn2" data-q="2" type="button">
+            <span class="q-btn-seasons">🌸☀️</span>
+            <span class="q-btn-label">Q2</span>
+            <span class="q-btn-months">T4–T6</span>
+            <span class="q-btn-tooltip">Bạn bỏ quên tui vào quý này rồi 😢</span>
+          </button>
+          <button class="quarter-btn" id="qBtn3" data-q="3" type="button">
+            <span class="q-btn-seasons">☀️🍂</span>
+            <span class="q-btn-label">Q3</span>
+            <span class="q-btn-months">T7–T9</span>
+            <span class="q-btn-tooltip">Bạn bỏ quên tui vào quý này rồi 😢</span>
+          </button>
+          <button class="quarter-btn" id="qBtn4" data-q="4" type="button">
+            <span class="q-btn-seasons">🍂❄️</span>
+            <span class="q-btn-label">Q4</span>
+            <span class="q-btn-months">T10–T12</span>
+            <span class="q-btn-tooltip">Bạn bỏ quên tui vào quý này rồi 😢</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic comparison grid (populated by JS) -->
+      <div class="report-comparison-grid" id="reportComparisonGrid">
+        <!-- JS will inject 1 or 2 columns here -->
+      </div>
+
+      <!-- Balance Reset Choice Box (only shown on auto month-change popup) -->
+      <div class="report-reset-box" id="reportResetBox">
+        <p class="report-reset-box__label">
+          <strong data-i18n="resetBoxTitle">Chế độ Tổng Số Dư</strong><br>
+          <span data-i18n="resetBoxDesc">Bạn muốn giữ dữ liệu cũ từ tháng trước hay tiến hành reset về con số 0?</span>
+        </p>
+        <div class="segmented-control" role="group" aria-label="Balance reset mode">
+          <button class="segmented-btn keep" id="segBtnKeep" onclick="setBalanceResetMode('keep')" type="button">
+            <span class="segmented-btn__icon">🔗</span>
+            <span data-i18n="resetModeKeep">Giữ lũy kế</span>
+          </button>
+          <button class="segmented-btn reset" id="segBtnReset" onclick="setBalanceResetMode('reset')" type="button">
+            <span class="segmented-btn__icon">🔄</span>
+            <span data-i18n="resetModeReset">Bắt đầu từ 0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic motivational / summary message -->
+      <div class="report-message" id="reportMessage">
+        You've managed your finances well this month. Let's keep it up!
+      </div>
+
+      <div class="modal-actions monthly-report-actions">
+        <button class="btn-primary btn-start-fresh" id="reportActionBtn" onclick="closeMonthlyReport()" data-i18n="startFresh">BẮT ĐẦU THÁNG MỚI</button>
+      </div>
+    </div>
+  </div><!-- /monthlyReportModal -->
+
+  <!-- Focus Trap — must load before spending.js -->
+  <script src="focus-trap.js"></script>
+  <script src="spending.js?v=2.1.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => { });

@@ -1,0 +1,999 @@
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid rgba(255, 255, 255, .05);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 255, 255, .03);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  /* Glass-inspired top highlight */
+  background-image: linear-gradient(180deg, rgba(255,255,255,.035) 0%, transparent 100%);
+}
+
+/* Animated accent underline */
+.topbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,71,87,.4) 30%, rgba(255,71,87,.15) 70%, transparent 100%);
+}
+
+.tb-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tb-logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--txt);
+  letter-spacing: .05em;
+}
+
+.tb-logo-accent {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(255, 71, 87, .5);
+}
+
+/* Logo as home-nav link */
+.tb-logo-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  transition: opacity 150ms;
+}
+
+.tb-logo-link:hover {
+  opacity: .8;
+}
+
+.tb-logo-link:hover .tb-logo-accent {
+  text-shadow: 0 0 16px rgba(255, 71, 87, .8);
+}
+
+.tb-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--recessed);
+  padding: 4px 12px;
+  border-radius: 99px;
+  box-shadow: var(--sh-press);
+}
+
+/* ── Wrap-up History Button (near logo) ── */
+.btn-wrapup-history {
+  width: 28px;
+  height: 28px;
+  background: var(--recessed);
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-press);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 2px;
+  transition: color 150ms, background 150ms, transform 150ms, border-color 150ms, box-shadow 150ms;
+  position: relative;
+}
+
+.btn-wrapup-history:hover {
+  color: var(--txt);
+  background: var(--surface2);
+  border-color: rgba(255, 255, 255, .15);
+  box-shadow: var(--sh-raise);
+  transform: scale(1.05);
+}
+
+.btn-wrapup-history:active {
+  transform: scale(0.92);
+  box-shadow: var(--sh-press);
+}
+
+/* Pulse glow indicator when there's a new unseen report */
+.btn-wrapup-history.has-new-report::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 71, 87, .7);
+  animation: ledPulse 2s ease-in-out infinite;
+}
+
+.tb-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.user-greeting {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--txt);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.system-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* LED */
+.led {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.led--green {
+  background: var(--green);
+  box-shadow: 0 0 6px 2px rgba(0, 230, 118, .55);
+  animation: ledPulse 2s ease-in-out infinite;
+}
+
+.led-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--green);
+}
+
+.tb-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Avatar user chip */
+.user-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--recessed);
+  padding: 6px 14px 6px 8px;
+  border-radius: 99px;
+  box-shadow: var(--sh-press);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms, box-shadow 150ms;
+}
+
+.user-chip:hover {
+  background: var(--surface2);
+  box-shadow: var(--sh-raise);
+}
+
+.user-chip-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #ff8a95);
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+/* Account Modal Details */
+.modal-card--account {
+  max-width: 440px;
+}
+
+.account-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0 24px;
+}
+
+.account-avatar-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #ff8a95);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--sh-raise), 0 0 0 4px var(--surface2);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  overflow: hidden;
+}
+
+.account-avatar-wrapper:hover {
+  transform: scale(1.05);
+  box-shadow: var(--sh-accent), 0 0 0 6px var(--surface2);
+}
+
+.account-avatar-wrapper::after {
+  /* i18n: use data-hover-label attribute so text can be translated via JS */
+  content: attr(data-hover-label, 'ĐỔI ẢNH');
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.account-avatar-wrapper:hover::after {
+  opacity: 1;
+}
+
+.account-avatar-placeholder {
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.account-avatar-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Alert boxes */
+.account-alert {
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.alert--error {
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.2);
+  color: #ff4757;
+}
+
+.alert--success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--green);
+}
+
+/* Form Groups & Dividers */
+.form-divider-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 24px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+html.light-theme .form-divider-label {
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.account-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-logout {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--muted);
+  background: var(--surface2);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+  box-shadow: var(--sh-raise);
+  transition: color 150ms, transform 120ms;
+}
+
+.btn-logout:hover {
+  color: var(--accent);
+}
+
+.btn-logout:active {
+  transform: translateY(1px);
+  box-shadow: var(--sh-press);
+}
+
+/* Theme toggle */
+.btn-theme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surface2);
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  box-shadow: var(--sh-raise);
+  transition: transform 300ms cubic-bezier(.34, 1.56, .64, 1), box-shadow 150ms;
+}
+
+.btn-theme:hover {
+  transform: rotate(20deg) scale(1.15);
+}
+
+.btn-theme:active {
+  transform: scale(.9);
+  box-shadow: var(--sh-press);
+}
+
+/* ============================================================
+   APP BODY — 2-column grid
+   ============================================================ */
+.app-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 0;
+  height: calc(100vh - 58px);
+  /* Prevent horizontal overflow from Windows scrollbar eating layout width */
+  overflow: hidden;
+}
+
+/* ============================================================
+   RAIL (left sidebar)
+   ============================================================ */
+.rail {
+  background: var(--surface);
+  border-right: 1px solid rgba(255, 255, 255, .05);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow-y: auto;
+  /* Prevent Windows scrollbar from eating sidebar width */
+  scrollbar-gutter: stable;
+  /* Subtle gradient accent on right border */
+  box-shadow: inset -1px 0 0 rgba(255,71,87,.08), 2px 0 20px rgba(0,0,0,.2);
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface2) transparent;
+}
+
+.rail::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rail::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+}
+.rail::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.rail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rail-section--grow {
+  flex: 1;
+  min-height: 0;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Metric Cards ── */
+.metrics-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metric-card {
+  background: var(--recessed);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--sh-press);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-raise);
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .09), transparent);
+}
+
+/* Accent top stripe per card type */
+.metric-card--income::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  opacity: 0.5;
+}
+
+.metric-card--expense::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.5;
+}
+
+/* Card corner screws */
+.metric-card__screw {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, .6), inset 1px 1px 1px rgba(255, 255, 255, .06);
+}
+
+.metric-card__screw::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 5px;
+  height: 1px;
+  background: rgba(0, 0, 0, .5);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .5);
+}
+
+.mc-screw--tl { top: 8px; left: 8px; }
+.mc-screw--tr { top: 8px; right: 8px; }
+
+.metric-card__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.metric-card__value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(16px, 3.5vw, 26px); /* ✅ Lỗi 2.2: tự co font trên màn hình nhỏ */
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  transition: color var(--dur-mid) ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
+}
+
+.metric-card__value--balance { color: var(--txt); }
+.metric-card__value--income  { color: var(--green); }
+.metric-card__value--expense { color: var(--accent); }
+
+.metric-card__sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ── ADD TRANSACTION button ── */
+.btn-add-txn {
+  width: 100%;
+  padding: 17px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-accent);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.btn-add-txn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .2) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.btn-add-txn__icon {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  transition: transform var(--dur-mid) cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.btn-add-txn:hover .btn-add-txn__icon {
+  transform: rotate(90deg);
+}
+
+.btn-add-txn:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 22px rgba(255, 71, 87, .65), -6px -6px 16px rgba(255, 71, 87, .22);
+}
+
+.btn-add-txn:active {
+  transform: translateY(2px);
+  box-shadow: var(--sh-press);
+}
+
+/* ── Chassis Frame ── */
+.chassis-frame {
+  background: var(--recessed);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-press);
+  flex: 1;
+  min-height: 140px;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.chassis-frame__screw {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #444a4c, #2a2f30);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, .6), inset 1px 1px 1px rgba(255, 255, 255, .06);
+}
+
+.chassis-frame__screw::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  width: 5px;
+  height: 1px;
+  background: rgba(0, 0, 0, .5);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .5);
+}
+
+.cf-screw--tl { top: 8px; left: 8px; }
+.cf-screw--tr { top: 8px; right: 8px; }
+.cf-screw--bl { bottom: 8px; left: 8px; }
+.cf-screw--br { bottom: 8px; right: 8px; }
+
+.chassis-frame__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+}
+
+.chassis-frame__icon {
+  color: var(--muted);
+  opacity: .25;
+}
+
+.chassis-frame__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: .4;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* ── Chart Panel (inside chassis-frame) ── */
+.chassis-frame--chart {
+  flex-direction: column;
+  min-height: 220px;
+}
+
+.chart-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px 14px;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, .04);
+  border-radius: calc(var(--r-lg) - 4px);
+  margin: 10px;
+  background: rgba(0, 0, 0, .12);
+}
+
+.chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 170px;
+  margin: 0 auto;
+}
+
+.chart-canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Custom HTML legend — Vertical list of rows */
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface2) transparent;
+  padding-right: 2px;
+}
+
+.chart-legend::-webkit-scrollbar { width: 3px; }
+.chart-legend::-webkit-scrollbar-thumb {
+  background: var(--surface2);
+  border-radius: 99px;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 0;
+}
+
+.chart-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-legend-lbl {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--txt);
+  opacity: .85;
+}
+
+.chart-legend-val {
+  font-weight: 500;
+  color: var(--txt);
+  margin-left: auto;
+}
+
+.chart-legend-pct {
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+/* Empty state */
+.chart-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: .4;
+  text-align: center;
+  padding: 24px 0;
+  display: none;
+}
+
+
+/* ============================================================
+   SETTINGS BUTTON (Topbar gear)
+   ============================================================ */
+.btn-settings {
+  width: 36px;
+  height: 36px;
+  background: var(--recessed);
+  border: none;
+  border-radius: var(--r-sm);
+  box-shadow: var(--sh-press);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 150ms, transform 300ms cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.btn-settings:hover {
+  color: var(--txt);
+  transform: rotate(45deg);
+}
+
+.btn-settings:active {
+  transform: rotate(45deg) scale(.9);
+  box-shadow: var(--sh-raise);
+}
+
+
+/* ============================================================
+   QUICK DEPOSIT BUTTON (on Balance card)
+   ============================================================ */
+.metric-card--balance {
+  overflow: visible;
+}
+
+.btn-quick-deposit {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  background: var(--surface2);
+  border: none;
+  border-radius: 50%;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--sh-raise);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 150ms, background 150ms, transform 200ms cubic-bezier(.34, 1.56, .64, 1), box-shadow 120ms;
+  z-index: 2;
+}
+
+.btn-quick-deposit:hover {
+  color: var(--green);
+  background: var(--recessed);
+  box-shadow: 0 0 10px rgba(0, 230, 118, .45);
+  transform: scale(1.2);
+}
+
+.btn-quick-deposit:active {
+  transform: scale(.88);
+  box-shadow: var(--sh-press);
+}
+
+
+/* ============================================================
+   TOPBAR NAVIGATION SEGMENT
+   ============================================================ */
+.tb-nav {
+  display: flex;
+  background: var(--recessed);
+  border-radius: var(--r-md);
+  padding: 2px;
+  box-shadow: var(--sh-press);
+  gap: 2px;
+  margin-left: 20px;
+}
+
+.tb-nav-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--r-md) - 2px);
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: color var(--dur-fast) ease, background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.tb-nav-btn:hover {
+  color: var(--txt);
+}
+
+.tb-nav-btn.active {
+  background: var(--surface2);
+  color: var(--accent);
+  box-shadow: var(--sh-raise);
+}
+
+/* Light / Cream / Sky specific Topbar nav styles */
+html.light-theme .tb-nav {
+  background: #F1F5F9;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.06);
+}
+html.light-theme .tb-nav-btn.active {
+  background: #FFFFFF;
+  color: #4F46E5;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+html.cream-theme .tb-nav {
+  background: #EDE4D8;
+  box-shadow: inset 0 1px 3px rgba(100,60,20,.06);
+}
+html.cream-theme .tb-nav-btn.active {
+  background: #FFFFFF;
+  color: #C0531E;
+  box-shadow: 0 1px 3px rgba(100,60,20,.1);
+}
+
+html.green-theme .tb-nav {
+  background: #E3F2E9;
+  box-shadow: inset 0 1px 3px rgba(16,80,50,.06);
+}
+html.green-theme .tb-nav-btn.active {
+  background: #FFFFFF;
+  color: #059669;
+  box-shadow: 0 1px 3px rgba(16,80,50,.1);
+}
+
+
+/* ============================================================
+   TABBED VIEW TRANSITIONS
+   ============================================================ */
+.main-content {
+  overflow-y: auto; /* Allow natural page scrolling for both views */
+}
+
+.dashboard-view {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ✅ Lỗi 2.3: Hiệu ứng chuyển tab mượt mà Dashboard ↔ Analytics */
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-view.active {
+  display: flex;
+  animation: viewFadeIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+
+/* Revert budget panel to full-width horizontal grid in Home view */
+#view-home .budget-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+  gap: 10px;
+  overflow-y: visible;
+}
+
+
+/* ============================================================
+   TOPBAR NAV — enhanced active indicator
+   ============================================================ */
+.tb-nav-btn {
+  position: relative;
+}
+
+.tb-nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 99px;
+  box-shadow: 0 0 6px rgba(255, 75, 114, .5);
+}
+
+html.light-theme .tb-nav-btn.active::after { background: #4F46E5; box-shadow: 0 0 6px rgba(79,70,229,.4); }
+html.cream-theme .tb-nav-btn.active::after { background: #C0531E; box-shadow: 0 0 6px rgba(192,83,30,.4); }
+html.green-theme .tb-nav-btn.active::after   { background: #059669; box-shadow: 0 0 6px rgba(5,150,105,.4); }
+
+/* ============================================================
+   DASHBOARD VIEW — smooth fade transition between views
+   ============================================================ */
+.dashboard-view {
+  animation: fadeUp var(--dur-mid) ease both;
+}

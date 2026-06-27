@@ -3,13 +3,13 @@
  * BEFORE any <link rel="stylesheet"> so the class is present when CSS
  * first paints — eliminates FOUC on all pages.
  *
- * Supported themes: 'dark' | 'light' | 'cream' | 'sky'
+ * Supported themes: 'dark' | 'light' | 'cream' | 'green'
  */
 (function () {
   'use strict';
 
   var KEY = 'caltdhy_theme';
-  var ALL_CLASSES = ['dark-theme', 'light-theme', 'cream-theme', 'sky-theme'];
+  var ALL_CLASSES = ['dark-theme', 'light-theme', 'cream-theme', 'green-theme'];
 
   function _read() {
     try { return localStorage.getItem(KEY); } catch (_) { return null; }
@@ -31,7 +31,7 @@
   }
 
   function _syncButtons(theme) {
-    var icons = { dark: '🌙', light: '☀️', cream: '☕', sky: '🧣' };
+    var icons = { dark: '🌙', light: '☀️', cream: '☕', green: '🌿' };
     var iconEls = document.querySelectorAll('[data-theme-icon]');
     iconEls.forEach(function (el) {
       el.textContent = icons[theme] || '🌙';

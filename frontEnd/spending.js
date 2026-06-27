@@ -9,7 +9,9 @@
 const STORAGE_KEY = 'caltdhy_txns';
 const BUDGET_KEY = 'caltdhy_budgets';
 const CUSTOM_CATS_KEY = 'caltdhy_custom_cats';
+const HIDDEN_CATS_KEY  = 'caltdhy_hidden_cats'; // danh mục mặc định bị ẩn
 const THEME_KEY = 'caltdhy_theme';
+const BALANCE_RESET_KEY = 'caltdhy_balance_reset_mode'; // 'keep' | 'reset'
 const EXCHANGE_RATE = 27000;  // 1 USD = 27,000 VND
 const CNY_RATE = 3750;   // 1 CNY = 3,750 VND
 const CATEGORIES = [
@@ -25,12 +27,20 @@ const CAT_ICONS = {
 /* ── State ── */
 let transactions = [];
 let budgets = {};   // { 'Food & Dining': 2000000, ... } — limits in VND
-let customCategories = []; // extra user-defined category names
+let customCategories = []; // extra user-defined category names — stored as { name, type } objects internally
+let hiddenDefaultCategories = []; // default cats hidden by user (soft-hide, not deleted)
 let currentFilter = 'all';
+let currentPeriodFilter = 'month'; // 'month' or 'all'
+let compareMonthYear = null;
 let currentType = 'expense';
 let currentCurrency = 'VND'; // 'VND' | 'USD' | 'CNY'
 let toastTimer = null;
 let selectedMonthYear = null;
+let currentSort = 'date-desc'; // 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
+let balanceResetMode = 'keep'; // 'keep' = lũy kế tất cả | 'reset' = chỉ tính tháng hiện tại
+let newCatType = 'expense'; // type selected in "Add Custom Category" row
+let currentReportTab = 'month'; // 'month' | 'quarter' | 'year' — active tab in wrapup modal
+let _wrapupIsManual = false;  // true when opened manually via btn (hides reset box)
 
 /* ── Interactive Charts State ── */
 let currentTrendRange = 3;  // 1 | 3 | 6 | 12 (months)
@@ -39,10 +49,50 @@ let currentCategoryChartType = 'doughnut'; // 'doughnut' | 'polarArea'
 let _trendChart = null; // trend chart instance
 let currentView = 'home'; // 'home' | 'analytics'
 
-/** Returns default + custom categories merged */
+/* ── Category helpers ── */
+
+/**
+ * Parse raw stored array → normalize each item to { name: string, type: 'expense'|'income' }
+ * Supports legacy string items (type defaults to 'expense' for backward compat).
+ */
+function parseCategories(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(item => {
+    if (typeof item === 'string') {
+      // Legacy format: try parse JSON string first, then treat as plain name
+      try {
+        const parsed = JSON.parse(item);
+        if (parsed && typeof parsed.name === 'string') return { name: parsed.name.trim(), type: parsed.type === 'income' ? 'income' : 'expense' };
+      } catch (_) {}
+      return { name: item.trim(), type: 'expense' };
+    }
+    if (typeof item === 'object' && item !== null && typeof item.name === 'string') {
+      return { name: item.name.trim(), type: item.type === 'income' ? 'income' : 'expense' };
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+/**
+ * Serialize category objects → string[] for localStorage and server (JSON-encoded objects).
+ * This keeps the server schema [String] while encoding the type info inside.
+ */
+function serializeCategories(arr) {
+  return arr.map(c => JSON.stringify({ name: c.name, type: c.type }));
+}
+
+/** Returns the type ('expense'|'income') of a named category (default or custom). */
+function getCategoryType(catName) {
+  const DEFAULT_INCOME = ['Salary', 'Freelance'];
+  if (DEFAULT_INCOME.includes(catName)) return 'income';
+  const found = customCategories.find(c => c.name === catName);
+  return found ? found.type : 'expense';
+}
+
+/** Returns default + custom category NAMES merged, excluding hidden defaults */
 function getAllCategories() {
-  const all = [...CATEGORIES];
-  customCategories.forEach(c => { if (!all.includes(c)) all.push(c); });
+  const all = CATEGORIES.filter(c => !hiddenDefaultCategories.includes(c));
+  customCategories.forEach(c => { if (!all.includes(c.name)) all.push(c.name); });
   return all;
 }
 
@@ -144,42 +194,85 @@ function syncCustomDropdown(selectId) {
     triggerIcon.textContent = '📦';
   }
 
+  // Pre-compute per-category spending for budget badges (only if data is ready)
+  let monthlySpent = {};
+  try {
+    if (typeof calcCategorySpend === 'function' && typeof budgets !== 'undefined') {
+      monthlySpent = calcCategorySpend();
+    }
+  } catch (_) { /* data not yet initialised */ }
+
   // Populate options dropdown
   dropdown.innerHTML = options.map((opt, index) => {
     const value = opt.value;
     const text = opt.textContent;
     const icon = CAT_ICONS[value] || '📦';
     const isSelected = index === selectedIndex;
-    
+
+    // Build budget badge (only for expense categories with a budget set)
+    let budgetBadge = '';
+    let isOverBudget = false;
+    let overAmt = 0;
+    try {
+      const limit = (typeof budgets !== 'undefined') ? (budgets[value] || 0) : 0;
+      const isExpenseCat = typeof getCategoryType === 'function'
+        ? getCategoryType(value) === 'expense'
+        : true;
+
+      if (limit > 0 && isExpenseCat) {
+        const spentAmt = monthlySpent[value] || 0;
+        const remaining = limit - spentAmt;
+        const pct = spentAmt / limit;
+        const overBudget = remaining < 0;
+        const nearLimit  = !overBudget && pct >= 0.8;
+
+        if (overBudget) {
+          // Over-budget: show red badge with ⚠️ icon — row stays fully clickable
+          isOverBudget = true;
+          overAmt = Math.abs(remaining);
+          budgetBadge = `<span class="custom-select-budget-badge badge--over">⚠️ ${fmt(overAmt)} ${t('budgetOver')}</span>`;
+        } else {
+          const badgeCls = nearLimit ? 'badge--warn' : 'badge--ok';
+          const badgeLabel = `${fmt(remaining)} ${t('budgetLeft')}`;
+          budgetBadge = `<span class="custom-select-budget-badge ${badgeCls}">${badgeLabel}</span>`;
+        }
+      }
+    } catch (_) { /* gracefully skip if helpers not ready */ }
+
     return `
       <div class="custom-select-option ${isSelected ? 'selected' : ''}" 
-           data-value="${escHtml(value)}" 
+           data-value="${escHtml(value)}"
+           data-over-budget="${isOverBudget ? '1' : '0'}"
            role="option" 
            tabIndex="0"
            aria-selected="${isSelected ? 'true' : 'false'}">
-        <span class="custom-select-icon">${icon}</span>
-        <span class="custom-select-option-text">${escHtml(text)}</span>
+        <div class="custom-select-option-left">
+          <span class="custom-select-icon">${icon}</span>
+          <span class="custom-select-option-text">${escHtml(text)}</span>
+        </div>
+        ${budgetBadge}
       </div>
     `;
   }).join('');
 
-  // Add click listeners to custom options
+  // ── Event listeners ────────────────────────────────────────────────────────
+
   const optElements = dropdown.querySelectorAll('.custom-select-option');
   optElements.forEach(optEl => {
+
+    // All rows are now clickable (no locked row paradigm)
     optEl.addEventListener('click', (e) => {
       e.stopPropagation();
       const val = optEl.getAttribute('data-value');
-      
-      // Update native select and trigger change event
+      const isOver = optEl.getAttribute('data-over-budget') === '1';
       nativeSelect.value = val;
       nativeSelect.dispatchEvent(new Event('change'));
-      
-      // Close dropdown
       wrapper.classList.remove('open');
       wrapper.querySelector('.custom-select-trigger').setAttribute('aria-expanded', 'false');
-      
-      // Sync UI again
       syncCustomDropdown(selectId);
+
+      // Show / hide inline warning card below the custom-select wrapper
+      _showBudgetInlineWarning(wrapper, isOver);
     });
 
     // Keyboard support inside options list
@@ -204,16 +297,51 @@ function syncCustomDropdown(selectId) {
   });
 }
 
+/**
+ * Show or remove the inline budget warning card below the given custom-select wrapper.
+ * @param {HTMLElement} wrapper - the .custom-select element
+ * @param {boolean}     show   - true = over-budget category was selected
+ */
+function _showBudgetInlineWarning(wrapper, show) {
+  // Remove any existing warning card first
+  const existing = wrapper.parentNode.querySelector('.budget-inline-warning');
+  if (existing) existing.remove();
+
+  if (!show) return;
+
+  const card = document.createElement('div');
+  card.className = 'budget-inline-warning';
+  card.setAttribute('role', 'alert');
+  card.setAttribute('aria-live', 'polite');
+  card.innerHTML = `
+    <span class="budget-inline-warning__icon">⚠️</span>
+    <span class="budget-inline-warning__text">${escHtml(t('overBudgetTip'))}</span>
+  `;
+
+  // Insert right after the wrapper
+  wrapper.parentNode.insertBefore(card, wrapper.nextSibling);
+
+  // Trigger slide-in animation on next frame
+  requestAnimationFrame(() => card.classList.add('budget-inline-warning--visible'));
+}
+
 function updateCategoryDropdown(selectId, type) {
   const catSel = document.getElementById(selectId);
   if (!catSel) return;
 
   let catsToShow = getAllCategories();
-  if (type === 'expense') {
+
+  if (type === 'income') {
+    // Only show income-type categories
+    catsToShow = catsToShow.filter(c => getCategoryType(c) === 'income');
+    // Fallback: if no income cats at all, show all (shouldn't happen with defaults Salary/Freelance)
+    if (catsToShow.length === 0) catsToShow = getAllCategories();
+  } else if (type === 'expense') {
+    // Only show expense-type categories
+    catsToShow = catsToShow.filter(c => getCategoryType(c) === 'expense');
+    // Sub-filter: prefer budgeted cats if available
     const budgetedCats = catsToShow.filter(c => budgets[c] && budgets[c] > 0);
-    if (budgetedCats.length > 0) {
-      catsToShow = budgetedCats;
-    }
+    if (budgetedCats.length > 0) catsToShow = budgetedCats;
   }
 
   // Populate hidden native select options
@@ -224,6 +352,7 @@ function updateCategoryDropdown(selectId, type) {
   // Synchronize custom dropdown
   syncCustomDropdown(selectId);
 }
+
 
 // Click outside to close custom select dropdowns and month picker dropdown
 document.addEventListener('click', (e) => {
@@ -250,8 +379,32 @@ document.addEventListener('click', (e) => {
    ============================================================ */
 let isServerConnected = false;
 
+/**
+ * Migration: chuyển key cũ `pcn_*` sang `caltdhy_*` (chạy 1 lần khi khởi động)
+ * Sau khi migrate xong thì xóa key cũ đi để tránh dupliate
+ */
+(function migrateLocalStorageKeys() {
+  try {
+    const OLD_TOKEN_KEY = 'pcn_token';
+    const OLD_USER_KEY  = 'pcn_user';
+    const NEW_TOKEN_KEY = 'caltdhy_token';
+    const NEW_USER_KEY  = 'caltdhy_user';
+    const oldToken = localStorage.getItem(OLD_TOKEN_KEY);
+    const oldUser  = localStorage.getItem(OLD_USER_KEY);
+    if (oldToken && !localStorage.getItem(NEW_TOKEN_KEY)) {
+      localStorage.setItem(NEW_TOKEN_KEY, oldToken);
+    }
+    if (oldUser && !localStorage.getItem(NEW_USER_KEY)) {
+      localStorage.setItem(NEW_USER_KEY, oldUser);
+    }
+    // Xóa key cũ
+    localStorage.removeItem(OLD_TOKEN_KEY);
+    localStorage.removeItem(OLD_USER_KEY);
+  } catch (e) { /* ignore */ }
+})();
+
 function getAuthHeaders() {
-  const token = localStorage.getItem('pcn_token') || localStorage.getItem('caltdhy_token');
+  const token = localStorage.getItem('caltdhy_token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -271,20 +424,54 @@ async function syncLoadFromServer() {
     if (budgetRes.ok) {
       const budgetData = await budgetRes.json();
       if (budgetData && budgetData.success && budgetData.data) {
-        const serverBudgets = budgetData.data;
-        const localBudgets = { ...budgets }; // đã load từ localStorage trước đó
-
-        // Merge: local làm nền, server ghi đè (tránh race condition xóa mất data)
-        const merged = { ...localBudgets, ...serverBudgets };
-        budgets = merged;
+        // ✅ Sửa lỗi 1.3 (Zombie Budget): Khi online, server là nguồn sự thật.
+        // Chỉ giữ lại budget từ local nếu server chưa biết đến danh mục đó
+        // (tức là mới thêm offline). Không đưa các mục local đã bị xóa trên server trở lại.
+        const serverBudgets = budgetData.data; // Đây là source of truth khi online
+        const localBudgets = { ...budgets };
+        
+        // Chỉ giữ budget local nếu category đó chưa có trên server (offline-created)
+        const offlineOnlyBudgets = {};
+        Object.keys(localBudgets).forEach(cat => {
+          if (!(cat in serverBudgets) && localBudgets[cat] > 0) {
+            offlineOnlyBudgets[cat] = localBudgets[cat];
+          }
+        });
+        
+        // Merge: server ghi đè + các mục offline chưa lên server
+        budgets = { ...offlineOnlyBudgets, ...serverBudgets };
         localStorage.setItem(BUDGET_KEY, JSON.stringify(budgets));
 
-        // Nếu local có nhiều category hơn server → push lên server để sync
-        if (Object.keys(localBudgets).length > Object.keys(serverBudgets).length) {
+        // Nếu có budget offline chưa sync lên → đẩy lên server
+        if (Object.keys(offlineOnlyBudgets).length > 0) {
           syncSaveBudgetsToServer();
         }
       }
     }
+
+    // Load Custom Categories
+    const catRes = await fetch('/api/spending/categories', { headers });
+    if (catRes.ok) {
+      const catData = await catRes.json();
+      if (catData && catData.success && Array.isArray(catData.data)) {
+        const serverCatObjects = parseCategories(catData.data); // normalize server data
+        const localCatObjects  = [...customCategories]; // already parsed objects from localStorage
+
+        // Merge: server wins for existing names, local-only cats appended
+        const serverNames = serverCatObjects.map(c => c.name);
+        const localOnly   = localCatObjects.filter(c => !serverNames.includes(c.name));
+        const merged = [...serverCatObjects, ...localOnly];
+        customCategories = merged;
+        // Persist serialized version
+        localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(serializeCategories(customCategories)));
+
+        // If local has extra categories not yet on server → push up to sync
+        if (localOnly.length > 0) {
+          syncSaveCategoriesToServer();
+        }
+      }
+    }
+
 
     // Load Transactions
     const txnRes = await fetch('/api/spending', { headers });
@@ -297,14 +484,19 @@ async function syncLoadFromServer() {
     }
 
     isServerConnected = true;
-    console.log('🔌 Connected to MongoDB Atlas. Data loaded successfully!');
     
     // Trigger full UI redraw with new database state
     triggerUIUpdates();
   } catch (e) {
-    console.log('📴 Operating in Offline Mode (using browser localStorage).', e);
+    // Offline mode – sử dụng dữ liệu cục bộ từ localStorage
+    isServerConnected = false;
+    // Hiển thị thông báo offline sau 1 giây để đảm bảo DOM đã sẵn sàng
+    setTimeout(() => {
+      showToast('📴 Đang ở chế độ Ngoại tuyến. Dữ liệu có thể chưa được đồng bộ.', 4000);
+    }, 1000);
   }
 }
+
 
 async function syncSaveBudgetsToServer() {
   try {
@@ -315,7 +507,7 @@ async function syncSaveBudgetsToServer() {
       body: JSON.stringify(budgets)
     });
     if (res.ok) {
-      console.log('💾 Budgets backed up to MongoDB!');
+      // Budget saved to server
     }
   } catch (e) {
     console.warn('⚠️ Budget backup failed.', e);
@@ -343,9 +535,11 @@ async function syncAddTransactionToServer(txn) {
         const localTxn = transactions.find(t => t.id === txn.id);
         if (localTxn) {
           localTxn.id = result.data.id;
+          if (result.data.createdAt) {
+            localTxn.createdAt = result.data.createdAt;
+          }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
         }
-        console.log('💾 Transaction saved to MongoDB!');
       }
     }
   } catch (e) {
@@ -361,7 +555,7 @@ async function syncDeleteTransactionFromServer(id) {
       headers
     });
     if (res.ok) {
-      console.log(`💾 Deleted transaction ${id} from MongoDB!`);
+      // Deleted from server
     }
   } catch (e) {
     console.warn('⚠️ Transaction deletion backup failed.', e);
@@ -406,7 +600,8 @@ function saveBudgets() {
 function loadCustomCategories() {
   try {
     const raw = localStorage.getItem(CUSTOM_CATS_KEY);
-    customCategories = raw ? JSON.parse(raw) : [];
+    const rawArr = raw ? JSON.parse(raw) : [];
+    customCategories = parseCategories(rawArr);
   } catch (e) {
     customCategories = [];
   }
@@ -414,10 +609,50 @@ function loadCustomCategories() {
 
 function saveCustomCategories() {
   try {
-    localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(customCategories));
-    syncSaveToServer();
+    const serialized = serializeCategories(customCategories);
+    localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(serialized));
+    syncSaveCategoriesToServer(); // ✅ Đã được định nghĩa bên dưới
   } catch (e) { }
 }
+
+// ✅ Lỗi 1.1: Hàm đồng bộ danh mục tự định nghĩa lên MongoDB Atlas
+async function syncSaveCategoriesToServer() {
+  if (!isServerConnected) return; // Chỉ gọi khi đang online
+  try {
+    const headers = getAuthHeaders();
+    const serialized = serializeCategories(customCategories);
+    const res = await fetch('/api/spending/categories', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ categories: serialized })
+    });
+    if (res.ok) {
+      // Categories synced to server
+    }
+  } catch (e) {
+    console.warn('⚠️ Category backup failed.', e);
+  }
+}
+
+
+/* ── Hidden default categories ── */
+function loadHiddenCategories() {
+  try {
+    const raw = localStorage.getItem(HIDDEN_CATS_KEY);
+    hiddenDefaultCategories = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    hiddenDefaultCategories = [];
+  }
+}
+
+function saveHiddenCategories() {
+  try {
+    localStorage.setItem(HIDDEN_CATS_KEY, JSON.stringify(hiddenDefaultCategories));
+  } catch (e) { }
+}
+
+
+
 
 /* ============================================================
    INFO TOOLTIP – Backup & Restore
@@ -475,6 +710,82 @@ function triggerImport() {
   }
 }
 
+/**
+ * Validate dữ liệu import từ file backup JSON trước khi ghi vào storage.
+ * Trả về { valid: true } hoặc { valid: false, reason: '...' }
+ */
+function validateImportedData(data) {
+  // Kiểm tra cấu trúc tổng quan
+  if (!data || typeof data !== 'object') {
+    return { valid: false, reason: 'File không phải định dạng JSON hợp lệ.' };
+  }
+  if (!data.transactions && !data.budgets && !data.customCategories) {
+    return { valid: false, reason: 'File không chứa dữ liệu CaltDHy.' };
+  }
+
+  // Validate mảng transactions
+  if (data.transactions !== undefined) {
+    if (!Array.isArray(data.transactions)) {
+      return { valid: false, reason: 'Trường "transactions" phải là mảng.' };
+    }
+    const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+    for (let i = 0; i < data.transactions.length; i++) {
+      const txn = data.transactions[i];
+      if (!txn || typeof txn !== 'object') {
+        return { valid: false, reason: `Giao dịch #${i + 1} không hợp lệ.` };
+      }
+      if (!txn.type || !['income', 'expense'].includes(txn.type)) {
+        return { valid: false, reason: `Giao dịch #${i + 1}: "type" phải là "income" hoặc "expense".` };
+      }
+      if (typeof txn.amount !== 'number' || isNaN(txn.amount) || txn.amount <= 0) {
+        return { valid: false, reason: `Giao dịch #${i + 1}: "amount" phải là số dương.` };
+      }
+      if (!txn.date || !DATE_REGEX.test(txn.date)) {
+        return { valid: false, reason: `Giao dịch #${i + 1}: "date" phải đúng định dạng YYYY-MM-DD.` };
+      }
+      // Kiểm tra ngày có thực sự tồn tại không (tránh 2024-02-30)
+      const parsed = new Date(txn.date + 'T00:00:00');
+      if (isNaN(parsed.getTime())) {
+        return { valid: false, reason: `Giao dịch #${i + 1}: "date" là ngày không tồn tại (${txn.date}).` };
+      }
+      if (!txn.category || typeof txn.category !== 'string' || !txn.category.trim()) {
+        return { valid: false, reason: `Giao dịch #${i + 1}: "category" không được để trống.` };
+      }
+    }
+  }
+
+  // Validate object budgets
+  if (data.budgets !== undefined) {
+    if (typeof data.budgets !== 'object' || Array.isArray(data.budgets)) {
+      return { valid: false, reason: 'Trường "budgets" phải là object.' };
+    }
+    for (const [cat, limit] of Object.entries(data.budgets)) {
+      if (typeof limit !== 'number' || isNaN(limit) || limit < 0) {
+        return { valid: false, reason: `Ngân sách "${cat}": giới hạn phải là số không âm.` };
+      }
+    }
+  }
+
+  // Validate mảng customCategories
+  if (data.customCategories !== undefined) {
+    if (!Array.isArray(data.customCategories)) {
+      return { valid: false, reason: 'Trường "customCategories" phải là mảng.' };
+    }
+    for (let i = 0; i < data.customCategories.length; i++) {
+      const item = data.customCategories[i];
+      if (typeof item === 'string') {
+        continue; // Hỗ trợ định dạng cũ (hoặc chuỗi JSON)
+      }
+      if (typeof item === 'object' && item !== null && typeof item.name === 'string') {
+        continue; // Hỗ trợ định dạng mới { name, type }
+      }
+      return { valid: false, reason: `Danh mục #${i + 1} không hợp lệ (phải là chuỗi hoặc đối tượng).` };
+    }
+  }
+
+  return { valid: true };
+}
+
 function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -483,8 +794,12 @@ function importData(event) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      if (!data || (!data.transactions && !data.budgets && !data.customCategories)) {
-        showToast(t('backupError'));
+
+      // ✅ Validate trước khi ghi — tránh crash UI do dữ liệu hỏng
+      const validation = validateImportedData(data);
+      if (!validation.valid) {
+        showToast('⚠ Import lỗi: ' + validation.reason);
+        event.target.value = '';
         return;
       }
 
@@ -497,7 +812,7 @@ function importData(event) {
         saveBudgets();
       }
       if (Array.isArray(data.customCategories)) {
-        customCategories = data.customCategories;
+        customCategories = parseCategories(data.customCategories);
         saveCustomCategories();
       }
 
@@ -542,24 +857,68 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/** Safe math evaluator supporting standard operators and custom cleaners */
+/** Safe math evaluator – không dùng eval/new Function (tránh code injection) */
 function evalMathExpression(str) {
   if (!str) return NaN;
-  let sanitized = str.replace(/\s+/g, '')
-                     .replace(/x/gi, '*')
-                     .replace(/:/g, '/');
-  
-  // Strip thousands separators (dots or commas followed by exactly three digits)
-  if (!/^[0-9.+\-*/()]+$/.test(sanitized)) {
-    sanitized = sanitized.replace(/([.,])(?=\d{3}(?!\d))/g, '');
+  let s = str.replace(/\s+/g, '')
+             .replace(/x/gi, '*')
+             .replace(/:/g, '/');
+
+  // Gỡ phân cách ngàn (dấu chấm hoặc phẩy trước 3 số)
+  if (!/^[0-9.+\-*/()]+$/.test(s)) {
+    s = s.replace(/([.,])(?=\d{3}(?!\d))/g, '');
   }
-  
-  if (!/^[0-9.+\-*/()]+$/.test(sanitized)) return NaN;
-  
+
+  if (!/^[0-9.+\-*/()]+$/.test(s)) return NaN;
+
+  // ── Recursive descent parser ──────────────────────────────────
+  // Grammar:
+  //   expr   = term   (('+' | '-') term)*
+  //   term   = factor (('*' | '/') factor)*
+  //   factor = number | '(' expr ')' | '-' factor
+  let pos = 0;
+
+  function parseNumber() {
+    let numStr = '';
+    while (pos < s.length && /[0-9.]/.test(s[pos])) numStr += s[pos++];
+    return numStr ? parseFloat(numStr) : NaN;
+  }
+
+  function parseFactor() {
+    if (s[pos] === '(') {
+      pos++;
+      const val = parseExpr();
+      if (s[pos] === ')') pos++;
+      return val;
+    }
+    if (s[pos] === '-') { pos++; return -parseFactor(); }
+    return parseNumber();
+  }
+
+  function parseTerm() {
+    let val = parseFactor();
+    while (pos < s.length && (s[pos] === '*' || s[pos] === '/')) {
+      const op = s[pos++];
+      const right = parseFactor();
+      if (op === '*') val *= right;
+      else { if (right === 0) return NaN; val /= right; }
+    }
+    return val;
+  }
+
+  function parseExpr() {
+    let val = parseTerm();
+    while (pos < s.length && (s[pos] === '+' || s[pos] === '-')) {
+      const op = s[pos++];
+      const right = parseTerm();
+      val = op === '+' ? val + right : val - right;
+    }
+    return val;
+  }
+
   try {
-    const fn = new Function(`return (${sanitized});`);
-    const val = fn();
-    return typeof val === 'number' && isFinite(val) ? val : NaN;
+    const result = parseExpr();
+    return (pos === s.length && isFinite(result)) ? result : NaN;
   } catch (e) {
     return NaN;
   }
@@ -593,7 +952,11 @@ function fmtDate(iso) {
 }
 
 function todayISO() {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function currentMonthYear() {
@@ -613,10 +976,19 @@ function calcMetrics() {
     const d = new Date(t.date + 'T00:00:00');
     const inThisMonth = d.getMonth() === month && d.getFullYear() === year;
     if (t.type === 'income') {
-      balance += t.amount;
+      // Tổng số dư: nếu chế độ 'reset' thì chỉ tính giao dịch trong tháng hiện tại
+      if (balanceResetMode === 'reset') {
+        if (inThisMonth) balance += t.amount;
+      } else {
+        balance += t.amount;
+      }
       if (inThisMonth) income += t.amount;
     } else {
-      balance -= t.amount;
+      if (balanceResetMode === 'reset') {
+        if (inThisMonth) balance -= t.amount;
+      } else {
+        balance -= t.amount;
+      }
       if (inThisMonth) expense += t.amount;
     }
   });
@@ -692,8 +1064,8 @@ function renderBudgetPanel() {
         : 'budget-bar__fill--ok';
 
     const remainLabel = overBudget
-      ? `⚠ ${fmt(Math.abs(remaining))} over`
-      : `${fmt(remaining)} left`;
+      ? `⚠ ${fmt(Math.abs(remaining))} ${t('budgetOver')}`
+      : `${fmt(remaining)} ${t('budgetLeft')}`;
 
     return `
       <div class="budget-card ${statusCls}">
@@ -730,7 +1102,7 @@ function getActiveThemeName() {
   const root = document.documentElement;
   if (root.classList.contains('light-theme')) return 'light';
   if (root.classList.contains('cream-theme')) return 'cream';
-  if (root.classList.contains('sky-theme')) return 'sky';
+  if (root.classList.contains('green-theme')) return 'green';
   return 'dark';
 }
 
@@ -769,6 +1141,17 @@ function getThemeChartColors() {
         expenseMuted: 'rgba(0,120,200,0.25)',
         grid: 'rgba(0, 80, 140, 0.08)',
         text: '#4D7899'
+      };
+    case 'green':
+      return {
+        income: '#059669',     // Emerald Green
+        incomeGlow: 'rgba(5,150,105,0.35)',
+        incomeMuted: 'rgba(5,150,105,0.2)',
+        expense: '#D63E3E',    // Coral-red (distinct from income)
+        expenseGlow: 'rgba(214,62,62,0.3)',
+        expenseMuted: 'rgba(214,62,62,0.18)',
+        grid: 'rgba(16,120,80,0.08)',
+        text: '#4D7A68'
       };
     case 'dark':
     default:
@@ -1243,13 +1626,7 @@ function switchView(view) {
   updateChart();
 }
 
-function updateAnalyticsSummary() {
-  const grid = document.getElementById('analyticsGrid');
-  if (!grid) return;
-  
-  const { month, year } = currentMonthYear();
-  
-  // Calculate analytics based on transactions in the selected month
+function generateAnalyticsHTML(month, year, isCompare = false) {
   let totalIncome = 0;
   let totalExpense = 0;
   let txnCount = 0;
@@ -1268,7 +1645,6 @@ function updateAnalyticsSummary() {
     }
   });
   
-  // Find top spending category
   let topCat = 'Other';
   let topCatAmt = 0;
   Object.keys(totalsByCat).forEach(c => {
@@ -1278,7 +1654,6 @@ function updateAnalyticsSummary() {
     }
   });
   
-  // Calculate savings rate
   const savings = totalIncome - totalExpense;
   const savingsRate = totalIncome > 0 ? ((savings / totalIncome) * 100).toFixed(0) : 0;
   
@@ -1293,28 +1668,52 @@ function updateAnalyticsSummary() {
   const monthName = monthDate.toLocaleString(locale, { month: 'short' }).toUpperCase();
   const monthLabel = monthName + ' ' + year;
 
-  grid.innerHTML = `
-    <div class="analytics-card">
-      <p class="analytics-card__title">${escHtml(tSavingsRate)}</p>
+  const titlePrefix = isCompare ? `VS ${monthLabel} - ` : '';
+
+  return `
+    <div class="analytics-card ${isCompare ? 'metric-card' : ''}" ${isCompare ? 'style="border: 1px dashed var(--accent); background: rgba(255,75,114,0.03);"' : ''}>
+      <p class="analytics-card__title ${isCompare ? 'metric-card__label' : ''}" ${isCompare ? 'style="color: var(--accent); font-weight: 700; opacity: 0.8;"' : ''}>${titlePrefix}${escHtml(tSavingsRate)}</p>
       <p class="analytics-card__value">${savingsRate}%</p>
       <p class="analytics-card__sub">${totalIncome > 0 ? `${t('savingsGood') || 'of total income saved'} (${monthLabel})` : (t('savingsNoIncome') || 'No income logged')}</p>
     </div>
-    <div class="analytics-card">
-      <p class="analytics-card__title">${escHtml(tTopCategory)}</p>
+    <div class="analytics-card ${isCompare ? 'metric-card' : ''}" ${isCompare ? 'style="border: 1px dashed var(--accent); background: rgba(255,75,114,0.03);"' : ''}>
+      <p class="analytics-card__title ${isCompare ? 'metric-card__label' : ''}" ${isCompare ? 'style="color: var(--accent); font-weight: 700; opacity: 0.8;"' : ''}>${titlePrefix}${escHtml(tTopCategory)}</p>
       <p class="analytics-card__value" style="font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escHtml(tCat(topCat))}</p>
       <p class="analytics-card__sub">${topCatAmt > 0 ? fmt(topCatAmt) : '0 ₫'}</p>
     </div>
-    <div class="analytics-card">
-      <p class="analytics-card__title">${escHtml(tNetSavings)}</p>
+    <div class="analytics-card ${isCompare ? 'metric-card' : ''}" ${isCompare ? 'style="border: 1px dashed var(--accent); background: rgba(255,75,114,0.03);"' : ''}>
+      <p class="analytics-card__title ${isCompare ? 'metric-card__label' : ''}" ${isCompare ? 'style="color: var(--accent); font-weight: 700; opacity: 0.8;"' : ''}>${titlePrefix}${escHtml(tNetSavings)}</p>
       <p class="analytics-card__value ${savings >= 0 ? 'pos' : 'neg'}" style="color: ${savings >= 0 ? 'var(--green)' : '#ff4757'}">${savings >= 0 ? '+' : ''}${fmt(savings)}</p>
       <p class="analytics-card__sub">${monthLabel}</p>
     </div>
-    <div class="analytics-card">
-      <p class="analytics-card__title">${escHtml(tTotalTransactions)}</p>
+    <div class="analytics-card ${isCompare ? 'metric-card' : ''}" ${isCompare ? 'style="border: 1px dashed var(--accent); background: rgba(255,75,114,0.03);"' : ''}>
+      <p class="analytics-card__title ${isCompare ? 'metric-card__label' : ''}" ${isCompare ? 'style="color: var(--accent); font-weight: 700; opacity: 0.8;"' : ''}>${titlePrefix}${escHtml(tTotalTransactions)}</p>
       <p class="analytics-card__value">${txnCount}</p>
       <p class="analytics-card__sub">${currentLang === 'vi' ? 'giao dịch được ghi nhận' : (currentLang === 'zh' ? '笔已记录交易' : 'transactions recorded')} (${monthLabel})</p>
     </div>
   `;
+}
+
+function updateAnalyticsSummary() {
+  const grid = document.getElementById('analyticsGrid');
+  if (!grid) return;
+  
+  const { month, year } = currentMonthYear();
+  grid.innerHTML = generateAnalyticsHTML(month, year, false);
+
+  const compareGrid = document.getElementById('analyticsCompareGrid');
+  const btnCompareClear = document.getElementById('btnCompareClear');
+  if (compareGrid && btnCompareClear) {
+    if (compareMonthYear) {
+      compareGrid.innerHTML = generateAnalyticsHTML(compareMonthYear.month, compareMonthYear.year, true);
+      compareGrid.style.display = 'grid';
+      btnCompareClear.style.display = 'flex';
+    } else {
+      compareGrid.style.display = 'none';
+      compareGrid.innerHTML = '';
+      btnCompareClear.style.display = 'none';
+    }
+  }
 }
 
 function renderMonthSelector() {
@@ -1406,7 +1805,16 @@ function renderMonthTxnFeed() {
     return d.getMonth() === month && d.getFullYear() === year;
   });
 
-  list = [...list].reverse(); // newest first
+  list.sort((a, b) => {
+    const dateCompare = b.date.localeCompare(a.date);
+    if (dateCompare !== 0) return dateCompare;
+    const aTime = a.createdAt || '';
+    const bTime = b.createdAt || '';
+    if (aTime && bTime) return bTime.localeCompare(aTime);
+    if (aTime) return -1;
+    if (bTime) return 1;
+    return b.id.localeCompare(a.id);
+  });
 
   const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
   const locale = localeMap[currentLang] || 'en-US';
@@ -1501,14 +1909,96 @@ function toggleCategoryChartType() {
 /* ============================================================
    TRANSACTION FEED
    ============================================================ */
+
+/** Apply active sort to a cloned list and return sorted result */
+function applySort(list) {
+  const sorted = [...list];
+  switch (currentSort) {
+    case 'date-asc':
+      sorted.sort((a, b) => {
+        const dateCompare = a.date.localeCompare(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        
+        const aTime = a.createdAt || '';
+        const bTime = b.createdAt || '';
+        if (aTime && bTime) return aTime.localeCompare(bTime);
+        if (aTime) return 1;
+        if (bTime) return -1;
+        return a.id.localeCompare(b.id);
+      });
+      break;
+    case 'amount-desc':
+      sorted.sort((a, b) => {
+        const amtCompare = b.amount - a.amount;
+        if (amtCompare !== 0) return amtCompare;
+        
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        
+        const aTime = a.createdAt || '';
+        const bTime = b.createdAt || '';
+        if (aTime && bTime) return bTime.localeCompare(aTime);
+        if (aTime) return -1;
+        if (bTime) return 1;
+        return b.id.localeCompare(a.id);
+      });
+      break;
+    case 'amount-asc':
+      sorted.sort((a, b) => {
+        const amtCompare = a.amount - b.amount;
+        if (amtCompare !== 0) return amtCompare;
+        
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        
+        const aTime = a.createdAt || '';
+        const bTime = b.createdAt || '';
+        if (aTime && bTime) return aTime.localeCompare(bTime);
+        if (aTime) return -1;
+        if (bTime) return 1;
+        return b.id.localeCompare(a.id);
+      });
+      break;
+    case 'date-desc':
+    default:
+      sorted.sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        
+        const aTime = a.createdAt || '';
+        const bTime = b.createdAt || '';
+        if (aTime && bTime) return bTime.localeCompare(aTime);
+        if (aTime) return -1;
+        if (bTime) return 1;
+        return b.id.localeCompare(a.id);
+      });
+      break;
+  }
+  return sorted;
+}
+
 function renderFeed() {
   const feed = document.getElementById('txnFeed');
   if (!feed) return;
 
-  let list = [...transactions].reverse(); // newest first
+  let list = [...transactions];
+
+  if (currentPeriodFilter === 'month') {
+    const today = new Date();
+    const currentMonthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    list = list.filter(tx => tx.date.startsWith(currentMonthPrefix));
+  }
 
   if (currentFilter !== 'all') {
-    list = list.filter(t => t.type === currentFilter);
+    list = list.filter(tx => tx.type === currentFilter);
+  }
+
+  list = applySort(list);
+
+  // Re-render dropdown items only when it's already open (keep active state in sync)
+  const sortWrapper = document.getElementById('feedSortWrapper');
+  if (sortWrapper && sortWrapper.classList.contains('open')) {
+    renderFeedSortDropdown();
   }
 
   if (list.length === 0) {
@@ -1540,7 +2030,8 @@ function renderFeed() {
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /* ── Filter ── */
@@ -1551,14 +2042,140 @@ function setFilter(f, btn) {
   renderFeed();
 }
 
+function setPeriodFilter(p, btn) {
+  currentPeriodFilter = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('period-btn--active'));
+  btn.classList.add('period-btn--active');
+  renderFeed();
+}
+
+/* ============================================================
+   SORT DROPDOWN
+   ============================================================ */
+
+/** Render the sort dropdown options based on current language */
+function renderFeedSortDropdown() {
+  const dropdown = document.getElementById('feedSortDropdown');
+  if (!dropdown) return;
+
+  const sortOptions = [
+    {
+      group: t('sortGroupDate'),
+      items: [
+        { key: 'date-desc', icon: '↓', label: t('sortDateDesc') },
+        { key: 'date-asc',  icon: '↑', label: t('sortDateAsc')  },
+      ]
+    },
+    {
+      group: t('sortGroupAmount'),
+      items: [
+        { key: 'amount-desc', icon: '↓', label: t('sortAmountDesc') },
+        { key: 'amount-asc',  icon: '↑', label: t('sortAmountAsc')  },
+      ]
+    }
+  ];
+
+  dropdown.innerHTML = sortOptions.map((group, gi) => `
+    ${gi > 0 ? '<div class="feed-sort-divider"></div>' : ''}
+    <div class="feed-sort-section-label">${escHtml(group.group)}</div>
+    ${group.items.map(opt => `
+      <button
+        class="feed-sort-option${currentSort === opt.key ? ' active' : ''}"
+        onclick="changeFeedSort('${opt.key}')"
+        role="option"
+        aria-selected="${currentSort === opt.key ? 'true' : 'false'}">
+        <span class="feed-sort-option__icon">${opt.icon}</span>
+        ${escHtml(opt.label)}
+      </button>
+    `).join('')}
+  `).join('');
+}
+
+/** Toggle the sort dropdown open / closed */
+function toggleFeedSort(e) {
+  if (e) e.stopPropagation();
+  const wrapper = document.getElementById('feedSortWrapper');
+  const btn = document.getElementById('feedSortBtn');
+  if (!wrapper) return;
+
+  const isOpen = wrapper.classList.toggle('open');
+  if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+  if (isOpen) {
+    renderFeedSortDropdown();
+  }
+}
+
+/** Set a new sort mode, re-render feed, close dropdown */
+function changeFeedSort(sortKey) {
+  currentSort = sortKey;
+  closeFeedSort();
+  renderFeed();
+}
+
+/** Close the sort dropdown */
+function closeFeedSort() {
+  const wrapper = document.getElementById('feedSortWrapper');
+  const btn = document.getElementById('feedSortBtn');
+  if (wrapper) wrapper.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
 /* ============================================================
    UNDO DELETE
    ============================================================ */
 let _deletedTxn = null;
 let _deletedCustomCat = null;
 let _deletedCustomCatBudget = null;
+let _hiddenDefaultCat = null;  // undo for hide-default-category
 let _undoTimer = null;
 const UNDO_DELAY = 5000; // ms before permanent deletion
+
+/**
+ * Ẩn một danh mục MẶC ĐỊNH (soft-hide, không xóa hẳn).
+ * User có thể Undo trong 5 giây.
+ */
+function hideDefaultCategory(name) {
+  if (!CATEGORIES.includes(name)) return; // Chỉ áp dụng cho danh mục mặc định
+
+  _hiddenDefaultCat = name;
+
+  // Thêm vào danh sách ẩn
+  if (!hiddenDefaultCategories.includes(name)) {
+    hiddenDefaultCategories.push(name);
+    saveHiddenCategories();
+  }
+
+  // Xóa budget của danh mục này (optional, tiết kiệm rác)
+  if (budgets[name] !== undefined) {
+    delete budgets[name];
+    saveBudgets();
+  }
+
+  // Rebuild modal + UI
+  openBudgetModal();
+  renderBudgetPanel();
+  updateChart();
+
+  // Undo toast
+  showUndoToast(
+    `"${tCat(name)}" đã được ẩn`,
+    () => {
+      // Restore: bỏ khỏi danh sách ẩn
+      const toRestore = _hiddenDefaultCat;
+      hiddenDefaultCategories = hiddenDefaultCategories.filter(c => c !== toRestore);
+      saveHiddenCategories();
+      _hiddenDefaultCat = null;
+      openBudgetModal();
+      renderBudgetPanel();
+      updateChart();
+    }
+  );
+  // Auto-clear temp after undo window
+  setTimeout(() => { _hiddenDefaultCat = null; }, UNDO_DELAY + 500);
+}
+
+
 
 function deleteTransaction(id) {
   const idx = transactions.findIndex(txn => txn.id === id);
@@ -1574,7 +2191,16 @@ function deleteTransaction(id) {
   showUndoToast(t('deleteToast'), () => {
     if (!_deletedTxn) return;
     transactions.push(_deletedTxn);
-    transactions.sort((a, b) => b.date.localeCompare(a.date));
+    transactions.sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      const aTime = a.createdAt || '';
+      const bTime = b.createdAt || '';
+      if (aTime && bTime) return bTime.localeCompare(aTime);
+      if (aTime) return -1;
+      if (bTime) return 1;
+      return b.id.localeCompare(a.id);
+    });
     _deletedTxn = null;
     saveTransactions();
     triggerUIUpdates();
@@ -1598,7 +2224,16 @@ function undoDelete() {
   /* Re-insert at original position (restore by date order: push, then let render sort) */
   transactions.push(_deletedTxn);
   /* Stable sort by date descending so feed stays ordered */
-  transactions.sort((a, b) => b.date.localeCompare(a.date));
+  transactions.sort((a, b) => {
+    const dateCompare = b.date.localeCompare(a.date);
+    if (dateCompare !== 0) return dateCompare;
+    const aTime = a.createdAt || '';
+    const bTime = b.createdAt || '';
+    if (aTime && bTime) return bTime.localeCompare(aTime);
+    if (aTime) return -1;
+    if (bTime) return 1;
+    return b.id.localeCompare(a.id);
+  });
   _deletedTxn = null;
   saveTransactions();
   triggerUIUpdates();
@@ -1607,12 +2242,13 @@ function undoDelete() {
 }
 
 function deleteCustomCategory(name) {
-  const idx = customCategories.indexOf(name);
+  const idx = customCategories.findIndex(c => c.name === name);
   if (idx === -1) return;
 
   // Soft-remove: hold in temp variables
   _deletedCustomCat = name;
   _deletedCustomCatBudget = budgets[name] !== undefined ? budgets[name] : null;
+  const deletedCatObj = customCategories[idx]; // save full object for undo restore
 
   // Remove from customCategories
   customCategories.splice(idx, 1);
@@ -1632,19 +2268,19 @@ function deleteCustomCategory(name) {
   // Show undo toast
   showUndoToast(t('categoryDeleted'), () => {
     if (!_deletedCustomCat) return;
-    
-    // Restore custom category
-    if (!customCategories.includes(_deletedCustomCat)) {
-      customCategories.push(_deletedCustomCat);
+
+    // Restore custom category (as full object with type)
+    if (!customCategories.find(c => c.name === _deletedCustomCat)) {
+      customCategories.push(deletedCatObj);
       saveCustomCategories();
     }
-    
+
     // Restore budget
     if (_deletedCustomCatBudget !== null) {
       budgets[_deletedCustomCat] = _deletedCustomCatBudget;
       saveBudgets();
     }
-    
+
     _deletedCustomCat = null;
     _deletedCustomCatBudget = null;
 
@@ -1662,6 +2298,7 @@ function deleteCustomCategory(name) {
     hideUndoToast();
   }, UNDO_DELAY);
 }
+
 
 function showUndoToast(labelText, undoFn) {
   const el = document.getElementById('undoToast');
@@ -1687,6 +2324,13 @@ function hideUndoToast() {
 /* ============================================================
    MODAL
    ============================================================ */
+/* ── Focus Trap cleanup references (populated when modals open) ── */
+let _trapModal      = null;
+let _trapSettings   = null;
+let _trapBudget     = null;
+let _trapQuickLog   = null;
+let _trapNumpad     = null;
+
 function openModal() {
   currentType = 'expense';
   syncTypeButtons();
@@ -1697,11 +2341,16 @@ function openModal() {
   /* Rebuild category options dynamically (includes custom cats) */
   updateCategoryDropdown('txnCat', 'expense');
   document.getElementById('modal').classList.add('open');
-  document.getElementById('txnDesc').focus();
+  if (window.FocusTrap) {
+    _trapModal = window.FocusTrap.trap(document.getElementById('modal').querySelector('.modal-card') || document.getElementById('modal'));
+  } else {
+    document.getElementById('txnDesc').focus();
+  }
 }
 
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
+  if (_trapModal) { _trapModal(); _trapModal = null; }
 }
 
 function closeModalOnOverlay(e) {
@@ -1746,7 +2395,7 @@ function handleSave(e) {
 
   const finalDesc = desc || tCat(cat);
 
-  const txn = { id: uid(), type: currentType, desc: finalDesc, amount, category: cat, date };
+  const txn = { id: uid(), type: currentType, desc: finalDesc, amount, category: cat, date, createdAt: new Date().toISOString() };
   transactions.push(txn);
   saveTransactions();
   syncAddTransactionToServer(txn);
@@ -1788,11 +2437,16 @@ function openQuickLog() {
   const errEl = document.getElementById('qlError');
   if (errEl) { errEl.textContent = ''; errEl.classList.remove('visible'); }
   document.getElementById('quickLogModal').classList.add('open');
-  if (amtInput) amtInput.focus();
+  if (window.FocusTrap) {
+    _trapQuickLog = window.FocusTrap.trap(document.getElementById('quickLogModal').querySelector('.modal-card') || document.getElementById('quickLogModal'));
+  } else {
+    if (amtInput) amtInput.focus();
+  }
 }
 
 function closeQuickLog() {
   document.getElementById('quickLogModal').classList.remove('open');
+  if (_trapQuickLog) { _trapQuickLog(); _trapQuickLog = null; }
 }
 
 function closeQuickLogOnOverlay(e) {
@@ -1839,7 +2493,7 @@ function handleQuickLog(e) {
 
   const finalDesc = desc || tCat(cat);
 
-  const txn = { id: uid(), type: _qlType, desc: finalDesc, amount: amountVND, category: cat, date: todayISO() };
+  const txn = { id: uid(), type: _qlType, desc: finalDesc, amount: amountVND, category: cat, date: todayISO(), createdAt: new Date().toISOString() };
   transactions.push(txn);
   saveTransactions();
   syncAddTransactionToServer(txn);
@@ -1853,10 +2507,14 @@ function openNumpad() {
   _numpadValue = '';
   document.getElementById('numpadDisplay').textContent = '0';
   document.getElementById('numpadModal').classList.add('open');
+  if (window.FocusTrap) {
+    _trapNumpad = window.FocusTrap.trap(document.getElementById('numpadModal').querySelector('.modal-card') || document.getElementById('numpadModal'));
+  }
 }
 
 function closeNumpad() {
   document.getElementById('numpadModal').classList.remove('open');
+  if (_trapNumpad) { _trapNumpad(); _trapNumpad = null; }
 }
 
 function closeNumpadOnOverlay(e) {
@@ -1884,7 +2542,8 @@ function numpadSubmit() {
     desc: t('deposit'),
     amount,
     category: 'Salary',
-    date: todayISO()
+    date: todayISO(),
+    createdAt: new Date().toISOString()
   };
   transactions.push(txn);
   saveTransactions();
@@ -1917,6 +2576,12 @@ const I18N = {
     filterAll: 'ALL',
     filterIncome: 'INCOME',
     filterExpense: 'EXPENSE',
+    sortGroupDate: 'Sort by Date',
+    sortGroupAmount: 'Sort by Amount',
+    sortDateDesc: 'Newest First',
+    sortDateAsc: 'Oldest First',
+    sortAmountDesc: 'Highest Amount',
+    sortAmountAsc: 'Lowest Amount',
     newTransaction: 'New Transaction',
     typeExpense: 'EXPENSE',
     typeIncome: 'INCOME',
@@ -1963,6 +2628,9 @@ const I18N = {
     budgetSaved: 'Budgets saved.',
     budgetEmpty: 'No budgets set. Click SET BUDGETS.',
     budgetLimit: 'Limit',
+    budgetLeft: 'left',
+    budgetOver: 'over',
+    overBudgetTip: 'Everything is better in moderation',
     categoryAdded: 'added.',
     addCustomCat: 'Add Category',
     cnyLabel: 'CNY ¥',
@@ -1975,7 +2643,7 @@ const I18N = {
     darkTheme: 'Dark',
     lightTheme: 'Light',
     creamTheme: 'Cream',
-    skyTheme: 'Sky',
+    greenTheme: 'Green',
     budgetHint: 'Enter monthly limits per category. Leave blank to disable.',
     addCustomCatLabel: '+ Add Custom Category',
     placeholderCatName: 'Category name',
@@ -2075,9 +2743,15 @@ const I18N = {
     gFeat4_desc: 'Below the chart, summary cards show average monthly figures, the highest-spend month, the most frugal month, and more.',
     gFeat5_title: 'Month Picker Grid',
     gFeat5_desc: 'Click the date dropdown trigger (e.g. "MAY 2026 ▾") at the top to open a 3x4 grid for switching between the last 12 rolling months.',
+    gFeat6_title: 'Month Comparison',
+    gFeat6_desc: 'Click the [+] button in the Analytics Summary section to compare data with previous months.',
+    gFeat7_title: 'Month Detail',
+    gFeat7_desc: 'Click on the month row in the Analytics Summary to view all transactions for that specific month.',
     /* Settings tab */
     gSettings_title: '⚙️ Settings & Customisation',
     gSettings_intro: 'Tap the <strong>Settings</strong> (⚙️) button in the top bar to open settings.',
+    gRow_account_key: '👤 Account',
+    gRow_account_val: 'Manage your profile: change display name, avatar, or log out.',
     gRow_lang_key: '🌐 Language',
     gRow_lang_val: 'Choose EN / VI / ZH — the interface switches instantly without a reload.',
     gRow_theme_key: '🎨 Appearance',
@@ -2102,9 +2776,49 @@ const I18N = {
     gTip5_desc: 'On mobile: <em>Share → Add to Home Screen</em> to install CaltDHy as a native-like app (PWA).',
     gTip6_title: 'Switch Theme Fast',
     gTip6_desc: 'Settings → Appearance → pick a theme. The change takes effect instantly across the entire interface.',
+    gTip7_title: 'Filter by Month',
+    gTip7_desc: 'In the transaction list, use the THIS MONTH / ALL TIME buttons to view only the current month\'s data or the entire history.',
     gTipsNote: '<strong>Get started:</strong> Close this window and tap <kbd>+ ADD TRANSACTION</kbd> to log your first transaction!',
+    monthlyWrapUp: 'MONTHLY WRAP-UP',
+    healthScore: 'Budget Health',
+    startFresh: 'START FRESH',
+    periodThisMonth: 'THIS MONTH',
+    periodAllTime: 'ALL TIME',
+    noPreviousData: 'No data available from previous months.',
+    resetBoxTitle: 'Balance Display Mode',
+    resetBoxDesc: 'Keep accumulated balance from previous months, or reset to zero each new month?',
+    resetModeKeep: 'Keep Running Total',
+    resetModeReset: 'Reset Each Month',
+    reportSavingsRate: 'Savings Rate',
+    reportTopSpend: 'Top Spend',
+    reportNetSavings: 'Net Savings',
+    reportTxnCount: 'Transactions',
+    reportPrevMonth: 'Previous Month',
+    reportThisMonth: 'This Month',
+    reportNoData: 'No transaction data for this period.',
+    /* Wrap-up tabs & period picker */
+    reportTabMonth: 'MONTH',
+    reportTabQuarter: 'QUARTER',
+    reportTabYear: 'YEAR',
+    quarterlyWrapUp: 'QUARTERLY WRAP-UP',
+    annualWrapUp: 'ANNUAL WRAP-UP',
+    wrapupBtnClose: 'CLOSE',
+    wrapupBtnStartFresh: 'START FRESH',
+    noDataForPeriod: 'No transaction data for this period.',
+    /* Quarter labels */
+    q1Label: 'Q1', q2Label: 'Q2', q3Label: 'Q3', q4Label: 'Q4',
+    /* Enhanced period badge labels */
+    reportThisQuarter: 'This Quarter',
+    reportThisYear: 'This Year',
+    /* Enhanced stats labels */
+    reportAvgMonthly: 'Monthly Avg',
+    reportTopCats: 'Top Spending Categories',
+    reportBestSavingsMonth: 'Best Savings Month',
+    reportPeakSpendMonth: 'Peak Spend Month',
+    reportPeakIncomeMonth: 'Peak Income Month',
     /* Footer */
     gFooterClose: 'Close Guide ✕',
+    quarterTooltipNoData: "You forgot about me this quarter! 😢",
   },
   vi: {
     analyticsMonth: 'CHỌN THÁNG',
@@ -2121,6 +2835,12 @@ const I18N = {
     filterAll: 'TẤT CẢ',
     filterIncome: 'THU NHẬP',
     filterExpense: 'CHI TIÊU',
+    sortGroupDate: 'Sắp xếp theo thời gian',
+    sortGroupAmount: 'Sắp xếp theo số tiền',
+    sortDateDesc: 'Mới nhất trước',
+    sortDateAsc: 'Cũ nhất trước',
+    sortAmountDesc: 'Số tiền lớn nhất',
+    sortAmountAsc: 'Số tiền nhỏ nhất',
     newTransaction: 'Giao Dịch Mới',
     typeExpense: 'CHI TIÊU',
     typeIncome: 'THU NHẬP',
@@ -2167,6 +2887,9 @@ const I18N = {
     budgetSaved: 'Đã lưu ngân sách.',
     budgetEmpty: 'Chưa có ngân sách. Nhấn ĐẶT NGÂN SÁCH.',
     budgetLimit: 'Hạn mức',
+    budgetLeft: 'còn lại',
+    budgetOver: 'vượt',
+    overBudgetTip: 'Mọi thứ đều chỉ tốt khi đều ở mức vừa phải',
     categoryAdded: 'đã được thêm.',
     addCustomCat: 'Thêm Danh Mục',
     cnyLabel: 'CNY ¥',
@@ -2179,7 +2902,7 @@ const I18N = {
     darkTheme: 'Tối',
     lightTheme: 'Sáng',
     creamTheme: 'Màu Kem',
-    skyTheme: 'Xanh Trời',
+    greenTheme: 'Xanh Lá',
     budgetHint: 'Nhập hạn mức chi tiêu hàng tháng theo từng danh mục. Để trống để tắt.',
     addCustomCatLabel: '+ Thêm Danh Mục Mới',
     placeholderCatName: 'Tên danh mục',
@@ -2279,9 +3002,15 @@ const I18N = {
     gFeat4_desc: 'Phần bên dưới biểu đồ hiển thị các chỉ số tổng hợp: trung bình tháng, tháng chi nhiều nhất, tháng tiết kiệm nhất…',
     gFeat5_title: 'Lưới Chọn Tháng',
     gFeat5_desc: 'Bấm vào ô hiển thị tháng ở góc trên bên phải để mở lưới chọn tháng 3x4, giúp đổi nhanh dữ liệu hiển thị của tháng bất kỳ.',
+    gFeat6_title: 'So Sánh Tháng',
+    gFeat6_desc: 'Bấm nút [+] trong phần Analytics Summary để so sánh số liệu với các tháng trước đó.',
+    gFeat7_title: 'Chi Tiết Tháng',
+    gFeat7_desc: 'Bấm vào hàng thông tin tháng trong phần Analytics Summary để xem danh sách toàn bộ giao dịch của tháng đó.',
     /* Settings tab */
     gSettings_title: '⚙️ Cài Đặt & Tùy Chỉnh',
     gSettings_intro: 'Bấm nút <strong>Cài Đặt</strong> (⚙️) trên thanh trên để mở cài đặt.',
+    gRow_account_key: '👤 Tài Khoản',
+    gRow_account_val: 'Quản lý hồ sơ cá nhân: đổi tên hiển thị, ảnh đại diện (avatar), hoặc đăng xuất.',
     gRow_lang_key: '🌐 Ngôn Ngữ',
     gRow_lang_val: 'Chọn EN / VI / ZH — giao diện đổi ngay lập tức, không cần reload.',
     gRow_theme_key: '🎨 Giao Diện',
@@ -2306,9 +3035,49 @@ const I18N = {
     gTip5_desc: 'Trên mobile: <em>Share → Add to Home Screen</em> để cài CaltDHy như một ứng dụng gốc (PWA).',
     gTip6_title: 'Đổi Theme Nhanh',
     gTip6_desc: 'Cài Đặt → Giao Diện → chọn theme ngay. Thay đổi có hiệu lực tức thì trên toàn bộ giao diện.',
+    gTip7_title: 'Lọc Theo Tháng',
+    gTip7_desc: 'Ở danh sách giao dịch, dùng nút THÁNG NÀY / TẤT CẢ để xem riêng dữ liệu tháng hiện tại hoặc toàn bộ lịch sử.',
     gTipsNote: '<strong>Bắt đầu ngay:</strong> Đóng cửa sổ này và bấm <kbd>+ THÊM GIAO DỊCH</kbd> để ghi giao dịch đầu tiên của bạn!',
+    monthlyWrapUp: 'BÁO CÁO THÁNG',
+    healthScore: 'Sức Khoẻ Ngân Sách',
+    startFresh: 'BẮT ĐẦU THÁNG MỚI',
+    periodThisMonth: 'THÁNG NÀY',
+    periodAllTime: 'TẤT CẢ',
+    noPreviousData: 'Chưa có dữ liệu từ tháng trước đó.',
+    resetBoxTitle: 'Chế Độ Hiển Thị Số Dư',
+    resetBoxDesc: 'Bạn muốn giữ dữ liệu cũ từ tháng trước hay tiến hành reset về con số 0?',
+    resetModeKeep: 'Giữ lũy kế',
+    resetModeReset: 'Bắt đầu từ 0',
+    reportSavingsRate: 'Tỉ lệ tích luỹ',
+    reportTopSpend: 'Chi nhiều nhất',
+    reportNetSavings: 'Tích luỹ ròng',
+    reportTxnCount: 'Tổng giao dịch',
+    reportPrevMonth: 'Tháng trước đó',
+    reportThisMonth: 'Tháng vừa qua',
+    reportNoData: 'Không có dữ liệu giao dịch trong kỳ này.',
+    /* Wrap-up tabs & period picker */
+    reportTabMonth: 'THÁNG',
+    reportTabQuarter: 'QUÝ',
+    reportTabYear: 'NĂM',
+    quarterlyWrapUp: 'TỔNG KẾT QUÝ',
+    annualWrapUp: 'TỔNG KẾT NĂM',
+    wrapupBtnClose: 'ĐÓNG',
+    wrapupBtnStartFresh: 'BẮT ĐẦU THÁNG MỚI',
+    noDataForPeriod: 'Chưa có dữ liệu giao dịch trong kỳ này.',
+    /* Quarter labels */
+    q1Label: 'Q1', q2Label: 'Q2', q3Label: 'Q3', q4Label: 'Q4',
+    /* Enhanced period badge labels */
+    reportThisQuarter: 'Quý vừa qua',
+    reportThisYear: 'Năm vừa qua',
+    /* Enhanced stats labels */
+    reportAvgMonthly: 'TB / tháng',
+    reportTopCats: 'Top hạng mục chi tiêu',
+    reportBestSavingsMonth: 'Tích luỹ tốt nhất',
+    reportPeakSpendMonth: 'Chi nhiều nhất',
+    reportPeakIncomeMonth: 'Thu nhập cao nhất',
     /* Footer */
     gFooterClose: 'Đóng Hướng Dẫn ✕',
+    quarterTooltipNoData: "Bạn bỏ quên tui vào quý này rồi 😢",
   },
   zh: {
     analyticsMonth: '选择月份',
@@ -2325,6 +3094,12 @@ const I18N = {
     filterAll: '全部',
     filterIncome: '收入',
     filterExpense: '支出',
+    sortGroupDate: '按时间排序',
+    sortGroupAmount: '按金额排序',
+    sortDateDesc: '最新优先',
+    sortDateAsc: '最早优先',
+    sortAmountDesc: '金额从大到小',
+    sortAmountAsc: '金额从小到大',
     newTransaction: '新建交易',
     typeExpense: '支出',
     typeIncome: '收入',
@@ -2371,6 +3146,9 @@ const I18N = {
     budgetSaved: '预算已保存。',
     budgetEmpty: '未设置预算，请点击设置预算。',
     budgetLimit: '上限',
+    budgetLeft: '剩余',
+    budgetOver: '超支',
+    overBudgetTip: '凡事适度，方为上策',
     categoryAdded: '已添加。',
     addCustomCat: '添加分类',
     cnyLabel: 'CNY ¥',
@@ -2383,7 +3161,7 @@ const I18N = {
     darkTheme: '深色',
     lightTheme: '浅色',
     creamTheme: '奶油色',
-    skyTheme: '天蓝色',
+    greenTheme: '绿色',
     budgetHint: '输入每个类别的每月限额。留空表示禁用。',
     addCustomCatLabel: '+ 添加自定义分类',
     placeholderCatName: '分类名称',
@@ -2472,9 +3250,15 @@ const I18N = {
     gFeat4_desc: '图表下方的摘要卡片显示月均数据、支出最高月份、最节省月份等综合指标。',
     gFeat5_title: '月份网格选择器',
     gFeat5_desc: '点击右上角的月份按钮（如 “5月 2026 ▾”）即可展开 3x4 布局 of 12 个月网格进行快速切换。',
+    gFeat6_title: '月份比较',
+    gFeat6_desc: '点击分析摘要中的 [+] 按钮即可与之前月份的数据进行比较。',
+    gFeat7_title: '本月明细',
+    gFeat7_desc: '在分析摘要中点击月份行，即可查看该特定月份的所有交易。',
     /* Settings tab */
     gSettings_title: '⚙️ 设置与自定义',
     gSettings_intro: '点击顶栏中的<strong>设置</strong>（⚙️）按钮打开设置。',
+    gRow_account_key: '👤 账户',
+    gRow_account_val: '管理您的个人资料：更改显示名称、头像或注销。',
     gRow_lang_key: '🌐 语言',
     gRow_lang_val: '选择 EN / VI / ZH — 界面立即切换，无需刷新。',
     gRow_theme_key: '🎨 外观',
@@ -2499,9 +3283,49 @@ const I18N = {
     gTip5_desc: '在手机上：<em>分享 → 添加到主屏幕</em>，将 CaltDHy 安装为原生应用（PWA）。',
     gTip6_title: '快速切换主题',
     gTip6_desc: '设置 → 外观 → 选择主题。更改立即在整个界面生效。',
+    gTip7_title: '按月过滤',
+    gTip7_desc: '在交易列表中，使用“本月”/“全部时间”按钮可仅查看当月数据或整个历史记录。',
     gTipsNote: '<strong>立即开始：</strong>关闭此窗口，点击 <kbd>添加交易</kbd> 记录您的第一笔交易！',
+    monthlyWrapUp: '月度总结',
+    healthScore: '预算健康',
+    startFresh: '开始新的月份',
+    periodThisMonth: '本月',
+    periodAllTime: '全部时间',
+    noPreviousData: '没有以往月份的数据。',
+    resetBoxTitle: '余额显示模式',
+    resetBoxDesc: '是否保留上月数据，还是每月重新归零？',
+    resetModeKeep: '保留累计余额',
+    resetModeReset: '每月重置',
+    reportSavingsRate: '储蓄率',
+    reportTopSpend: '最高消费',
+    reportNetSavings: '净储蓄',
+    reportTxnCount: '交易笔数',
+    reportPrevMonth: '上上月',
+    reportThisMonth: '上月',
+    reportNoData: '此周期内没有交易数据。',
+    /* Wrap-up tabs & period picker */
+    reportTabMonth: '月度',
+    reportTabQuarter: '季度',
+    reportTabYear: '年度',
+    quarterlyWrapUp: '季度总结',
+    annualWrapUp: '年度总结',
+    wrapupBtnClose: '关闭',
+    wrapupBtnStartFresh: '开始新月份',
+    noDataForPeriod: '此周期内没有交易数据。',
+    /* Quarter labels */
+    q1Label: 'Q1', q2Label: 'Q2', q3Label: 'Q3', q4Label: 'Q4',
+    /* Enhanced period badge labels */
+    reportThisQuarter: '本季',
+    reportThisYear: '今年',
+    /* Enhanced stats labels */
+    reportAvgMonthly: '月均',
+    reportTopCats: '消费最多类别',
+    reportBestSavingsMonth: '最佳储蓄月',
+    reportPeakSpendMonth: '消费最高月',
+    reportPeakIncomeMonth: '收入最高月',
     /* Footer */
     gFooterClose: '关闭指南 ✕',
+    quarterTooltipNoData: "你在这个季度把我忘啦！😢",
   },
 };
 
@@ -2539,6 +3363,15 @@ function applyLang() {
   // Re-render chart empty label
   const emptyEl = document.getElementById('chartEmpty');
   if (emptyEl) emptyEl.textContent = t('noExpense');
+  // Update user welcoming and current date
+  updateWelcomeAndDate();
+  // i18n: CSS pseudo-element text (::after) cannot be translated via data-i18n,
+  // so we update the data-hover-label attribute which is read via attr() in CSS
+  const avatarLabels = { en: 'CHANGE PHOTO', vi: 'ĐỔI ẢNH', zh: '更换头像' };
+  const avatarWrapper = document.getElementById('accountAvatarPreview');
+  if (avatarWrapper) {
+    avatarWrapper.dataset.hoverLabel = avatarLabels[currentLang] || 'ĐỔI ẢNH';
+  }
 }
 
 function setLang(code) {
@@ -2561,10 +3394,15 @@ function openSettings() {
   });
   /* Sync theme cards */
   syncThemeCards();
+  /* Focus trap for keyboard/screen reader users */
+  if (window.FocusTrap) {
+    _trapSettings = window.FocusTrap.trap(document.getElementById('settingsModal').querySelector('.modal-card') || document.getElementById('settingsModal'));
+  }
 }
 
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('open');
+  if (_trapSettings) { _trapSettings(); _trapSettings = null; }
 }
 
 function closeSettingsOnOverlay(e) {
@@ -2602,9 +3440,9 @@ function loadCurrency() {
 /* ============================================================
    THEME — 4-theme system (dark / light / cream / sky)
    ============================================================ */
-const THEME_ICONS   = { dark: '\ud83c\udf19', light: '\u2600\ufe0f', cream: '\u2615', sky: '\ud83e\udde3' };
-const THEME_ORDER   = ['dark', 'light', 'cream', 'sky'];
-const THEME_CLASSES = ['dark-theme', 'light-theme', 'cream-theme', 'sky-theme'];
+const THEME_ICONS   = { dark: '\ud83c\udf19', light: '\u2600\ufe0f', cream: '\u2615', green: '\ud83c\udf3f' };
+const THEME_ORDER   = ['dark', 'light', 'cream', 'green'];
+const THEME_CLASSES = ['dark-theme', 'light-theme', 'cream-theme', 'green-theme'];
 
 function _getSavedTheme() {
   try { return localStorage.getItem('caltdhy_theme') || 'dark'; } catch (_) { return 'dark'; }
@@ -2612,7 +3450,6 @@ function _getSavedTheme() {
 
 function syncThemeCards() {
   const cur = _getSavedTheme();
-  console.log('🔄 Syncing settings theme cards. Active theme:', cur);
   document.querySelectorAll('.theme-card').forEach(card => {
     const active = card.id === 'theme-btn-' + cur;
     card.setAttribute('aria-pressed', active ? 'true' : 'false');
@@ -2620,37 +3457,27 @@ function syncThemeCards() {
 }
 
 function applyTheme(theme) {
-  console.log('🎨 Applying theme:', theme);
   const html = document.documentElement;
-  
   if (window.ThemeManager && typeof window.ThemeManager.set === 'function') {
-    // If window.ThemeManager is loaded in head, delegate applying and saving to it
     window.ThemeManager.set(theme);
   } else {
-    // Fallback: manual local class application
     THEME_CLASSES.forEach(c => html.classList.remove(c));
     if (theme !== 'dark') {
       html.classList.add(theme + '-theme');
     }
     try { localStorage.setItem('caltdhy_theme', theme); } catch (_) {}
   }
-  
-  /* Sync active states on cards in settings modal */
   syncThemeCards();
-
-  /* Force charts to redraw with new theme colors */
   updateChart();
   updateTrendChart();
 }
 
 function setTheme(theme) {
-  console.log('💾 Setting theme to:', theme);
   applyTheme(theme);
 }
 
 function loadTheme() {
   const saved = _getSavedTheme();
-  console.log('📂 Loading saved theme from storage:', saved);
   applyTheme(saved);
 }
 
@@ -2659,13 +3486,11 @@ function cycleTheme() {
   const cur = _getSavedTheme();
   const idx = THEME_ORDER.indexOf(cur);
   const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
-  console.log('🔄 Cycling theme from', cur, 'to', next);
   setTheme(next);
 }
 
 /** Select a specific theme — called by theme-card buttons in settings */
 function pickTheme(theme) {
-  console.log('👉 pickTheme called with:', theme);
   setTheme(theme);
 }
 
@@ -2689,21 +3514,292 @@ function showToast(msg, duration = 2800) {
    AUTH
    ============================================================ */
 function handleLogout() {
-  ['caltdhy_token', 'caltdhy_user', 'pcn_token', 'pcn_user']
-    .forEach(k => localStorage.removeItem(k));
+  const keysToRemove = [
+    'caltdhy_token',
+    'caltdhy_user',
+    'caltdhy_txns',
+    'caltdhy_budgets',
+    'caltdhy_custom_cats',
+    'caltdhy_hidden_cats',
+    'caltdhy_last_reported_month',
+    'caltdhy_is_new_user'
+  ];
+  keysToRemove.forEach(k => localStorage.removeItem(k));
   window.location.href = 'index.html';
 }
 
+function getInitials(name) {
+  if (!name) return 'US';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  const first = parts[0][0] || '';
+  const last = parts[parts.length - 1][0] || '';
+  return (first + last).toUpperCase();
+}
+
 function initUser() {
+  updateWelcomeAndDate();
+}
+
+function updateWelcomeAndDate() {
   try {
-    const raw = localStorage.getItem('caltdhy_user') || localStorage.getItem('pcn_user');
+    const raw = localStorage.getItem('caltdhy_user');
     const u = raw ? JSON.parse(raw) : null;
+    const name = u ? (u.name || u.username || 'USER') : 'USER';
+    
+    // 1. Update user welcoming greeting
+    const greetingEl = document.getElementById('userGreeting');
+    if (greetingEl) {
+      let greeting = '';
+      if (currentLang === 'vi') {
+        greeting = `Xin chào, ${name}!`;
+      } else if (currentLang === 'zh') {
+        greeting = `你好，${name}！`;
+      } else {
+        greeting = `Welcome, ${name}!`;
+      }
+      greetingEl.textContent = greeting;
+    }
+    
+    // 2. Update userChip avatar and name
+    const chipNameEl = document.getElementById('userChipName');
+    if (chipNameEl) {
+      chipNameEl.textContent = name.toUpperCase().slice(0, 14);
+    }
+    
+    const chipAvatarEl = document.getElementById('userChipAvatar');
+    if (chipAvatarEl) {
+      if (u && u.avatar) {
+        chipAvatarEl.style.backgroundImage = `url(${u.avatar})`;
+        chipAvatarEl.textContent = '';
+      } else {
+        chipAvatarEl.style.backgroundImage = 'none';
+        chipAvatarEl.textContent = getInitials(name);
+      }
+    }
+    
+    // 3. Update system date
+    const dateEl = document.getElementById('systemDate');
+    if (dateEl) {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const locale = currentLang === 'vi' ? 'vi-VN' : (currentLang === 'zh' ? 'zh-CN' : 'en-US');
+      let dateStr = new Date().toLocaleDateString(locale, options);
+      if (dateStr) {
+        dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+      }
+      dateEl.textContent = dateStr;
+    }
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+let selectedAvatarBase64 = '';
+
+function openAccountModal() {
+  try {
+    const raw = localStorage.getItem('caltdhy_user');
+    const u = raw ? JSON.parse(raw) : null;
+    
+    // Clear passwords
+    const curPass = document.getElementById('accountCurrentPassword');
+    const newPass = document.getElementById('accountNewPassword');
+    if (curPass) curPass.value = '';
+    if (newPass) newPass.value = '';
+    
+    // Clear alerts
+    const errEl = document.getElementById('accountAlertError');
+    const succEl = document.getElementById('accountAlertSuccess');
+    if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    if (succEl) { succEl.textContent = ''; succEl.style.display = 'none'; }
+    
     if (u) {
       const name = u.name || u.username || 'USER';
-      const el = document.getElementById('userChip');
-      if (el) el.textContent = name.toUpperCase().slice(0, 14);
+      const email = u.email || '';
+      
+      const nameEl = document.getElementById('accountName');
+      const emailEl = document.getElementById('accountEmail');
+      if (nameEl) nameEl.value = name;
+      if (emailEl) emailEl.value = email;
+      
+      selectedAvatarBase64 = u.avatar || '';
+      
+      updateAccountAvatarPreview(name);
     }
-  } catch (e) { /* ignore */ }
+    
+    const modal = document.getElementById('accountModal');
+    if (modal) modal.classList.add('open');
+  } catch (e) {
+    console.error('Error opening account modal:', e);
+  }
+}
+
+function updateAccountAvatarPreview(name) {
+  const preview = document.getElementById('accountAvatarPreview');
+  const placeholder = document.getElementById('accountAvatarPlaceholder');
+  if (preview && placeholder) {
+    if (selectedAvatarBase64) {
+      preview.style.backgroundImage = `url(${selectedAvatarBase64})`;
+      placeholder.textContent = '';
+    } else {
+      preview.style.backgroundImage = 'none';
+      placeholder.textContent = getInitials(name);
+    }
+  }
+}
+
+function closeAccountModal() {
+  const modal = document.getElementById('accountModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function closeAccountModalOnOverlay(e) {
+  if (e.target === document.getElementById('accountModal')) {
+    closeAccountModal();
+  }
+}
+
+function triggerAvatarSelection() {
+  const fileInput = document.getElementById('accountAvatarInput');
+  if (fileInput) fileInput.click();
+}
+
+function handleAvatarChange(e) {
+  try {
+    const fileInput = e.target;
+    const file = fileInput.files[0];
+    if (!file) return;
+    
+    const errEl = document.getElementById('accountAlertError');
+    const succEl = document.getElementById('accountAlertSuccess');
+    if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    if (succEl) { succEl.textContent = ''; succEl.style.display = 'none'; }
+    
+    // Check file size limit: 1MB = 1,048,576 bytes
+    if (file.size > 1024 * 1024) {
+      if (errEl) {
+        errEl.textContent = currentLang === 'vi' 
+          ? 'Dung lượng ảnh vượt quá 1MB. Vui lòng chọn ảnh khác nhẹ hơn.'
+          : (currentLang === 'zh' ? '图片大小超过 1MB。请选择较小的图片。' : 'Image size exceeds 1MB. Please choose a smaller image.');
+        errEl.style.display = 'block';
+      }
+      fileInput.value = ''; // Reset input
+      return;
+    }
+    
+    // Validate it's an image file
+    if (!file.type.startsWith('image/')) {
+      if (errEl) {
+        errEl.textContent = currentLang === 'vi'
+          ? 'Tệp đã chọn không phải định dạng hình ảnh hợp lệ.'
+          : (currentLang === 'zh' ? '所选文件不是有效的图片格式。' : 'Selected file is not a valid image format.');
+        errEl.style.display = 'block';
+      }
+      fileInput.value = '';
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      selectedAvatarBase64 = event.target.result;
+      const nameEl = document.getElementById('accountName');
+      updateAccountAvatarPreview(nameEl ? nameEl.value : 'USER');
+    };
+    reader.readAsDataURL(file);
+  } catch (error) {
+    console.error('Error handling avatar change:', error);
+  }
+}
+
+async function handleSaveProfile(e) {
+  e.preventDefault();
+  
+  const errEl = document.getElementById('accountAlertError');
+  const succEl = document.getElementById('accountAlertSuccess');
+  const btnSave = document.getElementById('btnSaveAccount');
+  
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+  if (succEl) { succEl.textContent = ''; succEl.style.display = 'none'; }
+  
+  const nameEl = document.getElementById('accountName');
+  const emailEl = document.getElementById('accountEmail');
+  const curPassEl = document.getElementById('accountCurrentPassword');
+  const newPassEl = document.getElementById('accountNewPassword');
+  
+  const name = nameEl ? nameEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+  const currentPassword = curPassEl ? curPassEl.value : '';
+  const newPassword = newPassEl ? newPassEl.value : '';
+  
+  if (!name || !email) {
+    if (errEl) {
+      errEl.textContent = currentLang === 'vi' ? 'Vui lòng nhập đầy đủ tên và email.' : (currentLang === 'zh' ? '请输入姓名和电子邮件。' : 'Please enter your name and email.');
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  
+  // Disable button and show loading state
+  const originalBtnText = btnSave ? btnSave.textContent : 'LƯU THAY ĐỔI';
+  if (btnSave) {
+    btnSave.disabled = true;
+    btnSave.textContent = currentLang === 'vi' ? 'ĐANG LƯU...' : (currentLang === 'zh' ? '正在保存...' : 'SAVING...');
+  }
+  
+  try {
+    const payload = {
+      name,
+      email,
+      avatar: selectedAvatarBase64,
+      currentPassword,
+      newPassword
+    };
+    
+    const response = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload)
+    });
+    
+    const resData = await response.json();
+    
+    if (response.ok && resData.success) {
+      // Lưu token và user mới vào localStorage
+      localStorage.setItem('caltdhy_user', JSON.stringify(resData.user));
+      localStorage.setItem('caltdhy_token', resData.token);
+      
+      // Update UI immediately
+      updateWelcomeAndDate();
+      
+      if (succEl) {
+        succEl.textContent = currentLang === 'vi' ? 'Cập nhật tài khoản thành công!' : (currentLang === 'zh' ? '账户更新成功！' : 'Account updated successfully!');
+        succEl.style.display = 'block';
+      }
+      
+      // Close modal after 1s
+      setTimeout(() => {
+        closeAccountModal();
+      }, 1000);
+    } else {
+      if (errEl) {
+        errEl.textContent = resData.message || (currentLang === 'vi' ? 'Cập nhật thất bại. Vui lòng kiểm tra lại.' : 'Update failed.');
+        errEl.style.display = 'block';
+      }
+    }
+  } catch (error) {
+    console.error('Error saving profile:', error);
+    if (errEl) {
+      errEl.textContent = currentLang === 'vi' ? 'Đã xảy ra lỗi kết nối máy chủ.' : 'Server connection error.';
+      errEl.style.display = 'block';
+    }
+  } finally {
+    if (btnSave) {
+      btnSave.disabled = false;
+      btnSave.textContent = originalBtnText;
+    }
+  }
 }
 
 /* ============================================================
@@ -2711,10 +3807,22 @@ function initUser() {
    ============================================================ */
 function openBudgetModal() {
   const grid = document.getElementById('budgetFormGrid');
-  if (!grid) { document.getElementById('budgetModal').classList.add('open'); return; }
+  const modal = document.getElementById('budgetModal');
+  if (!grid) {
+    if (modal) modal.classList.add('open');
+    return;
+  }
 
-  /* Render ALL categories (default + custom) as form rows */
+  // Reset category type selection if the modal is currently closed
+  const isAlreadyOpen = modal && modal.classList.contains('open');
+  if (!isAlreadyOpen) {
+    setNewCatType('expense');
+  }
+
+  // Use getCategoryType() to correctly group default AND custom categories
   const allCats = getAllCategories();
+  const expenseCats = allCats.filter(c => getCategoryType(c) === 'expense');
+  const incomeCats  = allCats.filter(c => getCategoryType(c) === 'income');
 
   /* Helper: convert stored VND to display currency for pre-fill */
   function toDisplay(vnd) {
@@ -2724,31 +3832,63 @@ function openBudgetModal() {
     return vnd;
   }
 
-  grid.innerHTML = allCats.map(cat => {
+  function renderRow(cat) {
     const safeId = 'budget-input-' + cat.replace(/[^a-z0-9]/gi, '_');
     const icon = CAT_ICONS[cat] || '\u2713';
     const label = escHtml(tCat(cat));
     const val = toDisplay(budgets[cat]);
-    const isCustom = customCategories.includes(cat);
+    const isCustom = customCategories.findIndex(c => c.name === cat) !== -1;
+
+    // Custom → xóa vĩnh viễn | Default → ẩn (có undo 5 giây)
+    const xBtn = isCustom
+      ? `<button type="button" class="btn-delete-cat btn-delete-cat--custom"
+            onclick="deleteCustomCategory('${escHtml(cat)}')"
+            title="Xóa danh mục" aria-label="Xóa danh mục tùy chỉnh">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>`
+      : `<button type="button" class="btn-delete-cat btn-delete-cat--default"
+            onclick="hideDefaultCategory('${escHtml(cat)}')"
+            title="Ẩn danh mục này" aria-label="Ẩn danh mục mặc định">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>`;
+
     return `
       <div class="budget-form-row" data-cat="${escHtml(cat)}">
         <label class="budget-form-label" for="${safeId}">${icon} ${label}</label>
         <div class="budget-input-wrapper">
           <input class="budget-form-input" id="${safeId}" type="number" min="0" step="1" placeholder="0" value="${val}" />
-          ${isCustom ? `
-            <button type="button" class="btn-delete-cat" onclick="deleteCustomCategory('${escHtml(cat)}')" title="Delete Category" aria-label="Delete Category">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          ` : ''}
+          ${xBtn}
         </div>
       </div>`;
-  }).join('');
+  }
 
+  /* Divider header cho mỗi nhóm */
+  function groupHeader(labelText, type) {
+    return `<div class="budget-group-header budget-group-header--${type}">${labelText}</div>`;
+  }
+
+  let html = '';
+  if (expenseCats.length > 0) {
+    html += groupHeader('💸 Chi tiêu', 'expense');
+    html += expenseCats.map(renderRow).join('');
+  }
+  if (incomeCats.length > 0) {
+    html += groupHeader('💰 Thu nhập', 'income');
+    html += incomeCats.map(renderRow).join('');
+  }
+
+  grid.innerHTML = html;
   document.getElementById('budgetModal').classList.add('open');
+  /* Focus trap */
+  if (window.FocusTrap) {
+    _trapBudget = window.FocusTrap.trap(document.getElementById('budgetModal').querySelector('.modal-card') || document.getElementById('budgetModal'));
+  }
 }
+
 
 function closeBudgetModal() {
   document.getElementById('budgetModal').classList.remove('open');
+  if (_trapBudget) { _trapBudget(); _trapBudget = null; }
 }
 
 function closeBudgetOnOverlay(e) {
@@ -2792,11 +3932,13 @@ function addCustomCategory() {
   const raw = parseFloat(limitEl.value);
 
   if (!name) { showToast('\u26a0 Enter a category name.'); return; }
-  if (getAllCategories().map(c => c.toLowerCase()).includes(name.toLowerCase())) {
+  const allExisting = [...CATEGORIES, ...customCategories.map(c => c.name)];
+  if (allExisting.map(c => c.toLowerCase()).includes(name.toLowerCase())) {
     showToast('\u26a0 Category already exists.'); return;
   }
 
-  customCategories.push(name);
+  // Store as { name, type } object using currently selected type
+  customCategories.push({ name, type: newCatType });
   saveCustomCategories();
 
   if (!isNaN(raw) && raw > 0) {
@@ -2808,11 +3950,71 @@ function addCustomCategory() {
 
   nameEl.value = '';
   limitEl.value = '';
+  // Close type dropdown if open
+  const dd = document.getElementById('newCatTypeDropdown');
+  if (dd) dd.classList.remove('open');
 
   showToast('\u2713 "' + name + '" ' + t('categoryAdded'));
   openBudgetModal();    // rebuild grid rows to include new cat
   renderBudgetPanel();
 }
+
+function setNewCatType(type) {
+  newCatType = type;
+
+  // Update trigger button class and label text
+  const btn = document.getElementById('btnNewCatType');
+  if (btn) {
+    btn.className = 'btn-new-cat-type is-' + type;
+  }
+
+  const labelSpan = document.getElementById('newCatTypeLabel');
+  if (labelSpan) {
+    const icon = type === 'expense' ? '💸' : '💰';
+    const textKey = type === 'expense' ? 'typeExpense' : 'typeIncome';
+    labelSpan.innerHTML = icon + ' <span data-i18n="' + textKey + '">' + t(textKey) + '</span>';
+  }
+
+  // Update selected class inside the options list
+  const optExpense = document.getElementById('typeOptExpense');
+  const optIncome = document.getElementById('typeOptIncome');
+  if (optExpense && optIncome) {
+    if (type === 'expense') {
+      optExpense.classList.add('selected');
+      optExpense.setAttribute('aria-selected', 'true');
+      optIncome.classList.remove('selected');
+      optIncome.setAttribute('aria-selected', 'false');
+    } else {
+      optIncome.classList.add('selected');
+      optIncome.setAttribute('aria-selected', 'true');
+      optExpense.classList.remove('selected');
+      optExpense.setAttribute('aria-selected', 'false');
+    }
+  }
+
+  // Close the dropdown
+  const dd = document.getElementById('newCatTypeDropdown');
+  if (dd) {
+    dd.classList.remove('open');
+  }
+  if (btn) {
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function toggleNewCatTypeDropdown(event) {
+  if (event) event.stopPropagation();
+  const dd = document.getElementById('newCatTypeDropdown');
+  const btn = document.getElementById('btnNewCatType');
+  if (!dd) return;
+
+  const isOpen = dd.classList.toggle('open');
+  if (btn) {
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+}
+
+
 
 /* ============================================================
    KEYBOARD SHORTCUTS
@@ -2852,9 +4054,11 @@ document.addEventListener('keydown', e => {
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
   initUser();
+  loadHiddenCategories();  // Load trước để getAllCategories() filter đúng
   loadCustomCategories();
   loadTransactions();
   loadBudgets();
+  loadBalanceResetMode(); // Load trước calcMetrics để số dư tính đúng chế độ
   calcMetrics();
   renderFeed();
   renderBudgetPanel();
@@ -2862,6 +4066,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLang();
   loadCurrency();
   loadTheme();
+  checkNewPeriodTransitions();
 
   /* Initialize premium custom selects */
   initCustomDropdown('txnCat');
@@ -2877,6 +4082,29 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Budget form */
   const bForm = document.getElementById('budgetForm');
   if (bForm) bForm.addEventListener('submit', handleSaveBudgets);
+
+  /* Sort dropdown — init and close on outside click */
+  renderFeedSortDropdown();
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('feedSortWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      closeFeedSort();
+    }
+
+    // Close new category type dropdown when clicking outside
+    const dd = document.getElementById('newCatTypeDropdown');
+    const trigger = document.getElementById('btnNewCatType');
+    if (dd && !dd.contains(e.target) && trigger && !trigger.contains(e.target)) {
+      dd.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* Lần đầu tiên đăng ký tài khoản -> hiển thị hướng dẫn sử dụng */
+  if (localStorage.getItem('caltdhy_is_new_user') === 'true') {
+    openGuide();
+    localStorage.removeItem('caltdhy_is_new_user');
+  }
 });
 
 /* ============================================================
@@ -2901,6 +4129,10 @@ window.handleSaveBudgets = handleSaveBudgets;
 window.deleteTransaction = deleteTransaction;
 window.setFilter = setFilter;
 window.setType = setType;
+window.toggleFeedSort = toggleFeedSort;
+window.changeFeedSort = changeFeedSort;
+window.closeFeedSort = closeFeedSort;
+window.renderFeedSortDropdown = renderFeedSortDropdown;
 window.closeModal = closeModal;
 window.openModal = openModal;
 window.closeModalOnOverlay = closeModalOnOverlay;
@@ -2915,6 +4147,7 @@ window.openNumpad = openNumpad;
 window.closeNumpadOnOverlay = closeNumpadOnOverlay;
 window.handleLogout = handleLogout;
 window.deleteCustomCategory = deleteCustomCategory;
+window.hideDefaultCategory  = hideDefaultCategory;
 window.undoDelete = undoDelete;
 window.addCustomCategory = addCustomCategory;
 window.changeTrendRange = changeTrendRange;
@@ -2929,6 +4162,8 @@ window.triggerUIUpdates = triggerUIUpdates;
 window.openMonthDetailModal = openMonthDetailModal;
 window.closeMonthDetailModal = closeMonthDetailModal;
 window.closeMonthDetailOnOverlay = closeMonthDetailOnOverlay;
+window.setNewCatType = setNewCatType;
+window.toggleNewCatTypeDropdown = toggleNewCatTypeDropdown;
 
 /* ============================================================
    USER GUIDE MODAL
@@ -3023,3 +4258,1189 @@ window.closeGuide = closeGuide;
 window.closeGuideOnOverlay = closeGuideOnOverlay;
 window.switchGuideTab = switchGuideTab;
 
+// Account Management Exposures
+window.openAccountModal = openAccountModal;
+window.closeAccountModal = closeAccountModal;
+window.closeAccountModalOnOverlay = closeAccountModalOnOverlay;
+window.triggerAvatarSelection = triggerAvatarSelection;
+window.handleAvatarChange = handleAvatarChange;
+window.handleSaveProfile = handleSaveProfile;
+
+/* ============================================================
+   ANALYTICS COMPARE
+   ============================================================ */
+function toggleCompareMenu(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('compareDropdown');
+  if (!dropdown) return;
+
+  // Build list of months that have data, excluding current selected month
+  const { month: activeM, year: activeY } = currentMonthYear();
+  const dataMonths = new Set();
+  transactions.forEach(t => {
+    const d = new Date(t.date + 'T00:00:00');
+    dataMonths.add(`${d.getFullYear()}-${d.getMonth()}`);
+  });
+
+  const available = Array.from(dataMonths).filter(my => my !== `${activeY}-${activeM}`);
+  available.sort((a, b) => b.localeCompare(a)); // Descending
+
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+
+  if (available.length === 0) {
+    dropdown.innerHTML = `<div style="padding: 10px 12px; font-size: 12px; color: var(--accent); font-weight: 500; text-align: center;">${t('noPreviousData')}</div>`;
+    dropdown.classList.add('show');
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      dropdown.classList.remove('show');
+    }, 3000);
+  } else {
+    dropdown.innerHTML = available.map(my => {
+      const [y, m] = my.split('-');
+      const d = new Date(y, m, 1);
+      const name = d.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + y;
+      return `<button class="compare-item" onclick="selectCompareMonth(${m}, ${y})">${name}</button>`;
+    }).join('');
+    dropdown.classList.toggle('show');
+  }
+}
+
+function selectCompareMonth(m, y) {
+  compareMonthYear = { month: parseInt(m), year: parseInt(y) };
+  const dropdown = document.getElementById('compareDropdown');
+  if (dropdown) dropdown.classList.remove('show');
+  updateAnalyticsSummary();
+}
+
+function clearCompareMonth(e) {
+  if (e) e.stopPropagation();
+  compareMonthYear = null;
+  updateAnalyticsSummary();
+}
+
+// Close compare dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('compareDropdown');
+  if (dropdown && dropdown.classList.contains('show') && !e.target.closest('#compareWrapper')) {
+    dropdown.classList.remove('show');
+  }
+});
+
+window.toggleCompareMenu = toggleCompareMenu;
+window.selectCompareMonth = selectCompareMonth;
+window.clearCompareMonth = clearCompareMonth;
+
+/* ============================================================
+   MONTHLY WRAP-UP MODAL
+   ============================================================ */
+
+/**
+ * Tính toán các chỉ số tổng hợp của một tháng cụ thể.
+ * Trả về: { totalIncome, totalExpense, savings, savingsRate, topCat, topCatAmt, txnCount }
+ */
+function calcMonthStats(month, year) {
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const totalsByCat = {};
+  let txnCount = 0;
+
+  transactions.forEach(txn => {
+    const d = new Date(txn.date + 'T00:00:00');
+    if (d.getMonth() !== month || d.getFullYear() !== year) return;
+    txnCount++;
+    if (txn.type === 'income') {
+      totalIncome += txn.amount;
+    } else {
+      totalExpense += txn.amount;
+      totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+    }
+  });
+
+  const savings = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+
+  let topCat = null;
+  let topCatAmt = 0;
+  Object.keys(totalsByCat).forEach(c => {
+    if (totalsByCat[c] > topCatAmt) {
+      topCat = c;
+      topCatAmt = totalsByCat[c];
+    }
+  });
+
+  return { totalIncome, totalExpense, savings, savingsRate, topCat, topCatAmt, txnCount };
+}
+
+/**
+ * Render HTML cho một cột trong báo cáo tháng.
+ * @param {string} headerLabel – Tiêu đề cột (tên tháng/năm)
+ * @param {boolean} isCurrent – true nếu là cột tháng chính (Month A)
+ * @param {object} stats – object từ calcMonthStats()
+ * @param {object|null} compareStats – stats của tháng kia để so sánh (nếu có)
+ */
+function buildReportColumnHTML(headerLabel, isCurrent, stats, compareStats) {
+  const hasData = stats.txnCount > 0;
+
+  function winner(field) {
+    if (!isCurrent || !compareStats) return false;
+    if (field === 'savingsRate') return stats.savingsRate > compareStats.savingsRate;
+    if (field === 'topCatAmt') return stats.topCatAmt < compareStats.topCatAmt && stats.topCatAmt > 0;
+    if (field === 'savings') return stats.savings > compareStats.savings;
+    return false;
+  }
+
+  const savingsRateDisplay = hasData ? `${stats.savingsRate.toFixed(1)}%` : '--';
+  const topSpendDisplay = stats.topCat
+    ? `${tCat(stats.topCat)}: ${fmt(stats.topCatAmt)}`
+    : (hasData ? t('reportNoData').split('.')[0] : '--');
+  const netSavingsDisplay = hasData ? `${stats.savings >= 0 ? '+' : ''}${fmt(stats.savings)}` : '--';
+  const txnCountDisplay = stats.txnCount.toString();
+
+  const colClass = isCurrent ? 'report-col report-col--current' : 'report-col report-col--prev';
+
+  // Dynamic badge label based on active tab
+  const badgeKey = currentReportTab === 'year'
+    ? 'reportThisYear'
+    : currentReportTab === 'quarter'
+      ? 'reportThisQuarter'
+      : 'reportThisMonth';
+  const badgeHTML = isCurrent
+    ? `<span class="report-col__header-badge">${t(badgeKey)}</span>`
+    : '';
+
+  // ── Monthly view: simple 4-row layout ──
+  if (currentReportTab === 'month') {
+    return `
+    <div class="${colClass}">
+      <div class="report-col__header">
+        ${escHtml(headerLabel)} ${badgeHTML}
+      </div>
+      <div class="report-stat ${winner('savingsRate') ? 'report-stat--winner' : ''}">
+        <span class="report-stat__label">${t('reportSavingsRate')}</span>
+        <span class="report-stat__value">${savingsRateDisplay}</span>
+      </div>
+      <div class="report-stat ${winner('topCatAmt') ? 'report-stat--winner' : ''}">
+        <span class="report-stat__label">${t('reportTopSpend')}</span>
+        <span class="report-stat__value" style="font-size:12px;">${escHtml(topSpendDisplay)}</span>
+      </div>
+      <div class="report-stat ${winner('savings') ? 'report-stat--winner' : ''}">
+        <span class="report-stat__label">${t('reportNetSavings')}</span>
+        <span class="report-stat__value" style="color: ${stats.savings >= 0 ? 'var(--green)' : 'var(--accent)'}">${netSavingsDisplay}</span>
+      </div>
+      <div class="report-stat">
+        <span class="report-stat__label">${t('reportTxnCount')}</span>
+        <span class="report-stat__value">${txnCountDisplay}</span>
+      </div>
+    </div>`;
+  }
+
+  // ── Quarter / Year view: enhanced layout ──
+  const numMonths = stats.activeMonths || (currentReportTab === 'year' ? 12 : 3);
+  const avgIncome  = hasData ? fmt(Math.round(stats.totalIncome  / numMonths)) : '--';
+  const avgExpense = hasData ? fmt(Math.round(stats.totalExpense / numMonths)) : '--';
+
+  // Top 3 categories progress bars
+  const topCatsHTML = (() => {
+    if (!hasData || !stats.topCategories || stats.topCategories.length === 0) {
+      return `<span style="font-size:10px; color: var(--muted)">--</span>`;
+    }
+    return stats.topCategories.map(cat => `
+      <div class="report-cat-row">
+        <div class="report-cat-info">
+          <span class="report-cat-name">${escHtml(tCat(cat.category))}</span>
+          <span class="report-cat-pct">${cat.percent.toFixed(0)}%</span>
+          <span class="report-cat-amt">${fmt(cat.amount)}</span>
+        </div>
+        <div class="report-cat-bar-bg">
+          <div class="report-cat-bar-fill" style="width:${Math.min(100, cat.percent).toFixed(1)}%"></div>
+        </div>
+      </div>`).join('');
+  })();
+
+  // Monthly extremes rows
+  const isYear = currentReportTab === 'year';
+  const extremesHTML = (() => {
+    if (!hasData) return '';
+    const rows = [];
+    if (stats.bestSavingsMonthLabel && stats.bestSavingsMonthLabel !== '--') {
+      rows.push(`<div class="report-extreme-row">
+        <span class="report-extreme-label">${t('reportBestSavingsMonth')}</span>
+        <span class="report-extreme-value report-extreme-value--positive">${escHtml(stats.bestSavingsMonthLabel)}</span>
+      </div>`);
+    }
+    if (stats.peakSpendMonthLabel && stats.peakSpendMonthLabel !== '--') {
+      rows.push(`<div class="report-extreme-row">
+        <span class="report-extreme-label">${t('reportPeakSpendMonth')}</span>
+        <span class="report-extreme-value report-extreme-value--accent">${escHtml(stats.peakSpendMonthLabel)}</span>
+      </div>`);
+    }
+    if (isYear && stats.peakIncomeMonthLabel && stats.peakIncomeMonthLabel !== '--') {
+      rows.push(`<div class="report-extreme-row">
+        <span class="report-extreme-label">${t('reportPeakIncomeMonth')}</span>
+        <span class="report-extreme-value report-extreme-value--positive">${escHtml(stats.peakIncomeMonthLabel)}</span>
+      </div>`);
+    }
+    return rows.length ? `<div class="report-extremes">${rows.join('')}</div>` : '';
+  })();
+
+  return `
+    <div class="${colClass}">
+      <div class="report-col__header">
+        ${escHtml(headerLabel)} ${badgeHTML}
+      </div>
+      <div class="report-col-body">
+        <div class="report-col-body-left">
+          <div class="report-stat ${winner('savingsRate') ? 'report-stat--winner' : ''}">
+            <span class="report-stat__label">${t('reportSavingsRate')}</span>
+            <span class="report-stat__value">${savingsRateDisplay}</span>
+          </div>
+          <div class="report-stat ${winner('savings') ? 'report-stat--winner' : ''}">
+            <span class="report-stat__label">${t('reportNetSavings')}</span>
+            <span class="report-stat__value" style="color: ${stats.savings >= 0 ? 'var(--green)' : 'var(--accent)'}">${netSavingsDisplay}</span>
+          </div>
+          <div class="report-stat">
+            <span class="report-stat__label">INCOME</span>
+            <span class="report-stat__value" style="color:var(--green)">${hasData ? fmt(stats.totalIncome) : '--'}</span>
+            ${hasData ? `<span class="report-stat__sub">${t('reportAvgMonthly')}: ${avgIncome}</span>` : ''}
+          </div>
+          <div class="report-stat">
+            <span class="report-stat__label">EXPENSE</span>
+            <span class="report-stat__value" style="color:var(--accent)">${hasData ? fmt(stats.totalExpense) : '--'}</span>
+            ${hasData ? `<span class="report-stat__sub">${t('reportAvgMonthly')}: ${avgExpense}</span>` : ''}
+          </div>
+          <div class="report-stat">
+            <span class="report-stat__label">${t('reportTxnCount')}</span>
+            <span class="report-stat__value">${txnCountDisplay}</span>
+          </div>
+        </div>
+        <div class="report-col-body-right">
+          <div class="report-stat">
+            <span class="report-stat__label">${t('reportTopCats')}</span>
+            <div class="report-top-cats">${topCatsHTML}</div>
+          </div>
+          ${extremesHTML}
+        </div>
+      </div>
+    </div>`;
+}
+
+
+function checkNewMonthTransition() {
+  const lastReported = localStorage.getItem('caltdhy_last_reported_month');
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
+
+  if (!lastReported) {
+    // First time running, just set it and skip
+    localStorage.setItem('caltdhy_last_reported_month', currentMonthKey);
+    return;
+  }
+
+  if (lastReported !== currentMonthKey) {
+    // We crossed into a new month!
+    const [lastY, lastM] = lastReported.split('-');
+    showMonthlyReport(parseInt(lastM), parseInt(lastY));
+    localStorage.setItem('caltdhy_last_reported_month', currentMonthKey);
+  }
+}
+
+function showMonthlyReport(month, year) {
+  const modal = document.getElementById('monthlyReportModal');
+  if (!modal) return;
+
+  // Sync tab to 'month' and set modal as auto-popup (not manual)
+  currentReportTab = 'month';
+  _wrapupIsManual = false;
+  const closeBtn = document.getElementById('reportCloseBtn');
+  if (closeBtn) closeBtn.style.display = 'none';
+  const actionBtn = document.getElementById('reportActionBtn');
+  if (actionBtn) actionBtn.textContent = t('startFresh');
+  const resetBox = document.getElementById('reportResetBox');
+  if (resetBox) resetBox.style.display = '';
+  ['month', 'quarter', 'year'].forEach(k => {
+    const btn = document.getElementById(`rtab-${k}`);
+    if (!btn) return;
+    btn.classList.toggle('active', k === 'month');
+    btn.setAttribute('aria-selected', String(k === 'month'));
+  });
+
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+
+  // Tiêu đề modal: tháng/năm vừa qua (Month A)
+  const monthADate = new Date(year, month, 1);
+  const monthAName = monthADate.toLocaleString(locale, { month: 'long' }).toUpperCase();
+  document.getElementById('reportMonthLabel').innerText = `${monthAName} ${year}`;
+
+  // Populate period dropdown and pre-select current month
+  const sel = document.getElementById('reportPeriodSelect');
+  if (sel) {
+    const seen = new Set();
+    transactions.forEach(txn => {
+      const d = new Date(txn.date + 'T00:00:00');
+      seen.add(`${d.getFullYear()}-${d.getMonth()}`);
+    });
+    // Ensure the reported month is always in the list
+    const reportedKey = `${year}-${month}`;
+    seen.add(reportedKey);
+    const sorted = Array.from(seen).sort((a, b) => b.localeCompare(a));
+    sel.innerHTML = '';
+    sorted.forEach(key => {
+      const [y, m] = key.split('-');
+      const d = new Date(parseInt(y), parseInt(m), 1);
+      const label = d.toLocaleString(locale, { month: 'long', year: 'numeric' }).toUpperCase();
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = label;
+      if (key === reportedKey) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Tính stats Month A (tháng vừa qua)
+  const statsA = calcMonthStats(month, year);
+
+  // Tính Month B (tháng trước đó)
+  const monthBDate = new Date(year, month - 1, 1);
+  const prevMonth = monthBDate.getMonth();
+  const prevYear = monthBDate.getFullYear();
+  const statsB = calcMonthStats(prevMonth, prevYear);
+  const hasPrevData = statsB.txnCount > 0;
+
+  // Render comparison grid
+  const grid = document.getElementById('reportComparisonGrid');
+  if (grid) {
+    if (hasPrevData) {
+      grid.className = 'report-comparison-grid';
+      const monthBName = monthBDate.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + prevYear;
+      const monthALabel = monthADate.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + year;
+      // Cột trái = tháng trước đó (Month B), cột phải = tháng vừa qua (Month A)
+      grid.innerHTML =
+        buildReportColumnHTML(monthBName, false, statsB, statsA) +
+        buildReportColumnHTML(monthALabel, true, statsA, statsB);
+    } else {
+      grid.className = 'report-comparison-grid single-column';
+      const monthALabel = monthADate.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + year;
+      grid.innerHTML = buildReportColumnHTML(monthALabel, true, statsA, null);
+    }
+  }
+
+  // Render message động
+  const msgEl = document.getElementById('reportMessage');
+  if (msgEl) {
+    let msg = '';
+    if (statsA.txnCount === 0) {
+      msg = t('reportNoData');
+    } else if (statsA.savings >= 0) {
+      if (statsA.savingsRate >= 30) {
+        msg = currentLang === 'vi'
+          ? `🎉 Xuất sắc! Bạn đã tích luỹ <strong>${statsA.savingsRate.toFixed(0)}%</strong> thu nhập tháng này. Hãy tiếp tục phong độ đó!`
+          : currentLang === 'zh'
+          ? `🎉 出色！本月储蓄率达 <strong>${statsA.savingsRate.toFixed(0)}%</strong>。继续保持！`
+          : `🎉 Excellent! You saved <strong>${statsA.savingsRate.toFixed(0)}%</strong> of your income this month. Keep it up!`;
+      } else {
+        msg = currentLang === 'vi'
+          ? `✅ Tháng ${monthAName} kết thúc với tích luỹ ròng <strong>${fmt(statsA.savings)}</strong>. Tốt lắm!`
+          : currentLang === 'zh'
+          ? `✅ 本月净储蓄 <strong>${fmt(statsA.savings)}</strong>。干得漂亮！`
+          : `✅ You finished ${monthAName} with a net saving of <strong>${fmt(statsA.savings)}</strong>. Well done!`;
+      }
+    } else {
+      msg = currentLang === 'vi'
+        ? `⚠️ Chi tiêu vượt thu nhập <strong>${fmt(Math.abs(statsA.savings))}</strong> trong tháng này. Hãy cân nhắc điều chỉnh ngân sách tháng tới nhé!`
+        : currentLang === 'zh'
+        ? `⚠️ 本月支出超出收入 <strong>${fmt(Math.abs(statsA.savings))}</strong>。下月注意调整预算！`
+        : `⚠️ Spending exceeded income by <strong>${fmt(Math.abs(statsA.savings))}</strong> this month. Consider adjusting your budget next month.`;
+    }
+    msgEl.innerHTML = msg;
+  }
+
+  // Sync segmented control to current mode
+  syncResetModeUI();
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+}
+
+function closeMonthlyReport() {
+  const modal = document.getElementById('monthlyReportModal');
+  if (modal) {
+    modal.classList.remove('open');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+  // Reset quarter grid year so next open re-inits to most-recent year
+  window._qGridYear = null;
+}
+
+/* ============================================================
+   BALANCE RESET MODE
+   ============================================================ */
+function loadBalanceResetMode() {
+  const saved = localStorage.getItem(BALANCE_RESET_KEY);
+  balanceResetMode = (saved === 'reset') ? 'reset' : 'keep';
+  syncResetModeUI();
+}
+
+function syncResetModeUI() {
+  const btnKeep = document.getElementById('segBtnKeep');
+  const btnReset = document.getElementById('segBtnReset');
+  if (!btnKeep || !btnReset) return;
+  if (balanceResetMode === 'reset') {
+    btnReset.classList.add('active');
+    btnKeep.classList.remove('active');
+  } else {
+    btnKeep.classList.add('active');
+    btnReset.classList.remove('active');
+  }
+}
+
+function setBalanceResetMode(mode) {
+  if (mode !== 'keep' && mode !== 'reset') return;
+  balanceResetMode = mode;
+  localStorage.setItem(BALANCE_RESET_KEY, mode);
+  syncResetModeUI();
+  // Cập nhật lại số dư ngay lập tức
+  calcMetrics();
+  const modeLabel = mode === 'reset'
+    ? (currentLang === 'vi' ? 'Bắt đầu từ 0 ✓' : currentLang === 'zh' ? '已设为每月重置 ✓' : 'Reset each month ✓')
+    : (currentLang === 'vi' ? 'Giữ lũy kế ✓' : currentLang === 'zh' ? '已设为保留累计 ✓' : 'Running total kept ✓');
+  showToast(modeLabel);
+}
+
+window.checkNewMonthTransition = checkNewMonthTransition; // kept for backward compat
+window.showMonthlyReport = showMonthlyReport;
+window.closeMonthlyReport = closeMonthlyReport;
+window.setBalanceResetMode = setBalanceResetMode;
+window.loadBalanceResetMode = loadBalanceResetMode;
+
+/* ============================================================
+   PERIOD TRANSITION CHECKER (Month / Quarter / Year)
+   ============================================================ */
+
+/**
+ * Checks all three cycle keys (month, quarter, year).
+ * Triggers wrapup modal auto-popup for the largest changed cycle.
+ */
+function checkNewPeriodTransitions() {
+  const now = new Date();
+  const curMonth   = `${now.getFullYear()}-${now.getMonth()}`;
+  const curQ       = `${now.getFullYear()}-Q${Math.floor(now.getMonth() / 3) + 1}`;
+  const curYear    = `${now.getFullYear()}`;
+
+  const lastMonth  = localStorage.getItem('caltdhy_last_reported_month');
+  const lastQ      = localStorage.getItem('caltdhy_last_reported_quarter');
+  const lastYear   = localStorage.getItem('caltdhy_last_reported_year');
+
+  // First-time init — just save and exit
+  if (!lastMonth && !lastQ && !lastYear) {
+    localStorage.setItem('caltdhy_last_reported_month',   curMonth);
+    localStorage.setItem('caltdhy_last_reported_quarter', curQ);
+    localStorage.setItem('caltdhy_last_reported_year',    curYear);
+    return;
+  }
+
+  const monthChanged   = lastMonth  && lastMonth  !== curMonth;
+  const quarterChanged = lastQ      && lastQ      !== curQ;
+  const yearChanged    = lastYear   && lastYear   !== curYear;
+
+  // Always update storage first
+  localStorage.setItem('caltdhy_last_reported_month',   curMonth);
+  localStorage.setItem('caltdhy_last_reported_quarter', curQ);
+  localStorage.setItem('caltdhy_last_reported_year',    curYear);
+
+  // Handle first-time init for individual keys (partial migration)
+  if (!lastMonth)  { return; }
+  if (!lastQ)      { localStorage.setItem('caltdhy_last_reported_quarter', curQ); }
+  if (!lastYear)   { localStorage.setItem('caltdhy_last_reported_year',    curYear); }
+
+  // Determine which popup to show (largest cycle wins)
+  if (yearChanged) {
+    // Show the PREVIOUS year's annual report
+    const [prevY] = lastYear.split('-');
+    _wrapupIsManual = false;
+    openWrapupModal('year', parseInt(prevY));
+  } else if (quarterChanged) {
+    // Show the PREVIOUS quarter's report
+    const [prevQY, qPart] = lastQ.split('-Q');
+    _wrapupIsManual = false;
+    openWrapupModal('quarter', parseInt(prevQY), parseInt(qPart));
+  } else if (monthChanged) {
+    // Show the PREVIOUS month's report (original behaviour)
+    const [lastY, lastM] = lastMonth.split('-');
+    _wrapupIsManual = false;
+    showMonthlyReport(parseInt(lastM), parseInt(lastY));
+  }
+}
+
+/* ============================================================
+   QUARTERLY & ANNUAL STATS CALCULATORS
+   ============================================================ */
+
+/**
+ * Returns aggregated stats for a given quarter of a year.
+ * quarter: 1-4
+ */
+function calcQuarterStats(quarter, year) {
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const totalsByCat = {};
+  let txnCount = 0;
+  const firstMonth = (quarter - 1) * 3;
+  const lastMonth  = firstMonth + 2;
+
+  // Per-month breakdown for extremes
+  const byMonth = {};
+  for (let m = firstMonth; m <= lastMonth; m++) {
+    byMonth[m] = { income: 0, expense: 0, savings: 0 };
+  }
+
+  transactions.forEach(txn => {
+    const d = new Date(txn.date + 'T00:00:00');
+    if (d.getFullYear() !== year) return;
+    const m = d.getMonth();
+    if (m < firstMonth || m > lastMonth) return;
+    txnCount++;
+    if (txn.type === 'income') {
+      totalIncome += txn.amount;
+      byMonth[m].income += txn.amount;
+    } else {
+      totalExpense += txn.amount;
+      byMonth[m].expense += txn.amount;
+      totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+    }
+  });
+
+  // Compute per-month savings
+  Object.keys(byMonth).forEach(m => {
+    byMonth[m].savings = byMonth[m].income - byMonth[m].expense;
+  });
+
+  const savings = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+
+  // Top 3 categories
+  const sortedCats = Object.keys(totalsByCat)
+    .sort((a, b) => totalsByCat[b] - totalsByCat[a])
+    .slice(0, 3);
+  const topCategories = sortedCats.map(c => ({
+    category: c,
+    amount: totalsByCat[c],
+    percent: totalExpense > 0 ? (totalsByCat[c] / totalExpense) * 100 : 0,
+  }));
+
+  let topCat = sortedCats[0] || null;
+  let topCatAmt = topCat ? totalsByCat[topCat] : 0;
+
+  // Monthly extremes
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+  const monthEntries = Object.entries(byMonth);
+
+  const hasMonthlySavingsData = monthEntries.some(([, d]) => d.income > 0 || d.expense > 0);
+  let bestSavingsMonthLabel = '--';
+  let peakSpendMonthLabel = '--';
+
+  if (hasMonthlySavingsData) {
+    const bestM = monthEntries.reduce((best, cur) =>
+      cur[1].savings > best[1].savings ? cur : best, monthEntries[0]);
+    const peakSpendM = monthEntries.reduce((best, cur) =>
+      cur[1].expense > best[1].expense ? cur : best, monthEntries[0]);
+    const toMonthName = m => new Date(year, parseInt(m), 1).toLocaleString(locale, { month: 'short' }).toUpperCase();
+    bestSavingsMonthLabel = toMonthName(bestM[0]);
+    peakSpendMonthLabel = toMonthName(peakSpendM[0]);
+  }
+
+  // Count months that actually had transactions
+  const activeMonths = monthEntries.filter(([, d]) => d.income > 0 || d.expense > 0).length || 1;
+
+  return { totalIncome, totalExpense, savings, savingsRate, topCat, topCatAmt, txnCount,
+           topCategories, bestSavingsMonthLabel, peakSpendMonthLabel, activeMonths };
+}
+
+/**
+ * Returns aggregated stats for an entire calendar year.
+ */
+function calcYearStats(year) {
+  let totalIncome = 0;
+  let totalExpense = 0;
+  const totalsByCat = {};
+  let txnCount = 0;
+
+  // Per-month breakdown for extremes
+  const byMonth = {};
+  for (let m = 0; m < 12; m++) {
+    byMonth[m] = { income: 0, expense: 0, savings: 0 };
+  }
+
+  transactions.forEach(txn => {
+    const d = new Date(txn.date + 'T00:00:00');
+    if (d.getFullYear() !== year) return;
+    const m = d.getMonth();
+    txnCount++;
+    if (txn.type === 'income') {
+      totalIncome += txn.amount;
+      byMonth[m].income += txn.amount;
+    } else {
+      totalExpense += txn.amount;
+      byMonth[m].expense += txn.amount;
+      totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+    }
+  });
+
+  // Compute per-month savings
+  Object.keys(byMonth).forEach(m => {
+    byMonth[m].savings = byMonth[m].income - byMonth[m].expense;
+  });
+
+  const savings = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+
+  // Top 3 categories
+  const sortedCats = Object.keys(totalsByCat)
+    .sort((a, b) => totalsByCat[b] - totalsByCat[a])
+    .slice(0, 3);
+  const topCategories = sortedCats.map(c => ({
+    category: c,
+    amount: totalsByCat[c],
+    percent: totalExpense > 0 ? (totalsByCat[c] / totalExpense) * 100 : 0,
+  }));
+
+  let topCat = sortedCats[0] || null;
+  let topCatAmt = topCat ? totalsByCat[topCat] : 0;
+
+  // Monthly extremes
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+  const monthEntries = Object.entries(byMonth);
+
+  const hasMonthlySavingsData = monthEntries.some(([, d]) => d.income > 0 || d.expense > 0);
+  let bestSavingsMonthLabel = '--';
+  let peakSpendMonthLabel = '--';
+  let peakIncomeMonthLabel = '--';
+
+  if (hasMonthlySavingsData) {
+    const toMonthName = m => new Date(year, parseInt(m), 1).toLocaleString(locale, { month: 'short' }).toUpperCase();
+    const activeEntries = monthEntries.filter(([, d]) => d.income > 0 || d.expense > 0);
+    const bestM = activeEntries.reduce((best, cur) =>
+      cur[1].savings > best[1].savings ? cur : best, activeEntries[0]);
+    const peakSpendM = activeEntries.reduce((best, cur) =>
+      cur[1].expense > best[1].expense ? cur : best, activeEntries[0]);
+    const peakIncomeM = activeEntries.reduce((best, cur) =>
+      cur[1].income > best[1].income ? cur : best, activeEntries[0]);
+    bestSavingsMonthLabel = toMonthName(bestM[0]);
+    peakSpendMonthLabel = toMonthName(peakSpendM[0]);
+    peakIncomeMonthLabel = toMonthName(peakIncomeM[0]);
+  }
+
+  // Count months with actual data
+  const activeMonths = monthEntries.filter(([, d]) => d.income > 0 || d.expense > 0).length || 1;
+
+  return { totalIncome, totalExpense, savings, savingsRate, topCat, topCatAmt, txnCount,
+           topCategories, bestSavingsMonthLabel, peakSpendMonthLabel, peakIncomeMonthLabel, activeMonths };
+}
+
+/* ============================================================
+   WRAPUP MODAL — UNIFIED OPEN / SWITCH / RENDER
+   ============================================================ */
+
+/**
+ * Opens the wrapup modal in manual mode (from history button)
+ * or with a specific tab pre-selected and period pre-set for auto-popup.
+ * @param {string} [tab='month']  - 'month' | 'quarter' | 'year'
+ * @param {number} [year]         - Override year for auto-popup
+ * @param {number} [quarter]      - Override quarter (1-4) for auto-popup (only for tab='quarter')
+ */
+function openWrapupModal(tab, year, quarter) {
+  const modal = document.getElementById('monthlyReportModal');
+  if (!modal) return;
+
+  // Determine mode
+  _wrapupIsManual = (tab === undefined || tab === null);
+  currentReportTab = tab || 'month';
+
+  // Show/hide the X close button (manual mode only)
+  const closeBtn = document.getElementById('reportCloseBtn');
+  if (closeBtn) closeBtn.style.display = _wrapupIsManual ? '' : 'none';
+
+  // Show/hide the Reset Box (auto month-change only)
+  const resetBox = document.getElementById('reportResetBox');
+  if (resetBox) resetBox.style.display = (currentReportTab === 'month' && !_wrapupIsManual) ? '' : 'none';
+
+  // Sync action button label
+  const actionBtn = document.getElementById('reportActionBtn');
+  if (actionBtn) {
+    actionBtn.textContent = _wrapupIsManual ? t('wrapupBtnClose') : t('wrapupBtnStartFresh');
+  }
+
+  // Sync tab UI
+  ['month', 'quarter', 'year'].forEach(k => {
+    const btn = document.getElementById(`rtab-${k}`);
+    if (!btn) return;
+    const isActive = k === currentReportTab;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+
+  // Populate period dropdown, then render
+  _populatePeriodDropdown(currentReportTab, year, quarter);
+  _renderWrapupFromDropdown();
+  _syncSelectorVisibility(currentReportTab);
+
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  syncResetModeUI();
+}
+
+/**
+ * Switches the active tab (Tháng / Quý / Năm) inside the wrapup modal.
+ */
+function switchReportTab(tab, btnEl) {
+  currentReportTab = tab;
+
+  // Sync tab buttons
+  ['month', 'quarter', 'year'].forEach(k => {
+    const btn = document.getElementById(`rtab-${k}`);
+    if (!btn) return;
+    const isActive = k === tab;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
+  });
+
+  // Show/hide reset box
+  const resetBox = document.getElementById('reportResetBox');
+  if (resetBox) resetBox.style.display = (tab === 'month' && !_wrapupIsManual) ? '' : 'none';
+
+  // Repopulate and rerender
+  _populatePeriodDropdown(tab);
+  _renderWrapupFromDropdown();
+  _syncSelectorVisibility(tab);
+}
+
+/**
+ * Shows/hides the correct selector UI depending on the active tab.
+ * Tab 'month'   → Month Slider
+ * Tab 'quarter' → Quarter Grid
+ * Tab 'year'    → Year Dropdown
+ */
+function _syncSelectorVisibility(tab) {
+  const yearWrapper  = document.getElementById('reportPeriodSelectorWrapper');
+  const monthWrapper = document.getElementById('reportMonthSliderWrapper');
+  const quarterWrapper = document.getElementById('reportQuarterSelector');
+
+  if (yearWrapper)    yearWrapper.style.display    = (tab === 'year')    ? '' : 'none';
+  if (monthWrapper)   monthWrapper.style.display   = (tab === 'month')   ? '' : 'none';
+  if (quarterWrapper) quarterWrapper.style.display = (tab === 'quarter') ? '' : 'none';
+}
+
+/**
+ * Called when user changes the period dropdown value.
+ */
+function handleReportPeriodChange() {
+  _renderWrapupFromDropdown();
+}
+
+/**
+ * Populates the period dropdown with available periods having transactions.
+ * @param {string} tab - 'month' | 'quarter' | 'year'
+ * @param {number} [preYear] - pre-select this year
+ * @param {number} [preQ]    - pre-select this quarter
+ */
+function _populatePeriodDropdown(tab, preYear, preQ) {
+  const sel = document.getElementById('reportPeriodSelect');
+  if (!sel) return;
+
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+
+  sel.innerHTML = '';
+
+  if (tab === 'month') {
+    // ── Build month slider chips ────────────────────────────────
+    const seen = new Set();
+    transactions.forEach(txn => {
+      const d = new Date(txn.date + 'T00:00:00');
+      seen.add(`${d.getFullYear()}-${d.getMonth()}`);
+    });
+    const sorted = Array.from(seen).sort((a, b) => b.localeCompare(a));
+
+    // Populate the hidden native <select> as well (for _renderWrapupFromDropdown)
+    sorted.forEach(key => {
+      const [y, m] = key.split('-');
+      const d = new Date(parseInt(y), parseInt(m), 1);
+      const label = d.toLocaleString(locale, { month: 'long', year: 'numeric' }).toUpperCase();
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+
+    // Build slider chips
+    const track = document.getElementById('monthSliderTrack');
+    const triggerText = document.getElementById('activeMonthText');
+    if (track) {
+      track.innerHTML = '';
+      // Active key = currently selected option (first by default)
+      const activeKey = sel.value || (sorted.length > 0 ? sorted[0] : null);
+      sorted.forEach((key, idx) => {
+        const [y, m] = key.split('-');
+        const d = new Date(parseInt(y), parseInt(m), 1);
+        const shortLabel = d.toLocaleString(locale, { month: 'short' }).toUpperCase();
+        const yearLabel  = d.toLocaleString(locale, { year: 'numeric' });
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'month-chip' + (key === activeKey ? ' active' : '');
+        chip.setAttribute('role', 'option');
+        chip.setAttribute('aria-selected', String(key === activeKey));
+        chip.dataset.key = key;
+        chip.style.setProperty('--i', idx);
+        chip.innerHTML = `<span>${shortLabel}</span><span style="opacity:0.6;font-size:8px;">${yearLabel}</span>`;
+        chip.style.flexDirection = 'column';
+        chip.style.display = 'inline-flex';
+        chip.style.alignItems = 'center';
+        chip.style.gap = '1px';
+        chip.onclick = () => {
+          // Update select
+          sel.value = key;
+          // Re-active chips
+          track.querySelectorAll('.month-chip').forEach(c => {
+            c.classList.toggle('active', c.dataset.key === key);
+            c.setAttribute('aria-selected', String(c.dataset.key === key));
+          });
+          // Update trigger label
+          const nd = new Date(parseInt(y), parseInt(m), 1);
+          if (triggerText) triggerText.textContent = nd.toLocaleString(locale, { month: 'long', year: 'numeric' }).toUpperCase();
+          handleReportPeriodChange();
+          // Collapse slider by removing hover (blur trick)
+          document.activeElement?.blur();
+        };
+        track.appendChild(chip);
+      });
+
+      // Update trigger label to show active month
+      if (triggerText && activeKey) {
+        const [ay, am] = activeKey.split('-');
+        const ad = new Date(parseInt(ay), parseInt(am), 1);
+        triggerText.textContent = ad.toLocaleString(locale, { month: 'long', year: 'numeric' }).toUpperCase();
+      } else if (triggerText) {
+        triggerText.textContent = t('noDataForPeriod');
+      }
+    }
+
+  } else if (tab === 'quarter') {
+    // ── Build quarter grid ──────────────────────────────────────
+    // Collect which quarters have data
+    const quartersWithData = new Set();
+    transactions.forEach(txn => {
+      const d = new Date(txn.date + 'T00:00:00');
+      const q = Math.floor(d.getMonth() / 3) + 1;
+      quartersWithData.add(`${d.getFullYear()}-${q}`);
+    });
+
+    // Also populate native select
+    const seen = new Set();
+    transactions.forEach(txn => {
+      const d = new Date(txn.date + 'T00:00:00');
+      const q = Math.floor(d.getMonth() / 3) + 1;
+      seen.add(`${d.getFullYear()}-${q}`);
+    });
+    const sorted = Array.from(seen).sort((a, b) => b.localeCompare(a));
+    sorted.forEach(key => {
+      const [y, q] = key.split('-');
+      const qLabel = t(`q${q}Label`) || `Q${q}`;
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = `${qLabel} / ${y}`;
+      if (preYear !== undefined && preQ !== undefined && parseInt(y) === preYear && parseInt(q) === preQ) {
+        opt.selected = true;
+      }
+      sel.appendChild(opt);
+    });
+
+    // Determine display year for the grid
+    const allYears = Array.from(new Set(transactions.map(txn => new Date(txn.date + 'T00:00:00').getFullYear()))).sort((a, b) => b - a);
+    let displayYear = preYear || (allYears.length > 0 ? allYears[0] : new Date().getFullYear());
+
+    // Initialise _qGridYear if not set
+    if (!window._qGridYear) window._qGridYear = displayYear;
+    else displayYear = window._qGridYear;
+
+    _updateQuarterGrid(displayYear, quartersWithData, preQ);
+
+    // Wire year stepper buttons (only once)
+    const btnPrev = document.getElementById('qYearPrev');
+    const btnNext = document.getElementById('qYearNext');
+    if (btnPrev) {
+      btnPrev.onclick = () => {
+        window._qGridYear = (window._qGridYear || new Date().getFullYear()) - 1;
+        _updateQuarterGrid(window._qGridYear, quartersWithData);
+      };
+    }
+    if (btnNext) {
+      btnNext.onclick = () => {
+        window._qGridYear = (window._qGridYear || new Date().getFullYear()) + 1;
+        _updateQuarterGrid(window._qGridYear, quartersWithData);
+      };
+    }
+
+  } else if (tab === 'year') {
+    // Collect unique years
+    const seen = new Set();
+    transactions.forEach(txn => {
+      const d = new Date(txn.date + 'T00:00:00');
+      seen.add(d.getFullYear());
+    });
+    const sorted = Array.from(seen).sort((a, b) => b - a);
+    sorted.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = `${y}`;
+      opt.textContent = `${y}`;
+      if (preYear !== undefined && y === preYear) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // If nothing in dropdown, add a disabled placeholder
+  if (sel.options.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = t('noDataForPeriod');
+    opt.disabled = true;
+    opt.selected = true;
+    sel.appendChild(opt);
+  }
+
+  _syncCustomDropdown();
+}
+
+/**
+ * Updates the quarter grid UI for a specific display year.
+ * @param {number} year
+ * @param {Set<string>} quartersWithData  - Set of "year-q" strings
+ * @param {number|undefined} [activeQ]    - Pre-select this quarter if provided
+ */
+function _updateQuarterGrid(year, quartersWithData, activeQ) {
+  const yearDisplay = document.getElementById('qYearDisplay');
+  if (yearDisplay) yearDisplay.textContent = year;
+
+  // Determine active quarter from native select if not provided
+  const sel = document.getElementById('reportPeriodSelect');
+  if (!activeQ && sel && sel.value) {
+    const parts = sel.value.split('-');
+    if (parts.length === 2 && parseInt(parts[0]) === year) activeQ = parseInt(parts[1]);
+  }
+
+  const tooltipMsg = t('quarterTooltipNoData');
+
+  for (let q = 1; q <= 4; q++) {
+    const btn = document.getElementById(`qBtn${q}`);
+    if (!btn) continue;
+
+    const hasData = quartersWithData.has(`${year}-${q}`);
+    const isActive = (q === activeQ) && hasData;
+
+    btn.classList.toggle('no-data', !hasData);
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-disabled', String(!hasData));
+    btn.setAttribute('aria-pressed', String(isActive));
+
+    // Update tooltip text (supports i18n change)
+    const tooltip = btn.querySelector('.q-btn-tooltip');
+    if (tooltip) tooltip.textContent = tooltipMsg;
+
+    // Wire click (replace each time to keep year fresh)
+    btn.onclick = hasData ? () => {
+      // Update native select
+      if (sel) sel.value = `${year}-${q}`;
+      // Update visual active state
+      for (let j = 1; j <= 4; j++) {
+        const b = document.getElementById(`qBtn${j}`);
+        if (b) {
+          b.classList.toggle('active', j === q && quartersWithData.has(`${year}-${j}`));
+        }
+      }
+      handleReportPeriodChange();
+    } : (e) => {
+      // No-data: don't navigate, just show tooltip (CSS handles it)
+      e.preventDefault();
+    };
+  }
+}
+
+/**
+ * Synchronizes the custom styled dropdown with the hidden native select.
+ */
+function _syncCustomDropdown() {
+  const nativeSel = document.getElementById('reportPeriodSelect');
+  const customDropdown = document.getElementById('reportPeriodDropdown');
+  if (!nativeSel || !customDropdown) return;
+
+  const triggerVal = customDropdown.querySelector('.custom-dropdown-value');
+  const menu = customDropdown.querySelector('.custom-dropdown-menu');
+  if (!triggerVal || !menu) return;
+
+  const selectedOpt = nativeSel.options[nativeSel.selectedIndex];
+  triggerVal.textContent = selectedOpt ? selectedOpt.textContent : '--';
+
+  menu.innerHTML = '';
+  Array.from(nativeSel.options).forEach(opt => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'custom-dropdown-item';
+    if (opt.selected) item.classList.add('active');
+    if (opt.disabled) item.disabled = true;
+    item.textContent = opt.textContent;
+    item.onclick = (e) => {
+      e.stopPropagation();
+      nativeSel.value = opt.value;
+      handleReportPeriodChange();
+      _syncCustomDropdown();
+      customDropdown.classList.remove('open');
+    };
+    menu.appendChild(item);
+  });
+}
+
+// Global click event to open/close custom dropdown
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('reportPeriodDropdown');
+  if (!dropdown) return;
+  const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+  
+  if (trigger && trigger.contains(e.target)) {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  } else {
+    dropdown.classList.remove('open');
+  }
+});
+
+/**
+ * Renders the wrapup report based on current tab + selected dropdown value.
+ */
+function _renderWrapupFromDropdown() {
+  const sel = document.getElementById('reportPeriodSelect');
+  const titleEl = document.getElementById('report-title');
+  const subtitleEl = document.getElementById('reportMonthLabel');
+  const grid = document.getElementById('reportComparisonGrid');
+  const msgEl = document.getElementById('reportMessage');
+
+  if (!sel || !grid) return;
+
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+
+  const val = sel.value;
+  if (!val) {
+    if (titleEl) titleEl.textContent = t('quarterlyWrapUp');
+    if (subtitleEl) subtitleEl.textContent = '';
+    grid.innerHTML = `<div class="report-stat" style="text-align:center;padding:24px;color:var(--muted);">${t('noDataForPeriod')}</div>`;
+    if (msgEl) msgEl.textContent = '';
+    return;
+  }
+
+  let stats, prevStats, periodLabel, titleKey;
+
+  if (currentReportTab === 'month') {
+    const [y, m] = val.split('-').map(Number);
+    stats = calcMonthStats(m, y);
+    // Previous month
+    const prevDate = new Date(y, m - 1, 1);
+    prevStats = calcMonthStats(prevDate.getMonth(), prevDate.getFullYear());
+    const d = new Date(y, m, 1);
+    periodLabel = d.toLocaleString(locale, { month: 'long', year: 'numeric' }).toUpperCase();
+    titleKey = 'monthlyWrapUp';
+
+  } else if (currentReportTab === 'quarter') {
+    const [y, q] = val.split('-').map(Number);
+    stats = calcQuarterStats(q, y);
+    // Previous quarter
+    let prevQ = q - 1, prevY = y;
+    if (prevQ < 1) { prevQ = 4; prevY = y - 1; }
+    prevStats = calcQuarterStats(prevQ, prevY);
+    periodLabel = `${t(`q${q}Label`)} / ${y}`;
+    titleKey = 'quarterlyWrapUp';
+
+  } else {
+    const y = parseInt(val);
+    stats = calcYearStats(y);
+    prevStats = calcYearStats(y - 1);
+    periodLabel = `${y}`;
+    titleKey = 'annualWrapUp';
+  }
+
+  if (titleEl) titleEl.textContent = t(titleKey);
+  if (subtitleEl) subtitleEl.textContent = periodLabel;
+
+  // Build comparison grid (same HTML as monthly report)
+  const hasPrev = prevStats.txnCount > 0;
+  const curLabel = periodLabel;
+  const prevLabel = (() => {
+    if (currentReportTab === 'month') {
+      const [y, m] = val.split('-').map(Number);
+      const pd = new Date(y, m - 1, 1);
+      return pd.toLocaleString(locale, { month: 'short', year: 'numeric' }).toUpperCase();
+    } else if (currentReportTab === 'quarter') {
+      const [y, q] = val.split('-').map(Number);
+      let prevQ = q - 1, prevY = y;
+      if (prevQ < 1) { prevQ = 4; prevY = y - 1; }
+      return `${t(`q${prevQ}Label`)} / ${prevY}`;
+    } else {
+      return `${parseInt(val) - 1}`;
+    }
+  })();
+
+  if (hasPrev) {
+    grid.className = 'report-comparison-grid';
+    grid.innerHTML =
+      buildReportColumnHTML(prevLabel, false, prevStats, stats) +
+      buildReportColumnHTML(curLabel, true, stats, prevStats);
+  } else {
+    grid.className = 'report-comparison-grid single-column';
+    grid.innerHTML = buildReportColumnHTML(curLabel, true, stats, null);
+  }
+
+  // Dynamic message
+  if (msgEl) {
+    let msg = '';
+    if (stats.txnCount === 0) {
+      msg = t('noDataForPeriod');
+    } else if (stats.savings >= 0) {
+      if (stats.savingsRate >= 30) {
+        msg = currentLang === 'vi'
+          ? `🎉 Xuất sắc! Bạn đã tích luỹ <strong>${stats.savingsRate.toFixed(0)}%</strong> thu nhập trong kỳ này. Hãy tiếp tục phong độ đó!`
+          : currentLang === 'zh'
+          ? `🎉 出色！本周期储蓄率达 <strong>${stats.savingsRate.toFixed(0)}%</strong>。继续保持！`
+          : `🎉 Excellent! You saved <strong>${stats.savingsRate.toFixed(0)}%</strong> of your income this period. Keep it up!`;
+      } else {
+        msg = currentLang === 'vi'
+          ? `✅ Kỳ này kết thúc với tích luỹ ròng <strong>${fmt(stats.savings)}</strong>. Tốt lắm!`
+          : currentLang === 'zh'
+          ? `✅ 本周期净储蓄 <strong>${fmt(stats.savings)}</strong>。干得漂亮！`
+          : `✅ You finished this period with a net saving of <strong>${fmt(stats.savings)}</strong>. Well done!`;
+      }
+    } else {
+      msg = currentLang === 'vi'
+        ? `⚠️ Chi tiêu vượt thu nhập <strong>${fmt(Math.abs(stats.savings))}</strong> trong kỳ này. Hãy cân nhắc điều chỉnh ngân sách!`
+        : currentLang === 'zh'
+        ? `⚠️ 本周期支出超出收入 <strong>${fmt(Math.abs(stats.savings))}</strong>。注意调整预算！`
+        : `⚠️ Spending exceeded income by <strong>${fmt(Math.abs(stats.savings))}</strong> this period. Consider adjusting your budget.`;
+    }
+    msgEl.innerHTML = msg;
+  }
+}
+
+/**
+ * Closes the wrapup modal when clicking on the overlay background.
+ */
+function closeWrapupOnOverlay(e) {
+  if (e.target === document.getElementById('monthlyReportModal')) {
+    closeMonthlyReport();
+  }
+}
+
+window.openWrapupModal = openWrapupModal;
+window.switchReportTab = switchReportTab;
+window.handleReportPeriodChange = handleReportPeriodChange;
+window.closeWrapupOnOverlay = closeWrapupOnOverlay;
+window.checkNewPeriodTransitions = checkNewPeriodTransitions;
