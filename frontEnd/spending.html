@@ -182,8 +182,29 @@
         <section class="budget-section" aria-labelledby="budget-heading">
           <div class="budget-section__header">
             <h2 class="section-label" id="budget-heading" data-i18n="budgetPanel">Envelope Budgets</h2>
-            <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET
-              BUDGETS</button>
+            <div class="budget-header-actions">
+              <!-- Budget Sort Dropdown Trigger -->
+              <div class="budget-sort-wrapper" id="budgetSortWrapper">
+                <button class="budget-sort-btn" id="budgetSortBtn"
+                  onclick="toggleBudgetSort(event)"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-label="Sắp xếp ngân sách"
+                  title="Sắp xếp ngân sách">
+                  <svg class="budget-sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/>
+                  </svg>
+                </button>
+                <div class="budget-sort-dropdown" id="budgetSortDropdown"
+                  role="listbox" aria-label="Lựa chọn sắp xếp ngân sách" onclick="event.stopPropagation()">
+                  <!-- Injected dynamically in JS -->
+                </div>
+              </div>
+              <button class="btn-set-budgets" onclick="openBudgetModal()" aria-haspopup="dialog" data-i18n="setBudgets">SET
+                BUDGETS</button>
+            </div>
           </div>
           <div class="budget-panel" id="budgetPanel" aria-live="polite">
             <!-- Budget cards injected by JS -->

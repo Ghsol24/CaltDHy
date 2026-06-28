@@ -723,6 +723,62 @@
   animation: ledPulse .6s ease-in-out infinite;
 }
 
+/* ── Drag handle (LED doubles as grab handle) ── */
+.budget-card__drag-handle {
+  cursor: grab;
+  position: relative;
+  transition: transform 150ms cubic-bezier(.34, 1.56, .64, 1), box-shadow 150ms ease;
+}
+
+/* Expand hit area invisibly so it's easy to grab without changing LED size */
+.budget-card__drag-handle::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  right: -12px;
+  bottom: -12px;
+  border-radius: 50%;
+}
+
+.budget-card__drag-handle:hover {
+  transform: scale(1.4);
+}
+
+/* Status-specific hover glow enhancements */
+.budget-card--ok .budget-card__drag-handle:hover {
+  box-shadow: 0 0 12px 4px rgba(0, 230, 118, .8);
+}
+.budget-card--warn .budget-card__drag-handle:hover {
+  box-shadow: 0 0 12px 4px rgba(241, 196, 15, .8);
+}
+.budget-card--over .budget-card__drag-handle:hover {
+  box-shadow: 0 0 14px 5px rgba(255, 71, 87, .9);
+}
+
+.budget-card__drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Card being dragged: glassmorphic, translucent, slight shrink, inset shadows */
+.budget-card.dragging {
+  opacity: 0.55;
+  transform: scale(0.97);
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+  border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+  transition: opacity 150ms, transform 150ms, background 150ms;
+}
+
+/* Prevent hover lift while dragging */
+.budget-panel:has(.budget-card.dragging) .budget-card:not(.dragging) {
+  transition: border-color 150ms, transform 150ms;
+}
+
 /* Progress bar track */
 .budget-bar {
   width: 100%;

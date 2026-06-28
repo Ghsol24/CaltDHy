@@ -10,6 +10,7 @@ const STORAGE_KEY = 'caltdhy_txns';
 const BUDGET_KEY = 'caltdhy_budgets';
 const CUSTOM_CATS_KEY = 'caltdhy_custom_cats';
 const HIDDEN_CATS_KEY  = 'caltdhy_hidden_cats'; // danh mục mặc định bị ẩn
+const CAT_ORDER_KEY    = 'caltdhy_cat_order';   // thứ tự danh mục do user tùy chỉnh
 const THEME_KEY = 'caltdhy_theme';
 const BALANCE_RESET_KEY = 'caltdhy_balance_reset_mode'; // 'keep' | 'reset'
 const EXCHANGE_RATE = 27000;  // 1 USD = 27,000 VND
@@ -39,6 +40,7 @@ let selectedMonthYear = null;
 let currentSort = 'date-desc'; // 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'
 let balanceResetMode = 'keep'; // 'keep' = lũy kế tất cả | 'reset' = chỉ tính tháng hiện tại
 let newCatType = 'expense'; // type selected in "Add Custom Category" row
+let categoryOrder = []; // user-customized category display order (array of category names)
 let currentReportTab = 'month'; // 'month' | 'quarter' | 'year' — active tab in wrapup modal
 let _wrapupIsManual = false;  // true when opened manually via btn (hides reset box)
 
@@ -93,6 +95,20 @@ function getCategoryType(catName) {
 function getAllCategories() {
   const all = CATEGORIES.filter(c => !hiddenDefaultCategories.includes(c));
   customCategories.forEach(c => { if (!all.includes(c.name)) all.push(c.name); });
+
+  // Sort by user-defined order if available
+  if (categoryOrder.length > 0) {
+    all.sort((a, b) => {
+      const ia = categoryOrder.indexOf(a);
+      const ib = categoryOrder.indexOf(b);
+      // Known items come first in their custom order; unknown items stay at end
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }
+
   return all;
 }
 
@@ -651,6 +667,23 @@ function saveHiddenCategories() {
   } catch (e) { }
 }
 
+/* ── Category Order ── */
+function loadCategoryOrder() {
+  try {
+    const raw = localStorage.getItem(CAT_ORDER_KEY);
+    categoryOrder = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(categoryOrder)) categoryOrder = [];
+  } catch (e) {
+    categoryOrder = [];
+  }
+}
+
+function saveCategoryOrder() {
+  try {
+    localStorage.setItem(CAT_ORDER_KEY, JSON.stringify(categoryOrder));
+  } catch (e) { }
+}
+
 
 
 
@@ -683,6 +716,7 @@ function exportData() {
       transactions: transactions,
       budgets: budgets,
       customCategories: customCategories,
+      categoryOrder: categoryOrder,
       exportDate: new Date().toISOString(),
       version: "1.0"
     };
@@ -814,6 +848,10 @@ function importData(event) {
       if (Array.isArray(data.customCategories)) {
         customCategories = parseCategories(data.customCategories);
         saveCustomCategories();
+      }
+      if (Array.isArray(data.categoryOrder)) {
+        categoryOrder = data.categoryOrder.filter(c => typeof c === 'string');
+        saveCategoryOrder();
       }
 
       showToast(t('backupSuccess'));
@@ -1028,6 +1066,7 @@ function calcCategorySpend() {
 /**
  * Renders the Budget Envelope panel in #budgetPanel.
  * Only shows categories that have a budget limit set.
+ * Supports drag-and-drop reordering via the LED handle.
  */
 function renderBudgetPanel() {
   const panel = document.getElementById('budgetPanel');
@@ -1068,11 +1107,11 @@ function renderBudgetPanel() {
       : `${fmt(remaining)} ${t('budgetLeft')}`;
 
     return `
-      <div class="budget-card ${statusCls}">
+      <div class="budget-card ${statusCls}" data-cat="${escHtml(cat)}" draggable="false">
         <div class="budget-card__header">
           <span class="budget-card__icon">${CAT_ICONS[cat] || '\u2713'}</span>
           <span class="budget-card__name">${escHtml(tCat(cat))}</span>
-          <span class="budget-card__led" aria-hidden="true"></span>
+          <span class="budget-card__led budget-card__drag-handle" aria-hidden="true" title="Giữ để kéo thứ tự"></span>
         </div>
         <div class="budget-bar" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100">
           <div class="budget-bar__fill ${barCls}" style="width:${pct.toFixed(1)}%"></div>
@@ -1084,7 +1123,101 @@ function renderBudgetPanel() {
         </div>
       </div>`;
   }).join('');
+
+  // Initialize drag-and-drop on the panel
+  _initBudgetPanelDragDrop(panel);
 }
+
+/**
+ * Attach drag-and-drop event listeners to budget panel.
+ * Uses event delegation: dragging is initiated only when mousedown is on the LED handle.
+ *
+ * Root cause of previous bug: pointerover set draggable="true", but when the user
+ * started to move the mouse to initiate drag, the browser fired pointerout (cursor
+ * leaving the handle), which reset draggable="false" BEFORE dragstart could fire.
+ * Fix: use mousedown to set draggable, and only reset it on mouseup or dragend.
+ */
+function _initBudgetPanelDragDrop(panel) {
+  let dragSrcCard = null;
+  let pendingDragCard = null; // card that is primed for drag via mousedown on handle
+
+  panel.addEventListener('mousedown', (e) => {
+    const handle = e.target.closest('.budget-card__drag-handle');
+    if (!handle) return;
+    const card = handle.closest('.budget-card');
+    if (!card) return;
+
+    // Prime this card for dragging
+    card.setAttribute('draggable', 'true');
+    pendingDragCard = card;
+
+    // Safety reset: if user releases mouse without ever dragging, remove draggable
+    const onMouseUp = () => {
+      if (pendingDragCard && !dragSrcCard) {
+        pendingDragCard.setAttribute('draggable', 'false');
+        pendingDragCard = null;
+      }
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    document.addEventListener('mouseup', onMouseUp, { once: true });
+  });
+
+  panel.addEventListener('dragstart', (e) => {
+    // Only allow drag if this card was primed via mousedown on the handle
+    const card = e.target.closest('.budget-card');
+    if (!card || !pendingDragCard || card !== pendingDragCard) {
+      e.preventDefault();
+      return;
+    }
+    dragSrcCard = card;
+    requestAnimationFrame(() => card.classList.add('dragging'));
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.dataset.cat || '');
+  });
+
+  panel.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!dragSrcCard) return;
+    const target = e.target.closest('.budget-card');
+    if (!target || target === dragSrcCard) return;
+
+    // Grid-aware swap: use diagonal split (top-left = insert before, bottom-right = insert after)
+    const rect = target.getBoundingClientRect();
+    const relX = (e.clientX - rect.left) / rect.width;
+    const relY = (e.clientY - rect.top) / rect.height;
+    const insertBefore = (relX + relY) < 1.0;
+
+    if (insertBefore) {
+      panel.insertBefore(dragSrcCard, target);
+    } else {
+      panel.insertBefore(dragSrcCard, target.nextSibling);
+    }
+  });
+
+  panel.addEventListener('dragend', () => {
+    if (!dragSrcCard) return;
+    dragSrcCard.classList.remove('dragging');
+    dragSrcCard.setAttribute('draggable', 'false');
+
+    // Extract new order from DOM
+    const cards = panel.querySelectorAll('.budget-card[data-cat]');
+    categoryOrder = Array.from(cards).map(c => c.dataset.cat);
+    saveCategoryOrder();
+
+    // Reset auto-sort state: user is now in custom (drag) order
+    currentBudgetSort = null;
+
+    // Update dropdowns to reflect new order
+    updateCategoryDropdown('txnCat', currentType === 'income' ? 'income' : 'expense');
+    updateCategoryDropdown('qlCat', 'expense');
+
+    dragSrcCard = null;
+    pendingDragCard = null;
+  });
+}
+
+
 
 const CHART_COLORS = [
   { bg: '#ff4757', glow: 'rgba(255,71,87,.75)' },  // Accent Red / Safety Orange
@@ -1615,6 +1748,14 @@ function switchView(view) {
   const viewAnalytics = document.getElementById('view-analytics');
   if (viewHome) viewHome.classList.toggle('active', view === 'home');
   if (viewAnalytics) viewAnalytics.classList.toggle('active', view === 'analytics');
+
+  // Bug 1: Ẩn nút budget sort khi đang ở analytics — calcCategorySpend dùng tháng hiện tại,
+  // không phải tháng đang xem trong analytics, nên ẩn nút tránh nhầm lẫn UX.
+  const budgetSortWrapper = document.getElementById('budgetSortWrapper');
+  if (budgetSortWrapper) {
+    budgetSortWrapper.style.display = view === 'analytics' ? 'none' : '';
+    if (view === 'analytics') closeBudgetSort();
+  }
   
   if (view === 'analytics') {
     // Redraw the trend chart immediately to fit the spacious area
@@ -1878,7 +2019,12 @@ function closeMonthDetailOnOverlay(e) {
 function triggerUIUpdates() {
   calcMetrics();
   renderFeed();
-  renderBudgetPanel();
+  // Opt 4: Re-apply current auto-sort after data changes (new txn, import, etc.)
+  if (currentBudgetSort) {
+    sortBudgets(currentBudgetSort);
+  } else {
+    renderBudgetPanel();
+  }
   updateChart();
   renderMonthSelector();
   updateAnalyticsSummary();
@@ -2122,6 +2268,118 @@ function closeFeedSort() {
 }
 
 /* ============================================================
+   BUDGET SORT DROPDOWN
+   ============================================================ */
+let currentBudgetSort = null; // null means custom drag order
+
+function renderBudgetSortDropdown() {
+  const dropdown = document.getElementById('budgetSortDropdown');
+  if (!dropdown) return;
+
+  const sortOptions = [
+    { key: 'limit-desc',  label: t('budgetSortLimitDesc')  },
+    { key: 'limit-asc',   label: t('budgetSortLimitAsc')   },
+    { key: 'remain-desc', label: t('budgetSortRemainDesc') },
+    { key: 'remain-asc',  label: t('budgetSortRemainAsc')  }
+  ];
+
+  dropdown.innerHTML = `
+    <div class="feed-sort-section-label">${escHtml(t('budgetSortTitle'))}</div>
+    ${sortOptions.map(opt => `
+      <button
+        class="budget-sort-option${currentBudgetSort === opt.key ? ' active' : ''}"
+        onclick="changeBudgetSort('${opt.key}')"
+        role="option"
+        aria-selected="${currentBudgetSort === opt.key ? 'true' : 'false'}">
+        ${escHtml(opt.label)}
+      </button>
+    `).join('')}
+  `;
+}
+
+function toggleBudgetSort(e) {
+  if (e) e.stopPropagation();
+  const wrapper = document.getElementById('budgetSortWrapper');
+  const btn = document.getElementById('budgetSortBtn');
+  if (!wrapper) return;
+
+  const isOpen = wrapper.classList.toggle('open');
+  if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+  if (isOpen) {
+    renderBudgetSortDropdown();
+  }
+}
+
+function changeBudgetSort(sortKey) {
+  currentBudgetSort = sortKey;
+  closeBudgetSort();
+  if (sortKey) {
+    sortBudgets(sortKey);
+  } else {
+    loadCategoryOrder();
+    renderBudgetPanel();
+    updateCategoryDropdown('txnCat', currentType === 'income' ? 'income' : 'expense');
+    updateCategoryDropdown('qlCat', 'expense');
+  }
+}
+
+function closeBudgetSort() {
+  const wrapper = document.getElementById('budgetSortWrapper');
+  const btn = document.getElementById('budgetSortBtn');
+  if (wrapper) wrapper.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function sortBudgets(criteria) {
+  const activeCats = getAllCategories().filter(c => budgets[c] && budgets[c] > 0);
+  const spent = calcCategorySpend();
+
+  activeCats.sort((a, b) => {
+    const limitA = budgets[a] || 0;
+    const limitB = budgets[b] || 0;
+    const remainA = limitA - (spent[a] || 0);
+    const remainB = limitB - (spent[b] || 0);
+
+    switch (criteria) {
+      case 'limit-desc':
+        return limitB - limitA;
+
+      case 'limit-asc':
+        return limitA - limitB;
+
+      case 'remain-desc':
+        // Positive remaining first (most first), over-budget pushed to end
+        if (remainA > 0 && remainB <= 0) return -1;
+        if (remainA <= 0 && remainB > 0) return 1;
+        if (remainA <= 0 && remainB <= 0) return limitB - limitA; // both over: sort by limit desc
+        return remainB - remainA;
+
+      case 'remain-asc':
+        // Positive remaining ONLY sorted ascending (least remaining = most urgent first).
+        // Over-budget categories are pushed to the END, sorted by how much they exceeded (worst last).
+        if (remainA > 0 && remainB <= 0) return -1; // a has money left, goes before over-budget b
+        if (remainA <= 0 && remainB > 0) return 1;  // b has money left, goes before over-budget a
+        if (remainA <= 0 && remainB <= 0) return remainA - remainB; // both over: most over goes last
+        return remainA - remainB; // both positive: smallest remaining first (most urgent)
+
+      default:
+        return 0;
+    }
+  });
+
+  const allCats = getAllCategories();
+  const otherCats = allCats.filter(c => !activeCats.includes(c));
+  categoryOrder = [...activeCats, ...otherCats];
+  saveCategoryOrder();
+
+  renderBudgetPanel();
+
+  updateCategoryDropdown('txnCat', currentType === 'income' ? 'income' : 'expense');
+  updateCategoryDropdown('qlCat', 'expense');
+}
+
+/* ============================================================
    UNDO DELETE
    ============================================================ */
 let _deletedTxn = null;
@@ -2150,6 +2408,13 @@ function hideDefaultCategory(name) {
   if (budgets[name] !== undefined) {
     delete budgets[name];
     saveBudgets();
+  }
+
+  // Bug 3: Xóa khỏi categoryOrder để tránh rác trong localStorage
+  const orderIdx = categoryOrder.indexOf(name);
+  if (orderIdx !== -1) {
+    categoryOrder.splice(orderIdx, 1);
+    saveCategoryOrder();
   }
 
   // Rebuild modal + UI
@@ -2260,6 +2525,13 @@ function deleteCustomCategory(name) {
     saveBudgets();
   }
 
+  // Bug 3: Xóa khỏi categoryOrder để tránh rác trong localStorage
+  const orderIdx = categoryOrder.indexOf(name);
+  if (orderIdx !== -1) {
+    categoryOrder.splice(orderIdx, 1);
+    saveCategoryOrder();
+  }
+
   // Refresh
   openBudgetModal();
   renderBudgetPanel();
@@ -2279,6 +2551,17 @@ function deleteCustomCategory(name) {
     if (_deletedCustomCatBudget !== null) {
       budgets[_deletedCustomCat] = _deletedCustomCatBudget;
       saveBudgets();
+    }
+
+    // Restore vị trí trong categoryOrder (thêm lại vào cuối nếu chưa có)
+    if (!categoryOrder.includes(_deletedCustomCat)) {
+      // Cố gắng chèn lại đúng vị trí cũ; nếu không biết thì thêm vào cuối
+      if (orderIdx !== -1 && orderIdx <= categoryOrder.length) {
+        categoryOrder.splice(orderIdx, 0, _deletedCustomCat);
+      } else {
+        categoryOrder.push(_deletedCustomCat);
+      }
+      saveCategoryOrder();
     }
 
     _deletedCustomCat = null;
@@ -2582,6 +2865,12 @@ const I18N = {
     sortDateAsc: 'Oldest First',
     sortAmountDesc: 'Highest Amount',
     sortAmountAsc: 'Lowest Amount',
+    budgetSortTitle: 'Sort Budgets',
+    budgetSortLimitDesc: 'Highest Limit',
+    budgetSortLimitAsc: 'Lowest Limit',
+    budgetSortRemainDesc: 'Highest Remaining',
+    budgetSortRemainAsc: 'Lowest Remaining',
+    budgetSortCustom: 'Custom (Drag & Drop)',
     newTransaction: 'New Transaction',
     typeExpense: 'EXPENSE',
     typeIncome: 'INCOME',
@@ -2841,6 +3130,12 @@ const I18N = {
     sortDateAsc: 'Cũ nhất trước',
     sortAmountDesc: 'Số tiền lớn nhất',
     sortAmountAsc: 'Số tiền nhỏ nhất',
+    budgetSortTitle: 'Sắp xếp ngân sách',
+    budgetSortLimitDesc: 'Hạn mức lớn nhất',
+    budgetSortLimitAsc: 'Hạn mức bé nhất',
+    budgetSortRemainDesc: 'Còn lại nhiều nhất',
+    budgetSortRemainAsc: 'Còn lại ít nhất',
+    budgetSortCustom: 'Tùy chỉnh (Kéo thả)',
     newTransaction: 'Giao Dịch Mới',
     typeExpense: 'CHI TIÊU',
     typeIncome: 'THU NHẬP',
@@ -3100,6 +3395,12 @@ const I18N = {
     sortDateAsc: '最早优先',
     sortAmountDesc: '金额从大到小',
     sortAmountAsc: '金额从小到大',
+    budgetSortTitle: '预算排序',
+    budgetSortLimitDesc: '限额最高',
+    budgetSortLimitAsc: '限额最低',
+    budgetSortRemainDesc: '余额最多',
+    budgetSortRemainAsc: '余额最少',
+    budgetSortCustom: '自定义（拖拽）',
     newTransaction: '新建交易',
     typeExpense: '支出',
     typeIncome: '收入',
@@ -3948,6 +4249,13 @@ function addCustomCategory() {
     saveBudgets();
   }
 
+  // Bug 2: Sync danh mục mới vào categoryOrder để thứ tự custom không bị mất.
+  // Danh mục mới được thêm vào cuối thứ tự hiện tại.
+  if (!categoryOrder.includes(name)) {
+    categoryOrder.push(name);
+    saveCategoryOrder();
+  }
+
   nameEl.value = '';
   limitEl.value = '';
   // Close type dropdown if open
@@ -4056,6 +4364,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initUser();
   loadHiddenCategories();  // Load trước để getAllCategories() filter đúng
   loadCustomCategories();
+  loadCategoryOrder();     // Load thứ tự danh mục do user tùy chỉnh
   loadTransactions();
   loadBudgets();
   loadBalanceResetMode(); // Load trước calcMetrics để số dư tính đúng chế độ
@@ -4089,6 +4398,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const wrapper = document.getElementById('feedSortWrapper');
     if (wrapper && !wrapper.contains(e.target)) {
       closeFeedSort();
+    }
+
+    const bSortWrapper = document.getElementById('budgetSortWrapper');
+    if (bSortWrapper && !bSortWrapper.contains(e.target)) {
+      closeBudgetSort();
     }
 
     // Close new category type dropdown when clicking outside
@@ -4133,6 +4447,10 @@ window.toggleFeedSort = toggleFeedSort;
 window.changeFeedSort = changeFeedSort;
 window.closeFeedSort = closeFeedSort;
 window.renderFeedSortDropdown = renderFeedSortDropdown;
+window.toggleBudgetSort = toggleBudgetSort;
+window.changeBudgetSort = changeBudgetSort;
+window.closeBudgetSort = closeBudgetSort;
+window.renderBudgetSortDropdown = renderBudgetSortDropdown;
 window.closeModal = closeModal;
 window.openModal = openModal;
 window.closeModalOnOverlay = closeModalOnOverlay;
