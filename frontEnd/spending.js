@@ -6056,8 +6056,60 @@ function genJarId() {
    RENDER — VIEW JARS
    ============================================================ */
 function renderJarsView() {
+  renderJarSummary();
   renderJarCards();
   renderInstallmentList();
+}
+
+function renderJarSummary() {
+  const summaryEl = document.getElementById('jarsSummaryHeader');
+  if (!summaryEl) return;
+
+  const totalSaved = jars.reduce((sum, j) => sum + (j.current || 0), 0);
+  const totalTarget = jars.reduce((sum, j) => sum + (j.target || 0), 0);
+  const avgProgress = totalTarget > 0 ? Math.min(100, (totalSaved / totalTarget) * 100) : 0;
+
+  // Find next active upcoming installment
+  const activeInst = installments.filter(i => i.active);
+  let nextBillStr = 'Không có hóa đơn';
+  let nextBillAmount = '';
+  if (activeInst.length > 0) {
+    const sorted = [...activeInst].sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
+    const nextBill = sorted[0];
+    const days = daysUntil(nextBill.nextDueDate);
+    const dayLabel = days < 0 ? `Trễ ${Math.abs(days)} ngày` : days === 0 ? 'Hôm nay!' : `Còn ${days} ngày`;
+    nextBillStr = `${nextBill.icon} ${nextBill.name} (${dayLabel})`;
+    nextBillAmount = fmtJar(nextBill.amount);
+  }
+
+  summaryEl.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-card__label">Tổng Tích Lũy</div>
+      <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card__label">Tiến Độ Trung Bình</div>
+      <div class="summary-card__value value--blue">${avgProgress.toFixed(0)}%</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card__label">Hóa Đơn Sắp Tới</div>
+      <div class="summary-card__value value--rose">
+        <span class="value-title" title="${nextBillStr}">${nextBillStr}</span>
+        ${nextBillAmount ? `<span class="value-sub">${nextBillAmount}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function triggerJarSlosh(jarId, element) {
+  const container = element.querySelector('.jar-glass-container');
+  if (!container) return;
+  container.classList.remove('slosh');
+  void container.offsetWidth; // trigger reflow
+  container.classList.add('slosh');
+  setTimeout(() => {
+    container.classList.remove('slosh');
+  }, 800);
 }
 
 function renderJarCards() {
@@ -6096,9 +6148,26 @@ function renderJarCards() {
           <span class="jar-card__sep">/</span>
           <span class="jar-card__target">${fmtJar(jar.target)}</span>
         </div>
-        <div class="jar-progress" aria-label="Tiến độ ${pctDisplay}%">
-          <div class="jar-progress__bar" style="width:${pct}%"></div>
+        
+        <!-- Premium Liquid Jar Animation Visual -->
+        <div class="jar-visual-wrapper" onclick="triggerJarSlosh('${jar.id}', this)">
+          <div class="jar-glass-container">
+            <div class="jar-neck"></div>
+            <div class="jar-body">
+              <div class="jar-water-fill" style="height: ${pct}%;">
+                <svg class="jar-water-waves" viewBox="0 0 120 28" preserveAspectRatio="none">
+                  <path class="jar-wave-path wave-back" d="M0 15 Q 30 0, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                  <path class="jar-wave-path wave-front" d="M0 15 Q 30 30, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                </svg>
+                <div class="jar-water-body"></div>
+                <div class="water-bubble bubble-1"></div>
+                <div class="water-bubble bubble-2"></div>
+                <div class="water-bubble bubble-3"></div>
+              </div>
+            </div>
+          </div>
         </div>
+
         <div class="jar-card__meta">
           <span class="jar-card__pct">${pctDisplay}%</span>
           ${daysStr ? `<span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}
@@ -6112,6 +6181,19 @@ function renderJarCards() {
         }
       </div>`;
   }).join('');
+}
+
+function formatTimelineDate(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const [_, m, d] = parts;
+  if (typeof currentLang !== 'undefined' && currentLang === 'en') {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`;
+  } else {
+    return `${parseInt(d, 10)} thg ${parseInt(m, 10)}`;
+  }
 }
 
 function renderInstallmentList() {
@@ -6142,7 +6224,7 @@ function renderInstallmentList() {
       countdownStr = `<span class="inst-badge inst-badge--paused">⏸ Tạm dừng</span>`;
     } else if (isOverdue) {
       statusClass = 'inst-item--overdue';
-      countdownStr = `<span class="inst-badge inst-badge--overdue">⚠️ Quá hạn ${Math.abs(days)} ngày</span>`;
+      countdownStr = `<span class="inst-badge inst-badge--overdue">⚠️ Trễ ${Math.abs(days)} ngày</span>`;
     } else if (isSoon) {
       statusClass = 'inst-item--soon';
       countdownStr = days === 0
@@ -6152,19 +6234,24 @@ function renderInstallmentList() {
       countdownStr = `<span class="inst-badge inst-badge--ok">✓ Còn ${days} ngày</span>`;
     }
 
+    const dateBubble = formatTimelineDate(inst.nextDueDate);
+
     return `
-      <div class="inst-item ${statusClass}" data-inst-id="${inst.id}">
-        <div class="inst-item__dot ${isOverdue ? 'dot--overdue' : isSoon ? 'dot--soon' : 'dot--ok'}"></div>
-        <span class="inst-item__icon">${inst.icon}</span>
-        <div class="inst-item__info">
-          <span class="inst-item__name">${inst.name}</span>
-          <span class="inst-item__meta">${fmtJar(inst.amount)} · ${cycleLabel(inst.cycle)}</span>
-        </div>
-        <div class="inst-item__right">
-          ${countdownStr}
-          ${inst.active ? `<button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">✓ Đã trả</button>` : ''}
-          <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">${inst.active ? '⏸' : '▶'}</button>
-          <button class="inst-delete-btn" onclick="deleteInstallment('${inst.id}')" title="Xóa">✕</button>
+      <div class="inst-timeline-node">
+        <div class="inst-date-bubble">${dateBubble}</div>
+        <div class="inst-item ${statusClass}" data-inst-id="${inst.id}">
+          <div class="inst-item__dot ${isOverdue ? 'dot--overdue' : isSoon ? 'dot--soon' : 'dot--ok'}"></div>
+          <span class="inst-item__icon">${inst.icon}</span>
+          <div class="inst-item__info">
+            <span class="inst-item__name">${inst.name}</span>
+            <span class="inst-item__meta">${fmtJar(inst.amount)} · ${cycleLabel(inst.cycle)}</span>
+          </div>
+          <div class="inst-item__right">
+            ${countdownStr}
+            ${inst.active ? `<button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">✓ Đã trả</button>` : ''}
+            <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">${inst.active ? '⏸' : '▶'}</button>
+            <button class="inst-delete-btn" onclick="deleteInstallment('${inst.id}')" title="Xóa">✕</button>
+          </div>
         </div>
       </div>`;
   };
@@ -6564,3 +6651,5 @@ window.payInstallment       = payInstallment;
 window.toggleInstallmentActive = toggleInstallmentActive;
 window.deleteInstallment    = deleteInstallment;
 window.syncLoadJarsFromServer = syncLoadJarsFromServer;
+window.triggerJarSlosh      = triggerJarSlosh;
+

@@ -350,41 +350,52 @@
            ========================================== -->
       <div id="view-jars" class="dashboard-view">
 
-        <!-- Section: Hũ Tiết Kiệm -->
-        <section class="jars-section" aria-labelledby="jars-heading">
-          <div class="jars-section__header">
-            <div class="jars-section__title-row">
-              <h2 class="section-label" id="jars-heading">🫙 Hũ Tiết Kiệm</h2>
-              <p class="jars-section__subtitle">Tiền trong hũ tách biệt hoàn toàn với số dư chính</p>
-            </div>
-            <button class="btn-add-jar" id="btnAddJar" onclick="openAddJarModal()" aria-haspopup="dialog" aria-label="Thêm hũ mới">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Thêm Hũ Mới
-            </button>
-          </div>
-          <div class="jars-grid" id="jarsGrid">
-            <!-- Injected by renderJarCards() -->
-          </div>
-        </section>
+        <!-- Summary Metrics Bar -->
+        <div class="jars-summary-header" id="jarsSummaryHeader">
+          <!-- Injected by renderJarSummary() -->
+        </div>
 
-        <!-- Section: Trả Góp & Hóa Đơn Định Kỳ -->
-        <section class="installments-section" aria-labelledby="inst-heading">
-          <div class="inst-section__header">
-            <div class="inst-section__title-row">
-              <h2 class="section-label" id="inst-heading">💳 Trả Góp & Hóa Đơn Định Kỳ</h2>
-              <p class="inst-section__subtitle">Theo dõi các khoản thanh toán định kỳ</p>
+        <!-- Columns wrapper -->
+        <div class="jars-columns">
+
+          <!-- Left: Hũ Tiết Kiệm -->
+          <section class="jars-section" aria-labelledby="jars-heading">
+            <div class="jars-section__header">
+              <div class="jars-section__title-row">
+                <h2 class="section-label" id="jars-heading">🫙 Hũ Tiết Kiệm</h2>
+                <p class="jars-section__subtitle">Tách biệt hoàn toàn với số dư chính</p>
+              </div>
+              <button class="btn-add-jar" id="btnAddJar" onclick="openAddJarModal()" aria-haspopup="dialog" aria-label="Thêm hũ mới">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Thêm Hũ
+              </button>
             </div>
-            <button class="btn-add-inst" id="btnAddInst" onclick="openAddInstallmentModal()" aria-haspopup="dialog" aria-label="Thêm khoản định kỳ">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Thêm Khoản
-            </button>
-          </div>
-          <div class="installment-list" id="installmentList">
-            <!-- Injected by renderInstallmentList() -->
-          </div>
-        </section>
+            <div class="jars-grid" id="jarsGrid">
+              <!-- Injected by renderJarCards() -->
+            </div>
+          </section>
+
+          <!-- Right: Trả Góp & Hóa Đơn Định Kỳ -->
+          <section class="installments-section" aria-labelledby="inst-heading">
+            <div class="inst-section__header">
+              <div class="inst-section__title-row">
+                <h2 class="section-label" id="inst-heading">💳 Định Kỳ</h2>
+                <p class="inst-section__subtitle">Thanh toán sắp đến hạn</p>
+              </div>
+              <button class="btn-add-inst" id="btnAddInst" onclick="openAddInstallmentModal()" aria-haspopup="dialog" aria-label="Thêm khoản định kỳ">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Thêm
+              </button>
+            </div>
+            <div class="installment-list" id="installmentList">
+              <!-- Injected by renderInstallmentList() -->
+            </div>
+          </section>
+
+        </div><!-- /jars-columns -->
 
       </div><!-- /view-jars -->
+
 
     </main>
 
