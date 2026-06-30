@@ -1441,6 +1441,7 @@ function updateChart() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          resizeDelay: 150, // Throttling resize events to keep transition 60fps
           animation: { duration: 600, easing: 'easeInOutQuart' },
           plugins: {
             legend: { display: false },
@@ -1696,6 +1697,7 @@ function updateTrendChart() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          resizeDelay: 150, // Throttling resize events to keep transition 60fps
           animation: { duration: 500, easing: 'easeInOutQuad' },
           plugins: {
             legend: {
@@ -4452,6 +4454,12 @@ document.addEventListener('keydown', e => {
    BOOT
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
+  // Load rail collapse preference
+  if (localStorage.getItem('railCollapsed') === 'true') {
+    const body = document.querySelector('.app-body');
+    if (body) body.classList.add('rail-collapsed');
+  }
+
   initUser();
   loadHiddenCategories();  // Load trước để getAllCategories() filter đúng
   loadCustomCategories();
@@ -6062,8 +6070,8 @@ function renderJarsView() {
 }
 
 function renderJarSummary() {
-  const summaryEl = document.getElementById('jarsSummaryHeader');
-  if (!summaryEl) return;
+  const leftSummaryEl = document.getElementById('jarsLeftSummary');
+  const rightSummaryEl = document.getElementById('jarsRightSummary');
 
   const totalSaved = jars.reduce((sum, j) => sum + (j.current || 0), 0);
   const totalTarget = jars.reduce((sum, j) => sum + (j.target || 0), 0);
@@ -6082,24 +6090,44 @@ function renderJarSummary() {
     nextBillAmount = fmtJar(nextBill.amount);
   }
 
-  summaryEl.innerHTML = `
-    <div class="summary-card">
-      <div class="summary-card__label">Tổng Tích Lũy</div>
-      <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-card__label">Tiến Độ Trung Bình</div>
-      <div class="summary-card__value value--blue">${avgProgress.toFixed(0)}%</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-card__label">Hóa Đơn Sắp Tới</div>
-      <div class="summary-card__value value--rose">
-        <span class="value-title" title="${nextBillStr}">${nextBillStr}</span>
-        ${nextBillAmount ? `<span class="value-sub">${nextBillAmount}</span>` : ''}
+  // Render left metrics (Tổng tích lũy & Tiến độ trung bình)
+  if (leftSummaryEl) {
+    leftSummaryEl.innerHTML = `
+      <div class="summary-card">
+        <div class="summary-card__label">Tổng Tích Lũy</div>
+        <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
       </div>
-    </div>
-  `;
+      <div class="summary-card">
+        <div class="summary-card__label">Tiến Độ Trung Bình</div>
+        <div class="summary-card__value value--blue">${avgProgress.toFixed(0)}%</div>
+      </div>
+    `;
+  }
+
+  // Render right metrics (Hóa đơn sắp tới)
+  if (rightSummaryEl) {
+    rightSummaryEl.innerHTML = `
+      <div class="summary-card">
+        <div class="summary-card__label">Hóa Đơn Sắp Tới</div>
+        <div class="summary-card__value value--rose">
+          <span class="value-title" title="${nextBillStr}" onmouseenter="initScrollText(this)">${nextBillStr}</span>
+          ${nextBillAmount ? `<span class="value-sub">${nextBillAmount}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
 }
+
+function initScrollText(el) {
+  const dist = el.scrollWidth - el.clientWidth;
+  if (dist > 0) {
+    el.style.setProperty('--scroll-dist', `-${dist + 10}px`);
+    el.classList.add('can-scroll');
+  } else {
+    el.classList.remove('can-scroll');
+  }
+}
+window.initScrollText = initScrollText;
 
 function triggerJarSlosh(jarId, element) {
   const container = element.querySelector('.jar-glass-container');
@@ -6134,51 +6162,65 @@ function renderJarCards() {
       : '';
     const isOverdue = daysLeft !== null && daysLeft < 0;
     const isComplete = pct >= 100;
+    const capName = jar.name.charAt(0).toUpperCase() + jar.name.slice(1);
 
     return `
       <div class="jar-card ${isComplete ? 'jar-card--complete' : ''}" style="--jar-color:${jar.color};" data-jar-id="${jar.id}">
         <div class="jar-card__glow" aria-hidden="true"></div>
-        <div class="jar-card__header">
-          <span class="jar-card__icon">${jar.icon}</span>
-          <button class="jar-card__delete" onclick="confirmDeleteJar('${jar.id}')" aria-label="Xóa hũ ${jar.name}" title="Xóa hũ">✕</button>
-        </div>
-        <h3 class="jar-card__name">${jar.name}</h3>
-        <div class="jar-card__amounts">
-          <span class="jar-card__current">${fmtJar(jar.current)}</span>
-          <span class="jar-card__sep">/</span>
-          <span class="jar-card__target">${fmtJar(jar.target)}</span>
-        </div>
+        <button class="jar-card__delete" onclick="confirmDeleteJar('${jar.id}')" aria-label="Xóa hũ ${jar.name}" title="Xóa hũ">✕</button>
         
-        <!-- Premium Liquid Jar Animation Visual -->
-        <div class="jar-visual-wrapper" onclick="triggerJarSlosh('${jar.id}', this)">
-          <div class="jar-glass-container">
-            <div class="jar-neck"></div>
-            <div class="jar-body">
-              <div class="jar-water-fill" style="height: ${pct}%;">
-                <svg class="jar-water-waves" viewBox="0 0 120 28" preserveAspectRatio="none">
-                  <path class="jar-wave-path wave-back" d="M0 15 Q 30 10, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
-                  <path class="jar-wave-path wave-front" d="M0 15 Q 30 20, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
-                </svg>
-                <div class="jar-water-body"></div>
-                <div class="water-bubble bubble-1"></div>
-                <div class="water-bubble bubble-2"></div>
-                <div class="water-bubble bubble-3"></div>
+        <div class="jar-card__content">
+          <div class="jar-card__info-section">
+            <div class="jar-card__header-row">
+              <span class="jar-card__icon">${jar.icon}</span>
+              <h3 class="jar-card__name">${capName}</h3>
+            </div>
+            
+            <div class="jar-card__amounts">
+              <span class="jar-card__current">${fmtJar(jar.current)}</span>
+              <span class="jar-card__sep">/</span>
+              <span class="jar-card__target">${fmtJar(jar.target)}</span>
+            </div>
+
+            <!-- Sleek Horizontal Progress Bar -->
+            <div class="jar-progress-bar-wrapper">
+              <div class="jar-progress-bar-track">
+                <div class="jar-progress-bar-fill" style="width: ${pct}%; background-color: var(--jar-color);"></div>
+              </div>
+              <div class="jar-card__meta-info">
+                <span class="jar-card__pct">${pctDisplay}%</span>
+                ${daysStr ? `<span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}
+              </div>
+            </div>
+
+            ${isComplete
+              ? `<div class="jar-card__complete-badge">🎉 Đạt mục tiêu!</div>`
+              : `<div class="jar-card__actions">
+                  <button class="jar-btn jar-btn--deposit" onclick="openJarTxnModal('${jar.id}','deposit')" aria-haspopup="dialog">+ Nạp</button>
+                  <button class="jar-btn jar-btn--withdraw" onclick="openJarTxnModal('${jar.id}','withdraw')" aria-haspopup="dialog" ${jar.current <= 0 ? 'disabled' : ''}>− Rút</button>
+                </div>`
+            }
+          </div>
+
+          <!-- Glass Jar Visual Column -->
+          <div class="jar-card__visual-section" onclick="triggerJarSlosh('${jar.id}', this)">
+            <div class="jar-glass-container">
+              <div class="jar-neck"></div>
+              <div class="jar-body">
+                <div class="jar-water-fill" style="height: ${pct}%;">
+                  <svg class="jar-water-waves" viewBox="0 0 120 28" preserveAspectRatio="none">
+                    <path class="jar-wave-path wave-back" d="M0 15 Q 30 10, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                    <path class="jar-wave-path wave-front" d="M0 15 Q 30 20, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                  </svg>
+                  <div class="jar-water-body"></div>
+                  <div class="water-bubble bubble-1"></div>
+                  <div class="water-bubble bubble-2"></div>
+                  <div class="water-bubble bubble-3"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="jar-card__meta">
-          <span class="jar-card__pct">${pctDisplay}%</span>
-          ${daysStr ? `<span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}
-        </div>
-        ${isComplete
-          ? `<div class="jar-card__complete-badge">🎉 Đạt mục tiêu!</div>`
-          : `<div class="jar-card__actions">
-              <button class="jar-btn jar-btn--deposit" onclick="openJarTxnModal('${jar.id}','deposit')" aria-haspopup="dialog">+ Nạp</button>
-              <button class="jar-btn jar-btn--withdraw" onclick="openJarTxnModal('${jar.id}','withdraw')" aria-haspopup="dialog" ${jar.current <= 0 ? 'disabled' : ''}>− Rút</button>
-            </div>`
-        }
       </div>`;
   }).join('');
 }
@@ -6235,6 +6277,7 @@ function renderInstallmentList() {
     }
 
     const dateBubble = formatTimelineDate(inst.nextDueDate);
+    const capName = inst.name.charAt(0).toUpperCase() + inst.name.slice(1);
 
     return `
       <div class="inst-timeline-node">
@@ -6243,14 +6286,26 @@ function renderInstallmentList() {
           <div class="inst-item__dot ${isOverdue ? 'dot--overdue' : isSoon ? 'dot--soon' : 'dot--ok'}"></div>
           <span class="inst-item__icon">${inst.icon}</span>
           <div class="inst-item__info">
-            <span class="inst-item__name">${inst.name}</span>
+            <span class="inst-item__name">${capName}</span>
             <span class="inst-item__meta">${fmtJar(inst.amount)} · ${cycleLabel(inst.cycle)}</span>
           </div>
           <div class="inst-item__right">
             ${countdownStr}
-            ${inst.active ? `<button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">✓ Đã trả</button>` : ''}
-            <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">${inst.active ? '⏸' : '▶'}</button>
-            <button class="inst-delete-btn" onclick="deleteInstallment('${inst.id}')" title="Xóa">✕</button>
+            ${inst.active ? `
+              <button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Trả</span>
+              </button>` : ''
+            }
+            <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">
+              ${inst.active 
+                ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
+                : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
+              }
+            </button>
+            <button class="inst-delete-btn" onclick="deleteInstallment('${inst.id}')" title="Xóa">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         </div>
       </div>`;
@@ -6297,6 +6352,14 @@ window.switchView = function switchViewExtended(view) {
 
   _originalSwitchView(view);
 };
+
+function toggleRail() {
+  const body = document.querySelector('.app-body');
+  if (!body) return;
+  const isCollapsed = body.classList.toggle('rail-collapsed');
+  localStorage.setItem('railCollapsed', isCollapsed ? 'true' : 'false');
+}
+window.toggleRail = toggleRail;
 
 /* ============================================================
    MODAL — ADD JAR
