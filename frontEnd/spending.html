@@ -64,6 +64,7 @@
     <div class="tb-nav" role="navigation" aria-label="Main Navigation">
       <button class="tb-nav-btn active" id="nav-home" onclick="switchView('home')" data-i18n="navHome">DASHBOARD</button>
       <button class="tb-nav-btn" id="nav-analytics" onclick="switchView('analytics')" data-i18n="navAnalytics">ANALYTICS</button>
+      <button class="tb-nav-btn" id="nav-jars" onclick="switchView('jars')" aria-label="Hũ Chi Tiêu">🫙 JARS</button>
     </div>
 
     <div class="tb-center" aria-label="Welcome and Date">
@@ -342,7 +343,48 @@
             <!-- Dynamically injected compare analytics cards -->
           </div>
         </section>
-      </div><!-- /view-analytics -->
+        </div><!-- /view-analytics -->
+
+      <!-- ==========================================
+           3. JARS VIEW (HŨ CHI TIÊU)
+           ========================================== -->
+      <div id="view-jars" class="dashboard-view">
+
+        <!-- Section: Hũ Tiết Kiệm -->
+        <section class="jars-section" aria-labelledby="jars-heading">
+          <div class="jars-section__header">
+            <div class="jars-section__title-row">
+              <h2 class="section-label" id="jars-heading">🫙 Hũ Tiết Kiệm</h2>
+              <p class="jars-section__subtitle">Tiền trong hũ tách biệt hoàn toàn với số dư chính</p>
+            </div>
+            <button class="btn-add-jar" id="btnAddJar" onclick="openAddJarModal()" aria-haspopup="dialog" aria-label="Thêm hũ mới">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm Hũ Mới
+            </button>
+          </div>
+          <div class="jars-grid" id="jarsGrid">
+            <!-- Injected by renderJarCards() -->
+          </div>
+        </section>
+
+        <!-- Section: Trả Góp & Hóa Đơn Định Kỳ -->
+        <section class="installments-section" aria-labelledby="inst-heading">
+          <div class="inst-section__header">
+            <div class="inst-section__title-row">
+              <h2 class="section-label" id="inst-heading">💳 Trả Góp & Hóa Đơn Định Kỳ</h2>
+              <p class="inst-section__subtitle">Theo dõi các khoản thanh toán định kỳ</p>
+            </div>
+            <button class="btn-add-inst" id="btnAddInst" onclick="openAddInstallmentModal()" aria-haspopup="dialog" aria-label="Thêm khoản định kỳ">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm Khoản
+            </button>
+          </div>
+          <div class="installment-list" id="installmentList">
+            <!-- Injected by renderInstallmentList() -->
+          </div>
+        </section>
+
+      </div><!-- /view-jars -->
 
     </main>
 
@@ -1361,6 +1403,145 @@
       </div>
     </div>
   </div><!-- /monthlyReportModal -->
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — THÊM HŨ MỚI
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addJarModal" role="dialog" aria-modal="true" aria-labelledby="add-jar-modal-title" onclick="closeAddJarOnOverlay(event)">
+    <div class="modal-card modal-card--jar">
+      <button class="modal-close" onclick="closeAddJarModal()" aria-label="Đóng">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="add-jar-modal-title">🫙 Tạo Hũ Mới</h2>
+
+      <!-- Emoji Selector -->
+      <div class="jar-form-emoji-row">
+        <div class="jar-emoji-display">
+          <span class="jar-emoji-preview" aria-label="Icon đã chọn">🫙</span>
+          <span class="jar-emoji-hint">Chọn icon</span>
+        </div>
+        <div class="jar-emoji-grid" role="group" aria-label="Chọn emoji cho hũ">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- Color Picker -->
+      <div class="jar-form-group">
+        <label class="jar-form-label">Màu sắc</label>
+        <div class="jar-color-picker" role="group" aria-label="Chọn màu">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="jarNameInput">Tên hũ <span class="required">*</span></label>
+        <input class="jar-form-input" id="jarNameInput" type="text" placeholder="VD: Quỹ du lịch, Mua xe..." maxlength="50" autocomplete="off" />
+      </div>
+
+      <!-- Target -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="jarTargetInput">Mục tiêu <span class="required">*</span></label>
+        <input class="jar-form-input" id="jarTargetInput" type="text" placeholder="VD: 10000000 hoặc 10M" autocomplete="off" inputmode="numeric" />
+      </div>
+
+      <!-- Target Date -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="jarTargetDateInput">Ngày mục tiêu <span class="jar-form-optional">(tùy chọn)</span></label>
+        <input class="jar-form-input" id="jarTargetDateInput" type="date" />
+      </div>
+
+      <button class="btn-jar-submit" id="btnSubmitJar" onclick="submitAddJar()">Tạo Hũ</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — NẠP / RÚT TIỀN HŨ
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="jarTxnModal" role="dialog" aria-modal="true" aria-labelledby="jar-txn-modal-title" onclick="closeJarTxnOnOverlay(event)">
+    <div class="modal-card modal-card--jar-txn">
+      <button class="modal-close" onclick="closeJarTxnModal()" aria-label="Đóng">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <div class="jar-txn-header">
+        <span class="jar-txn-icon" aria-hidden="true">🫙</span>
+        <div>
+          <h2 class="modal-title jar-txn-title" id="jar-txn-modal-title">Nạp tiền</h2>
+          <p class="jar-txn-subtitle">Số dư hiện tại: 0 ₫</p>
+        </div>
+      </div>
+
+      <div class="jar-form-group">
+        <label class="jar-form-label jar-txn-label" for="jarTxnAmount">Số tiền nạp</label>
+        <input class="jar-form-input jar-form-input--lg" id="jarTxnAmount" type="text" placeholder="VD: 500000 hoặc 500K" autocomplete="off" inputmode="numeric"
+          onkeydown="if(event.key==='Enter') submitJarTxn()" />
+      </div>
+
+      <button class="btn-jar-submit" id="btnSubmitJarTxn" onclick="submitJarTxn()">Xác nhận</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — THÊM KHOẢN ĐỊNH KỲ
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="addInstallmentModal" role="dialog" aria-modal="true" aria-labelledby="add-inst-modal-title" onclick="closeAddInstallmentOnOverlay(event)">
+    <div class="modal-card modal-card--inst">
+      <button class="modal-close" onclick="closeAddInstallmentModal()" aria-label="Đóng">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="add-inst-modal-title">💳 Thêm Khoản Định Kỳ</h2>
+
+      <!-- Emoji Selector -->
+      <div class="jar-form-emoji-row">
+        <div class="jar-emoji-display">
+          <span class="inst-emoji-preview" aria-label="Icon đã chọn">💳</span>
+          <span class="jar-emoji-hint">Chọn icon</span>
+        </div>
+        <div class="inst-emoji-grid" role="group" aria-label="Chọn emoji">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- Name -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="instNameInput">Tên khoản <span class="required">*</span></label>
+        <input class="jar-form-input" id="instNameInput" type="text" placeholder="VD: Netflix, Gym, Trả góp iPhone..." maxlength="60" autocomplete="off" />
+      </div>
+
+      <!-- Amount -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="instAmountInput">Số tiền mỗi kỳ <span class="required">*</span></label>
+        <input class="jar-form-input" id="instAmountInput" type="text" placeholder="VD: 200000 hoặc 200K" autocomplete="off" inputmode="numeric" />
+      </div>
+
+      <!-- Cycle -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="instCycleSelect">Chu kỳ <span class="required">*</span></label>
+        <select class="jar-form-input jar-form-select" id="instCycleSelect">
+          <option value="monthly">Hàng tháng</option>
+          <option value="quarterly">Hàng quý (3 tháng)</option>
+          <option value="yearly">Hàng năm</option>
+        </select>
+      </div>
+
+      <!-- Next Due Date -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="instDueDateInput">Ngày đến hạn đầu tiên <span class="required">*</span></label>
+        <input class="jar-form-input" id="instDueDateInput" type="date" />
+      </div>
+
+      <button class="btn-jar-submit" id="btnSubmitInst" onclick="submitAddInstallment()">Thêm Khoản</button>
+    </div>
+  </div>
 
   <!-- Focus Trap — must load before spending.js -->
   <script src="focus-trap.js"></script>

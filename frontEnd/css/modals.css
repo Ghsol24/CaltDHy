@@ -3650,3 +3650,257 @@ html.green-theme .q-btn-months { color: #475569; }
   .quarter-grid { grid-template-columns: repeat(2, 1fr); }
   .month-slider-track { max-width: 100% !important; }
 }
+
+/* ============================================================
+   JAR MODALS — THÊM HŨ / NẠP RÚT / THÊM ĐỊNH KỲ
+   ============================================================ */
+
+/* Jar modal card sizes */
+.modal-card--jar,
+.modal-card--jar-txn,
+.modal-card--inst {
+  max-width: 480px;
+  background: rgba(23, 23, 27, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  border-radius: 28px;
+}
+
+/* Form groups */
+.jar-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.jar-form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.jar-form-optional {
+  font-size: 0.68rem;
+  font-weight: 400;
+  text-transform: none;
+  color: var(--muted);
+  opacity: 0.6;
+  letter-spacing: 0;
+}
+
+.required { color: #ff6b81; margin-left: 2px; }
+
+.jar-form-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: var(--txt);
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+.jar-form-input:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(52, 152, 219, 0.6);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+.jar-form-input::placeholder {
+  color: var(--muted);
+  opacity: 0.4;
+}
+
+.jar-form-input--lg {
+  font-size: 1.1rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 14px 18px;
+}
+.jar-form-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba%28255,255,255,0.4%29' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+/* Emoji row */
+.jar-form-emoji-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.jar-emoji-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.jar-emoji-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  font-size: 2.2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  cursor: default;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.jar-emoji-hint {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+/* Emoji picker grid */
+.jar-emoji-grid,
+.inst-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  flex: 1;
+}
+
+@media (max-width: 480px) {
+  .jar-emoji-grid,
+  .inst-emoji-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.emoji-opt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  font-size: 1.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1;
+}
+.emoji-opt:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.15);
+}
+.emoji-opt.selected {
+  background: rgba(52, 152, 219, 0.15);
+  border-color: rgba(52, 152, 219, 0.45);
+  transform: scale(1.08);
+}
+
+/* Color picker */
+.jar-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+.color-dot:hover { transform: scale(1.2); }
+.color-dot.selected {
+  border-color: white;
+  box-shadow: 0 0 0 2.5px rgba(255, 255, 255, 0.4);
+  transform: scale(1.12);
+}
+
+/* Jar Txn modal header */
+.jar-txn-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.jar-txn-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.jar-txn-title {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.jar-txn-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Submit button */
+.btn-jar-submit {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 18px rgba(52, 152, 219, 0.3);
+}
+.btn-jar-submit:hover {
+  opacity: 0.95;
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 24px rgba(52, 152, 219, 0.45);
+}
+.btn-jar-submit:active {
+  transform: translateY(0);
+}
+
+

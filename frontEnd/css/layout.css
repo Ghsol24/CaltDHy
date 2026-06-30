@@ -997,3 +997,25 @@ html.green-theme .tb-nav-btn.active::after   { background: #059669; box-shadow: 
 .dashboard-view {
   animation: fadeUp var(--dur-mid) ease both;
 }
+
+/* ── Jars View Layout ── */
+#view-jars {
+  display: none;
+  flex-direction: column;
+  gap: 32px;
+  padding-bottom: 32px;
+}
+#view-jars.active {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  #view-jars.active {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+}
+
+

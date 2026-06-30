@@ -503,6 +503,11 @@ async function syncLoadFromServer() {
     
     // Trigger full UI redraw with new database state
     triggerUIUpdates();
+
+    // Load Jars & Installments (non-blocking, after main data)
+    if (typeof syncLoadJarsFromServer === 'function') {
+      syncLoadJarsFromServer();
+    }
   } catch (e) {
     // Offline mode – sử dụng dữ liệu cục bộ từ localStorage
     isServerConnected = false;
@@ -1219,17 +1224,37 @@ function _initBudgetPanelDragDrop(panel) {
 
 
 
-const CHART_COLORS = [
-  { bg: '#ff4757', glow: 'rgba(255,71,87,.75)' },  // Accent Red / Safety Orange
+const STABLE_CHART_COLORS = [
+  { bg: '#ff4757', glow: 'rgba(255,71,87,.75)' },   // Crimson Red
   { bg: '#3498db', glow: 'rgba(52,152,219,.75)' },  // Cyber Blue
   { bg: '#2ecc71', glow: 'rgba(46,204,113,.75)' },  // Acid Green
+  { bg: '#ff9f43', glow: 'rgba(255,159,67,.75)' },  // Amber Orange
+  { bg: '#9b59b6', glow: 'rgba(155,89,182,.75)' },  // Violet Purple
+  { bg: '#1abc9c', glow: 'rgba(26,188,156,.75)' },  // Deep Teal
+  { bg: '#ff6b81', glow: 'rgba(255,107,129,.75)' }, // Hot Pink
   { bg: '#f1c40f', glow: 'rgba(241,196,15,.75)' },  // Neon Yellow
-  { bg: '#9b59b6', glow: 'rgba(155,89,182,.75)' },  // Violet
-  { bg: '#00e676', glow: 'rgba(0,230,118,.75)' },  // LED Green
-  { bg: '#ff6b81', glow: 'rgba(255,107,129,.75)' },  // Hot Pink
-  { bg: '#1abc9c', glow: 'rgba(26,188,156,.75)' },  // Teal
-  { bg: '#e67e22', glow: 'rgba(230,126,34,.75)' },  // Amber
+  { bg: '#00d2fc', glow: 'rgba(0,210,252,.75)' },   // Ice Cyan
+  { bg: '#ff4d4d', glow: 'rgba(255,77,77,.75)' },    // Coral Red
+  { bg: '#26de81', glow: 'rgba(38,222,129,.75)' },  // Mint Green
+  { bg: '#a55eea', glow: 'rgba(165,94,234,.75)' },  // Soft Lavender
+  { bg: '#e67e22', glow: 'rgba(230,126,34,.75)' },  // Bright Tangerine
+  { bg: '#54a0ff', glow: 'rgba(84,160,255,.75)' },  // Steel Blue
+  { bg: '#10ac84', glow: 'rgba(16,172,132,.75)' },  // Emerald Forest
+  { bg: '#fd79a8', glow: 'rgba(253,121,168,.75)' }  // Rose Gold
 ];
+
+function getCategoryColor(catName) {
+  const defaultIdx = CATEGORIES.indexOf(catName);
+  if (defaultIdx !== -1) {
+    return STABLE_CHART_COLORS[defaultIdx % STABLE_CHART_COLORS.length];
+  }
+  let hash = 0;
+  for (let i = 0; i < catName.length; i++) {
+    hash = catName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % STABLE_CHART_COLORS.length;
+  return STABLE_CHART_COLORS[index];
+}
 
 function getActiveThemeName() {
   const root = document.documentElement;
@@ -1357,9 +1382,9 @@ function updateChart() {
       return;
     }
 
-    /* Build color arrays */
-    const bgColors = labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length].bg);
-    const glowColors = labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length].glow);
+    /* Build color arrays based on stable category keys */
+    const bgColors = rawKeys.map(k => getCategoryColor(k).bg);
+    const glowColors = rawKeys.map(k => getCategoryColor(k).glow);
 
     /* Custom glow plugin for category Doughnut */
     const glowPlugin = {
@@ -2386,8 +2411,36 @@ let _deletedTxn = null;
 let _deletedCustomCat = null;
 let _deletedCustomCatBudget = null;
 let _hiddenDefaultCat = null;  // undo for hide-default-category
+let _hiddenDefaultCatBudget = null;  // undo budget for hide-default-category
+let _hiddenDefaultCatOrderIdx = -1;  // undo position in categoryOrder
 let _undoTimer = null;
 const UNDO_DELAY = 5000; // ms before permanent deletion
+
+/**
+ * Flush current budget modal input values into the `budgets` object.
+ * Must be called BEFORE any action that rebuilds the modal grid
+ * (delete/hide/add category) so that unsaved user edits are preserved.
+ */
+function saveCurrentInputValuesToBudgets() {
+  const grid = document.getElementById('budgetFormGrid');
+  if (!grid) return;
+  grid.querySelectorAll('.budget-form-row[data-cat]').forEach(row => {
+    const cat = row.dataset.cat;
+    const inp = row.querySelector('.budget-form-input');
+    if (!inp) return;
+    const raw = parseFloat(inp.value);
+    if (!isNaN(raw) && raw > 0) {
+      budgets[cat] = currentCurrency === 'USD'
+        ? Math.round(raw * EXCHANGE_RATE)
+        : currentCurrency === 'CNY'
+          ? Math.round(raw * CNY_RATE)
+          : Math.round(raw);
+    } else {
+      delete budgets[cat];
+    }
+  });
+  saveBudgets();
+}
 
 /**
  * Ẩn một danh mục MẶC ĐỊNH (soft-hide, không xóa hẳn).
@@ -2396,7 +2449,12 @@ const UNDO_DELAY = 5000; // ms before permanent deletion
 function hideDefaultCategory(name) {
   if (!CATEGORIES.includes(name)) return; // Chỉ áp dụng cho danh mục mặc định
 
+  // Flush unsaved form edits so other inputs are not lost on modal rebuild
+  saveCurrentInputValuesToBudgets();
+
   _hiddenDefaultCat = name;
+  // Save budget for undo restore
+  _hiddenDefaultCatBudget = budgets[name] !== undefined ? budgets[name] : null;
 
   // Thêm vào danh sách ẩn
   if (!hiddenDefaultCategories.includes(name)) {
@@ -2404,16 +2462,16 @@ function hideDefaultCategory(name) {
     saveHiddenCategories();
   }
 
-  // Xóa budget của danh mục này (optional, tiết kiệm rác)
+  // Xóa budget của danh mục này
   if (budgets[name] !== undefined) {
     delete budgets[name];
     saveBudgets();
   }
 
-  // Bug 3: Xóa khỏi categoryOrder để tránh rác trong localStorage
-  const orderIdx = categoryOrder.indexOf(name);
-  if (orderIdx !== -1) {
-    categoryOrder.splice(orderIdx, 1);
+  // Xóa khỏi categoryOrder, lưu vị trí cũ để khôi phục
+  _hiddenDefaultCatOrderIdx = categoryOrder.indexOf(name);
+  if (_hiddenDefaultCatOrderIdx !== -1) {
+    categoryOrder.splice(_hiddenDefaultCatOrderIdx, 1);
     saveCategoryOrder();
   }
 
@@ -2428,16 +2486,43 @@ function hideDefaultCategory(name) {
     () => {
       // Restore: bỏ khỏi danh sách ẩn
       const toRestore = _hiddenDefaultCat;
+      if (!toRestore) return;
       hiddenDefaultCategories = hiddenDefaultCategories.filter(c => c !== toRestore);
       saveHiddenCategories();
+
+      // Restore budget
+      if (_hiddenDefaultCatBudget !== null) {
+        budgets[toRestore] = _hiddenDefaultCatBudget;
+        saveBudgets();
+      }
+
+      // Restore position in categoryOrder
+      if (!categoryOrder.includes(toRestore)) {
+        if (_hiddenDefaultCatOrderIdx !== -1 && _hiddenDefaultCatOrderIdx <= categoryOrder.length) {
+          categoryOrder.splice(_hiddenDefaultCatOrderIdx, 0, toRestore);
+        } else {
+          categoryOrder.push(toRestore);
+        }
+        saveCategoryOrder();
+      }
+
       _hiddenDefaultCat = null;
+      _hiddenDefaultCatBudget = null;
+      _hiddenDefaultCatOrderIdx = -1;
       openBudgetModal();
       renderBudgetPanel();
       updateChart();
     }
   );
-  // Auto-clear temp after undo window
-  setTimeout(() => { _hiddenDefaultCat = null; }, UNDO_DELAY + 500);
+
+  // Start permanent-deletion timer (use shared _undoTimer)
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => {
+    _hiddenDefaultCat = null;
+    _hiddenDefaultCatBudget = null;
+    _hiddenDefaultCatOrderIdx = -1;
+    hideUndoToast();
+  }, UNDO_DELAY);
 }
 
 
@@ -2509,6 +2594,9 @@ function undoDelete() {
 function deleteCustomCategory(name) {
   const idx = customCategories.findIndex(c => c.name === name);
   if (idx === -1) return;
+
+  // Flush unsaved form edits so other inputs are not lost on modal rebuild
+  saveCurrentInputValuesToBudgets();
 
   // Soft-remove: hold in temp variables
   _deletedCustomCat = name;
@@ -4229,6 +4317,9 @@ function addCustomCategory() {
   const limitEl = document.getElementById('newCatLimit');
   if (!nameEl || !limitEl) return;
 
+  // Flush unsaved form edits so other inputs are not lost on modal rebuild
+  saveCurrentInputValuesToBudgets();
+
   const name = nameEl.value.trim();
   const raw = parseFloat(limitEl.value);
 
@@ -5762,3 +5853,714 @@ window.switchReportTab = switchReportTab;
 window.handleReportPeriodChange = handleReportPeriodChange;
 window.closeWrapupOnOverlay = closeWrapupOnOverlay;
 window.checkNewPeriodTransitions = checkNewPeriodTransitions;
+
+
+/* ============================================================
+   HŨ CHI TIÊU — JARS & INSTALLMENTS
+   Tiền trong hũ HOÀN TOÀN tách biệt với balance/transactions.
+   ============================================================ */
+
+/* ── Jars State & Storage Keys ── */
+const JARS_KEY         = 'caltdhy_jars';
+const INSTALLMENTS_KEY = 'caltdhy_installments';
+
+let jars         = [];  // [{ id, name, icon, target, current, targetDate, color }]
+let installments = [];  // [{ id, name, icon, amount, cycle, nextDueDate, active, totalPaid }]
+
+/* ── Emoji Picker Data ── */
+const JAR_EMOJIS = [
+  '🫙','💰','🏦','🎯','✈️','🏠','🚗','📚','💊','🎮',
+  '🛍️','🎵','🏋️','🌏','💍','🎓','🐶','🌱','☕','🍕'
+];
+
+const INSTALLMENT_EMOJIS = [
+  '💳','📱','🎬','🏋️','🌐','🎵','📦','⚡','🌊','🏥',
+  '📺','🎮','🚗','🏠','🍜','☕','🛡️','📰','🎓','🔑'
+];
+
+/* ── Palette for Jar cards ── */
+const JAR_PALETTE = [
+  '#3498db','#2ecc71','#e74c3c','#9b59b6','#f39c12',
+  '#1abc9c','#e67e22','#e91e63','#00bcd4','#8bc34a'
+];
+
+/* ── Load / Save helpers ── */
+function loadJars() {
+  try {
+    const raw = localStorage.getItem(JARS_KEY);
+    jars = raw ? JSON.parse(raw) : [];
+  } catch (e) { jars = []; }
+}
+
+function saveJars() {
+  try {
+    localStorage.setItem(JARS_KEY, JSON.stringify(jars));
+  } catch (e) { showToast('⚠ Storage full.'); }
+}
+
+function loadInstallments() {
+  try {
+    const raw = localStorage.getItem(INSTALLMENTS_KEY);
+    installments = raw ? JSON.parse(raw) : [];
+  } catch (e) { installments = []; }
+}
+
+function saveInstallments() {
+  try {
+    localStorage.setItem(INSTALLMENTS_KEY, JSON.stringify(installments));
+  } catch (e) { showToast('⚠ Storage full.'); }
+}
+
+/* ── Server Sync ── */
+async function syncLoadJarsFromServer() {
+  if (!isServerConnected) return;
+  try {
+    const headers = getAuthHeaders();
+    const [jarRes, instRes] = await Promise.all([
+      fetch('/api/jars', { headers }),
+      fetch('/api/jars/installments', { headers })
+    ]);
+    if (jarRes.ok) {
+      const data = await jarRes.json();
+      if (data.success) { jars = data.data; saveJars(); }
+    }
+    if (instRes.ok) {
+      const data = await instRes.json();
+      if (data.success) { installments = data.data; saveInstallments(); }
+    }
+    renderJarsView();
+  } catch (e) {
+    console.warn('⚠️ Jars sync failed (offline mode).', e);
+  }
+}
+
+async function syncAddJarToServer(jar) {
+  if (!isServerConnected) return null;
+  try {
+    const res = await fetch('/api/jars', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name: jar.name, icon: jar.icon, target: jar.target, current: jar.current, targetDate: jar.targetDate, color: jar.color })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) return data.data.id;
+    }
+  } catch (e) { console.warn('⚠️ syncAddJar failed.', e); }
+  return null;
+}
+
+async function syncJarTransactionToServer(jarId, type, amount) {
+  if (!isServerConnected) return;
+  try {
+    await fetch(`/api/jars/${jarId}/${type}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ amount })
+    });
+  } catch (e) { console.warn('⚠️ syncJarTransaction failed.', e); }
+}
+
+async function syncDeleteJarFromServer(jarId) {
+  if (!isServerConnected) return;
+  try {
+    await fetch(`/api/jars/${jarId}`, { method: 'DELETE', headers: getAuthHeaders() });
+  } catch (e) { console.warn('⚠️ syncDeleteJar failed.', e); }
+}
+
+async function syncAddInstallmentToServer(inst) {
+  if (!isServerConnected) return null;
+  try {
+    const res = await fetch('/api/jars/installments', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name: inst.name, icon: inst.icon, amount: inst.amount, cycle: inst.cycle, nextDueDate: inst.nextDueDate })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) return data.data.id;
+    }
+  } catch (e) { console.warn('⚠️ syncAddInstallment failed.', e); }
+  return null;
+}
+
+async function syncPayInstallmentToServer(instId) {
+  if (!isServerConnected) return;
+  try {
+    const res = await fetch(`/api/jars/installments/${instId}/pay`, {
+      method: 'PATCH', headers: getAuthHeaders()
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) return data.data;
+    }
+  } catch (e) { console.warn('⚠️ syncPayInstallment failed.', e); }
+  return null;
+}
+
+async function syncDeleteInstallmentFromServer(instId) {
+  if (!isServerConnected) return;
+  try {
+    await fetch(`/api/jars/installments/${instId}`, { method: 'DELETE', headers: getAuthHeaders() });
+  } catch (e) { console.warn('⚠️ syncDeleteInstallment failed.', e); }
+}
+
+/* ── Utility: Format number ── */
+function fmtJar(n) {
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B ₫';
+  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M ₫';
+  if (n >= 1_000)         return (n / 1_000).toFixed(0) + 'K ₫';
+  return n.toLocaleString('vi-VN') + ' ₫';
+}
+
+function parseCurrencyInput(val) {
+  // Strip K / M / B suffixes for easy input
+  const str = String(val).trim().replace(/,/g, '');
+  if (/k$/i.test(str)) return parseFloat(str) * 1000;
+  if (/m$/i.test(str)) return parseFloat(str) * 1_000_000;
+  if (/b$/i.test(str)) return parseFloat(str) * 1_000_000_000;
+  return parseFloat(str);
+}
+
+/* ── Days until due date ── */
+function daysUntil(dateStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dateStr + 'T00:00:00');
+  return Math.round((due - today) / 86400000);
+}
+
+/* ── Advance nextDueDate locally (for offline) ── */
+function advanceNextDueDate(dateStr, cycle) {
+  const d = new Date(dateStr + 'T00:00:00');
+  switch (cycle) {
+    case 'monthly':   d.setMonth(d.getMonth() + 1);   break;
+    case 'quarterly': d.setMonth(d.getMonth() + 3);   break;
+    case 'yearly':    d.setFullYear(d.getFullYear() + 1); break;
+  }
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/* ── Cycle label ── */
+function cycleLabel(cycle) {
+  return { monthly: 'Hàng tháng', quarterly: 'Hàng quý', yearly: 'Hàng năm' }[cycle] || cycle;
+}
+
+/* ── Generate a local ID ── */
+function genJarId() {
+  return 'jar_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+/* ============================================================
+   RENDER — VIEW JARS
+   ============================================================ */
+function renderJarsView() {
+  renderJarCards();
+  renderInstallmentList();
+}
+
+function renderJarCards() {
+  const grid = document.getElementById('jarsGrid');
+  if (!grid) return;
+
+  if (jars.length === 0) {
+    grid.innerHTML = `
+      <div class="jars-empty-state">
+        <span class="jars-empty-icon">🫙</span>
+        <p class="jars-empty-text">Chưa có hũ nào. Tạo hũ đầu tiên!</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = jars.map(jar => {
+    const pct = jar.target > 0 ? Math.min(100, (jar.current / jar.target) * 100) : 0;
+    const pctDisplay = pct.toFixed(0);
+    const daysLeft = jar.targetDate ? daysUntil(jar.targetDate) : null;
+    const daysStr = daysLeft !== null
+      ? (daysLeft > 0 ? `còn ${daysLeft} ngày` : daysLeft === 0 ? 'Hôm nay!' : `quá hạn ${Math.abs(daysLeft)} ngày`)
+      : '';
+    const isOverdue = daysLeft !== null && daysLeft < 0;
+    const isComplete = pct >= 100;
+
+    return `
+      <div class="jar-card ${isComplete ? 'jar-card--complete' : ''}" style="--jar-color:${jar.color};" data-jar-id="${jar.id}">
+        <div class="jar-card__glow" aria-hidden="true"></div>
+        <div class="jar-card__header">
+          <span class="jar-card__icon">${jar.icon}</span>
+          <button class="jar-card__delete" onclick="confirmDeleteJar('${jar.id}')" aria-label="Xóa hũ ${jar.name}" title="Xóa hũ">✕</button>
+        </div>
+        <h3 class="jar-card__name">${jar.name}</h3>
+        <div class="jar-card__amounts">
+          <span class="jar-card__current">${fmtJar(jar.current)}</span>
+          <span class="jar-card__sep">/</span>
+          <span class="jar-card__target">${fmtJar(jar.target)}</span>
+        </div>
+        <div class="jar-progress" aria-label="Tiến độ ${pctDisplay}%">
+          <div class="jar-progress__bar" style="width:${pct}%"></div>
+        </div>
+        <div class="jar-card__meta">
+          <span class="jar-card__pct">${pctDisplay}%</span>
+          ${daysStr ? `<span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}
+        </div>
+        ${isComplete
+          ? `<div class="jar-card__complete-badge">🎉 Đạt mục tiêu!</div>`
+          : `<div class="jar-card__actions">
+              <button class="jar-btn jar-btn--deposit" onclick="openJarTxnModal('${jar.id}','deposit')" aria-haspopup="dialog">+ Nạp</button>
+              <button class="jar-btn jar-btn--withdraw" onclick="openJarTxnModal('${jar.id}','withdraw')" aria-haspopup="dialog" ${jar.current <= 0 ? 'disabled' : ''}>− Rút</button>
+            </div>`
+        }
+      </div>`;
+  }).join('');
+}
+
+function renderInstallmentList() {
+  const list = document.getElementById('installmentList');
+  if (!list) return;
+
+  const active = installments.filter(i => i.active);
+  const inactive = installments.filter(i => !i.active);
+  const sorted = [...active].sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
+
+  if (installments.length === 0) {
+    list.innerHTML = `
+      <div class="inst-empty">
+        <span>💳</span>
+        <p>Chưa có khoản định kỳ nào. Thêm ngay!</p>
+      </div>`;
+    return;
+  }
+
+  const renderItem = (inst) => {
+    const days = daysUntil(inst.nextDueDate);
+    const isOverdue = days < 0;
+    const isSoon = days >= 0 && days <= 7;
+    let statusClass = '';
+    let countdownStr = '';
+    if (!inst.active) {
+      statusClass = 'inst-item--inactive';
+      countdownStr = `<span class="inst-badge inst-badge--paused">⏸ Tạm dừng</span>`;
+    } else if (isOverdue) {
+      statusClass = 'inst-item--overdue';
+      countdownStr = `<span class="inst-badge inst-badge--overdue">⚠️ Quá hạn ${Math.abs(days)} ngày</span>`;
+    } else if (isSoon) {
+      statusClass = 'inst-item--soon';
+      countdownStr = days === 0
+        ? `<span class="inst-badge inst-badge--today">🔔 Hôm nay!</span>`
+        : `<span class="inst-badge inst-badge--soon">⏰ Còn ${days} ngày</span>`;
+    } else {
+      countdownStr = `<span class="inst-badge inst-badge--ok">✓ Còn ${days} ngày</span>`;
+    }
+
+    return `
+      <div class="inst-item ${statusClass}" data-inst-id="${inst.id}">
+        <div class="inst-item__dot ${isOverdue ? 'dot--overdue' : isSoon ? 'dot--soon' : 'dot--ok'}"></div>
+        <span class="inst-item__icon">${inst.icon}</span>
+        <div class="inst-item__info">
+          <span class="inst-item__name">${inst.name}</span>
+          <span class="inst-item__meta">${fmtJar(inst.amount)} · ${cycleLabel(inst.cycle)}</span>
+        </div>
+        <div class="inst-item__right">
+          ${countdownStr}
+          ${inst.active ? `<button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">✓ Đã trả</button>` : ''}
+          <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">${inst.active ? '⏸' : '▶'}</button>
+          <button class="inst-delete-btn" onclick="deleteInstallment('${inst.id}')" title="Xóa">✕</button>
+        </div>
+      </div>`;
+  };
+
+  list.innerHTML = sorted.map(renderItem).join('')
+    + (inactive.length > 0
+      ? `<div class="inst-section-label">Đã tạm dừng</div>` + inactive.map(renderItem).join('')
+      : '');
+}
+
+/* ============================================================
+   SWITCH VIEW — extend for 'jars'
+   ============================================================ */
+const _originalSwitchView = window.switchView;
+window.switchView = function switchViewExtended(view) {
+  // Update nav buttons (add jars button handling)
+  const btnJars = document.getElementById('nav-jars');
+  if (btnJars) btnJars.classList.toggle('active', view === 'jars');
+
+  const viewJars = document.getElementById('view-jars');
+  if (viewJars) viewJars.classList.toggle('active', view === 'jars');
+
+  if (view === 'jars') {
+    currentView = 'jars';
+    // Hide/show home-only elements
+    const btnHome = document.getElementById('nav-home');
+    const btnAnalytics = document.getElementById('nav-analytics');
+    const viewHome = document.getElementById('view-home');
+    const viewAnalytics = document.getElementById('view-analytics');
+    if (btnHome) btnHome.classList.remove('active');
+    if (btnAnalytics) btnAnalytics.classList.remove('active');
+    if (viewHome) viewHome.classList.remove('active');
+    if (viewAnalytics) viewAnalytics.classList.remove('active');
+    const budgetSortWrapper = document.getElementById('budgetSortWrapper');
+    if (budgetSortWrapper) budgetSortWrapper.style.display = 'none';
+    renderJarsView();
+    return;
+  }
+
+  // Restore budget sort wrapper when leaving jars
+  const budgetSortWrapper = document.getElementById('budgetSortWrapper');
+  if (budgetSortWrapper && view === 'home') budgetSortWrapper.style.display = '';
+
+  _originalSwitchView(view);
+};
+
+/* ============================================================
+   MODAL — ADD JAR
+   ============================================================ */
+let _jarEmojiPickerOpen = false;
+let _selectedJarEmoji = '🫙';
+let _selectedJarColor = JAR_PALETTE[0];
+
+function openAddJarModal() {
+  _selectedJarEmoji = '🫙';
+  _selectedJarColor = JAR_PALETTE[0];
+  const overlay = document.getElementById('addJarModal');
+  if (!overlay) return;
+
+  // Reset form
+  ['jarNameInput','jarTargetInput','jarTargetDateInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Set emoji preview
+  const preview = overlay.querySelector('.jar-emoji-preview');
+  if (preview) preview.textContent = _selectedJarEmoji;
+
+  // Build emoji picker grid
+  const picker = overlay.querySelector('.jar-emoji-grid');
+  if (picker) {
+    picker.innerHTML = JAR_EMOJIS.map(e =>
+      `<button type="button" class="emoji-opt ${e === _selectedJarEmoji ? 'selected' : ''}" onclick="selectJarEmoji('${e}')">${e}</button>`
+    ).join('');
+  }
+
+  // Build color picker
+  const colorPicker = overlay.querySelector('.jar-color-picker');
+  if (colorPicker) {
+    colorPicker.innerHTML = JAR_PALETTE.map(c =>
+      `<button type="button" class="color-dot ${c === _selectedJarColor ? 'selected' : ''}" style="background:${c}" onclick="selectJarColor('${c}')" aria-label="Màu ${c}"></button>`
+    ).join('');
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const el = document.getElementById('jarNameInput'); if (el) el.focus(); }, 100);
+}
+
+function closeAddJarModal() {
+  const overlay = document.getElementById('addJarModal');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeAddJarOnOverlay(e) {
+  if (e.target === document.getElementById('addJarModal')) closeAddJarModal();
+}
+
+function selectJarEmoji(emoji) {
+  _selectedJarEmoji = emoji;
+  const preview = document.querySelector('#addJarModal .jar-emoji-preview');
+  if (preview) preview.textContent = emoji;
+  document.querySelectorAll('#addJarModal .emoji-opt').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === emoji);
+  });
+}
+
+function selectJarColor(color) {
+  _selectedJarColor = color;
+  document.querySelectorAll('#addJarModal .color-dot').forEach(btn => {
+    btn.classList.toggle('selected', btn.style.background === color || btn.style.backgroundColor === color);
+  });
+}
+
+async function submitAddJar() {
+  const name = (document.getElementById('jarNameInput')?.value || '').trim();
+  const targetRaw = document.getElementById('jarTargetInput')?.value || '';
+  const targetDate = document.getElementById('jarTargetDateInput')?.value || null;
+
+  if (!name) { showToast('⚠ Vui lòng nhập tên hũ.'); return; }
+  const target = parseCurrencyInput(targetRaw);
+  if (isNaN(target) || target <= 0) { showToast('⚠ Vui lòng nhập mục tiêu hợp lệ.'); return; }
+
+  const newJar = {
+    id: genJarId(),
+    name,
+    icon: _selectedJarEmoji,
+    target,
+    current: 0,
+    targetDate: targetDate || null,
+    color: _selectedJarColor
+  };
+
+  jars.push(newJar);
+  saveJars();
+  closeAddJarModal();
+  renderJarCards();
+  showToast(`🫙 Đã tạo hũ "${name}"!`);
+
+  // Sync to server
+  const serverId = await syncAddJarToServer(newJar);
+  if (serverId && serverId !== newJar.id) {
+    const local = jars.find(j => j.id === newJar.id);
+    if (local) { local.id = serverId; saveJars(); renderJarCards(); }
+  }
+}
+
+/* ============================================================
+   MODAL — JAR TRANSACTION (Deposit / Withdraw)
+   ============================================================ */
+let _activeJarId = null;
+let _activeJarTxnType = 'deposit'; // 'deposit' | 'withdraw'
+
+function openJarTxnModal(jarId, type) {
+  _activeJarId = jarId;
+  _activeJarTxnType = type;
+  const jar = jars.find(j => j.id === jarId);
+  if (!jar) return;
+
+  const overlay = document.getElementById('jarTxnModal');
+  if (!overlay) return;
+
+  const titleEl = overlay.querySelector('.jar-txn-title');
+  const subtitleEl = overlay.querySelector('.jar-txn-subtitle');
+  const labelEl = overlay.querySelector('.jar-txn-label');
+  const amtInput = document.getElementById('jarTxnAmount');
+  const iconEl = overlay.querySelector('.jar-txn-icon');
+
+  if (titleEl) titleEl.textContent = type === 'deposit' ? `Nạp vào "${jar.name}"` : `Rút từ "${jar.name}"`;
+  if (subtitleEl) subtitleEl.textContent = `Số dư hiện tại: ${fmtJar(jar.current)}`;
+  if (labelEl) labelEl.textContent = type === 'deposit' ? 'Số tiền nạp' : 'Số tiền rút';
+  if (iconEl) iconEl.textContent = jar.icon;
+  if (amtInput) { amtInput.value = ''; }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { if (amtInput) amtInput.focus(); }, 100);
+}
+
+function closeJarTxnModal() {
+  const overlay = document.getElementById('jarTxnModal');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  _activeJarId = null;
+}
+
+function closeJarTxnOnOverlay(e) {
+  if (e.target === document.getElementById('jarTxnModal')) closeJarTxnModal();
+}
+
+async function submitJarTxn() {
+  if (!_activeJarId) return;
+  const jar = jars.find(j => j.id === _activeJarId);
+  if (!jar) return;
+
+  const raw = document.getElementById('jarTxnAmount')?.value || '';
+  const amount = parseCurrencyInput(raw);
+  if (isNaN(amount) || amount <= 0) { showToast('⚠ Vui lòng nhập số tiền hợp lệ.'); return; }
+
+  if (_activeJarTxnType === 'withdraw') {
+    if (amount > jar.current) {
+      showToast(`⚠ Số dư hũ chỉ còn ${fmtJar(jar.current)}. Không thể rút nhiều hơn.`);
+      return;
+    }
+    jar.current -= amount;
+  } else {
+    jar.current += amount;
+  }
+
+  saveJars();
+  closeJarTxnModal();
+  renderJarCards();
+
+  const action = _activeJarTxnType === 'deposit' ? 'Đã nạp' : 'Đã rút';
+  showToast(`✓ ${action} ${fmtJar(amount)} ${_activeJarTxnType === 'deposit' ? 'vào' : 'từ'} "${jar.name}"!`);
+
+  await syncJarTransactionToServer(jar.id, _activeJarTxnType, amount);
+}
+
+function confirmDeleteJar(jarId) {
+  const jar = jars.find(j => j.id === jarId);
+  if (!jar) return;
+  const ok = window.confirm(`Xóa hũ "${jar.name}"?\nSố tiền ${fmtJar(jar.current)} trong hũ sẽ biến mất (không ảnh hưởng đến số dư chính).`);
+  if (!ok) return;
+  jars = jars.filter(j => j.id !== jarId);
+  saveJars();
+  renderJarCards();
+  showToast(`🗑 Đã xóa hũ "${jar.name}".`);
+  syncDeleteJarFromServer(jarId);
+}
+
+/* ============================================================
+   MODAL — ADD INSTALLMENT
+   ============================================================ */
+let _selectedInstEmoji = '💳';
+
+function openAddInstallmentModal() {
+  _selectedInstEmoji = '💳';
+  const overlay = document.getElementById('addInstallmentModal');
+  if (!overlay) return;
+
+  ['instNameInput','instAmountInput','instDueDateInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const cycleEl = document.getElementById('instCycleSelect');
+  if (cycleEl) cycleEl.value = 'monthly';
+
+  const preview = overlay.querySelector('.inst-emoji-preview');
+  if (preview) preview.textContent = _selectedInstEmoji;
+
+  const picker = overlay.querySelector('.inst-emoji-grid');
+  if (picker) {
+    picker.innerHTML = INSTALLMENT_EMOJIS.map(e =>
+      `<button type="button" class="emoji-opt ${e === _selectedInstEmoji ? 'selected' : ''}" onclick="selectInstEmoji('${e}')">${e}</button>`
+    ).join('');
+  }
+
+  // Set today's date + 1 month as default
+  const today = new Date();
+  today.setMonth(today.getMonth() + 1);
+  const p = n => String(n).padStart(2, '0');
+  const defaultDate = `${today.getFullYear()}-${p(today.getMonth() + 1)}-${p(today.getDate())}`;
+  const dueDateEl = document.getElementById('instDueDateInput');
+  if (dueDateEl) dueDateEl.value = defaultDate;
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const el = document.getElementById('instNameInput'); if (el) el.focus(); }, 100);
+}
+
+function closeAddInstallmentModal() {
+  const overlay = document.getElementById('addInstallmentModal');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeAddInstallmentOnOverlay(e) {
+  if (e.target === document.getElementById('addInstallmentModal')) closeAddInstallmentModal();
+}
+
+function selectInstEmoji(emoji) {
+  _selectedInstEmoji = emoji;
+  const preview = document.querySelector('#addInstallmentModal .inst-emoji-preview');
+  if (preview) preview.textContent = emoji;
+  document.querySelectorAll('#addInstallmentModal .emoji-opt').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === emoji);
+  });
+}
+
+async function submitAddInstallment() {
+  const name = (document.getElementById('instNameInput')?.value || '').trim();
+  const amtRaw = document.getElementById('instAmountInput')?.value || '';
+  const cycle = document.getElementById('instCycleSelect')?.value || 'monthly';
+  const nextDueDate = document.getElementById('instDueDateInput')?.value || '';
+
+  if (!name) { showToast('⚠ Vui lòng nhập tên khoản định kỳ.'); return; }
+  const amount = parseCurrencyInput(amtRaw);
+  if (isNaN(amount) || amount <= 0) { showToast('⚠ Vui lòng nhập số tiền hợp lệ.'); return; }
+  if (!nextDueDate) { showToast('⚠ Vui lòng chọn ngày đến hạn.'); return; }
+
+  const newInst = {
+    id: genJarId(),
+    name,
+    icon: _selectedInstEmoji,
+    amount,
+    cycle,
+    nextDueDate,
+    active: true,
+    totalPaid: 0
+  };
+
+  installments.push(newInst);
+  saveInstallments();
+  closeAddInstallmentModal();
+  renderInstallmentList();
+  showToast(`✓ Đã thêm "${name}"!`);
+
+  const serverId = await syncAddInstallmentToServer(newInst);
+  if (serverId && serverId !== newInst.id) {
+    const local = installments.find(i => i.id === newInst.id);
+    if (local) { local.id = serverId; saveInstallments(); }
+  }
+}
+
+/* ── Installment Actions ── */
+async function payInstallment(instId) {
+  const inst = installments.find(i => i.id === instId);
+  if (!inst) return;
+
+  const prevDate = inst.nextDueDate;
+  inst.nextDueDate = advanceNextDueDate(inst.nextDueDate, inst.cycle);
+  inst.totalPaid = (inst.totalPaid || 0) + inst.amount;
+  saveInstallments();
+  renderInstallmentList();
+  showToast(`✓ Đã thanh toán ${fmtJar(inst.amount)} cho "${inst.name}"! Kỳ tiếp: ${inst.nextDueDate}`);
+
+  const serverData = await syncPayInstallmentToServer(inst.id);
+  if (serverData && serverData.nextDueDate) {
+    inst.nextDueDate = serverData.nextDueDate;
+    inst.totalPaid = serverData.totalPaid;
+    saveInstallments();
+    renderInstallmentList();
+  }
+}
+
+function toggleInstallmentActive(instId) {
+  const inst = installments.find(i => i.id === instId);
+  if (!inst) return;
+  inst.active = !inst.active;
+  saveInstallments();
+  renderInstallmentList();
+  showToast(inst.active ? `▶ Đã kích hoạt "${inst.name}"` : `⏸ Đã tạm dừng "${inst.name}"`);
+}
+
+function deleteInstallment(instId) {
+  const inst = installments.find(i => i.id === instId);
+  if (!inst) return;
+  const ok = window.confirm(`Xóa khoản định kỳ "${inst.name}"?`);
+  if (!ok) return;
+  installments = installments.filter(i => i.id !== instId);
+  saveInstallments();
+  renderInstallmentList();
+  showToast(`🗑 Đã xóa "${inst.name}".`);
+  syncDeleteInstallmentFromServer(instId);
+}
+
+/* ── Init Jars on page load ── */
+(function initJars() {
+  loadJars();
+  loadInstallments();
+  // Sync from server after main load (non-blocking)
+  // Called via syncLoadJarsFromServer() after auth is confirmed
+})();
+
+/* ── Window exports ── */
+window.renderJarsView       = renderJarsView;
+window.openAddJarModal      = openAddJarModal;
+window.closeAddJarModal     = closeAddJarModal;
+window.closeAddJarOnOverlay = closeAddJarOnOverlay;
+window.selectJarEmoji       = selectJarEmoji;
+window.selectJarColor       = selectJarColor;
+window.submitAddJar         = submitAddJar;
+window.openJarTxnModal      = openJarTxnModal;
+window.closeJarTxnModal     = closeJarTxnModal;
+window.closeJarTxnOnOverlay = closeJarTxnOnOverlay;
+window.submitJarTxn         = submitJarTxn;
+window.confirmDeleteJar     = confirmDeleteJar;
+window.openAddInstallmentModal  = openAddInstallmentModal;
+window.closeAddInstallmentModal = closeAddInstallmentModal;
+window.closeAddInstallmentOnOverlay = closeAddInstallmentOnOverlay;
+window.selectInstEmoji      = selectInstEmoji;
+window.submitAddInstallment = submitAddInstallment;
+window.payInstallment       = payInstallment;
+window.toggleInstallmentActive = toggleInstallmentActive;
+window.deleteInstallment    = deleteInstallment;
+window.syncLoadJarsFromServer = syncLoadJarsFromServer;
