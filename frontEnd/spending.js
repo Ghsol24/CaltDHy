@@ -6156,8 +6156,8 @@ function renderJarCards() {
             <div class="jar-body">
               <div class="jar-water-fill" style="height: ${pct}%;">
                 <svg class="jar-water-waves" viewBox="0 0 120 28" preserveAspectRatio="none">
-                  <path class="jar-wave-path wave-back" d="M0 15 Q 30 0, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
-                  <path class="jar-wave-path wave-front" d="M0 15 Q 30 30, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                  <path class="jar-wave-path wave-back" d="M0 15 Q 30 10, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
+                  <path class="jar-wave-path wave-front" d="M0 15 Q 30 20, 60 15 T 120 15 L 120 28 L 0 28 Z"></path>
                 </svg>
                 <div class="jar-water-body"></div>
                 <div class="water-bubble bubble-1"></div>
