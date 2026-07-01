@@ -6116,8 +6116,7 @@ let installments = [];  // [{ id, name, icon, amount, cycle, nextDueDate, active
 
 /* ── Emoji Picker Data ── */
 const JAR_EMOJIS = [
-  '🫙','💰','🏦','🎯','✈️','🏠','🚗','📚','💊','🎮',
-  '🛍️','🎵','🏋️','🌏','💍','🎓','🐶','🌱','☕','🍕'
+  '🫙', '🏠', '🚗', '✈️', '🎓', '🏥', '🛍️', '🎯', '💰', '💼', '🎁', '🚨'
 ];
 
 const INSTALLMENT_EMOJIS = [
@@ -6252,12 +6251,12 @@ async function syncDeleteInstallmentFromServer(instId) {
   } catch (e) { console.warn('⚠️ syncDeleteInstallment failed.', e); }
 }
 
-/* ── Utility: Format number ── */
+/* Fix #9: Dùng 'đ' thường thay vì '₫' để tránh glyph gạch chân lạ trên Mac/Windows */
 function fmtJar(n) {
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B ₫';
-  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M ₫';
-  if (n >= 1_000)         return (n / 1_000).toFixed(0) + 'K ₫';
-  return n.toLocaleString('vi-VN') + ' ₫';
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B đ';
+  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M đ';
+  if (n >= 1_000)         return (n / 1_000).toFixed(0) + 'K đ';
+  return n.toLocaleString('vi-VN') + ' đ';
 }
 
 function parseCurrencyInput(val) {
@@ -6329,18 +6328,42 @@ function renderJarSummary() {
     nextBillAmount = fmtJar(nextBill.amount);
   }
 
-  // Render left metrics (Tổng tích lũy & Tiến độ trung bình)
+  // Fix #4: Logic adaptive dựa theo số lượng hũ
   if (leftSummaryEl) {
-    leftSummaryEl.innerHTML = `
-      <div class="summary-card">
-        <div class="summary-card__label">Tổng Tích Lũy</div>
-        <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-card__label">Tiến Độ Trung Bình</div>
-        <div class="summary-card__value value--blue">${avgProgress.toFixed(0)}%</div>
-      </div>
-    `;
+    if (jars.length === 0) {
+      // Ẩn hẳn summary khi chưa có hũ nào
+      leftSummaryEl.innerHTML = '';
+      leftSummaryEl.style.display = 'none';
+    } else if (jars.length === 1) {
+      // Khi chỉ có 1 hũ: hiện "Tổng tích lũy" + Insight "Còn cần" thay vì lặp lại %
+      const singleJar = jars[0];
+      const stillNeed = Math.max(0, (singleJar.target || 0) - (singleJar.current || 0));
+      const capJarName = singleJar.name.charAt(0).toUpperCase() + singleJar.name.slice(1);
+      leftSummaryEl.style.display = '';
+      leftSummaryEl.innerHTML = `
+        <div class="summary-card">
+          <div class="summary-card__label">Tổng Tích Lũy</div>
+          <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card__label">Để đạt mục tiêu "${capJarName}"</div>
+          <div class="summary-card__value value--blue">${stillNeed > 0 ? `Còn thiếu ${fmtJar(stillNeed)}` : '🎉 Đã đạt mục tiêu!'}</div>
+        </div>
+      `;
+    } else {
+      // 2+ hũ: hiện tổng hợp chuẩn
+      leftSummaryEl.style.display = '';
+      leftSummaryEl.innerHTML = `
+        <div class="summary-card">
+          <div class="summary-card__label">Tổng Tích Lũy</div>
+          <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-card__label">Tiến Độ Trung Bình</div>
+          <div class="summary-card__value value--blue">${avgProgress.toFixed(0)}%</div>
+        </div>
+      `;
+    }
   }
 
   // Render right metrics (Hóa đơn sắp tới)
@@ -6392,7 +6415,7 @@ function renderJarCards() {
     return;
   }
 
-  grid.innerHTML = jars.map(jar => {
+  const cardsHTML = jars.map(jar => {
     const pct = jar.target > 0 ? Math.min(100, (jar.current / jar.target) * 100) : 0;
     const pctDisplay = pct.toFixed(0);
     const daysLeft = jar.targetDate ? daysUntil(jar.targetDate) : null;
@@ -6402,10 +6425,26 @@ function renderJarCards() {
     const isOverdue = daysLeft !== null && daysLeft < 0;
     const isComplete = pct >= 100;
     const capName = jar.name.charAt(0).toUpperCase() + jar.name.slice(1);
+    // Fix #5: Hiển thị % và ngày dưới dạng text nhỏ gọn cạnh số tiền, bỏ thanh progress bar ngang
+    const progressText = `<span class="jar-card__pct">${pctDisplay}%</span>${daysStr ? ` · <span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}`;
 
     return `
       <div class="jar-card ${isComplete ? 'jar-card--complete' : ''}" style="--jar-color:${jar.color};" data-jar-id="${jar.id}">
         <div class="jar-card__glow" aria-hidden="true"></div>
+
+        <!-- Fix #7: Inline delete confirm overlay thay vì window.confirm -->
+        <div class="jar-card__confirm-overlay" role="alertdialog" aria-modal="true" aria-label="Xác nhận xóa hũ">
+          <div class="jar-card__confirm-text">
+            <strong>Xóa hũ "${capName}"?</strong>
+            ${jar.current > 0 ? `${fmtJar(jar.current)} đã tích lũy sẽ không được cộng lại vào số dư.` : 'Hành động này không thể hoàn tác.'}
+          </div>
+          <div class="jar-card__confirm-actions">
+            <button class="jar-card__confirm-cancel" onclick="cancelDeleteJar('${jar.id}')" aria-label="Hủy xóa">Hủy</button>
+            <button class="jar-card__confirm-delete-btn" onclick="executeDeleteJar('${jar.id}')" aria-label="Xác nhận xóa hũ ${jar.name}">🗑 Xóa hũ</button>
+          </div>
+        </div>
+
+        <!-- Nút xóa - trigger overlay thay vì window.confirm -->
         <button class="jar-card__delete" onclick="confirmDeleteJar('${jar.id}')" aria-label="Xóa hũ ${jar.name}" title="Xóa hũ">✕</button>
         
         <div class="jar-card__content">
@@ -6421,16 +6460,8 @@ function renderJarCards() {
               <span class="jar-card__target">${fmtJar(jar.target)}</span>
             </div>
 
-            <!-- Sleek Horizontal Progress Bar -->
-            <div class="jar-progress-bar-wrapper">
-              <div class="jar-progress-bar-track">
-                <div class="jar-progress-bar-fill" style="width: ${pct}%; background-color: var(--jar-color);"></div>
-              </div>
-              <div class="jar-card__meta-info">
-                <span class="jar-card__pct">${pctDisplay}%</span>
-                ${daysStr ? `<span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}
-              </div>
-            </div>
+            <!-- Fix #5: Chỉ giữ text % nhỏ gọn, bỏ thanh progress bar ngang -->
+            <div class="jar-card__meta-info">${progressText}</div>
 
             ${isComplete
               ? `<div class="jar-card__complete-badge">🎉 Đạt mục tiêu!</div>`
@@ -6441,9 +6472,11 @@ function renderJarCards() {
             }
           </div>
 
-          <!-- Glass Jar Visual Column -->
+          <!-- Fix #3: Glass Jar Visual Column với nắp gỗ bần và nơ cói -->
           <div class="jar-card__visual-section" onclick="triggerJarSlosh('${jar.id}', this)">
             <div class="jar-glass-container">
+              <div class="jar-lid" aria-hidden="true"></div>
+              <div class="jar-thread" aria-hidden="true"></div>
               <div class="jar-neck"></div>
               <div class="jar-body">
                 <div class="jar-water-fill" style="height: ${pct}%;">
@@ -6462,6 +6495,15 @@ function renderJarCards() {
         </div>
       </div>`;
   }).join('');
+
+  // Fix #10: Thêm dashed placeholder card để lấp khoảng trống, mời tạo hũ mới
+  const dashedCard = `
+    <button class="jar-card--dashed" onclick="openAddJarModal()" aria-label="Tạo hũ tiết kiệm mới">
+      <span class="jar-dashed__icon">+</span>
+      <span class="jar-dashed__text">Tạo Hũ Tiết Kiệm Mới</span>
+    </button>`;
+
+  grid.innerHTML = cardsHTML + dashedCard;
 }
 
 function formatTimelineDate(dateStr) {
@@ -6607,6 +6649,43 @@ let _jarEmojiPickerOpen = false;
 let _selectedJarEmoji = '🫙';
 let _selectedJarColor = JAR_PALETTE[0];
 
+function updateJarPreview() {
+  const preview = document.querySelector('#addJarModal .jar-live-preview');
+  if (!preview) return;
+  preview.textContent = _selectedJarEmoji;
+  // Nền mờ 13% (hex alpha '22') và border nét chính
+  preview.style.background = _selectedJarColor + '22';
+  preview.style.borderColor = _selectedJarColor;
+  // Shadow tỏa ra theo tông màu hũ (opacity ~40% - hex alpha '66')
+  preview.style.boxShadow = `0 6px 18px -4px ${_selectedJarColor}66`;
+
+  // Nút CTA tạo hũ tiệp màu gradient
+  const btn = document.getElementById('btnSubmitJar');
+  if (btn) {
+    btn.style.background = `linear-gradient(135deg, ${_selectedJarColor}, ${_selectedJarColor}cc)`;
+    btn.style.boxShadow = `0 4px 18px ${_selectedJarColor}4d`; // ~30% opacity
+  }
+}
+
+function toggleTargetDate() {
+  const dateGroup = document.getElementById('jarTargetDateGroup');
+  const toggleBtn = document.getElementById('btnToggleTargetDate');
+  if (!dateGroup || !toggleBtn) return;
+
+  const isHidden = dateGroup.style.display === 'none' || !dateGroup.style.display;
+  if (isHidden) {
+    dateGroup.style.display = 'block';
+    toggleBtn.textContent = '− Bỏ ngày mục tiêu';
+    const dateInput = document.getElementById('jarTargetDateInput');
+    if (dateInput) dateInput.focus();
+  } else {
+    dateGroup.style.display = 'none';
+    toggleBtn.textContent = '+ Thêm ngày mục tiêu (tùy chọn)';
+    const dateInput = document.getElementById('jarTargetDateInput');
+    if (dateInput) dateInput.value = '';
+  }
+}
+
 function openAddJarModal() {
   _selectedJarEmoji = '🫙';
   _selectedJarColor = JAR_PALETTE[0];
@@ -6619,9 +6698,11 @@ function openAddJarModal() {
     if (el) el.value = '';
   });
 
-  // Set emoji preview
-  const preview = overlay.querySelector('.jar-emoji-preview');
-  if (preview) preview.textContent = _selectedJarEmoji;
+  // Khởi tạo trạng thái Ngày mục tiêu (progressive disclosure) - mặc định ẩn
+  const dateGroup = document.getElementById('jarTargetDateGroup');
+  const toggleBtn = document.getElementById('btnToggleTargetDate');
+  if (dateGroup) dateGroup.style.display = 'none';
+  if (toggleBtn) toggleBtn.textContent = '+ Thêm ngày mục tiêu (tùy chọn)';
 
   // Build emoji picker grid
   const picker = overlay.querySelector('.jar-emoji-grid');
@@ -6638,6 +6719,9 @@ function openAddJarModal() {
       `<button type="button" class="color-dot ${c === _selectedJarColor ? 'selected' : ''}" style="background:${c}" onclick="selectJarColor('${c}')" aria-label="Màu ${c}"></button>`
     ).join('');
   }
+
+  // Cập nhật preview lần đầu
+  updateJarPreview();
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -6656,24 +6740,31 @@ function closeAddJarOnOverlay(e) {
 
 function selectJarEmoji(emoji) {
   _selectedJarEmoji = emoji;
-  const preview = document.querySelector('#addJarModal .jar-emoji-preview');
-  if (preview) preview.textContent = emoji;
   document.querySelectorAll('#addJarModal .emoji-opt').forEach(btn => {
     btn.classList.toggle('selected', btn.textContent === emoji);
   });
+  updateJarPreview();
 }
 
 function selectJarColor(color) {
   _selectedJarColor = color;
   document.querySelectorAll('#addJarModal .color-dot').forEach(btn => {
-    btn.classList.toggle('selected', btn.style.background === color || btn.style.backgroundColor === color);
+    // Chuẩn hoá để so sánh cả màu RGB và HEX
+    const bg = btn.style.background || btn.style.backgroundColor;
+    btn.classList.toggle('selected', bg === color || bg.replace(/\s/g, '') === color.replace(/\s/g, ''));
   });
+  updateJarPreview();
 }
 
 async function submitAddJar() {
   const name = (document.getElementById('jarNameInput')?.value || '').trim();
   const targetRaw = document.getElementById('jarTargetInput')?.value || '';
-  const targetDate = document.getElementById('jarTargetDateInput')?.value || null;
+  
+  // Chỉ đọc ngày nếu container đang hiển thị (người dùng chọn dùng)
+  const dateGroup = document.getElementById('jarTargetDateGroup');
+  const targetDate = (dateGroup && dateGroup.style.display !== 'none')
+    ? (document.getElementById('jarTargetDateInput')?.value || null)
+    : null;
 
   if (!name) { showToast('⚠ Vui lòng nhập tên hũ.'); return; }
   const target = parseCurrencyInput(targetRaw);
@@ -6702,6 +6793,7 @@ async function submitAddJar() {
     if (local) { local.id = serverId; saveJars(); renderJarCards(); }
   }
 }
+
 
 /* ============================================================
    MODAL — JAR TRANSACTION (Deposit / Withdraw)
@@ -6775,11 +6867,22 @@ async function submitJarTxn() {
   await syncJarTransactionToServer(jar.id, _activeJarTxnType, amount);
 }
 
+/* Fix #7: confirmDeleteJar hiện chỉ hiện overlay inline, không dùng window.confirm */
 function confirmDeleteJar(jarId) {
+  const card = document.querySelector(`[data-jar-id="${jarId}"]`);
+  if (!card) return;
+  card.classList.add('jar-card--confirm-delete');
+}
+
+function cancelDeleteJar(jarId) {
+  const card = document.querySelector(`[data-jar-id="${jarId}"]`);
+  if (!card) return;
+  card.classList.remove('jar-card--confirm-delete');
+}
+
+function executeDeleteJar(jarId) {
   const jar = jars.find(j => j.id === jarId);
   if (!jar) return;
-  const ok = window.confirm(`Xóa hũ "${jar.name}"?\nSố tiền ${fmtJar(jar.current)} trong hũ sẽ biến mất (không ảnh hưởng đến số dư chính).`);
-  if (!ok) return;
   jars = jars.filter(j => j.id !== jarId);
   saveJars();
   renderJarCards();
@@ -6938,12 +7041,15 @@ window.closeAddJarModal     = closeAddJarModal;
 window.closeAddJarOnOverlay = closeAddJarOnOverlay;
 window.selectJarEmoji       = selectJarEmoji;
 window.selectJarColor       = selectJarColor;
+window.toggleTargetDate     = toggleTargetDate;
 window.submitAddJar         = submitAddJar;
 window.openJarTxnModal      = openJarTxnModal;
 window.closeJarTxnModal     = closeJarTxnModal;
 window.closeJarTxnOnOverlay = closeJarTxnOnOverlay;
 window.submitJarTxn         = submitJarTxn;
 window.confirmDeleteJar     = confirmDeleteJar;
+window.cancelDeleteJar      = cancelDeleteJar;
+window.executeDeleteJar     = executeDeleteJar;
 window.openAddInstallmentModal  = openAddInstallmentModal;
 window.closeAddInstallmentModal = closeAddInstallmentModal;
 window.closeAddInstallmentOnOverlay = closeAddInstallmentOnOverlay;

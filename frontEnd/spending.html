@@ -119,7 +119,7 @@
             <div class="metric-card__screw mc-screw--tl" aria-hidden="true"></div>
             <div class="metric-card__screw mc-screw--tr" aria-hidden="true"></div>
             <p class="metric-card__label" data-i18n="totalBalance">Total Balance</p>
-            <p class="metric-card__value metric-card__value--balance" id="metricBalance">0 ₫</p>
+            <p class="metric-card__value metric-card__value--balance" id="metricBalance">0 đ</p>
             <p class="metric-card__sub" data-i18n="allTimeNet">All-time net</p>
             <button class="btn-quick-deposit" id="btnQuickDeposit" onclick="openNumpad()" aria-label="Quick Deposit"
               aria-haspopup="dialog">+</button>
@@ -127,13 +127,13 @@
 
           <div class="metric-card metric-card--income">
             <p class="metric-card__label" data-i18n="monthlyIncome">Monthly Income</p>
-            <p class="metric-card__value metric-card__value--income" id="metricIncome">+0 ₫</p>
+            <p class="metric-card__value metric-card__value--income" id="metricIncome">+0 đ</p>
             <p class="metric-card__sub" id="metricMonthLabel">APR 2026</p>
           </div>
 
           <div class="metric-card metric-card--expense">
             <p class="metric-card__label" data-i18n="monthlyExpense">Monthly Expense</p>
-            <p class="metric-card__value metric-card__value--expense" id="metricExpense">-0 ₫</p>
+            <p class="metric-card__value metric-card__value--expense" id="metricExpense">-0 đ</p>
             <p class="metric-card__sub" data-i18n="thisMonth">This month</p>
           </div>
 
@@ -534,7 +534,7 @@
       <div class="numpad-display" aria-live="polite">
         <p class="numpad-display__label" data-i18n="quickDeposit">QUICK DEPOSIT</p>
         <p class="numpad-display__value" id="numpadDisplay">0</p>
-        <p class="numpad-display__unit">₫</p>
+        <p class="numpad-display__unit">đ</p>
       </div>
 
       <!-- vent slots -->
@@ -1467,26 +1467,24 @@
 
       <h2 class="modal-title" id="add-jar-modal-title">🫙 Tạo Hũ Mới</h2>
 
-      <!-- Emoji Selector -->
-      <div class="jar-form-emoji-row">
-        <div class="jar-emoji-display">
-          <span class="jar-emoji-preview" aria-label="Icon đã chọn">🫙</span>
-          <span class="jar-emoji-hint">Chọn icon</span>
-        </div>
-        <div class="jar-emoji-grid" role="group" aria-label="Chọn emoji cho hũ">
-          <!-- Injected by JS -->
-        </div>
-      </div>
-
-      <!-- Color Picker -->
-      <div class="jar-form-group">
-        <label class="jar-form-label">Màu sắc</label>
-        <div class="jar-color-picker" role="group" aria-label="Chọn màu">
-          <!-- Injected by JS -->
+      <!-- Merged Jar Preview & Picker (Fix #1, #3, #6) -->
+      <div class="jar-style-picker">
+        <div class="jar-live-preview" aria-label="Hũ Xem Trước">🫙</div>
+        
+        <div class="jar-style-controls">
+          <!-- Emoji selection grid (Fix #10) -->
+          <div class="jar-emoji-grid" role="group" aria-label="Chọn emoji cho hũ">
+            <!-- Injected by JS -->
+          </div>
+          
+          <!-- Color picker dots -->
+          <div class="jar-color-picker" role="group" aria-label="Chọn màu sắc cho hũ">
+            <!-- Injected by JS -->
+          </div>
         </div>
       </div>
 
-      <!-- Name -->
+      <!-- Name (Removed box backgrounds in CSS) -->
       <div class="jar-form-group">
         <label class="jar-form-label" for="jarNameInput">Tên hũ <span class="required">*</span></label>
         <input class="jar-form-input" id="jarNameInput" type="text" placeholder="VD: Quỹ du lịch, Mua xe..." maxlength="50" autocomplete="off" />
@@ -1498,13 +1496,19 @@
         <input class="jar-form-input" id="jarTargetInput" type="text" placeholder="VD: 10000000 hoặc 10M" autocomplete="off" inputmode="numeric" />
       </div>
 
-      <!-- Target Date -->
-      <div class="jar-form-group">
-        <label class="jar-form-label" for="jarTargetDateInput">Ngày mục tiêu <span class="jar-form-optional">(tùy chọn)</span></label>
+      <!-- Target Date toggler (Fix #6 - progressive disclosure) -->
+      <div class="jar-form-toggle-wrapper">
+        <button type="button" class="btn-toggle-optional" id="btnToggleTargetDate" onclick="toggleTargetDate()">+ Thêm ngày mục tiêu (tùy chọn)</button>
+      </div>
+
+      <!-- Target Date (Hidden by default, styled webkit calendar indicator in CSS) -->
+      <div class="jar-form-group jar-form-group--optional" id="jarTargetDateGroup" style="display: none;">
+        <label class="jar-form-label" for="jarTargetDateInput">Ngày mục tiêu</label>
         <input class="jar-form-input" id="jarTargetDateInput" type="date" />
       </div>
 
       <button class="btn-jar-submit" id="btnSubmitJar" onclick="submitAddJar()">Tạo Hũ</button>
+
     </div>
   </div>
 
