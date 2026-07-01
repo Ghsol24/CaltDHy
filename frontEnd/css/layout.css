@@ -1010,4 +1010,241 @@ html.green-theme .tb-nav-btn.active::after   { background: #059669; box-shadow: 
 }
 
 
+/* ============================================================
+   ANALYTICS VIEW — 2-Column Restructured Grid Layout & Controls
+   ============================================================ */
+
+.analytics-layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+@media (min-width: 1025px) {
+  .analytics-layout-wrapper {
+    display: grid;
+    grid-template-columns: 2.7fr 1.3fr;
+    align-items: start;
+    gap: 24px;
+  }
+}
+
+.analytics-main-pane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.analytics-side-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Control Panel Card styles */
+.analytics-control-card {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, .05);
+  border-radius: var(--r-md);
+  padding: 18px 16px;
+  box-shadow: var(--sh-raise);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+html.light-theme .analytics-control-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+html.cream-theme .analytics-control-card {
+  background: #F4ECE1;
+  border-color: #E6DCD0;
+}
+
+html.green-theme .analytics-control-card {
+  background: #EDF7F2;
+  border-color: #D2ECD9;
+}
+
+/* Section styling inside Control Panel */
+.control-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.control-card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.control-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.control-card-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 2px 0;
+}
+
+html.light-theme .control-card-divider {
+  background: #E2E8F0;
+}
+
+html.cream-theme .control-card-divider {
+  background: #E6DCD0;
+}
+
+html.green-theme .control-card-divider {
+  background: #D2ECD9;
+}
+
+/* Month Quick Navigation Wrapper & Buttons */
+.month-navigation-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.month-navigation-wrapper .month-picker-wrapper {
+  flex: 1;
+}
+
+.month-navigation-wrapper .month-picker-trigger {
+  width: 100% !important;
+  justify-content: space-between !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.month-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface2);
+  border: 1px solid rgba(255, 255, 255, .05);
+  border-radius: var(--r-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+  padding: 0;
+}
+
+.month-nav-btn:hover {
+  color: var(--txt);
+  background: var(--recessed);
+  border-color: rgba(255, 255, 255, .1);
+}
+
+.month-nav-btn:active {
+  transform: scale(0.95);
+}
+
+/* Theme overrides for navigation buttons */
+html.light-theme .month-nav-btn {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #64748B;
+}
+html.light-theme .month-nav-btn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+html.cream-theme .month-nav-btn {
+  background: #EDE4D8;
+  border-color: #D8CCBE;
+  color: #7D6C58;
+}
+html.cream-theme .month-nav-btn:hover {
+  background: #E0D4C4;
+  color: #2C1D10;
+}
+
+html.green-theme .month-nav-btn {
+  background: #E3F2E9;
+  border-color: #B2DFC8;
+  color: #4D7A68;
+}
+html.green-theme .month-nav-btn:hover {
+  background: #B2DFC8;
+  color: #0E2E1E;
+}
+
+/* Force vertical card stacking inside the sidebar */
+.analytics-side-pane .analytics-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin-top: 10px;
+}
+
+.analytics-side-pane .analytics-grid .analytics-card {
+  width: 100% !important;
+  margin-top: 0 !important;
+}
+
+.analytics-side-pane .analytics-compare-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin-top: 12px;
+}
+
+/* Inline Accordion override for Month Picker inside the Analytics Control Card */
+.analytics-control-card .month-picker-dropdown {
+  position: static !important;
+  width: 100% !important;
+  margin-top: 10px !important;
+  background: var(--surface2) !important;
+  border: 1px solid rgba(255, 255, 255, .04) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 12px !important;
+  border-radius: var(--r-sm) !important;
+}
+
+html.light-theme .analytics-control-card .month-picker-dropdown {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.cream-theme .analytics-control-card .month-picker-dropdown {
+  background: #EDE4D8 !important;
+  border-color: #D8CCBE !important;
+}
+
+html.green-theme .analytics-control-card .month-picker-dropdown {
+  background: #E3F2E9 !important;
+  border-color: #B2DFC8 !important;
+}
+
+.analytics-control-card .month-picker-dropdown.open {
+  display: block !important;
+  /* Disable absolute transition/popup translate */
+  animation: none !important;
+}
+
+
+
 

@@ -45,7 +45,7 @@ let currentReportTab = 'month'; // 'month' | 'quarter' | 'year' — active tab i
 let _wrapupIsManual = false;  // true when opened manually via btn (hides reset box)
 
 /* ── Interactive Charts State ── */
-let currentTrendRange = 3;  // 1 | 3 | 6 | 12 (months)
+let currentTrendRange = 1;  // 1 | 3 | 6 | 12 (months)
 let currentTrendType = 'bar'; // 'bar' | 'line'
 let currentCategoryChartType = 'doughnut'; // 'doughnut' | 'polarArea'
 let _trendChart = null; // trend chart instance
@@ -1528,25 +1528,28 @@ function updateTrendChart() {
     let incomeData = [];
     let expenseData = [];
     let currentWeekIdx = -1;
+    const now = new Date();
+    const { month, year } = currentMonthYear();
+    const isThisMonth = (month === now.getMonth() && year === now.getFullYear());
 
     if (currentTrendRange === 1) {
-      const today = new Date();
-      const currentDay = today.getDate();
-      if (currentDay >= 1 && currentDay <= 7) currentWeekIdx = 0;
-      else if (currentDay >= 8 && currentDay <= 14) currentWeekIdx = 1;
-      else if (currentDay >= 15 && currentDay <= 21) currentWeekIdx = 2;
-      else if (currentDay >= 22) currentWeekIdx = 3;
+      if (isThisMonth) {
+        const currentDay = now.getDate();
+        if (currentDay >= 1 && currentDay <= 7) currentWeekIdx = 0;
+        else if (currentDay >= 8 && currentDay <= 14) currentWeekIdx = 1;
+        else if (currentDay >= 15 && currentDay <= 21) currentWeekIdx = 2;
+        else if (currentDay >= 22) currentWeekIdx = 3;
+      }
 
       // 1 Month: Weekly breakdown of current month
       const weeksList = [
-        { label: currentWeekIdx === 0 ? [t('week1') || 'Week 1', `(${t('current') || 'current'})`] : (t('week1') || 'Week 1'), start: 1, end: 7 },
-        { label: currentWeekIdx === 1 ? [t('week2') || 'Week 2', `(${t('current') || 'current'})`] : (t('week2') || 'Week 2'), start: 8, end: 14 },
-        { label: currentWeekIdx === 2 ? [t('week3') || 'Week 3', `(${t('current') || 'current'})`] : (t('week3') || 'Week 3'), start: 15, end: 21 },
-        { label: currentWeekIdx === 3 ? [t('week4') || 'Week 4+', `(${t('current') || 'current'})`] : (t('week4') || 'Week 4+'), start: 22, end: 31 }
+        { label: (currentWeekIdx === 0 && isThisMonth) ? [t('week1') || 'Week 1', `(${t('current') || 'current'})`] : (t('week1') || 'Week 1'), start: 1, end: 7 },
+        { label: (currentWeekIdx === 1 && isThisMonth) ? [t('week2') || 'Week 2', `(${t('current') || 'current'})`] : (t('week2') || 'Week 2'), start: 8, end: 14 },
+        { label: (currentWeekIdx === 2 && isThisMonth) ? [t('week3') || 'Week 3', `(${t('current') || 'current'})`] : (t('week3') || 'Week 3'), start: 15, end: 21 },
+        { label: (currentWeekIdx === 3 && isThisMonth) ? [t('week4') || 'Week 4+', `(${t('current') || 'current'})`] : (t('week4') || 'Week 4+'), start: 22, end: 31 }
       ];
       incomeData = [0, 0, 0, 0];
       expenseData = [0, 0, 0, 0];
-      const { month, year } = currentMonthYear();
 
       transactions.forEach(t => {
         const d = new Date(t.date + 'T00:00:00');
@@ -1616,33 +1619,118 @@ function updateTrendChart() {
 
     const colors = getThemeChartColors();
 
-    const datasetIncomeColors = currentTrendRange === 1 && currentTrendType === 'bar'
-      ? incomeData.map((_, idx) => (idx === currentWeekIdx ? colors.income : colors.incomeMuted))
-      : (currentTrendType === 'bar' ? colors.income : colors.incomeGlow);
+    const averageLinePlugin = {
+      id: 'averageLine',
+      afterDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        if (!chartArea) return;
+        
+        chart.data.datasets.forEach(dataset => {
+          const data = dataset.data;
+          if (!data || data.length === 0) return;
+          const sum = data.reduce((a, b) => a + b, 0);
+          const avg = sum / data.length;
+          if (avg <= 0) return;
+          
+          const yVal = scales.y.getPixelForValue(avg);
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([5, 5]);
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = (typeof dataset.borderColor === 'function') ? dataset.borderColor(null) : dataset.borderColor;
+          ctx.globalAlpha = 0.4;
+          ctx.moveTo(chartArea.left, yVal);
+          ctx.lineTo(chartArea.right, yVal);
+          ctx.stroke();
+          
+          // Draw a small label right-aligned
+          ctx.fillStyle = (typeof dataset.borderColor === 'function') ? dataset.borderColor(null) : dataset.borderColor;
+          ctx.font = "9px 'JetBrains Mono', monospace";
+          ctx.textAlign = 'right';
+          ctx.fillText(`AVG ${dataset.label}: ${fmt(avg)}`, chartArea.right - 10, yVal - 5);
+          ctx.restore();
+        });
+      }
+    };
 
-    const datasetExpenseColors = currentTrendRange === 1 && currentTrendType === 'bar'
-      ? expenseData.map((_, idx) => (idx === currentWeekIdx ? colors.expense : colors.expenseMuted))
-      : (currentTrendType === 'bar' ? colors.expense : colors.expenseGlow);
+    const getIncomeBg = (context) => {
+      const chart = context.chart;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return colors.income;
+      
+      const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+      if (currentTrendType === 'line') {
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.01)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.35)');
+      } else {
+        const idx = context.dataIndex;
+        const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
+        let topColor = colors.income;
+        let bottomColor = colors.incomeGlow || 'rgba(16,185,129,0.05)';
+        if (currentTrendRange === 1 && isThisMonth && !isCurrent) {
+          topColor = colors.incomeMuted;
+          bottomColor = 'rgba(16,185,129,0.02)';
+        }
+        gradient.addColorStop(0, bottomColor);
+        gradient.addColorStop(1, topColor);
+      }
+      return gradient;
+    };
 
-    const datasetIncomeBorderColors = currentTrendRange === 1 && currentTrendType === 'bar'
-      ? incomeData.map((_, idx) => (idx === currentWeekIdx ? colors.income : colors.incomeMuted))
-      : colors.income;
+    const getExpenseBg = (context) => {
+      const chart = context.chart;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return colors.expense;
+      
+      const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+      if (currentTrendType === 'line') {
+        gradient.addColorStop(0, 'rgba(255, 75, 114, 0.01)');
+        gradient.addColorStop(1, 'rgba(255, 75, 114, 0.35)');
+      } else {
+        const idx = context.dataIndex;
+        const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
+        let topColor = colors.expense;
+        let bottomColor = colors.expenseGlow || 'rgba(255,75,114,0.05)';
+        if (currentTrendRange === 1 && isThisMonth && !isCurrent) {
+          topColor = colors.expenseMuted;
+          bottomColor = 'rgba(255,75,114,0.02)';
+        }
+        gradient.addColorStop(0, bottomColor);
+        gradient.addColorStop(1, topColor);
+      }
+      return gradient;
+    };
 
-    const datasetExpenseBorderColors = currentTrendRange === 1 && currentTrendType === 'bar'
-      ? expenseData.map((_, idx) => (idx === currentWeekIdx ? colors.expense : colors.expenseMuted))
-      : colors.expense;
+    const getIncomeBorder = (context) => {
+      if (currentTrendType === 'line') return colors.income;
+      if (!context) return colors.income;
+      const idx = context.dataIndex;
+      const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
+      return (currentTrendRange === 1 && isThisMonth && !isCurrent) ? colors.incomeMuted : colors.income;
+    };
+
+    const getExpenseBorder = (context) => {
+      if (currentTrendType === 'line') return colors.expense;
+      if (!context) return colors.expense;
+      const idx = context.dataIndex;
+      const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
+      return (currentTrendRange === 1 && isThisMonth && !isCurrent) ? colors.expenseMuted : colors.expense;
+    };
 
     if (_trendChart && _trendChart.config.type === currentTrendType) {
       // Update in-place
       _trendChart.data.labels = labels;
       _trendChart.data.datasets[0].data = incomeData;
       _trendChart.data.datasets[1].data = expenseData;
-      _trendChart.data.datasets[0].backgroundColor = datasetIncomeColors;
-      _trendChart.data.datasets[1].backgroundColor = datasetExpenseColors;
-      _trendChart.data.datasets[0].borderColor = datasetIncomeBorderColors;
-      _trendChart.data.datasets[1].borderColor = datasetExpenseBorderColors;
+      _trendChart.data.datasets[0].backgroundColor = getIncomeBg;
+      _trendChart.data.datasets[1].backgroundColor = getExpenseBg;
+      _trendChart.data.datasets[0].borderColor = getIncomeBorder;
+      _trendChart.data.datasets[1].borderColor = getExpenseBorder;
       _trendChart.options.scales.x.grid.color = colors.grid;
+      _trendChart.options.scales.x.grid.display = false; // Hide vertical grids
       _trendChart.options.scales.y.grid.color = colors.grid;
+      _trendChart.options.scales.y.grid.borderDash = [5, 5]; // Dashed lines
       _trendChart.options.scales.x.ticks.color = colors.text;
       _trendChart.options.scales.y.ticks.color = colors.text;
       _trendChart.options.scales.x.ticks.font = { family: "'JetBrains Mono', monospace", size: 11 };
@@ -1659,32 +1747,44 @@ function updateTrendChart() {
         {
           label: t('incomeLabel') || 'Income',
           data: incomeData,
-          backgroundColor: datasetIncomeColors,
-          borderColor: datasetIncomeBorderColors,
+          backgroundColor: getIncomeBg,
+          borderColor: getIncomeBorder,
           borderWidth: 2.5,
-          borderRadius: currentTrendType === 'bar' ? 4 : 0,
+          borderRadius: currentTrendType === 'bar' ? { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 } : 0,
           fill: currentTrendType === 'line',
-          tension: 0.35,
+          tension: 0.4,
           pointBackgroundColor: colors.income,
-          pointBorderColor: '#1e2124',
+          pointBorderColor: getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff',
           pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          hoverBorderWidth: 3,
+          hoverBorderColor: colors.income,
+          barPercentage: 0.6,
+          categoryPercentage: 0.8,
+          barThickness: 'flex',
+          maxBarThickness: 48
         },
         {
           label: t('expenseLabel') || 'Expense',
           data: expenseData,
-          backgroundColor: datasetExpenseColors,
-          borderColor: datasetExpenseBorderColors,
+          backgroundColor: getExpenseBg,
+          borderColor: getExpenseBorder,
           borderWidth: 2.5,
-          borderRadius: currentTrendType === 'bar' ? 4 : 0,
+          borderRadius: currentTrendType === 'bar' ? { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 } : 0,
           fill: currentTrendType === 'line',
-          tension: 0.35,
+          tension: 0.4,
           pointBackgroundColor: colors.expense,
-          pointBorderColor: '#1e2124',
+          pointBorderColor: getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff',
           pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          hoverBorderWidth: 3,
+          hoverBorderColor: colors.expense,
+          barPercentage: 0.6,
+          categoryPercentage: 0.8,
+          barThickness: 'flex',
+          maxBarThickness: 48
         }
       ];
 
@@ -1694,6 +1794,7 @@ function updateTrendChart() {
           labels,
           datasets
         },
+        plugins: [averageLinePlugin],
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -1729,11 +1830,11 @@ function updateTrendChart() {
           },
           scales: {
             x: {
-              grid: { color: colors.grid, drawBorder: false },
+              grid: { display: false },
               ticks: { color: colors.text, font: { family: "'JetBrains Mono', monospace", size: 11 } }
             },
             y: {
-              grid: { color: colors.grid, drawBorder: false },
+              grid: { color: colors.grid, drawBorder: false, borderDash: [5, 5] },
               ticks: {
                 color: colors.text,
                 font: { family: "'JetBrains Mono', monospace", size: 11 },
@@ -1866,9 +1967,101 @@ function updateAnalyticsSummary() {
   const grid = document.getElementById('analyticsGrid');
   if (!grid) return;
   
-  const { month, year } = currentMonthYear();
-  grid.innerHTML = generateAnalyticsHTML(month, year, false);
+  // Determine which periods (months) are in the active trend range
+  let periods = [];
+  if (currentTrendRange === 1) {
+    const { month, year } = currentMonthYear();
+    periods.push({ month, year });
+  } else {
+    // Mirror the months shown in the chart (rolling last N months)
+    const now = new Date();
+    for (let i = currentTrendRange - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      periods.push({ month: d.getMonth(), year: d.getFullYear() });
+    }
+  }
 
+  // Compute aggregated stats
+  let totalIncome = 0;
+  let totalExpense = 0;
+  let txnCount = 0;
+  const totalsByCat = {};
+
+  transactions.forEach(t => {
+    const d = new Date(t.date + 'T00:00:00');
+    const tMonth = d.getMonth();
+    const tYear = d.getFullYear();
+
+    // Check if transaction is in any of the periods
+    const inPeriod = periods.some(p => p.month === tMonth && p.year === tYear);
+    if (inPeriod) {
+      txnCount++;
+      if (t.type === 'income') {
+        totalIncome += t.amount;
+      } else {
+        totalExpense += t.amount;
+        totalsByCat[t.category] = (totalsByCat[t.category] || 0) + t.amount;
+      }
+    }
+  });
+
+  let topCat = 'Other';
+  let topCatAmt = 0;
+  Object.keys(totalsByCat).forEach(c => {
+    if (totalsByCat[c] > topCatAmt) {
+      topCat = c;
+      topCatAmt = totalsByCat[c];
+    }
+  });
+
+  const savings = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? ((savings / totalIncome) * 100).toFixed(0) : 0;
+
+  const tSavingsRate = t('savingsRate') || 'Savings Rate';
+  const tTopCategory = t('topCategory') || 'Top Category';
+  const tTotalTransactions = t('totalTransactions') || 'Total Transactions';
+  const tNetSavings = t('netSavings') || 'Net Savings';
+
+  // Build the label for the subtitle (e.g. "MAY 2026 - JUL 2026" or "JUL 2026")
+  const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+  const locale = localeMap[currentLang] || 'en-US';
+  
+  let rangeLabel = '';
+  if (periods.length === 1) {
+    const d = new Date(periods[0].year, periods[0].month, 1);
+    rangeLabel = d.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + periods[0].year;
+  } else {
+    const startD = new Date(periods[0].year, periods[0].month, 1);
+    const endD = new Date(periods[periods.length - 1].year, periods[periods.length - 1].month, 1);
+    const startLabel = startD.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + periods[0].year;
+    const endLabel = endD.toLocaleString(locale, { month: 'short' }).toUpperCase() + ' ' + periods[periods.length - 1].year;
+    rangeLabel = `${startLabel} - ${endLabel}`;
+  }
+
+  grid.innerHTML = `
+    <div class="analytics-card">
+      <p class="analytics-card__title">${escHtml(tSavingsRate)}</p>
+      <p class="analytics-card__value">${savingsRate}%</p>
+      <p class="analytics-card__sub">${totalIncome > 0 ? `${t('savingsGood') || 'of total income saved'} (${rangeLabel})` : (t('savingsNoIncome') || 'No income logged')}</p>
+    </div>
+    <div class="analytics-card">
+      <p class="analytics-card__title">${escHtml(tTopCategory)}</p>
+      <p class="analytics-card__value" style="font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escHtml(tCat(topCat))}</p>
+      <p class="analytics-card__sub">${topCatAmt > 0 ? fmt(topCatAmt) : '0 ₫'}</p>
+    </div>
+    <div class="analytics-card">
+      <p class="analytics-card__title">${escHtml(tNetSavings)}</p>
+      <p class="analytics-card__value ${savings >= 0 ? 'pos' : 'neg'}" style="color: ${savings >= 0 ? 'var(--green)' : '#ff4757'}">${savings >= 0 ? '+' : ''}${fmt(savings)}</p>
+      <p class="analytics-card__sub">${rangeLabel}</p>
+    </div>
+    <div class="analytics-card">
+      <p class="analytics-card__title">${escHtml(tTotalTransactions)}</p>
+      <p class="analytics-card__value">${txnCount}</p>
+      <p class="analytics-card__sub">${currentLang === 'vi' ? 'giao dịch được ghi nhận' : (currentLang === 'zh' ? '笔已记录交易' : 'transactions recorded')} (${rangeLabel})</p>
+    </div>
+  `;
+
+  // Compare month rendering (if active)
   const compareGrid = document.getElementById('analyticsCompareGrid');
   const btnCompareClear = document.getElementById('btnCompareClear');
   if (compareGrid && btnCompareClear) {
@@ -1938,6 +2131,28 @@ function selectMonth(month, year) {
   const trigger = document.getElementById('monthPickerTrigger');
   if (dropdown) dropdown.classList.remove('open');
   if (trigger) trigger.setAttribute('aria-expanded', 'false');
+
+  // Reset trend range to 1 Month when selecting a month
+  currentTrendRange = 1;
+  const rangeSelect = document.getElementById('trendRange');
+  if (rangeSelect) {
+    rangeSelect.value = "1";
+  }
+
+  triggerUIUpdates();
+}
+
+function changeMonthOffset(offset) {
+  const current = currentMonthYear();
+  const d = new Date(current.year, current.month + offset, 1);
+  selectedMonthYear = { month: d.getMonth(), year: d.getFullYear() };
+
+  // Reset trend range to 1 Month when navigating months
+  currentTrendRange = 1;
+  const rangeSelect = document.getElementById('trendRange');
+  if (rangeSelect) {
+    rangeSelect.value = "1";
+  }
 
   triggerUIUpdates();
 }
@@ -2061,6 +2276,7 @@ function triggerUIUpdates() {
 function changeTrendRange(months) {
   currentTrendRange = months;
   updateTrendChart();
+  updateAnalyticsSummary();
 }
 
 function setTrendType(type) {
@@ -3034,6 +3250,7 @@ const I18N = {
     placeholderCoffee: 'e.g. Coffee...',
     syncActive: 'SYNC ACTIVE',
     dateRequired: 'Date is required.',
+    trendControls: 'CHART OPTIONS',
     trendPanel: 'Cash Flow Trends',
     range1M: '1 Month',
     range3M: '3 Months',
@@ -3299,6 +3516,7 @@ const I18N = {
     placeholderCoffee: 'Ví dụ: Cà phê...',
     syncActive: 'ĐÃ ĐỒNG BỘ',
     dateRequired: 'Vui lòng chọn ngày.',
+    trendControls: 'TÙY CHỌN BIỂU ĐỒ',
     trendPanel: 'Xu Hướng Thu Chi',
     range1M: '1 Tháng',
     range3M: '3 Tháng',
@@ -3564,6 +3782,7 @@ const I18N = {
     placeholderCoffee: '例如：咖啡...',
     syncActive: '同步已激活',
     dateRequired: '日期是必填的。',
+    trendControls: '图表选项',
     trendPanel: '现金流趋势',
     range1M: '1 个月',
     range3M: '3 个月',
@@ -5171,22 +5390,42 @@ function checkNewPeriodTransitions() {
   if (!lastQ)      { localStorage.setItem('caltdhy_last_reported_quarter', curQ); }
   if (!lastYear)   { localStorage.setItem('caltdhy_last_reported_year',    curYear); }
 
-  // Determine which popup to show (largest cycle wins)
-  if (yearChanged) {
-    // Show the PREVIOUS year's annual report
-    const [prevY] = lastYear.split('-');
-    _wrapupIsManual = false;
-    openWrapupModal('year', parseInt(prevY));
-  } else if (quarterChanged) {
-    // Show the PREVIOUS quarter's report
-    const [prevQY, qPart] = lastQ.split('-Q');
-    _wrapupIsManual = false;
-    openWrapupModal('quarter', parseInt(prevQY), parseInt(qPart));
-  } else if (monthChanged) {
-    // Show the PREVIOUS month's report (original behaviour)
+  // If the month has changed, we ALWAYS show the Monthly Report because it has the action: "Bắt đầu tháng mới" (Start Fresh/Reset budget)
+  if (monthChanged) {
     const [lastY, lastM] = lastMonth.split('-');
     _wrapupIsManual = false;
     showMonthlyReport(parseInt(lastM), parseInt(lastY));
+
+    // Show optional toast to notify user that Quarterly or Annual reports are also ready
+    if (yearChanged) {
+      setTimeout(() => {
+        const msg = currentLang === 'vi'
+          ? '🎉 Báo cáo Năm mới đã sẵn sàng! Nhấp vào tab NĂM để xem.'
+          : currentLang === 'zh'
+          ? '🎉 新年度总结已准备就绪！点击“年”标签查看。'
+          : '🎉 New Annual Report is ready! Click on the YEAR tab to view.';
+        showToast(msg, 4000);
+      }, 1000);
+    } else if (quarterChanged) {
+      setTimeout(() => {
+        const msg = currentLang === 'vi'
+          ? '🎉 Báo cáo Quý mới đã sẵn sàng! Nhấp vào tab QUÝ để xem.'
+          : currentLang === 'zh'
+          ? '🎉 新季度总结已准备就绪！点击“季”标签查看。'
+          : '🎉 New Quarterly Report is ready! Click on the QUARTER tab to view.';
+        showToast(msg, 4000);
+      }, 1000);
+    }
+  } else if (quarterChanged) {
+    // Show the PREVIOUS quarter's report (fallback if quarter changes without month)
+    const [prevQY, qPart] = lastQ.split('-Q');
+    _wrapupIsManual = false;
+    openWrapupModal('quarter', parseInt(prevQY), parseInt(qPart));
+  } else if (yearChanged) {
+    // Show the PREVIOUS year's annual report (fallback if year changes without month)
+    const [prevY] = lastYear.split('-');
+    _wrapupIsManual = false;
+    openWrapupModal('year', parseInt(prevY));
   }
 }
 

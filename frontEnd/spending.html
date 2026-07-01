@@ -269,88 +269,113 @@
            2. ANALYTICS VIEW (TRANG PHÂN TÍCH)
            ========================================== -->
       <div id="view-analytics" class="dashboard-view">
-        <!-- Month Selector Section (Idea 2 - Dropdown Grid Picker) -->
-        <section class="month-selector-section" aria-labelledby="analytics-month-heading">
-          <h2 class="section-label" id="analytics-month-heading" data-i18n="analyticsMonth">SELECT MONTH</h2>
-          <div class="month-picker-wrapper" id="monthPickerWrapper">
-            <button class="month-picker-trigger" id="monthPickerTrigger" onclick="toggleMonthPicker(event)" aria-haspopup="dialog" aria-expanded="false">
-              <span class="month-picker-icon" aria-hidden="true">📅</span>
-              <span id="monthPickerLabel">MAY 2026</span>
-              <span class="month-picker-arrow" aria-hidden="true">▾</span>
-            </button>
-            <div class="month-picker-dropdown" id="monthPickerDropdown" role="dialog" aria-modal="false" aria-label="Choose month" onclick="event.stopPropagation()">
-              <div class="month-picker-grid" id="monthPickerGrid">
-                <!-- Injected dynamically by JS (3x4 grid) -->
+        <div class="analytics-layout-wrapper">
+          <!-- Left Column: Trend Chart -->
+          <div class="analytics-main-pane">
+            <!-- Cash Flow Trend Chart -->
+            <section class="trend-section" aria-labelledby="trend-heading">
+              <div class="trend-section__header">
+                <h2 class="section-label" id="trend-heading" data-i18n="trendPanel">Cash Flow Trends</h2>
               </div>
-            </div>
-          </div>
-        </section>
 
-        <!-- Cash Flow Trend Chart -->
-        <section class="trend-section" aria-labelledby="trend-heading">
-          <div class="trend-section__header">
-            <h2 class="section-label" id="trend-heading" data-i18n="trendPanel">Cash Flow Trends</h2>
-            <div class="trend-controls">
-              <!-- Time range select -->
-              <select id="trendRange" onchange="changeTrendRange(parseInt(this.value))" class="trend-select" aria-label="Select trend time range">
-                <option value="1" data-i18n="range1M">1 Month</option>
-                <option value="3" selected data-i18n="range3M">3 Months</option>
-                <option value="6" data-i18n="range6M">6 Months</option>
-                <option value="12" data-i18n="range12M">12 Months</option>
-              </select>
-              <!-- Chart type switcher -->
-              <div class="trend-type-group" role="group" aria-label="Trend chart type">
-                <button class="trend-type-btn active" id="trend-btn-bar" onclick="setTrendType('bar')" aria-label="Bar Chart" title="Bar Chart">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                </button>
-                <button class="trend-type-btn" id="trend-btn-line" onclick="setTrendType('line')" aria-label="Line Chart" title="Line Chart">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                </button>
+              <div class="chassis-frame chassis-frame--trend" aria-label="Cash flow trend chart">
+                <div class="chassis-frame__screw cf-screw--tl" aria-hidden="true"></div>
+                <div class="chassis-frame__screw cf-screw--tr" aria-hidden="true"></div>
+                <div class="chassis-frame__screw cf-screw--bl" aria-hidden="true"></div>
+                <div class="chassis-frame__screw cf-screw--br" aria-hidden="true"></div>
+
+                <div class="trend-panel">
+                  <div class="trend-canvas-wrap">
+                    <canvas id="trendChart" aria-label="Monthly Cash Flow Trend Chart" role="img"></canvas>
+                  </div>
+                  <!-- empty state -->
+                  <p class="trend-empty" id="trendEmpty">// NO DATA IN RANGE</p>
+                </div>
               </div>
-            </div>
+            </section>
           </div>
 
-          <div class="chassis-frame chassis-frame--trend" aria-label="Cash flow trend chart">
-            <div class="chassis-frame__screw cf-screw--tl" aria-hidden="true"></div>
-            <div class="chassis-frame__screw cf-screw--tr" aria-hidden="true"></div>
-            <div class="chassis-frame__screw cf-screw--bl" aria-hidden="true"></div>
-            <div class="chassis-frame__screw cf-screw--br" aria-hidden="true"></div>
-
-            <div class="trend-panel">
-              <div class="trend-canvas-wrap">
-                <canvas id="trendChart" aria-label="Monthly Cash Flow Trend Chart" role="img"></canvas>
+          <!-- Right Column: Controls & Analytics Summary -->
+          <div class="analytics-side-pane">
+            <!-- Unified Control Panel -->
+            <div class="analytics-control-card">
+              <div class="control-card-section">
+                <h3 class="control-card-label" data-i18n="analyticsMonth">SELECT MONTH</h3>
+                <div class="month-navigation-wrapper">
+                  <button class="month-nav-btn prev-month-btn" onclick="changeMonthOffset(-1)" aria-label="Tháng trước" title="Tháng trước">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <div class="month-picker-wrapper" id="monthPickerWrapper">
+                    <button class="month-picker-trigger" id="monthPickerTrigger" onclick="toggleMonthPicker(event)" aria-haspopup="dialog" aria-expanded="false">
+                      <span class="month-picker-icon" aria-hidden="true">📅</span>
+                      <span id="monthPickerLabel">MAY 2026</span>
+                      <span class="month-picker-arrow" aria-hidden="true">▾</span>
+                    </button>
+                  </div>
+                  <button class="month-nav-btn next-month-btn" onclick="changeMonthOffset(1)" aria-label="Tháng sau" title="Tháng sau">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+                </div>
+                <!-- Inline Month Picker Dropdown -->
+                <div class="month-picker-dropdown" id="monthPickerDropdown" role="dialog" aria-modal="false" aria-label="Choose month" onclick="event.stopPropagation()">
+                  <div class="month-picker-grid" id="monthPickerGrid">
+                    <!-- Injected dynamically by JS (3x4 grid) -->
+                  </div>
+                </div>
               </div>
-              <!-- empty state -->
-              <p class="trend-empty" id="trendEmpty">// NO DATA IN RANGE</p>
-            </div>
-          </div>
-        </section>
 
-        <!-- Dynamic Analytics Summary Grid -->
-        <section class="analytics-summary-section" aria-labelledby="analytics-summary-heading">
-          <div class="analytics-summary-header">
-            <h2 class="section-label" data-i18n="analyticsSummary">Analytics Summary</h2>
-            <div class="compare-wrapper" id="compareWrapper">
-              <button class="btn-compare-add" id="btnCompareAdd" onclick="toggleCompareMenu(event)" aria-label="Compare with another month" title="So sánh với tháng khác">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              </button>
-              <button class="btn-compare-clear" id="btnCompareClear" onclick="clearCompareMonth(event)" aria-label="Clear comparison" hidden title="Tắt so sánh">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-              <div class="compare-dropdown" id="compareDropdown" role="listbox" onclick="event.stopPropagation()">
-                <!-- Populated by JS -->
+              <div class="control-card-divider"></div>
+
+              <div class="control-card-section">
+                <h3 class="control-card-label" data-i18n="trendControls">CHART OPTIONS</h3>
+                <div class="control-card-row">
+                  <!-- Time range select -->
+                  <select id="trendRange" onchange="changeTrendRange(parseInt(this.value))" class="trend-select" aria-label="Select trend time range">
+                    <option value="1" data-i18n="range1M">1 Month</option>
+                    <option value="3" selected data-i18n="range3M">3 Months</option>
+                    <option value="6" data-i18n="range6M">6 Months</option>
+                    <option value="12" data-i18n="range12M">12 Months</option>
+                  </select>
+                  <!-- Chart type switcher -->
+                  <div class="trend-type-group" role="group" aria-label="Trend chart type">
+                    <button class="trend-type-btn active" id="trend-btn-bar" onclick="setTrendType('bar')" aria-label="Bar Chart" title="Bar Chart">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    </button>
+                    <button class="trend-type-btn" id="trend-btn-line" onclick="setTrendType('line')" aria-label="Line Chart" title="Line Chart">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- Dynamic Analytics Summary Grid -->
+            <section class="analytics-summary-section" aria-labelledby="analytics-summary-heading">
+              <div class="analytics-summary-header">
+                <h2 class="section-label" id="analytics-summary-heading" data-i18n="analyticsSummary">Analytics Summary</h2>
+                <div class="compare-wrapper" id="compareWrapper">
+                  <button class="btn-compare-add" id="btnCompareAdd" onclick="toggleCompareMenu(event)" aria-label="Compare with another month" title="So sánh với tháng khác">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </button>
+                  <button class="btn-compare-clear" id="btnCompareClear" onclick="clearCompareMonth(event)" aria-label="Clear comparison" hidden title="Tắt so sánh">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                  <div class="compare-dropdown" id="compareDropdown" role="listbox" onclick="event.stopPropagation()">
+                    <!-- Populated by JS -->
+                  </div>
+                </div>
+              </div>
+              <div class="analytics-grid" id="analyticsGrid">
+                <!-- Dynamically injected analytics cards -->
+              </div>
+              <!-- Compare Analytics Grid -->
+              <div class="analytics-grid analytics-grid--compare analytics-compare-grid" id="analyticsCompareGrid">
+                <!-- Dynamically injected compare analytics cards -->
+              </div>
+            </section>
           </div>
-          <div class="analytics-grid" id="analyticsGrid">
-            <!-- Dynamically injected analytics cards -->
-          </div>
-          <!-- Compare Analytics Grid -->
-          <div class="analytics-grid analytics-grid--compare analytics-compare-grid" id="analyticsCompareGrid">
-            <!-- Dynamically injected compare analytics cards -->
-          </div>
-        </section>
-        </div><!-- /view-analytics -->
+        </div>
+      </div>
 
       <!-- ==========================================
            3. JARS VIEW (HŨ CHI TIÊU)
