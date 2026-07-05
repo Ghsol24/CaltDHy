@@ -3399,7 +3399,7 @@ html.light-theme .report-month-slider:focus-within .month-slider-trigger {
 html.light-theme .month-slider-trigger__caret { color: #4F46E5; }
 html.light-theme .report-month-slider:hover .month-slider-trigger__caret { color: #4F46E5; }
 html.light-theme .month-chip { background: #e5e7eb; border-color: #d1d5db; color: #4b5563; }
-html.light-theme .month-chip.active { background: #4F46E5; border-color: #4F46E5; }
+html.light-theme .month-chip.active { background: #4F46E5; border-color: #4F46E5; color: #fff; }
 html.light-theme .month-chip:not(.active):hover { background: rgba(79,70,229,0.1); border-color: #4F46E5; color: #111827; }
 
 /* ── Cream theme ── */
@@ -3416,7 +3416,7 @@ html.cream-theme .report-month-slider:focus-within .month-slider-trigger {
 }
 html.cream-theme .month-slider-trigger__caret { color: #C0531E; }
 html.cream-theme .month-chip { background: #EDE4D8; border-color: #D8CCBE; color: #584133; }
-html.cream-theme .month-chip.active { background: #C0531E; border-color: #C0531E; }
+html.cream-theme .month-chip.active { background: #C0531E; border-color: #C0531E; color: #fff; }
 html.cream-theme .month-chip:not(.active):hover { background: rgba(192,83,30,0.1); border-color: #C0531E; color: #2C1D10; }
 
 /* ── Green theme ── */
@@ -3433,7 +3433,7 @@ html.green-theme .report-month-slider:focus-within .month-slider-trigger {
 }
 html.green-theme .month-slider-trigger__caret { color: #16a34a; }
 html.green-theme .month-chip { background: #D1EAD9; border-color: #B2DFC8; color: #475569; }
-html.green-theme .month-chip.active { background: #16a34a; border-color: #16a34a; }
+html.green-theme .month-chip.active { background: #16a34a; border-color: #16a34a; color: #fff; }
 html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.12); border-color: #16a34a; color: #0E2E1E; }
 
 /* ╔══════════════════════════════════════════════════════════════╗

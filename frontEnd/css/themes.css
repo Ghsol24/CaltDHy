@@ -40,6 +40,25 @@ html.light-theme {
   --sh-press: inset 0 1px 3px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.02);
   --sh-accent: 0 4px 12px rgba(79,70,229,.2), 0 1px 4px rgba(79,70,229,.1);
   --sh-float: 0 12px 32px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+
+  /* ── Component Token Overrides ── */
+  --c-summary-bg:            var(--surface);
+  --c-summary-border:        #E2E8F0;
+  --c-summary-hover-border:  var(--accent);
+  --c-summary-shadow:        var(--sh-raise);
+  --c-card-bg:               var(--surface);
+  --c-card-border:           #E2E8F0;
+  --c-card-shadow:           var(--sh-raise);
+  --c-card-hover-shadow:     var(--sh-float);
+  --c-inst-bg:               var(--surface);
+  --c-inst-border:           #E2E8F0;
+  --c-inst-hover-bg:         var(--surface2);
+  --c-inst-hover-border:     var(--accent);
+  --c-bubble-bg:             var(--surface2);
+  --c-bubble-border:         #E2E8F0;
+  --c-bubble-shadow:         var(--sh-press);
+  --c-dashed-border:         rgba(15, 23, 42, 0.12);
+  --c-dashed-icon:           var(--muted);
 }
 
 /* Topbar */
@@ -633,6 +652,25 @@ html.cream-theme {
   --sh-press: inset 0 1px 5px rgba(100,60,20,.12), inset 0 0 0 1px rgba(100,60,20,.05);
   --sh-accent: 0 4px 16px rgba(192,83,30,.28), 0 1px 4px rgba(192,83,30,.15);
   --sh-float: 0 12px 44px rgba(100,60,20,.16), 0 2px 10px rgba(100,60,20,.08);
+
+  /* ── Component Token Overrides ── */
+  --c-summary-bg:            var(--surface);
+  --c-summary-border:        #EDE4D8;
+  --c-summary-hover-border:  var(--accent);
+  --c-summary-shadow:        var(--sh-raise);
+  --c-card-bg:               var(--surface);
+  --c-card-border:           #EDE4D8;
+  --c-card-shadow:           var(--sh-raise);
+  --c-card-hover-shadow:     var(--sh-float);
+  --c-inst-bg:               var(--surface);
+  --c-inst-border:           #EDE4D8;
+  --c-inst-hover-bg:         var(--surface2);
+  --c-inst-hover-border:     var(--accent);
+  --c-bubble-bg:             var(--surface2);
+  --c-bubble-border:         #EDE4D8;
+  --c-bubble-shadow:         var(--sh-press);
+  --c-dashed-border:         rgba(44, 29, 16, 0.12);
+  --c-dashed-icon:           var(--muted);
 }
 
 html.cream-theme body { background: var(--bg); color: var(--txt); }
@@ -933,6 +971,25 @@ html.green-theme {
   --sh-press: inset 0 1px 5px rgba(16,120,80,.10), inset 0 0 0 1px rgba(16,120,80,.03);
   --sh-accent: 0 4px 16px rgba(5,150,105,.25), 0 1px 4px rgba(5,150,105,.12);
   --sh-float: 0 12px 44px rgba(16,120,80,.12), 0 2px 10px rgba(16,120,80,.06);
+
+  /* ── Component Token Overrides ── */
+  --c-summary-bg:            var(--surface);
+  --c-summary-border:        #E3F2E9;
+  --c-summary-hover-border:  var(--accent);
+  --c-summary-shadow:        var(--sh-raise);
+  --c-card-bg:               var(--surface);
+  --c-card-border:           #E3F2E9;
+  --c-card-shadow:           var(--sh-raise);
+  --c-card-hover-shadow:     var(--sh-float);
+  --c-inst-bg:               var(--surface);
+  --c-inst-border:           #E3F2E9;
+  --c-inst-hover-bg:         var(--surface2);
+  --c-inst-hover-border:     var(--accent);
+  --c-bubble-bg:             var(--surface2);
+  --c-bubble-border:         #E3F2E9;
+  --c-bubble-shadow:         var(--sh-press);
+  --c-dashed-border:         rgba(14, 46, 30, 0.12);
+  --c-dashed-icon:           var(--muted);
 }
 
 html.green-theme body { background: var(--bg); color: var(--txt); }

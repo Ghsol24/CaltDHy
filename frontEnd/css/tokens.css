@@ -61,4 +61,32 @@
   --z-modal: 100;
   --z-dropdown: 200;
   --z-toast: 300;
+
+  /* ── Component Tokens: Jar & Summary Cards (Dark defaults) ── */
+  /* Summary Card (Tổng tích lũy, Mục tiêu, Hóa đơn sắp tới) */
+  --c-summary-bg:            rgba(255, 255, 255, 0.02);
+  --c-summary-border:        rgba(255, 255, 255, 0.06);
+  --c-summary-hover-border:  rgba(255, 255, 255, 0.14);
+  --c-summary-shadow:        none;
+
+  /* Jar Card */
+  --c-card-bg:               rgba(20, 20, 24, 0.65);
+  --c-card-border:           rgba(255, 255, 255, 0.07);
+  --c-card-shadow:           0 8px 32px rgba(0, 0, 0, 0.24);
+  --c-card-hover-shadow:     0 16px 48px rgba(0, 0, 0, 0.35);
+
+  /* Inst Item (Hóa đơn định kỳ row) */
+  --c-inst-bg:               rgba(20, 20, 24, 0.50);
+  --c-inst-border:           rgba(255, 255, 255, 0.05);
+  --c-inst-hover-bg:         rgba(255, 255, 255, 0.03);
+  --c-inst-hover-border:     rgba(255, 255, 255, 0.12);
+
+  /* Timeline Date Bubble */
+  --c-bubble-bg:             rgba(255, 255, 255, 0.03);
+  --c-bubble-border:         rgba(255, 255, 255, 0.06);
+  --c-bubble-shadow:         0 4px 12px rgba(0, 0, 0, 0.20);
+
+  /* Dashed Placeholder Card */
+  --c-dashed-border:         rgba(255, 255, 255, 0.12);
+  --c-dashed-icon:           rgba(255, 255, 255, 0.20);
 }
