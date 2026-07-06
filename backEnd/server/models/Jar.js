@@ -1,6 +1,19 @@
 const mongoose = require('mongoose');
 
 /**
+ * Sub-schema: JarHistoryEntry — một lần nạp hoặc rút tiền
+ */
+const jarHistorySchema = new mongoose.Schema(
+    {
+        type:   { type: String, enum: ['deposit', 'withdraw'], required: true },
+        amount: { type: Number, required: true, min: 1 },
+        reason: { type: String, trim: true, maxlength: [200, 'Lý do không quá 200 ký tự.'], default: '' },
+        date:   { type: Date, default: Date.now }
+    },
+    { _id: true }
+);
+
+/**
  * Schema: Jar (Hũ Tiết Kiệm)
  * Mỗi document đại diện cho một hũ tiết kiệm của user.
  * Hoàn toàn độc lập với balance/transactions — tiền trong hũ KHÔNG kết nối với số dư tổng.
@@ -41,6 +54,13 @@ const jarSchema = new mongoose.Schema(
         color: {
             type: String,
             default: '#3498db'
+        },
+        /**
+         * Lịch sử nạp/rút — mỗi action ghi thêm một entry (max giữ 200 entries gần nhất)
+         */
+        history: {
+            type: [jarHistorySchema],
+            default: []
         }
     },
     {
@@ -50,6 +70,16 @@ const jarSchema = new mongoose.Schema(
             transform: (doc, ret) => {
                 ret.id = ret._id.toString();
                 ret.userId = ret.userId.toString();
+                // Làm sạch history items
+                if (Array.isArray(ret.history)) {
+                    ret.history = ret.history.map(h => ({
+                        id:     h._id ? h._id.toString() : undefined,
+                        type:   h.type,
+                        amount: h.amount,
+                        reason: h.reason,
+                        date:   h.date
+                    }));
+                }
                 delete ret._id;
                 delete ret.__v;
                 return ret;
@@ -57,6 +87,7 @@ const jarSchema = new mongoose.Schema(
         }
     }
 );
+
 
 jarSchema.index({ userId: 1, createdAt: -1 });
 

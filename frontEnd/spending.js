@@ -17,12 +17,12 @@ const EXCHANGE_RATE = 27000;  // 1 USD = 27,000 VND
 const CNY_RATE = 3750;   // 1 CNY = 3,750 VND
 const CATEGORIES = [
   'Food & Dining', 'Transport', 'Shopping', 'Entertainment',
-  'Health', 'Utilities', 'Salary', 'Freelance', 'Other'
+  'Health', 'Utilities', 'Salary', 'Freelance', 'Installment', 'Other'
 ];
 const CAT_ICONS = {
-  'Food & Dining': '🍜', 'Transport': '🚗', 'Shopping': '🛗️',
+  'Food & Dining': '🍜', 'Transport': '🚗', 'Shopping': '🛍️',
   'Entertainment': '🎦', 'Health': '💊', 'Utilities': '⚡',
-  'Salary': '💵', 'Freelance': '💻', 'Other': '📦'
+  'Salary': '💵', 'Freelance': '💻', 'Installment': '💳', 'Other': '📦'
 };
 
 /* ── State ── */
@@ -355,8 +355,8 @@ function updateCategoryDropdown(selectId, type) {
   } else if (type === 'expense') {
     // Only show expense-type categories
     catsToShow = catsToShow.filter(c => getCategoryType(c) === 'expense');
-    // Sub-filter: prefer budgeted cats if available
-    const budgetedCats = catsToShow.filter(c => budgets[c] && budgets[c] > 0);
+    // Sub-filter: prefer budgeted cats if available, but ALWAYS keep 'Installment'
+    const budgetedCats = catsToShow.filter(c => (budgets[c] && budgets[c] > 0) || c === 'Installment');
     if (budgetedCats.length > 0) catsToShow = budgetedCats;
   }
 
@@ -1420,7 +1420,7 @@ function updateChart() {
       }
       _categoryChart.options.plugins.tooltip.titleFont = { family: "'JetBrains Mono', monospace", size: 13, weight: '700' };
       _categoryChart.options.plugins.tooltip.bodyFont = { family: "'JetBrains Mono', monospace", size: 12 };
-      _categoryChart.update('active');
+      _categoryChart.update('active'); // CSS aspect-ratio đã fix resize loop — animation 60fps an toàn
     } else {
       if (_categoryChart) {
         _categoryChart.destroy();
@@ -1738,7 +1738,7 @@ function updateTrendChart() {
       _trendChart.options.plugins.legend.labels.font = { family: "'JetBrains Mono', monospace", size: 12 };
       _trendChart.options.plugins.tooltip.titleFont = { family: "'JetBrains Mono', monospace", size: 13, weight: '700' };
       _trendChart.options.plugins.tooltip.bodyFont = { family: "'JetBrains Mono', monospace", size: 12 };
-      _trendChart.update('active');
+      _trendChart.update('active'); // CSS aspect-ratio đã fix resize loop — animation 60fps an toàn
     } else {
       // Recreate chart
       if (_trendChart) { _trendChart.destroy(); }
@@ -1886,12 +1886,12 @@ function switchView(view) {
   }
   
   if (view === 'analytics') {
-    // Redraw the trend chart immediately to fit the spacious area
+    // renderMonthSelector đồng bộ tháng đang chọn
     renderMonthSelector();
-    updateTrendChart();
-    updateAnalyticsSummary();
+    // renderMonthTxnFeed render feed giao dịch
     renderMonthTxnFeed();
   }
+  // updateChart() tự gọi updateTrendChart() + updateAnalyticsSummary() — không gọi thừa
   updateChart();
 }
 
@@ -1924,7 +1924,12 @@ function generateAnalyticsHTML(month, year, isCompare = false) {
   });
   
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? ((savings / totalIncome) * 100).toFixed(0) : 0;
+  // Tỷ lệ tích lũy: phân nhánh 3 kịch bản tài chính
+  let savingsRate;
+  if (totalIncome === 0 && totalExpense === 0) savingsRate = '0.0';
+  else if (totalIncome > 0 && totalExpense === 0) savingsRate = '100.0';
+  else if (totalIncome >= totalExpense) savingsRate = (((totalIncome - totalExpense) / totalIncome) * 100).toFixed(1);
+  else savingsRate = (-(totalIncome / totalExpense) * 100).toFixed(1);
   
   const tSavingsRate = t('savingsRate') || 'Savings Rate';
   const tTopCategory = t('topCategory') || 'Top Category';
@@ -2015,7 +2020,7 @@ function updateAnalyticsSummary() {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? ((savings / totalIncome) * 100).toFixed(0) : 0;
+  const savingsRate = totalExpense > 0 ? (- (totalIncome / totalExpense) * 100).toFixed(1) : '0.0';
 
   const tSavingsRate = t('savingsRate') || 'Savings Rate';
   const tTopCategory = t('topCategory') || 'Top Category';
@@ -2975,6 +2980,7 @@ function handleSave(e) {
   const amount = evalMathExpression(amtVal);
   const cat = document.getElementById('txnCat').value;
   const date = document.getElementById('txnDate').value;
+  const linkInstId = document.getElementById('txnInstallmentLink')?.value || '';
 
   if (isNaN(amount) || amount <= 0) { 
     showFormError(t('enterValidAmount')); 
@@ -2984,10 +2990,37 @@ function handleSave(e) {
 
   const finalDesc = desc || tCat(cat);
 
-  const txn = { id: uid(), type: currentType, desc: finalDesc, amount, category: cat, date, createdAt: new Date().toISOString() };
+  const txn = { 
+    id: uid(), 
+    type: currentType, 
+    desc: finalDesc, 
+    amount, 
+    category: cat, 
+    date, 
+    createdAt: new Date().toISOString() 
+  };
+  if (cat === 'Installment' && linkInstId) {
+    txn.installmentId = linkInstId;
+  }
+
   transactions.push(txn);
   saveTransactions();
   syncAddTransactionToServer(txn);
+
+  // Nếu là thanh toán định kỳ liên kết, tự động cập nhật khoản định kỳ đó
+  if (cat === 'Installment' && linkInstId) {
+    const inst = installments.find(i => i.id === linkInstId);
+    if (inst) {
+      inst.nextDueDate = advanceNextDueDate(inst.nextDueDate, inst.cycle);
+      inst.totalPaid = (inst.totalPaid || 0) + amount;
+      saveInstallments();
+      syncPayInstallmentToServer(inst.id);
+      if (typeof refreshInstallmentsPanel === 'function') {
+        refreshInstallmentsPanel();
+      }
+    }
+  }
+
   closeModal();
   triggerUIUpdates();
   showToast(currentType === 'expense' ? t('expenseLogged') : t('incomeRecorded'));
@@ -3197,6 +3230,15 @@ const I18N = {
     noTxn: '// NO TRANSACTIONS FOUND',
     pressAdd: 'Press ADD TRANSACTION to begin.',
     noExpense: '// NO EXPENSE DATA',
+    jarHistoryBtn: 'History',
+    jarHistoryTitle: 'Jar Transaction History',
+    jarHistoryAll: 'All Jars',
+    jarHistoryEmpty: 'No history yet.',
+    jarTxnReason: 'Reason (optional)',
+    jarTxnRecentHistory: 'Recent history',
+    Installment: 'Recurring Payment',
+    installmentLink: 'Link to recurring item',
+    installmentSelectPlaceholder: 'Select a recurring item...',
     /* ── Category names ── */
     'Food & Dining': 'Food & Dining',
     'Transport': 'Transport',
@@ -3463,6 +3505,15 @@ const I18N = {
     noTxn: '// KHÔNG CÓ GIAO DỊCH',
     pressAdd: 'Nhấn THÊM GIAO DỊCH để bắt đầu.',
     noExpense: '// CHƯA CÓ DỮ LIỆU',
+    jarHistoryBtn: 'Lịch sử',
+    jarHistoryTitle: 'Lịch Sử Nạp / Rút Hũ',
+    jarHistoryAll: 'Tất cả hũ',
+    jarHistoryEmpty: 'Chưa có lịch sử giao dịch.',
+    jarTxnReason: 'Lý do (không bắt buộc)',
+    jarTxnRecentHistory: 'Lịch sử gần đây',
+    Installment: 'Thanh toán định kỳ',
+    installmentLink: 'Liên kết khoản định kỳ',
+    installmentSelectPlaceholder: 'Chọn khoản định kỳ...',
     /* ── Category names ── */
     'Food & Dining': 'Ăn uống',
     'Transport': 'Di chuyển',
@@ -3729,6 +3780,15 @@ const I18N = {
     noTxn: '// 暂无交易记录',
     pressAdd: '点击添加交易开始使用。',
     noExpense: '// 暂无支出数据',
+    jarHistoryBtn: '历史记录',
+    jarHistoryTitle: '存取记录',
+    jarHistoryAll: '全部储蓄罐',
+    jarHistoryEmpty: '暂无交易记录。',
+    jarTxnReason: '原因（可选）',
+    jarTxnRecentHistory: '近期记录',
+    Installment: '定期付款',
+    installmentLink: '关联定期项目',
+    installmentSelectPlaceholder: '选择定期项目...',
     /* ── Category names ── */
     'Food & Dining': '餐饮',
     'Transport': '交通',
@@ -4698,6 +4758,28 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Initialize premium custom selects */
   initCustomDropdown('txnCat');
   initCustomDropdown('qlCat');
+  initCustomDropdown('txnInstallmentLink');
+
+  const txnCatSel = document.getElementById('txnCat');
+  if (txnCatSel) {
+    txnCatSel.addEventListener('change', (e) => {
+      onCatChange(e.target.value);
+    });
+  }
+
+  const linkSel = document.getElementById('txnInstallmentLink');
+  if (linkSel) {
+    linkSel.addEventListener('change', (e) => {
+      const instId = e.target.value;
+      const inst = installments.find(i => i.id === instId);
+      if (inst) {
+        const amtEl = document.getElementById('txnAmount');
+        const descEl = document.getElementById('txnDesc');
+        if (amtEl) amtEl.value = inst.amount;
+        if (descEl) descEl.value = `Thanh toán: ${inst.name}`;
+      }
+    });
+  }
 
   // Try to sync with MacBook local file-server
   syncLoadFromServer();
@@ -4994,7 +5076,7 @@ function calcMonthStats(month, year) {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+  const savingsRate = totalExpense > 0 ? - (totalIncome / totalExpense) * 100 : 0;
 
   let topCat = null;
   let topCatAmt = 0;
@@ -5473,7 +5555,7 @@ function calcQuarterStats(quarter, year) {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+  const savingsRate = totalExpense > 0 ? - (totalIncome / totalExpense) * 100 : 0;
 
   // Top 3 categories
   const sortedCats = Object.keys(totalsByCat)
@@ -5550,7 +5632,7 @@ function calcYearStats(year) {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+  const savingsRate = totalExpense > 0 ? - (totalIncome / totalExpense) * 100 : 0;
 
   // Top 3 categories
   const sortedCats = Object.keys(totalsByCat)
@@ -6196,13 +6278,13 @@ async function syncAddJarToServer(jar) {
   return null;
 }
 
-async function syncJarTransactionToServer(jarId, type, amount) {
+async function syncJarTransactionToServer(jarId, type, amount, reason) {
   if (!isServerConnected) return;
   try {
     await fetch(`/api/jars/${jarId}/${type}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ amount })
+      body: JSON.stringify({ amount, reason: reason || '' })
     });
   } catch (e) { console.warn('⚠️ syncJarTransaction failed.', e); }
 }
@@ -6540,6 +6622,13 @@ function renderInstallmentList() {
     const days = daysUntil(inst.nextDueDate);
     const isOverdue = days < 0;
     const isSoon = days >= 0 && days <= 7;
+
+    // Xác định xem khoản định kỳ đã được thanh toán cho tháng hiện tại chưa
+    const today = new Date();
+    const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const dueDate = new Date(inst.nextDueDate + 'T00:00:00');
+    const isPaidThisMonth = dueDate >= nextMonthStart;
+
     let statusClass = '';
     let countdownStr = '';
     if (!inst.active) {
@@ -6564,6 +6653,15 @@ function renderInstallmentList() {
       <div class="inst-timeline-node">
         <div class="inst-date-bubble">${dateBubble}</div>
         <div class="inst-item ${statusClass}" data-inst-id="${inst.id}">
+          <!-- Lớp phủ xác nhận xóa khoản định kỳ -->
+          <div class="inst-item__confirm-overlay" role="alertdialog" aria-modal="true" aria-label="Xác nhận xóa khoản định kỳ">
+            <span class="inst-item__confirm-text">Xóa "${capName}"?</span>
+            <div class="inst-item__confirm-actions">
+              <button class="inst-confirm-cancel" onclick="cancelDeleteInstallment('${inst.id}')">Hủy</button>
+              <button class="inst-confirm-delete" onclick="executeDeleteInstallment('${inst.id}')">Xóa</button>
+            </div>
+          </div>
+
           <div class="inst-item__dot ${isOverdue ? 'dot--overdue' : isSoon ? 'dot--soon' : 'dot--ok'}"></div>
           <span class="inst-item__icon">${inst.icon}</span>
           <div class="inst-item__info">
@@ -6572,11 +6670,15 @@ function renderInstallmentList() {
           </div>
           <div class="inst-item__right">
             ${countdownStr}
-            ${inst.active ? `
+            ${inst.active ? (isPaidThisMonth ? `
+              <button class="inst-pay-btn inst-pay-btn--paid" disabled title="Đã thanh toán tháng này">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span>Đã trả</span>
+              </button>` : `
               <button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Trả</span>
-              </button>` : ''
+              </button>`) : ''
             }
             <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">
               ${inst.active 
@@ -6584,7 +6686,7 @@ function renderInstallmentList() {
                 : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
               }
             </button>
-            <button class="inst-delete-btn" onclick="deleteInstallment('${inst.id}')" title="Xóa">
+            <button class="inst-delete-btn" onclick="confirmDeleteInstallment('${inst.id}')" title="Xóa">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -6596,6 +6698,9 @@ function renderInstallmentList() {
     + (inactive.length > 0
       ? `<div class="inst-section-label">Đã tạm dừng</div>` + inactive.map(renderItem).join('')
       : '');
+
+  // Cập nhật màu nền panel theo trạng thái tháng
+  checkInstallmentsStatus();
 }
 
 /* ============================================================
@@ -6810,17 +6915,22 @@ function openJarTxnModal(jarId, type) {
   const overlay = document.getElementById('jarTxnModal');
   if (!overlay) return;
 
-  const titleEl = overlay.querySelector('.jar-txn-title');
+  const titleEl   = overlay.querySelector('.jar-txn-title');
   const subtitleEl = overlay.querySelector('.jar-txn-subtitle');
-  const labelEl = overlay.querySelector('.jar-txn-label');
-  const amtInput = document.getElementById('jarTxnAmount');
-  const iconEl = overlay.querySelector('.jar-txn-icon');
+  const labelEl   = overlay.querySelector('.jar-txn-label');
+  const amtInput  = document.getElementById('jarTxnAmount');
+  const reasonInput = document.getElementById('jarTxnReason');
+  const iconEl    = overlay.querySelector('.jar-txn-icon');
 
-  if (titleEl) titleEl.textContent = type === 'deposit' ? `Nạp vào "${jar.name}"` : `Rút từ "${jar.name}"`;
+  if (titleEl)   titleEl.textContent   = type === 'deposit' ? `Nạp vào "${jar.name}"` : `Rút từ "${jar.name}"`;
   if (subtitleEl) subtitleEl.textContent = `Số dư hiện tại: ${fmtJar(jar.current)}`;
-  if (labelEl) labelEl.textContent = type === 'deposit' ? 'Số tiền nạp' : 'Số tiền rút';
-  if (iconEl) iconEl.textContent = jar.icon;
-  if (amtInput) { amtInput.value = ''; }
+  if (labelEl)   labelEl.textContent   = type === 'deposit' ? 'Số tiền nạp' : 'Số tiền rút';
+  if (iconEl)    iconEl.textContent    = jar.icon;
+  if (amtInput)  { amtInput.value = ''; }
+  if (reasonInput) { reasonInput.value = ''; }
+
+  // Render mini history của hũ này
+  renderJarMiniHistory(jar);
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -6847,6 +6957,8 @@ async function submitJarTxn() {
   const amount = parseCurrencyInput(raw);
   if (isNaN(amount) || amount <= 0) { showToast('⚠ Vui lòng nhập số tiền hợp lệ.'); return; }
 
+  const reason = (document.getElementById('jarTxnReason')?.value || '').trim();
+
   if (_activeJarTxnType === 'withdraw') {
     if (amount > jar.current) {
       showToast(`⚠ Số dư hũ chỉ còn ${fmtJar(jar.current)}. Không thể rút nhiều hơn.`);
@@ -6857,14 +6969,44 @@ async function submitJarTxn() {
     jar.current += amount;
   }
 
+  // Lưu lịch sử local
+  if (!Array.isArray(jar.history)) jar.history = [];
+  jar.history.unshift({ type: _activeJarTxnType, amount, reason, date: new Date().toISOString() });
+  if (jar.history.length > 200) jar.history = jar.history.slice(0, 200);
+
   saveJars();
+
+  // ── ĐỒNG BỘ VỚI SỐ DƯ CHÍNH ──────────────────────────────────────────────
+  // Nạp vào hũ  → chi tiêu (tiền rời ví chính)
+  // Rút từ hũ   → thu nhập (tiền về ví chính)
+  const isDeposit = _activeJarTxnType === 'deposit';
+  const txnDesc = isDeposit
+    ? `Nạp vào hũ: ${jar.name}${reason ? ` — ${reason}` : ''}`
+    : `Rút từ hũ: ${jar.name}${reason ? ` — ${reason}` : ''}`;
+
+  const linkedTxn = {
+    id: uid(),
+    type: isDeposit ? 'expense' : 'income',
+    desc: txnDesc,
+    amount,
+    category: isDeposit ? 'Savings' : 'Savings',
+    date: todayISO(),
+    createdAt: new Date().toISOString(),
+    jarId: jar.id   // liên kết ngược với hũ để truy xuất sau
+  };
+  transactions.push(linkedTxn);
+  saveTransactions();
+  syncAddTransactionToServer(linkedTxn);
+  // ──────────────────────────────────────────────────────────────────────────
+
   closeJarTxnModal();
   renderJarCards();
+  triggerUIUpdates(); // Đồng bộ số dư tổng + lịch sử giao dịch
 
   const action = _activeJarTxnType === 'deposit' ? 'Đã nạp' : 'Đã rút';
   showToast(`✓ ${action} ${fmtJar(amount)} ${_activeJarTxnType === 'deposit' ? 'vào' : 'từ'} "${jar.name}"!`);
 
-  await syncJarTransactionToServer(jar.id, _activeJarTxnType, amount);
+  await syncJarTransactionToServer(jar.id, _activeJarTxnType, amount, reason);
 }
 
 /* Fix #7: confirmDeleteJar hiện chỉ hiện overlay inline, không dùng window.confirm */
@@ -6974,7 +7116,7 @@ async function submitAddInstallment() {
   installments.push(newInst);
   saveInstallments();
   closeAddInstallmentModal();
-  renderInstallmentList();
+  refreshInstallmentsPanel();
   showToast(`✓ Đã thêm "${name}"!`);
 
   const serverId = await syncAddInstallmentToServer(newInst);
@@ -6982,6 +7124,12 @@ async function submitAddInstallment() {
     const local = installments.find(i => i.id === newInst.id);
     if (local) { local.id = serverId; saveInstallments(); }
   }
+}
+
+/* ── MỚI: refreshInstallmentsPanel ── */
+function refreshInstallmentsPanel() {
+  renderJarSummary();
+  renderInstallmentList();
 }
 
 /* ── Installment Actions ── */
@@ -6993,7 +7141,27 @@ async function payInstallment(instId) {
   inst.nextDueDate = advanceNextDueDate(inst.nextDueDate, inst.cycle);
   inst.totalPaid = (inst.totalPaid || 0) + inst.amount;
   saveInstallments();
-  renderInstallmentList();
+
+  // Tự động tạo giao dịch chi tiêu tương ứng
+  const finalDesc = `Thanh toán: ${inst.name}`;
+  const txn = {
+    id: uid(),
+    type: 'expense',
+    desc: finalDesc,
+    amount: inst.amount,
+    category: 'Installment',
+    date: todayISO(),
+    createdAt: new Date().toISOString(),
+    installmentId: inst.id
+  };
+  transactions.push(txn);
+  saveTransactions();
+  syncAddTransactionToServer(txn);
+
+  // Cập nhật giao diện
+  refreshInstallmentsPanel();
+  triggerUIUpdates();
+
   showToast(`✓ Đã thanh toán ${fmtJar(inst.amount)} cho "${inst.name}"! Kỳ tiếp: ${inst.nextDueDate}`);
 
   const serverData = await syncPayInstallmentToServer(inst.id);
@@ -7001,7 +7169,7 @@ async function payInstallment(instId) {
     inst.nextDueDate = serverData.nextDueDate;
     inst.totalPaid = serverData.totalPaid;
     saveInstallments();
-    renderInstallmentList();
+    refreshInstallmentsPanel();
   }
 }
 
@@ -7010,19 +7178,27 @@ function toggleInstallmentActive(instId) {
   if (!inst) return;
   inst.active = !inst.active;
   saveInstallments();
-  renderInstallmentList();
+  refreshInstallmentsPanel();
   showToast(inst.active ? `▶ Đã kích hoạt "${inst.name}"` : `⏸ Đã tạm dừng "${inst.name}"`);
 }
 
-function deleteInstallment(instId) {
+function confirmDeleteInstallment(instId) {
+  const card = document.querySelector(`.inst-item[data-inst-id="${instId}"]`);
+  if (card) card.classList.add('inst-item--confirm-delete');
+}
+
+function cancelDeleteInstallment(instId) {
+  const card = document.querySelector(`.inst-item[data-inst-id="${instId}"]`);
+  if (card) card.classList.remove('inst-item--confirm-delete');
+}
+
+function executeDeleteInstallment(instId) {
   const inst = installments.find(i => i.id === instId);
-  if (!inst) return;
-  const ok = window.confirm(`Xóa khoản định kỳ "${inst.name}"?`);
-  if (!ok) return;
+  const name = inst ? inst.name : '';
   installments = installments.filter(i => i.id !== instId);
   saveInstallments();
-  renderInstallmentList();
-  showToast(`🗑 Đã xóa "${inst.name}".`);
+  refreshInstallmentsPanel();
+  showToast(`🗑 Đã xóa "${name}".`);
   syncDeleteInstallmentFromServer(instId);
 }
 
@@ -7034,7 +7210,180 @@ function deleteInstallment(instId) {
   // Called via syncLoadJarsFromServer() after auth is confirmed
 })();
 
-/* ── Window exports ── */
+/* ============================================================
+   MỚI: Render mini history trong jar txn modal
+   ============================================================ */
+function renderJarMiniHistory(jar) {
+  const listEl = document.getElementById('jarMiniHistoryList');
+  const wrapEl = document.getElementById('jarMiniHistory');
+  if (!listEl) return;
+
+  const history = Array.isArray(jar.history) ? jar.history : [];
+  if (history.length === 0) {
+    if (wrapEl) wrapEl.style.display = 'none';
+    return;
+  }
+  if (wrapEl) wrapEl.style.display = 'block';
+
+  const recent = history.slice(0, 5);
+  listEl.innerHTML = recent.map(h => {
+    const isDeposit = h.type === 'deposit';
+    const icon = isDeposit ? '⬆️' : '⬇️';
+    const cls  = isDeposit ? 'jar-mini-hist--deposit' : 'jar-mini-hist--withdraw';
+    const dateStr = h.date ? new Date(h.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
+    const reasonStr = h.reason ? `<span class="jar-mini-hist__reason">— ${h.reason}</span>` : '';
+    return `
+      <li class="jar-mini-hist-item ${cls}">
+        <span class="jar-mini-hist__icon">${icon}</span>
+        <span class="jar-mini-hist__amount">${fmtJar(h.amount)}</span>
+        ${reasonStr}
+        <span class="jar-mini-hist__date">${dateStr}</span>
+      </li>`;
+  }).join('');
+}
+
+/* ============================================================
+   MỚI: Modal Lịch sử tập trung #jarHistoryModal
+   ============================================================ */
+let _jarHistoryAllData = []; // [{jarId, jarName, jarIcon, ...entry}]
+
+function openJarHistoryModal() {
+  const overlay = document.getElementById('jarHistoryModal');
+  if (!overlay) return;
+
+  // Build merged history from all jars
+  _jarHistoryAllData = [];
+  jars.forEach(jar => {
+    if (!Array.isArray(jar.history)) return;
+    jar.history.forEach(h => {
+      _jarHistoryAllData.push({ ...h, jarId: jar.id, jarName: jar.name, jarIcon: jar.icon });
+    });
+  });
+  _jarHistoryAllData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Populate filter dropdown
+  const sel = document.getElementById('jarHistoryFilterSelect');
+  if (sel) {
+    const tObj = I18N[currentLang] || I18N.en;
+    sel.innerHTML = `<option value="">${tObj.jarHistoryAll || 'Tất cả hũ'}</option>`
+      + jars.map(j => `<option value="${j.id}">${j.icon} ${j.name}</option>`).join('');
+    sel.value = '';
+  }
+
+  renderJarHistory('');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeJarHistoryModal() {
+  const overlay = document.getElementById('jarHistoryModal');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeJarHistoryOnOverlay(e) {
+  if (e.target === document.getElementById('jarHistoryModal')) closeJarHistoryModal();
+}
+
+function filterJarHistory(jarId) {
+  renderJarHistory(jarId);
+}
+
+function renderJarHistory(filterJarId) {
+  const body = document.getElementById('jarHistoryBody');
+  if (!body) return;
+  const tObj = I18N[currentLang] || I18N.en;
+
+  const data = filterJarId
+    ? _jarHistoryAllData.filter(h => h.jarId === filterJarId)
+    : _jarHistoryAllData;
+
+  if (data.length === 0) {
+    body.innerHTML = `<p class="jar-history-empty">${tObj.jarHistoryEmpty || 'Chưa có lịch sử giao dịch.'}</p>`;
+    return;
+  }
+
+  body.innerHTML = data.map(h => {
+    const isDeposit = h.type === 'deposit';
+    const icon   = isDeposit ? '⬆️' : '⬇️';
+    const cls    = isDeposit ? 'jar-hist-row--deposit' : 'jar-hist-row--withdraw';
+    const dateStr = h.date
+      ? new Date(h.date).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '';
+    return `
+      <div class="jar-hist-row ${cls}">
+        <span class="jar-hist-row__icon">${icon}</span>
+        <div class="jar-hist-row__info">
+          <span class="jar-hist-row__jar">${h.jarIcon} ${h.jarName}</span>
+          ${h.reason ? `<span class="jar-hist-row__reason">${h.reason}</span>` : ''}
+        </div>
+        <div class="jar-hist-row__right">
+          <span class="jar-hist-row__amount">${isDeposit ? '+' : '−'}${fmtJar(h.amount)}</span>
+          <span class="jar-hist-row__date">${dateStr}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   MỚI: onCatChange — hiện/ẩn dropdown installment
+   ============================================================ */
+function onCatChange(value) {
+  const grp = document.getElementById('installmentSelectGroup');
+  if (!grp) return;
+
+  if (value === 'Installment') {
+    grp.style.display = 'block';
+    // Populate dropdown với các khoản định kỳ active
+    const sel = document.getElementById('txnInstallmentLink');
+    if (sel) {
+      const tObj = I18N[currentLang] || I18N.en;
+      const active = installments.filter(i => i.active);
+      sel.innerHTML = `<option value="">${tObj.installmentSelectPlaceholder || 'Chọn khoản định kỳ...'}</option>`
+        + active.map(i => `<option value="${i.id}" data-amount="${i.amount}">${i.icon} ${i.name} — ${fmtJar(i.amount)}</option>`).join('');
+
+      // Đồng bộ giao diện custom select
+      syncCustomDropdown('txnInstallmentLink');
+    }
+  } else {
+    grp.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   MỚI: checkInstallmentsStatus — cập nhật màu panel định kỳ
+   ============================================================ */
+function checkInstallmentsStatus() {
+  const section = document.querySelector('.installments-section');
+  if (!section) return;
+
+  const activeInsts = installments.filter(i => i.active);
+  if (activeInsts.length === 0) {
+    section.classList.remove('status--pending', 'status--completed');
+    return;
+  }
+
+  const today = new Date();
+  const thisMonth = today.getMonth();
+  const thisYear  = today.getFullYear();
+
+  // Khoản được coi là "cần thanh toán trong tháng này"
+  // nếu nextDueDate nằm trong tháng hiện tại hoặc đã quá hạn
+  const dueSoon = activeInsts.filter(i => {
+    const d = new Date(i.nextDueDate + 'T00:00:00');
+    return (d.getFullYear() < thisYear)
+      || (d.getFullYear() === thisYear && d.getMonth() <= thisMonth);
+  });
+
+  section.classList.remove('status--pending', 'status--completed');
+  if (dueSoon.length > 0) {
+    section.classList.add('status--pending');
+  } else {
+    section.classList.add('status--completed');
+  }
+}
+
+/* ── Window exports (extended) ── */
 window.renderJarsView       = renderJarsView;
 window.openAddJarModal      = openAddJarModal;
 window.closeAddJarModal     = closeAddJarModal;
@@ -7057,7 +7406,15 @@ window.selectInstEmoji      = selectInstEmoji;
 window.submitAddInstallment = submitAddInstallment;
 window.payInstallment       = payInstallment;
 window.toggleInstallmentActive = toggleInstallmentActive;
-window.deleteInstallment    = deleteInstallment;
+window.confirmDeleteInstallment = confirmDeleteInstallment;
+window.cancelDeleteInstallment  = cancelDeleteInstallment;
+window.executeDeleteInstallment = executeDeleteInstallment;
 window.syncLoadJarsFromServer = syncLoadJarsFromServer;
 window.triggerJarSlosh      = triggerJarSlosh;
-
+// MỚI: History & Installment dropdown
+window.openJarHistoryModal      = openJarHistoryModal;
+window.closeJarHistoryModal     = closeJarHistoryModal;
+window.closeJarHistoryOnOverlay = closeJarHistoryOnOverlay;
+window.filterJarHistory         = filterJarHistory;
+window.onCatChange              = onCatChange;
+window.checkInstallmentsStatus  = checkInstallmentsStatus;

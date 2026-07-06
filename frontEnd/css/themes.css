@@ -1503,3 +1503,151 @@ html.green-theme .guide-step,
 html.green-theme .guide-feature,
 html.green-theme .guide-tip-card { background: #E3F2E9; border-color: #B2DFC8; }
 html.green-theme .btn-help { background: #E3F2E9; border-color: #B2DFC8; }
+
+
+/* ============================================================
+   PHASE 1 — UI ELEVATION OVERRIDES FOR LIGHT THEMES
+   Tăng độ tương phản nhẹ: viền & bóng đổ cho card/panel
+   Áp dụng cho light-theme, cream-theme, green-theme
+   ============================================================ */
+
+/* ── Light Theme — cải thiện border & shadow ── */
+html.light-theme {
+  --c-summary-border:        #CBD5E1;
+  --c-card-border:           #CBD5E1;
+  --c-inst-border:           #CBD5E1;
+  --c-bubble-border:         #CBD5E1;
+  --c-dashed-border:         rgba(15, 23, 42, 0.22);
+  --sh-raise: 0 4px 10px rgba(15,23,42,.05), 0 1px 3px rgba(15,23,42,.04);
+  --sh-float: 0 14px 36px rgba(15,23,42,.10), 0 2px 8px rgba(15,23,42,.05);
+}
+
+/* ── Cream Theme — cải thiện border & shadow ── */
+html.cream-theme {
+  --c-summary-border:        #D8CCBE;
+  --c-card-border:           #D8CCBE;
+  --c-inst-border:           #D8CCBE;
+  --c-bubble-border:         #D8CCBE;
+  --c-dashed-border:         rgba(44, 29, 16, 0.22);
+  --sh-raise: 0 4px 12px rgba(100,60,20,.09), 0 1px 3px rgba(100,60,20,.05);
+  --sh-float: 0 14px 44px rgba(100,60,20,.16), 0 2px 8px rgba(100,60,20,.08);
+}
+
+/* ── Green Theme — cải thiện border & shadow ── */
+html.green-theme {
+  --c-summary-border:        #B2DFC8;
+  --c-card-border:           #B2DFC8;
+  --c-inst-border:           #B2DFC8;
+  --c-bubble-border:         #B2DFC8;
+  --c-dashed-border:         rgba(14, 46, 30, 0.22);
+  --sh-raise: 0 4px 12px rgba(16,120,80,.07), 0 1px 3px rgba(16,120,80,.04);
+  --sh-float: 0 14px 44px rgba(16,120,80,.13), 0 2px 8px rgba(16,120,80,.06);
+}
+
+
+/* ============================================================
+   PHASE 1 — JAR DELETE CONFIRM OVERLAY — THEME-AWARE TOKENS
+   Màu nền/chữ của lớp phủ xóa hũ thích ứng theo theme
+   ============================================================ */
+
+/* Dark/default theme (giữ nguyên tone tối như cũ) */
+:root {
+  --c-confirm-bg:            rgba(10, 10, 14, 0.90);
+  --c-confirm-blur:          blur(14px);
+  --c-confirm-txt:           rgba(255, 255, 255, 0.92);
+  --c-confirm-cancel-bg:     rgba(255, 255, 255, 0.07);
+  --c-confirm-cancel-border: rgba(255, 255, 255, 0.14);
+  --c-confirm-cancel-txt:    rgba(255, 255, 255, 0.72);
+}
+
+/* Light themes — kính trắng sang trọng */
+html.light-theme,
+html.cream-theme,
+html.green-theme {
+  --c-confirm-bg:            rgba(255, 255, 255, 0.94);
+  --c-confirm-blur:          blur(16px);
+  --c-confirm-txt:           #0F172A;
+  --c-confirm-cancel-bg:     rgba(15, 23, 42, 0.05);
+  --c-confirm-cancel-border: rgba(15, 23, 42, 0.12);
+  --c-confirm-cancel-txt:    #475569;
+}
+
+html.cream-theme {
+  --c-confirm-bg:            rgba(253, 248, 242, 0.95);
+  --c-confirm-txt:           #2C1D10;
+  --c-confirm-cancel-bg:     rgba(44, 29, 16, 0.05);
+  --c-confirm-cancel-border: rgba(44, 29, 16, 0.12);
+  --c-confirm-cancel-txt:    #584133;
+}
+
+html.green-theme {
+  --c-confirm-bg:            rgba(242, 253, 246, 0.95);
+  --c-confirm-txt:           #0E2E1E;
+  --c-confirm-cancel-bg:     rgba(14, 46, 30, 0.05);
+  --c-confirm-cancel-border: rgba(14, 46, 30, 0.12);
+  --c-confirm-cancel-txt:    #4D7A68;
+}
+
+
+/* ============================================================
+   PHASE 1 — INSTALLMENT SECTION PANEL — DYNAMIC STATUS COLORS
+   Màu khung "Thanh toán định kỳ" thay đổi theo trạng thái tháng
+   ============================================================ */
+
+/* Dark (mặc định): viền đỏ nhạt khi pending, xanh khi completed */
+:root {
+  --c-inst-panel-bg:                var(--surface, #14141A);
+  --c-inst-panel-border:            rgba(255,255,255,.06);
+  --c-inst-panel-bg-pending:        rgba(239, 68, 68, 0.08);
+  --c-inst-panel-border-pending:    rgba(239, 68, 68, 0.30);
+  --c-inst-panel-bg-completed:      rgba(34, 197, 94, 0.08);
+  --c-inst-panel-border-completed:  rgba(34, 197, 94, 0.30);
+}
+
+html.light-theme {
+  --c-inst-panel-bg:                #FFFFFF;
+  --c-inst-panel-border:            #CBD5E1;
+  --c-inst-panel-bg-pending:        #FFF5F5;
+  --c-inst-panel-border-pending:    #FCA5A5;
+  --c-inst-panel-bg-completed:      #F0FDF4;
+  --c-inst-panel-border-completed:  #86EFAC;
+}
+
+html.cream-theme {
+  --c-inst-panel-bg:                #FDF8F2;
+  --c-inst-panel-border:            #D8CCBE;
+  --c-inst-panel-bg-pending:        #FFF3EE;
+  --c-inst-panel-border-pending:    #F4A88A;
+  --c-inst-panel-bg-completed:      #F2FDF6;
+  --c-inst-panel-border-completed:  #86C89E;
+}
+
+html.green-theme {
+  --c-inst-panel-bg:                #FFFFFF;
+  --c-inst-panel-border:            #B2DFC8;
+  --c-inst-panel-bg-pending:        #FFF5F5;
+  --c-inst-panel-border-pending:    #FCA5A5;
+  --c-inst-panel-bg-completed:      #F0FDF4;
+  --c-inst-panel-border-completed:  #6EE7B7;
+}
+
+/* Cũng cần token cho panel jar section */
+:root {
+  --c-jar-panel-bg:     var(--surface, #14141A);
+  --c-jar-panel-border: rgba(255,255,255,.06);
+}
+
+html.light-theme {
+  --c-jar-panel-bg:     #FAFBFF;
+  --c-jar-panel-border: #CBD5E1;
+}
+
+html.cream-theme {
+  --c-jar-panel-bg:     #FDF8F2;
+  --c-jar-panel-border: #D8CCBE;
+}
+
+html.green-theme {
+  --c-jar-panel-bg:     #F7FDF9;
+  --c-jar-panel-border: #B2DFC8;
+}

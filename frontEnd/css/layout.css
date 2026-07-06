@@ -703,13 +703,14 @@ html.light-theme .form-divider-label {
   position: relative;
   width: 100%;
   max-width: 170px;
+  aspect-ratio: 1 / 1; /* Chiều cao tự bằng chiều rộng — responsive mọi màn hình */
   margin: 0 auto;
 }
 
 .chart-canvas-wrap canvas {
   display: block;
   width: 100% !important;
-  height: auto !important;
+  height: 100% !important; /* Lấp đầy khung 1:1 do CSS tính sẵn — Chart.js không resize nữa */
 }
 
 /* Custom HTML legend — Vertical list of rows */

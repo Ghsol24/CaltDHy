@@ -1961,6 +1961,25 @@ html.green-theme .modal-close:hover {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background: var(--c-jar-panel-bg, var(--surface));
+  border: 1px solid var(--c-jar-panel-border, rgba(255,255,255,.06));
+  border-radius: 20px;
+  padding: 20px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+/* Installment section riêng: màu border đỏ/xanh theo trạng thái tháng */
+.installments-section {
+  background: var(--c-inst-panel-bg, var(--surface));
+  border-color: var(--c-inst-panel-border, rgba(255,255,255,.06));
+}
+.installments-section.status--pending {
+  background: var(--c-inst-panel-bg-pending);
+  border-color: var(--c-inst-panel-border-pending);
+}
+.installments-section.status--completed {
+  background: var(--c-inst-panel-bg-completed);
+  border-color: var(--c-inst-panel-border-completed);
 }
 
 .jars-section__header,
@@ -1971,7 +1990,7 @@ html.green-theme .modal-close:hover {
   gap: 12px;
   flex-wrap: wrap;
   padding-bottom: 8px;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  border-bottom: 1px dashed var(--c-dashed-border, rgba(255, 255, 255, 0.1));
 }
 
 .jars-section__title-row,
@@ -2785,9 +2804,9 @@ html.green-theme .modal-close:hover {
   inset: 0;
   z-index: 20;
   border-radius: inherit;
-  background: rgba(10, 10, 14, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--c-confirm-bg, rgba(10, 10, 14, 0.90));
+  backdrop-filter: var(--c-confirm-blur, blur(14px));
+  -webkit-backdrop-filter: var(--c-confirm-blur, blur(14px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2806,7 +2825,7 @@ html.green-theme .modal-close:hover {
 
 .jar-card__confirm-text {
   font-size: 0.88rem;
-  color: var(--txt);
+  color: var(--c-confirm-txt, var(--txt));
   text-align: center;
   line-height: 1.5;
 }
@@ -2826,17 +2845,17 @@ html.green-theme .modal-close:hover {
 .jar-card__confirm-cancel {
   padding: 8px 18px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--muted);
+  border: 1px solid var(--c-confirm-cancel-border, rgba(255, 255, 255, 0.12));
+  background: var(--c-confirm-cancel-bg, rgba(255, 255, 255, 0.06));
+  color: var(--c-confirm-cancel-txt, var(--muted));
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s;
 }
 .jar-card__confirm-cancel:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--txt);
+  filter: brightness(0.9);
+  color: var(--c-confirm-txt, var(--txt));
 }
 
 .jar-card__confirm-delete-btn {
@@ -2908,6 +2927,289 @@ html.green-theme .modal-close:hover {
 .jar-card--dashed:hover .jar-dashed__text {
   color: var(--txt);
 }
+
+
+/* ============================================================
+   NEW — BTN JAR HISTORY (📜 Lịch sử button next to + Thêm Hũ)
+   ============================================================ */
+.btn-jar-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--c-dashed-border, rgba(255,255,255,.1));
+  background: var(--surface2, rgba(255,255,255,.04));
+  color: var(--muted);
+  font-size: 0.79rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-jar-history:hover {
+  background: var(--c-bubble-bg, rgba(255,255,255,.08));
+  color: var(--txt);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   NEW — MINI HISTORY inside Jar Txn Modal
+   ============================================================ */
+.jar-mini-history {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--c-dashed-border, rgba(255,255,255,.1));
+}
+
+.jar-mini-history__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+  opacity: 0.7;
+}
+
+.jar-mini-history__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jar-mini-hist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: var(--recessed, rgba(255,255,255,.03));
+  font-size: 0.8rem;
+}
+
+.jar-mini-hist--deposit  { border-left: 3px solid rgba(34,197,94,.5); }
+.jar-mini-hist--withdraw { border-left: 3px solid rgba(239,68,68,.4); }
+
+.jar-mini-hist__icon { font-size: 0.85rem; flex-shrink: 0; }
+.jar-mini-hist__amount {
+  font-weight: 700;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+.jar-mini-hist--deposit  .jar-mini-hist__amount { color: var(--green, #22c55e); }
+.jar-mini-hist--withdraw .jar-mini-hist__amount { color: #ef4444; }
+
+.jar-mini-hist__reason {
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jar-mini-hist__date {
+  font-size: 0.72rem;
+  color: var(--muted);
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ============================================================
+   NEW — MODAL JAR HISTORY (centralized)
+   ============================================================ */
+.modal-card--jar-history {
+  width: 100%;
+  max-width: 560px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.jar-history-filter {
+  flex-shrink: 0;
+}
+
+.jar-history-filter .jar-form-input {
+  width: 100%;
+  max-width: 280px;
+}
+
+.jar-history-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-dashed-border, rgba(255,255,255,.1)) transparent;
+}
+
+.jar-history-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ── History row ── */
+.jar-hist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--recessed, rgba(255,255,255,.03));
+  border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+.jar-hist-row:hover { background: var(--surface2, rgba(255,255,255,.06)); }
+
+.jar-hist-row--deposit  { border-left-color: rgba(34,197,94,.6); }
+.jar-hist-row--withdraw { border-left-color: rgba(239,68,68,.5); }
+
+.jar-hist-row__icon { font-size: 1rem; flex-shrink: 0; }
+
+.jar-hist-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.jar-hist-row__jar {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--txt);
+}
+
+.jar-hist-row__reason {
+  font-size: 0.75rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jar-hist-row__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.jar-hist-row__amount {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.jar-hist-row--deposit  .jar-hist-row__amount { color: var(--green, #22c55e); }
+.jar-hist-row--withdraw .jar-hist-row__amount { color: #ef4444; }
+
+.jar-hist-row__date {
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+
+/* ============================================================
+   NEW — OVERLAY CONFIRM DELETE INSTALLMENT (Timeline Row Level)
+   ============================================================ */
+.inst-item {
+  position: relative; /* ensure absolute positioning works */
+}
+
+.inst-item__confirm-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  background: var(--c-confirm-bg, rgba(10, 10, 14, 0.92));
+  backdrop-filter: var(--c-confirm-blur, blur(14px));
+  -webkit-backdrop-filter: var(--c-confirm-blur, blur(14px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  border: 1px solid var(--border, rgba(255,255,255,.08));
+}
+
+.inst-item--confirm-delete .inst-item__confirm-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.inst-item__confirm-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-confirm-txt, var(--txt));
+}
+
+.inst-item__confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.inst-confirm-cancel {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--c-confirm-cancel-border, rgba(255, 255, 255, 0.12));
+  background: var(--c-confirm-cancel-bg, rgba(255, 255, 255, 0.06));
+  color: var(--c-confirm-cancel-txt, var(--muted));
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.inst-confirm-cancel:hover {
+  background: var(--c-confirm-cancel-hover-bg, rgba(255, 255, 255, 0.1));
+  color: var(--c-confirm-txt, var(--txt));
+}
+
+.inst-confirm-delete {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 71, 87, 0.35);
+  background: rgba(255, 71, 87, 0.12);
+  color: #ff4757;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.inst-confirm-delete:hover {
+  background: rgba(255, 71, 87, 0.25);
+  border-color: #ff4757;
+}
+
+.inst-pay-btn--paid {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  color: var(--green, #22c55e) !important;
+  cursor: not-allowed !important;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+
+
 
 
 

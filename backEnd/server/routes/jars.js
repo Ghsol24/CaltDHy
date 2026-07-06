@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
 // PATCH /api/jars/:id/deposit — Nạp tiền vào hũ
 router.patch('/:id/deposit', async (req, res) => {
     try {
-        const { amount } = req.body;
+        const { amount, reason } = req.body;
         if (!amount || Number(amount) <= 0) {
             return res.status(400).json({ success: false, message: 'Số tiền nạp phải lớn hơn 0.' });
         }
@@ -65,6 +65,16 @@ router.patch('/:id/deposit', async (req, res) => {
         }
 
         jar.current = jar.current + Number(amount);
+
+        // Ghi lịch sử (thêm mới nhất lên đầu, giữ tối đa 200 entries)
+        jar.history.unshift({
+            type:   'deposit',
+            amount: Number(amount),
+            reason: (reason || '').trim().slice(0, 200),
+            date:   new Date()
+        });
+        if (jar.history.length > 200) jar.history = jar.history.slice(0, 200);
+
         await jar.save();
 
         res.json({ success: true, message: 'Đã nạp tiền vào hũ!', data: jar.toJSON() });
@@ -74,10 +84,11 @@ router.patch('/:id/deposit', async (req, res) => {
     }
 });
 
+
 // PATCH /api/jars/:id/withdraw — Rút tiền từ hũ
 router.patch('/:id/withdraw', async (req, res) => {
     try {
-        const { amount } = req.body;
+        const { amount, reason } = req.body;
         if (!amount || Number(amount) <= 0) {
             return res.status(400).json({ success: false, message: 'Số tiền rút phải lớn hơn 0.' });
         }
@@ -91,6 +102,16 @@ router.patch('/:id/withdraw', async (req, res) => {
         }
 
         jar.current = jar.current - Number(amount);
+
+        // Ghi lịch sử
+        jar.history.unshift({
+            type:   'withdraw',
+            amount: Number(amount),
+            reason: (reason || '').trim().slice(0, 200),
+            date:   new Date()
+        });
+        if (jar.history.length > 200) jar.history = jar.history.slice(0, 200);
+
         await jar.save();
 
         res.json({ success: true, message: 'Đã rút tiền từ hũ!', data: jar.toJSON() });
@@ -99,6 +120,7 @@ router.patch('/:id/withdraw', async (req, res) => {
         res.status(500).json({ success: false, message: 'Lỗi khi rút tiền.' });
     }
 });
+
 
 // DELETE /api/jars/:id — Xóa hũ (tiền trong hũ không liên kết với balance)
 router.delete('/:id', async (req, res) => {

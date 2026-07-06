@@ -396,6 +396,9 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Thêm Hũ
               </button>
+              <button class="btn-jar-history" id="btnJarHistory" onclick="openJarHistoryModal()" aria-haspopup="dialog" data-i18n="jarHistoryBtn">
+                📜 Lịch sử
+              </button>
             </div>
 
             <!-- Left metrics bar (Tổng tích lũy & Tiến độ) -->
@@ -487,7 +490,7 @@
 
         <div class="form-group">
           <label class="form-label" for="txnCat" data-i18n="category">Category</label>
-          <select id="txnCat" class="form-select">
+          <select id="txnCat" class="form-select" onchange="onCatChange(this.value)">
             <option>Food &amp; Dining</option>
             <option>Transport</option>
             <option>Shopping</option>
@@ -496,7 +499,16 @@
             <option>Utilities</option>
             <option>Salary</option>
             <option>Freelance</option>
+            <option>Installment</option>
             <option>Other</option>
+          </select>
+        </div>
+
+        <!-- Dropdown liên kết khoản định kỳ — chỉ hiện khi chọn category Installment -->
+        <div class="form-group" id="installmentSelectGroup" style="display:none">
+          <label class="form-label" for="txnInstallmentLink" data-i18n="installmentLink">Link to recurring item</label>
+          <select id="txnInstallmentLink" class="form-select">
+            <option value="" data-i18n="installmentSelectPlaceholder">Select a recurring item...</option>
           </select>
         </div>
 
@@ -1537,9 +1549,27 @@
           onkeydown="if(event.key==='Enter') submitJarTxn()" />
       </div>
 
+      <!-- Input Lý do — tùy chọn -->
+      <div class="jar-form-group">
+        <label class="jar-form-label" for="jarTxnReason" data-i18n="jarTxnReason">Lý do (không bắt buộc)</label>
+        <input class="jar-form-input" id="jarTxnReason" type="text" maxlength="200"
+          placeholder="VD: Tiết kiệm kỳ lương tháng 7..."
+          onkeydown="if(event.key==='Enter') submitJarTxn()" />
+      </div>
+
       <button class="btn-jar-submit" id="btnSubmitJarTxn" onclick="submitJarTxn()">Xác nhận</button>
+
+      <!-- Mini history — 3-5 giao dịch gần nhất của hũ này -->
+      <div class="jar-mini-history" id="jarMiniHistory">
+        <p class="jar-mini-history__label" data-i18n="jarTxnRecentHistory">Lịch sử gần đây</p>
+        <ul class="jar-mini-history__list" id="jarMiniHistoryList">
+          <!-- Injected by renderJarMiniHistory() -->
+        </ul>
+      </div>
+
     </div>
   </div>
+
 
   <!-- ═══════════════════════════════════════════
        MODAL — THÊM KHOẢN ĐỊNH KỲ
@@ -1597,9 +1627,39 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════════
+       MODAL — LỊCH SỬ NẠP / RÚT HŨ (CENTRALIZED)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="jarHistoryModal" role="dialog" aria-modal="true"
+    aria-labelledby="jar-hist-modal-title" onclick="closeJarHistoryOnOverlay(event)">
+    <div class="modal-card modal-card--jar-history">
+      <button class="modal-close" onclick="closeJarHistoryModal()" aria-label="Đóng">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="jar-hist-modal-title" data-i18n="jarHistoryTitle">Lịch Sử Nạp / Rút Hũ</h2>
+
+      <!-- Filter bar: chọn hũ cụ thể hoặc xem tất cả -->
+      <div class="jar-history-filter">
+        <select id="jarHistoryFilterSelect" class="jar-form-input jar-form-select" onchange="filterJarHistory(this.value)">
+          <option value="" data-i18n="jarHistoryAll">Tất cả hũ</option>
+          <!-- Injected by openJarHistoryModal() -->
+        </select>
+      </div>
+
+      <!-- Bảng lịch sử -->
+      <div class="jar-history-body" id="jarHistoryBody">
+        <!-- Injected by renderJarHistory() -->
+      </div>
+
+    </div>
+  </div>
+
   <!-- Focus Trap — must load before spending.js -->
   <script src="focus-trap.js"></script>
-  <script src="spending.js?v=2.1.0"></script>
+  <script src="spending.js?v=2.2.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => { });
