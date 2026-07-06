@@ -1061,6 +1061,8 @@ function calcCategorySpend() {
   const spent = {};
   transactions.forEach(txn => {
     if (txn.type !== 'expense') return;
+    // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không ảnh hưởng ngân sách danh mục
+    if (txn.jarId || txn.category === 'Savings') return;
     const d = new Date(txn.date + 'T00:00:00');
     if (d.getMonth() !== month || d.getFullYear() !== year) return;
     spent[txn.category] = (spent[txn.category] || 0) + txn.amount;
@@ -1351,6 +1353,8 @@ function updateChart() {
     const totals = {};
     transactions.forEach(txn => {
       if (txn.type !== 'expense') return;
+      // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào phân loại chi tiêu
+      if (txn.jarId || txn.category === 'Savings') return;
       const d = new Date(txn.date + 'T00:00:00');
       if (d.getMonth() !== month || d.getFullYear() !== year) return;
       totals[txn.category] = (totals[txn.category] || 0) + txn.amount;
@@ -5071,7 +5075,10 @@ function calcMonthStats(month, year) {
       totalIncome += txn.amount;
     } else {
       totalExpense += txn.amount;
-      totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+      // Bỏ qua giao dịch nạp hũ khi phân tích danh mục (vẫn tính vào tổng chi tiêu)
+      if (!txn.jarId && txn.category !== 'Savings') {
+        totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+      }
     }
   });
 
@@ -5545,7 +5552,10 @@ function calcQuarterStats(quarter, year) {
     } else {
       totalExpense += txn.amount;
       byMonth[m].expense += txn.amount;
-      totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+      // Bỏ qua giao dịch nạp hũ khi phân tích danh mục (vẫn tính vào tổng chi tiêu)
+      if (!txn.jarId && txn.category !== 'Savings') {
+        totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+      }
     }
   });
 
@@ -5622,7 +5632,10 @@ function calcYearStats(year) {
     } else {
       totalExpense += txn.amount;
       byMonth[m].expense += txn.amount;
-      totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+      // Bỏ qua giao dịch nạp hũ khi phân tích danh mục (vẫn tính vào tổng chi tiêu)
+      if (!txn.jarId && txn.category !== 'Savings') {
+        totalsByCat[txn.category] = (totalsByCat[txn.category] || 0) + txn.amount;
+      }
     }
   });
 
