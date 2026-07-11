@@ -31,8 +31,9 @@ html.light-theme {
   --surface2: #F4F4F5;
   --recessed: #F8F8FA;
   --txt: #0F172A;
-  --muted: #64748B;
+  --muted: #475569;
   --accent: #4F46E5;
+  --accent-rgb: 79, 70, 229;
   --green: #16A34A;
   --warn: #D97706;
 
@@ -40,6 +41,10 @@ html.light-theme {
   --sh-press: inset 0 1px 3px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.02);
   --sh-accent: 0 4px 12px rgba(79,70,229,.2), 0 1px 4px rgba(79,70,229,.1);
   --sh-float: 0 12px 32px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+
+  /* ── Scrollbar Colors ── */
+  --scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --scrollbar-hover: rgba(0, 0, 0, 0.30);
 
   /* ── Component Token Overrides ── */
   --c-summary-bg:            var(--surface);
@@ -128,7 +133,7 @@ html.light-theme .metric-card--expense::after {
 }
 
 html.light-theme .metric-card__screw {
-  background: #CBD5E1;
+  background: radial-gradient(circle at 40% 35%, #F8FAFC, #CBD5E1, #94A3B8);
   box-shadow: none;
 }
 
@@ -161,7 +166,7 @@ html.light-theme .chassis-frame--chart {
 }
 
 html.light-theme .chassis-frame__screw {
-  background: #CBD5E1;
+  background: radial-gradient(circle at 40% 35%, #F8FAFC, #CBD5E1, #94A3B8);
   box-shadow: none;
 }
 
@@ -268,13 +273,15 @@ html.light-theme .modal-card {
 html.light-theme .modal-title { color: #0F172A; }
 
 html.light-theme .modal-card__screw {
-  background: #CBD5E1;
+  background: radial-gradient(circle at 40% 35%, #F8FAFC, #CBD5E1, #94A3B8);
   box-shadow: none;
 }
 
-html.light-theme .modal-vent {
+html.light-theme .modal-vent,
+html.light-theme .numpad-vent,
+html.light-theme .guide-vent {
   background: #E2E8F0;
-  box-shadow: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 html.light-theme .form-group:focus-within .form-label {
@@ -645,6 +652,7 @@ html.cream-theme {
   --txt:      #2C1D10;
   --muted:    #584133;
   --accent:   #C0531E;
+  --accent-rgb: 192, 83, 30;
   --green:    #2D7A3E;
   --warn:     #B57D1A;
 
@@ -652,6 +660,10 @@ html.cream-theme {
   --sh-press: inset 0 1px 5px rgba(100,60,20,.12), inset 0 0 0 1px rgba(100,60,20,.05);
   --sh-accent: 0 4px 16px rgba(192,83,30,.28), 0 1px 4px rgba(192,83,30,.15);
   --sh-float: 0 12px 44px rgba(100,60,20,.16), 0 2px 10px rgba(100,60,20,.08);
+
+  /* ── Scrollbar Colors ── */
+  --scrollbar-thumb: rgba(100, 60, 20, 0.20);
+  --scrollbar-hover: rgba(100, 60, 20, 0.36);
 
   /* ── Component Token Overrides ── */
   --c-summary-bg:            var(--surface);
@@ -757,8 +769,8 @@ html.cream-theme .metric-card--expense {
   box-shadow: var(--sh-raise);
 }
 
-html.cream-theme .metric-card__screw { background: #D8CCBE; box-shadow: none; }
-html.cream-theme .chassis-frame__screw { background: #D8CCBE; box-shadow: none; }
+html.cream-theme .metric-card__screw { background: radial-gradient(circle at 40% 35%, #FEF3C7, #F59E0B, #B45309); box-shadow: none; }
+html.cream-theme .chassis-frame__screw { background: radial-gradient(circle at 40% 35%, #FEF3C7, #F59E0B, #B45309); box-shadow: none; }
 
 html.cream-theme .btn-add-txn {
   background: linear-gradient(135deg, #C0531E 0%, #E07848 100%);
@@ -833,8 +845,13 @@ html.cream-theme .modal-card {
   background-image: none;
 }
 html.cream-theme .modal-title { color: #2C1D10; }
-html.cream-theme .modal-card__screw { background: #D8CCBE; box-shadow: none; }
-html.cream-theme .modal-vent { background: #E0D4C4; box-shadow: none; }
+html.cream-theme .modal-card__screw { background: radial-gradient(circle at 40% 35%, #FEF3C7, #F59E0B, #B45309); box-shadow: none; }
+html.cream-theme .modal-vent,
+html.cream-theme .numpad-vent,
+html.cream-theme .guide-vent {
+  background: #E0D4C4;
+  box-shadow: inset 0 1px 2px rgba(100, 60, 20, 0.15);
+}
 
 html.cream-theme .form-group:focus-within .form-label { color: #C0531E; }
 html.cream-theme .form-input,
@@ -962,8 +979,9 @@ html.green-theme {
   --surface2: #E3F2E9;
   --recessed: #F7FCFA;
   --txt:      #0E2E1E;
-  --muted:    #4D7A68;
+  --muted:    #345D4C;
   --accent:   #059669;
+  --accent-rgb: 5, 150, 105;
   --green:    #10B981;
   --warn:     #C07800;
 
@@ -971,6 +989,10 @@ html.green-theme {
   --sh-press: inset 0 1px 5px rgba(16,120,80,.10), inset 0 0 0 1px rgba(16,120,80,.03);
   --sh-accent: 0 4px 16px rgba(5,150,105,.25), 0 1px 4px rgba(5,150,105,.12);
   --sh-float: 0 12px 44px rgba(16,120,80,.12), 0 2px 10px rgba(16,120,80,.06);
+
+  /* ── Scrollbar Colors ── */
+  --scrollbar-thumb: rgba(5, 150, 105, 0.22);
+  --scrollbar-hover: rgba(5, 150, 105, 0.38);
 
   /* ── Component Token Overrides ── */
   --c-summary-bg:            var(--surface);
@@ -1073,8 +1095,8 @@ html.green-theme .metric-card--expense {
   box-shadow: var(--sh-raise);
 }
 
-html.green-theme .metric-card__screw { background: #A7D9BB; box-shadow: none; }
-html.green-theme .chassis-frame__screw { background: #A7D9BB; box-shadow: none; }
+html.green-theme .metric-card__screw { background: radial-gradient(circle at 40% 35%, #E8F5E9, #81C784, #2E7D32); box-shadow: none; }
+html.green-theme .chassis-frame__screw { background: radial-gradient(circle at 40% 35%, #E8F5E9, #81C784, #2E7D32); box-shadow: none; }
 
 html.green-theme .btn-add-txn {
   background: linear-gradient(135deg, #059669 0%, #34D399 100%);
@@ -1154,8 +1176,13 @@ html.green-theme .modal-card {
   background-image: none;
 }
 html.green-theme .modal-title { color: #0E2E1E; }
-html.green-theme .modal-card__screw { background: #A7D9BB; box-shadow: none; }
-html.green-theme .modal-vent { background: #B2DFC8; box-shadow: none; }
+html.green-theme .modal-card__screw { background: radial-gradient(circle at 40% 35%, #E8F5E9, #81C784, #2E7D32); box-shadow: none; }
+html.green-theme .modal-vent,
+html.green-theme .numpad-vent,
+html.green-theme .guide-vent {
+  background: #B2DFC8;
+  box-shadow: inset 0 1px 2px rgba(14, 46, 30, 0.15);
+}
 
 html.green-theme .form-group:focus-within .form-label { color: #059669; }
 html.green-theme .form-input,

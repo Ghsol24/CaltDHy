@@ -26,13 +26,13 @@
     })();
   </script>
   <!-- Modular CSS — cascade order matters -->
-  <link rel="stylesheet" href="css/tokens.css?v=2.1.0" />
-  <link rel="stylesheet" href="css/base.css?v=2.1.0" />
-  <link rel="stylesheet" href="css/layout.css?v=2.1.0" />
-  <link rel="stylesheet" href="css/components.css?v=2.1.0" />
-  <link rel="stylesheet" href="css/modals.css?v=2.1.0" />
-  <link rel="stylesheet" href="css/themes.css?v=2.1.0" />
-  <link rel="stylesheet" href="css/responsive.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/tokens.css?v=2.2.0" />
+  <link rel="stylesheet" href="css/base.css?v=2.2.0" />
+  <link rel="stylesheet" href="css/layout.css?v=2.2.0" />
+  <link rel="stylesheet" href="css/components.css?v=2.2.0" />
+  <link rel="stylesheet" href="css/modals.css?v=2.2.0" />
+  <link rel="stylesheet" href="css/themes.css?v=2.2.0" />
+  <link rel="stylesheet" href="css/responsive.css?v=2.2.0" />
   <!-- Chart.js — pinned version with crossorigin for future SRI -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
   <link rel="manifest" href="manifest.json" />
@@ -105,6 +105,13 @@
        APP BODY  (2-column grid)
   ═══════════════════════════════════════════ -->
   <div class="app-body">
+    <script>
+      (function() {
+        if (localStorage.getItem('railCollapsed') === 'true') {
+          document.currentScript.parentElement.classList.add('rail-collapsed');
+        }
+      })();
+    </script>
 
     <!-- ─── LEFT RAIL ─── -->
     <aside class="rail" aria-label="Financial overview">
@@ -286,10 +293,33 @@
 
                 <div class="trend-panel">
                   <div class="trend-canvas-wrap">
-                    <canvas id="trendChart" aria-label="Monthly Cash Flow Trend Chart" role="img"></canvas>
+                    <canvas id="dailyTrendChart" aria-label="Monthly Cash Flow Trend Chart" role="img"></canvas>
                   </div>
                   <!-- empty state -->
                   <p class="trend-empty" id="trendEmpty">// NO DATA IN RANGE</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Daily Spending Chart — NEW -->
+            <section class="daily-section" aria-labelledby="daily-heading">
+              <div class="daily-section__header">
+                <h2 class="section-label" id="daily-heading" data-i18n="dailySpendingTitle">Daily Spending</h2>
+                <span class="daily-section__badge" id="dailyMonthBadge">—</span>
+              </div>
+
+              <div class="chassis-frame chassis-frame--daily" aria-label="Daily spending chart">
+                <div class="chassis-frame__screw cf-screw--tl" aria-hidden="true"></div>
+                <div class="chassis-frame__screw cf-screw--tr" aria-hidden="true"></div>
+                <div class="chassis-frame__screw cf-screw--bl" aria-hidden="true"></div>
+                <div class="chassis-frame__screw cf-screw--br" aria-hidden="true"></div>
+
+                <div class="daily-panel">
+                  <div class="daily-canvas-wrap">
+                    <canvas id="dailySpendingChart" aria-label="Daily Expense Spending Chart" role="img"></canvas>
+                  </div>
+                  <!-- empty state -->
+                  <p class="daily-empty" id="dailyEmpty">// NO EXPENSE DATA THIS MONTH</p>
                 </div>
               </div>
             </section>
@@ -389,12 +419,12 @@
           <section class="jars-section" aria-labelledby="jars-heading">
             <div class="jars-section__header">
               <div class="jars-section__title-row">
-                <h2 class="section-label" id="jars-heading">🫙 Hũ Tiết Kiệm</h2>
-                <p class="jars-section__subtitle">Tách biệt hoàn toàn với số dư chính</p>
+                <h2 class="section-label" id="jars-heading" data-i18n="jarsHeading">🫙 Hũ Tiết Kiệm</h2>
+                <p class="jars-section__subtitle" data-i18n="jarsSubtitle">Tách biệt hoàn toàn với số dư chính</p>
               </div>
               <button class="btn-add-jar" id="btnAddJar" onclick="openAddJarModal()" aria-haspopup="dialog" aria-label="Thêm hũ mới">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Thêm Hũ
+                <span data-i18n="jarsAddBtn">Thêm Hũ</span>
               </button>
               <button class="btn-jar-history" id="btnJarHistory" onclick="openJarHistoryModal()" aria-haspopup="dialog" data-i18n="jarHistoryBtn">
                 📜 Lịch sử
@@ -415,12 +445,12 @@
           <section class="installments-section" aria-labelledby="inst-heading">
             <div class="inst-section__header">
               <div class="inst-section__title-row">
-                <h2 class="section-label" id="inst-heading">💳 Định Kỳ</h2>
-                <p class="inst-section__subtitle">Thanh toán sắp đến hạn</p>
+                <h2 class="section-label" id="inst-heading" data-i18n="instHeading">💳 Định Kỳ</h2>
+                <p class="inst-section__subtitle" data-i18n="instSubtitle">Thanh toán sắp đến hạn</p>
               </div>
               <button class="btn-add-inst" id="btnAddInst" onclick="openAddInstallmentModal()" aria-haspopup="dialog" aria-label="Thêm khoản định kỳ">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Thêm
+                <span data-i18n="instAddBtn">Thêm</span>
               </button>
             </div>
 

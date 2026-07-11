@@ -1360,11 +1360,12 @@ function updateChart() {
       totals[txn.category] = (totals[txn.category] || 0) + txn.amount;
     });
 
-    /* Build localised labels from raw category keys */
-    const rawKeys = Object.keys(totals);
-    const labels = rawKeys.map(k => tCat(k));
-    const data = Object.values(totals);
-    const total = data.reduce((s, v) => s + v, 0);
+    /* Sort categories descending by amount (highest spend first) */
+    const sortedEntries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const rawKeys = sortedEntries.map(([k]) => k);
+    const labels   = rawKeys.map(k => tCat(k));
+    const data     = sortedEntries.map(([, v]) => v);
+    const total    = data.reduce((s, v) => s + v, 0);
 
     /* Empty state */
     const isEmpty = labels.length === 0;
@@ -1516,7 +1517,7 @@ function updateChart() {
 
 function updateTrendChart() {
   try {
-    const canvas = document.getElementById('trendChart');
+    const canvas = document.getElementById('dailyTrendChart');
     const emptyEl = document.getElementById('trendEmpty');
     if (!canvas) return;
 
@@ -1866,6 +1867,162 @@ function updateTrendChart() {
   }
 }
 
+/* ── Daily Spending Chart ─────────────────────────────────── */
+let _dailySpendingChart = null; // instance
+
+function updateDailySpendingChart() {
+  try {
+    const canvas = document.getElementById('dailySpendingChart');
+    const emptyEl = document.getElementById('dailyEmpty');
+    const badgeEl = document.getElementById('dailyMonthBadge');
+    if (!canvas) return;
+
+    /* Only render when in analytics view */
+    if (currentView !== 'analytics') return;
+
+    if (typeof Chart === 'undefined') return;
+
+    const { month, year } = currentMonthYear();
+
+    /* Update badge label */
+    if (badgeEl) {
+      const monthName = new Date(year, month, 1).toLocaleString(
+        currentLang === 'vi' ? 'vi-VN' : (currentLang === 'zh' ? 'zh-CN' : 'en-US'),
+        { month: 'short' }
+      ).toUpperCase();
+      badgeEl.textContent = monthName + ' ' + year;
+    }
+
+    /* Build days-in-month array */
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const dailyExpense = new Array(daysInMonth).fill(0);
+    const dailyIncome  = new Array(daysInMonth).fill(0);
+
+    transactions.forEach(txn => {
+      const d = new Date(txn.date + 'T00:00:00');
+      if (d.getMonth() === month && d.getFullYear() === year) {
+        const dayIdx = d.getDate() - 1; // 0-based
+        if (txn.type === 'expense') dailyExpense[dayIdx] += txn.amount;
+        else                         dailyIncome[dayIdx]  += txn.amount;
+      }
+    });
+
+    const labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+    const totalExpense = dailyExpense.reduce((s, v) => s + v, 0);
+    const isEmpty = totalExpense === 0;
+
+    /* Empty state */
+    if (emptyEl) emptyEl.style.display = isEmpty ? 'block' : 'none';
+    canvas.style.display = isEmpty ? 'none' : 'block';
+
+    if (isEmpty) {
+      if (_dailySpendingChart) { _dailySpendingChart.destroy(); _dailySpendingChart = null; }
+      return;
+    }
+
+    /* Theme colours reusing existing helper */
+    const colors = getThemeChartColors();
+
+    /* Highlight today */
+    const today = new Date();
+    const isCurrentMonth = (today.getMonth() === month && today.getFullYear() === year);
+    const todayIdx = isCurrentMonth ? today.getDate() - 1 : -1;
+
+    const barColors = dailyExpense.map((_, i) => {
+      if (i === todayIdx) return colors.expense;       // today — full brightness
+      return colors.expenseMuted || 'rgba(255,75,114,0.45)';
+    });
+    const borderColors = barColors.map((c, i) =>
+      i === todayIdx ? colors.expense : (colors.expenseMuted || 'rgba(255,75,114,0.45)')
+    );
+
+    const tooltipStyle = {
+      backgroundColor: '#1c1f24',
+      titleColor: '#e0e5ec',
+      bodyColor: '#8896a8',
+      borderColor: 'rgba(255,255,255,.08)',
+      borderWidth: 1,
+      padding: 10,
+      titleFont: { family: "'JetBrains Mono', monospace", size: 12, weight: '700' },
+      bodyFont:  { family: "'JetBrains Mono', monospace", size: 11 },
+      callbacks: {
+        title(items) {
+          return (t('dailySpendingTooltipTitle') || 'Day') + ' ' + items[0].label;
+        },
+        label(ctx) {
+          return ' ' + (t('dailySpendingTooltipLabel') || 'Expense') + ': ' + fmt(ctx.raw);
+        }
+      }
+    };
+
+    if (_dailySpendingChart) {
+      /* Update in-place */
+      _dailySpendingChart.data.labels = labels;
+      _dailySpendingChart.data.datasets[0].data = dailyExpense;
+      _dailySpendingChart.data.datasets[0].backgroundColor = barColors;
+      _dailySpendingChart.data.datasets[0].borderColor = borderColors;
+      _dailySpendingChart.options.scales.x.ticks.color = colors.text;
+      _dailySpendingChart.options.scales.y.ticks.color = colors.text;
+      _dailySpendingChart.options.scales.y.grid.color   = colors.grid;
+      Object.assign(_dailySpendingChart.options.plugins.tooltip, tooltipStyle);
+      _dailySpendingChart.update('active');
+    } else {
+      /* Create chart */
+      _dailySpendingChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: t('dailySpendingTitle') || 'Daily Expense',
+            data: dailyExpense,
+            backgroundColor: barColors,
+            borderColor: borderColors,
+            borderWidth: 1.5,
+            borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+            barPercentage: 0.75,
+            categoryPercentage: 0.9
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 450, easing: 'easeInOutQuad' },
+          plugins: {
+            legend: { display: false },
+            tooltip: tooltipStyle
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: colors.text,
+                font: { family: "'JetBrains Mono', monospace", size: 9 },
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 16
+              }
+            },
+            y: {
+              grid: { color: colors.grid, borderDash: [4, 4], drawBorder: false },
+              ticks: {
+                color: colors.text,
+                font: { family: "'JetBrains Mono', monospace", size: 9 },
+                callback(val) {
+                  if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+                  if (val >= 1000)    return (val / 1000).toFixed(0) + 'k';
+                  return val;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Error rendering daily spending chart:', err);
+  }
+}
+
 function switchView(view) {
   currentView = view;
   
@@ -1894,6 +2051,8 @@ function switchView(view) {
     renderMonthSelector();
     // renderMonthTxnFeed render feed giao dịch
     renderMonthTxnFeed();
+    // Render daily spending chart khi switch sang analytics
+    updateDailySpendingChart();
   }
   // updateChart() tự gọi updateTrendChart() + updateAnalyticsSummary() — không gọi thừa
   updateChart();
@@ -2280,6 +2439,7 @@ function triggerUIUpdates() {
   renderMonthSelector();
   updateAnalyticsSummary();
   renderMonthTxnFeed();
+  updateDailySpendingChart();
 }
 
 function changeTrendRange(months) {
@@ -3320,6 +3480,55 @@ const I18N = {
     incomeVsExpense: 'Income minus Expense',
     allTimeTxns: 'transactions recorded',
     current: 'current',
+    /* ── Jars & Installments ── */
+    jarsHeading: '🫙 Savings Jars',
+    jarsSubtitle: 'Fully separated from main balance',
+    jarsAddBtn: 'Add Jar',
+    instHeading: '💳 Recurring',
+    instSubtitle: 'Upcoming payments',
+    instAddBtn: 'Add',
+    jarsTotalSaved: 'Total Saved',
+    jarsAvgProgress: 'Average Progress',
+    jarsLeftNeed: 'To reach goal "{name}"',
+    jarsStillLack: 'Still need {amount}',
+    jarsGoalReached: '🎉 Goal reached!',
+    jarsUpcomingBills: 'Upcoming Bill',
+    jarsNoBills: 'No bills',
+    jarsDashedNew: 'Create New Savings Jar',
+    jarsOverdue: '⚠️ Overdue {days} days',
+    jarsDaysLeft: '✓ {days} days left',
+    jarsDaysLeftSoon: '⏰ {days} days left',
+    jarsToday: '🔔 Today!',
+    jarsConfirmDelete: 'Delete "{name}"?',
+    jarsConfirmDetails: '{amount} accumulated will not be refunded to main balance.',
+    jarsConfirmDetailsNoAmt: 'This action cannot be undone.',
+    jarsDeleteBtn: '🗑 Delete Jar',
+    jarsCancelBtn: 'Cancel',
+    jarsNoJarsTitle: 'No Jars Found',
+    jarsNoJarsDesc: 'Create your first savings jar to track financial goals.',
+    jarsCreateJarBtn: 'Create Jar',
+    instNoBillsTitle: 'No recurring bills',
+    instNoBillsDesc: 'Add monthly bills or repeating expenses to track them.',
+    instAddRecurringBtn: 'Add Recurring',
+    instPaused: '⏸ Paused',
+    instOverdueLabel: '⚠️ Overdue {days} days',
+    instDaysLeftLabel: '✓ {days} days left',
+    instDaysLeftSoonLabel: '⏰ {days} days left',
+    instTodayLabel: '🔔 Today!',
+    instDeleteConfirm: 'Delete "{name}"?',
+    instCycleMonthly: 'Monthly',
+    instCycleQuarterly: 'Quarterly',
+    instCycleYearly: 'Yearly',
+    instStatusPaid: 'Paid',
+    instStatusUnpaid: 'Pay',
+    instActionPause: 'Pause tracking',
+    instActionResume: 'Activate again',
+    instActionDelete: 'Delete',
+    instPausedLabel: 'Paused',
+    /* ── Daily spending chart ── */
+    dailySpendingTitle: 'Daily Spending',
+    dailySpendingTooltipTitle: 'Day',
+    dailySpendingTooltipLabel: 'Expense',
     /* ── Guide modal ── */
     guideBadge: 'DOCS v2.0',
     guideTitle: 'CaltDHy',
@@ -3595,6 +3804,55 @@ const I18N = {
     incomeVsExpense: 'Thu nhập trừ Chi tiêu',
     allTimeTxns: 'giao dịch được ghi nhận',
     current: 'hiện tại',
+    /* ── Jars & Installments ── */
+    jarsHeading: '🫙 Hũ Tiết Kiệm',
+    jarsSubtitle: 'Tách biệt hoàn toàn với số dư chính',
+    jarsAddBtn: 'Thêm Hũ',
+    instHeading: '💳 Định Kỳ',
+    instSubtitle: 'Thanh toán sắp đến hạn',
+    instAddBtn: 'Thêm',
+    jarsTotalSaved: 'Tổng Tích Lũy',
+    jarsAvgProgress: 'Tiến Độ Trung Bình',
+    jarsLeftNeed: 'Để đạt mục tiêu "{name}"',
+    jarsStillLack: 'Còn thiếu {amount}',
+    jarsGoalReached: '🎉 Đã đạt mục tiêu!',
+    jarsUpcomingBills: 'Hóa Đơn Sắp Tới',
+    jarsNoBills: 'Không có hóa đơn',
+    jarsDashedNew: 'Tạo Hũ Tiết Kiệm Mới',
+    jarsOverdue: '⚠️ Trễ {days} ngày',
+    jarsDaysLeft: '✓ Còn {days} ngày',
+    jarsDaysLeftSoon: '⏰ Còn {days} ngày',
+    jarsToday: '🔔 Hôm nay!',
+    jarsConfirmDelete: 'Xóa hũ "{name}"?',
+    jarsConfirmDetails: '{amount} đã tích lũy sẽ không được cộng lại vào số dư.',
+    jarsConfirmDetailsNoAmt: 'Hành động này không thể hoàn tác.',
+    jarsDeleteBtn: '🗑 Xóa hũ',
+    jarsCancelBtn: 'Hủy',
+    jarsNoJarsTitle: 'Chưa có hũ nào',
+    jarsNoJarsDesc: 'Tạo hũ tích lũy đầu tiên của bạn để theo dõi mục tiêu tài chính.',
+    jarsCreateJarBtn: 'Tạo hũ mới',
+    instNoBillsTitle: 'Không có khoản định kỳ',
+    instNoBillsDesc: 'Thêm các hóa đơn hoặc khoản chi lặp lại hàng tháng để theo dõi.',
+    instAddRecurringBtn: 'Thêm định kỳ',
+    instPaused: '⏸ Tạm dừng',
+    instOverdueLabel: '⚠️ Trễ {days} ngày',
+    instDaysLeftLabel: '✓ Còn {days} ngày',
+    instDaysLeftSoonLabel: '⏰ Còn {days} ngày',
+    instTodayLabel: '🔔 Hôm nay!',
+    instDeleteConfirm: 'Xóa "{name}"?',
+    instCycleMonthly: 'Hàng tháng',
+    instCycleQuarterly: 'Hàng quý',
+    instCycleYearly: 'Hàng năm',
+    instStatusPaid: 'Đã trả',
+    instStatusUnpaid: 'Trả',
+    instActionPause: 'Tạm dừng theo dõi',
+    instActionResume: 'Kích hoạt lại',
+    instActionDelete: 'Xóa',
+    instPausedLabel: 'Đã tạm dừng',
+    /* ── Daily spending chart ── */
+    dailySpendingTitle: 'Chi Tiêu Hàng Ngày',
+    dailySpendingTooltipTitle: 'Ngày',
+    dailySpendingTooltipLabel: 'Chi tiêu',
     /* ── Guide modal ── */
     guideBadge: 'TÀI LIỆU v2.0',
     guideTitle: 'CaltDHy',
@@ -3859,6 +4117,67 @@ const I18N = {
     incomeLabel: '收入',
     expenseLabel: '支出',
     current: '当前',
+    /* ── Navigation & Analytics ── */
+    navHome: '主页',
+    navAnalytics: '分析',
+    analyticsSummary: '分析摘要',
+    savingsRate: '储蓄率',
+    topCategory: '消费最多',
+    netSavings: '净储蓄',
+    totalTransactions: '交易总数',
+    savingsGood: '占总收入 of 储蓄',
+    savingsNoIncome: '未记录收入',
+    incomeVsExpense: '收入减支出',
+    allTimeTxns: '笔交易记录',
+    /* ── Jars & Installments ── */
+    jarsHeading: '🫙 储蓄罐',
+    jarsSubtitle: '与主余额完全分离',
+    jarsAddBtn: '添加储蓄罐',
+    instHeading: '💳 定期',
+    instSubtitle: '即将到期的账单',
+    instAddBtn: '添加',
+    jarsTotalSaved: '总积累',
+    jarsAvgProgress: '平均进度',
+    jarsLeftNeed: '为达到目标 "{name}"',
+    jarsStillLack: '还差 {amount}',
+    jarsGoalReached: '🎉 已达到目标！',
+    jarsUpcomingBills: '即将到期的账单',
+    jarsNoBills: '没有账单',
+    jarsDashedNew: '创建新储蓄罐',
+    jarsOverdue: '⚠️ 逾期 {days} 天',
+    jarsDaysLeft: '✓ 还剩 {days} 天',
+    jarsDaysLeftSoon: '⏰ 还剩 {days} 天',
+    jarsToday: '🔔 今天！',
+    jarsConfirmDelete: '删除储蓄罐 "{name}" 吗？',
+    jarsConfirmDetails: '已积累 of {amount} 将不会退回到主余额。',
+    jarsConfirmDetailsNoAmt: '此操作无法撤销。',
+    jarsDeleteBtn: '🗑 删除储蓄罐',
+    jarsCancelBtn: '取消',
+    jarsNoJarsTitle: '暂无储蓄罐',
+    jarsNoJarsDesc: '创建您的第一个储蓄罐以跟踪财务目标。',
+    jarsCreateJarBtn: '创建储蓄罐',
+    instNoBillsTitle: '没有定期账单',
+    instNoBillsDesc: '添加每月账单或重复支出以进行跟踪。',
+    instAddRecurringBtn: '添加定期账单',
+    instPaused: '⏸ 已暂停',
+    instOverdueLabel: '⚠️ 逾期 {days} 天',
+    instDaysLeftLabel: '✓ 还剩 {days} 天',
+    instDaysLeftSoonLabel: '⏰ 还剩 {days} 天',
+    instTodayLabel: '🔔 今天！',
+    instDeleteConfirm: '删除 "{name}" 吗？',
+    instCycleMonthly: '每月',
+    instCycleQuarterly: '每季度',
+    instCycleYearly: '每年',
+    instStatusPaid: '已付',
+    instStatusUnpaid: '支付',
+    instActionPause: '暂停跟踪',
+    instActionResume: '重新激活',
+    instActionDelete: '删除',
+    instPausedLabel: '已暂停',
+    /* ── Daily spending chart ── */
+    dailySpendingTitle: '每日支出',
+    dailySpendingTooltipTitle: '日期',
+    dailySpendingTooltipLabel: '支出',
     /* ── Guide modal ── */
     guideBadge: '文档 v2.0',
     guideTitle: 'CaltDHy',
@@ -6412,13 +6731,17 @@ function renderJarSummary() {
 
   // Find next active upcoming installment
   const activeInst = installments.filter(i => i.active);
-  let nextBillStr = 'Không có hóa đơn';
+  let nextBillStr = t('jarsNoBills') || 'No bills';
   let nextBillAmount = '';
   if (activeInst.length > 0) {
     const sorted = [...activeInst].sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
     const nextBill = sorted[0];
     const days = daysUntil(nextBill.nextDueDate);
-    const dayLabel = days < 0 ? `Trễ ${Math.abs(days)} ngày` : days === 0 ? 'Hôm nay!' : `Còn ${days} ngày`;
+    const dayLabel = days < 0
+      ? (t('jarsOverdue') || 'Overdue {days} days').replace('{days}', Math.abs(days))
+      : days === 0
+        ? (t('jarsToday') || 'Today!')
+        : (t('jarsDaysLeft') || '{days} days left').replace('{days}', days);
     nextBillStr = `${nextBill.icon} ${nextBill.name} (${dayLabel})`;
     nextBillAmount = fmtJar(nextBill.amount);
   }
@@ -6437,12 +6760,12 @@ function renderJarSummary() {
       leftSummaryEl.style.display = '';
       leftSummaryEl.innerHTML = `
         <div class="summary-card">
-          <div class="summary-card__label">Tổng Tích Lũy</div>
+          <div class="summary-card__label">${t('jarsTotalSaved')}</div>
           <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-card__label">Để đạt mục tiêu "${capJarName}"</div>
-          <div class="summary-card__value value--blue">${stillNeed > 0 ? `Còn thiếu ${fmtJar(stillNeed)}` : '🎉 Đã đạt mục tiêu!'}</div>
+          <div class="summary-card__label">${t('jarsLeftNeed').replace('{name}', capJarName)}</div>
+          <div class="summary-card__value value--blue">${stillNeed > 0 ? t('jarsStillLack').replace('{amount}', fmtJar(stillNeed)) : t('jarsGoalReached')}</div>
         </div>
       `;
     } else {
@@ -6450,11 +6773,11 @@ function renderJarSummary() {
       leftSummaryEl.style.display = '';
       leftSummaryEl.innerHTML = `
         <div class="summary-card">
-          <div class="summary-card__label">Tổng Tích Lũy</div>
+          <div class="summary-card__label">${t('jarsTotalSaved')}</div>
           <div class="summary-card__value value--emerald">${fmtJar(totalSaved)}</div>
         </div>
         <div class="summary-card">
-          <div class="summary-card__label">Tiến Độ Trung Bình</div>
+          <div class="summary-card__label">${t('jarsAvgProgress')}</div>
           <div class="summary-card__value value--blue">${avgProgress.toFixed(0)}%</div>
         </div>
       `;
@@ -6465,7 +6788,7 @@ function renderJarSummary() {
   if (rightSummaryEl) {
     rightSummaryEl.innerHTML = `
       <div class="summary-card">
-        <div class="summary-card__label">Hóa Đơn Sắp Tới</div>
+        <div class="summary-card__label">${t('jarsUpcomingBills')}</div>
         <div class="summary-card__value value--rose">
           <span class="value-title" title="${nextBillStr}" onmouseenter="initScrollText(this)">${nextBillStr}</span>
           ${nextBillAmount ? `<span class="value-sub">${nextBillAmount}</span>` : ''}
@@ -6503,9 +6826,11 @@ function renderJarCards() {
 
   if (jars.length === 0) {
     grid.innerHTML = `
-      <div class="jars-empty-state">
-        <span class="jars-empty-icon">🫙</span>
-        <p class="jars-empty-text">Chưa có hũ nào. Tạo hũ đầu tiên!</p>
+      <div class="empty-state">
+        <div class="empty-state__icon">🫙</div>
+        <h3 class="empty-state__title">${t('jarsNoJarsTitle')}</h3>
+        <p class="empty-state__hint">${t('jarsNoJarsDesc')}</p>
+        <button class="empty-state__cta" onclick="openAddJarModal()">${t('jarsCreateJarBtn')}</button>
       </div>`;
     return;
   }
@@ -6515,7 +6840,11 @@ function renderJarCards() {
     const pctDisplay = pct.toFixed(0);
     const daysLeft = jar.targetDate ? daysUntil(jar.targetDate) : null;
     const daysStr = daysLeft !== null
-      ? (daysLeft > 0 ? `còn ${daysLeft} ngày` : daysLeft === 0 ? 'Hôm nay!' : `quá hạn ${Math.abs(daysLeft)} ngày`)
+      ? (daysLeft > 0
+          ? (t('jarsDaysLeft') || '{days} days left').replace('{days}', daysLeft)
+          : daysLeft === 0
+            ? (t('jarsToday') || 'Today!')
+            : (t('jarsOverdue') || 'Overdue {days} days').replace('{days}', Math.abs(daysLeft)))
       : '';
     const isOverdue = daysLeft !== null && daysLeft < 0;
     const isComplete = pct >= 100;
@@ -6530,12 +6859,12 @@ function renderJarCards() {
         <!-- Fix #7: Inline delete confirm overlay thay vì window.confirm -->
         <div class="jar-card__confirm-overlay" role="alertdialog" aria-modal="true" aria-label="Xác nhận xóa hũ">
           <div class="jar-card__confirm-text">
-            <strong>Xóa hũ "${capName}"?</strong>
-            ${jar.current > 0 ? `${fmtJar(jar.current)} đã tích lũy sẽ không được cộng lại vào số dư.` : 'Hành động này không thể hoàn tác.'}
+            <strong>${t('jarsConfirmDelete').replace('{name}', capName)}</strong>
+            ${jar.current > 0 ? t('jarsConfirmDetails').replace('{amount}', fmtJar(jar.current)) : t('jarsConfirmDetailsNoAmt')}
           </div>
           <div class="jar-card__confirm-actions">
-            <button class="jar-card__confirm-cancel" onclick="cancelDeleteJar('${jar.id}')" aria-label="Hủy xóa">Hủy</button>
-            <button class="jar-card__confirm-delete-btn" onclick="executeDeleteJar('${jar.id}')" aria-label="Xác nhận xóa hũ ${jar.name}">🗑 Xóa hũ</button>
+            <button class="jar-card__confirm-cancel" onclick="cancelDeleteJar('${jar.id}')" aria-label="Hủy xóa">${t('jarsCancelBtn')}</button>
+            <button class="jar-card__confirm-delete-btn" onclick="executeDeleteJar('${jar.id}')" aria-label="Xác nhận xóa hũ ${jar.name}">${t('jarsDeleteBtn')}</button>
           </div>
         </div>
 
@@ -6559,10 +6888,10 @@ function renderJarCards() {
             <div class="jar-card__meta-info">${progressText}</div>
 
             ${isComplete
-              ? `<div class="jar-card__complete-badge">🎉 Đạt mục tiêu!</div>`
+              ? `<div class="jar-card__complete-badge">${t('jarsGoalReached')}</div>`
               : `<div class="jar-card__actions">
-                  <button class="jar-btn jar-btn--deposit" onclick="openJarTxnModal('${jar.id}','deposit')" aria-haspopup="dialog">+ Nạp</button>
-                  <button class="jar-btn jar-btn--withdraw" onclick="openJarTxnModal('${jar.id}','withdraw')" aria-haspopup="dialog" ${jar.current <= 0 ? 'disabled' : ''}>− Rút</button>
+                  <button class="jar-btn jar-btn--deposit" onclick="openJarTxnModal('${jar.id}','deposit')" aria-haspopup="dialog">+ ${currentLang === 'vi' ? 'Nạp' : currentLang === 'zh' ? '存入' : 'Deposit'}</button>
+                  <button class="jar-btn jar-btn--withdraw" onclick="openJarTxnModal('${jar.id}','withdraw')" aria-haspopup="dialog" ${jar.current <= 0 ? 'disabled' : ''}>− ${currentLang === 'vi' ? 'Rút' : currentLang === 'zh' ? '取出' : 'Withdraw'}</button>
                 </div>`
             }
           </div>
@@ -6595,7 +6924,7 @@ function renderJarCards() {
   const dashedCard = `
     <button class="jar-card--dashed" onclick="openAddJarModal()" aria-label="Tạo hũ tiết kiệm mới">
       <span class="jar-dashed__icon">+</span>
-      <span class="jar-dashed__text">Tạo Hũ Tiết Kiệm Mới</span>
+      <span class="jar-dashed__text">${t('jarsDashedNew')}</span>
     </button>`;
 
   grid.innerHTML = cardsHTML + dashedCard;
@@ -6606,12 +6935,15 @@ function formatTimelineDate(dateStr) {
   const parts = dateStr.split('-');
   if (parts.length < 3) return dateStr;
   const [_, m, d] = parts;
-  if (typeof currentLang !== 'undefined' && currentLang === 'en') {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${months[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`;
-  } else {
-    return `${parseInt(d, 10)} thg ${parseInt(m, 10)}`;
+  if (typeof currentLang !== 'undefined') {
+    if (currentLang === 'en') {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`;
+    } else if (currentLang === 'zh') {
+      return `${parseInt(m, 10)}月${parseInt(d, 10)}日`;
+    }
   }
+  return `${parseInt(d, 10)} thg ${parseInt(m, 10)}`;
 }
 
 function renderInstallmentList() {
@@ -6624,9 +6956,11 @@ function renderInstallmentList() {
 
   if (installments.length === 0) {
     list.innerHTML = `
-      <div class="inst-empty">
-        <span>💳</span>
-        <p>Chưa có khoản định kỳ nào. Thêm ngay!</p>
+      <div class="empty-state">
+        <div class="empty-state__icon">💳</div>
+        <h3 class="empty-state__title">${t('instNoBillsTitle')}</h3>
+        <p class="empty-state__hint">${t('instNoBillsDesc')}</p>
+        <button class="empty-state__cta" onclick="openAddInstallmentModal()">${t('instAddRecurringBtn')}</button>
       </div>`;
     return;
   }
@@ -6646,17 +6980,17 @@ function renderInstallmentList() {
     let countdownStr = '';
     if (!inst.active) {
       statusClass = 'inst-item--inactive';
-      countdownStr = `<span class="inst-badge inst-badge--paused">⏸ Tạm dừng</span>`;
+      countdownStr = `<span class="inst-badge inst-badge--paused">${t('instPaused')}</span>`;
     } else if (isOverdue) {
       statusClass = 'inst-item--overdue';
-      countdownStr = `<span class="inst-badge inst-badge--overdue">⚠️ Trễ ${Math.abs(days)} ngày</span>`;
+      countdownStr = `<span class="inst-badge inst-badge--overdue">${t('instOverdueLabel').replace('{days}', Math.abs(days))}</span>`;
     } else if (isSoon) {
       statusClass = 'inst-item--soon';
       countdownStr = days === 0
-        ? `<span class="inst-badge inst-badge--today">🔔 Hôm nay!</span>`
-        : `<span class="inst-badge inst-badge--soon">⏰ Còn ${days} ngày</span>`;
+        ? `<span class="inst-badge inst-badge--today">${t('instTodayLabel')}</span>`
+        : `<span class="inst-badge inst-badge--soon">${t('instDaysLeftSoonLabel').replace('{days}', days)}</span>`;
     } else {
-      countdownStr = `<span class="inst-badge inst-badge--ok">✓ Còn ${days} ngày</span>`;
+      countdownStr = `<span class="inst-badge inst-badge--ok">${t('instDaysLeftLabel').replace('{days}', days)}</span>`;
     }
 
     const dateBubble = formatTimelineDate(inst.nextDueDate);
@@ -6668,10 +7002,10 @@ function renderInstallmentList() {
         <div class="inst-item ${statusClass}" data-inst-id="${inst.id}">
           <!-- Lớp phủ xác nhận xóa khoản định kỳ -->
           <div class="inst-item__confirm-overlay" role="alertdialog" aria-modal="true" aria-label="Xác nhận xóa khoản định kỳ">
-            <span class="inst-item__confirm-text">Xóa "${capName}"?</span>
+            <span class="inst-item__confirm-text">${t('instDeleteConfirm').replace('{name}', capName)}</span>
             <div class="inst-item__confirm-actions">
-              <button class="inst-confirm-cancel" onclick="cancelDeleteInstallment('${inst.id}')">Hủy</button>
-              <button class="inst-confirm-delete" onclick="executeDeleteInstallment('${inst.id}')">Xóa</button>
+              <button class="inst-confirm-cancel" onclick="cancelDeleteInstallment('${inst.id}')">${t('jarsCancelBtn')}</button>
+              <button class="inst-confirm-delete" onclick="executeDeleteInstallment('${inst.id}')">${t('instActionDelete')}</button>
             </div>
           </div>
 
@@ -6684,22 +7018,22 @@ function renderInstallmentList() {
           <div class="inst-item__right">
             ${countdownStr}
             ${inst.active ? (isPaidThisMonth ? `
-              <button class="inst-pay-btn inst-pay-btn--paid" disabled title="Đã thanh toán tháng này">
+              <button class="inst-pay-btn inst-pay-btn--paid" disabled title="${currentLang === 'vi' ? 'Đã thanh toán tháng này' : currentLang === 'zh' ? '本月已付' : 'Paid this month'}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <span>Đã trả</span>
+                <span>${t('instStatusPaid')}</span>
               </button>` : `
-              <button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="Đánh dấu đã trả">
+              <button class="inst-pay-btn" onclick="payInstallment('${inst.id}')" title="${currentLang === 'vi' ? 'Đánh dấu đã trả' : currentLang === 'zh' ? '标记为已付' : 'Mark as paid'}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Trả</span>
+                <span>${t('instStatusUnpaid')}</span>
               </button>`) : ''
             }
-            <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? 'Tạm dừng theo dõi' : 'Kích hoạt lại'}">
+            <button class="inst-toggle-btn" onclick="toggleInstallmentActive('${inst.id}')" title="${inst.active ? t('instActionPause') : t('instActionResume')}">
               ${inst.active 
                 ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
                 : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
               }
             </button>
-            <button class="inst-delete-btn" onclick="confirmDeleteInstallment('${inst.id}')" title="Xóa">
+            <button class="inst-delete-btn" onclick="confirmDeleteInstallment('${inst.id}')" title="${t('instActionDelete')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -6709,7 +7043,7 @@ function renderInstallmentList() {
 
   list.innerHTML = sorted.map(renderItem).join('')
     + (inactive.length > 0
-      ? `<div class="inst-section-label">Đã tạm dừng</div>` + inactive.map(renderItem).join('')
+      ? `<div class="inst-section-label">${t('instPausedLabel')}</div>` + inactive.map(renderItem).join('')
       : '');
 
   // Cập nhật màu nền panel theo trạng thái tháng
@@ -7192,7 +7526,7 @@ function toggleInstallmentActive(instId) {
   inst.active = !inst.active;
   saveInstallments();
   refreshInstallmentsPanel();
-  showToast(inst.active ? `▶ Đã kích hoạt "${inst.name}"` : `⏸ Đã tạm dừng "${inst.name}"`);
+  showToast(inst.active ? `▶ ${t('instActionResume')} "${inst.name}"` : `⏸ ${t('instActionPause').replace('Tạm dừng theo dõi', 'Đã tạm dừng')} "${inst.name}"`);
 }
 
 function confirmDeleteInstallment(instId) {
@@ -7243,7 +7577,9 @@ function renderJarMiniHistory(jar) {
     const isDeposit = h.type === 'deposit';
     const icon = isDeposit ? '⬆️' : '⬇️';
     const cls  = isDeposit ? 'jar-mini-hist--deposit' : 'jar-mini-hist--withdraw';
-    const dateStr = h.date ? new Date(h.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
+    const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+    const locale = localeMap[currentLang] || 'vi-VN';
+    const dateStr = h.date ? new Date(h.date).toLocaleDateString(locale, { day: '2-digit', month: '2-digit' }) : '';
     const reasonStr = h.reason ? `<span class="jar-mini-hist__reason">— ${h.reason}</span>` : '';
     return `
       <li class="jar-mini-hist-item ${cls}">
@@ -7320,8 +7656,10 @@ function renderJarHistory(filterJarId) {
     const isDeposit = h.type === 'deposit';
     const icon   = isDeposit ? '⬆️' : '⬇️';
     const cls    = isDeposit ? 'jar-hist-row--deposit' : 'jar-hist-row--withdraw';
+    const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
+    const locale = localeMap[currentLang] || 'vi-VN';
     const dateStr = h.date
-      ? new Date(h.date).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      ? new Date(h.date).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : '';
     return `
       <div class="jar-hist-row ${cls}">

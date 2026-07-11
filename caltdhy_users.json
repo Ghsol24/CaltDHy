@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "id": "dca6715c-cd77-4a9f-8e6a-532662cba554",
+      "name": "CaltDHy User",
+      "email": "giahuyz3sta@gmail.com",
+      "passwordHash": "13470728e77799f19a80f634974bc51eb75221914652131b62b7239c35042730",
+      "createdAt": "2026-07-11T06:52:17.643Z"
+    }
+  ]
+}

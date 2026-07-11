@@ -410,8 +410,8 @@ html.green-theme .finput:focus {
 }
 .pw-weak   .pw-strength__fill { background: var(--accent); width: 33%; }
 .pw-weak   .pw-strength__label { color: var(--accent); }
-.pw-medium .pw-strength__fill { background: #f1c40f; width: 66%; }
-.pw-medium .pw-strength__label { color: #f1c40f; }
+.pw-medium .pw-strength__fill { background: var(--warn); width: 66%; }
+.pw-medium .pw-strength__label { color: var(--warn); }
 .pw-strong .pw-strength__fill { background: var(--green); width: 100%; }
 .pw-strong .pw-strength__label { color: var(--green); }
 html.dark-theme .pw-strength__bar { background: #252a2b; }

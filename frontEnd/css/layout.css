@@ -408,6 +408,7 @@ html.light-theme .form-divider-label {
   flex-direction: column;
   gap: 22px;
   overflow-y: auto;
+  overflow-x: hidden;
   /* Prevent Windows scrollbar from eating sidebar width */
   scrollbar-gutter: stable;
   /* Subtle gradient accent on right border */
@@ -1220,9 +1221,16 @@ html.green-theme .month-nav-btn:hover {
   border: 1px solid rgba(255, 255, 255, .04) !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   padding: 12px !important;
   border-radius: var(--r-sm) !important;
+  
+  /* Reset transition properties so it defaults to block/none collapse */
+  opacity: 0 !important;
+  visibility: hidden !important;
+  display: none !important;
+  transform: none !important;
+  pointer-events: none !important;
+  transition: none !important;
 }
 
 html.light-theme .analytics-control-card .month-picker-dropdown {
@@ -1242,10 +1250,8 @@ html.green-theme .analytics-control-card .month-picker-dropdown {
 
 .analytics-control-card .month-picker-dropdown.open {
   display: block !important;
-  /* Disable absolute transition/popup translate */
-  animation: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
-
-
-
 

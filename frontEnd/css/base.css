@@ -33,7 +33,7 @@ body.dark-panel {
 /* ── Global Sleek Scrollbar (overrides chunky Windows default) ── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 *::-webkit-scrollbar {
   width: 5px;
@@ -43,11 +43,11 @@ body.dark-panel {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 99px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--scrollbar-hover);
 }
 
 /* ============================================================
@@ -104,9 +104,9 @@ body.dark-panel {
 }
 
 @keyframes pulseRing {
-  0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, .4); }
-  70% { box-shadow: 0 0 0 8px rgba(255, 71, 87, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), .4); }
+  70% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); }
 }
 
 @keyframes fadeUp {
@@ -209,9 +209,9 @@ html.light-theme .nk:active {
    FOCUS-VISIBLE — Accessibility outline
    ============================================================ */
 *:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  outline-offset: 0;
 }
 
 button:focus:not(:focus-visible),
@@ -265,39 +265,7 @@ select:focus:not(:focus-visible) {
 }
 
 
-/* ============================================================
-   CROSS-PLATFORM SCROLLBAR — Light / Cream / Green theme overrides
-   Ensures scrollbars use dark-on-light colors (not white-on-white)
-   ============================================================ */
-html.light-theme * {
-  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
-}
-html.light-theme *::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.18);
-}
-html.light-theme *::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.30);
-}
-
-html.cream-theme * {
-  scrollbar-color: rgba(100, 60, 20, 0.2) transparent;
-}
-html.cream-theme *::-webkit-scrollbar-thumb {
-  background: rgba(100, 60, 20, 0.2);
-}
-html.cream-theme *::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 60, 20, 0.36);
-}
-
-html.green-theme * {
-  scrollbar-color: rgba(5, 150, 105, 0.22) transparent;
-}
-html.green-theme *::-webkit-scrollbar-thumb {
-  background: rgba(5, 150, 105, 0.22);
-}
-html.green-theme *::-webkit-scrollbar-thumb:hover {
-  background: rgba(5, 150, 105, 0.38);
-}
+/* Scrollbar theme overrides are now managed via --scrollbar-thumb and --scrollbar-hover CSS tokens */
 
 /* ============================================================
    WINDOWS DPI / SCALE-FACTOR COMPENSATION
@@ -374,4 +342,25 @@ html.green-theme *::-webkit-scrollbar-thumb:hover {
 
 .u-text-muted {
   color: var(--muted);
+}
+
+/* ── Modern CSS Scroll Lock ── */
+body:has(.modal-overlay.open),
+body:has(.guide-overlay.open) {
+  overflow: hidden !important;
+}
+
+/* Card corner screws rotation on parent hover */
+.metric-card__screw,
+.chassis-frame__screw,
+.modal-card__screw,
+.guide-panel__screw {
+  transition: transform var(--dur-mid) ease;
+}
+
+.metric-card:hover .metric-card__screw,
+.chassis-frame:hover .chassis-frame__screw,
+.modal-card:hover .modal-card__screw,
+.guide-panel:hover .guide-panel__screw {
+  transform: rotate(45deg);
 }

@@ -14,8 +14,9 @@
 
   /* ── Accent ── */
   --accent: #FF4B72;
+  --accent-rgb: 255, 75, 114;
   --green: #10B981;
-  --warn: #f1c40f;
+  --warn: #F59E0B;
 
   /* ── Shadows — sleek obsidian glow ── */
   --sh-raise: 0 8px 30px rgba(0,0,0,.60), inset 0 1px 0 rgba(255, 255, 255, .05);
@@ -24,10 +25,11 @@
   --sh-float: 0 20px 48px rgba(0, 0, 0, .80), inset 0 1px 0 rgba(255, 255, 255, .05);
 
   /* ── Radii ── */
+  --r-xs: 4px;
   --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 14px;
-  --r-xl: 20px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
 
   /* ── Animation durations ── */
   --dur-fast: 120ms;
@@ -35,15 +37,15 @@
   --dur-slow: 400ms;
 
   /* ── Font Scale ── */
-  --font-2xs: 8px;
-  --font-xs:  9px;
-  --font-sm:  10px;
-  --font-md:  11px;
-  --font-base: 13px;
-  --font-lg:  15px;
-  --font-xl:  16px;
-  --font-2xl: 18px;
-  --font-3xl: 26px;
+  --font-2xs: 10px;
+  --font-xs:  11px;
+  --font-sm:  12px;
+  --font-md:  13px;
+  --font-base: 14px;
+  --font-lg:  16px;
+  --font-xl:  18px;
+  --font-2xl: 22px;
+  --font-3xl: 32px;
 
   /* ── Spacing Scale ── */
   --sp-1: 4px;
@@ -89,4 +91,8 @@
   /* Dashed Placeholder Card */
   --c-dashed-border:         rgba(255, 255, 255, 0.12);
   --c-dashed-icon:           rgba(255, 255, 255, 0.20);
+
+  /* ── Scrollbar Colors ── */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-hover: rgba(255, 255, 255, 0.22);
 }

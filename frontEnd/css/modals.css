@@ -665,7 +665,7 @@
 
 /* Status modifiers */
 .budget-card--ok   { border-left-color: var(--green); }
-.budget-card--warn { border-left-color: #f1c40f; }
+.budget-card--warn { border-left-color: var(--warn); }
 .budget-card--over {
   border-left-color: var(--accent);
   animation: pulseRing 2s ease-in-out infinite;
@@ -712,8 +712,8 @@
 }
 
 .budget-card--warn .budget-card__led {
-  background: #f1c40f;
-  box-shadow: 0 0 6px 2px rgba(241, 196, 15, .6);
+  background: var(--warn);
+  box-shadow: 0 0 6px 2px rgba(245, 158, 11, .6);
   animation: ledPulse 1s ease-in-out infinite;
 }
 
@@ -815,8 +815,8 @@
 }
 
 .budget-bar__fill--warn {
-  background: #f1c40f;
-  box-shadow: 0 0 6px rgba(241, 196, 15, .4);
+  background: var(--warn);
+  box-shadow: 0 0 6px rgba(245, 158, 11, .4);
 }
 
 .budget-bar__fill--over {
@@ -3660,10 +3660,6 @@ html.green-theme .q-btn-months { color: #475569; }
 .modal-card--jar-txn,
 .modal-card--inst {
   max-width: 480px;
-  background: rgba(23, 23, 27, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
-  border-radius: 28px;
 }
 
 /* Form groups */
@@ -3695,9 +3691,9 @@ html.green-theme .q-btn-months { color: #475569; }
 .required { color: #ff6b81; margin-left: 2px; }
 
 .jar-form-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  background: var(--recessed);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.15);
+  border-radius: var(--r-md);
   padding: 12px 16px;
   font-size: 0.9rem;
   color: var(--txt);
@@ -3708,9 +3704,9 @@ html.green-theme .q-btn-months { color: #475569; }
   box-sizing: border-box;
 }
 .jar-form-input:focus {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(52, 152, 219, 0.6);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+  background: var(--recessed);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
 }
 .jar-form-input::placeholder {
   color: var(--muted);
@@ -3945,4 +3941,158 @@ input[type="date"].jar-form-input::-webkit-calendar-picker-indicator {
   transform: translateY(0);
 }
 
+
+/* ============================================================
+   DAILY SPENDING CHART — Analytics View
+   ============================================================ */
+
+.daily-section {
+  margin-top: 20px;
+}
+
+.daily-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.daily-section__badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(255, 75, 114, .1);
+  border: 1px solid rgba(255, 75, 114, .2);
+  border-radius: 99px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+/* Chassis frame variant for daily chart */
+.chassis-frame--daily {
+  flex-direction: column;
+  min-height: 220px;
+}
+
+/* Inner panel (mirrors .trend-panel style) */
+.daily-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(255, 255, 255, .04);
+  border-radius: calc(var(--r-lg) - 4px);
+  margin: 10px;
+  background: rgba(0, 0, 0, .12);
+}
+
+/* Canvas wrapper — fixed height for consistent rendering */
+.daily-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+}
+
+.daily-canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Empty state */
+.daily-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: .4;
+  text-align: center;
+  padding: 60px 0;
+  display: none;
+}
+
+
+/* ============================================================
+   UI POLISH — Premium micro-improvements
+   ============================================================ */
+
+/* Smoother section-label entry */
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Subtle accent line before section labels */
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 2px;
+  opacity: .75;
+  flex-shrink: 0;
+}
+
+/* Analytics main pane gets more breathing room */
+.analytics-main-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Trend-section header row */
+.trend-section__header {
+  margin-bottom: 10px;
+}
+
+/* Light theme daily chart badge */
+html.light-theme .daily-section__badge {
+  color: #E02A52;
+  background: rgba(224, 42, 82, .08);
+  border-color: rgba(224, 42, 82, .18);
+}
+
+html.light-theme .daily-panel {
+  background: rgba(0, 0, 0, .03);
+  border-color: rgba(0, 0, 0, .06);
+}
+
+/* Cream theme */
+html.cream-theme .daily-section__badge {
+  color: #C0531E;
+  background: rgba(192, 83, 30, .08);
+  border-color: rgba(192, 83, 30, .18);
+}
+
+html.cream-theme .daily-panel {
+  background: rgba(0, 0, 0, .04);
+  border-color: rgba(0, 0, 0, .06);
+}
+
+/* Green theme */
+html.green-theme .daily-section__badge {
+  color: #2e9c6a;
+  background: rgba(46, 156, 106, .08);
+  border-color: rgba(46, 156, 106, .2);
+}
+
+html.green-theme .daily-panel {
+  background: rgba(0, 0, 0, .05);
+  border-color: rgba(0, 0, 0, .06);
+}
 

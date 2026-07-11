@@ -1222,12 +1222,22 @@ input[type="date"].form-input {
   border-radius: var(--r-md);
   padding: 12px;
   box-shadow: var(--sh-float);
-  display: none;
+  
+  /* Smooth opacity & transform transition instead of display: none */
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 150ms;
 }
 
 .month-picker-dropdown.open {
-  display: block;
-  animation: popupFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
 }
 
 @keyframes popupFadeIn {
@@ -2602,8 +2612,7 @@ html.green-theme .modal-close:hover {
 
 .app-body.rail-collapsed .rail {
   width: 0px !important;
-  padding-left: 0px !important;
-  padding-right: 0px !important;
+  padding: 0 !important;
   border-right-width: 0px !important;
   opacity: 0 !important;
   pointer-events: none !important;
@@ -3206,6 +3215,51 @@ html.green-theme .modal-close:hover {
   cursor: not-allowed !important;
   opacity: 0.8;
   pointer-events: none;
+}
+
+/* ── Skeleton Loaders & Shimmer Pattern ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-element {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--recessed) 37%, var(--surface2) 63%);
+  background-size: 200% 100%;
+}
+
+html.light-theme .skeleton-element {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 37%, #E2E8F0 63%);
+  background-size: 200% 100%;
+}
+
+html.cream-theme .skeleton-element {
+  background: linear-gradient(90deg, #EDE4D8 25%, #F5EDE0 37%, #EDE4D8 63%);
+  background-size: 200% 100%;
+}
+
+html.green-theme .skeleton-element {
+  background: linear-gradient(90deg, #E3F2E9 25%, #F0F9F4 37%, #E3F2E9 63%);
+  background-size: 200% 100%;
+}
+
+.shimmer {
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.txn-slot.skeleton {
+  pointer-events: none;
+  border-left-color: transparent !important;
+}
+
+.txn-slot.skeleton .txn-icon {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
 }
 
 

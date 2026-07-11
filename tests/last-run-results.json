@@ -1,0 +1,230 @@
+[
+  {
+    "id": "Test 1.1",
+    "name": "Default Theme Initialization",
+    "status": "FAIL",
+    "error": "Theme icon element [data-theme-icon] not found"
+  },
+  {
+    "id": "Test 1.2",
+    "name": "Switch to Light Theme",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.3",
+    "name": "Switch to Cream Theme",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.4",
+    "name": "Switch to Green Theme",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.5",
+    "name": "Side Rail Folding Toggle",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 2.1",
+    "name": "Trend Chart Canvas Presence",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 2.2",
+    "name": "Chart Object Instantiation",
+    "status": "FAIL",
+    "error": "No Chart instance associated with canvas 'dailyTrendChart' was instantiated"
+  },
+  {
+    "id": "Test 2.3",
+    "name": "Reactive Chart updates on Transaction Addition",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 2.4",
+    "name": "Reactive Chart updates on Transaction Deletion",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 2.5",
+    "name": "Month Switch Refreshes Chart Scope",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 3.1",
+    "name": "Load Existing Transactions",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.2",
+    "name": "Create New Transaction",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.3",
+    "name": "Edit Existing Transaction",
+    "status": "FAIL",
+    "error": "Edit transaction button '.txn-edit' not found (Feature not yet implemented)"
+  },
+  {
+    "id": "Test 3.4",
+    "name": "Delete Transaction",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.5",
+    "name": "Client Server Sync When Online",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.6",
+    "name": "Corrupted Local Storage Theme Recovery",
+    "status": "FAIL",
+    "error": "Expected theme fallback to 'dark' for invalid config values, got 'invalid-hacked-theme-invalid'"
+  },
+  {
+    "id": "Test 1.7",
+    "name": "Extreme Title/Username Length Ellipsis",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.8",
+    "name": "Rapid Successive Theme Clicking",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.9",
+    "name": "Settings Modal Focus Trap Isolation",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 1.10",
+    "name": "Localization Missing Key Fallback",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 2.6",
+    "name": "Zero Transactions Chart Empty State",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 2.7",
+    "name": "Leap Year Date Bounds",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 2.8",
+    "name": "Aggregation of Multi-Transaction Single Day",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 2.9",
+    "name": "Extreme Trillion VND Financial Scale",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 2.10",
+    "name": "Styling Contrast Update on Theme Swap",
+    "status": "FAIL",
+    "error": "Trend chart not instantiated"
+  },
+  {
+    "id": "Test 3.6",
+    "name": "Non-Positive Amount Rejection",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.7",
+    "name": "Future Date Bounds Rejection",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.8",
+    "name": "XSS Script Injection Mitigation",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.9",
+    "name": "Server Outage Network Fallback",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Test 3.10",
+    "name": "Session Expiry (401 Unauthorized) Redirection",
+    "status": "FAIL",
+    "error": "Expected redirect to 'login.html', currently: 'http://localhost:8080/spending.html'"
+  },
+  {
+    "id": "Scenario 3.1",
+    "name": "Active Modal Theme Switching & Layout Preservation",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Scenario 3.2",
+    "name": "Custom Category Addition & Reactive Chart Mapping",
+    "status": "FAIL",
+    "error": "Doughnut chart categories does not contain the user-added custom category 'Gym Workout'"
+  },
+  {
+    "id": "Scenario 3.3",
+    "name": "Offline Queue Operations & Language Toggle",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Scenario 4.1",
+    "name": "Daily Budget Monitoring & Tracking Flow",
+    "status": "FAIL",
+    "error": "Daily trend chart not instantiated"
+  },
+  {
+    "id": "Scenario 4.2",
+    "name": "Offline Session Recovery & Database Reconciliation",
+    "status": "FAIL",
+    "error": "Sync failing to push newly added offline transactions"
+  },
+  {
+    "id": "Scenario 4.3",
+    "name": "Jar Allocation & Progress Tracking",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Scenario 4.4",
+    "name": "Multi-Language Dashboard Audit",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "Scenario 4.5",
+    "name": "Full Month-End Budget Settlement",
+    "status": "PASS",
+    "error": null
+  }
+]
