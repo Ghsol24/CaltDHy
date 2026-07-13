@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -13,8 +13,10 @@ app.use(helmet({
     contentSecurityPolicy: false
 }));
 
-// CORS Whitelist
-const whitelist = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(',') : ['http://localhost:24127'];
+// CORS Whitelist — allow backend port and Vite dev server ports (5173 and 3000) for local development
+const whitelist = process.env.CORS_WHITELIST 
+    ? process.env.CORS_WHITELIST.split(',') 
+    : ['http://localhost:24127', 'http://localhost:5173', 'http://localhost:3000'];
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
@@ -31,18 +33,17 @@ app.use(cors(corsOptions));
 // Rate Limiting — Chung cho toàn bộ /api/
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: process.env.NODE_ENV === 'production' ? 100 : 10000,
     standardHeaders: true,
     legacyHeaders: false
 });
 app.use('/api/', limiter);
 
 // Rate Limiting — Nghiêm ngặt hơn cho các route xác thực nhạy cảm
-// (login, register, forgot-password, reset-password)
-// Tối đa 10 requests / 15 phút / 1 IP để chặn brute force & spam email
+// Tối đa 10 requests / 15 phút / 1 IP ở Production để chặn brute force
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: process.env.NODE_ENV === 'production' ? 10 : 1000,
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -53,8 +54,9 @@ const authLimiter = rateLimit({
 
 app.use(express.json());
 
-// Serve static files (Frontend)
-app.use(express.static(path.join(__dirname, '..', '..', 'frontEnd')));
+// Serve static files — React build output (frontEnd/dist) for production
+// Run `npm run build` inside /frontEnd to regenerate.
+app.use(express.static(path.join(__dirname, '..', '..', 'frontEnd', 'dist')));
 
 // Middleware kiểm tra database cho API routes
 const checkDbReady = (req, res, next) => {

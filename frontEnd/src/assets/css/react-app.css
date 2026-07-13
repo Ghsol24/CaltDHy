@@ -1,0 +1,953 @@
+/* ============================================================
+   CaltDHy — assets/css/react-app.css
+   Styles bổ sung cho các React components mới.
+   Các tokens, base, layout, components cũ vẫn được giữ nguyên.
+   ============================================================ */
+
+/* ══════════════════════════════════════════════════════
+   REACT SPA ROOT FIX
+   body.dark-panel dùng display:grid cho Vanilla HTML cũ.
+   Trong React, mọi thứ nằm trong #root → cần height:100%.
+   ══════════════════════════════════════════════════════ */
+body,
+body.dark-panel {
+  display: block !important;  /* Override grid layout dành cho Vanilla HTML */
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+/* ── App Shell ── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/*
+  .app-body là class thực tế trong JSX (không phải .main-layout).
+  Fix: dùng flex:1 + min-height:0 thay vì height:calc(100vh-58px) hardcode
+  để fill phần còn lại sau Topbar mà không gây overflow.
+  Override display:grid từ layout.css.
+*/
+.app-body {
+  display: flex !important;   /* override grid từ layout.css */
+  flex: 1;                    /* fill phần còn lại sau Topbar */
+  min-height: 0;              /* allow flex children to shrink */
+  height: auto !important;   /* cancel out calc(100vh - 58px) từ layout.css */
+  overflow: hidden;
+}
+
+/*
+  Không override padding của .main-content — giữ nguyên 28px 32px từ components.css.
+  Chỉ cần đảm bảo flex properties đúng.
+*/
+.main-content {
+  flex: 1;
+  min-width: 0;  /* prevent flex blowout */
+}
+
+/* ── Rail collapsed state ── */
+.rail--collapsed {
+  width: 0 !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   REACT CRITICAL OVERRIDES
+   components.css ẩn .form-select vì vanilla JS dùng custom dropdown.
+   React dùng <select> HTML thật → phải restore display.
+   ══════════════════════════════════════════════════════ */
+
+/* Restore form-select visibility for React modals */
+.modal-card .form-select,
+.modal-card--ql .form-select,
+.modal-card--budget .form-select,
+.modal-card--settings .form-select {
+  display: block !important;
+  width: 100%;
+  background: var(--recessed);
+  border: 2px solid transparent;
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--txt);
+  box-shadow: var(--sh-press);
+  outline: none;
+  cursor: pointer;
+  transition: box-shadow 200ms ease, border-color 200ms ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.modal-card .form-select:focus,
+.modal-card--ql .form-select:focus,
+.modal-card--budget .form-select:focus,
+.modal-card--settings .form-select:focus {
+  box-shadow: var(--sh-press), 0 0 0 2px rgba(255, 71, 87, .3);
+  border-color: rgba(255, 71, 87, .25);
+}
+
+.modal-card .form-select option,
+.modal-card--ql .form-select option {
+  background: var(--surface, #1e2124);
+  color: var(--txt, #e2e8f0);
+}
+
+/* chart-empty: layout.css đặt display:none để hide bằng JS — trong React dùng conditional render nên cần override */
+.chart-panel .chart-empty {
+  display: block !important;
+}
+
+/* Budget header actions spacing */
+.budget-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Feed section */
+.feed-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.txn-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Auth page ── */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+}
+
+.auth-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.auth-logo-accent {
+  color: var(--primary-color, #6366f1);
+}
+
+.auth-logo-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary, var(--bg-primary));
+  border: 1px solid var(--border-color);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0 0 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.auth-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.auth-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.875rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input-wrap .auth-input {
+  padding-right: 2.5rem;
+}
+
+.auth-toggle-pass {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.auth-forgot-link {
+  background: none;
+  border: none;
+  color: var(--primary-color, #6366f1);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-btn {
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 0.25rem;
+}
+
+.auth-btn:hover { opacity: 0.9; }
+.auth-btn:active { transform: scale(0.98); }
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-error {
+  color: #ef4444;
+  font-size: 0.82rem;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.auth-success-msg {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.auth-switch-link {
+  background: none;
+  border: none;
+  color: var(--primary-color, #6366f1);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* ── Panel ── */
+.panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.875rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.panel-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Dashboard Form ── */
+.txn-type-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.type-btn--expense.active { background: rgba(239,68,68,0.15); border-color: #ef4444; color: #ef4444; }
+.type-btn--income.active { background: rgba(16,185,129,0.15); border-color: #10b981; color: #10b981; }
+
+.add-txn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.form-field--wide { grid-column: 1 / -1; }
+
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}
+
+.form-select { cursor: pointer; }
+.form-error { color: #ef4444; font-size: 0.8rem; margin: 0.25rem 0 0; }
+
+.btn-primary {
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 0.75rem;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+/* ── Transaction list ── */
+.txn-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.txn-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.625rem;
+  padding: 0.65rem 1rem;
+  transition: box-shadow 0.15s;
+}
+
+.txn-item:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+
+.txn-item__icon { font-size: 1.35rem; flex-shrink: 0; }
+
+.txn-item__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.txn-item__cat { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.txn-item__note { font-size: 0.78rem; color: var(--text-secondary); }
+.txn-item__date { font-size: 0.72rem; color: var(--text-secondary); opacity: 0.7; }
+
+.budget-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+  width: fit-content;
+}
+
+.budget-badge.warn { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.budget-badge.over { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+.txn-item__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.txn-item__amount {
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.txn-item__amount--income { color: #10b981; }
+.txn-item__amount--expense { color: #ef4444; }
+
+.btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  padding: 0;
+}
+
+.btn-delete:hover { opacity: 1; }
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ── Analytics ── */
+.analytics-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chart-panel { }
+
+.chart-controls {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chart-ctrl-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chart-ctrl-btn.active {
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  border-color: var(--primary-color, #6366f1);
+}
+
+.chart-container {
+  position: relative;
+}
+
+.cat-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.cat-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.cat-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-legend-icon { font-size: 1rem; }
+.cat-legend-name { flex: 1; color: var(--text-primary); }
+.cat-legend-val { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* ── Jars ── */
+.jars-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.jars-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.jars-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0;
+}
+
+.toast-msg {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  text-align: center;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+
+.jars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.jar-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  border-top: 3px solid var(--jar-color, #6366f1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transition: box-shadow 0.2s;
+}
+
+.jar-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+
+.jar-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.jar-card__name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.jar-card__target {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--jar-color, #6366f1);
+  background: color-mix(in srgb, var(--jar-color, #6366f1) 15%, transparent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.jar-card__desc { font-size: 0.78rem; color: var(--text-secondary); margin: 0; }
+
+.jar-card__balance {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.jar-progress {
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.jar-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.jar-progress__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.jar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.jar-amount-input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.jar-action-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.jar-btn {
+  flex: 1;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.jar-btn--deposit { background: rgba(16,185,129,0.15); color: #10b981; }
+.jar-btn--withdraw { background: rgba(239,68,68,0.15); color: #ef4444; }
+.jar-btn:hover { opacity: 0.8; }
+
+/* ── Sidebar Balance Cards ── */
+.balance-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.625rem;
+  padding: 0.65rem 0.875rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.balance-card__label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+.balance-card__value { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.balance-card--income .balance-card__value { color: #10b981; }
+.balance-card--expense .balance-card__value { color: #ef4444; }
+.balance-card--balance.positive .balance-card__value { color: #6366f1; }
+.balance-card--balance.negative .balance-card__value { color: #f59e0b; }
+
+/* ── Recent Transactions Sidebar ── */
+.recent-txn-list { list-style: none; padding: 0; margin: 0; }
+
+.recent-txn-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+}
+
+.recent-txn-item:last-child { border-bottom: none; }
+.recent-txn-desc { flex: 1; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-txn-amount { font-weight: 600; white-space: nowrap; }
+.recent-txn-amount.income { color: #10b981; }
+.recent-txn-amount.expense { color: #ef4444; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .add-txn-grid { grid-template-columns: 1fr 1fr; }
+  .jars-grid { grid-template-columns: 1fr; }
+  .main-content { padding: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .add-txn-grid { grid-template-columns: 1fr; }
+  .form-field--wide { grid-column: auto; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   REACT-SPECIFIC UI ADDITIONS
+   Các class CSS bổ sung cho Quick Deposit, Quick Log FAB,
+   Budget Modal, và Chart Legend với Glow Effect.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Quick Deposit Button (trên Balance Card) ── */
+.btn-quick-deposit {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent, #10b981);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
+  transition: opacity 0.15s, transform 0.15s;
+  font-weight: 700;
+  padding: 0;
+}
+.btn-quick-deposit:hover { opacity: 1; transform: scale(1.12); }
+
+/* Ensure metric-card--balance has position relative for the button */
+.metric-card--balance { position: relative; }
+
+/* ── Quick Log Modal (FAB) ── */
+.modal-card--ql {
+  max-width: 380px;
+}
+.ql-curr-hint {
+  font-size: 10px;
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+/* ── Budget Modal ── */
+.modal-card--budget {
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.budget-modal__hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 12px;
+  font-style: italic;
+}
+.budget-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
+.budget-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.budget-form-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.budget-form-input {
+  background: var(--input-bg, rgba(0,0,0,0.25));
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 5px;
+  padding: 5px 8px;
+  color: var(--txt);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.budget-form-input:focus {
+  outline: none;
+  border-color: var(--accent, #10b981);
+}
+
+/* ── Add Custom Category inside Budget Modal ── */
+.budget-add-cat {
+  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+  padding-top: 12px;
+  margin-top: 4px;
+}
+.budget-add-cat__label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent, #10b981);
+  margin: 0 0 8px;
+  letter-spacing: 0.05em;
+}
+.budget-add-cat__row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.budget-add-cat__name { flex: 2; min-width: 120px; }
+.budget-add-cat__limit { flex: 1; min-width: 80px; }
+.budget-add-cat__actions { flex: 1; min-width: 100px; }
+.budget-add-cat__type-dropdown {
+  display: flex;
+  gap: 4px;
+}
+.budget-type-option {
+  flex: 1;
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: all 0.15s;
+}
+.budget-type-option--expense.selected {
+  background: rgba(255,75,114,0.2);
+  border-color: #ff4b72;
+  color: #ff4b72;
+}
+.budget-type-option--income.selected {
+  background: rgba(16,185,129,0.2);
+  border-color: #10b981;
+  color: #10b981;
+}
+.budget-modal-actions {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+}
+
+/* ── SET BUDGETS full-width variant ── */
+.btn-set-budgets--full {
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Chart Legend Items (Sidebar Doughnut) ── */
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+.chart-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.chart-legend-lbl {
+  flex: 1;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chart-legend-val {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--txt);
+  font-size: 10px;
+}
+
