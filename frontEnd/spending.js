@@ -1557,6 +1557,8 @@ function updateTrendChart() {
       expenseData = [0, 0, 0, 0];
 
       transactions.forEach(t => {
+        // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào xu hướng thu chi
+        if (t.jarId || t.category === 'Savings') return;
         const d = new Date(t.date + 'T00:00:00');
         if (d.getMonth() === month && d.getFullYear() === year) {
           const dateNum = d.getDate();
@@ -1594,6 +1596,8 @@ function updateTrendChart() {
       expenseData = new Array(currentTrendRange).fill(0);
 
       transactions.forEach(t => {
+        // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào xu hướng thu chi
+        if (t.jarId || t.category === 'Savings') return;
         const d = new Date(t.date + 'T00:00:00');
         const tMonth = d.getMonth();
         const tYear = d.getFullYear();
@@ -1899,6 +1903,8 @@ function updateDailySpendingChart() {
     const dailyIncome  = new Array(daysInMonth).fill(0);
 
     transactions.forEach(txn => {
+      // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào chi tiêu hàng ngày
+      if (txn.jarId || txn.category === 'Savings') return;
       const d = new Date(txn.date + 'T00:00:00');
       if (d.getMonth() === month && d.getFullYear() === year) {
         const dayIdx = d.getDate() - 1; // 0-based
@@ -2065,6 +2071,8 @@ function generateAnalyticsHTML(month, year, isCompare = false) {
   const totalsByCat = {};
   
   transactions.forEach(t => {
+    // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào tổng kết analytics
+    if (t.jarId || t.category === 'Savings') return;
     const d = new Date(t.date + 'T00:00:00');
     if (d.getMonth() === month && d.getFullYear() === year) {
       txnCount++;
