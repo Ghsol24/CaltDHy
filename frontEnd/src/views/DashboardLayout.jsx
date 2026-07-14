@@ -143,6 +143,43 @@ export default function DashboardLayout() {
   const [newCatLimit, setNewCatLimit] = useState('');
   const [newCatType, setNewCatType]   = useState('expense');
 
+  // NEW states for dynamic groups, toast, loading, validation
+  const [isSavingBudget, setIsSavingBudget] = useState(false);
+  const [budgetToast, setBudgetToast] = useState({ show: false, message: '', type: 'success' });
+  const [newCatNameError, setNewCatNameError] = useState('');
+  const [showAddGroupForm, setShowAddGroupForm] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupIcon, setNewGroupIcon] = useState('✨');
+
+  const [groups, setGroups] = useState(() => {
+    const saved = localStorage.getItem('caltdhy_budget_groups');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      { id: 'essential', title: lang === 'vi' ? 'Sinh hoạt thiết yếu' : 'Essential Living', icon: '🏠' },
+      { id: 'personal', title: lang === 'vi' ? 'Cá nhân & Giải trí' : 'Personal & Leisure', icon: '🎉' },
+      { id: 'finance', title: lang === 'vi' ? 'Tài chính & Khác' : 'Finance & Others', icon: '💼' }
+    ];
+  });
+
+  const [groupMapping, setGroupMapping] = useState(() => {
+    const saved = localStorage.getItem('caltdhy_category_group_mapping');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      'Food & Dining': 'essential',
+      'Transport': 'essential',
+      'Utilities': 'essential',
+      'Health': 'essential',
+      'Shopping': 'personal',
+      'Entertainment': 'personal',
+      'Installment': 'finance',
+      'Other': 'finance'
+    };
+  });
+
   const categories = getAllCategories();
 
   // ── Category Doughnut Chart: STABLE_CHART_COLORS + segmentGlow ──
@@ -266,21 +303,206 @@ export default function DashboardLayout() {
   function openBudgetModal() {
     setBudgetDraft({ ...budgets });
     setNewCatName(''); setNewCatLimit(''); setNewCatType('expense');
+    setNewCatNameError('');
     setShowBudgetModal(true);
   }
 
-  function saveBudgets() {
-    const finalBudgets = { ...budgetDraft };
-    // Save new custom category if filled
-    if (newCatName.trim() && newCatLimit) {
-      const limit = parseFloat(newCatLimit);
-      if (!isNaN(limit) && limit > 0) {
-        addCustomCategory(newCatName.trim(), newCatType);
-        finalBudgets[newCatName.trim()] = limit;
-      }
+  const formatNumber = (val) => {
+    if (val === undefined || val === null || val === '') return '';
+    const clean = String(val).replace(/\D/g, '');
+    if (!clean) return '';
+    return parseInt(clean, 10).toLocaleString('vi-VN');
+  };
+
+  const handleBudgetChange = (cat, rawValue) => {
+    const cleanValue = rawValue.replace(/\D/g, '');
+    const numValue = cleanValue ? parseInt(cleanValue, 10) : '';
+    setBudgetDraft(prev => ({ ...prev, [cat]: numValue }));
+  };
+
+  const handleNewCatLimitChange = (val) => {
+    const clean = val.replace(/\D/g, '');
+    setNewCatLimit(clean ? parseInt(clean, 10) : '');
+  };
+
+  const handleNewCatNameChange = (val) => {
+    setNewCatName(val);
+    if (!val.trim()) {
+      setNewCatNameError('');
+      return;
     }
+    const exists = categories.some(c => c.toLowerCase() === val.trim().toLowerCase());
+    if (exists) {
+      setNewCatNameError(lang === 'vi' ? 'Danh mục này đã tồn tại!' : 'This category already exists!');
+    } else {
+      setNewCatNameError('');
+    }
+  };
+
+  const getGroupTitle = (group) => {
+    if (group.id === 'essential') return lang === 'vi' ? 'Sinh hoạt thiết yếu' : 'Essential Living';
+    if (group.id === 'personal') return lang === 'vi' ? 'Cá nhân & Giải trí' : 'Personal & Leisure';
+    if (group.id === 'finance') return lang === 'vi' ? 'Tài chính & Khác' : 'Finance & Others';
+    return group.title;
+  };
+
+  const handleAddGroup = () => {
+    if (!newGroupName.trim()) return;
+    const newId = 'group_' + Date.now();
+    const newGroup = {
+      id: newId,
+      title: newGroupName.trim(),
+      icon: newGroupIcon || '📁'
+    };
+    const updatedGroups = [...groups, newGroup];
+    setGroups(updatedGroups);
+    localStorage.setItem('caltdhy_budget_groups', JSON.stringify(updatedGroups));
+    setNewGroupName('');
+    setNewGroupIcon('✨');
+    setShowAddGroupForm(false);
+    
+    setBudgetToast({
+      show: true,
+      message: lang === 'vi' ? 'Đã thêm nhóm mới thành công!' : 'Added new group successfully!',
+      type: 'success'
+    });
+    setTimeout(() => setBudgetToast(prev => ({ ...prev, show: false })), 2800);
+  };
+
+  const handleDeleteGroup = (groupId) => {
+    if (groups.length <= 1) {
+      setBudgetToast({
+        show: true,
+        message: lang === 'vi' ? 'Phải có ít nhất một nhóm danh mục!' : 'Must keep at least one group!',
+        type: 'error'
+      });
+      setTimeout(() => setBudgetToast(prev => ({ ...prev, show: false })), 2800);
+      return;
+    }
+
+    const updatedGroups = groups.filter(g => g.id !== groupId);
+    setGroups(updatedGroups);
+    localStorage.setItem('caltdhy_budget_groups', JSON.stringify(updatedGroups));
+
+    const fallbackGroupId = updatedGroups[0].id;
+    const updatedMapping = { ...groupMapping };
+    Object.keys(updatedMapping).forEach(cat => {
+      if (updatedMapping[cat] === groupId) {
+        updatedMapping[cat] = fallbackGroupId;
+      }
+    });
+    setGroupMapping(updatedMapping);
+    localStorage.setItem('caltdhy_category_group_mapping', JSON.stringify(updatedMapping));
+
+    setBudgetToast({
+      show: true,
+      message: lang === 'vi' ? 'Đã xóa nhóm thành công!' : 'Deleted group successfully!',
+      type: 'success'
+    });
+    setTimeout(() => setBudgetToast(prev => ({ ...prev, show: false })), 2800);
+  };
+
+  const handleDragStart = (e, catName) => {
+    e.dataTransfer.setData('text/plain', catName);
+    e.currentTarget.classList.add('is-dragging');
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.classList.remove('is-dragging');
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  const handleDragLeave = (e) => {
+    e.currentTarget.classList.remove('drag-over');
+  };
+
+  const handleDrop = (e, groupId) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const catName = e.dataTransfer.getData('text/plain');
+    if (catName) {
+      setGroupMapping(prev => {
+        const updated = { ...prev, [catName]: groupId };
+        localStorage.setItem('caltdhy_category_group_mapping', JSON.stringify(updated));
+        return updated;
+      });
+    }
+  };
+
+  const groupedCategories = useMemo(() => {
+    const res = {};
+    groups.forEach(g => {
+      res[g.id] = [];
+    });
+
+    const fallbackGroupId = groups[0]?.id || 'essential';
+    const expenseCategories = categories.filter(c => getCategoryType(c) === 'expense');
+
+    expenseCategories.forEach(cat => {
+      const gId = groupMapping[cat] || fallbackGroupId;
+      if (res[gId]) {
+        res[gId].push(cat);
+      } else {
+        if (!res[fallbackGroupId]) res[fallbackGroupId] = [];
+        res[fallbackGroupId].push(cat);
+      }
+    });
+
+    return res;
+  }, [categories, getCategoryType, groups, groupMapping]);
+
+  async function saveBudgets() {
+    setIsSavingBudget(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const finalBudgets = {};
+    categories.filter(c => getCategoryType(c) === 'expense').forEach(cat => {
+      const rawVal = budgetDraft[cat] !== undefined ? budgetDraft[cat] : (budgets[cat] || '');
+      const cleanVal = String(rawVal).replace(/\D/g, '');
+      finalBudgets[cat] = cleanVal ? parseFloat(cleanVal) : 0;
+    });
+
+    if (newCatName.trim()) {
+      if (newCatNameError) {
+        setIsSavingBudget(false);
+        return;
+      }
+      
+      const limitVal = String(newCatLimit).replace(/\D/g, '');
+      const limit = limitVal ? parseFloat(limitVal) : 0;
+      
+      const exists = categories.some(c => c.toLowerCase() === newCatName.trim().toLowerCase());
+      if (exists) {
+        setNewCatNameError(lang === 'vi' ? 'Danh mục đã tồn tại!' : 'Category already exists!');
+        setIsSavingBudget(false);
+        return;
+      }
+
+      addCustomCategory(newCatName.trim(), newCatType);
+      finalBudgets[newCatName.trim()] = limit;
+      
+      const fallbackGroupId = groups[0]?.id || 'essential';
+      setGroupMapping(prev => {
+        const updated = { ...prev, [newCatName.trim()]: fallbackGroupId };
+        localStorage.setItem('caltdhy_category_group_mapping', JSON.stringify(updated));
+        return updated;
+      });
+    }
+
     saveAllBudgets(finalBudgets);
+    setIsSavingBudget(false);
     setShowBudgetModal(false);
+
+    setBudgetToast({
+      show: true,
+      message: lang === 'vi' ? 'Đã lưu ngân sách thành công!' : 'Saved budgets successfully!',
+      type: 'success'
+    });
+    setTimeout(() => setBudgetToast(prev => ({ ...prev, show: false })), 3000);
   }
 
   // Backup data
@@ -578,13 +800,13 @@ export default function DashboardLayout() {
       )}
 
       {/* ═══════════════════════════════════════════
-           MODAL: SET BUDGETS — nguyên bản
+           MODAL: SET BUDGETS — Cập nhật tối ưu và Drag & Drop
          ═══════════════════════════════════════════ */}
       {showBudgetModal && (
         <div className="modal-overlay open" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title"
-          onClick={e => { if (e.target === e.currentTarget) setShowBudgetModal(false); }}>
+          onClick={e => { if (e.target === e.currentTarget && !isSavingBudget) setShowBudgetModal(false); }}>
           <div className="modal-card modal-card--budget">
-            <button className="modal-close" onClick={() => setShowBudgetModal(false)} aria-label="Close budget settings">✕</button>
+            <button className="modal-close" onClick={() => setShowBudgetModal(false)} disabled={isSavingBudget} aria-label="Close budget settings">✕</button>
             <div className="modal-card__screw mc--tl" aria-hidden="true"></div>
             <div className="modal-card__screw mc--tr" aria-hidden="true"></div>
             <div className="modal-card__screw mc--bl" aria-hidden="true"></div>
@@ -598,49 +820,173 @@ export default function DashboardLayout() {
             </div>
 
             <h2 className="modal-title" id="budget-modal-title">{t('setBudgets', lang)}</h2>
-
             <p className="budget-modal__hint">{t('budgetHint', lang)}</p>
 
-            <div className="budget-form-grid" id="budgetFormGrid">
-              {categories.filter(c => getCategoryType(c) === 'expense').map(cat => (
-                <div key={cat} className="budget-form-row">
-                  <label className="budget-form-label" htmlFor={`budget-${cat}`}>
-                    {getCatIcon(cat)} {tCat(cat, lang)}
-                  </label>
+            {/* ── Quản lý nhóm ── */}
+            <div className="group-manager-panel">
+              <div className="group-manager-header">
+                <span className="group-manager-title">📁 {lang === 'vi' ? 'Nhóm ngân sách' : 'Budget Groups'}</span>
+                <button
+                  type="button"
+                  className="btn-toggle-add-group"
+                  onClick={() => setShowAddGroupForm(!showAddGroupForm)}
+                >
+                  {showAddGroupForm ? (lang === 'vi' ? 'Đóng' : 'Close') : `➕ ${lang === 'vi' ? 'Thêm nhóm' : 'Add Group'}`}
+                </button>
+              </div>
+
+              {showAddGroupForm && (
+                <div className="add-group-form-row">
                   <input
-                    id={`budget-${cat}`}
-                    className="budget-form-input"
-                    type="number"
-                    min="0"
-                    step="10000"
-                    placeholder="0"
-                    value={budgetDraft[cat] !== undefined ? budgetDraft[cat] : (budgets[cat] || '')}
-                    onChange={e => setBudgetDraft(prev => ({ ...prev, [cat]: e.target.value }))}
+                    type="text"
+                    className="budget-form-input new-group-name-input"
+                    placeholder={lang === 'vi' ? 'Tên nhóm mới...' : 'New group name...'}
+                    value={newGroupName}
+                    onChange={e => setNewGroupName(e.target.value)}
                   />
+                  <select
+                    className="budget-form-input new-group-icon-select"
+                    value={newGroupIcon}
+                    onChange={e => setNewGroupIcon(e.target.value)}
+                  >
+                    {['✨', '🏠', '🎉', '💼', '🍕', '🚗', '🛍️', '🏥', '🔌', '📈', '📦'].map(emoji => (
+                      <option key={emoji} value={emoji}>{emoji}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="btn-add-group-submit"
+                    onClick={handleAddGroup}
+                    disabled={!newGroupName.trim()}
+                  >
+                    {lang === 'vi' ? 'Thêm' : 'Add'}
+                  </button>
                 </div>
-              ))}
+              )}
+
+              <div className="group-badges-list">
+                {groups.map(g => (
+                  <span key={g.id} className="group-badge-item">
+                    {g.icon} {getGroupTitle(g)}
+                    {groups.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn-delete-group-badge"
+                        onClick={() => handleDeleteGroup(g.id)}
+                        title={lang === 'vi' ? 'Xóa nhóm' : 'Delete group'}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Danh mục phân nhóm & Drag & Drop ── */}
+            <div className="budget-groups-wrapper">
+              {groups.map(group => {
+                const catsInGroup = groupedCategories[group.id] || [];
+                return (
+                  <div
+                    key={group.id}
+                    className="budget-group-section"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={e => handleDrop(e, group.id)}
+                  >
+                    <h3 className="budget-group-title">
+                      <span className="budget-group-title-left">
+                        <span className="group-title-icon">{group.icon}</span>
+                        <span className="group-title-text">{getGroupTitle(group)}</span>
+                      </span>
+                      {catsInGroup.length === 0 && (
+                        <span className="budget-group-title-empty">
+                          {lang === 'vi' ? '(Kéo thả vào đây)' : '(Drag categories here)'}
+                        </span>
+                      )}
+                    </h3>
+                    
+                    <div className="budget-form-grid">
+                      {catsInGroup.map(cat => {
+                        const draftVal = budgetDraft[cat] !== undefined ? budgetDraft[cat] : (budgets[cat] || '');
+                        return (
+                          <div
+                            key={cat}
+                            className="budget-form-row budget-form-row--draggable"
+                            draggable={true}
+                            onDragStart={e => handleDragStart(e, cat)}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <label className="budget-form-label" htmlFor={`budget-${cat}`}>
+                              <span className="drag-handle" title={lang === 'vi' ? 'Kéo để phân nhóm' : 'Drag to re-group'}>☰</span>
+                              {getCatIcon(cat)} {tCat(cat, lang)}
+                            </label>
+                            <div className="currency-input-wrapper">
+                              <input
+                                id={`budget-${cat}`}
+                                className="budget-form-input"
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="0"
+                                value={formatNumber(draftVal)}
+                                onChange={e => handleBudgetChange(cat, e.target.value)}
+                              />
+                              <span className="currency-suffix">đ</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Add Custom Category */}
             <div className="budget-add-cat">
-              <p className="budget-add-cat__label">{t('addCustomCatLabel', lang)}</p>
-              <div className="budget-add-cat__row">
-                <input
-                  className="budget-form-input budget-add-cat__name"
-                  type="text"
-                  placeholder={t('placeholderCatName', lang)}
-                  value={newCatName}
-                  onChange={e => setNewCatName(e.target.value)}
-                />
-                <input
-                  className="budget-form-input budget-add-cat__limit"
-                  type="number"
-                  min="0"
-                  placeholder={lang === 'vi' ? 'Hạn mức' : 'Limit'}
-                  value={newCatLimit}
-                  onChange={e => setNewCatLimit(e.target.value)}
-                />
-                <div className="budget-add-cat__actions">
+              <h3 className="budget-add-cat__header">
+                <span className="icon">➕</span> {t('addCustomCatLabel', lang)}
+              </h3>
+              
+              <div className="budget-add-cat__fields">
+                <div className="budget-add-field-group">
+                  <label htmlFor="new-cat-name" className="budget-add-field-label">
+                    {lang === 'vi' ? 'Tên danh mục mới' : 'New Category Name'}
+                  </label>
+                  <input
+                    id="new-cat-name"
+                    className={`budget-form-input budget-add-cat__name ${newCatNameError ? 'is-invalid' : ''}`}
+                    type="text"
+                    placeholder={t('placeholderCatName', lang)}
+                    value={newCatName}
+                    onChange={e => handleNewCatNameChange(e.target.value)}
+                  />
+                  {newCatNameError && <span className="budget-field-error">{newCatNameError}</span>}
+                </div>
+
+                <div className="budget-add-field-group">
+                  <label htmlFor="new-cat-limit" className="budget-add-field-label">
+                    {lang === 'vi' ? 'Hạn mức ban đầu' : 'Initial Limit'}
+                  </label>
+                  <div className="currency-input-wrapper">
+                    <input
+                      id="new-cat-limit"
+                      className="budget-form-input budget-add-cat__limit"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={formatNumber(newCatLimit)}
+                      onChange={e => handleNewCatLimitChange(e.target.value)}
+                    />
+                    <span className="currency-suffix">đ</span>
+                  </div>
+                </div>
+
+                <div className="budget-add-field-group budget-add-field-group--type">
+                  <label className="budget-add-field-label">
+                    {lang === 'vi' ? 'Loại danh mục' : 'Category Type'}
+                  </label>
                   <div className="budget-add-cat__type-dropdown" role="listbox" aria-label="Category type">
                     <button
                       type="button"
@@ -648,7 +994,7 @@ export default function DashboardLayout() {
                       onClick={() => setNewCatType('expense')}
                       role="option"
                     >
-                      {lang === 'vi' ? 'Chi tiêu' : 'Expense'}
+                      {lang === 'vi' ? 'Chi chi tiêu' : 'Expense'}
                     </button>
                     <button
                       type="button"
@@ -664,9 +1010,18 @@ export default function DashboardLayout() {
             </div>
 
             <div className="modal-actions budget-modal-actions">
-              <button type="button" className="btn-cancel" onClick={() => setShowBudgetModal(false)}>{t('cancel', lang)}</button>
-              <button type="button" className="btn-save" onClick={saveBudgets}>
-                {lang === 'vi' ? 'LƯU NGÂN SÁCH' : 'SAVE BUDGETS'}
+              <button type="button" className="btn-cancel" onClick={() => setShowBudgetModal(false)} disabled={isSavingBudget}>
+                {t('cancel', lang)}
+              </button>
+              <button type="button" className="btn-save" onClick={saveBudgets} disabled={isSavingBudget || !!newCatNameError}>
+                {isSavingBudget ? (
+                  <span className="save-btn-spinner-wrapper">
+                    <span className="save-btn-spinner"></span>
+                    {lang === 'vi' ? 'ĐANG LƯU...' : 'SAVING...'}
+                  </span>
+                ) : (
+                  lang === 'vi' ? 'LƯU NGÂN SÁCH' : 'SAVE BUDGETS'
+                )}
               </button>
             </div>
           </div>
@@ -856,6 +1211,16 @@ export default function DashboardLayout() {
         transactions={transactions}
         formatCurrency={formatCurrency}
       />
+
+      {/* Toast Notification */}
+      {budgetToast.show && (
+        <div className={`toast-notification ${budgetToast.type} show`} role="alert">
+          <span className="toast-icon">
+            {budgetToast.type === 'success' ? '✅' : '⚠️'}
+          </span>
+          <span className="toast-message">{budgetToast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

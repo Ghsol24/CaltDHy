@@ -16,6 +16,10 @@ body.dark-panel {
   margin: 0;
 }
 
+body.dark-panel {
+  padding: 0 !important;
+}
+
 #root {
   height: 100%;
 }
@@ -949,5 +953,356 @@ body.dark-panel {
   font-family: 'JetBrains Mono', monospace;
   color: var(--txt);
   font-size: 10px;
+}
+
+/* ============================================================
+   UPGRADED BUDGET SETTING STYLES (Drag & Drop, Grouping, Toast)
+   ============================================================ */
+
+/* ── Group Management Panel ── */
+.group-manager-panel {
+  background: var(--surface2, rgba(255, 255, 255, 0.05));
+  border: 1px dashed var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--r-md, 8px);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.group-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.group-manager-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--txt-secondary, var(--muted));
+}
+
+.btn-toggle-add-group {
+  background: transparent;
+  border: none;
+  color: var(--accent, #10b981);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.btn-toggle-add-group:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.add-group-form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  animation: modalIn 0.2s ease-out;
+}
+
+.new-group-name-input {
+  flex: 2;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.new-group-icon-select {
+  flex: 1;
+  font-size: 11px;
+  padding: 5px;
+  background: var(--input-bg, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 5px;
+  color: var(--txt);
+  cursor: pointer;
+}
+
+.btn-add-group-submit {
+  background: var(--accent, #10b981);
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-add-group-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.group-badges-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.group-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--txt);
+}
+
+.btn-delete-group-badge {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0;
+  font-size: 9px;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: background-color 0.15s;
+}
+
+.btn-delete-group-badge:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ── Group Sections inside Modal ── */
+.budget-groups-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.budget-group-section {
+  background: var(--surface2, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.05));
+  border-radius: var(--r-lg, 10px);
+  padding: 14px;
+  transition: all 0.2s ease;
+}
+
+.budget-group-section.drag-over {
+  border: 2px dashed var(--accent, #10b981);
+  background: rgba(16, 185, 129, 0.04);
+  transform: scale(1.01);
+}
+
+.budget-group-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  color: var(--txt);
+  letter-spacing: 0.02em;
+}
+
+.budget-group-title-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.group-title-icon {
+  font-size: 14px;
+}
+
+.group-title-text {
+  font-size: 12px;
+}
+
+.budget-group-title-empty {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* ── Draggable Rows ── */
+.budget-form-row--draggable {
+  position: relative;
+  background: var(--surface, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.03));
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 2px;
+  cursor: grab;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.budget-form-row--draggable:hover {
+  background: var(--surface2, rgba(255, 255, 255, 0.08));
+}
+
+.budget-form-row--draggable.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  cursor: grabbing;
+}
+
+.drag-handle {
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--muted);
+  cursor: grab;
+  font-size: 12px;
+  user-select: none;
+}
+
+/* ── Currency Input Wrapper ── */
+.currency-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.currency-input-wrapper .budget-form-input {
+  padding-right: 24px;
+}
+
+.currency-suffix {
+  position: absolute;
+  right: 10px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* ── Add Custom Category Redesign ── */
+.budget-add-cat {
+  background: var(--surface2, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.05));
+  border-radius: var(--r-lg, 10px);
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.budget-add-cat__header {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--accent, #10b981);
+}
+
+.budget-add-cat__fields {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.budget-add-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.budget-add-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt-secondary, var(--muted));
+}
+
+.budget-field-error {
+  font-size: 10px;
+  color: #ef4444;
+  margin-top: 2px;
+}
+
+.budget-form-input.is-invalid {
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* ── Toast Notifications ── */
+.toast-notification {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  background: var(--surface, #1e1e24);
+  border-left: 4px solid var(--accent, #10b981);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+  transform: translateY(-20px);
+  opacity: 0;
+  animation: slideInToast 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  max-width: 320px;
+}
+
+.toast-notification.error {
+  border-left-color: #ef4444;
+}
+
+.toast-icon {
+  font-size: 18px;
+}
+
+.toast-message {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt, #ffffff);
+}
+
+@keyframes slideInToast {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Loading Spinner for Save Button ── */
+.save-btn-spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.save-btn-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinBtnSpinner 0.8s linear infinite;
+}
+
+@keyframes spinBtnSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Responsive Adjustment ── */
+@media (max-width: 580px) {
+  .budget-add-cat__fields {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 

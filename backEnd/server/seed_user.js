@@ -63,14 +63,42 @@ async function seed() {
         };
 
         const mockTransactions = [
-            { userId, type: 'income', desc: 'Nhận lương tháng này', amount: 15000000, category: 'Lương', date: formatDate(5) },
-            { userId, type: 'income', desc: 'Thù lao Freelance dự án UI', amount: 3500000, category: 'Freelance', date: formatDate(2) },
-            { userId, type: 'expense', desc: 'Ăn lẩu buffet cuối tuần', amount: 250000, category: 'Ăn uống', date: formatDate(1) },
-            { userId, type: 'expense', desc: 'Cà phê sáng cùng bạn', amount: 45000, category: 'Ăn uống', date: formatDate(0) },
-            { userId, type: 'expense', desc: 'Đổ xăng xe máy', amount: 150000, category: 'Di chuyển', date: formatDate(4) },
-            { userId, type: 'expense', desc: 'Mua giày sneaker mới', amount: 1200000, category: 'Mua sắm', date: formatDate(3) },
-            { userId, type: 'expense', desc: 'Vé xem phim IMAX', amount: 300000, category: 'Giải trí', date: formatDate(1) },
-            { userId, type: 'expense', desc: 'Thanh toán tiền phòng trọ', amount: 3000000, category: 'Tiền nhà', date: formatDate(4) }
+            // --- THÁNG 4/2026 ---
+            { userId, type: 'income', desc: 'Lương tháng 4', amount: 15000000, category: 'Lương', date: '2026-04-05' },
+            { userId, type: 'income', desc: 'Thù lao Freelance tháng 4', amount: 2500000, category: 'Freelance', date: '2026-04-20' },
+            { userId, type: 'expense', desc: 'Tiền thuê nhà tháng 4', amount: 3000000, category: 'Tiền nhà', date: '2026-04-05' },
+            { userId, type: 'expense', desc: 'Ăn lẩu cuối tuần', amount: 250000, category: 'Ăn uống', date: '2026-04-12' },
+            { userId, type: 'expense', desc: 'Cơm gia đình', amount: 180000, category: 'Ăn uống', date: '2026-04-18' },
+            { userId, type: 'expense', desc: 'Mua sách phát triển bản thân', amount: 1200000, category: 'Mua sắm', date: '2026-04-15' },
+            { userId, type: 'expense', desc: 'Tiền điện nước mạng', amount: 450000, category: 'Tiền nhà', date: '2026-04-10' },
+
+            // --- THÁNG 5/2026 ---
+            { userId, type: 'income', desc: 'Lương tháng 5', amount: 15000000, category: 'Lương', date: '2026-05-05' },
+            { userId, type: 'income', desc: 'Thù lao Freelance tháng 5', amount: 4000000, category: 'Freelance', date: '2026-05-18' },
+            { userId, type: 'expense', desc: 'Tiền thuê nhà tháng 5', amount: 3000000, category: 'Tiền nhà', date: '2026-05-05' },
+            { userId, type: 'expense', desc: 'Liên hoan công ty', amount: 320000, category: 'Ăn uống', date: '2026-05-10' },
+            { userId, type: 'expense', desc: 'Ăn tối cùng bạn', amount: 290000, category: 'Ăn uống', date: '2026-05-24' },
+            { userId, type: 'expense', desc: 'Xem liveshow ca nhạc', amount: 600000, category: 'Giải trí', date: '2026-05-20' },
+            { userId, type: 'expense', desc: 'Mua thuốc & thực phẩm chức năng', amount: 350000, category: 'Ăn uống', date: '2026-05-15' },
+
+            // --- THÁNG 6/2026 ---
+            { userId, type: 'income', desc: 'Lương tháng 6', amount: 15000000, category: 'Lương', date: '2026-06-05' },
+            { userId, type: 'income', desc: 'Thù lao Freelance tháng 6', amount: 3000000, category: 'Freelance', date: '2026-06-22' },
+            { userId, type: 'expense', desc: 'Tiền thuê nhà tháng 6', amount: 3000000, category: 'Tiền nhà', date: '2026-06-05' },
+            { userId, type: 'expense', desc: 'Ăn uống cuối tuần', amount: 400000, category: 'Ăn uống', date: '2026-06-08' },
+            { userId, type: 'expense', desc: 'Cà phê họp nhóm', amount: 150000, category: 'Ăn uống', date: '2026-06-15' },
+            { userId, type: 'expense', desc: 'Mua bàn ghế làm việc mới', amount: 2500000, category: 'Mua sắm', date: '2026-06-18' },
+            { userId, type: 'expense', desc: 'Bảo dưỡng xe máy', amount: 300000, category: 'Di chuyển', date: '2026-06-12' },
+
+            // --- THÁNG 7/2026 (Tháng hiện tại) ---
+            { userId, type: 'income', desc: 'Lương tháng 7', amount: 15000000, category: 'Lương', date: '2026-07-05' },
+            { userId, type: 'income', desc: 'Thù lao Freelance tháng 7', amount: 3500000, category: 'Freelance', date: '2026-07-10' },
+            { userId, type: 'expense', desc: 'Tiền thuê nhà tháng 7', amount: 3000000, category: 'Tiền nhà', date: '2026-07-05' },
+            { userId, type: 'expense', desc: 'Ăn lẩu buffet cuối tuần', amount: 250000, category: 'Ăn uống', date: '2026-07-11' },
+            { userId, type: 'expense', desc: 'Cà phê sáng cùng bạn', amount: 45000, category: 'Ăn uống', date: '2026-07-13' },
+            { userId, type: 'expense', desc: 'Mua giày sneaker mới', amount: 1200000, category: 'Mua sắm', date: '2026-07-09' },
+            { userId, type: 'expense', desc: 'Vé xem phim IMAX', amount: 300000, category: 'Giải trí', date: '2026-07-12' },
+            { userId, type: 'expense', desc: 'Đổ xăng xe máy', amount: 150000, category: 'Di chuyển', date: '2026-07-08' }
         ];
 
         await Transaction.insertMany(mockTransactions);
