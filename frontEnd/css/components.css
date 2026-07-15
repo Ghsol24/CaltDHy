@@ -1256,8 +1256,8 @@ input[type="date"].form-input {
   font-size: 10px;
   font-weight: 700;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--r-sm);
   padding: 10px 4px;
   text-align: center;
@@ -1268,15 +1268,16 @@ input[type="date"].form-input {
 
 .month-grid-cell:hover {
   color: var(--txt);
-  background: var(--surface2);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, .08);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(255, 75, 114, .2);
 }
 
 .month-grid-cell--active {
-  background: linear-gradient(135deg, var(--accent) 0%, rgba(16, 185, 129, 0.75) 100%) !important;
+  background: linear-gradient(135deg, var(--accent) 0%, rgba(255, 75, 114, 0.7) 100%) !important;
   color: #fff !important;
   border-color: transparent !important;
-  box-shadow: 0 0 10px var(--accent) !important;
+  box-shadow: 0 2px 12px rgba(255, 75, 114, .45), 0 0 0 1px rgba(255, 75, 114, .2) !important;
 }
 
 

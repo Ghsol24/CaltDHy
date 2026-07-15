@@ -1403,6 +1403,7 @@ html.green-theme .btn-view-month-detail:hover {
 }
 
 /* Light theme overrides */
+/* Note: trigger itself is now styled via .month-navigation-wrapper in layout.css */
 html.light-theme .month-picker-trigger {
   background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
   border-color: #E2E8F0;
@@ -1415,22 +1416,26 @@ html.light-theme .month-picker-trigger:hover {
   box-shadow: 0 4px 10px rgba(79, 70, 229, 0.1);
 }
 html.light-theme .month-picker-dropdown {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.98);
   border-color: #E2E8F0;
-  box-shadow: 0 10px 32px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.10);
 }
 html.light-theme .month-grid-cell {
-  background: #F1F5F9;
+  background: #F4F7FF;
   border-color: #E2E8F0;
   color: #64748B;
 }
 html.light-theme .month-grid-cell:hover {
-  background: #E2E8F0;
-  color: #0F172A;
+  background: #EEF2FF;
+  color: #4F46E5;
+  border-color: #818CF8;
+  box-shadow: 0 0 0 1px rgba(79,70,229,.15);
 }
 html.light-theme .month-grid-cell--active {
-  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+  background: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 12px rgba(79, 70, 229, .40), 0 0 0 1px rgba(79,70,229,.2) !important;
 }
 
 /* Cream theme overrides */
@@ -1446,52 +1451,61 @@ html.cream-theme .month-picker-trigger:hover {
   box-shadow: 0 4px 10px rgba(192, 83, 30, 0.1);
 }
 html.cream-theme .month-picker-dropdown {
-  background: rgba(253, 248, 242, 0.96);
+  background: rgba(253, 248, 242, 0.98);
   border-color: #E0D4C4;
-  box-shadow: 0 10px 32px rgba(100,60,20,0.08);
+  box-shadow: 0 12px 36px rgba(100,60,20,0.10);
 }
 html.cream-theme .month-grid-cell {
-  background: #EDE4D8;
-  border-color: #D8CCBE;
-  color: var(--muted);
+  background: #FAF4EC;
+  border-color: #E0D4C4;
+  color: #7D6C58;
 }
 html.cream-theme .month-grid-cell:hover {
-  background: #E0D4C4;
-  color: #2C1D10;
+  background: #F5EDE0;
+  color: #C0531E;
+  border-color: #C0531E;
+  box-shadow: 0 0 0 1px rgba(192,83,30,.18);
 }
 html.cream-theme .month-grid-cell--active {
   background: linear-gradient(135deg, #C0531E 0%, #E07848 100%) !important;
-  box-shadow: 0 4px 12px rgba(192, 83, 30, 0.25) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 12px rgba(192, 83, 30, .42), 0 0 0 1px rgba(192,83,30,.25) !important;
 }
 
 /* Green theme overrides */
 html.green-theme .month-picker-trigger {
-  background: #E3F2E9;
+  background: linear-gradient(135deg, #F0FAF4 0%, #E3F2E9 100%);
   border-color: #B2DFC8;
   color: #0E2E1E;
   box-shadow: none;
 }
 html.green-theme .month-picker-trigger:hover {
-  background: #B2DFC8;
+  background: linear-gradient(135deg, #E3F2E9 0%, #C8E8D4 100%);
   color: #059669;
+  box-shadow: 0 4px 10px rgba(5,150,105,.12);
 }
 html.green-theme .month-picker-dropdown {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(247, 252, 250, 0.98);
   border-color: #B2DFC8;
-  box-shadow: 0 10px 32px rgba(16,80,50,0.08);
+  box-shadow: 0 12px 36px rgba(16,80,50,0.10);
 }
 html.green-theme .month-grid-cell {
-  background: #E3F2E9;
-  border-color: #B2DFC8;
+  background: #EDF7F2;
+  border-color: #C8E8D4;
   color: #4D7A68;
 }
 html.green-theme .month-grid-cell:hover {
-  background: #B2DFC8;
-  color: #0E2E1E;
+  background: #DCF0E6;
+  color: #059669;
+  border-color: #059669;
+  box-shadow: 0 0 0 1px rgba(5,150,105,.2);
 }
 html.green-theme .month-grid-cell--active {
   background: linear-gradient(135deg, #059669 0%, #34D399 100%) !important;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 12px rgba(5, 150, 105, .42), 0 0 0 1px rgba(5,150,105,.25) !important;
 }
 
 .trend-section {

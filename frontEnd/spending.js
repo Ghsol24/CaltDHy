@@ -204,19 +204,35 @@ function syncCustomDropdown(selectId) {
   if (selectedOption) {
     const value = selectedOption.value;
     triggerText.textContent = selectedOption.textContent;
-    triggerIcon.textContent = CAT_ICONS[value] || '📦';
+    if (selectId === 'trendRange') {
+      if (triggerIcon) triggerIcon.style.display = 'none';
+    } else {
+      if (triggerIcon) {
+        triggerIcon.style.display = '';
+        triggerIcon.textContent = CAT_ICONS[value] || '📦';
+      }
+    }
   } else {
     triggerText.textContent = '';
-    triggerIcon.textContent = '📦';
+    if (triggerIcon) {
+      if (selectId === 'trendRange') {
+        triggerIcon.style.display = 'none';
+      } else {
+        triggerIcon.style.display = '';
+        triggerIcon.textContent = '📦';
+      }
+    }
   }
 
   // Pre-compute per-category spending for budget badges (only if data is ready)
   let monthlySpent = {};
-  try {
-    if (typeof calcCategorySpend === 'function' && typeof budgets !== 'undefined') {
-      monthlySpent = calcCategorySpend();
-    }
-  } catch (_) { /* data not yet initialised */ }
+  if (selectId !== 'trendRange') {
+    try {
+      if (typeof calcCategorySpend === 'function' && typeof budgets !== 'undefined') {
+        monthlySpent = calcCategorySpend();
+      }
+    } catch (_) { /* data not yet initialised */ }
+  }
 
   // Populate options dropdown
   dropdown.innerHTML = options.map((opt, index) => {
@@ -229,31 +245,37 @@ function syncCustomDropdown(selectId) {
     let budgetBadge = '';
     let isOverBudget = false;
     let overAmt = 0;
-    try {
-      const limit = (typeof budgets !== 'undefined') ? (budgets[value] || 0) : 0;
-      const isExpenseCat = typeof getCategoryType === 'function'
-        ? getCategoryType(value) === 'expense'
-        : true;
+    if (selectId !== 'trendRange') {
+      try {
+        const limit = (typeof budgets !== 'undefined') ? (budgets[value] || 0) : 0;
+        const isExpenseCat = typeof getCategoryType === 'function'
+          ? getCategoryType(value) === 'expense'
+          : true;
 
-      if (limit > 0 && isExpenseCat) {
-        const spentAmt = monthlySpent[value] || 0;
-        const remaining = limit - spentAmt;
-        const pct = spentAmt / limit;
-        const overBudget = remaining < 0;
-        const nearLimit  = !overBudget && pct >= 0.8;
+        if (limit > 0 && isExpenseCat) {
+          const spentAmt = monthlySpent[value] || 0;
+          const remaining = limit - spentAmt;
+          const pct = spentAmt / limit;
+          const overBudget = remaining < 0;
+          const nearLimit  = !overBudget && pct >= 0.8;
 
-        if (overBudget) {
-          // Over-budget: show red badge with ⚠️ icon — row stays fully clickable
-          isOverBudget = true;
-          overAmt = Math.abs(remaining);
-          budgetBadge = `<span class="custom-select-budget-badge badge--over">⚠️ ${fmt(overAmt)} ${t('budgetOver')}</span>`;
-        } else {
-          const badgeCls = nearLimit ? 'badge--warn' : 'badge--ok';
-          const badgeLabel = `${fmt(remaining)} ${t('budgetLeft')}`;
-          budgetBadge = `<span class="custom-select-budget-badge ${badgeCls}">${badgeLabel}</span>`;
+          if (overBudget) {
+            // Over-budget: show red badge with ⚠️ icon — row stays fully clickable
+            isOverBudget = true;
+            overAmt = Math.abs(remaining);
+            budgetBadge = `<span class="custom-select-budget-badge badge--over">⚠️ ${fmt(overAmt)} ${t('budgetOver')}</span>`;
+          } else {
+            const badgeCls = nearLimit ? 'badge--warn' : 'badge--ok';
+            const badgeLabel = `${fmt(remaining)} ${t('budgetLeft')}`;
+            budgetBadge = `<span class="custom-select-budget-badge ${badgeCls}">${badgeLabel}</span>`;
+          }
         }
-      }
-    } catch (_) { /* gracefully skip if helpers not ready */ }
+      } catch (_) { /* gracefully skip if helpers not ready */ }
+    }
+
+    const leftContent = selectId === 'trendRange'
+      ? `<span class="custom-select-option-text">${escHtml(text)}</span>`
+      : `<span class="custom-select-icon">${icon}</span><span class="custom-select-option-text">${escHtml(text)}</span>`;
 
     return `
       <div class="custom-select-option ${isSelected ? 'selected' : ''}" 
@@ -263,8 +285,7 @@ function syncCustomDropdown(selectId) {
            tabIndex="0"
            aria-selected="${isSelected ? 'true' : 'false'}">
         <div class="custom-select-option-left">
-          <span class="custom-select-icon">${icon}</span>
-          <span class="custom-select-option-text">${escHtml(text)}</span>
+          ${leftContent}
         </div>
         ${budgetBadge}
       </div>
@@ -288,7 +309,9 @@ function syncCustomDropdown(selectId) {
       syncCustomDropdown(selectId);
 
       // Show / hide inline warning card below the custom-select wrapper
-      _showBudgetInlineWarning(wrapper, isOver);
+      if (selectId !== 'trendRange' && typeof _showBudgetInlineWarning === 'function') {
+        _showBudgetInlineWarning(wrapper, isOver);
+      }
     });
 
     // Keyboard support inside options list
@@ -2313,6 +2336,9 @@ function selectMonth(month, year) {
   const rangeSelect = document.getElementById('trendRange');
   if (rangeSelect) {
     rangeSelect.value = "1";
+    if (typeof syncCustomDropdown === 'function') {
+      syncCustomDropdown('trendRange');
+    }
   }
 
   triggerUIUpdates();
@@ -2328,6 +2354,9 @@ function changeMonthOffset(offset) {
   const rangeSelect = document.getElementById('trendRange');
   if (rangeSelect) {
     rangeSelect.value = "1";
+    if (typeof syncCustomDropdown === 'function') {
+      syncCustomDropdown('trendRange');
+    }
   }
 
   triggerUIUpdates();
@@ -3108,10 +3137,16 @@ function openModal() {
   updateCategoryDropdown('txnCat', 'expense');
   document.getElementById('modal').classList.add('open');
   if (window.FocusTrap) {
-    _trapModal = window.FocusTrap.trap(document.getElementById('modal').querySelector('.modal-card') || document.getElementById('modal'));
-  } else {
-    document.getElementById('txnDesc').focus();
+    _trapModal = window.FocusTrap.trap(
+      document.getElementById('modal').querySelector('.modal-card') || document.getElementById('modal'),
+      { autoFocus: false }
+    );
   }
+  /* Always focus Amount first — matches Quick Log UX */
+  setTimeout(() => {
+    const amtInput = document.getElementById('txnAmount');
+    if (amtInput) amtInput.focus();
+  }, 60);
 }
 
 function closeModal() {
@@ -3232,10 +3267,15 @@ function openQuickLog() {
   if (errEl) { errEl.textContent = ''; errEl.classList.remove('visible'); }
   document.getElementById('quickLogModal').classList.add('open');
   if (window.FocusTrap) {
-    _trapQuickLog = window.FocusTrap.trap(document.getElementById('quickLogModal').querySelector('.modal-card') || document.getElementById('quickLogModal'));
-  } else {
-    if (amtInput) amtInput.focus();
+    _trapQuickLog = window.FocusTrap.trap(
+      document.getElementById('quickLogModal').querySelector('.modal-card') || document.getElementById('quickLogModal'),
+      { autoFocus: false }
+    );
   }
+  /* Focus Amount immediately */
+  setTimeout(() => {
+    if (amtInput) amtInput.focus();
+  }, 60);
 }
 
 function closeQuickLog() {
@@ -5090,6 +5130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCustomDropdown('txnCat');
   initCustomDropdown('qlCat');
   initCustomDropdown('txnInstallmentLink');
+  initCustomDropdown('trendRange');
 
   const txnCatSel = document.getElementById('txnCat');
   if (txnCatSel) {

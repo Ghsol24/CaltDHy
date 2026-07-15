@@ -1116,80 +1116,141 @@ html.green-theme .control-card-divider {
   background: #D2ECD9;
 }
 
-/* Month Quick Navigation Wrapper & Buttons */
+/* Month Quick Navigation — Segmented Control */
 .month-navigation-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: stretch;
   width: 100%;
+  /* Unified container: single rounded pill */
+  background: var(--surface2);
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--sh-press);
 }
 
 .month-navigation-wrapper .month-picker-wrapper {
   flex: 1;
+  min-width: 0;
 }
 
+/* Trigger fills its wrapper perfectly */
 .month-navigation-wrapper .month-picker-trigger {
   width: 100% !important;
-  justify-content: space-between !important;
+  height: 100% !important;
+  min-height: 36px;
+  justify-content: center !important;
   display: flex !important;
   align-items: center !important;
+  /* Remove individual styling — inherit from container */
+  background: transparent !important;
+  border: none !important;
+  border-left: 1px solid rgba(255, 255, 255, .06) !important;
+  border-right: 1px solid rgba(255, 255, 255, .06) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 8px 12px !important;
+  gap: 6px !important;
+  transition: background var(--dur-fast) ease !important;
+}
+
+.month-navigation-wrapper .month-picker-trigger:hover {
+  background: rgba(255, 255, 255, .04) !important;
+  border-color: rgba(255, 255, 255, .08) !important;
 }
 
 .month-nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: var(--surface2);
-  border: 1px solid rgba(255, 255, 255, .05);
-  border-radius: var(--r-sm);
+  width: 34px;
+  min-height: 36px;
+  flex-shrink: 0;
+  /* Inherit bg from container, borderless inside */
+  background: transparent;
+  border: none;
   color: var(--muted);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: color var(--dur-fast) ease, background var(--dur-fast) ease;
   padding: 0;
 }
 
 .month-nav-btn:hover {
   color: var(--txt);
-  background: var(--recessed);
-  border-color: rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .05);
 }
 
 .month-nav-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.9);
 }
 
-/* Theme overrides for navigation buttons */
-html.light-theme .month-nav-btn {
+/* ── Light theme ── */
+html.light-theme .month-navigation-wrapper {
   background: #F1F5F9;
   border-color: #E2E8F0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.06);
+}
+html.light-theme .month-navigation-wrapper .month-picker-trigger {
+  border-left-color: #E2E8F0 !important;
+  border-right-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+html.light-theme .month-navigation-wrapper .month-picker-trigger:hover {
+  background: #E8EDF5 !important;
+  color: #4F46E5 !important;
+}
+html.light-theme .month-nav-btn {
   color: #64748B;
 }
 html.light-theme .month-nav-btn:hover {
+  color: #4F46E5;
   background: #E2E8F0;
-  color: #0F172A;
 }
 
-html.cream-theme .month-nav-btn {
+/* ── Cream theme ── */
+html.cream-theme .month-navigation-wrapper {
   background: #EDE4D8;
   border-color: #D8CCBE;
+  box-shadow: inset 0 1px 3px rgba(100,60,20,.06);
+}
+html.cream-theme .month-navigation-wrapper .month-picker-trigger {
+  border-left-color: #D8CCBE !important;
+  border-right-color: #D8CCBE !important;
+  color: #2C1D10 !important;
+}
+html.cream-theme .month-navigation-wrapper .month-picker-trigger:hover {
+  background: rgba(192,83,30,.07) !important;
+  color: #C0531E !important;
+}
+html.cream-theme .month-nav-btn {
   color: #7D6C58;
 }
 html.cream-theme .month-nav-btn:hover {
-  background: #E0D4C4;
-  color: #2C1D10;
+  color: #C0531E;
+  background: rgba(192,83,30,.08);
 }
 
-html.green-theme .month-nav-btn {
+/* ── Green theme ── */
+html.green-theme .month-navigation-wrapper {
   background: #E3F2E9;
   border-color: #B2DFC8;
+  box-shadow: inset 0 1px 3px rgba(16,120,80,.06);
+}
+html.green-theme .month-navigation-wrapper .month-picker-trigger {
+  border-left-color: #B2DFC8 !important;
+  border-right-color: #B2DFC8 !important;
+  color: #0E2E1E !important;
+}
+html.green-theme .month-navigation-wrapper .month-picker-trigger:hover {
+  background: rgba(5,150,105,.08) !important;
+  color: #059669 !important;
+}
+html.green-theme .month-nav-btn {
   color: #4D7A68;
 }
 html.green-theme .month-nav-btn:hover {
-  background: #B2DFC8;
-  color: #0E2E1E;
+  color: #059669;
+  background: rgba(5,150,105,.08);
 }
 
 /* Force vertical card stacking inside the sidebar */
@@ -1234,7 +1295,7 @@ html.green-theme .month-nav-btn:hover {
 }
 
 html.light-theme .analytics-control-card .month-picker-dropdown {
-  background: #F8FAFC !important;
+  background: #F1F5F9 !important;
   border-color: #E2E8F0 !important;
 }
 
@@ -1254,4 +1315,190 @@ html.green-theme .analytics-control-card .month-picker-dropdown {
   visibility: visible !important;
   pointer-events: auto !important;
 }
+
+/* Compact Premium Custom Dropdown for Trend Range (Tùy chọn biểu đồ) */
+#trendRange_custom {
+  width: auto;
+  min-width: 125px;
+  max-width: 160px;
+}
+
+#trendRange_custom .custom-select-trigger {
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--sh-raise);
+  min-height: 28px;
+  height: 28px;
+  color: var(--txt);
+  transition: all var(--dur-fast) ease;
+}
+
+/* Hide icon in trigger and options for trendRange dropdown */
+#trendRange_custom .custom-select-icon {
+  display: none !important;
+}
+
+#trendRange_custom .custom-select-value {
+  gap: 0;
+}
+
+/* Custom arrow for trendRange dropdown */
+#trendRange_custom .custom-select-arrow {
+  margin-left: 8px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid var(--muted);
+  transition: transform var(--dur-fast) ease;
+}
+
+#trendRange_custom.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+/* Options dropdown container placement and styling */
+#trendRange_custom .custom-select-dropdown {
+  top: calc(100% + 4px);
+  right: 0;
+  left: auto;
+  width: 125px;
+  background: rgba(30, 33, 36, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px;
+  box-shadow: var(--sh-float);
+  border-radius: var(--r-sm);
+}
+
+#trendRange_custom .custom-select-option {
+  padding: 6px 10px;
+  font-size: 10px;
+  border-radius: var(--r-xs);
+  color: var(--muted);
+  justify-content: flex-start;
+}
+
+#trendRange_custom .custom-select-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--accent);
+  transform: translateX(1px);
+}
+
+#trendRange_custom .custom-select-option.selected {
+  background: rgba(255, 75, 114, 0.12);
+  color: var(--accent);
+  border-left: 2px solid var(--accent);
+  padding-left: 8px;
+}
+
+/* Theme overrides for the compact dropdown */
+/* ── Dark theme ── */
+#trendRange_custom .custom-select-trigger:hover {
+  border-color: rgba(255, 75, 114, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ── Light theme ── */
+html.light-theme #trendRange_custom .custom-select-trigger {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #0F172A;
+  box-shadow: none;
+}
+html.light-theme #trendRange_custom .custom-select-trigger:hover {
+  border-color: #4F46E5;
+  background: #E2E8F0;
+}
+html.light-theme #trendRange_custom .custom-select-arrow {
+  border-top-color: #64748B;
+}
+html.light-theme #trendRange_custom .custom-select-dropdown {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+html.light-theme #trendRange_custom .custom-select-option {
+  color: #64748B;
+}
+html.light-theme #trendRange_custom .custom-select-option:hover {
+  background: #F1F5F9;
+  color: #4F46E5;
+}
+html.light-theme #trendRange_custom .custom-select-option.selected {
+  background: rgba(79, 70, 229, 0.08);
+  color: #4F46E5;
+  border-left-color: #4F46E5;
+}
+
+/* ── Cream theme ── */
+html.cream-theme #trendRange_custom .custom-select-trigger {
+  background: #EDE4D8;
+  border-color: #D8CCBE;
+  color: #2C1D10;
+  box-shadow: none;
+}
+html.cream-theme #trendRange_custom .custom-select-trigger:hover {
+  border-color: #C0531E;
+  background: #E0D4C4;
+}
+html.cream-theme #trendRange_custom .custom-select-arrow {
+  border-top-color: #7D6C58;
+}
+html.cream-theme #trendRange_custom .custom-select-dropdown {
+  background: #FAF7F2;
+  border-color: #D8CCBE;
+  box-shadow: 0 10px 25px rgba(44, 29, 16, 0.08);
+}
+html.cream-theme #trendRange_custom .custom-select-option {
+  color: #7D6C58;
+}
+html.cream-theme #trendRange_custom .custom-select-option:hover {
+  background: #EDE4D8;
+  color: #C0531E;
+}
+html.cream-theme #trendRange_custom .custom-select-option.selected {
+  background: rgba(192, 83, 30, 0.08);
+  color: #C0531E;
+  border-left-color: #C0531E;
+}
+
+/* ── Green theme ── */
+html.green-theme #trendRange_custom .custom-select-trigger {
+  background: #E3F2E9;
+  border-color: #B2DFC8;
+  color: #0E2E1E;
+  box-shadow: none;
+}
+html.green-theme #trendRange_custom .custom-select-trigger:hover {
+  border-color: #059669;
+  background: #B2DFC8;
+}
+html.green-theme #trendRange_custom .custom-select-arrow {
+  border-top-color: #4D7A68;
+}
+html.green-theme #trendRange_custom .custom-select-dropdown {
+  background: #F7FCFA;
+  border-color: #B2DFC8;
+  box-shadow: 0 10px 25px rgba(16, 120, 80, 0.08);
+}
+html.green-theme #trendRange_custom .custom-select-option {
+  color: #4D7A68;
+}
+html.green-theme #trendRange_custom .custom-select-option:hover {
+  background: #E3F2E9;
+  color: #059669;
+}
+html.green-theme #trendRange_custom .custom-select-option.selected {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+  border-left-color: #059669;
+}
+
 
