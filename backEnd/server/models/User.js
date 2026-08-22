@@ -38,6 +38,20 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: undefined
         },
+        emailVerified: {
+            type: Boolean,
+            default: false
+        },
+        emailVerificationToken: {
+            type: String,
+            default: undefined,
+            select: false
+        },
+        emailVerificationExpiry: {
+            type: Date,
+            default: undefined,
+            select: false
+        },
         // Danh mục chi tiêu tự định nghĩa – lưu trữ trên server để đồng bộ đa thiết bị
         customCategories: {
             type: [String],
@@ -60,6 +74,8 @@ const userSchema = new mongoose.Schema(
                 delete ret.password;
                 delete ret.resetPasswordToken;
                 delete ret.resetPasswordExpiry;
+                delete ret.emailVerificationToken;
+                delete ret.emailVerificationExpiry;
                 return ret;
             }
         }

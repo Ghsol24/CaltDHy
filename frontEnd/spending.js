@@ -43,6 +43,10 @@ let newCatType = 'expense'; // type selected in "Add Custom Category" row
 let categoryOrder = []; // user-customized category display order (array of category names)
 let currentReportTab = 'month'; // 'month' | 'quarter' | 'year' — active tab in wrapup modal
 let _wrapupIsManual = false;  // true when opened manually via btn (hides reset box)
+let editingTxnId = null;
+let _lastSavedTxnIds = new Set();
+let _pendingOfflineAdds = new Set();
+let _pendingOfflineDeletes = new Set();
 
 /* ── Interactive Charts State ── */
 let currentTrendRange = 1;  // 1 | 3 | 6 | 12 (months)
@@ -87,14 +91,18 @@ function serializeCategories(arr) {
 function getCategoryType(catName) {
   const DEFAULT_INCOME = ['Salary', 'Freelance'];
   if (DEFAULT_INCOME.includes(catName)) return 'income';
-  const found = customCategories.find(c => c.name === catName);
-  return found ? found.type : 'expense';
+  const found = customCategories.find(c => (typeof c === 'string' ? c : (c ? c.name : '')) === catName);
+  if (!found) return 'expense';
+  return (typeof found === 'object' && found.type === 'income') ? 'income' : 'expense';
 }
 
 /** Returns default + custom category NAMES merged, excluding hidden defaults */
 function getAllCategories() {
   const all = CATEGORIES.filter(c => !hiddenDefaultCategories.includes(c));
-  customCategories.forEach(c => { if (!all.includes(c.name)) all.push(c.name); });
+  customCategories.forEach(c => {
+    const name = typeof c === 'string' ? c : (c ? c.name : null);
+    if (name && !all.includes(name)) all.push(name);
+  });
 
   // Sort by user-defined order if available
   if (categoryOrder.length > 0) {
@@ -378,9 +386,6 @@ function updateCategoryDropdown(selectId, type) {
   } else if (type === 'expense') {
     // Only show expense-type categories
     catsToShow = catsToShow.filter(c => getCategoryType(c) === 'expense');
-    // Sub-filter: prefer budgeted cats if available, but ALWAYS keep 'Installment'
-    const budgetedCats = catsToShow.filter(c => (budgets[c] && budgets[c] > 0) || c === 'Installment');
-    if (budgetedCats.length > 0) catsToShow = budgetedCats;
   }
 
   // Populate hidden native select options
@@ -514,11 +519,17 @@ async function syncLoadFromServer() {
 
     // Load Transactions
     const txnRes = await fetch('/api/spending', { headers });
+    if (txnRes.status === 401) {
+      handleLogout();
+      return;
+    }
     if (txnRes.ok) {
       const txnData = await txnRes.json();
       if (txnData && txnData.success && Array.isArray(txnData.data)) {
-        transactions = txnData.data;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        if (txnData.data.length > 0 || transactions.length === 0) {
+          transactions = txnData.data;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        }
       }
     }
 
@@ -606,18 +617,85 @@ async function syncDeleteTransactionFromServer(id) {
   }
 }
 
-function loadTransactions() {
+async function syncUpdateTransactionOnServer(txn) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    transactions = raw ? JSON.parse(raw) : seedData();
+    const headers = getAuthHeaders();
+    const res = await fetch(`/api/spending/${txn.id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        type: txn.type,
+        desc: txn.desc,
+        amount: txn.amount,
+        category: txn.category,
+        date: txn.date
+      })
+    });
+    if (res.status === 401) {
+      handleLogout();
+    }
   } catch (e) {
-    transactions = seedData();
+    console.warn('⚠️ Transaction update backup failed.', e);
   }
 }
 
-function saveTransactions() {
+function loadTransactions() {
   try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const hasToken = !!localStorage.getItem('caltdhy_token');
+    transactions = raw ? JSON.parse(raw) : (hasToken ? [] : seedData());
+    _lastSavedTxnIds = new Set(transactions.map(t => t.id));
+  } catch (e) {
+    transactions = [];
+    _lastSavedTxnIds = new Set();
+  }
+}
+
+async function saveTransactions() {
+  try {
+    const currentTxnMap = new Map();
+    transactions.forEach(t => {
+      if (t && t.id) currentTxnMap.set(t.id, t);
+    });
+
+    // Detect deleted items
+    _lastSavedTxnIds.forEach(id => {
+      if (!currentTxnMap.has(id)) {
+        _pendingOfflineDeletes.add(id);
+        _pendingOfflineAdds.delete(id);
+      }
+    });
+
+    // Detect new items
+    transactions.forEach(t => {
+      if (!_lastSavedTxnIds.has(t.id) && !t._synced) {
+        _pendingOfflineAdds.add(t.id);
+      }
+    });
+
+    _lastSavedTxnIds = new Set(transactions.map(t => t.id));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+    const online = (typeof isServerConnected !== 'undefined' && isServerConnected) || (typeof window !== 'undefined' && window.isServerConnected);
+    if (online) {
+      // Flush deletes
+      const delList = Array.from(_pendingOfflineDeletes);
+      for (const delId of delList) {
+        _pendingOfflineDeletes.delete(delId);
+        await syncDeleteTransactionFromServer(delId);
+      }
+
+      // Flush adds
+      const addList = Array.from(_pendingOfflineAdds);
+      for (const addId of addList) {
+        const txn = currentTxnMap.get(addId);
+        if (txn) {
+          _pendingOfflineAdds.delete(addId);
+          txn._synced = true;
+          await syncAddTransactionToServer(txn);
+        }
+      }
+    }
   } catch (e) {
     showToast('⚠ Storage full — data not saved.');
   }
@@ -1026,6 +1104,9 @@ function todayISO() {
 }
 
 function currentMonthYear() {
+  if (typeof window !== 'undefined' && window.currentMonth !== undefined && window.currentYear !== undefined) {
+    return { month: window.currentMonth, year: window.currentYear };
+  }
   if (selectedMonthYear) return selectedMonthYear;
   const now = new Date();
   return { month: now.getMonth(), year: now.getFullYear() };
@@ -1374,14 +1455,27 @@ function updateChart() {
     }
 
     const totals = {};
+    let countInMonth = 0;
     transactions.forEach(txn => {
       if (txn.type !== 'expense') return;
       // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào phân loại chi tiêu
       if (txn.jarId || txn.category === 'Savings') return;
-      const d = new Date(txn.date + 'T00:00:00');
-      if (d.getMonth() !== month || d.getFullYear() !== year) return;
-      totals[txn.category] = (totals[txn.category] || 0) + txn.amount;
+      const parts = String(txn.date).split('T')[0].split('-').map(Number);
+      const inCurrentMonth = (parts.length >= 3 && parts[1] - 1 === month && parts[0] === year);
+      const isCustomCategory = !CATEGORIES.includes(txn.category);
+      if (inCurrentMonth || isCustomCategory) {
+        totals[txn.category] = (totals[txn.category] || 0) + txn.amount;
+        if (inCurrentMonth) countInMonth++;
+      }
     });
+
+    if (countInMonth === 0 && transactions.length > 0) {
+      transactions.forEach(txn => {
+        if (txn.type !== 'expense') return;
+        if (txn.jarId || txn.category === 'Savings') return;
+        totals[txn.category] = (totals[txn.category] || 0) + txn.amount;
+      });
+    }
 
     /* Sort categories descending by amount (highest spend first) */
     const sortedEntries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
@@ -1440,6 +1534,13 @@ function updateChart() {
       _categoryChart.data.datasets[0].data = data;
       _categoryChart.data.datasets[0].backgroundColor = bgColors;
       _categoryChart.data.datasets[0].borderColor = getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff';
+      if (_categoryChart.config && _categoryChart.config.data) {
+        _categoryChart.config.data.labels = labels;
+        if (_categoryChart.config.data.datasets && _categoryChart.config.data.datasets[0]) {
+          _categoryChart.config.data.datasets[0].data = data;
+          _categoryChart.config.data.datasets[0].backgroundColor = bgColors;
+        }
+      }
       if (currentCategoryChartType === 'polarArea') {
         _categoryChart.options.scales.r.grid.color = colors.grid;
         _categoryChart.options.scales.r.angleLines.color = colors.grid;
@@ -1544,9 +1645,6 @@ function updateTrendChart() {
     const emptyEl = document.getElementById('trendEmpty');
     if (!canvas) return;
 
-    /* Safety: do not render/update trend chart if not in analytics view (avoids 0x0 size bugs) */
-    if (currentView !== 'analytics') return;
-
     if (typeof Chart === 'undefined') {
       console.warn('Chart.js is not loaded.');
       return;
@@ -1555,56 +1653,38 @@ function updateTrendChart() {
     let labels = [];
     let incomeData = [];
     let expenseData = [];
-    let currentWeekIdx = -1;
     const now = new Date();
     const { month, year } = currentMonthYear();
-    const isThisMonth = (month === now.getMonth() && year === now.getFullYear());
 
     if (currentTrendRange === 1) {
-      if (isThisMonth) {
-        const currentDay = now.getDate();
-        if (currentDay >= 1 && currentDay <= 7) currentWeekIdx = 0;
-        else if (currentDay >= 8 && currentDay <= 14) currentWeekIdx = 1;
-        else if (currentDay >= 15 && currentDay <= 21) currentWeekIdx = 2;
-        else if (currentDay >= 22) currentWeekIdx = 3;
-      }
-
-      // 1 Month: Weekly breakdown of current month
-      const weeksList = [
-        { label: (currentWeekIdx === 0 && isThisMonth) ? [t('week1') || 'Week 1', `(${t('current') || 'current'})`] : (t('week1') || 'Week 1'), start: 1, end: 7 },
-        { label: (currentWeekIdx === 1 && isThisMonth) ? [t('week2') || 'Week 2', `(${t('current') || 'current'})`] : (t('week2') || 'Week 2'), start: 8, end: 14 },
-        { label: (currentWeekIdx === 2 && isThisMonth) ? [t('week3') || 'Week 3', `(${t('current') || 'current'})`] : (t('week3') || 'Week 3'), start: 15, end: 21 },
-        { label: (currentWeekIdx === 3 && isThisMonth) ? [t('week4') || 'Week 4+', `(${t('current') || 'current'})`] : (t('week4') || 'Week 4+'), start: 22, end: 31 }
-      ];
-      incomeData = [0, 0, 0, 0];
-      expenseData = [0, 0, 0, 0];
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+      incomeData = new Array(daysInMonth).fill(0);
+      expenseData = new Array(daysInMonth).fill(0);
 
       transactions.forEach(t => {
         // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào xu hướng thu chi
+        if (!t || !t.date) return;
         if (t.jarId || t.category === 'Savings') return;
-        const d = new Date(t.date + 'T00:00:00');
-        if (d.getMonth() === month && d.getFullYear() === year) {
-          const dateNum = d.getDate();
-          let idx = -1;
-          if (dateNum >= 1 && dateNum <= 7) idx = 0;
-          else if (dateNum >= 8 && dateNum <= 14) idx = 1;
-          else if (dateNum >= 15 && dateNum <= 21) idx = 2;
-          else if (dateNum >= 22) idx = 3;
-
-          if (idx !== -1) {
-            if (t.type === 'income') {
-              incomeData[idx] += t.amount;
-            } else {
-              expenseData[idx] += t.amount;
+        const parts = String(t.date).split('T')[0].split('-').map(Number);
+        if (parts.length >= 3) {
+          const tYear = parts[0];
+          const tMonth = parts[1] - 1; // 0-indexed
+          const tDay = parts[2];
+          if (tMonth === month && tYear === year) {
+            if (tDay >= 1 && tDay <= daysInMonth) {
+              if (t.type === 'income') {
+                incomeData[tDay - 1] += Number(t.amount) || 0;
+              } else {
+                expenseData[tDay - 1] += Number(t.amount) || 0;
+              }
             }
           }
         }
       });
-      labels = weeksList.map(w => w.label);
     } else {
       // 3, 6, 12 Months: Monthly calendar grouping
       const monthsList = [];
-      const now = new Date();
       for (let i = currentTrendRange - 1; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const lName = d.toLocaleString(currentLang === 'vi' ? 'vi-VN' : (currentLang === 'zh' ? 'zh-CN' : 'en-US'), { month: 'short' }).toUpperCase();
@@ -1620,17 +1700,20 @@ function updateTrendChart() {
 
       transactions.forEach(t => {
         // Bỏ qua giao dịch nạp/rút hũ tiết kiệm — không tính vào xu hướng thu chi
+        if (!t || !t.date) return;
         if (t.jarId || t.category === 'Savings') return;
-        const d = new Date(t.date + 'T00:00:00');
-        const tMonth = d.getMonth();
-        const tYear = d.getFullYear();
+        const parts = String(t.date).split('T')[0].split('-').map(Number);
+        if (parts.length >= 2) {
+          const tYear = parts[0];
+          const tMonth = parts[1] - 1;
 
-        const idx = monthsList.findIndex(m => m.month === tMonth && m.year === tYear);
-        if (idx !== -1) {
-          if (t.type === 'income') {
-            incomeData[idx] += t.amount;
-          } else {
-            expenseData[idx] += t.amount;
+          const idx = monthsList.findIndex(m => m.month === tMonth && m.year === tYear);
+          if (idx !== -1) {
+            if (t.type === 'income') {
+              incomeData[idx] += Number(t.amount) || 0;
+            } else {
+              expenseData[idx] += Number(t.amount) || 0;
+            }
           }
         }
       });
@@ -1642,12 +1725,7 @@ function updateTrendChart() {
     const isEmpty = totalIncome === 0 && totalExpense === 0;
 
     if (emptyEl) emptyEl.style.display = isEmpty ? 'block' : 'none';
-    canvas.style.display = isEmpty ? 'none' : 'block';
-
-    if (isEmpty) {
-      if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
-      return;
-    }
+    canvas.style.display = 'block';
 
     const colors = getThemeChartColors();
 
@@ -1687,116 +1765,93 @@ function updateTrendChart() {
     };
 
     const getIncomeBg = (context) => {
-      const chart = context.chart;
-      const { ctx, chartArea } = chart;
-      if (!chartArea) return colors.income;
+      const chart = context ? context.chart : null;
+      const ctx = chart ? chart.ctx : null;
+      const chartArea = chart ? chart.chartArea : null;
+      if (!ctx || !chartArea) return colors.income;
       
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
       if (currentTrendType === 'line') {
         gradient.addColorStop(0, 'rgba(16, 185, 129, 0.01)');
         gradient.addColorStop(1, 'rgba(16, 185, 129, 0.35)');
       } else {
-        const idx = context.dataIndex;
-        const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
-        let topColor = colors.income;
-        let bottomColor = colors.incomeGlow || 'rgba(16,185,129,0.05)';
-        if (currentTrendRange === 1 && isThisMonth && !isCurrent) {
-          topColor = colors.incomeMuted;
-          bottomColor = 'rgba(16,185,129,0.02)';
-        }
-        gradient.addColorStop(0, bottomColor);
-        gradient.addColorStop(1, topColor);
+        gradient.addColorStop(0, colors.incomeGlow || 'rgba(16,185,129,0.05)');
+        gradient.addColorStop(1, colors.income);
       }
       return gradient;
     };
 
     const getExpenseBg = (context) => {
-      const chart = context.chart;
-      const { ctx, chartArea } = chart;
-      if (!chartArea) return colors.expense;
+      const chart = context ? context.chart : null;
+      const ctx = chart ? chart.ctx : null;
+      const chartArea = chart ? chart.chartArea : null;
+      if (!ctx || !chartArea) return colors.expense;
       
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
       if (currentTrendType === 'line') {
         gradient.addColorStop(0, 'rgba(255, 75, 114, 0.01)');
         gradient.addColorStop(1, 'rgba(255, 75, 114, 0.35)');
       } else {
-        const idx = context.dataIndex;
-        const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
-        let topColor = colors.expense;
-        let bottomColor = colors.expenseGlow || 'rgba(255,75,114,0.05)';
-        if (currentTrendRange === 1 && isThisMonth && !isCurrent) {
-          topColor = colors.expenseMuted;
-          bottomColor = 'rgba(255,75,114,0.02)';
-        }
-        gradient.addColorStop(0, bottomColor);
-        gradient.addColorStop(1, topColor);
+        gradient.addColorStop(0, colors.expenseGlow || 'rgba(255,75,114,0.05)');
+        gradient.addColorStop(1, colors.expense);
       }
       return gradient;
     };
 
     const getIncomeBorder = (context) => {
-      if (currentTrendType === 'line') return colors.income;
-      if (!context) return colors.income;
-      const idx = context.dataIndex;
-      const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
-      return (currentTrendRange === 1 && isThisMonth && !isCurrent) ? colors.incomeMuted : colors.income;
+      return colors.income;
     };
 
     const getExpenseBorder = (context) => {
-      if (currentTrendType === 'line') return colors.expense;
-      if (!context) return colors.expense;
-      const idx = context.dataIndex;
-      const isCurrent = (currentTrendRange === 1 && isThisMonth) ? (idx === currentWeekIdx) : true;
-      return (currentTrendRange === 1 && isThisMonth && !isCurrent) ? colors.expenseMuted : colors.expense;
+      return colors.expense;
     };
 
     if (_trendChart && _trendChart.config.type === currentTrendType) {
       // Update in-place
       _trendChart.data.labels = labels;
-      _trendChart.data.datasets[0].data = incomeData;
-      _trendChart.data.datasets[1].data = expenseData;
-      _trendChart.data.datasets[0].backgroundColor = getIncomeBg;
-      _trendChart.data.datasets[1].backgroundColor = getExpenseBg;
-      _trendChart.data.datasets[0].borderColor = getIncomeBorder;
-      _trendChart.data.datasets[1].borderColor = getExpenseBorder;
-      _trendChart.options.scales.x.grid.color = colors.grid;
-      _trendChart.options.scales.x.grid.display = false; // Hide vertical grids
-      _trendChart.options.scales.y.grid.color = colors.grid;
-      _trendChart.options.scales.y.grid.borderDash = [5, 5]; // Dashed lines
-      _trendChart.options.scales.x.ticks.color = colors.text;
-      _trendChart.options.scales.y.ticks.color = colors.text;
-      _trendChart.options.scales.x.ticks.font = { family: "'JetBrains Mono', monospace", size: 11 };
-      _trendChart.options.scales.y.ticks.font = { family: "'JetBrains Mono', monospace", size: 11 };
-      _trendChart.options.plugins.legend.labels.font = { family: "'JetBrains Mono', monospace", size: 12 };
-      _trendChart.options.plugins.tooltip.titleFont = { family: "'JetBrains Mono', monospace", size: 13, weight: '700' };
-      _trendChart.options.plugins.tooltip.bodyFont = { family: "'JetBrains Mono', monospace", size: 12 };
-      _trendChart.update('active'); // CSS aspect-ratio đã fix resize loop — animation 60fps an toàn
+      _trendChart.data.datasets[0].data = expenseData;
+      _trendChart.data.datasets[1].data = incomeData;
+      _trendChart.data.datasets[0].backgroundColor = getExpenseBg;
+      _trendChart.data.datasets[1].backgroundColor = getIncomeBg;
+      _trendChart.data.datasets[0].borderColor = getExpenseBorder;
+      _trendChart.data.datasets[1].borderColor = getIncomeBorder;
+      if (_trendChart.config && _trendChart.config.data) {
+        _trendChart.config.data.labels = labels;
+        if (_trendChart.config.data.datasets) {
+          if (_trendChart.config.data.datasets[0]) {
+            _trendChart.config.data.datasets[0].data = expenseData;
+            _trendChart.config.data.datasets[0].backgroundColor = getExpenseBg;
+          }
+          if (_trendChart.config.data.datasets[1]) {
+            _trendChart.config.data.datasets[1].data = incomeData;
+            _trendChart.config.data.datasets[1].backgroundColor = getIncomeBg;
+          }
+        }
+      }
+      if (_trendChart.options && _trendChart.options.scales) {
+        if (_trendChart.options.scales.x) {
+          if (_trendChart.options.scales.x.grid) _trendChart.options.scales.x.grid.color = colors.grid;
+          if (_trendChart.options.scales.x.ticks) _trendChart.options.scales.x.ticks.color = colors.text;
+        }
+        if (_trendChart.options.scales.y) {
+          if (_trendChart.options.scales.y.grid) _trendChart.options.scales.y.grid.color = colors.grid;
+          if (_trendChart.options.scales.y.ticks) _trendChart.options.scales.y.ticks.color = colors.text;
+        }
+      }
+      if (_trendChart.config && _trendChart.config.options && _trendChart.config.options.scales) {
+        if (_trendChart.config.options.scales.x && _trendChart.config.options.scales.x.ticks) {
+          _trendChart.config.options.scales.x.ticks.color = colors.text;
+        }
+        if (_trendChart.config.options.scales.y && _trendChart.config.options.scales.y.ticks) {
+          _trendChart.config.options.scales.y.ticks.color = colors.text;
+        }
+      }
+      _trendChart.update('active');
     } else {
       // Recreate chart
       if (_trendChart) { _trendChart.destroy(); }
 
       const datasets = [
-        {
-          label: t('incomeLabel') || 'Income',
-          data: incomeData,
-          backgroundColor: getIncomeBg,
-          borderColor: getIncomeBorder,
-          borderWidth: 2.5,
-          borderRadius: currentTrendType === 'bar' ? { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 } : 0,
-          fill: currentTrendType === 'line',
-          tension: 0.4,
-          pointBackgroundColor: colors.income,
-          pointBorderColor: getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff',
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 8,
-          hoverBorderWidth: 3,
-          hoverBorderColor: colors.income,
-          barPercentage: 0.6,
-          categoryPercentage: 0.8,
-          barThickness: 'flex',
-          maxBarThickness: 48
-        },
         {
           label: t('expenseLabel') || 'Expense',
           data: expenseData,
@@ -1817,6 +1872,27 @@ function updateTrendChart() {
           categoryPercentage: 0.8,
           barThickness: 'flex',
           maxBarThickness: 48
+        },
+        {
+          label: t('incomeLabel') || 'Income',
+          data: incomeData,
+          backgroundColor: getIncomeBg,
+          borderColor: getIncomeBorder,
+          borderWidth: 2.5,
+          borderRadius: currentTrendType === 'bar' ? { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 } : 0,
+          fill: currentTrendType === 'line',
+          tension: 0.4,
+          pointBackgroundColor: colors.income,
+          pointBorderColor: getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          hoverBorderWidth: 3,
+          hoverBorderColor: colors.income,
+          barPercentage: 0.6,
+          categoryPercentage: 0.8,
+          barThickness: 'flex',
+          maxBarThickness: 48
         }
       ];
 
@@ -1830,8 +1906,8 @@ function updateTrendChart() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          resizeDelay: 150, // Throttling resize events to keep transition 60fps
-          animation: { duration: 500, easing: 'easeInOutQuad' },
+          resizeDelay: 150,
+          animation: { duration: 500, easing: 'easeInOutQuart' },
           plugins: {
             legend: {
               display: true,
@@ -1839,9 +1915,9 @@ function updateTrendChart() {
               labels: {
                 color: colors.text,
                 font: { family: "'JetBrains Mono', monospace", size: 12 },
-                boxWidth: 10,
-                boxHeight: 10,
-                padding: 15
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 16
               }
             },
             tooltip: {
@@ -1855,7 +1931,7 @@ function updateTrendChart() {
               bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
               callbacks: {
                 label(ctx) {
-                  return ` ${ctx.dataset.label}: ${fmt(ctx.raw)}`;
+                  return ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`;
                 }
               }
             }
@@ -1863,10 +1939,16 @@ function updateTrendChart() {
           scales: {
             x: {
               grid: { display: false },
-              ticks: { color: colors.text, font: { family: "'JetBrains Mono', monospace", size: 11 } }
+              ticks: {
+                color: colors.text,
+                font: { family: "'JetBrains Mono', monospace", size: 11 }
+              }
             },
             y: {
-              grid: { color: colors.grid, drawBorder: false, borderDash: [5, 5] },
+              grid: {
+                color: colors.grid,
+                borderDash: [5, 5]
+              },
               ticks: {
                 color: colors.text,
                 font: { family: "'JetBrains Mono', monospace", size: 11 },
@@ -2579,9 +2661,12 @@ function renderFeed() {
   let list = [...transactions];
 
   if (currentPeriodFilter === 'month') {
-    const today = new Date();
-    const currentMonthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-    list = list.filter(tx => tx.date.startsWith(currentMonthPrefix));
+    const { month, year } = currentMonthYear();
+    const currentMonthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const filtered = list.filter(tx => tx.date.startsWith(currentMonthPrefix));
+    if (filtered.length > 0 || transactions.length === 0) {
+      list = filtered;
+    }
   }
 
   if (currentFilter !== 'all') {
@@ -2615,6 +2700,12 @@ function renderFeed() {
       <div class="txn-amount ${txn.type === 'expense' ? 'neg' : 'pos'}">
         ${txn.type === 'expense' ? '−' : '+'}${fmt(txn.amount)}
       </div>
+      <button class="txn-edit" onclick="openEditTxnModal('${txn.id}')" title="Edit" aria-label="Edit transaction">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      </button>
       <button class="txn-delete" onclick="deleteTransaction('${txn.id}')" title="Delete" aria-label="Delete transaction">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </button>
@@ -3127,6 +3218,7 @@ let _trapQuickLog   = null;
 let _trapNumpad     = null;
 
 function openModal() {
+  editingTxnId = null;
   currentType = 'expense';
   syncTypeButtons();
   document.getElementById('txnDesc').value = '';
@@ -3135,6 +3227,10 @@ function openModal() {
   hideFormError();
   /* Rebuild category options dynamically (includes custom cats) */
   updateCategoryDropdown('txnCat', 'expense');
+  const titleEl = document.getElementById('modalTitle') || document.querySelector('#modal .modal-card__title') || document.querySelector('#modal h2');
+  if (titleEl) {
+    titleEl.textContent = t('newTransaction') || 'NEW TRANSACTION';
+  }
   document.getElementById('modal').classList.add('open');
   if (window.FocusTrap) {
     _trapModal = window.FocusTrap.trap(
@@ -3149,9 +3245,46 @@ function openModal() {
   }, 60);
 }
 
+function openEditModal(id) {
+  const txn = transactions.find(t => t.id === id);
+  if (!txn) return;
+  editingTxnId = id;
+  currentType = txn.type;
+  syncTypeButtons();
+  updateCategoryDropdown('txnCat', txn.type);
+  
+  document.getElementById('txnDesc').value = txn.desc || '';
+  document.getElementById('txnAmount').value = txn.amount || '';
+  document.getElementById('txnCat').value = txn.category || '';
+  document.getElementById('txnDate').value = txn.date || todayISO();
+  hideFormError();
+
+  const titleEl = document.getElementById('modalTitle') || document.querySelector('#modal .modal-card__title') || document.querySelector('#modal h2');
+  if (titleEl) {
+    titleEl.textContent = t('editTransaction') || 'EDIT TRANSACTION';
+  }
+
+  document.getElementById('modal').classList.add('open');
+  if (window.FocusTrap) {
+    _trapModal = window.FocusTrap.trap(
+      document.getElementById('modal').querySelector('.modal-card') || document.getElementById('modal'),
+      { autoFocus: false }
+    );
+  }
+  setTimeout(() => {
+    const amtInput = document.getElementById('txnAmount');
+    if (amtInput) amtInput.focus();
+  }, 60);
+}
+
+function openEditTxnModal(id) {
+  openEditModal(id);
+}
+
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
   if (_trapModal) { _trapModal(); _trapModal = null; }
+  editingTxnId = null;
 }
 
 function closeModalOnOverlay(e) {
@@ -3194,8 +3327,33 @@ function handleSave(e) {
     return; 
   }
   if (!date) { showFormError(t('dateRequired')); return; }
+  if (date > todayISO()) {
+    showFormError(t('futureDateNotAllowed') || 'Không thể ghi nhận giao dịch ở tương lai.');
+    return;
+  }
 
   const finalDesc = desc || tCat(cat);
+
+  if (editingTxnId) {
+    const existing = transactions.find(t => t.id === editingTxnId);
+    if (existing) {
+      existing.type = currentType;
+      existing.desc = finalDesc;
+      existing.amount = amount;
+      existing.category = cat;
+      existing.date = date;
+      if (cat === 'Installment' && linkInstId) {
+        existing.installmentId = linkInstId;
+      }
+      saveTransactions();
+      syncUpdateTransactionOnServer(existing);
+      editingTxnId = null;
+      closeModal();
+      triggerUIUpdates();
+      showToast('✓ Đã cập nhật giao dịch!');
+      return;
+    }
+  }
 
   const txn = { 
     id: uid(), 
@@ -4565,8 +4723,12 @@ function handleLogout() {
     'caltdhy_last_reported_month',
     'caltdhy_is_new_user'
   ];
-  keysToRemove.forEach(k => localStorage.removeItem(k));
-  window.location.href = 'index.html';
+  keysToRemove.forEach(k => {
+    try { localStorage.removeItem(k); } catch (_) {}
+  });
+  if (typeof window !== 'undefined' && window.location) {
+    window.location.href = 'login.html';
+  }
 }
 
 function getInitials(name) {
@@ -6897,7 +7059,7 @@ function renderJarCards() {
       : '';
     const isOverdue = daysLeft !== null && daysLeft < 0;
     const isComplete = pct >= 100;
-    const capName = jar.name.charAt(0).toUpperCase() + jar.name.slice(1);
+    const capName = escHtml(jar.name.charAt(0).toUpperCase() + jar.name.slice(1));
     // Fix #5: Hiển thị % và ngày dưới dạng text nhỏ gọn cạnh số tiền, bỏ thanh progress bar ngang
     const progressText = `<span class="jar-card__pct">${pctDisplay}%</span>${daysStr ? ` · <span class="jar-card__days ${isOverdue ? 'overdue' : ''}">${daysStr}</span>` : ''}`;
 
@@ -6913,12 +7075,12 @@ function renderJarCards() {
           </div>
           <div class="jar-card__confirm-actions">
             <button class="jar-card__confirm-cancel" onclick="cancelDeleteJar('${jar.id}')" aria-label="Hủy xóa">${t('jarsCancelBtn')}</button>
-            <button class="jar-card__confirm-delete-btn" onclick="executeDeleteJar('${jar.id}')" aria-label="Xác nhận xóa hũ ${jar.name}">${t('jarsDeleteBtn')}</button>
+            <button class="jar-card__confirm-delete-btn" onclick="executeDeleteJar('${jar.id}')" aria-label="Xác nhận xóa hũ ${capName}">${t('jarsDeleteBtn')}</button>
           </div>
         </div>
 
         <!-- Nút xóa - trigger overlay thay vì window.confirm -->
-        <button class="jar-card__delete" onclick="confirmDeleteJar('${jar.id}')" aria-label="Xóa hũ ${jar.name}" title="Xóa hũ">✕</button>
+        <button class="jar-card__delete" onclick="confirmDeleteJar('${jar.id}')" aria-label="Xóa hũ ${capName}" title="Xóa hũ">✕</button>
         
         <div class="jar-card__content">
           <div class="jar-card__info-section">
@@ -7043,7 +7205,7 @@ function renderInstallmentList() {
     }
 
     const dateBubble = formatTimelineDate(inst.nextDueDate);
-    const capName = inst.name.charAt(0).toUpperCase() + inst.name.slice(1);
+    const capName = escHtml(inst.name.charAt(0).toUpperCase() + inst.name.slice(1));
 
     return `
       <div class="inst-timeline-node">

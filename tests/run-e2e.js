@@ -83,14 +83,22 @@ function setupJSDOM(initialLocalStorage = {}, mockFetchConfig = {}) {
 
   // Location Mock
   let currentHref = "http://localhost:8080/spending.html";
-  delete window.location;
-  window.location = {
+  const mockLocation = {
     get href() { return currentHref; },
     set href(val) { currentHref = val; },
     assign(url) { currentHref = url; },
     replace(url) { currentHref = url; },
     reload() {}
   };
+  try {
+    Object.defineProperty(window, 'location', {
+      value: mockLocation,
+      writable: true,
+      configurable: true
+    });
+  } catch (_) {
+    window.location = mockLocation;
+  }
 
   // ScrollTo, requestAnimationFrame
   window.scrollTo = () => {};
@@ -180,7 +188,7 @@ function setupJSDOM(initialLocalStorage = {}, mockFetchConfig = {}) {
       if (resp.status === 401) {
         // Mock authorization error side effects
         window.localStorage.removeItem('caltdhy_token');
-        window.location.href = 'login.html';
+        try { dom.reconfigure({ url: 'http://localhost:8080/login.html' }); } catch (_) {}
       }
       return {
         ok: resp.status >= 200 && resp.status < 300,
@@ -1183,6 +1191,9 @@ if (require.main === module) {
   main().then((results) => {
     // Write summary result details to a local JSON for verification if needed
     fs.writeFileSync(path.resolve(__dirname, 'last-run-results.json'), JSON.stringify(results, null, 2), 'utf8');
+    if (results.some((result) => result.status === 'FAIL')) {
+      process.exitCode = 1;
+    }
   });
 }
 

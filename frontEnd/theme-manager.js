@@ -9,10 +9,14 @@
   'use strict';
 
   var KEY = 'caltdhy_theme';
+  var VALID_THEMES = ['dark', 'light', 'cream', 'green'];
   var ALL_CLASSES = ['dark-theme', 'light-theme', 'cream-theme', 'green-theme'];
 
   function _read() {
-    try { return localStorage.getItem(KEY); } catch (_) { return null; }
+    try {
+      var v = localStorage.getItem(KEY);
+      return VALID_THEMES.indexOf(v) !== -1 ? v : null;
+    } catch (_) { return null; }
   }
 
   function _write(theme) {
@@ -20,14 +24,13 @@
   }
 
   function _apply(theme) {
+    var safeTheme = VALID_THEMES.indexOf(theme) !== -1 ? theme : 'dark';
     var root = document.documentElement; // <html>
     ALL_CLASSES.forEach(function (c) { root.classList.remove(c); });
-    /* dark theme uses :root CSS variables — no class needed.
-       light / cream / sky each have their own html.xxx-theme override block. */
-    if (theme && theme !== 'dark') {
-      root.classList.add(theme + '-theme');
+    if (safeTheme && safeTheme !== 'dark') {
+      root.classList.add(safeTheme + '-theme');
     }
-    _syncButtons(theme || 'dark');
+    _syncButtons(safeTheme);
   }
 
   function _syncButtons(theme) {

@@ -7,6 +7,10 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+const getPositiveIntegerEnv = (value, fallback) => {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
 
 // Security Middleware
 app.use(helmet({
@@ -23,26 +27,28 @@ const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
 
-// Rate Limiting — Chung cho toàn bộ /api/
-const limiter = rateLimit({
+// Rate limiting cho API đã đăng nhập. Ngưỡng mặc định cao hơn để người dùng
+// cùng NAT/Wi-Fi không dễ chặn lẫn nhau; có thể điều chỉnh bằng biến môi trường.
+const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: getPositiveIntegerEnv(process.env.API_RATE_LIMIT_MAX, 300),
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skip: (req) => req.path.startsWith('/auth/')
 });
-app.use('/api/', limiter);
+app.use('/api/', apiLimiter);
 
 // Rate Limiting — Nghiêm ngặt hơn cho các route xác thực nhạy cảm
 // (login, register, forgot-password, reset-password)
 // Tối đa 10 requests / 15 phút / 1 IP để chặn brute force & spam email
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: getPositiveIntegerEnv(process.env.AUTH_RATE_LIMIT_MAX, 10),
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -72,11 +78,6 @@ const checkDbReady = (req, res, next) => {
 // authLimiter áp dụng cho toàn bộ /api/auth (gồm cả /login, /register, /forgot-password, /reset-password)
 // /api/auth/profile (PUT) cũng nằm trong đây nhưng vẫn chấp nhận vì user hiếm khi cập nhật profile > 10 lần/15 phút
 app.use('/api/auth', authLimiter, checkDbReady, require('./routes/auth'));
-
-// TODO: Route /api/events hiện tại chưa có UI tương ứng ở Frontend.
-// Được tạm ẩn để giảm attack surface.
-// Bỏ comment khi cần phát triển tính năng lịch trình.
-// app.use('/api/events', checkDbReady, require('./routes/events'));
 
 app.use('/api/spending', checkDbReady, require('./routes/spending'));
 app.use('/api/jars', checkDbReady, require('./routes/jars'));

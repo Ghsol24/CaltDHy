@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
@@ -7,6 +8,25 @@ const User = require('../models/User');
 
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+function parseTransactionDate(date) {
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+    const parsed = new Date(`${date}T00:00:00.000Z`);
+    return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date ? null : parsed;
+}
+
+function validateTransactionPayload({ type, amount, category, date }) {
+    if (!type || amount === undefined || amount === null || !category || !date) {
+        return 'Vui lòng điền đầy đủ các thông tin bắt buộc.';
+    }
+    if (!['income', 'expense'].includes(type)) return 'Loại giao dịch không hợp lệ.';
+    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) return 'Số tiền phải lớn hơn 0.';
+    if (typeof category !== 'string' || !category.trim()) return 'Danh mục không hợp lệ.';
+    if (!parseTransactionDate(date)) return 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
+    return null;
+}
 
 // =============================================
 // GET /api/spending/categories – Lấy danh mục tự định nghĩa của user
@@ -147,9 +167,14 @@ router.get('/', async (req, res) => {
 
         // Lọc theo năm/tháng nếu có tham số
         if (year && month) {
-            const paddedMonth = String(month).padStart(2, '0');
-            const prefix = `${year}-${paddedMonth}`;
-            filter.date = { $regex: `^${prefix}` };
+            const yearNum = Number(year);
+            const monthNum = Number(month);
+            if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) {
+                return res.status(400).json({ success: false, message: 'Tháng hoặc năm không hợp lệ.' });
+            }
+            const start = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+            const end = new Date(Date.UTC(yearNum, monthNum, 1));
+            filter.date = { $gte: start, $lt: end };
         }
 
         const query = Transaction.find(filter).sort({ date: -1, createdAt: -1 });
@@ -191,27 +216,16 @@ router.post('/', async (req, res) => {
     try {
         const { type, desc, amount, category, date } = req.body;
 
-        // Validation
-        if (!type || !amount || !category || !date) {
-            return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ các thông tin bắt buộc.' });
-        }
-        if (!['income', 'expense'].includes(type)) {
-            return res.status(400).json({ success: false, message: 'Loại giao dịch không hợp lệ.' });
-        }
-        if (Number(amount) <= 0) {
-            return res.status(400).json({ success: false, message: 'Số tiền phải lớn hơn 0.' });
-        }
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-            return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ (YYYY-MM-DD).' });
-        }
+        const validationError = validateTransactionPayload({ type, amount, category, date });
+        if (validationError) return res.status(400).json({ success: false, message: validationError });
 
         const newRecord = await Transaction.create({
             userId: req.user.id,
             type,
-            desc: (desc || '').trim(),
+            desc: typeof desc === 'string' ? desc.trim() : '',
             amount: Number(amount),
             category: category.trim(),
-            date
+            date: parseTransactionDate(date)
         });
 
         res.status(201).json({
@@ -226,11 +240,51 @@ router.post('/', async (req, res) => {
 });
 
 // =============================================
+// PUT /api/spending/:id - Chỉnh sửa một giao dịch
+// =============================================
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
+        }
+
+        const { type, desc, amount, category, date } = req.body;
+        const validationError = validateTransactionPayload({ type, amount, category, date });
+        if (validationError) return res.status(400).json({ success: false, message: validationError });
+
+        const updated = await Transaction.findOneAndUpdate(
+            { _id: id, userId: req.user.id },
+            {
+                type,
+                desc: typeof desc === 'string' ? desc.trim() : '',
+                amount: Number(amount),
+                category: category.trim(),
+                date: parseTransactionDate(date)
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch hoặc bạn không có quyền chỉnh sửa.' });
+        }
+
+        res.json({ success: true, message: 'Đã cập nhật giao dịch!', data: updated.toJSON() });
+    } catch (error) {
+        console.error('PUT /api/spending/:id error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi cập nhật giao dịch.' });
+    }
+});
+
+// =============================================
 // DELETE /api/spending/:id - Xóa giao dịch theo ID
 // =============================================
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
+        }
         const deleted = await Transaction.findOneAndDelete({ _id: id, userId: req.user.id });
 
         if (!deleted) {

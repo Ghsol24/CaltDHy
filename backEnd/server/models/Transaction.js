@@ -32,11 +32,11 @@ const transactionSchema = new mongoose.Schema(
             required: [true, 'category không được để trống.'],
             trim: true
         },
-        // Định dạng 'YYYY-MM-DD'
+        // Lưu dưới dạng Date để MongoDB có thể lọc và lập chỉ mục theo khoảng thời gian.
+        // API vẫn trả về YYYY-MM-DD để tương thích với frontend hiện có.
         date: {
-            type: String,
+            type: Date,
             required: [true, 'date không được để trống.'],
-            match: [/^\d{4}-\d{2}-\d{2}$/, 'Định dạng date phải là YYYY-MM-DD.']
         }
     },
     {
@@ -46,6 +46,7 @@ const transactionSchema = new mongoose.Schema(
             transform: (doc, ret) => {
                 ret.id = ret._id.toString();
                 ret.userId = ret.userId.toString();
+                ret.date = ret.date.toISOString().slice(0, 10);
                 delete ret._id;
                 delete ret.__v;
                 return ret;

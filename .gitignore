@@ -6,6 +6,9 @@ npm-debug.log*
 **/.env
 backEnd/server/.env
 
+# Local sample/export data — may contain personal transactions
+caltdhy_db.json
+
 # OS
 .DS_Store
 Thumbs.db

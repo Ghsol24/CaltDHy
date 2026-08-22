@@ -41,6 +41,35 @@ const createTransporter = () => {
 // Base64 overhead ≈ 33%, nên 1MB ảnh ≈ 1.37MB string
 const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024; // 1.5MB string limit
 
+const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+function createEmailVerificationToken(user) {
+    const token = crypto.randomBytes(32).toString('hex');
+    user.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
+    user.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return token;
+}
+
+async function sendVerificationEmail(user, token, req) {
+    const clientUrl = (process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+    const verificationUrl = `${clientUrl}/verify-email.html?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    const transporter = createTransporter();
+    await transporter.sendMail({
+        from: `"CaltDHy" <${process.env.GMAIL_USER}>`,
+        to: user.email,
+        subject: 'Xác minh địa chỉ email – CaltDHy',
+        html: `<p>Xin chào ${escapeHtml(user.name)},</p>
+          <p>Vui lòng xác minh địa chỉ email để kích hoạt tài khoản CaltDHy của bạn.</p>
+          <p><a href="${verificationUrl}">Xác minh email</a></p>
+          <p>Liên kết hết hạn sau 24 giờ. Nếu bạn không tạo tài khoản này, hãy bỏ qua email.</p>`
+    });
+}
+
 // =============================================
 // POST /api/auth/register – Đăng ký tài khoản
 // =============================================
@@ -70,11 +99,16 @@ router.post('/register', async (req, res) => {
         // Hash mật khẩu – truyền rounds trực tiếp (gọn hơn genSalt riêng)
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Tạo user mới
+        // Tạo user mới. Tài khoản chỉ được kích hoạt sau khi xác minh email.
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
         const newUser = await User.create({
             name: name.trim(),
             email: email.toLowerCase().trim(),
-            password: hashedPassword
+            password: hashedPassword,
+            emailVerified: false,
+            emailVerificationToken: verificationTokenHash,
+            emailVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000)
         });
 
         // Tạo một số danh mục ngân sách mặc định để tránh người dùng mới bị ngợp
@@ -85,12 +119,16 @@ router.post('/register', async (req, res) => {
             { userId: newUser._id, category: 'Entertainment', limit: 800000 }
         ]);
 
-        const token = createToken(newUser);
+        try {
+            await sendVerificationEmail(newUser, verificationToken, req);
+        } catch (emailError) {
+            // The account is kept unverified; the user can safely request a new link.
+            console.error('Không thể gửi email xác minh:', emailError.message);
+        }
 
         res.status(201).json({
             success: true,
-            message: 'Đăng ký thành công!',
-            token,
+            message: 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
             user: {
                 id: newUser._id.toString(),
                 name: newUser.name,
@@ -134,6 +172,13 @@ router.post('/login', async (req, res) => {
             });
         }
 
+        if (!user.emailVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Vui lòng xác minh email trước khi đăng nhập.'
+            });
+        }
+
         const token = createToken(user);
 
         res.json({
@@ -150,6 +195,67 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('POST /login error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
+    }
+});
+
+// =============================================
+// POST /api/auth/verify-email – Kích hoạt email theo token một lần
+// =============================================
+router.post('/verify-email', async (req, res) => {
+    try {
+        const { email, token } = req.body;
+        if (!email || !token) {
+            return res.status(400).json({ success: false, message: 'Liên kết xác minh không hợp lệ.' });
+        }
+
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const user = await User.findOne({
+            email: email.toLowerCase().trim(),
+            emailVerificationToken: tokenHash,
+            emailVerificationExpiry: { $gt: new Date() }
+        }).select('+emailVerificationToken +emailVerificationExpiry');
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Liên kết xác minh không hợp lệ hoặc đã hết hạn.' });
+        }
+
+        user.emailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpiry = undefined;
+        await user.save();
+        res.json({ success: true, message: 'Email đã được xác minh. Bạn có thể đăng nhập.' });
+    } catch (error) {
+        console.error('POST /verify-email error:', error);
+        res.status(500).json({ success: false, message: 'Không thể xác minh email. Vui lòng thử lại.' });
+    }
+});
+
+// =============================================
+// POST /api/auth/resend-verification – gửi lại link, không tiết lộ email tồn tại
+// =============================================
+router.post('/resend-verification', async (req, res) => {
+    try {
+        const email = req.body.email?.toLowerCase().trim();
+        const genericResponse = {
+            success: true,
+            message: 'Nếu email chưa được xác minh, chúng tôi đã gửi liên kết kích hoạt mới.'
+        };
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) return res.json(genericResponse);
+
+        const user = await User.findOne({ email }).select('+emailVerificationToken +emailVerificationExpiry');
+        if (!user || user.emailVerified) return res.json(genericResponse);
+
+        const token = createEmailVerificationToken(user);
+        await user.save();
+        try {
+            await sendVerificationEmail(user, token, req);
+        } catch (emailError) {
+            console.error('Không thể gửi lại email xác minh:', emailError.message);
+        }
+        res.json(genericResponse);
+    } catch (error) {
+        console.error('POST /resend-verification error:', error);
+        res.status(500).json({ success: false, message: 'Không thể gửi lại email xác minh. Vui lòng thử lại.' });
     }
 });
 
@@ -338,8 +444,11 @@ router.put('/profile', protect, async (req, res) => {
                 });
             }
             user.email = trimmedEmail;
+            user.emailVerified = false;
+            const verificationToken = createEmailVerificationToken(user);
             // ⚠️ Bảo mật: đổi email ⇒ vô hiệu hóa toàn bộ JWT token cũ được cấp trước đó
             user.passwordChangedAt = new Date();
+            res.locals.emailVerificationToken = verificationToken;
         }
 
         // 3. Cập nhật tên hiển thị
@@ -364,6 +473,14 @@ router.put('/profile', protect, async (req, res) => {
         // Lưu thông tin cập nhật
         await user.save();
 
+        if (res.locals.emailVerificationToken) {
+            try {
+                await sendVerificationEmail(user, res.locals.emailVerificationToken, req);
+            } catch (emailError) {
+                console.error('Không thể gửi email xác minh địa chỉ mới:', emailError.message);
+            }
+        }
+
         // Tạo token mới (bao gồm thông tin mới + pca mới)
         const token = createToken(user);
 
@@ -375,7 +492,8 @@ router.put('/profile', protect, async (req, res) => {
                 id: user._id.toString(),
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar
+                avatar: user.avatar,
+                emailVerified: user.emailVerified
             }
         });
     } catch (error) {

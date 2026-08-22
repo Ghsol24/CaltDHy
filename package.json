@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test": "node tests/run-api-contract.js",
+    "test:e2e": "node tests/run-e2e.js"
+  },
   "dependencies": {
     "jsdom": "^29.1.1"
   }

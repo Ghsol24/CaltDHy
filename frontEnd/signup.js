@@ -78,12 +78,9 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    // Lưu JWT token và thông tin user thực tế
-    localStorage.setItem('caltdhy_token', data.token);
-    localStorage.setItem('caltdhy_user', JSON.stringify(data.user));
-    localStorage.setItem('caltdhy_is_new_user', 'true');
-
-    setTimeout(() => { window.location.href = 'spending.html'; }, 300);
+    setTimeout(() => {
+      window.location.href = 'verify-email.html?email=' + encodeURIComponent(email);
+    }, 300);
   } catch (err) {
     showErr(err.message || 'Lỗi kết nối server.');
     btn.disabled = false;

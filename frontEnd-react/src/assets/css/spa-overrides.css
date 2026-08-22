@@ -1,0 +1,51 @@
+/* ============================================================
+   SPA OVERRIDES — React Single Page Application
+   
+   Trong Vanilla, mỗi trang HTML chỉ load 1 file CSS riêng.
+   Trong React SPA, tất cả CSS được import đồng thời nên 
+   các body rules xung đột lẫn nhau.
+   
+   File này ghi đè các body rules cũ để phù hợp với cấu trúc SPA.
+   ============================================================ */
+
+/* Reset body về baseline dark panel */
+body {
+  font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif);
+  background: var(--chassis, var(--bg, #090A0F));
+  color: var(--txt, #F3F4F6);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Đảm bảo body luôn có dark-panel class behavior */
+body {
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --scrollbar-hover: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Auth page wrapper (thay thế body styles từ auth.css) ── */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Landing page wrapper (thay thế body styles từ landing.css) ── */
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}

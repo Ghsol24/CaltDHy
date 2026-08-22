@@ -2,8 +2,8 @@
   {
     "id": "Test 1.1",
     "name": "Default Theme Initialization",
-    "status": "FAIL",
-    "error": "Theme icon element [data-theme-icon] not found"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 1.2",
@@ -38,26 +38,26 @@
   {
     "id": "Test 2.2",
     "name": "Chart Object Instantiation",
-    "status": "FAIL",
-    "error": "No Chart instance associated with canvas 'dailyTrendChart' was instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.3",
     "name": "Reactive Chart updates on Transaction Addition",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.4",
     "name": "Reactive Chart updates on Transaction Deletion",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.5",
     "name": "Month Switch Refreshes Chart Scope",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 3.1",
@@ -74,8 +74,8 @@
   {
     "id": "Test 3.3",
     "name": "Edit Existing Transaction",
-    "status": "FAIL",
-    "error": "Edit transaction button '.txn-edit' not found (Feature not yet implemented)"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 3.4",
@@ -92,8 +92,8 @@
   {
     "id": "Test 1.6",
     "name": "Corrupted Local Storage Theme Recovery",
-    "status": "FAIL",
-    "error": "Expected theme fallback to 'dark' for invalid config values, got 'invalid-hacked-theme-invalid'"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 1.7",
@@ -122,32 +122,32 @@
   {
     "id": "Test 2.6",
     "name": "Zero Transactions Chart Empty State",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.7",
     "name": "Leap Year Date Bounds",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.8",
     "name": "Aggregation of Multi-Transaction Single Day",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.9",
     "name": "Extreme Trillion VND Financial Scale",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 2.10",
     "name": "Styling Contrast Update on Theme Swap",
-    "status": "FAIL",
-    "error": "Trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Test 3.6",
@@ -176,8 +176,8 @@
   {
     "id": "Test 3.10",
     "name": "Session Expiry (401 Unauthorized) Redirection",
-    "status": "FAIL",
-    "error": "Expected redirect to 'login.html', currently: 'http://localhost:8080/spending.html'"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Scenario 3.1",
@@ -188,8 +188,8 @@
   {
     "id": "Scenario 3.2",
     "name": "Custom Category Addition & Reactive Chart Mapping",
-    "status": "FAIL",
-    "error": "Doughnut chart categories does not contain the user-added custom category 'Gym Workout'"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Scenario 3.3",
@@ -200,14 +200,14 @@
   {
     "id": "Scenario 4.1",
     "name": "Daily Budget Monitoring & Tracking Flow",
-    "status": "FAIL",
-    "error": "Daily trend chart not instantiated"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Scenario 4.2",
     "name": "Offline Session Recovery & Database Reconciliation",
-    "status": "FAIL",
-    "error": "Sync failing to push newly added offline transactions"
+    "status": "PASS",
+    "error": null
   },
   {
     "id": "Scenario 4.3",

@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Jar = require('../models/Jar');
@@ -6,6 +7,8 @@ const Installment = require('../models/Installment');
 
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 /* =============================================
    JARS (HŨ TIẾT KIỆM)
@@ -54,28 +57,33 @@ router.post('/', async (req, res) => {
 // PATCH /api/jars/:id/deposit — Nạp tiền vào hũ
 router.patch('/:id/deposit', async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
+        }
         const { amount, reason } = req.body;
         if (!amount || Number(amount) <= 0) {
             return res.status(400).json({ success: false, message: 'Số tiền nạp phải lớn hơn 0.' });
         }
 
-        const jar = await Jar.findOne({ _id: req.params.id, userId: req.user.id });
+        const amt = Number(amount);
+        const entry = {
+            type: 'deposit',
+            amount: amt,
+            reason: (reason || '').trim().slice(0, 200),
+            date: new Date()
+        };
+
+        const jar = await Jar.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.id },
+            {
+                $inc: { current: amt },
+                $push: { history: { $each: [entry], $position: 0, $slice: 200 } }
+            },
+            { new: true }
+        );
         if (!jar) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
         }
-
-        jar.current = jar.current + Number(amount);
-
-        // Ghi lịch sử (thêm mới nhất lên đầu, giữ tối đa 200 entries)
-        jar.history.unshift({
-            type:   'deposit',
-            amount: Number(amount),
-            reason: (reason || '').trim().slice(0, 200),
-            date:   new Date()
-        });
-        if (jar.history.length > 200) jar.history = jar.history.slice(0, 200);
-
-        await jar.save();
 
         res.json({ success: true, message: 'Đã nạp tiền vào hũ!', data: jar.toJSON() });
     } catch (error) {
@@ -88,31 +96,37 @@ router.patch('/:id/deposit', async (req, res) => {
 // PATCH /api/jars/:id/withdraw — Rút tiền từ hũ
 router.patch('/:id/withdraw', async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
+        }
         const { amount, reason } = req.body;
         if (!amount || Number(amount) <= 0) {
             return res.status(400).json({ success: false, message: 'Số tiền rút phải lớn hơn 0.' });
         }
 
-        const jar = await Jar.findOne({ _id: req.params.id, userId: req.user.id });
-        if (!jar) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
-        }
-        if (Number(amount) > jar.current) {
-            return res.status(400).json({ success: false, message: 'Số tiền rút vượt quá số dư trong hũ.' });
-        }
-
-        jar.current = jar.current - Number(amount);
-
-        // Ghi lịch sử
-        jar.history.unshift({
-            type:   'withdraw',
-            amount: Number(amount),
+        const amt = Number(amount);
+        const entry = {
+            type: 'withdraw',
+            amount: amt,
             reason: (reason || '').trim().slice(0, 200),
-            date:   new Date()
-        });
-        if (jar.history.length > 200) jar.history = jar.history.slice(0, 200);
+            date: new Date()
+        };
+        const jar = await Jar.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.id, current: { $gte: amt } },
+            {
+                $inc: { current: -amt },
+                $push: { history: { $each: [entry], $position: 0, $slice: 200 } }
+            },
+            { new: true }
+        );
 
-        await jar.save();
+        if (!jar) {
+            const exists = await Jar.exists({ _id: req.params.id, userId: req.user.id });
+            return res.status(exists ? 400 : 404).json({
+                success: false,
+                message: exists ? 'Số tiền rút vượt quá số dư trong hũ.' : 'Không tìm thấy hũ.'
+            });
+        }
 
         res.json({ success: true, message: 'Đã rút tiền từ hũ!', data: jar.toJSON() });
     } catch (error) {
@@ -125,6 +139,9 @@ router.patch('/:id/withdraw', async (req, res) => {
 // DELETE /api/jars/:id — Xóa hũ (tiền trong hũ không liên kết với balance)
 router.delete('/:id', async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
+        }
         const deleted = await Jar.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
@@ -190,6 +207,9 @@ router.post('/installments', async (req, res) => {
 // PATCH /api/jars/installments/:id/pay — Đánh dấu "Đã trả kỳ này" → tự động tính kỳ tiếp
 router.patch('/installments/:id/pay', async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
+        }
         const item = await Installment.findOne({ _id: req.params.id, userId: req.user.id });
         if (!item) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
@@ -218,6 +238,9 @@ router.patch('/installments/:id/pay', async (req, res) => {
 // PATCH /api/jars/installments/:id/toggle — Bật/tắt theo dõi khoản định kỳ
 router.patch('/installments/:id/toggle', async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
+        }
         const item = await Installment.findOne({ _id: req.params.id, userId: req.user.id });
         if (!item) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
@@ -234,6 +257,9 @@ router.patch('/installments/:id/toggle', async (req, res) => {
 // DELETE /api/jars/installments/:id — Xóa khoản định kỳ
 router.delete('/installments/:id', async (req, res) => {
     try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
+        }
         const deleted = await Installment.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
