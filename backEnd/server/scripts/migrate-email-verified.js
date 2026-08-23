@@ -9,7 +9,10 @@
  *   From backEnd/server: node scripts/migrate-email-verified.js
  *   From root: npm run migrate:email
  */
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+
 const mongoose = require('mongoose');
 const User = require('../models/User');
 
@@ -23,7 +26,6 @@ async function migrateEmailVerified() {
     await mongoose.connect(mongoUri);
     console.log('✅ Đã kết nối cơ sở dữ liệu.');
 
-    // Tìm tất cả user có emailVerified !== true (bao gồm false, null, undefined)
     const filter = {
         $or: [
             { emailVerified: false },
@@ -63,6 +65,8 @@ migrateEmailVerified()
         process.exitCode = 1;
     })
     .finally(async () => {
-        await mongoose.disconnect();
-        console.log('🔌 Đã ngắt kết nối database.');
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+            console.log('🔌 Đã ngắt kết nối database.');
+        }
     });

@@ -6,7 +6,10 @@
  * Before running in production, back up the database, then run from
  * backEnd/server: node scripts/migrate-transaction-dates.js
  */
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+
 const mongoose = require('mongoose');
 const Transaction = require('../models/Transaction');
 
@@ -21,7 +24,10 @@ async function migrate() {
         throw new Error('Thiếu MONGODB_URI. Migration không thể kết nối cơ sở dữ liệu.');
     }
 
+    console.log('🔄 Đang kết nối tới MongoDB...');
     await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ Đã kết nối cơ sở dữ liệu.');
+
     const legacyRecords = await Transaction.collection
         .find({ date: { $type: 'string' } }, { projection: { _id: 1, date: 1 } })
         .toArray();
@@ -32,7 +38,7 @@ async function migrate() {
     }
 
     if (legacyRecords.length === 0) {
-        console.log('Không có giao dịch date kiểu String cần chuyển đổi.');
+        console.log('✨ Không có giao dịch date kiểu String cần chuyển đổi.');
         return;
     }
 
@@ -46,14 +52,17 @@ async function migrate() {
         { ordered: false }
     );
 
-    console.log(`Đã chuyển ${result.modifiedCount} / ${legacyRecords.length} giao dịch sang kiểu Date.`);
+    console.log(`🎉 Đã chuyển ${result.modifiedCount} / ${legacyRecords.length} giao dịch sang kiểu Date.`);
 }
 
 migrate()
     .catch((error) => {
-        console.error('Migration thất bại:', error.message);
+        console.error('❌ Migration thất bại:', error.message);
         process.exitCode = 1;
     })
     .finally(async () => {
-        await mongoose.disconnect();
+        if (mongoose.connection.readyState !== 0) {
+            await mongoose.disconnect();
+            console.log('🔌 Đã ngắt kết nối database.');
+        }
     });
