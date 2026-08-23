@@ -386,6 +386,15 @@ function updateCategoryDropdown(selectId, type) {
   } else if (type === 'expense') {
     // Only show expense-type categories
     catsToShow = catsToShow.filter(c => getCategoryType(c) === 'expense');
+    if (typeof budgets !== 'undefined') {
+      catsToShow.sort((a, b) => {
+        const budgetA = budgets[a] || 0;
+        const budgetB = budgets[b] || 0;
+        if (budgetA > 0 && budgetB === 0) return -1;
+        if (budgetA === 0 && budgetB > 0) return 1;
+        return 0;
+      });
+    }
   }
 
   // Populate hidden native select options
@@ -1807,7 +1816,7 @@ function updateTrendChart() {
     };
 
     if (_trendChart && _trendChart.config.type === currentTrendType) {
-      // Update in-place
+      const pointRadiusFn = (ctx) => (currentTrendType === 'line' ? (ctx.raw > 0 ? 5 : 0) : 0);
       _trendChart.data.labels = labels;
       _trendChart.data.datasets[0].data = expenseData;
       _trendChart.data.datasets[1].data = incomeData;
@@ -1815,16 +1824,20 @@ function updateTrendChart() {
       _trendChart.data.datasets[1].backgroundColor = getIncomeBg;
       _trendChart.data.datasets[0].borderColor = getExpenseBorder;
       _trendChart.data.datasets[1].borderColor = getIncomeBorder;
+      _trendChart.data.datasets[0].pointRadius = pointRadiusFn;
+      _trendChart.data.datasets[1].pointRadius = pointRadiusFn;
       if (_trendChart.config && _trendChart.config.data) {
         _trendChart.config.data.labels = labels;
         if (_trendChart.config.data.datasets) {
           if (_trendChart.config.data.datasets[0]) {
             _trendChart.config.data.datasets[0].data = expenseData;
             _trendChart.config.data.datasets[0].backgroundColor = getExpenseBg;
+            _trendChart.config.data.datasets[0].pointRadius = pointRadiusFn;
           }
           if (_trendChart.config.data.datasets[1]) {
             _trendChart.config.data.datasets[1].data = incomeData;
             _trendChart.config.data.datasets[1].backgroundColor = getIncomeBg;
+            _trendChart.config.data.datasets[1].pointRadius = pointRadiusFn;
           }
         }
       }
@@ -1851,6 +1864,7 @@ function updateTrendChart() {
       // Recreate chart
       if (_trendChart) { _trendChart.destroy(); }
 
+      const pointRadiusFn = (ctx) => (currentTrendType === 'line' ? (ctx.raw > 0 ? 5 : 0) : 0);
       const datasets = [
         {
           label: t('expenseLabel') || 'Expense',
@@ -1864,7 +1878,7 @@ function updateTrendChart() {
           pointBackgroundColor: colors.expense,
           pointBorderColor: getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff',
           pointBorderWidth: 2,
-          pointRadius: 5,
+          pointRadius: pointRadiusFn,
           pointHoverRadius: 8,
           hoverBorderWidth: 3,
           hoverBorderColor: colors.expense,
@@ -1885,7 +1899,7 @@ function updateTrendChart() {
           pointBackgroundColor: colors.income,
           pointBorderColor: getActiveThemeName() === 'dark' ? '#1e2124' : '#ffffff',
           pointBorderWidth: 2,
-          pointRadius: 5,
+          pointRadius: pointRadiusFn,
           pointHoverRadius: 8,
           hoverBorderWidth: 3,
           hoverBorderColor: colors.income,
@@ -1917,6 +1931,8 @@ function updateTrendChart() {
                 font: { family: "'JetBrains Mono', monospace", size: 12 },
                 usePointStyle: true,
                 pointStyle: 'circle',
+                boxWidth: 8,
+                boxHeight: 8,
                 padding: 16
               }
             },
@@ -2149,6 +2165,9 @@ function switchView(view) {
   if (viewHome) viewHome.classList.toggle('active', view === 'home');
   if (viewAnalytics) viewAnalytics.classList.toggle('active', view === 'analytics');
 
+  const fab = document.getElementById('fabQuickLog');
+  if (fab) fab.style.display = (view === 'home' ? '' : 'none');
+
   // Bug 1: Ẩn nút budget sort khi đang ở analytics — calcCategorySpend dùng tháng hiện tại,
   // không phải tháng đang xem trong analytics, nên ẩn nút tránh nhầm lẫn UX.
   const budgetSortWrapper = document.getElementById('budgetSortWrapper');
@@ -2204,8 +2223,8 @@ function generateAnalyticsHTML(month, year, isCompare = false) {
   let savingsRate;
   if (totalIncome === 0 && totalExpense === 0) savingsRate = '0.0';
   else if (totalIncome > 0 && totalExpense === 0) savingsRate = '100.0';
-  else if (totalIncome >= totalExpense) savingsRate = (((totalIncome - totalExpense) / totalIncome) * 100).toFixed(1);
-  else savingsRate = (-(totalIncome / totalExpense) * 100).toFixed(1);
+  else if (totalIncome > 0) savingsRate = (((totalIncome - totalExpense) / totalIncome) * 100).toFixed(1);
+  else savingsRate = '-100.0';
   
   const tSavingsRate = t('savingsRate') || 'Savings Rate';
   const tTopCategory = t('topCategory') || 'Top Category';
@@ -2296,7 +2315,11 @@ function updateAnalyticsSummary() {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalExpense > 0 ? (- (totalIncome / totalExpense) * 100).toFixed(1) : '0.0';
+  let savingsRate = '0.0';
+  if (totalIncome === 0 && totalExpense === 0) savingsRate = '0.0';
+  else if (totalIncome > 0 && totalExpense === 0) savingsRate = '100.0';
+  else if (totalIncome > 0) savingsRate = (((totalIncome - totalExpense) / totalIncome) * 100).toFixed(1);
+  else savingsRate = '-100.0';
 
   const tSavingsRate = t('savingsRate') || 'Savings Rate';
   const tTopCategory = t('topCategory') || 'Top Category';
@@ -5613,7 +5636,7 @@ function calcMonthStats(month, year) {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalExpense > 0 ? - (totalIncome / totalExpense) * 100 : 0;
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : (totalExpense > 0 ? -100 : 0);
 
   let topCat = null;
   let topCatAmt = 0;
@@ -6095,7 +6118,7 @@ function calcQuarterStats(quarter, year) {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalExpense > 0 ? - (totalIncome / totalExpense) * 100 : 0;
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : (totalExpense > 0 ? -100 : 0);
 
   // Top 3 categories
   const sortedCats = Object.keys(totalsByCat)
@@ -6175,7 +6198,7 @@ function calcYearStats(year) {
   });
 
   const savings = totalIncome - totalExpense;
-  const savingsRate = totalExpense > 0 ? - (totalIncome / totalExpense) * 100 : 0;
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : (totalExpense > 0 ? -100 : 0);
 
   // Top 3 categories
   const sortedCats = Object.keys(totalsByCat)
