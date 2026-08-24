@@ -20,6 +20,11 @@ const htmlContentRaw = fs.readFileSync(htmlPath, 'utf8');
 // We will evaluate them manually in correct order after mocking context
 const htmlContent = htmlContentRaw.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
+const getTodayLocal = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const themeManagerCode = fs.readFileSync(themeManagerPath, 'utf8');
 const focusTrapCode = fs.readFileSync(focusTrapPath, 'utf8');
 const spendingCode = fs.readFileSync(spendingPath, 'utf8');
@@ -374,7 +379,7 @@ const tests = [
       const exposure = window._testExposure;
       const beforeCount = mockChart.updates.length;
       exposure.transactions.push({
-        id: "add-ch-1", type: "expense", desc: "Chart Add Test", amount: 150000, category: "Food & Dining", date: new Date().toISOString().split('T')[0]
+        id: "add-ch-1", type: "expense", desc: "Chart Add Test", amount: 150000, category: "Food & Dining", date: getTodayLocal()
       });
       exposure.saveTransactions();
       if (exposure.updateTrendChart) {
@@ -397,7 +402,7 @@ const tests = [
       
       const exposure = window._testExposure;
       exposure.transactions = [
-        { id: "del-ch-1", type: "expense", desc: "Del Chart Test", amount: 80000, category: "Food & Dining", date: new Date().toISOString().split('T')[0] }
+        { id: "del-ch-1", type: "expense", desc: "Del Chart Test", amount: 80000, category: "Food & Dining", date: getTodayLocal() }
       ];
       exposure.saveTransactions();
       if (exposure.updateTrendChart) exposure.updateTrendChart();
@@ -502,7 +507,7 @@ const tests = [
     tier: "Tier 1: CRUD",
     name: "Delete Transaction",
     setupFetch: (cfg) => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayLocal();
       cfg.transactionsData = [
         { id: "d-target", type: "expense", desc: "Delete Me", amount: 50000, category: "Food & Dining", date: today }
       ];
@@ -535,7 +540,7 @@ const tests = [
       document.getElementById('txnDesc').value = "Online Sync Test";
       document.getElementById('txnAmount').value = "99000";
       document.getElementById('txnCat').value = "Food & Dining";
-      document.getElementById('txnDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('txnDate').value = getTodayLocal();
       window.currentType = "expense";
       
       const form = document.getElementById('txnForm');
@@ -679,7 +684,7 @@ const tests = [
     tier: "Tier 2: Chart",
     name: "Aggregation of Multi-Transaction Single Day",
     setupStorage: (storage) => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayLocal();
       storage.caltdhy_txns = JSON.stringify([
         { id: "agg-1", type: "expense", desc: "Item 1", amount: 100000, category: "Food & Dining", date: today },
         { id: "agg-2", type: "expense", desc: "Item 2", amount: 200000, category: "Food & Dining", date: today }
@@ -704,7 +709,7 @@ const tests = [
     tier: "Tier 2: Chart",
     name: "Extreme Trillion VND Financial Scale",
     setupStorage: (storage) => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayLocal();
       storage.caltdhy_txns = JSON.stringify([
         { id: "scale-1", type: "expense", desc: "Extreme Buy", amount: 999999999999999, category: "Food & Dining", date: today }
       ]);
@@ -965,7 +970,7 @@ const tests = [
         if (exposure.loadBudgets) exposure.loadBudgets();
       }
       
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayLocal();
       exposure.transactions.push(
         { id: "s4-1-1", type: "expense", desc: "Snack", amount: 50000, category: "Food & Dining", date: today },
         { id: "s4-1-2", type: "expense", desc: "Combo Meal", amount: 100000, category: "Food & Dining", date: today },
@@ -1102,7 +1107,7 @@ const tests = [
       }
       
       exposure.transactions = [
-        { id: "e-over", type: "expense", desc: "Over Electricity", amount: 1500000, category: "Utilities", date: new Date().toISOString().split('T')[0] }
+        { id: "e-over", type: "expense", desc: "Over Electricity", amount: 1500000, category: "Utilities", date: getTodayLocal() }
       ];
       exposure.saveTransactions();
       

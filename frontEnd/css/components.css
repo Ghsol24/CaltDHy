@@ -1149,6 +1149,152 @@ input[type="date"].form-input {
 
 .undo-toast__btn:active { transform: scale(.94); }
 
+/* ============================================================
+   CONFIRM TOAST (Duplicate Warning)
+   ============================================================ */
+.confirm-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-left: 4px solid #f0a500;
+  border-radius: var(--r-md);
+  padding: 12px 16px 12px 20px;
+  box-shadow: var(--sh-float);
+  z-index: 220;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease, transform 280ms cubic-bezier(.34, 1.2, .64, 1);
+  min-width: 280px;
+  max-width: 480px;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+
+.confirm-toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(240, 165, 0, .6), transparent);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+}
+
+.confirm-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.confirm-toast__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--txt);
+  flex: 1;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.confirm-toast__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.confirm-toast__btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border-radius: 99px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms, transform 100ms;
+  border: 1.5px solid;
+}
+
+.confirm-toast__btn--confirm {
+  color: #f0a500;
+  background: rgba(240, 165, 0, .12);
+  border-color: rgba(240, 165, 0, .4);
+}
+
+.confirm-toast__btn--confirm:hover {
+  background: rgba(240, 165, 0, .22);
+  border-color: #f0a500;
+}
+
+.confirm-toast__btn--cancel {
+  color: var(--txt-dim);
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .15);
+}
+
+.confirm-toast__btn--cancel:hover {
+  background: rgba(255, 255, 255, .12);
+}
+
+.confirm-toast__btn:active { transform: scale(.94); }
+
+/* ============================================================
+   JAR CELEBRATION
+   ============================================================ */
+@keyframes jar-celebrate-pulse {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 213, 115, .4); }
+  50%  { transform: scale(1.03); box-shadow: 0 0 24px 8px rgba(46, 213, 115, .25); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 213, 115, 0); }
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(60px) rotate(360deg); opacity: 0; }
+}
+
+.jar-card--celebrating {
+  animation: jar-celebrate-pulse 600ms ease-in-out 3;
+  z-index: 10;
+}
+
+.jar-confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 5;
+}
+
+.jar-confetti__particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: confetti-fall 1.2s ease-out forwards;
+}
+
+.jar-confetti__particle:nth-child(1)  { left: 10%; top: 5%;  background: #ff6b6b; animation-delay: 0s;    }
+.jar-confetti__particle:nth-child(2)  { left: 25%; top: 8%;  background: #feca57; animation-delay: .1s;   }
+.jar-confetti__particle:nth-child(3)  { left: 40%; top: 3%;  background: #48dbfb; animation-delay: .15s;  }
+.jar-confetti__particle:nth-child(4)  { left: 55%; top: 6%;  background: #ff9ff3; animation-delay: .2s;   }
+.jar-confetti__particle:nth-child(5)  { left: 70%; top: 4%;  background: #2ed573; animation-delay: .05s;  }
+.jar-confetti__particle:nth-child(6)  { left: 85%; top: 7%;  background: #f368e0; animation-delay: .25s;  }
+.jar-confetti__particle:nth-child(7)  { left: 15%; top: 10%; background: #ff6348; animation-delay: .3s;   }
+.jar-confetti__particle:nth-child(8)  { left: 50%; top: 2%;  background: #1dd1a1; animation-delay: .12s;  }
+.jar-confetti__particle:nth-child(9)  { left: 60%; top: 9%;  background: #feca57; animation-delay: .18s;  }
+.jar-confetti__particle:nth-child(10) { left: 35%; top: 5%;  background: #54a0ff; animation-delay: .08s;  }
+.jar-confetti__particle:nth-child(11) { left: 80%; top: 3%;  background: #ff6b6b; animation-delay: .22s;  }
+.jar-confetti__particle:nth-child(12) { left: 45%; top: 8%;  background: #2ed573; animation-delay: .28s;  }
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .fab {
@@ -3263,11 +3409,224 @@ html.green-theme .skeleton-element {
   height: 32px;
 }
 
+/* ============================================================
+   MULTI-WALLET & CAROUSEL (FEATURE D)
+   ============================================================ */
+.wallets-section {
+  margin-bottom: 24px;
+}
 
+.wallets-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
 
+.wallets-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
+.btn-wallet-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--r-sm);
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--txt-dim);
+  cursor: pointer;
+  transition: all 160ms ease;
+}
 
+.btn-wallet-header:hover {
+  color: var(--txt);
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .25);
+  transform: translateY(-1px);
+}
 
+.btn-wallet-transfer {
+  color: #3498db;
+  border-color: rgba(52, 152, 219, .3);
+  background: rgba(52, 152, 219, .06);
+}
 
+.btn-wallet-transfer:hover {
+  color: #5dade2;
+  border-color: #3498db;
+  background: rgba(52, 152, 219, .15);
+}
 
+.btn-add-wallet {
+  color: #2ed573;
+  border-color: rgba(46, 213, 115, .3);
+  background: rgba(46, 213, 115, .06);
+}
 
+.btn-add-wallet:hover {
+  color: #2ed573;
+  border-color: #2ed573;
+  background: rgba(46, 213, 115, .15);
+}
+
+.wallets-carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 10px 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wallets-carousel::-webkit-scrollbar {
+  height: 4px;
+}
+
+.wallets-carousel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .15);
+  border-radius: 99px;
+}
+
+.wallet-card {
+  flex: 0 0 205px;
+  scroll-snap-align: start;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  user-select: none;
+}
+
+.wallet-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--wallet-accent, #2ed573);
+  border-radius: var(--r-md) 0 0 var(--r-md);
+}
+
+.wallet-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, .2);
+  box-shadow: var(--sh-float);
+}
+
+.wallet-card.active {
+  border-color: var(--wallet-accent, #2ed573);
+  box-shadow: 0 0 16px rgba(46, 213, 115, .18);
+  background: rgba(255, 255, 255, .03);
+}
+
+.wallet-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wallet-card__icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .06);
+  font-size: 18px;
+}
+
+.wallet-card__badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .08);
+  color: var(--txt-dim);
+}
+
+.wallet-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--txt);
+  margin-top: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wallet-card__balance {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-top: 4px;
+}
+
+.wallet-card__credit-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--txt-dim);
+  margin-top: 4px;
+}
+
+.wallet-card__actions-hint {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  font-size: 12px;
+  color: var(--txt-dim);
+}
+
+.wallet-card:hover .wallet-card__actions-hint {
+  opacity: 1;
+}
+
+/* Modal Transfer layout */
+.transfer-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.transfer-arrow {
+  font-size: 18px;
+  color: var(--accent, #2ed573);
+  font-weight: 700;
+  margin-top: 18px;
+  flex-shrink: 0;
+}
+
+/* Transaction Tag / Badge in feed */
+.txn-slot__wallet-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--txt-dim);
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+}

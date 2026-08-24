@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
 
+const installmentHistorySchema = new mongoose.Schema(
+    {
+        amount: { type: Number, required: true, min: 1 },
+        paidDate: { type: String, required: true }, // 'YYYY-MM-DD'
+        cycleDate: { type: String, default: '' },   // Ngày hạn của kỳ đó
+        createdAt: { type: Date, default: Date.now }
+    },
+    { _id: true }
+);
+
 /**
  * Schema: Installment (Trả Góp & Hóa Đơn Định Kỳ)
  * Đại diện cho một khoản thanh toán định kỳ (Netflix, gym, trả góp điện thoại...)
@@ -48,6 +58,10 @@ const installmentSchema = new mongoose.Schema(
         totalPaid: {
             type: Number,
             default: 0
+        },
+        history: {
+            type: [installmentHistorySchema],
+            default: []
         }
     },
     {
@@ -57,6 +71,15 @@ const installmentSchema = new mongoose.Schema(
             transform: (doc, ret) => {
                 ret.id = ret._id.toString();
                 ret.userId = ret.userId.toString();
+                if (Array.isArray(ret.history)) {
+                    ret.history = ret.history.map(h => ({
+                        id: h._id ? h._id.toString() : undefined,
+                        amount: h.amount,
+                        paidDate: h.paidDate,
+                        cycleDate: h.cycleDate,
+                        createdAt: h.createdAt
+                    }));
+                }
                 delete ret._id;
                 delete ret.__v;
                 return ret;

@@ -13,6 +13,9 @@ const HIDDEN_CATS_KEY  = 'caltdhy_hidden_cats'; // danh mục mặc định bị
 const CAT_ORDER_KEY    = 'caltdhy_cat_order';   // thứ tự danh mục do user tùy chỉnh
 const THEME_KEY = 'caltdhy_theme';
 const BALANCE_RESET_KEY = 'caltdhy_balance_reset_mode'; // 'keep' | 'reset'
+const PENDING_ADDS_KEY = 'caltdhy_pending_adds';
+const PENDING_DELETES_KEY = 'caltdhy_pending_deletes';
+const STORAGE_WALLETS_KEY = 'caltdhy_wallets';
 const EXCHANGE_RATE = 27000;  // 1 USD = 27,000 VND
 const CNY_RATE = 3750;   // 1 CNY = 3,750 VND
 const CATEGORIES = [
@@ -30,6 +33,11 @@ let transactions = [];
 let budgets = {};   // { 'Food & Dining': 2000000, ... } — limits in VND
 let customCategories = []; // extra user-defined category names — stored as { name, type } objects internally
 let hiddenDefaultCategories = []; // default cats hidden by user (soft-hide, not deleted)
+let wallets = []; // Multi-Wallet state
+let activeWalletFilter = 'all'; // 'all' | walletId
+let editingWalletId = null;
+let _selectedWalletEmoji = '💵';
+let _selectedWalletColor = '#2ed573';
 let currentFilter = 'all';
 let currentPeriodFilter = 'month'; // 'month' or 'all'
 let compareMonthYear = null;
@@ -47,6 +55,25 @@ let editingTxnId = null;
 let _lastSavedTxnIds = new Set();
 let _pendingOfflineAdds = new Set();
 let _pendingOfflineDeletes = new Set();
+
+function loadOfflineQueues() {
+  try {
+    const rawAdds = localStorage.getItem(PENDING_ADDS_KEY);
+    const rawDels = localStorage.getItem(PENDING_DELETES_KEY);
+    _pendingOfflineAdds = new Set(rawAdds ? JSON.parse(rawAdds) : []);
+    _pendingOfflineDeletes = new Set(rawDels ? JSON.parse(rawDels) : []);
+  } catch (_) {
+    _pendingOfflineAdds = new Set();
+    _pendingOfflineDeletes = new Set();
+  }
+}
+
+function persistOfflineQueues() {
+  try {
+    localStorage.setItem(PENDING_ADDS_KEY, JSON.stringify(Array.from(_pendingOfflineAdds)));
+    localStorage.setItem(PENDING_DELETES_KEY, JSON.stringify(Array.from(_pendingOfflineDeletes)));
+  } catch (_) {}
+}
 
 /* ── Interactive Charts State ── */
 let currentTrendRange = 1;  // 1 | 3 | 6 | 12 (months)
@@ -535,9 +562,23 @@ async function syncLoadFromServer() {
     if (txnRes.ok) {
       const txnData = await txnRes.json();
       if (txnData && txnData.success && Array.isArray(txnData.data)) {
-        if (txnData.data.length > 0 || transactions.length === 0) {
-          transactions = txnData.data;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        const serverTxns = txnData.data.map(t => ({ ...t, _synced: true }));
+        // Lọc bỏ những giao dịch đã bị xóa offline trước đó
+        const filteredServerTxns = serverTxns.filter(t => !_pendingOfflineDeletes.has(t.id));
+        const serverIds = new Set(filteredServerTxns.map(t => t.id));
+
+        // Giữ lại các giao dịch tạo mới ở client khi offline hoặc chưa kịp đồng bộ lên server
+        const pendingLocalTxns = transactions.filter(t => !t._synced || _pendingOfflineAdds.has(t.id));
+        const uniquePending = pendingLocalTxns.filter(t => !serverIds.has(t.id));
+
+        transactions = [...filteredServerTxns, ...uniquePending];
+        _lastSavedTxnIds = new Set(transactions.map(t => t.id));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        persistOfflineQueues();
+
+        // Tự động đẩy hàng đợi offline nếu có giao dịch đang chờ
+        if (_pendingOfflineDeletes.size > 0 || _pendingOfflineAdds.size > 0) {
+          await saveTransactions();
         }
       }
     }
@@ -547,7 +588,10 @@ async function syncLoadFromServer() {
     // Trigger full UI redraw with new database state
     triggerUIUpdates();
 
-    // Load Jars & Installments (non-blocking, after main data)
+    // Load Wallets, Jars & Installments (non-blocking, after main data)
+    if (typeof syncLoadWalletsFromServer === 'function') {
+      syncLoadWalletsFromServer();
+    }
     if (typeof syncLoadJarsFromServer === 'function') {
       syncLoadJarsFromServer();
     }
@@ -589,25 +633,60 @@ async function syncAddTransactionToServer(txn) {
         desc: txn.desc,
         amount: txn.amount,
         category: txn.category,
-        date: txn.date
+        date: txn.date,
+        walletId: txn.walletId || undefined,
+        toWalletId: txn.toWalletId || undefined,
+        fee: txn.fee || undefined,
+        jarId: txn.jarId || undefined,
+        installmentId: txn.installmentId || undefined
       })
     });
+    if (res.status === 401) {
+      handleLogout();
+      return false;
+    }
     if (res.ok) {
       const result = await res.json();
       if (result && result.success && result.data) {
         // Cập nhật ID từ client-side temporary thành ID thực tế của MongoDB
         const localTxn = transactions.find(t => t.id === txn.id);
+        const oldId = txn.id;
         if (localTxn) {
-          localTxn.id = result.data.id;
+          if (result.data.id || result.data._id) {
+            localTxn.id = result.data.id || result.data._id;
+          }
           if (result.data.createdAt) {
             localTxn.createdAt = result.data.createdAt;
           }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+          if (result.data.walletId) {
+            localTxn.walletId = result.data.walletId;
+          }
+          if (result.data.toWalletId) {
+            localTxn.toWalletId = result.data.toWalletId;
+          }
+          if (result.data.fee !== undefined) {
+            localTxn.fee = result.data.fee;
+          }
+          if (result.data.jarId) {
+            localTxn.jarId = result.data.jarId;
+          }
+          if (result.data.installmentId) {
+            localTxn.installmentId = result.data.installmentId;
+          }
+          localTxn._synced = true;
         }
+        _pendingOfflineAdds.delete(oldId);
+        if (localTxn) _pendingOfflineAdds.delete(localTxn.id);
+        _lastSavedTxnIds = new Set(transactions.map(t => t.id));
+        persistOfflineQueues();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        return true;
       }
     }
+    return false;
   } catch (e) {
     console.warn('⚠️ Transaction backup failed.', e);
+    return false;
   }
 }
 
@@ -618,11 +697,19 @@ async function syncDeleteTransactionFromServer(id) {
       method: 'DELETE',
       headers
     });
-    if (res.ok) {
-      // Deleted from server
+    if (res.status === 401) {
+      handleLogout();
+      return false;
     }
+    if (res.ok || res.status === 404) {
+      _pendingOfflineDeletes.delete(id);
+      persistOfflineQueues();
+      return true;
+    }
+    return false;
   } catch (e) {
     console.warn('⚠️ Transaction deletion backup failed.', e);
+    return false;
   }
 }
 
@@ -637,7 +724,12 @@ async function syncUpdateTransactionOnServer(txn) {
         desc: txn.desc,
         amount: txn.amount,
         category: txn.category,
-        date: txn.date
+        date: txn.date,
+        walletId: txn.walletId || undefined,
+        toWalletId: txn.toWalletId || undefined,
+        fee: txn.fee || undefined,
+        jarId: txn.jarId || undefined,
+        installmentId: txn.installmentId || undefined
       })
     });
     if (res.status === 401) {
@@ -650,9 +742,20 @@ async function syncUpdateTransactionOnServer(txn) {
 
 function loadTransactions() {
   try {
+    loadOfflineQueues();
+    loadWallets();
+    const defaultW = getDefaultWallet();
     const raw = localStorage.getItem(STORAGE_KEY);
     const hasToken = !!localStorage.getItem('caltdhy_token');
     transactions = raw ? JSON.parse(raw) : (hasToken ? [] : seedData());
+    
+    // Auto-migrate legacy transactions without walletId
+    if (defaultW && Array.isArray(transactions)) {
+      transactions.forEach(t => {
+        if (!t.walletId) t.walletId = defaultW.id;
+      });
+    }
+
     _lastSavedTxnIds = new Set(transactions.map(t => t.id));
   } catch (e) {
     transactions = [];
@@ -675,22 +778,22 @@ async function saveTransactions() {
       }
     });
 
-    // Detect new items
+    // Detect new un-synced items
     transactions.forEach(t => {
-      if (!_lastSavedTxnIds.has(t.id) && !t._synced) {
+      if (!t._synced) {
         _pendingOfflineAdds.add(t.id);
       }
     });
 
     _lastSavedTxnIds = new Set(transactions.map(t => t.id));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    persistOfflineQueues();
 
     const online = (typeof isServerConnected !== 'undefined' && isServerConnected) || (typeof window !== 'undefined' && window.isServerConnected);
     if (online) {
       // Flush deletes
       const delList = Array.from(_pendingOfflineDeletes);
       for (const delId of delList) {
-        _pendingOfflineDeletes.delete(delId);
         await syncDeleteTransactionFromServer(delId);
       }
 
@@ -699,9 +802,10 @@ async function saveTransactions() {
       for (const addId of addList) {
         const txn = currentTxnMap.get(addId);
         if (txn) {
-          _pendingOfflineAdds.delete(addId);
-          txn._synced = true;
           await syncAddTransactionToServer(txn);
+        } else {
+          _pendingOfflineAdds.delete(addId);
+          persistOfflineQueues();
         }
       }
     }
@@ -1010,33 +1114,66 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-/** Safe math evaluator – không dùng eval/new Function (tránh code injection) */
+function normalizeNumberToken(token) {
+  if (!token) return token;
+  if (token.includes('.') && token.includes(',')) {
+    const lastDot = token.lastIndexOf('.');
+    const lastComma = token.lastIndexOf(',');
+    if (lastDot > lastComma) {
+      return token.replace(/,/g, '');
+    } else {
+      return token.replace(/\./g, '').replace(',', '.');
+    }
+  }
+
+  if ((token.match(/\./g) || []).length > 1) {
+    return token.replace(/\./g, '');
+  }
+  if ((token.match(/,/g) || []).length > 1) {
+    return token.replace(/,/g, '');
+  }
+
+  const match = token.match(/^(\d+)([.,])(\d+)$/);
+  if (match) {
+    const intPart = match[1];
+    const fracPart = match[3];
+    if (fracPart.length === 3) {
+      return intPart + fracPart;
+    } else {
+      return intPart + '.' + fracPart;
+    }
+  }
+
+  return token;
+}
+
+/** Safe math evaluator – không dùng eval/new Function (tránh code injection), hỗ trợ định dạng số VN & biểu thức toán học */
 function evalMathExpression(str) {
-  if (!str) return NaN;
-  let s = str.replace(/\s+/g, '')
-             .replace(/x/gi, '*')
+  if (!str || typeof str !== 'string') return NaN;
+  let s = str.trim().toLowerCase()
+             .replace(/\s+/g, '')
+             .replace(/x/g, '*')
              .replace(/:/g, '/');
 
-  // Gỡ phân cách ngàn (dấu chấm hoặc phẩy trước 3 số)
-  if (!/^[0-9.+\-*/()]+$/.test(s)) {
-    s = s.replace(/([.,])(?=\d{3}(?!\d))/g, '');
-  }
+  // Support shortcut suffixes: k, m, tr, ty, tỷ, b
+  s = s.replace(/(\d+(?:[.,]\d+)?)\s*tỷ/g, '($1*1000000000)')
+       .replace(/(\d+(?:[.,]\d+)?)\s*ty/g, '($1*1000000000)')
+       .replace(/(\d+(?:[.,]\d+)?)\s*b/g, '($1*1000000000)')
+       .replace(/(\d+(?:[.,]\d+)?)\s*tr/g, '($1*1000000)')
+       .replace(/(\d+(?:[.,]\d+)?)\s*m/g, '($1*1000000)')
+       .replace(/(\d+(?:[.,]\d+)?)\s*k/g, '($1*1000)');
+
+  // Normalize number tokens inside expression
+  s = s.replace(/\d+(?:[.,]\d+)*/g, (match) => normalizeNumberToken(match));
 
   if (!/^[0-9.+\-*/()]+$/.test(s)) return NaN;
 
-  // ── Recursive descent parser ──────────────────────────────────
-  // Grammar:
-  //   expr   = term   (('+' | '-') term)*
-  //   term   = factor (('*' | '/') factor)*
-  //   factor = number | '(' expr ')' | '-' factor
   let pos = 0;
-
   function parseNumber() {
     let numStr = '';
     while (pos < s.length && /[0-9.]/.test(s[pos])) numStr += s[pos++];
     return numStr ? parseFloat(numStr) : NaN;
   }
-
   function parseFactor() {
     if (s[pos] === '(') {
       pos++;
@@ -1045,9 +1182,9 @@ function evalMathExpression(str) {
       return val;
     }
     if (s[pos] === '-') { pos++; return -parseFactor(); }
+    if (s[pos] === '+') { pos++; return parseFactor(); }
     return parseNumber();
   }
-
   function parseTerm() {
     let val = parseFactor();
     while (pos < s.length && (s[pos] === '*' || s[pos] === '/')) {
@@ -1058,20 +1195,20 @@ function evalMathExpression(str) {
     }
     return val;
   }
-
   function parseExpr() {
     let val = parseTerm();
     while (pos < s.length && (s[pos] === '+' || s[pos] === '-')) {
       const op = s[pos++];
       const right = parseTerm();
-      val = op === '+' ? val + right : val - right;
+      if (op === '+') val += right;
+      else val -= right;
     }
     return val;
   }
 
   try {
-    const result = parseExpr();
-    return (pos === s.length && isFinite(result)) ? result : NaN;
+    const res = parseExpr();
+    return (pos === s.length && !isNaN(res) && isFinite(res)) ? res : NaN;
   } catch (e) {
     return NaN;
   }
@@ -1128,30 +1265,70 @@ function calcMetrics() {
   const { month, year } = currentMonthYear();
   let balance = 0, income = 0, expense = 0;
 
-  transactions.forEach(t => {
-    const d = new Date(t.date + 'T00:00:00');
-    const inThisMonth = d.getMonth() === month && d.getFullYear() === year;
-    if (t.type === 'income') {
-      // Tổng số dư: nếu chế độ 'reset' thì chỉ tính giao dịch trong tháng hiện tại
-      if (balanceResetMode === 'reset') {
-        if (inThisMonth) balance += t.amount;
-      } else {
-        balance += t.amount;
-      }
-      if (inThisMonth) income += t.amount;
+  if (activeWalletFilter === 'all') {
+    if (balanceResetMode === 'reset') {
+      transactions.forEach(t => {
+        const d = new Date(t.date + 'T00:00:00');
+        const inThisMonth = d.getMonth() === month && d.getFullYear() === year;
+        if (inThisMonth) {
+          if (t.type === 'income') balance += t.amount;
+          else if (t.type === 'expense') balance -= t.amount;
+          else if (t.type === 'transfer') balance -= (t.fee || 0);
+        }
+      });
     } else {
-      if (balanceResetMode === 'reset') {
-        if (inThisMonth) balance -= t.amount;
-      } else {
-        balance -= t.amount;
-      }
-      if (inThisMonth) expense += t.amount;
+      balance = calcTotalNetWorth();
     }
-  });
 
-  document.getElementById('metricBalance').textContent = fmt(balance);
-  document.getElementById('metricIncome').textContent = '+' + fmt(income);
-  document.getElementById('metricExpense').textContent = '-' + fmt(expense);
+    transactions.forEach(t => {
+      const d = new Date(t.date + 'T00:00:00');
+      const inThisMonth = d.getMonth() === month && d.getFullYear() === year;
+      if (inThisMonth) {
+        if (t.type === 'income') income += t.amount;
+        else if (t.type === 'expense') expense += t.amount;
+        else if (t.type === 'transfer' && t.fee) expense += t.fee;
+      }
+    });
+  } else {
+    // Specific wallet selected
+    const targetWid = activeWalletFilter;
+    if (balanceResetMode === 'reset') {
+      transactions.forEach(t => {
+        const d = new Date(t.date + 'T00:00:00');
+        const inThisMonth = d.getMonth() === month && d.getFullYear() === year;
+        if (inThisMonth) {
+          if (t.walletId === targetWid) {
+            if (t.type === 'income') balance += t.amount;
+            else if (t.type === 'expense') balance -= t.amount;
+            else if (t.type === 'transfer') balance -= (t.amount + (t.fee || 0));
+          }
+          if (t.toWalletId === targetWid && t.type === 'transfer') {
+            balance += t.amount;
+          }
+        }
+      });
+    } else {
+      balance = calcWalletBalance(targetWid);
+    }
+
+    transactions.forEach(t => {
+      const d = new Date(t.date + 'T00:00:00');
+      const inThisMonth = d.getMonth() === month && d.getFullYear() === year;
+      if (inThisMonth) {
+        if (t.walletId === targetWid && t.type === 'income') income += t.amount;
+        if (t.toWalletId === targetWid && t.type === 'transfer') income += t.amount;
+        if (t.walletId === targetWid && t.type === 'expense') expense += t.amount;
+        if (t.walletId === targetWid && t.type === 'transfer') expense += (t.amount + (t.fee || 0));
+      }
+    });
+  }
+
+  const elBal = document.getElementById('metricBalance');
+  const elInc = document.getElementById('metricIncome');
+  const elExp = document.getElementById('metricExpense');
+  if (elBal) elBal.textContent = fmt(balance);
+  if (elInc) elInc.textContent = '+' + fmt(income);
+  if (elExp) elExp.textContent = '-' + fmt(expense);
 
   const now = new Date(year, month, 1);
   const localeMap = { en: 'en-US', vi: 'vi-VN', zh: 'zh-CN' };
@@ -2570,6 +2747,8 @@ function closeMonthDetailOnOverlay(e) {
 
 function triggerUIUpdates() {
   calcMetrics();
+  renderWalletCarousel();
+  updateWalletDropdowns();
   renderFeed();
   // Opt 4: Re-apply current auto-sort after data changes (new txn, import, etc.)
   if (currentBudgetSort) {
@@ -2683,6 +2862,10 @@ function renderFeed() {
 
   let list = [...transactions];
 
+  if (activeWalletFilter !== 'all') {
+    list = list.filter(tx => tx.walletId === activeWalletFilter || tx.toWalletId === activeWalletFilter);
+  }
+
   if (currentPeriodFilter === 'month') {
     const { month, year } = currentMonthYear();
     const currentMonthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -2713,16 +2896,39 @@ function renderFeed() {
     return;
   }
 
-  feed.innerHTML = list.map(txn => `
+  feed.innerHTML = list.map(txn => {
+    const w = getWalletById(txn.walletId);
+    const toW = txn.toWalletId ? getWalletById(txn.toWalletId) : null;
+    let walletBadgeHtml = '';
+    if (txn.type === 'transfer' && toW) {
+      walletBadgeHtml = `<span class="txn-slot__wallet-tag">${w ? w.icon : '💵'} ➔ ${toW.icon} ${escHtml(toW.name)}</span>`;
+    } else if (w) {
+      walletBadgeHtml = `<span class="txn-slot__wallet-tag">${w.icon} ${escHtml(w.name)}</span>`;
+    }
+
+    let amountHtml = '';
+    if (txn.type === 'transfer') {
+      if (activeWalletFilter === txn.toWalletId) {
+        amountHtml = `<div class="txn-amount pos">+${fmt(txn.amount)}</div>`;
+      } else if (activeWalletFilter === txn.walletId) {
+        amountHtml = `<div class="txn-amount neg">−${fmt(txn.amount + (txn.fee || 0))}</div>`;
+      } else {
+        amountHtml = `<div class="txn-amount" style="color:var(--txt-dim)">⇄ ${fmt(txn.amount)}</div>`;
+      }
+    } else {
+      amountHtml = `<div class="txn-amount ${txn.type === 'expense' ? 'neg' : 'pos'}">${txn.type === 'expense' ? '−' : '+'}${fmt(txn.amount)}</div>`;
+    }
+
+    const icon = txn.type === 'transfer' ? '⇄' : (CAT_ICONS[txn.category] || '📦');
+
+    return `
     <div class="txn-slot" data-id="${txn.id}">
-      <div class="txn-icon">${CAT_ICONS[txn.category] || '📦'}</div>
+      <div class="txn-icon">${icon}</div>
       <div class="txn-info">
-        <div class="txn-name">${escHtml(txn.desc)}</div>
-        <div class="txn-meta">${escHtml(tCat(txn.category)).toUpperCase()} &middot; ${fmtDate(txn.date)}</div>
+        <div class="txn-name">${escHtml(txn.desc)} ${walletBadgeHtml}</div>
+        <div class="txn-meta">${escHtml(tCat(txn.category)).toUpperCase()} &middot; ${fmtDate(txn.date)}${txn.fee ? ` &middot; Phí: ${fmt(txn.fee)}` : ''}</div>
       </div>
-      <div class="txn-amount ${txn.type === 'expense' ? 'neg' : 'pos'}">
-        ${txn.type === 'expense' ? '−' : '+'}${fmt(txn.amount)}
-      </div>
+      ${amountHtml}
       <button class="txn-edit" onclick="openEditTxnModal('${txn.id}')" title="Edit" aria-label="Edit transaction">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -2733,7 +2939,8 @@ function renderFeed() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function escHtml(str) {
@@ -3098,9 +3305,6 @@ function deleteTransaction(id) {
   /* Start permanent-deletion timer */
   clearTimeout(_undoTimer);
   _undoTimer = setTimeout(() => {
-    if (_deletedTxn) {
-      syncDeleteTransactionFromServer(_deletedTxn.id);
-    }
     _deletedTxn = null;
     hideUndoToast();
   }, UNDO_DELAY);
@@ -3250,6 +3454,12 @@ function openModal() {
   hideFormError();
   /* Rebuild category options dynamically (includes custom cats) */
   updateCategoryDropdown('txnCat', 'expense');
+  updateWalletDropdowns();
+  const defaultW = getDefaultWallet();
+  const targetWid = activeWalletFilter !== 'all' ? activeWalletFilter : (defaultW ? defaultW.id : '');
+  const walletSel = document.getElementById('txnWallet');
+  if (walletSel && targetWid) walletSel.value = targetWid;
+
   const titleEl = document.getElementById('modalTitle') || document.querySelector('#modal .modal-card__title') || document.querySelector('#modal h2');
   if (titleEl) {
     titleEl.textContent = t('newTransaction') || 'NEW TRANSACTION';
@@ -3275,11 +3485,16 @@ function openEditModal(id) {
   currentType = txn.type;
   syncTypeButtons();
   updateCategoryDropdown('txnCat', txn.type);
+  updateWalletDropdowns();
   
   document.getElementById('txnDesc').value = txn.desc || '';
   document.getElementById('txnAmount').value = txn.amount || '';
   document.getElementById('txnCat').value = txn.category || '';
   document.getElementById('txnDate').value = txn.date || todayISO();
+  const walletSel = document.getElementById('txnWallet');
+  if (walletSel) {
+    walletSel.value = txn.walletId || (getDefaultWallet() ? getDefaultWallet().id : '');
+  }
   hideFormError();
 
   const titleEl = document.getElementById('modalTitle') || document.querySelector('#modal .modal-card__title') || document.querySelector('#modal h2');
@@ -3344,6 +3559,7 @@ function handleSave(e) {
   const cat = document.getElementById('txnCat').value;
   const date = document.getElementById('txnDate').value;
   const linkInstId = document.getElementById('txnInstallmentLink')?.value || '';
+  const walletId = document.getElementById('txnWallet')?.value || (getDefaultWallet() ? getDefaultWallet().id : null);
 
   if (isNaN(amount) || amount <= 0) { 
     showFormError(t('enterValidAmount')); 
@@ -3365,6 +3581,7 @@ function handleSave(e) {
       existing.amount = amount;
       existing.category = cat;
       existing.date = date;
+      existing.walletId = walletId;
       if (cat === 'Installment' && linkInstId) {
         existing.installmentId = linkInstId;
       }
@@ -3385,24 +3602,54 @@ function handleSave(e) {
     amount, 
     category: cat, 
     date, 
+    walletId,
     createdAt: new Date().toISOString() 
   };
   if (cat === 'Installment' && linkInstId) {
     txn.installmentId = linkInstId;
   }
 
+  /* Feature B: Cảnh báo giao dịch trùng lặp */
+  const duplicate = detectDuplicateTransaction(amount, cat, date);
+  if (duplicate) {
+    showConfirmToast(
+      `⚠️ Giao dịch tương tự (${fmtCur(amount)} — ${tCat(cat)}) vừa nhập ${Math.round((Date.now() - new Date(duplicate.createdAt).getTime()) / 1000)}s trước. Trùng lặp?`,
+      () => _commitNewTransaction(txn, cat, linkInstId, amount),
+      () => {} // Hủy — không làm gì
+    );
+    return;
+  }
+
+  _commitNewTransaction(txn, cat, linkInstId, amount);
+}
+
+/** Tách logic lưu giao dịch mới ra để Feature B (confirm toast) có thể gọi lại */
+async function _commitNewTransaction(txn, cat, linkInstId, amount) {
   transactions.push(txn);
   saveTransactions();
-  syncAddTransactionToServer(txn);
+
+  let inst = null;
+  let prevDate, prevPaid, prevHistory;
 
   // Nếu là thanh toán định kỳ liên kết, tự động cập nhật khoản định kỳ đó
   if (cat === 'Installment' && linkInstId) {
-    const inst = installments.find(i => i.id === linkInstId);
+    inst = installments.find(i => i.id === linkInstId);
     if (inst) {
+      prevDate = inst.nextDueDate;
+      prevPaid = inst.totalPaid;
+      prevHistory = Array.isArray(inst.history) ? [...inst.history] : [];
+
       inst.nextDueDate = advanceNextDueDate(inst.nextDueDate, inst.cycle);
       inst.totalPaid = (inst.totalPaid || 0) + amount;
+      if (!Array.isArray(inst.history)) inst.history = [];
+      inst.history.unshift({
+        amount,
+        paidDate: todayISO(),
+        cycleDate: prevDate,
+        date: new Date().toISOString()
+      });
+      if (inst.history.length > 200) inst.history = inst.history.slice(0, 200);
       saveInstallments();
-      syncPayInstallmentToServer(inst.id);
       if (typeof refreshInstallmentsPanel === 'function') {
         refreshInstallmentsPanel();
       }
@@ -3411,7 +3658,31 @@ function handleSave(e) {
 
   closeModal();
   triggerUIUpdates();
-  showToast(currentType === 'expense' ? t('expenseLogged') : t('incomeRecorded'));
+  showToast(txn.type === 'expense' ? t('expenseLogged') : t('incomeRecorded'));
+
+  // Atomic rollback on server error for linked installment payments
+  const online = (typeof isServerConnected !== 'undefined' && isServerConnected) || (typeof window !== 'undefined' && window.isServerConnected);
+  if (online && inst) {
+    const serverData = await syncPayInstallmentToServer(inst.id);
+    if (!serverData) {
+      // Rollback on server error
+      inst.nextDueDate = prevDate;
+      inst.totalPaid = prevPaid;
+      inst.history = prevHistory;
+      saveInstallments();
+
+      const txnIdx = transactions.findIndex(t => t.id === txn.id);
+      if (txnIdx !== -1) {
+        transactions.splice(txnIdx, 1);
+        saveTransactions();
+      }
+      if (typeof refreshInstallmentsPanel === 'function') {
+        refreshInstallmentsPanel();
+      }
+      triggerUIUpdates();
+      showToast('⚠️ Đồng bộ thanh toán khoản định kỳ lên server thất bại. Đã hoàn tác giao dịch.', 5000);
+    }
+  }
 }
 
 /* ── Form error helpers ── */
@@ -3440,6 +3711,12 @@ function openQuickLog() {
   if (descInput) descInput.value = '';
   /* Rebuild category select dynamically */
   updateCategoryDropdown('qlCat', 'expense');
+  updateWalletDropdowns();
+  const defaultW = getDefaultWallet();
+  const targetWid = activeWalletFilter !== 'all' ? activeWalletFilter : (defaultW ? defaultW.id : '');
+  const qlWalletSel = document.getElementById('qlWallet');
+  if (qlWalletSel && targetWid) qlWalletSel.value = targetWid;
+
   /* Show currency hint */
   const currHints = { VND: '(VND)', USD: '(USD)', CNY: '(¥CNY)' };
   const hint = document.getElementById('qlCurrHint');
@@ -3488,6 +3765,7 @@ function handleQuickLog(e) {
   const amtRaw = evalMathExpression(amtInput);
   const desc = document.getElementById('qlDesc').value.trim();
   const cat = document.getElementById('qlCat').value;
+  const walletId = document.getElementById('qlWallet')?.value || (getDefaultWallet() ? getDefaultWallet().id : null);
 
   const errEl = document.getElementById('qlError');
   function showQlErr(msg) {
@@ -3508,13 +3786,28 @@ function handleQuickLog(e) {
 
   const finalDesc = desc || tCat(cat);
 
-  const txn = { id: uid(), type: _qlType, desc: finalDesc, amount: amountVND, category: cat, date: todayISO(), createdAt: new Date().toISOString() };
+  const txn = { id: uid(), type: _qlType, desc: finalDesc, amount: amountVND, category: cat, walletId, date: todayISO(), createdAt: new Date().toISOString() };
+
+  /* Feature B: Cảnh báo giao dịch trùng lặp */
+  const duplicate = detectDuplicateTransaction(amountVND, cat, txn.date);
+  if (duplicate) {
+    showConfirmToast(
+      `⚠️ Giao dịch tương tự (${fmtCur(amountVND)} — ${tCat(cat)}) vừa nhập gần đây. Trùng lặp?`,
+      () => _commitQuickLog(txn),
+      () => {} // Hủy
+    );
+    return;
+  }
+
+  _commitQuickLog(txn);
+}
+
+function _commitQuickLog(txn) {
   transactions.push(txn);
   saveTransactions();
-  syncAddTransactionToServer(txn);
   closeQuickLog();
   triggerUIUpdates();
-  showToast(_qlType === 'expense' ? t('expenseLogged') : t('incomeRecorded'));
+  showToast(txn.type === 'expense' ? t('expenseLogged') : t('incomeRecorded'));
 }
 let _numpadValue = '';
 
@@ -3562,7 +3855,6 @@ function numpadSubmit() {
   };
   transactions.push(txn);
   saveTransactions();
-  syncAddTransactionToServer(txn);
   closeNumpad();
   triggerUIUpdates();
   showToast('✓ ' + t('depositAdded') + ' ' + fmt(amount));
@@ -3632,6 +3924,15 @@ const I18N = {
     Installment: 'Recurring Payment',
     installmentLink: 'Link to recurring item',
     installmentSelectPlaceholder: 'Select a recurring item...',
+    walletsSectionTitle: 'My Wallets & Accounts',
+    transferMoney: 'TRANSFER',
+    addWallet: 'ADD WALLET',
+    allWallets: 'All Wallets',
+    walletsCount: 'accounts',
+    transferMoneyTitle: 'Transfer Between Wallets',
+    addWalletTitle: 'Add New Wallet / Account',
+    editWalletTitle: 'Edit Wallet',
+    walletSelect: 'Wallet / Account',
     /* ── Category names ── */
     'Food & Dining': 'Food & Dining',
     'Transport': 'Transport',
@@ -3956,6 +4257,15 @@ const I18N = {
     Installment: 'Thanh toán định kỳ',
     installmentLink: 'Liên kết khoản định kỳ',
     installmentSelectPlaceholder: 'Chọn khoản định kỳ...',
+    walletsSectionTitle: 'Ví & Tài Khoản',
+    transferMoney: 'CHUYỂN TIỀN',
+    addWallet: 'THÊM VÍ',
+    allWallets: 'Tất Cả Ví',
+    walletsCount: 'tài khoản',
+    transferMoneyTitle: 'Chuyển Tiền Giữa Các Ví',
+    addWalletTitle: 'Thêm Ví / Tài Khoản Mới',
+    editWalletTitle: 'Chỉnh Sửa Ví',
+    walletSelect: 'Nguồn tiền / Ví',
     /* ── Category names ── */
     'Food & Dining': 'Ăn uống',
     'Transport': 'Di chuyển',
@@ -4280,6 +4590,15 @@ const I18N = {
     Installment: '定期付款',
     installmentLink: '关联定期项目',
     installmentSelectPlaceholder: '选择定期项目...',
+    walletsSectionTitle: '我的钱包与账户',
+    transferMoney: '转账',
+    addWallet: '添加钱包',
+    allWallets: '所有钱包',
+    walletsCount: '个账户',
+    transferMoneyTitle: '钱包间转账',
+    addWalletTitle: '添加新钱包/账户',
+    editWalletTitle: '编辑钱包',
+    walletSelect: '资金来源/钱包',
     /* ── Category names ── */
     'Food & Dining': '餐饮',
     'Transport': '交通',
@@ -5299,10 +5618,13 @@ document.addEventListener('DOMContentLoaded', () => {
   loadHiddenCategories();  // Load trước để getAllCategories() filter đúng
   loadCustomCategories();
   loadCategoryOrder();     // Load thứ tự danh mục do user tùy chỉnh
+  loadWallets();           // Load Multi-Wallets
   loadTransactions();
   loadBudgets();
   loadBalanceResetMode(); // Load trước calcMetrics để số dư tính đúng chế độ
   calcMetrics();
+  renderWalletCarousel();
+  updateWalletDropdowns();
   renderFeed();
   renderBudgetPanel();
   updateChart();
@@ -5376,6 +5698,9 @@ document.addEventListener('DOMContentLoaded', () => {
     openGuide();
     localStorage.removeItem('caltdhy_is_new_user');
   }
+
+  /* Feature A: Nhắc nhở thanh toán định kỳ — delay 2s cho app ổn định UI */
+  setTimeout(() => checkAndNotifyInstallmentsDue(), 2000);
 });
 
 /* ============================================================
@@ -6751,6 +7076,547 @@ window.checkNewPeriodTransitions = checkNewPeriodTransitions;
 
 
 /* ============================================================
+   MULTI-WALLET ENGINE (FEATURE D)
+   ============================================================ */
+
+function loadWallets() {
+  try {
+    const raw = localStorage.getItem(STORAGE_WALLETS_KEY);
+    wallets = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(wallets) || wallets.length === 0) {
+      wallets = [{
+        id: 'w_default_cash',
+        name: 'Tiền mặt',
+        type: 'cash',
+        icon: '💵',
+        color: '#2ed573',
+        initialBalance: 0,
+        creditLimit: 0,
+        isDefault: true,
+        isExcludedFromTotal: false
+      }];
+      saveWallets();
+    }
+  } catch (e) {
+    wallets = [{
+      id: 'w_default_cash',
+      name: 'Tiền mặt',
+      type: 'cash',
+      icon: '💵',
+      color: '#2ed573',
+      initialBalance: 0,
+      creditLimit: 0,
+      isDefault: true,
+      isExcludedFromTotal: false
+    }];
+  }
+}
+
+function saveWallets() {
+  try {
+    localStorage.setItem(STORAGE_WALLETS_KEY, JSON.stringify(wallets));
+  } catch (e) {
+    console.warn('Storage full for wallets', e);
+  }
+}
+
+function getDefaultWallet() {
+  if (!Array.isArray(wallets) || wallets.length === 0) {
+    loadWallets();
+  }
+  return wallets.find(w => w.isDefault) || wallets[0];
+}
+
+function getWalletById(id) {
+  if (!id) return getDefaultWallet();
+  return wallets.find(w => w.id === id) || getDefaultWallet();
+}
+
+function calcWalletBalance(walletId) {
+  const wallet = wallets.find(w => w.id === walletId);
+  if (!wallet) return 0;
+  let bal = wallet.initialBalance || 0;
+  transactions.forEach(t => {
+    if (t.walletId === walletId) {
+      if (t.type === 'income') bal += t.amount;
+      else if (t.type === 'expense') bal -= t.amount;
+      else if (t.type === 'transfer') bal -= (t.amount + (t.fee || 0));
+    }
+    if (t.toWalletId === walletId && t.type === 'transfer') {
+      bal += t.amount;
+    }
+  });
+  return bal;
+}
+
+function calcTotalNetWorth() {
+  if (!Array.isArray(wallets) || wallets.length === 0) return 0;
+  return wallets
+    .filter(w => !w.isExcludedFromTotal)
+    .reduce((sum, w) => sum + calcWalletBalance(w.id), 0);
+}
+
+function renderWalletCarousel() {
+  const carousel = document.getElementById('walletsCarousel');
+  if (!carousel) return;
+
+  const totalNetWorth = calcTotalNetWorth();
+  const isAllActive = activeWalletFilter === 'all';
+
+  const allWalletsCard = `
+    <div class="wallet-card ${isAllActive ? 'active' : ''}" style="--wallet-accent:#2ed573" onclick="setWalletFilter('all')" role="tab" aria-selected="${isAllActive}">
+      <div class="wallet-card__header">
+        <div class="wallet-card__icon-box">🌐</div>
+        <span class="wallet-card__badge">${t('all') || 'TẤT CẢ'}</span>
+      </div>
+      <div class="wallet-card__name">${t('allWallets') || 'Tất Cả Ví'}</div>
+      <div class="wallet-card__balance">${fmt(totalNetWorth)}</div>
+      <div class="wallet-card__credit-info">${wallets.length} ${t('walletsCount') || 'tài khoản'}</div>
+    </div>
+  `;
+
+  const walletCards = wallets.map(w => {
+    const bal = calcWalletBalance(w.id);
+    const isActive = activeWalletFilter === w.id;
+    let typeLabel = 'Tiền mặt';
+    if (w.type === 'bank') typeLabel = 'Ngân hàng';
+    else if (w.type === 'credit') typeLabel = 'Tín dụng';
+    else if (w.type === 'e-wallet') typeLabel = 'Ví điện tử';
+    else if (w.type === 'savings') typeLabel = 'Tiết kiệm';
+
+    const creditInfo = w.type === 'credit'
+      ? `Hạn mức: ${fmt(w.creditLimit || 0)}`
+      : (w.isExcludedFromTotal ? 'Riêng biệt' : (w.isDefault ? 'Mặc định' : ''));
+
+    return `
+      <div class="wallet-card ${isActive ? 'active' : ''}" 
+           style="--wallet-accent:${w.color || '#2ed573'}" 
+           onclick="setWalletFilter('${w.id}')"
+           role="tab" 
+           aria-selected="${isActive}">
+        <span class="wallet-card__actions-hint" onclick="event.stopPropagation(); openEditWalletModal('${w.id}')" title="Chỉnh sửa ví">✎</span>
+        <div class="wallet-card__header">
+          <div class="wallet-card__icon-box">${w.icon || '💵'}</div>
+          <span class="wallet-card__badge">${typeLabel}</span>
+        </div>
+        <div class="wallet-card__name">${escHtml(w.name)}</div>
+        <div class="wallet-card__balance">${fmt(bal)}</div>
+        <div class="wallet-card__credit-info">${creditInfo}</div>
+      </div>
+    `;
+  }).join('');
+
+  carousel.innerHTML = allWalletsCard + walletCards;
+}
+
+function setWalletFilter(walletId) {
+  activeWalletFilter = walletId;
+  triggerUIUpdates();
+}
+
+function updateWalletDropdowns() {
+  const defaultW = getDefaultWallet();
+  const activeId = activeWalletFilter !== 'all' ? activeWalletFilter : (defaultW ? defaultW.id : '');
+
+  // 1. Transaction form dropdown
+  const txnSel = document.getElementById('txnWallet');
+  if (txnSel) {
+    txnSel.innerHTML = wallets.map(w => {
+      const bal = calcWalletBalance(w.id);
+      return `<option value="${w.id}" ${w.id === activeId ? 'selected' : ''}>${w.icon} ${escHtml(w.name)} (${fmt(bal)})</option>`;
+    }).join('');
+  }
+
+  // 2. Quick Log dropdown
+  const qlSel = document.getElementById('qlWallet');
+  if (qlSel) {
+    qlSel.innerHTML = wallets.map(w => {
+      return `<option value="${w.id}" ${w.id === activeId ? 'selected' : ''}>${w.icon} ${escHtml(w.name)}</option>`;
+    }).join('');
+  }
+
+  // 3. Transfer From / To dropdowns
+  const fromSel = document.getElementById('transferFromSelect');
+  const toSel = document.getElementById('transferToSelect');
+  if (fromSel && toSel) {
+    const fromOptions = wallets.map((w, idx) => {
+      const bal = calcWalletBalance(w.id);
+      return `<option value="${w.id}" ${idx === 0 ? 'selected' : ''}>${w.icon} ${escHtml(w.name)} (${fmt(bal)})</option>`;
+    }).join('');
+
+    const toOptions = wallets.map((w, idx) => {
+      const bal = calcWalletBalance(w.id);
+      return `<option value="${w.id}" ${idx === 1 || (wallets.length === 1 && idx === 0) ? 'selected' : ''}>${w.icon} ${escHtml(w.name)} (${fmt(bal)})</option>`;
+    }).join('');
+
+    fromSel.innerHTML = fromOptions;
+    toSel.innerHTML = toOptions;
+  }
+}
+
+function openAddWalletModal() {
+  editingWalletId = null;
+  const titleEl = document.getElementById('wallet-modal-title');
+  if (titleEl) titleEl.textContent = 'Thêm Ví / Tài Khoản Mới';
+  const nameInp = document.getElementById('walletNameInput');
+  if (nameInp) nameInp.value = '';
+  const typeInp = document.getElementById('walletTypeInput');
+  if (typeInp) typeInp.value = 'cash';
+  const initBalInp = document.getElementById('walletInitialBalanceInput');
+  if (initBalInp) initBalInp.value = '';
+  const credInp = document.getElementById('walletCreditLimitInput');
+  if (credInp) credInp.value = '';
+  const credGrp = document.getElementById('walletCreditLimitGroup');
+  if (credGrp) credGrp.style.display = 'none';
+  const exclInp = document.getElementById('walletExcludedInput');
+  if (exclInp) exclInp.checked = false;
+  const delBtn = document.getElementById('btnDeleteWallet');
+  if (delBtn) delBtn.style.display = 'none';
+  _selectedWalletEmoji = '💵';
+  _selectedWalletColor = '#2ed573';
+  _syncWalletModalPickers();
+  hideWalletFormError();
+  document.getElementById('walletModal').classList.add('open');
+}
+
+function openEditWalletModal(id) {
+  const w = wallets.find(item => item.id === id);
+  if (!w) return;
+  editingWalletId = id;
+  const titleEl = document.getElementById('wallet-modal-title');
+  if (titleEl) titleEl.textContent = 'Chỉnh Sửa Ví';
+  const nameInp = document.getElementById('walletNameInput');
+  if (nameInp) nameInp.value = w.name;
+  const typeInp = document.getElementById('walletTypeInput');
+  if (typeInp) typeInp.value = w.type || 'cash';
+  const initBalInp = document.getElementById('walletInitialBalanceInput');
+  if (initBalInp) initBalInp.value = w.initialBalance || 0;
+  const credInp = document.getElementById('walletCreditLimitInput');
+  if (credInp) credInp.value = w.creditLimit || '';
+  const credGrp = document.getElementById('walletCreditLimitGroup');
+  if (credGrp) credGrp.style.display = w.type === 'credit' ? 'block' : 'none';
+  const exclInp = document.getElementById('walletExcludedInput');
+  if (exclInp) exclInp.checked = !!w.isExcludedFromTotal;
+  const delBtn = document.getElementById('btnDeleteWallet');
+  if (delBtn) delBtn.style.display = wallets.length > 1 ? 'inline-block' : 'none';
+  _selectedWalletEmoji = w.icon || '💵';
+  _selectedWalletColor = w.color || '#2ed573';
+  _syncWalletModalPickers();
+  hideWalletFormError();
+  document.getElementById('walletModal').classList.add('open');
+}
+
+function closeWalletModal() {
+  const m = document.getElementById('walletModal');
+  if (m) m.classList.remove('open');
+  editingWalletId = null;
+}
+
+function closeWalletOnOverlay(e) {
+  if (e.target === document.getElementById('walletModal')) closeWalletModal();
+}
+
+function selectWalletEmoji(emoji, btn) {
+  _selectedWalletEmoji = emoji;
+  document.querySelectorAll('#walletEmojiPicker .emoji-opt').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+}
+
+function selectWalletColor(color, btn) {
+  _selectedWalletColor = color;
+  document.querySelectorAll('#walletColorPicker .color-opt').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+}
+
+function onWalletTypeChange(type) {
+  const creditGroup = document.getElementById('walletCreditLimitGroup');
+  if (creditGroup) {
+    creditGroup.style.display = type === 'credit' ? 'block' : 'none';
+  }
+}
+
+function _syncWalletModalPickers() {
+  document.querySelectorAll('#walletEmojiPicker .emoji-opt').forEach(b => {
+    b.classList.toggle('selected', b.textContent.trim() === _selectedWalletEmoji);
+  });
+  document.querySelectorAll('#walletColorPicker .color-opt').forEach(b => {
+    b.classList.toggle('selected', b.style.background === _selectedWalletColor);
+  });
+}
+
+function showWalletFormError(msg) {
+  const el = document.getElementById('walletFormError');
+  if (el) { el.textContent = '⚠ ' + msg; el.classList.add('visible'); }
+}
+
+function hideWalletFormError() {
+  const el = document.getElementById('walletFormError');
+  if (el) { el.textContent = ''; el.classList.remove('visible'); }
+}
+
+async function submitWalletForm(e) {
+  if (e) e.preventDefault();
+  hideWalletFormError();
+
+  const name = document.getElementById('walletNameInput').value.trim();
+  const type = document.getElementById('walletTypeInput').value;
+  const initBalRaw = document.getElementById('walletInitialBalanceInput').value.trim();
+  const initialBalance = evalMathExpression(initBalRaw) || 0;
+  const creditLimitRaw = document.getElementById('walletCreditLimitInput').value.trim();
+  const creditLimit = evalMathExpression(creditLimitRaw) || 0;
+  const isExcludedFromTotal = document.getElementById('walletExcludedInput').checked;
+
+  if (!name) {
+    showWalletFormError('Vui lòng nhập tên ví.');
+    return;
+  }
+
+  if (editingWalletId) {
+    const w = wallets.find(item => item.id === editingWalletId);
+    if (w) {
+      w.name = name;
+      w.type = type;
+      w.icon = _selectedWalletEmoji;
+      w.color = _selectedWalletColor;
+      w.initialBalance = initialBalance;
+      w.creditLimit = creditLimit;
+      w.isExcludedFromTotal = isExcludedFromTotal;
+      saveWallets();
+      syncUpdateWalletOnServer(w);
+      closeWalletModal();
+      triggerUIUpdates();
+      showToast('✓ Đã cập nhật thông tin ví!');
+      return;
+    }
+  }
+
+  const newWallet = {
+    id: uid(),
+    name,
+    type,
+    icon: _selectedWalletEmoji,
+    color: _selectedWalletColor,
+    initialBalance,
+    creditLimit,
+    isExcludedFromTotal,
+    isDefault: wallets.length === 0
+  };
+
+  wallets.push(newWallet);
+  saveWallets();
+  syncAddWalletToServer(newWallet);
+  closeWalletModal();
+  triggerUIUpdates();
+  showToast(`✓ Đã tạo ví "${name}"!`);
+}
+
+async function handleDeleteWallet() {
+  if (!editingWalletId) return;
+  if (wallets.length <= 1) {
+    showToast('⚠️ Bạn không thể xóa ví duy nhất còn lại.');
+    return;
+  }
+
+  const walletToDelete = wallets.find(w => w.id === editingWalletId);
+  if (!walletToDelete) return;
+
+  const defaultW = wallets.find(w => w.id !== editingWalletId && w.isDefault) || wallets.find(w => w.id !== editingWalletId);
+  if (defaultW) {
+    // Reassign all transactions associated with deleted wallet to default wallet
+    transactions.forEach(t => {
+      if (t.walletId === editingWalletId) t.walletId = defaultW.id;
+      if (t.toWalletId === editingWalletId) t.toWalletId = defaultW.id;
+    });
+    saveTransactions();
+  }
+
+  const deletedId = editingWalletId;
+  wallets = wallets.filter(w => w.id !== editingWalletId);
+  if (activeWalletFilter === deletedId) {
+    activeWalletFilter = 'all';
+  }
+  saveWallets();
+  syncDeleteWalletFromServer(deletedId);
+  closeWalletModal();
+  triggerUIUpdates();
+  showToast(`✓ Đã xóa ví "${walletToDelete.name}" và chuyển các giao dịch về ví mặc định.`);
+}
+
+/* ── Transfer modal handlers ── */
+function openTransferModal() {
+  if (wallets.length < 2) {
+    showToast('⚠️ Bạn cần có ít nhất 2 ví để thực hiện chuyển tiền.');
+    openAddWalletModal();
+    return;
+  }
+  updateWalletDropdowns();
+  document.getElementById('transferAmountInput').value = '';
+  document.getElementById('transferFeeInput').value = '';
+  document.getElementById('transferDateInput').value = todayISO();
+  document.getElementById('transferDescInput').value = '';
+  hideTransferFormError();
+  document.getElementById('transferModal').classList.add('open');
+}
+
+function closeTransferModal() {
+  const m = document.getElementById('transferModal');
+  if (m) m.classList.remove('open');
+}
+
+function closeTransferOnOverlay(e) {
+  if (e.target === document.getElementById('transferModal')) closeTransferModal();
+}
+
+function showTransferFormError(msg) {
+  const el = document.getElementById('transferFormError');
+  if (el) { el.textContent = '⚠ ' + msg; el.classList.add('visible'); }
+}
+
+function hideTransferFormError() {
+  const el = document.getElementById('transferFormError');
+  if (el) { el.textContent = ''; el.classList.remove('visible'); }
+}
+
+async function submitTransfer(e) {
+  if (e) e.preventDefault();
+  hideTransferFormError();
+
+  const fromId = document.getElementById('transferFromSelect').value;
+  const toId = document.getElementById('transferToSelect').value;
+  const amtRaw = document.getElementById('transferAmountInput').value.trim();
+  const amount = evalMathExpression(amtRaw);
+  const feeRaw = document.getElementById('transferFeeInput').value.trim();
+  const fee = evalMathExpression(feeRaw) || 0;
+  const date = document.getElementById('transferDateInput').value || todayISO();
+  const desc = document.getElementById('transferDescInput').value.trim();
+
+  if (fromId === toId) {
+    showTransferFormError('Ví chuyển đi và ví nhận phải khác nhau.');
+    return;
+  }
+  if (isNaN(amount) || amount <= 0) {
+    showTransferFormError('Vui lòng nhập số tiền hợp lệ (> 0).');
+    return;
+  }
+
+  const fromW = getWalletById(fromId);
+  const toW = getWalletById(toId);
+
+  const txn = {
+    id: uid(),
+    type: 'transfer',
+    amount,
+    fee,
+    walletId: fromId,
+    toWalletId: toId,
+    category: 'Transfer',
+    desc: desc || `Chuyển tiền từ ${fromW ? fromW.name : 'ví'} sang ${toW ? toW.name : 'ví'}`,
+    date,
+    createdAt: new Date().toISOString()
+  };
+
+  transactions.push(txn);
+  saveTransactions();
+  syncAddTransactionToServer(txn);
+  closeTransferModal();
+  triggerUIUpdates();
+  showToast(`✓ Đã chuyển ${fmt(amount)} từ "${fromW ? fromW.name : ''}" sang "${toW ? toW.name : ''}"!`);
+}
+
+async function syncLoadWalletsFromServer() {
+  if (!isServerConnected) return;
+  try {
+    const headers = getAuthHeaders();
+    const res = await fetch('/api/wallets', { headers });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+        wallets = data.data;
+        saveWallets();
+
+        // Reconcile temporary wallet IDs (e.g. 'w_default_cash') with real server default wallet ID
+        const serverDefaultWallet = getDefaultWallet();
+        if (serverDefaultWallet && Array.isArray(transactions)) {
+          let hasTxnUpdated = false;
+          transactions.forEach(t => {
+            if (t.walletId === 'w_default_cash' || !wallets.some(w => w.id === t.walletId)) {
+              t.walletId = serverDefaultWallet.id;
+              hasTxnUpdated = true;
+              if (t._synced) syncUpdateTransactionOnServer(t);
+            }
+            if (t.toWalletId === 'w_default_cash' || (t.toWalletId && !wallets.some(w => w.id === t.toWalletId))) {
+              t.toWalletId = serverDefaultWallet.id;
+              hasTxnUpdated = true;
+              if (t._synced) syncUpdateTransactionOnServer(t);
+            }
+          });
+          if (hasTxnUpdated) {
+            saveTransactions();
+          }
+        }
+
+        renderWalletCarousel();
+        updateWalletDropdowns();
+        triggerUIUpdates();
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Wallet backup sync failed', e);
+  }
+}
+
+async function syncAddWalletToServer(wallet) {
+  if (!isServerConnected) return;
+  try {
+    const headers = getAuthHeaders();
+    const res = await fetch('/api/wallets', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(wallet)
+    });
+    if (res.ok) {
+      const result = await res.json();
+      if (result && result.success && result.data) {
+        const local = wallets.find(w => w.id === wallet.id);
+        if (local && result.data.id) {
+          local.id = result.data.id;
+          saveWallets();
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Add wallet server backup failed', e);
+  }
+}
+
+async function syncUpdateWalletOnServer(wallet) {
+  if (!isServerConnected) return;
+  try {
+    const headers = getAuthHeaders();
+    await fetch(`/api/wallets/${wallet.id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(wallet)
+    });
+  } catch (e) {
+    console.warn('⚠️ Update wallet server backup failed', e);
+  }
+}
+
+async function syncDeleteWalletFromServer(id) {
+  if (!isServerConnected) return;
+  try {
+    const headers = getAuthHeaders();
+    await fetch(`/api/wallets/${id}`, {
+      method: 'DELETE',
+      headers
+    });
+  } catch (e) {
+    console.warn('⚠️ Delete wallet server backup failed', e);
+  }
+}
+
+/* ============================================================
    HŨ CHI TIÊU — JARS & INSTALLMENTS
    Tiền trong hũ HOÀN TOÀN tách biệt với balance/transactions.
    ============================================================ */
@@ -6845,14 +7711,26 @@ async function syncAddJarToServer(jar) {
 }
 
 async function syncJarTransactionToServer(jarId, type, amount, reason) {
-  if (!isServerConnected) return;
+  if (!isServerConnected) return true; // Offline mode: cho phép ghi nhận local
   try {
-    await fetch(`/api/jars/${jarId}/${type}`, {
+    const res = await fetch(`/api/jars/${jarId}/${type}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ amount, reason: reason || '' })
     });
-  } catch (e) { console.warn('⚠️ syncJarTransaction failed.', e); }
+    if (res.status === 401) {
+      handleLogout();
+      return false;
+    }
+    if (res.ok) {
+      const data = await res.json();
+      return !!(data && data.success);
+    }
+    return false;
+  } catch (e) {
+    console.warn('⚠️ syncJarTransaction failed.', e);
+    return false;
+  }
 }
 
 async function syncDeleteJarFromServer(jarId) {
@@ -6879,16 +7757,23 @@ async function syncAddInstallmentToServer(inst) {
 }
 
 async function syncPayInstallmentToServer(instId) {
-  if (!isServerConnected) return;
+  if (!isServerConnected) return { offline: true };
   try {
     const res = await fetch(`/api/jars/installments/${instId}/pay`, {
-      method: 'PATCH', headers: getAuthHeaders()
+      method: 'PATCH',
+      headers: getAuthHeaders()
     });
+    if (res.status === 401) {
+      handleLogout();
+      return null;
+    }
     if (res.ok) {
       const data = await res.json();
-      if (data.success) return data.data;
+      if (data && data.success) return data.data;
     }
-  } catch (e) { console.warn('⚠️ syncPayInstallment failed.', e); }
+  } catch (e) {
+    console.warn('⚠️ syncPayInstallment failed.', e);
+  }
   return null;
 }
 
@@ -6924,16 +7809,38 @@ function daysUntil(dateStr) {
   return Math.round((due - today) / 86400000);
 }
 
-/* ── Advance nextDueDate locally (for offline) ── */
+/* ── Advance nextDueDate locally with month-end boundary clamping ── */
 function advanceNextDueDate(dateStr, cycle) {
-  const d = new Date(dateStr + 'T00:00:00');
-  switch (cycle) {
-    case 'monthly':   d.setMonth(d.getMonth() + 1);   break;
-    case 'quarterly': d.setMonth(d.getMonth() + 3);   break;
-    case 'yearly':    d.setFullYear(d.getFullYear() + 1); break;
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  let targetYear = year;
+  let targetMonth = month;
+  if (cycle === 'monthly') {
+    targetMonth = month + 1;
+    if (targetMonth > 11) {
+      targetYear += Math.floor(targetMonth / 12);
+      targetMonth = targetMonth % 12;
+    }
+  } else if (cycle === 'quarterly') {
+    targetMonth = month + 3;
+    if (targetMonth > 11) {
+      targetYear += Math.floor(targetMonth / 12);
+      targetMonth = targetMonth % 12;
+    }
+  } else if (cycle === 'yearly') {
+    targetYear += 1;
   }
-  const p = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+
+  const daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+  const targetDay = Math.min(day, daysInTargetMonth);
+
+  const pad = n => String(n).padStart(2, '0');
+  return `${targetYear}-${pad(targetMonth + 1)}-${pad(targetDay)}`;
 }
 
 /* ── Cycle label ── */
@@ -7247,7 +8154,7 @@ function renderInstallmentList() {
           <span class="inst-item__icon">${inst.icon}</span>
           <div class="inst-item__info">
             <span class="inst-item__name">${capName}</span>
-            <span class="inst-item__meta">${fmtJar(inst.amount)} · ${cycleLabel(inst.cycle)}</span>
+            <span class="inst-item__meta">${fmtJar(inst.amount)} · ${cycleLabel(inst.cycle)}${Array.isArray(inst.history) && inst.history.length > 0 ? ` · Đã trả: ${fmtJar(inst.totalPaid || 0)} (${inst.history.length} kỳ)` : (inst.totalPaid > 0 ? ` · Đã trả: ${fmtJar(inst.totalPaid)}` : '')}</span>
           </div>
           <div class="inst-item__right">
             ${countdownStr}
@@ -7545,6 +8452,13 @@ async function submitJarTxn() {
       showToast(`⚠ Số dư hũ chỉ còn ${fmtJar(jar.current)}. Không thể rút nhiều hơn.`);
       return;
     }
+  }
+
+  // Lưu trạng thái trước đó để rollback nếu đồng bộ server thất bại
+  const prevCurrent = jar.current;
+  const prevHistory = Array.isArray(jar.history) ? [...jar.history] : [];
+
+  if (_activeJarTxnType === 'withdraw') {
     jar.current -= amount;
   } else {
     jar.current += amount;
@@ -7570,24 +8484,53 @@ async function submitJarTxn() {
     type: isDeposit ? 'expense' : 'income',
     desc: txnDesc,
     amount,
-    category: isDeposit ? 'Savings' : 'Savings',
+    category: 'Savings',
     date: todayISO(),
     createdAt: new Date().toISOString(),
     jarId: jar.id   // liên kết ngược với hũ để truy xuất sau
   };
   transactions.push(linkedTxn);
   saveTransactions();
-  syncAddTransactionToServer(linkedTxn);
   // ──────────────────────────────────────────────────────────────────────────
 
   closeJarTxnModal();
   renderJarCards();
   triggerUIUpdates(); // Đồng bộ số dư tổng + lịch sử giao dịch
 
-  const action = _activeJarTxnType === 'deposit' ? 'Đã nạp' : 'Đã rút';
-  showToast(`✓ ${action} ${fmtJar(amount)} ${_activeJarTxnType === 'deposit' ? 'vào' : 'từ'} "${jar.name}"!`);
+  /* Feature C: Celebration khi hũ vừa đạt mục tiêu */
+  if (_activeJarTxnType === 'deposit' && jar.target > 0
+      && prevCurrent < jar.target && jar.current >= jar.target) {
+    triggerJarCelebration(jar);
+  } else {
+    const action = _activeJarTxnType === 'deposit' ? 'Đã nạp' : 'Đã rút';
+    showToast(`✓ ${action} ${fmtJar(amount)} ${_activeJarTxnType === 'deposit' ? 'vào' : 'từ'} "${jar.name}"!`);
+  }
 
-  await syncJarTransactionToServer(jar.id, _activeJarTxnType, amount, reason);
+  // Đồng bộ với server và tự động hoàn tác nếu server báo lỗi
+  const online = (typeof isServerConnected !== 'undefined' && isServerConnected) || (typeof window !== 'undefined' && window.isServerConnected);
+  if (online) {
+    const success = await syncJarTransactionToServer(jar.id, _activeJarTxnType, amount, reason);
+    if (!success) {
+      // Rollback số dư hũ
+      jar.current = prevCurrent;
+      jar.history = prevHistory;
+      saveJars();
+
+      // Xóa giao dịch đã thêm khỏi sổ cái và hàng đợi
+      const txnIdx = transactions.findIndex(t => t.id === linkedTxn.id);
+      if (txnIdx !== -1) {
+        transactions.splice(txnIdx, 1);
+        _pendingOfflineAdds.delete(linkedTxn.id);
+        _lastSavedTxnIds.delete(linkedTxn.id);
+        persistOfflineQueues();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      }
+
+      renderJarCards();
+      triggerUIUpdates();
+      showToast('⚠️ Không thể cập nhật hũ trên server. Đã hoàn tác giao dịch!', 4000);
+    }
+  }
 }
 
 /* Fix #7: confirmDeleteJar hiện chỉ hiện overlay inline, không dùng window.confirm */
@@ -7606,10 +8549,25 @@ function cancelDeleteJar(jarId) {
 function executeDeleteJar(jarId) {
   const jar = jars.find(j => j.id === jarId);
   if (!jar) return;
+
+  // 1. Xóa hũ local
   jars = jars.filter(j => j.id !== jarId);
   saveJars();
   renderJarCards();
-  showToast(`🗑 Đã xóa hũ "${jar.name}".`);
+
+  // 2. Cascade delete: Dọn sạch tất cả giao dịch liên quan đến hũ này
+  const relatedTxns = transactions.filter(t => t.jarId === jarId);
+  if (relatedTxns.length > 0) {
+    relatedTxns.forEach(t => {
+      _pendingOfflineDeletes.add(t.id);
+      _pendingOfflineAdds.delete(t.id);
+    });
+    transactions = transactions.filter(t => t.jarId !== jarId);
+    saveTransactions();
+    triggerUIUpdates();
+  }
+
+  showToast(`🗑 Đã xóa hũ "${jar.name}" và các giao dịch liên quan.`);
   syncDeleteJarFromServer(jarId);
 }
 
@@ -7719,8 +8677,22 @@ async function payInstallment(instId) {
   if (!inst) return;
 
   const prevDate = inst.nextDueDate;
+  const prevPaid = inst.totalPaid;
+  const prevHistory = Array.isArray(inst.history) ? [...inst.history] : [];
+
   inst.nextDueDate = advanceNextDueDate(inst.nextDueDate, inst.cycle);
   inst.totalPaid = (inst.totalPaid || 0) + inst.amount;
+
+  const historyEntry = {
+    amount: inst.amount,
+    paidDate: todayISO(),
+    cycleDate: prevDate,
+    date: new Date().toISOString()
+  };
+  if (!Array.isArray(inst.history)) inst.history = [];
+  inst.history.unshift(historyEntry);
+  if (inst.history.length > 200) inst.history = inst.history.slice(0, 200);
+
   saveInstallments();
 
   // Tự động tạo giao dịch chi tiêu tương ứng
@@ -7737,7 +8709,6 @@ async function payInstallment(instId) {
   };
   transactions.push(txn);
   saveTransactions();
-  syncAddTransactionToServer(txn);
 
   // Cập nhật giao diện
   refreshInstallmentsPanel();
@@ -7745,12 +8716,35 @@ async function payInstallment(instId) {
 
   showToast(`✓ Đã thanh toán ${fmtJar(inst.amount)} cho "${inst.name}"! Kỳ tiếp: ${inst.nextDueDate}`);
 
-  const serverData = await syncPayInstallmentToServer(inst.id);
-  if (serverData && serverData.nextDueDate) {
-    inst.nextDueDate = serverData.nextDueDate;
-    inst.totalPaid = serverData.totalPaid;
-    saveInstallments();
-    refreshInstallmentsPanel();
+  const online = (typeof isServerConnected !== 'undefined' && isServerConnected) || (typeof window !== 'undefined' && window.isServerConnected);
+  if (online) {
+    const serverData = await syncPayInstallmentToServer(inst.id);
+    if (!serverData) {
+      // Rollback on server error
+      inst.nextDueDate = prevDate;
+      inst.totalPaid = prevPaid;
+      inst.history = prevHistory;
+      saveInstallments();
+
+      const txnIdx = transactions.findIndex(t => t.id === txn.id);
+      if (txnIdx !== -1) {
+        transactions.splice(txnIdx, 1);
+        _pendingOfflineAdds.delete(txn.id);
+        _lastSavedTxnIds.delete(txn.id);
+        persistOfflineQueues();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      }
+
+      refreshInstallmentsPanel();
+      triggerUIUpdates();
+      showToast('⚠️ Không thể cập nhật kỳ thanh toán trên server. Đã hoàn tác!', 4000);
+    } else if (serverData.nextDueDate) {
+      inst.nextDueDate = serverData.nextDueDate;
+      inst.totalPaid = serverData.totalPaid;
+      if (Array.isArray(serverData.history)) inst.history = serverData.history;
+      saveInstallments();
+      refreshInstallmentsPanel();
+    }
   }
 }
 
@@ -7776,10 +8770,25 @@ function cancelDeleteInstallment(instId) {
 function executeDeleteInstallment(instId) {
   const inst = installments.find(i => i.id === instId);
   const name = inst ? inst.name : '';
+
+  // 1. Xóa khoản định kỳ local
   installments = installments.filter(i => i.id !== instId);
   saveInstallments();
+
+  // 2. Cascade delete: Dọn sạch tất cả giao dịch liên quan đến khoản định kỳ này
+  const relatedTxns = transactions.filter(t => t.installmentId === instId);
+  if (relatedTxns.length > 0) {
+    relatedTxns.forEach(t => {
+      _pendingOfflineDeletes.add(t.id);
+      _pendingOfflineAdds.delete(t.id);
+    });
+    transactions = transactions.filter(t => t.installmentId !== instId);
+    saveTransactions();
+    triggerUIUpdates();
+  }
+
   refreshInstallmentsPanel();
-  showToast(`🗑 Đã xóa "${name}".`);
+  showToast(`🗑 Đã xóa "${name}" và các giao dịch liên quan.`);
   syncDeleteInstallmentFromServer(instId);
 }
 
@@ -8003,3 +9012,143 @@ window.closeJarHistoryOnOverlay = closeJarHistoryOnOverlay;
 window.filterJarHistory         = filterJarHistory;
 window.onCatChange              = onCatChange;
 window.checkInstallmentsStatus  = checkInstallmentsStatus;
+
+/* ============================================================
+   FEATURE A: Nhắc nhở sắp đến hạn / quá hạn thanh toán định kỳ
+   ============================================================ */
+function checkAndNotifyInstallmentsDue() {
+  if (!Array.isArray(installments) || installments.length === 0) return;
+
+  // Chỉ nhắc 1 lần mỗi ngày — dùng sessionStorage để tránh spam khi reload
+  const todayKey = `caltdhy_inst_reminded_${todayISO()}`;
+  try {
+    if (sessionStorage.getItem(todayKey)) return;
+  } catch (_) {}
+
+  const active = installments.filter(i => i.active);
+  if (active.length === 0) return;
+
+  const overdue = [];
+  const dueToday = [];
+  const dueSoon = [];
+
+  active.forEach(inst => {
+    const days = daysUntil(inst.nextDueDate);
+    if (days < 0) overdue.push(inst);
+    else if (days === 0) dueToday.push(inst);
+    else if (days <= 3) dueSoon.push(inst);
+  });
+
+  // Không có gì đáng nhắc
+  if (overdue.length === 0 && dueToday.length === 0 && dueSoon.length === 0) return;
+
+  // Ghi nhận đã nhắc hôm nay
+  try { sessionStorage.setItem(todayKey, '1'); } catch (_) {}
+
+  // Ưu tiên: quá hạn > hôm nay > sắp đến hạn
+  if (overdue.length > 0) {
+    const names = overdue.slice(0, 3).map(i => i.name).join(', ');
+    const extra = overdue.length > 3 ? ` (+${overdue.length - 3} khác)` : '';
+    showToast(`⚠️ ${overdue.length} khoản quá hạn: ${names}${extra}`, 5000);
+  } else if (dueToday.length > 0) {
+    const names = dueToday.map(i => i.name).join(', ');
+    showToast(`📌 Hôm nay cần thanh toán: ${names}`, 4500);
+  } else if (dueSoon.length > 0) {
+    showToast(`🔔 ${dueSoon.length} khoản sắp đến hạn trong 3 ngày tới`, 4000);
+  }
+}
+
+/* ============================================================
+   FEATURE B: Cảnh báo giao dịch trùng lặp
+   ============================================================ */
+let _confirmToastTimer = null;
+
+function detectDuplicateTransaction(amount, category, date) {
+  const DUPLICATE_WINDOW_MS = 5 * 60 * 1000; // 5 phút
+  const now = Date.now();
+
+  return transactions.find(t => {
+    if (t.amount !== amount) return false;
+    if (t.category !== category) return false;
+    if (t.date !== date) return false;
+    if (!t.createdAt) return false;
+    const createdMs = new Date(t.createdAt).getTime();
+    return (now - createdMs) < DUPLICATE_WINDOW_MS;
+  }) || null;
+}
+
+function showConfirmToast(message, onConfirm, onCancel) {
+  // Tạo confirm toast element nếu chưa có
+  let el = document.getElementById('confirmToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'confirmToast';
+    el.className = 'confirm-toast';
+    el.setAttribute('role', 'alertdialog');
+    el.innerHTML = `
+      <span class="confirm-toast__label"></span>
+      <div class="confirm-toast__actions">
+        <button class="confirm-toast__btn confirm-toast__btn--confirm"></button>
+        <button class="confirm-toast__btn confirm-toast__btn--cancel"></button>
+      </div>`;
+    document.body.appendChild(el);
+  }
+
+  const label = el.querySelector('.confirm-toast__label');
+  const btnConfirm = el.querySelector('.confirm-toast__btn--confirm');
+  const btnCancel = el.querySelector('.confirm-toast__btn--cancel');
+  if (label) label.textContent = message;
+  if (btnConfirm) {
+    btnConfirm.textContent = 'Vẫn lưu';
+    btnConfirm.onclick = () => {
+      hideConfirmToast();
+      if (typeof onConfirm === 'function') onConfirm();
+    };
+  }
+  if (btnCancel) {
+    btnCancel.textContent = 'Hủy';
+    btnCancel.onclick = () => {
+      hideConfirmToast();
+      if (typeof onCancel === 'function') onCancel();
+    };
+  }
+
+  el.classList.add('show');
+  clearTimeout(_confirmToastTimer);
+  _confirmToastTimer = setTimeout(() => hideConfirmToast(), 8000);
+}
+
+function hideConfirmToast() {
+  const el = document.getElementById('confirmToast');
+  if (el) el.classList.remove('show');
+  clearTimeout(_confirmToastTimer);
+}
+
+/* ============================================================
+   FEATURE C: Celebration khi hũ đạt mục tiêu
+   ============================================================ */
+function triggerJarCelebration(jar) {
+  showToast(`🎉🥳 Chúc mừng! Hũ "${jar.name}" đã đạt mục tiêu ${fmtJar(jar.target)}!`, 5000);
+
+  // Kích hoạt animation trên jar card
+  const card = document.querySelector(`[data-jar-id="${jar.id}"]`);
+  if (card) {
+    card.classList.add('jar-card--celebrating');
+
+    // Thêm confetti particles
+    const confetti = document.createElement('div');
+    confetti.className = 'jar-confetti';
+    confetti.innerHTML = Array.from({ length: 12 }, () =>
+      '<div class="jar-confetti__particle"></div>'
+    ).join('');
+    card.style.position = 'relative';
+    card.appendChild(confetti);
+
+    // Dọn dẹp sau 2.5 giây
+    setTimeout(() => {
+      card.classList.remove('jar-card--celebrating');
+      if (confetti.parentNode) confetti.parentNode.removeChild(confetti);
+    }, 2500);
+  }
+}
+

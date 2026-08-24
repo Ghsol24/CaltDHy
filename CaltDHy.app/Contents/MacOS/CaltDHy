@@ -1,0 +1,48 @@
+#!/bin/bash
+# CaltDHy Native App Launcher for macOS
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$HOME/.nvm/versions/node/$(ls -1 $HOME/.nvm/versions/node 2>/dev/null | tail -n 1)/bin:$HOME/.fnm/current/bin:$HOME/.volta/bin:$PATH"
+
+if ! command -v node &> /dev/null; then
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+        . "$HOME/.nvm/nvm.sh"
+    elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+        . "/opt/homebrew/opt/nvm/nvm.sh"
+    fi
+fi
+
+# Determine project root directory dynamically or fallback
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CANDIDATE_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+if [ -f "$CANDIDATE_DIR/backEnd/server/server.js" ]; then
+    PROJECT_DIR="$CANDIDATE_DIR"
+else
+    PROJECT_DIR="/Users/ghtude10./Documents/10.gh/proJectLinhTinh/CaltDHy"
+fi
+
+SERVER_DIR="$PROJECT_DIR/backEnd/server"
+
+# Auto self-healing: if node_modules is missing, install dependencies automatically
+if [ ! -d "$SERVER_DIR/node_modules" ]; then
+    cd "$SERVER_DIR" && npm install
+fi
+
+# If already running, just open browser
+if lsof -i:24127 -t >/dev/null 2>&1; then
+    open "http://localhost:24127"
+    exit 0
+fi
+
+# Start server in background
+cd "$SERVER_DIR"
+nohup node server.js >/tmp/caltdhy_server.log 2>&1 &
+
+# Wait for server to bind port
+for i in {1..30}; do
+    if lsof -i:24127 -t >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.15
+done
+
+open "http://localhost:24127"

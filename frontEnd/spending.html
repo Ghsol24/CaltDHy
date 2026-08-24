@@ -194,6 +194,26 @@
            1. HOME VIEW (TRANG CHỦ - DAILY LOGS)
            ========================================== -->
       <div id="view-home" class="dashboard-view active">
+        <!-- Multi-Wallet Bar / Carousel -->
+        <section class="wallets-section" aria-labelledby="wallets-heading">
+          <div class="wallets-section__header">
+            <h2 class="section-label" id="wallets-heading" data-i18n="walletsSectionTitle">Ví & Tài Khoản</h2>
+            <div class="wallets-header-actions">
+              <button class="btn-wallet-header btn-wallet-transfer" onclick="openTransferModal()" type="button" title="Chuyển tiền giữa các ví">
+                <span class="btn-wallet-icon" aria-hidden="true">⇄</span>
+                <span data-i18n="transferMoney">CHUYỂN TIỀN</span>
+              </button>
+              <button class="btn-wallet-header btn-add-wallet" onclick="openAddWalletModal()" type="button" title="Thêm ví mới">
+                <span class="btn-wallet-icon" aria-hidden="true">+</span>
+                <span data-i18n="addWallet">THÊM VÍ</span>
+              </button>
+            </div>
+          </div>
+          <div class="wallets-carousel" id="walletsCarousel" role="tablist" aria-label="Danh sách ví">
+            <!-- Rendered dynamically by spending.js -->
+          </div>
+        </section>
+
         <!-- Envelope Budgets -->
         <section class="budget-section" aria-labelledby="budget-heading">
           <div class="budget-section__header">
@@ -543,6 +563,14 @@
           </select>
         </div>
 
+        <!-- Dropdown chọn Ví nguồn tiền -->
+        <div class="form-group" id="walletSelectGroup">
+          <label class="form-label" for="txnWallet" data-i18n="walletSelect">Nguồn tiền / Ví</label>
+          <select id="txnWallet" class="form-select">
+            <!-- Injected by spending.js -->
+          </select>
+        </div>
+
         <div class="form-group">
           <label class="form-label" for="txnDate" data-i18n="date">Date</label>
           <input id="txnDate" class="form-input" type="date" />
@@ -889,6 +917,13 @@
             <option>Salary</option>
             <option>Freelance</option>
             <option>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="qlWallet" data-i18n="walletSelect">Nguồn tiền / Ví</label>
+          <select id="qlWallet" class="form-select">
+            <!-- Injected by spending.js -->
           </select>
         </div>
 
@@ -1685,6 +1720,167 @@
         <!-- Injected by renderJarHistory() -->
       </div>
 
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — QUẢN LÝ / THÊM / SỬA VÍ (MULTI-WALLET)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="walletModal" role="dialog" aria-modal="true"
+    aria-labelledby="wallet-modal-title" onclick="closeWalletOnOverlay(event)">
+    <div class="modal-card modal-card--wallet">
+      <button class="modal-close" onclick="closeWalletModal()" aria-label="Đóng">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="wallet-modal-title" data-i18n="addWalletTitle">Thêm Ví / Tài Khoản Mới</h2>
+
+      <form id="walletForm" onsubmit="submitWalletForm(event)" novalidate>
+        <!-- Tên ví -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="walletNameInput">Tên ví <span class="required">*</span></label>
+          <input class="jar-form-input" id="walletNameInput" type="text" placeholder="e.g. Vietcombank, Tiền mặt, MoMo..." maxlength="50" required />
+        </div>
+
+        <!-- Loại ví -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="walletTypeInput">Loại ví / tài khoản <span class="required">*</span></label>
+          <select class="jar-form-input jar-form-select" id="walletTypeInput" onchange="onWalletTypeChange(this.value)">
+            <option value="cash">💵 Tiền mặt (Cash)</option>
+            <option value="bank">🏦 Tài khoản ngân hàng (Bank Account)</option>
+            <option value="e-wallet">📱 Ví điện tử (MoMo, ZaloPay...)</option>
+            <option value="credit">💳 Thẻ tín dụng (Credit Card)</option>
+            <option value="savings">📈 Tài khoản tiết kiệm / Đầu tư</option>
+          </select>
+        </div>
+
+        <!-- Số dư ban đầu -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="walletInitialBalanceInput">Số dư ban đầu (VND)</label>
+          <input class="jar-form-input" id="walletInitialBalanceInput" type="text" placeholder="0 hoặc e.g. 5000000" />
+        </div>
+
+        <!-- Hạn mức tín dụng (Chỉ hiện khi là Thẻ tín dụng) -->
+        <div class="jar-form-group" id="walletCreditLimitGroup" style="display:none">
+          <label class="jar-form-label" for="walletCreditLimitInput">Hạn mức thẻ tín dụng (VND)</label>
+          <input class="jar-form-input" id="walletCreditLimitInput" type="text" placeholder="e.g. 20000000" />
+        </div>
+
+        <!-- Chọn Emoji Icon -->
+        <div class="jar-form-group">
+          <label class="jar-form-label">Biểu tượng</label>
+          <div class="emoji-picker" id="walletEmojiPicker">
+            <button type="button" class="emoji-opt selected" onclick="selectWalletEmoji('💵', this)">💵</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('🏦', this)">🏦</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('💳', this)">💳</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('📱', this)">📱</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('🪙', this)">🪙</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('📈', this)">📈</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('💼', this)">💼</button>
+            <button type="button" class="emoji-opt" onclick="selectWalletEmoji('🏧', this)">🏧</button>
+          </div>
+        </div>
+
+        <!-- Chọn Màu Sắc -->
+        <div class="jar-form-group">
+          <label class="jar-form-label">Màu sắc nhận diện</label>
+          <div class="color-picker" id="walletColorPicker">
+            <button type="button" class="color-opt selected" style="background:#2ed573" onclick="selectWalletColor('#2ed573', this)"></button>
+            <button type="button" class="color-opt" style="background:#3498db" onclick="selectWalletColor('#3498db', this)"></button>
+            <button type="button" class="color-opt" style="background:#9b59b6" onclick="selectWalletColor('#9b59b6', this)"></button>
+            <button type="button" class="color-opt" style="background:#e67e22" onclick="selectWalletColor('#e67e22', this)"></button>
+            <button type="button" class="color-opt" style="background:#e74c3c" onclick="selectWalletColor('#e74c3c', this)"></button>
+            <button type="button" class="color-opt" style="background:#1abc9c" onclick="selectWalletColor('#1abc9c', this)"></button>
+            <button type="button" class="color-opt" style="background:#f1c40f" onclick="selectWalletColor('#f1c40f', this)"></button>
+          </div>
+        </div>
+
+        <!-- Tùy chọn nâng cao: Loại trừ khỏi tổng tài sản -->
+        <div class="jar-form-group jar-form-group--checkbox">
+          <label class="checkbox-label">
+            <input type="checkbox" id="walletExcludedInput" />
+            <span>Không tính ví này vào Tổng số dư khả dụng (phù hợp ví tiết kiệm / đầu tư)</span>
+          </label>
+        </div>
+
+        <div id="walletFormError" class="form-error" role="alert"></div>
+
+        <div class="modal-actions" style="margin-top:20px">
+          <button type="button" class="btn-cancel" id="btnDeleteWallet" onclick="handleDeleteWallet()" style="display:none;color:#ff4757;border-color:rgba(255,71,87,.3)">XÓA VÍ</button>
+          <button type="button" class="btn-cancel" onclick="closeWalletModal()">HỦY</button>
+          <button type="submit" class="btn-save" id="btnSaveWallet">LƯU VÍ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — CHUYỂN TIỀN GIỮA CÁC VÍ (WALLET TRANSFER)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="transferModal" role="dialog" aria-modal="true"
+    aria-labelledby="transfer-modal-title" onclick="closeTransferOnOverlay(event)">
+    <div class="modal-card modal-card--transfer">
+      <button class="modal-close" onclick="closeTransferModal()" aria-label="Đóng">✕</button>
+      <div class="modal-card__screw mc--tl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--tr" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--bl" aria-hidden="true"></div>
+      <div class="modal-card__screw mc--br" aria-hidden="true"></div>
+
+      <h2 class="modal-title" id="transfer-modal-title" data-i18n="transferMoneyTitle">Chuyển Tiền Giữa Các Ví</h2>
+
+      <form id="transferForm" onsubmit="submitTransfer(event)" novalidate>
+        <!-- Ví chuyển đi & Ví nhận -->
+        <div class="transfer-wallet-row">
+          <div class="jar-form-group" style="flex:1">
+            <label class="jar-form-label" for="transferFromSelect">Từ ví (Nguồn) <span class="required">*</span></label>
+            <select class="jar-form-input jar-form-select" id="transferFromSelect" required>
+              <!-- Injected by spending.js -->
+            </select>
+          </div>
+
+          <div class="transfer-arrow" aria-hidden="true">➔</div>
+
+          <div class="jar-form-group" style="flex:1">
+            <label class="jar-form-label" for="transferToSelect">Đến ví (Đích) <span class="required">*</span></label>
+            <select class="jar-form-input jar-form-select" id="transferToSelect" required>
+              <!-- Injected by spending.js -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Số tiền -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="transferAmountInput">Số tiền chuyển (VND) <span class="required">*</span></label>
+          <input class="jar-form-input" id="transferAmountInput" type="text" placeholder="e.g. 500000 hoặc 2tr" required />
+        </div>
+
+        <!-- Phí chuyển khoản nếu có -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="transferFeeInput">Phí chuyển khoản (nếu có)</label>
+          <input class="jar-form-input" id="transferFeeInput" type="text" placeholder="0 hoặc e.g. 1100" />
+        </div>
+
+        <!-- Ngày chuyển -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="transferDateInput">Ngày chuyển</label>
+          <input class="jar-form-input" id="transferDateInput" type="date" />
+        </div>
+
+        <!-- Ghi chú -->
+        <div class="jar-form-group">
+          <label class="jar-form-label" for="transferDescInput">Ghi chú</label>
+          <input class="jar-form-input" id="transferDescInput" type="text" placeholder="e.g. Rút tiền ATM, Nạp tiền MoMo..." maxlength="80" />
+        </div>
+
+        <div id="transferFormError" class="form-error" role="alert"></div>
+
+        <div class="modal-actions" style="margin-top:20px">
+          <button type="button" class="btn-cancel" onclick="closeTransferModal()">HỦY</button>
+          <button type="submit" class="btn-save" id="btnSubmitTransfer">XÁC NHẬN CHUYỂN</button>
+        </div>
+      </form>
     </div>
   </div>
 

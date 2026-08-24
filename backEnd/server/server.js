@@ -81,6 +81,7 @@ app.use('/api/auth', authLimiter, checkDbReady, require('./routes/auth'));
 
 app.use('/api/spending', checkDbReady, require('./routes/spending'));
 app.use('/api/jars', checkDbReady, require('./routes/jars'));
+app.use('/api/wallets', checkDbReady, require('./routes/wallets'));
 
 // Health check
 app.get('/api/health', (req, res) => {

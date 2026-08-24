@@ -4,6 +4,7 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const Budget = require('../models/Budget');
+const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
@@ -21,7 +22,7 @@ function validateTransactionPayload({ type, amount, category, date }) {
     if (!type || amount === undefined || amount === null || !category || !date) {
         return 'Vui lòng điền đầy đủ các thông tin bắt buộc.';
     }
-    if (!['income', 'expense'].includes(type)) return 'Loại giao dịch không hợp lệ.';
+    if (!['income', 'expense', 'transfer'].includes(type)) return 'Loại giao dịch không hợp lệ.';
     if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) return 'Số tiền phải lớn hơn 0.';
     if (typeof category !== 'string' || !category.trim()) return 'Danh mục không hợp lệ.';
     if (!parseTransactionDate(date)) return 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
@@ -43,43 +44,38 @@ router.get('/categories', async (req, res) => {
         });
     } catch (error) {
         console.error('GET /api/spending/categories error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi khi lấy danh mục.' });
+        res.status(500).json({ success: false, message: 'Lỗi khi tải danh mục.' });
     }
 });
 
 // =============================================
-// PUT /api/spending/categories – Cập nhật danh mục tự định nghĩa của user
-// Body: { categories: ['Cat1', 'Cat2', ...] }
+// PUT /api/spending/categories – Cập nhật danh mục tự định nghĩa
 // =============================================
 router.put('/categories', async (req, res) => {
     try {
         const { categories } = req.body;
-
         if (!Array.isArray(categories)) {
-            return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ. Cần mảng categories.' });
+            return res.status(400).json({ success: false, message: 'Dữ liệu danh mục không hợp lệ.' });
         }
 
-        // Lọc: chỉ giữ string hợp lệ, trim whitespace, loại bỏ trùng lặp
-        const cleaned = [...new Set(
-            categories
-                .filter(c => typeof c === 'string' && c.trim().length > 0)
-                .map(c => c.trim())
-        )];
+        const cleanCategories = categories
+            .map(c => (typeof c === 'string' ? c.trim() : ''))
+            .filter(c => c.length > 0 && c.length <= 50);
 
-        const user = await User.findByIdAndUpdate(
+        const updatedUser = await User.findByIdAndUpdate(
             req.user.id,
-            { customCategories: cleaned },
-            { new: true, select: 'customCategories' }
+            { customCategories: cleanCategories },
+            { new: true, runValidators: true }
         );
 
-        if (!user) {
+        if (!updatedUser) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy user.' });
         }
 
         res.json({
             success: true,
-            message: 'Cập nhật danh mục thành công!',
-            data: user.customCategories
+            message: 'Đã cập nhật danh mục thành công!',
+            data: updatedUser.customCategories
         });
     } catch (error) {
         console.error('PUT /api/spending/categories error:', error);
@@ -88,28 +84,28 @@ router.put('/categories', async (req, res) => {
 });
 
 // =============================================
-// GET /api/spending/budget - Lấy hạn mức ngân sách theo danh mục
+// GET /api/spending/budget – Lấy ngân sách của user
 // =============================================
 router.get('/budget', async (req, res) => {
     try {
         const budgets = await Budget.find({ userId: req.user.id });
-        const budgetObj = {};
+        const budgetMap = {};
         budgets.forEach(b => {
-            budgetObj[b.category] = b.limit;
+            budgetMap[b.category] = b.limit;
         });
 
         res.json({
             success: true,
-            data: budgetObj
+            data: budgetMap
         });
     } catch (error) {
         console.error('GET /api/spending/budget error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi khi lấy hạn mức chi tiêu.' });
+        res.status(500).json({ success: false, message: 'Lỗi khi tải ngân sách.' });
     }
 });
 
 // =============================================
-// PUT /api/spending/budget - Cập nhật hạn mức ngân sách
+// PUT /api/spending/budget – Cập nhật hạn mức ngân sách
 // Dùng bulkWrite upsert thay vì delete-all + reinsert để tránh mất data
 // =============================================
 router.put('/budget', async (req, res) => {
@@ -122,15 +118,15 @@ router.put('/budget', async (req, res) => {
 
         // Lọc các category hợp lệ (limit > 0)
         const validEntries = Object.entries(budgetsObj)
-            .filter(([_, limit]) => limit && Number(limit) > 0);
+            .filter(([cat, limit]) => typeof cat === 'string' && cat.trim() && Number(limit) > 0);
 
-        const validCategories = validEntries.map(([cat]) => cat);
+        const validCategories = validEntries.map(([cat]) => cat.trim());
 
         // Bước 1: Upsert tất cả budget hợp lệ (atomic từng item)
         if (validEntries.length > 0) {
             const bulkOps = validEntries.map(([category, limit]) => ({
                 updateOne: {
-                    filter: { userId: req.user.id, category },
+                    filter: { userId: req.user.id, category: category.trim() },
                     update: { $set: { limit: Number(limit) } },
                     upsert: true
                 }
@@ -156,77 +152,61 @@ router.put('/budget', async (req, res) => {
 });
 
 // =============================================
-// GET /api/spending - Lấy danh sách giao dịch của user
-// Hỗ trợ lọc: ?year=2026&month=5
-// Hỗ trợ phân trang: ?page=1&limit=50 (mặc định trả về tất cả nếu không có page)
+// GET /api/spending – Lấy danh sách giao dịch
 // =============================================
 router.get('/', async (req, res) => {
     try {
-        const { year, month, page, limit } = req.query;
-        let filter = { userId: req.user.id };
+        const filter = { userId: req.user.id };
 
-        // Lọc theo năm/tháng nếu có tham số
-        if (year && month) {
-            const yearNum = Number(year);
-            const monthNum = Number(month);
-            if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) {
-                return res.status(400).json({ success: false, message: 'Tháng hoặc năm không hợp lệ.' });
-            }
-            const start = new Date(Date.UTC(yearNum, monthNum - 1, 1));
-            const end = new Date(Date.UTC(yearNum, monthNum, 1));
-            filter.date = { $gte: start, $lt: end };
+        if (req.query.walletId && isValidObjectId(req.query.walletId)) {
+            filter.$or = [
+                { walletId: req.query.walletId },
+                { toWalletId: req.query.walletId }
+            ];
         }
 
-        const query = Transaction.find(filter).sort({ date: -1, createdAt: -1 });
-
-        // Phân trang nếu có truyền `page`
-        let pagination = null;
-        if (page) {
-            const pageNum  = Math.max(1, parseInt(page) || 1);
-            const limitNum = Math.min(200, Math.max(1, parseInt(limit) || 50));
-            const skip     = (pageNum - 1) * limitNum;
-            const total    = await Transaction.countDocuments(filter);
-
-            query.skip(skip).limit(limitNum);
-            pagination = {
-                page: pageNum,
-                limit: limitNum,
-                total,
-                totalPages: Math.ceil(total / limitNum)
-            };
-        }
-
-        const records = await query;
+        const transactions = await Transaction.find(filter).sort({ date: -1, createdAt: -1 });
 
         res.json({
             success: true,
-            data: records.map(r => r.toJSON()),
-            ...(pagination && { pagination })
+            data: transactions.map(t => t.toJSON())
         });
     } catch (error) {
         console.error('GET /api/spending error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi khi lấy dữ liệu chi tiêu.' });
+        res.status(500).json({ success: false, message: 'Lỗi khi tải danh sách giao dịch.' });
     }
 });
 
 // =============================================
-// POST /api/spending - Tạo giao dịch mới
+// POST /api/spending – Tạo giao dịch mới
 // =============================================
 router.post('/', async (req, res) => {
     try {
-        const { type, desc, amount, category, date } = req.body;
+        const { type, desc, amount, category, date, walletId, toWalletId, fee, jarId, installmentId } = req.body;
 
         const validationError = validateTransactionPayload({ type, amount, category, date });
         if (validationError) return res.status(400).json({ success: false, message: validationError });
 
-        const newRecord = await Transaction.create({
+        const createPayload = {
             userId: req.user.id,
             type,
             desc: typeof desc === 'string' ? desc.trim() : '',
             amount: Number(amount),
             category: category.trim(),
-            date: parseTransactionDate(date)
-        });
+            date: parseTransactionDate(date),
+            fee: Number.isFinite(Number(fee)) && Number(fee) >= 0 ? Number(fee) : 0
+        };
+        if (isValidObjectId(walletId)) {
+            createPayload.walletId = walletId;
+        } else {
+            const defWallet = await Wallet.findOne({ userId: req.user.id, isDefault: true, archived: false }) || await Wallet.findOne({ userId: req.user.id, archived: false });
+            if (defWallet) createPayload.walletId = defWallet._id;
+        }
+        if (isValidObjectId(toWalletId)) createPayload.toWalletId = toWalletId;
+        if (isValidObjectId(jarId)) createPayload.jarId = jarId;
+        if (isValidObjectId(installmentId)) createPayload.installmentId = installmentId;
+
+        const newRecord = await Transaction.create(createPayload);
 
         res.status(201).json({
             success: true,
@@ -249,19 +229,41 @@ router.put('/:id', async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
         }
 
-        const { type, desc, amount, category, date } = req.body;
+        const { type, desc, amount, category, date, walletId, toWalletId, fee, jarId, installmentId } = req.body;
         const validationError = validateTransactionPayload({ type, amount, category, date });
         if (validationError) return res.status(400).json({ success: false, message: validationError });
 
+        const updatePayload = {
+            type,
+            desc: typeof desc === 'string' ? desc.trim() : '',
+            amount: Number(amount),
+            category: category.trim(),
+            date: parseTransactionDate(date)
+        };
+        if (fee !== undefined) {
+            updatePayload.fee = Number.isFinite(Number(fee)) && Number(fee) >= 0 ? Number(fee) : 0;
+        }
+        if (walletId !== undefined) {
+            if (isValidObjectId(walletId)) {
+                updatePayload.walletId = walletId;
+            } else {
+                const defWallet = await Wallet.findOne({ userId: req.user.id, isDefault: true, archived: false }) || await Wallet.findOne({ userId: req.user.id, archived: false });
+                if (defWallet) updatePayload.walletId = defWallet._id;
+            }
+        }
+        if (toWalletId !== undefined) {
+            updatePayload.toWalletId = isValidObjectId(toWalletId) ? toWalletId : null;
+        }
+        if (jarId !== undefined) {
+            updatePayload.jarId = isValidObjectId(jarId) ? jarId : null;
+        }
+        if (installmentId !== undefined) {
+            updatePayload.installmentId = isValidObjectId(installmentId) ? installmentId : null;
+        }
+
         const updated = await Transaction.findOneAndUpdate(
             { _id: id, userId: req.user.id },
-            {
-                type,
-                desc: typeof desc === 'string' ? desc.trim() : '',
-                amount: Number(amount),
-                category: category.trim(),
-                date: parseTransactionDate(date)
-            },
+            updatePayload,
             { new: true, runValidators: true }
         );
 

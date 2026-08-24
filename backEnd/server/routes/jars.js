@@ -4,6 +4,7 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Jar = require('../models/Jar');
 const Installment = require('../models/Installment');
+const Transaction = require('../models/Transaction');
 
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
@@ -136,7 +137,7 @@ router.patch('/:id/withdraw', async (req, res) => {
 });
 
 
-// DELETE /api/jars/:id — Xóa hũ (tiền trong hũ không liên kết với balance)
+// DELETE /api/jars/:id — Xóa hũ và dọn dẹp các giao dịch liên quan
 router.delete('/:id', async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
@@ -146,7 +147,11 @@ router.delete('/:id', async (req, res) => {
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
         }
-        res.json({ success: true, message: 'Đã xóa hũ!' });
+
+        // Tự động dọn sạch các giao dịch liên kết với hũ này để tránh giao dịch mồ côi
+        await Transaction.deleteMany({ jarId: req.params.id, userId: req.user.id });
+
+        res.json({ success: true, message: 'Đã xóa hũ và dọn dẹp các giao dịch liên quan!' });
     } catch (error) {
         console.error('DELETE /api/jars/:id error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi xóa hũ.' });
@@ -204,6 +209,39 @@ router.post('/installments', async (req, res) => {
     }
 });
 
+function advanceNextDueDate(dateStr, cycle) {
+    if (!dateStr || typeof dateStr !== 'string') return dateStr;
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+
+    let targetYear = year;
+    let targetMonth = month;
+    if (cycle === 'monthly') {
+        targetMonth = month + 1;
+        if (targetMonth > 11) {
+            targetYear += Math.floor(targetMonth / 12);
+            targetMonth = targetMonth % 12;
+        }
+    } else if (cycle === 'quarterly') {
+        targetMonth = month + 3;
+        if (targetMonth > 11) {
+            targetYear += Math.floor(targetMonth / 12);
+            targetMonth = targetMonth % 12;
+        }
+    } else if (cycle === 'yearly') {
+        targetYear += 1;
+    }
+
+    const daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+    const targetDay = Math.min(day, daysInTargetMonth);
+
+    const pad = n => String(n).padStart(2, '0');
+    return `${targetYear}-${pad(targetMonth + 1)}-${pad(targetDay)}`;
+}
+
 // PATCH /api/jars/installments/:id/pay — Đánh dấu "Đã trả kỳ này" → tự động tính kỳ tiếp
 router.patch('/installments/:id/pay', async (req, res) => {
     try {
@@ -215,16 +253,23 @@ router.patch('/installments/:id/pay', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
 
-        // Tính ngày đến hạn tiếp theo dựa vào cycle
-        const current = new Date(item.nextDueDate + 'T00:00:00');
-        let next = new Date(current);
-        switch (item.cycle) {
-            case 'monthly':   next.setMonth(next.getMonth() + 1);   break;
-            case 'quarterly': next.setMonth(next.getMonth() + 3);   break;
-            case 'yearly':    next.setFullYear(next.getFullYear() + 1); break;
-        }
-        const pad = n => String(n).padStart(2, '0');
-        item.nextDueDate = `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
+        const prevDueDate = item.nextDueDate;
+        const nextDate = advanceNextDueDate(item.nextDueDate, item.cycle);
+
+        // Lưu lịch sử thanh toán từng kỳ
+        const todayDate = new Date().toISOString().slice(0, 10);
+        const historyEntry = {
+            amount: item.amount,
+            paidDate: todayDate,
+            cycleDate: prevDueDate,
+            createdAt: new Date()
+        };
+
+        if (!Array.isArray(item.history)) item.history = [];
+        item.history.unshift(historyEntry);
+        if (item.history.length > 200) item.history = item.history.slice(0, 200);
+
+        item.nextDueDate = nextDate;
         item.totalPaid = (item.totalPaid || 0) + item.amount;
         await item.save();
 
@@ -254,7 +299,7 @@ router.patch('/installments/:id/toggle', async (req, res) => {
     }
 });
 
-// DELETE /api/jars/installments/:id — Xóa khoản định kỳ
+// DELETE /api/jars/installments/:id — Xóa khoản định kỳ và dọn dẹp các giao dịch liên quan
 router.delete('/installments/:id', async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
@@ -264,7 +309,11 @@ router.delete('/installments/:id', async (req, res) => {
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
-        res.json({ success: true, message: 'Đã xóa khoản định kỳ!' });
+
+        // Tự động dọn sạch các giao dịch liên kết với khoản định kỳ này
+        await Transaction.deleteMany({ installmentId: req.params.id, userId: req.user.id });
+
+        res.json({ success: true, message: 'Đã xóa khoản định kỳ và dọn dẹp các giao dịch liên quan!' });
     } catch (error) {
         console.error('DELETE /api/jars/installments/:id error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi xóa khoản định kỳ.' });
