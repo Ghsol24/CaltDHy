@@ -23,7 +23,7 @@ const getInitialTheme = () => {
       applyThemeToDOM(saved);
       return saved;
     }
-  } catch (_) {}
+  } catch {}
   applyThemeToDOM('dark');
   return 'dark';
 };
@@ -34,7 +34,7 @@ export const useThemeStore = create((set, get) => ({
   setTheme: (theme) => {
     try {
       localStorage.setItem(KEY, theme);
-    } catch (_) {}
+    } catch {}
     applyThemeToDOM(theme);
     set({ theme });
   },

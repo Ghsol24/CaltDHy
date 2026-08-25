@@ -1,7 +1,7 @@
 const getAuthToken = () => {
   try {
     return localStorage.getItem('caltdhy_token');
-  } catch (_) {
+  } catch {
     return null;
   }
 };

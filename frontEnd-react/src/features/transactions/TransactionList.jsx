@@ -1,9 +1,11 @@
 import React from 'react';
 import { useTransactionStore } from '../../stores/useTransactionStore';
+import { useConfirmStore } from '../../stores/useConfirmStore';
 import { getCategoryIcon } from '../../utils/categories';
 
 export function TransactionList() {
   const { transactions, filters, deleteTransaction, openEditTransaction, isLoading } = useTransactionStore();
+  const { confirm } = useConfirmStore();
 
   // Apply filters
   const filtered = transactions.filter((t) => {
@@ -35,9 +37,16 @@ export function TransactionList() {
   };
 
   const handleDelete = (id, desc) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa giao dịch "${desc || 'này'}"?`)) {
-      deleteTransaction(id);
-    }
+    confirm({
+      title: 'Xóa giao dịch',
+      message: `Bạn có chắc chắn muốn xóa giao dịch "${desc || 'này'}"? Hành động này không thể hoàn tác.`,
+      confirmText: 'Xóa giao dịch',
+      cancelText: 'Hủy',
+      confirmVariant: 'danger',
+      onConfirm: () => {
+        deleteTransaction(id);
+      },
+    });
   };
 
   if (isLoading && transactions.length === 0) {

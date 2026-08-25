@@ -1,11 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-// Import Industrial Tech Panel CSS Design System
+// Import CaltDHy v2 CSS Design System
 import './assets/css/tokens.css'
 import './assets/css/base.css'
 import './assets/css/layout.css'
+import './assets/css/app-shell.css'
+import './assets/css/dialogs.css'
 import './assets/css/components.css'
+import './assets/css/budgets-analytics.css'
 import './assets/css/modals.css'
 import './assets/css/themes.css'
 import './assets/css/auth.css'

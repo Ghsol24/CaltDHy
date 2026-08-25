@@ -1,35 +1,30 @@
 import { create } from 'zustand';
 
-export const useSpendingStore = create((set, get) => ({
-  activeView: 'home',
-  railCollapsed: (() => {
-    try {
-      return localStorage.getItem('railCollapsed') === 'true';
-    } catch (_) {
-      return false;
-    }
-  })(),
+export const useSpendingStore = create((set) => ({
+  activeView: 'home', // 'home' | 'plan' | 'analytics' | 'jars'
+  planSubTab: 'wallets', // 'wallets' | 'budgets' | 'recurring'
+  analyticsSubTab: 'overview', // 'overview' | 'spending' | 'cash-flow' | 'reports'
+  jarsSubTab: 'jars', // 'jars' | 'goals' | 'history'
+  isSidebarCollapsed: false,
+  selectedMonth: new Date().toISOString().slice(0, 7), // 'YYYY-MM'
 
-  totalBalance: 24811500, // Default display value
-  monthlyIncome: 6200000,
-  monthlyExpense: 1843000,
+  totalBalance: 0,
+  monthlyIncome: 0,
+  monthlyExpense: 0,
 
   isAddTxnOpen: false,
-  isNumpadOpen: false,
   isSettingsOpen: false,
   isWrapupOpen: false,
   isAccountOpen: false,
   isHelpOpen: false,
 
   setActiveView: (view) => set({ activeView: view }),
-
-  toggleRail: () => {
-    const next = !get().railCollapsed;
-    try {
-      localStorage.setItem('railCollapsed', String(next));
-    } catch (_) {}
-    set({ railCollapsed: next });
-  },
+  setPlanSubTab: (subTab) => set({ planSubTab: subTab }),
+  setAnalyticsSubTab: (subTab) => set({ analyticsSubTab: subTab }),
+  setJarsSubTab: (subTab) => set({ jarsSubTab: subTab }),
+  setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+  setSelectedMonth: (month) => set({ selectedMonth: month }),
 
   setMetrics: ({ balance, income, expense }) =>
     set((state) => ({
@@ -40,9 +35,6 @@ export const useSpendingStore = create((set, get) => ({
 
   openAddTxnModal: () => set({ isAddTxnOpen: true }),
   closeAddTxnModal: () => set({ isAddTxnOpen: false }),
-
-  openNumpadModal: () => set({ isNumpadOpen: true }),
-  closeNumpadModal: () => set({ isNumpadOpen: false }),
 
   openSettingsModal: () => set({ isSettingsOpen: true }),
   closeSettingsModal: () => set({ isSettingsOpen: false }),

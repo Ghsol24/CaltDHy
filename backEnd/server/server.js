@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -17,18 +18,31 @@ app.use(helmet({
     contentSecurityPolicy: false
 }));
 
-// CORS Whitelist
-const whitelist = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(',') : ['http://localhost:24127'];
+// CORS Whitelist — Hỗ trợ cả backend port và React Vite dev server
+const defaultAllowedOrigins = [
+    'http://localhost:24127',
+    'http://127.0.0.1:24127',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+];
+const envWhitelist = process.env.CORS_WHITELIST ? process.env.CORS_WHITELIST.split(',').map(s => s.trim()) : [];
+const whitelist = [...new Set([...defaultAllowedOrigins, ...envWhitelist])];
+
 const corsOptions = {
     origin: function (origin, callback) {
-        if (!origin || whitelist.indexOf(origin) !== -1) {
+        if (!origin || whitelist.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            callback(new Error(`Origin ${origin} not allowed by CORS`));
         }
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 };
 app.use(cors(corsOptions));
 
@@ -59,8 +73,11 @@ const authLimiter = rateLimit({
 
 app.use(express.json());
 
-// Serve static files (Frontend)
-app.use(express.static(path.join(__dirname, '..', '..', 'frontEnd')));
+// Serve static files (React Frontend Production Build)
+const reactDistPath = path.join(__dirname, '..', '..', 'frontEnd-react', 'dist');
+if (fs.existsSync(reactDistPath)) {
+    app.use(express.static(reactDistPath));
+}
 
 // Middleware kiểm tra database cho API routes
 const checkDbReady = (req, res, next) => {
@@ -93,12 +110,26 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// SPA Fallback Route cho React Client-Side Routing
+if (fs.existsSync(reactDistPath)) {
+    app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) return next();
+        res.sendFile(path.join(reactDistPath, 'index.html'));
+    });
+}
+
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error('❌ Server error:', err.stack);
-    res.status(500).json({
+    console.error('❌ Server error:', err.stack || err.message);
+    if (err.message && err.message.includes('CORS')) {
+        return res.status(403).json({
+            success: false,
+            message: 'Yêu cầu bị từ chối bởi chính sách bảo mật CORS.'
+        });
+    }
+    res.status(err.status || 500).json({
         success: false,
-        message: 'Lỗi server không xác định.'
+        message: err.message || 'Lỗi server không xác định.'
     });
 });
 

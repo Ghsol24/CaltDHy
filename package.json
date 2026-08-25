@@ -2,6 +2,8 @@
   "name": "caltdhy",
   "version": "2.2.0",
   "scripts": {
+    "dev": "node scripts/start-all.js",
+    "start": "node scripts/start-all.js",
     "test": "node tests/run-api-contract.js",
     "test:e2e": "node tests/run-e2e.js",
     "migrate:email": "node backEnd/server/scripts/migrate-email-verified.js",

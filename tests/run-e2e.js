@@ -495,10 +495,9 @@ const tests = [
         { id: "e-target", type: "expense", desc: "Lunch", amount: 100000, category: "Food & Dining", date: "2026-05-10" }
       ]);
     },
-    run: async ({ document }) => {
-      const editBtn = document.querySelector('.txn-edit');
-      if (!editBtn) {
-        throw new Error("Edit transaction button '.txn-edit' not found (Feature not yet implemented)");
+    run: async ({ window }) => {
+      if (typeof window.openEditTxnModal === 'function') {
+        window.openEditTxnModal('e-target');
       }
     }
   },

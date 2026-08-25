@@ -76,7 +76,7 @@ export function LandingPage() {
   const [lang, setLang] = useState(() => {
     try {
       return localStorage.getItem('caltdhy_lang') || 'en';
-    } catch (_) {
+    } catch {
       return 'en';
     }
   });
@@ -93,7 +93,7 @@ export function LandingPage() {
     try {
       localStorage.setItem('caltdhy_lang', newLang);
       document.documentElement.lang = newLang;
-    } catch (_) {}
+    } catch {}
   };
 
   // Close modal on Escape

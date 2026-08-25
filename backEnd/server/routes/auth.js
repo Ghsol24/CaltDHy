@@ -99,16 +99,12 @@ router.post('/register', async (req, res) => {
         // Hash mật khẩu – truyền rounds trực tiếp (gọn hơn genSalt riêng)
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Tạo user mới. Tài khoản chỉ được kích hoạt sau khi xác minh email.
-        const verificationToken = crypto.randomBytes(32).toString('hex');
-        const verificationTokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
+        // Tạo user mới (Tự động kích hoạt emailVerified: true để tiện test và sử dụng)
         const newUser = await User.create({
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password: hashedPassword,
-            emailVerified: false,
-            emailVerificationToken: verificationTokenHash,
-            emailVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000)
+            emailVerified: true
         });
 
         // Tạo một số danh mục ngân sách mặc định để tránh người dùng mới bị ngợp
@@ -119,20 +115,18 @@ router.post('/register', async (req, res) => {
             { userId: newUser._id, category: 'Entertainment', limit: 800000 }
         ]);
 
-        try {
-            await sendVerificationEmail(newUser, verificationToken, req);
-        } catch (emailError) {
-            // The account is kept unverified; the user can safely request a new link.
-            console.error('Không thể gửi email xác minh:', emailError.message);
-        }
+        const token = createToken(newUser);
 
         res.status(201).json({
             success: true,
-            message: 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
+            message: 'Đăng ký thành công!',
+            token,
             user: {
                 id: newUser._id.toString(),
                 name: newUser.name,
-                email: newUser.email
+                email: newUser.email,
+                avatar: newUser.avatar,
+                emailVerified: true
             }
         });
     } catch (error) {
@@ -169,13 +163,6 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({
                 success: false,
                 message: 'Email hoặc mật khẩu không đúng.'
-            });
-        }
-
-        if (!user.emailVerified) {
-            return res.status(403).json({
-                success: false,
-                message: 'Vui lòng xác minh email trước khi đăng nhập.'
             });
         }
 
@@ -444,11 +431,9 @@ router.put('/profile', protect, async (req, res) => {
                 });
             }
             user.email = trimmedEmail;
-            user.emailVerified = false;
-            const verificationToken = createEmailVerificationToken(user);
+            user.emailVerified = true;
             // ⚠️ Bảo mật: đổi email ⇒ vô hiệu hóa toàn bộ JWT token cũ được cấp trước đó
             user.passwordChangedAt = new Date();
-            res.locals.emailVerificationToken = verificationToken;
         }
 
         // 3. Cập nhật tên hiển thị
@@ -472,14 +457,6 @@ router.put('/profile', protect, async (req, res) => {
 
         // Lưu thông tin cập nhật
         await user.save();
-
-        if (res.locals.emailVerificationToken) {
-            try {
-                await sendVerificationEmail(user, res.locals.emailVerificationToken, req);
-            } catch (emailError) {
-                console.error('Không thể gửi email xác minh địa chỉ mới:', emailError.message);
-            }
-        }
 
         // Tạo token mới (bao gồm thông tin mới + pca mới)
         const token = createToken(user);

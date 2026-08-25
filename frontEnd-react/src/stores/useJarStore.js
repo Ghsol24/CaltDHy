@@ -24,6 +24,13 @@ export const useJarStore = create((set, get) => ({
   createJar: async (data) => {
     const response = await jarsService.createJar(data);
     set({ jars: [response.data, ...get().jars] });
+    return response;
+  },
+
+  updateJar: async (id, data) => {
+    const response = await jarsService.updateJar(id, data);
+    set({ jars: get().jars.map((jar) => jar.id === id ? response.data : jar) });
+    return response;
   },
 
   updateJarBalance: async (id, action, amount, reason) => {
@@ -31,6 +38,7 @@ export const useJarStore = create((set, get) => ({
       ? await jarsService.deposit(id, amount, reason)
       : await jarsService.withdraw(id, amount, reason);
     set({ jars: get().jars.map((jar) => jar.id === id ? response.data : jar) });
+    return response;
   },
 
   deleteJar: async (id) => {

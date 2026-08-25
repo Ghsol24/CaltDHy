@@ -68,15 +68,9 @@
   padding: 0;
 }
 
-html,
-body {
+.landing-page {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
-  /* NO SCROLLING — single viewport lock */
-}
-
-body {
+  min-height: 100vh;
   font-family: var(--font-sans);
   background-color: var(--chassis);
   color: var(--text-primary);
@@ -84,13 +78,14 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
 /* ============================================================
    BACKGROUND — Grain texture + animated gradient orbs
    ============================================================ */
-body::before {
+.landing-page::before {
   content: '';
   position: fixed;
   inset: 0;

@@ -52,9 +52,9 @@ export const SignupPage = () => {
     setIsSubmitting(true);
 
     try {
-      const result = await register(name.trim(), email.trim(), password);
+      await register(name.trim(), email.trim(), password);
       setTimeout(() => {
-        navigate(`/verify-email?email=${encodeURIComponent(result.user?.email || email.trim())}`);
+        navigate('/spending');
       }, 300);
     } catch (err) {
       setError(err.message || 'Lỗi kết nối server.');

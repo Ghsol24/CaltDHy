@@ -386,15 +386,13 @@ html.light-theme .form-divider-label {
 }
 
 /* ============================================================
-   APP BODY — 2-column grid
+   APP BODY — Modern Full-Width Layout
    ============================================================ */
 .app-body {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  min-height: 0;
-  height: calc(100vh - 58px);
-  /* Prevent horizontal overflow from Windows scrollbar eating layout width */
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: calc(100vh - 68px);
 }
 
 /* ============================================================

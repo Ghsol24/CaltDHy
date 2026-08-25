@@ -20,11 +20,18 @@ else
     PROJECT_DIR="/Users/ghtude10./Documents/10.gh/proJectLinhTinh/CaltDHy"
 fi
 
-SERVER_DIR="$PROJECT_DIR/backEnd/server"
+FRONTEND_DIR="$PROJECT_DIR/frontEnd-react"
 
-# Auto self-healing: if node_modules is missing, install dependencies automatically
+# Auto self-healing: if server node_modules is missing, install dependencies
 if [ ! -d "$SERVER_DIR/node_modules" ]; then
     cd "$SERVER_DIR" && npm install
+fi
+
+# Auto build React app if dist is missing
+if [ ! -d "$FRONTEND_DIR/dist" ]; then
+    if [ -d "$FRONTEND_DIR" ]; then
+        cd "$FRONTEND_DIR" && npm run build
+    fi
 fi
 
 # If already running, just open browser

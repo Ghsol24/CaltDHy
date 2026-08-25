@@ -3,6 +3,7 @@ import { api } from './api';
 export const jarsService = {
   getJars: () => api.get('/api/jars'),
   createJar: (data) => api.post('/api/jars', data),
+  updateJar: (id, data) => api.put(`/api/jars/${id}`, data),
   deposit: (id, amount, reason = '') => api.patch(`/api/jars/${id}/deposit`, { amount, reason }),
   withdraw: (id, amount, reason = '') => api.patch(`/api/jars/${id}/withdraw`, { amount, reason }),
   deleteJar: (id) => api.delete(`/api/jars/${id}`),

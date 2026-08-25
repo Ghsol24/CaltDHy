@@ -1,45 +1,102 @@
 /* ============================================================
-   DESIGN TOKENS — Dark Technical Panel
+   DESIGN TOKENS — CaltDHy v2 Modern Light Theme & Mint Accents
    ============================================================ */
 :root {
-  /* ── Surfaces ── */
-  --bg: #090A0F;
-  --surface: #12131C;
-  --surface2: #1C1E2D;
-  --recessed: #05060A;
+  /* ── Core Color Tokens (v2 Mint Clean Theme Spec) ── */
+  --color-brand-700: #008B57;
+  --color-brand-600: #009A5D;
+  --color-brand-100: #E6F7EF;
+  --color-brand-50: #F1FBF6;
+  --color-canvas: #F5FCF8;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F7FAF8;
+  --color-border: #E3ECE7;
+  --color-border-strong: #C9DED3;
+  --color-text: #101B36;
+  --color-text-secondary: #607086;
+  --color-text-muted: #8A98A9;
+  --color-danger: #E34B45;
+  --color-danger-50: #FFF0EF;
+  --color-warning: #D9921E;
+  --color-info-50: #ECF8F1;
+  --color-overlay: rgba(16, 27, 54, 0.48);
 
-  /* ── Text ── */
-  --txt: #F3F4F6;
-  --muted: #8F9CAE;
+  /* ── Aliases mapping to spec ── */
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-card: var(--color-surface);
+  --surface-subtle: var(--color-brand-50);
 
-  /* ── Accent ── */
-  --accent: #FF4B72;
-  --accent-rgb: 255, 75, 114;
-  --green: #10B981;
-  --warn: #F59E0B;
+  /* ── Text Tokens ── */
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
 
-  /* ── Shadows — sleek obsidian glow ── */
-  --sh-raise: 0 8px 30px rgba(0,0,0,.60), inset 0 1px 0 rgba(255, 255, 255, .05);
-  --sh-press: inset 0 2px 8px rgba(0,0,0,.70), inset 0 0 0 1px rgba(255, 255, 255, .02);
-  --sh-accent: 0 0 20px rgba(255, 75, 114, .35), 0 2px 6px rgba(255, 75, 114, .15);
-  --sh-float: 0 20px 48px rgba(0, 0, 0, .80), inset 0 1px 0 rgba(255, 255, 255, .05);
+  /* ── Primary Mint / Emerald Brand Tokens ── */
+  --primary: var(--color-brand-700);
+  --primary-hover: var(--color-brand-600);
+  --primary-light: var(--color-brand-100);
+  --primary-border: var(--color-border-strong);
 
-  /* ── Radii ── */
+  /* ── Status Tokens: Warning ── */
+  --warning: var(--color-warning);
+  --warning-bg: #FEF3C7;
+  --warning-text: #92400E;
+
+  /* ── Status Tokens: Danger ── */
+  --danger: var(--color-danger);
+  --danger-bg: var(--color-danger-50);
+  --danger-text: #991B1B;
+
+  /* ── Border Tokens ── */
+  --border: var(--color-border);
+  --border-focus: var(--color-brand-700);
+
+  /* ── Shadow Tokens ── */
+  --shadow-sm: 0 1px 2px rgba(16, 27, 54, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(16, 27, 54, 0.06), 0 2px 4px -2px rgba(16, 27, 54, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(16, 27, 54, 0.08), 0 4px 6px -4px rgba(16, 27, 54, 0.04);
+  --shadow-card: 0 1px 2px rgba(16, 27, 54, 0.04), 0 6px 20px rgba(16, 27, 54, 0.04);
+  --shadow-dialog: 0 24px 60px rgba(16, 27, 54, 0.24);
+  --focus-ring: 0 0 0 3px rgba(0, 139, 87, 0.26);
+
+  /* ── Radii Tokens ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Legacy Aliases for Seamless Backward Compatibility ── */
+  --txt: var(--text-primary);
+  --muted: var(--text-secondary);
+  --surface2: var(--surface-subtle);
+  --recessed: var(--surface-subtle);
+  --accent: var(--primary);
+  --accent-rgb: 7, 138, 89;
+  --green: var(--primary);
+  --warn: var(--warning);
+  --sh-raise: var(--shadow-md);
+  --sh-press: 0 1px 2px rgba(23, 49, 38, 0.04);
+  --sh-accent: 0 4px 12px rgba(7, 138, 89, 0.2);
+  --sh-float: var(--shadow-lg);
+
   --r-xs: 4px;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-xl: 20px;
 
-  /* ── Animation durations ── */
-  --dur-fast: 120ms;
+  /* ── Animation Durations & Easings ── */
+  --dur-fast: 150ms;
   --dur-mid: 250ms;
   --dur-slow: 400ms;
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ── Font Family Tokens ── */
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'IBM Plex Mono', SFMono-Regular, Consolas, 'Liberation Mono', monospace;
-  --font-display: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* ── Font Scale ── */
   --font-2xs: 10px;
@@ -65,39 +122,191 @@
   /* ── Z-Index Layers ── */
   --z-base: 1;
   --z-fab: 90;
-  --z-modal: 100;
-  --z-dropdown: 200;
-  --z-toast: 300;
+  --z-header: 100;
+  --z-modal: 200;
+  --z-dropdown: 300;
+  --z-toast: 400;
 
-  /* ── Component Tokens: Jar & Summary Cards (Dark defaults) ── */
-  /* Summary Card (Tổng tích lũy, Mục tiêu, Hóa đơn sắp tới) */
-  --c-summary-bg:            rgba(255, 255, 255, 0.02);
-  --c-summary-border:        rgba(255, 255, 255, 0.06);
-  --c-summary-hover-border:  rgba(255, 255, 255, 0.14);
-  --c-summary-shadow:        none;
+  /* ── Component Defaults ── */
+  --c-summary-bg: var(--surface);
+  --c-summary-border: var(--border);
+  --c-summary-hover-border: var(--primary-border);
+  --c-summary-shadow: var(--shadow-sm);
 
-  /* Jar Card */
-  --c-card-bg:               rgba(20, 20, 24, 0.65);
-  --c-card-border:           rgba(255, 255, 255, 0.07);
-  --c-card-shadow:           0 8px 32px rgba(0, 0, 0, 0.24);
-  --c-card-hover-shadow:     0 16px 48px rgba(0, 0, 0, 0.35);
+  --c-card-bg: var(--surface-card);
+  --c-card-border: var(--border);
+  --c-card-shadow: var(--shadow-sm);
+  --c-card-hover-shadow: var(--shadow-md);
 
-  /* Inst Item (Hóa đơn định kỳ row) */
-  --c-inst-bg:               rgba(20, 20, 24, 0.50);
-  --c-inst-border:           rgba(255, 255, 255, 0.05);
-  --c-inst-hover-bg:         rgba(255, 255, 255, 0.03);
-  --c-inst-hover-border:     rgba(255, 255, 255, 0.12);
+  --c-inst-bg: var(--surface-subtle);
+  --c-inst-border: var(--border);
+  --c-inst-hover-bg: var(--primary-light);
+  --c-inst-hover-border: var(--primary-border);
 
-  /* Timeline Date Bubble */
-  --c-bubble-bg:             rgba(255, 255, 255, 0.03);
-  --c-bubble-border:         rgba(255, 255, 255, 0.06);
-  --c-bubble-shadow:         0 4px 12px rgba(0, 0, 0, 0.20);
+  --c-bubble-bg: var(--surface);
+  --c-bubble-border: var(--border);
+  --c-bubble-shadow: var(--shadow-sm);
 
-  /* Dashed Placeholder Card */
-  --c-dashed-border:         rgba(255, 255, 255, 0.12);
-  --c-dashed-icon:           rgba(255, 255, 255, 0.20);
+  --c-dashed-border: var(--border);
+  --c-dashed-icon: var(--text-muted);
 
-  /* ── Scrollbar Colors ── */
-  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-  --scrollbar-hover: rgba(255, 255, 255, 0.22);
+  /* ── Scrollbar ── */
+  --scrollbar-thumb: #C8D8CF;
+  --scrollbar-hover: #9BB8A7;
+}
+
+/* ============================================================
+   THEME OVERRIDES — CaltDHy v1 to v2 Unified System
+   ============================================================ */
+
+/* ── 1. DARK THEME (CaltDHy 1 Dark Technical Panel — Obsidian & Magenta Accent) ── */
+html.dark-theme {
+  --color-brand-700: #FF4B72;
+  --color-brand-600: #FF6B8C;
+  --color-brand-100: rgba(255, 75, 114, 0.18);
+  --color-brand-50: rgba(255, 75, 114, 0.09);
+  --color-canvas: #090A0F;
+  --color-surface: #12131C;
+  --color-surface-muted: #1A1C29;
+  --color-border: #26293A;
+  --color-border-strong: #3D425A;
+  --color-text: #F3F4F6;
+  --color-text-secondary: #8F9CAE;
+  --color-text-muted: #64748B;
+  --color-danger: #FF4757;
+  --color-danger-50: rgba(255, 71, 87, 0.14);
+  --color-warning: #F59E0B;
+  --color-overlay: rgba(0, 0, 0, 0.78);
+
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-card: var(--color-surface);
+  --surface-subtle: var(--color-surface-muted);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --primary: var(--color-brand-700);
+  --primary-hover: var(--color-brand-600);
+  --primary-light: var(--color-brand-100);
+  --primary-border: var(--color-border-strong);
+  --accent: #FF4B72;
+  --accent-rgb: 255, 75, 114;
+  --green: #10B981;
+  --warn: #F59E0B;
+  --border: var(--color-border);
+  --txt: var(--color-text);
+  --muted: var(--color-text-secondary);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.75);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-dialog: 0 24px 64px rgba(0, 0, 0, 0.85);
+  --sh-raise: 0 8px 30px rgba(0, 0, 0, 0.60), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --sh-press: inset 0 2px 8px rgba(0, 0, 0, 0.70), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --sh-accent: 0 0 20px rgba(255, 75, 114, 0.35), 0 2px 6px rgba(255, 75, 114, 0.15);
+  --sh-float: 0 20px 48px rgba(0, 0, 0, 0.80), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --focus-ring: 0 0 0 3px rgba(255, 75, 114, 0.35);
+
+  --c-summary-bg: rgba(255, 255, 255, 0.02);
+  --c-summary-border: rgba(255, 255, 255, 0.06);
+  --c-summary-hover-border: rgba(255, 255, 255, 0.14);
+  --c-card-bg: rgba(20, 20, 24, 0.65);
+  --c-card-border: rgba(255, 255, 255, 0.07);
+  --c-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  --c-inst-bg: rgba(20, 20, 24, 0.50);
+  --c-bubble-bg: rgba(255, 255, 255, 0.03);
+
+  --scrollbar-thumb: #26293A;
+  --scrollbar-hover: #3D425A;
+}
+
+/* ── 2. CREAM THEME (Warm Parchment / Cozy Paper) ── */
+html.cream-theme {
+  --color-brand-700: #C0531E;
+  --color-brand-600: #D96024;
+  --color-brand-100: #F6E2D5;
+  --color-brand-50: #FBF2EB;
+  --color-canvas: #F5EDE0;
+  --color-surface: #FDF8F2;
+  --color-surface-muted: #EDE4D8;
+  --color-border: #E0D4C4;
+  --color-border-strong: #C8B8A4;
+  --color-text: #2C1D10;
+  --color-text-secondary: #584133;
+  --color-text-muted: #8C7564;
+  --color-danger: #D63E3E;
+  --color-danger-50: #FDF0F0;
+  --color-warning: #B57D1A;
+  --color-overlay: rgba(44, 29, 16, 0.5);
+
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-card: var(--color-surface);
+  --surface-subtle: var(--color-surface-muted);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --primary: var(--color-brand-700);
+  --primary-hover: var(--color-brand-600);
+  --primary-light: var(--color-brand-100);
+  --primary-border: var(--color-border-strong);
+  --border: var(--color-border);
+  --txt: var(--color-text);
+  --muted: var(--color-text-secondary);
+
+  --shadow-sm: 0 1px 3px rgba(100, 60, 20, 0.06);
+  --shadow-md: 0 4px 12px rgba(100, 60, 20, 0.08);
+  --shadow-lg: 0 12px 28px rgba(100, 60, 20, 0.12);
+  --shadow-card: 0 2px 8px rgba(100, 60, 20, 0.06);
+  --shadow-dialog: 0 24px 60px rgba(100, 60, 20, 0.25);
+  --focus-ring: 0 0 0 3px rgba(192, 83, 30, 0.25);
+
+  --scrollbar-thumb: #D8CCBE;
+  --scrollbar-hover: #B8A896;
+}
+
+/* ── 3. GREEN THEME (Forest Emerald / Eco Mint) ── */
+html.green-theme {
+  --color-brand-700: #059669;
+  --color-brand-600: #10B981;
+  --color-brand-100: #D1FAE5;
+  --color-brand-50: #ECFDF5;
+  --color-canvas: #EEF8F3;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #E2F2E9;
+  --color-border: #B2DFC8;
+  --color-border-strong: #84C7A3;
+  --color-text: #0E2E1E;
+  --color-text-secondary: #3D6A56;
+  --color-text-muted: #6B9582;
+  --color-danger: #DC2626;
+  --color-danger-50: #FEF2F2;
+  --color-warning: #D97706;
+  --color-overlay: rgba(14, 46, 30, 0.5);
+
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-card: var(--color-surface);
+  --surface-subtle: var(--color-surface-muted);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --primary: var(--color-brand-700);
+  --primary-hover: var(--color-brand-600);
+  --primary-light: var(--color-brand-100);
+  --primary-border: var(--color-border-strong);
+  --border: var(--color-border);
+  --txt: var(--color-text);
+  --muted: var(--color-text-secondary);
+
+  --shadow-sm: 0 1px 3px rgba(16, 120, 80, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 120, 80, 0.08);
+  --shadow-lg: 0 12px 28px rgba(16, 120, 80, 0.12);
+  --shadow-card: 0 2px 8px rgba(16, 120, 80, 0.06);
+  --shadow-dialog: 0 24px 60px rgba(16, 120, 80, 0.25);
+  --focus-ring: 0 0 0 3px rgba(5, 150, 105, 0.25);
+
+  --scrollbar-thumb: #B2DFC8;
+  --scrollbar-hover: #84C7A3;
 }

@@ -8,14 +8,23 @@
    File này ghi đè các body rules cũ để phù hợp với cấu trúc SPA.
    ============================================================ */
 
-/* Reset body về baseline dark panel */
+/* ── Global Baseline Reset for SPA ── */
+html {
+  width: 100%;
+  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 body {
-  font-family: var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif);
-  background: var(--chassis, var(--bg, #090A0F));
-  color: var(--txt, #F3F4F6);
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+  width: 100% !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  background: var(--bg, #F5FAF7) !important;
+  color: var(--text-primary, #173126) !important;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-font-smoothing: antialiased;
@@ -23,10 +32,34 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Đảm bảo body luôn có dark-panel class behavior */
-body {
-  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
-  --scrollbar-hover: rgba(255, 255, 255, 0.2);
+#root {
+  width: 100% !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ── App Shell & Topbar Guarantee ── */
+.app-shell {
+  width: 100% !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: var(--bg, #F5FAF7) !important;
+}
+
+.topbar {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
 }
 
 /* ── Auth page wrapper (thay thế body styles từ auth.css) ── */

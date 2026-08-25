@@ -5,14 +5,14 @@ const TOKEN_KEY = 'caltdhy_token';
 const USER_KEY = 'caltdhy_user';
 
 const getStoredToken = () => {
-  try { return localStorage.getItem(TOKEN_KEY); } catch (_) { return null; }
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
 };
 
 const getStoredUser = () => {
   try {
     const raw = localStorage.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch (_) { return null; }
+  } catch { return null; }
 };
 
 export const useAuthStore = create((set, get) => ({
@@ -51,8 +51,19 @@ export const useAuthStore = create((set, get) => ({
       if (!data.success) {
         throw new Error(data.message || 'Đăng ký thất bại.');
       }
-      set({ isLoading: false });
-      return { success: true, user: data.user, message: data.message };
+      if (data.token && data.user) {
+        localStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+        set({
+          token: data.token,
+          user: data.user,
+          isAuthenticated: true,
+          isLoading: false
+        });
+      } else {
+        set({ isLoading: false });
+      }
+      return { success: true, user: data.user, token: data.token, message: data.message };
     } catch (err) {
       set({ isLoading: false });
       throw err;

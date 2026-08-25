@@ -55,6 +55,38 @@ router.post('/', async (req, res) => {
     }
 });
 
+// PUT /api/jars/:id — Cập nhật thông tin hũ
+router.put('/:id', async (req, res) => {
+    try {
+        if (!isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
+        }
+        const { name, icon, target, targetDate, color } = req.body;
+        const updateData = {};
+        if (name !== undefined) updateData.name = name.trim();
+        if (icon !== undefined) updateData.icon = icon;
+        if (target !== undefined) {
+            if (Number(target) <= 0) return res.status(400).json({ success: false, message: 'Mục tiêu phải lớn hơn 0.' });
+            updateData.target = Number(target);
+        }
+        if (targetDate !== undefined) updateData.targetDate = targetDate || null;
+        if (color !== undefined) updateData.color = color;
+
+        const jar = await Jar.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.id },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+        if (!jar) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
+        }
+        res.json({ success: true, message: 'Đã cập nhật hũ!', data: jar.toJSON() });
+    } catch (error) {
+        console.error('PUT /api/jars/:id error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi cập nhật hũ.' });
+    }
+});
+
 // PATCH /api/jars/:id/deposit — Nạp tiền vào hũ
 router.patch('/:id/deposit', async (req, res) => {
     try {
