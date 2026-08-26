@@ -28,6 +28,7 @@ export function SidebarNav() {
 
   const navGroups = [
     {
+      id: 'group_home',
       groupLabel: 'TRANG CHỦ',
       items: [
         {
@@ -45,6 +46,7 @@ export function SidebarNav() {
       ]
     },
     {
+      id: 'group_plan',
       groupLabel: 'KẾ HOẠCH',
       items: [
         {
@@ -92,6 +94,7 @@ export function SidebarNav() {
       ]
     },
     {
+      id: 'group_analytics',
       groupLabel: 'PHÂN TÍCH',
       items: [
         {
@@ -153,6 +156,7 @@ export function SidebarNav() {
       ]
     },
     {
+      id: 'group_jars',
       groupLabel: 'HŨ CHI TIÊU',
       items: [
         {
@@ -205,11 +209,50 @@ export function SidebarNav() {
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
       aria-label="Điều hướng chính"
     >
+      {/* Collapsed Top Toggle Button */}
+      {isSidebarCollapsed && (
+        <div className="sidebar-collapsed-header">
+          <button
+            type="button"
+            className="sidebar-hamburger-btn"
+            onClick={toggleSidebar}
+            aria-label="Mở rộng thanh điều hướng"
+            title="Mở rộng thanh điều hướng"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12" />
+              <line x1="4" x2="20" y1="6" y2="6" />
+              <line x1="4" x2="20" y1="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="sidebar-scrollable-content">
         {navGroups.map((group, gIdx) => (
-          <div key={gIdx} className="sidebar-nav-group">
+          <div key={group.id || gIdx} className="sidebar-nav-group">
             {!isSidebarCollapsed && (
-              <div className="sidebar-group-label">{group.groupLabel}</div>
+              <div className="sidebar-group-header-row">
+                <div className="sidebar-group-label">
+                  <span className="sidebar-group-dot" aria-hidden="true" />
+                  <span>{group.groupLabel}</span>
+                </div>
+                {gIdx === 0 && (
+                  <button
+                    type="button"
+                    className="sidebar-hamburger-btn"
+                    onClick={toggleSidebar}
+                    aria-label="Thu gọn thanh điều hướng"
+                    title="Thu gọn thanh điều hướng"
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="4" x2="20" y1="12" y2="12" />
+                      <line x1="4" x2="20" y1="6" y2="6" />
+                      <line x1="4" x2="20" y1="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             )}
             <div className="sidebar-group-items">
               {group.items.map((item) => (
@@ -232,36 +275,6 @@ export function SidebarNav() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Collapse button bottom-left */}
-      <div className="sidebar-bottom-action">
-        <button
-          type="button"
-          className="sidebar-collapse-btn"
-          onClick={toggleSidebar}
-          aria-label={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
-          title={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`collapse-icon ${isSidebarCollapsed ? 'is-flipped' : ''}`}
-            aria-hidden="true"
-          >
-            <polyline points="11 17 6 12 11 7" />
-            <polyline points="18 17 13 12 18 7" />
-          </svg>
-          {!isSidebarCollapsed && (
-            <span className="collapse-btn-text">Thu gọn</span>
-          )}
-        </button>
       </div>
     </aside>
   );

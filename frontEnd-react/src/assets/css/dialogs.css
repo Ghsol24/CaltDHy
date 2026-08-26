@@ -623,8 +623,27 @@
 
 .txn-amount-input:focus {
   outline: none;
-  border-color: var(--primary, #078A59);
-  box-shadow: 0 0 0 3px rgba(7, 138, 89, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+/* Error state - chỉ hiển thị khi có class has-error */
+.txn-amount-box.has-error .txn-amount-input {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.txn-amount-error-inline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: #EF4444;
+  margin-top: 5px;
+  padding-left: 2px;
+  animation: fadeIn 0.15s ease-out;
 }
 
 .txn-amount-suffix {
@@ -633,8 +652,8 @@
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 700;
-  color: var(--primary, #078A59);
-  background: var(--primary-light, #E6F4EA);
+  color: var(--text-secondary, #A0AEC0);
+  background: rgba(255, 255, 255, 0.06);
   padding: 4px 8px;
   border-radius: var(--radius-sm, 6px);
   pointer-events: none;
@@ -644,56 +663,196 @@
 .txn-category-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  max-height: 160px;
+  gap: 10px;
+  max-height: 240px;
   overflow-y: auto;
-  padding: 2px;
+  padding: 2px 2px 6px 2px;
 }
 
-.txn-category-btn {
+/* Smart Category Card */
+.txn-category-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 6px;
-  background: var(--surface-subtle, #EDF5F0);
-  border: 1.5px solid transparent;
-  border-radius: var(--radius-md, 10px);
+  justify-content: flex-start;
+  padding: 12px 8px 10px 8px;
+  min-height: 98px;
+  background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
+  border: 1.5px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 12px);
   cursor: pointer;
   transition: all var(--dur-fast) ease;
   text-align: center;
+  user-select: none;
 }
 
-.txn-category-btn:hover {
-  background: #E4EFE8;
+.txn-category-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
 }
 
-.txn-category-btn.active {
-  background: var(--primary-light, #E6F4EA);
-  border-color: var(--primary, #078A59);
-  color: var(--primary, #078A59);
-  font-weight: 600;
+/* Selected state */
+.txn-category-card.active {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 12px rgba(var(--accent-rgb), 0.15);
 }
 
-.txn-category-icon {
-  font-size: 20px;
+/* Check Badge on top right of selected card */
+.txn-card-check-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent, #FF4757);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
-.txn-category-name {
+/* Icon */
+.txn-card-icon {
+  font-size: 20px;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+/* Category Name */
+.txn-card-name {
   font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--text-primary, #173126);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary, #A0AEC0);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  margin-bottom: 2px;
 }
 
-.txn-category-btn.active .txn-category-name {
-  color: var(--primary, #078A59);
+.txn-category-card.active .txn-card-name {
+  color: var(--text-primary, #FFFFFF);
   font-weight: 600;
+}
+
+/* Remaining Amount */
+.txn-card-amount {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #FFFFFF);
+  letter-spacing: -0.01em;
+  margin-bottom: 3px;
+}
+
+/* Subtitle: "Còn lại 88%", "Hết hạn mức", "Chưa đặt hạn mức" */
+.txn-card-subtitle {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted, #718096);
+  margin-bottom: 6px;
+}
+
+/* Unset category card (Chưa đặt hạn mức) */
+.txn-category-card.is-unset {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.txn-category-card.is-unset .txn-card-amount {
+  color: var(--text-muted, #718096);
+}
+
+/* Mini Progress Bar */
+.txn-card-progress-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: auto;
+}
+
+.txn-card-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Income card tag */
+.txn-card-income-tag {
+  margin-top: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* Empty Categories State */
+.txn-empty-categories {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1.5px dashed rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+}
+
+.txn-empty-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.txn-empty-title {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #FFFFFF);
+  margin-bottom: 4px;
+}
+
+.txn-empty-desc {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-muted, #A0AEC0);
+  margin-bottom: 12px;
+  max-width: 240px;
+}
+
+.txn-empty-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: var(--accent, #FF4757);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+}
+
+.txn-empty-cta-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 /* Standard Inputs & Selects */

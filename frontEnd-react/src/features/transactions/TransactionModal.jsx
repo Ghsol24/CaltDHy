@@ -1,20 +1,24 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { formatCurrency } from '../../utils/formatters';
 
 export function TransactionModal() {
-  const { isAddTxnOpen, closeAddTxnModal } = useSpendingStore();
+  const { isAddTxnOpen, closeAddTxnModal, setActiveView, setPlanSubTab } = useSpendingStore();
   const {
     addTransaction,
     updateTransaction,
     undoAddTransaction,
     editingTransaction,
-    closeEditTransaction
+    closeEditTransaction,
+    expenseCategories,
+    incomeCategories,
+    budgets,
+    transactions
   } = useTransactionStore();
   const { wallets, fetchWallets } = useWalletStore();
   const { addToast } = useToastStore();
@@ -30,6 +34,7 @@ export function TransactionModal() {
   const [desc, setDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [amountError, setAmountError] = useState('');
 
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
@@ -44,7 +49,93 @@ export function TransactionModal() {
   }, [isOpen, wallets.length, fetchWallets]);
 
   // Categories list based on selected transaction type
-  const categories = type === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES;
+  const activeExpenseCats = expenseCategories || [];
+  const activeIncomeCats = incomeCategories && incomeCategories.length > 0
+    ? incomeCategories
+    : DEFAULT_INCOME_CATEGORIES;
+
+  const categories = type === 'expense' ? activeExpenseCats : activeIncomeCats;
+
+  // Tính toán ngân sách thời gian thực cho từng danh mục chi tiêu trong tháng được chọn
+  const categoryMetrics = useMemo(() => {
+    if (type !== 'expense') return {};
+    const curPrefix = date ? date.slice(0, 7) : new Date().toISOString().slice(0, 7);
+    const spentMap = {};
+    transactions.forEach((t) => {
+      if (t.type === 'expense' && t.date && t.date.startsWith(curPrefix)) {
+        spentMap[t.category] = (spentMap[t.category] || 0) + (Number(t.amount) || 0) + (Number(t.fee) || 0);
+      }
+    });
+
+    const metrics = {};
+    activeExpenseCats.forEach((cat) => {
+      const rawLimit = budgets && budgets[cat.name] !== undefined ? Number(budgets[cat.name]) : null;
+      const limit = rawLimit && rawLimit > 0 ? rawLimit : null;
+      const spent = spentMap[cat.name] || 0;
+
+      if (limit !== null) {
+        const remaining = limit - spent;
+        const percent = limit > 0 ? Math.round((remaining / limit) * 100) : 0;
+
+        // Quy tắc dải màu theo tiêu chuẩn UX:
+        // > 60% : Xanh lá an toàn
+        // 15% - 60% : Vàng sang cam theo % giảm dần
+        // < 15% hoặc hết hạn mức : Đỏ cảnh báo
+        let color = '#10B981'; // Green
+        if (remaining <= 0 || percent < 15) {
+          color = '#EF4444'; // Red
+        } else if (percent <= 60) {
+          if (percent > 40) {
+            color = '#F59E0B'; // Vàng tươi
+          } else if (percent > 25) {
+            color = '#F97316'; // Vàng cam
+          } else {
+            color = '#EA580C'; // Cam đậm
+          }
+        }
+
+        let statusLabel = `Còn lại ${percent}%`;
+        if (remaining <= 0) {
+          statusLabel = 'Hết hạn mức';
+        }
+
+        metrics[cat.name] = {
+          hasLimit: true,
+          limit,
+          spent,
+          remaining: Math.max(0, remaining),
+          rawRemaining: remaining,
+          percent: Math.max(0, Math.min(100, percent)),
+          color,
+          statusLabel
+        };
+      } else {
+        metrics[cat.name] = {
+          hasLimit: false,
+          limit: null,
+          spent,
+          remaining: 0,
+          rawRemaining: 0,
+          percent: 0,
+          color: 'rgba(255, 255, 255, 0.15)',
+          statusLabel: 'Chưa đặt hạn mức'
+        };
+      }
+    });
+    return metrics;
+  }, [type, date, transactions, budgets, activeExpenseCats]);
+
+  // Sắp xếp danh mục: Ưu tiên có hạn mức trước, sau đó là chưa đặt hạn mức (giữ nguyên trật tự cấu hình)
+  const sortedCategories = useMemo(() => {
+    if (type !== 'expense') return categories;
+    return [...categories].sort((a, b) => {
+      const mA = categoryMetrics[a.name];
+      const mB = categoryMetrics[b.name];
+      if (mA?.hasLimit && !mB?.hasLimit) return -1;
+      if (!mA?.hasLimit && mB?.hasLimit) return 1;
+      return 0;
+    });
+  }, [type, categories, categoryMetrics]);
 
   // Initialize or reset form values
   useEffect(() => {
@@ -68,14 +159,17 @@ export function TransactionModal() {
       );
       setDesc(editingTransaction.desc || '');
       setErrorMsg('');
+      setAmountError('');
     } else {
       // New transaction default state
       setType('expense');
       setAmount('');
-      setCategory(DEFAULT_EXPENSE_CATEGORIES[0]?.name || 'Ăn uống');
+      const defaultCat = sortedCategories[0]?.name || '';
+      setCategory(defaultCat);
       setDate(new Date().toISOString().split('T')[0]);
       setDesc('');
       setErrorMsg('');
+      setAmountError('');
 
       // Preselect default wallet or first wallet
       const defWallet = wallets.find((w) => w.isDefault) || wallets[0];
@@ -83,7 +177,7 @@ export function TransactionModal() {
         setWalletId(defWallet.id);
       }
     }
-  }, [isOpen, editingTransaction, wallets]);
+  }, [isOpen, editingTransaction, wallets, sortedCategories]);
 
   // Preselect wallet if walletId is empty when wallets load
   useEffect(() => {
@@ -109,6 +203,7 @@ export function TransactionModal() {
     closeAddTxnModal();
     closeEditTransaction();
     setErrorMsg('');
+    setAmountError('');
   }, [closeAddTxnModal, closeEditTransaction]);
 
   // Keyboard shortcut: Escape to close modal
@@ -128,7 +223,7 @@ export function TransactionModal() {
   const handleTypeChange = (newType) => {
     if (type === newType) return;
     setType(newType);
-    const newCategories = newType === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES;
+    const newCategories = newType === 'expense' ? activeExpenseCats : activeIncomeCats;
     const exists = newCategories.some((c) => c.name.toLowerCase() === category.toLowerCase());
     if (!exists) {
       setCategory(newCategories[0]?.name || '');
@@ -144,17 +239,22 @@ export function TransactionModal() {
     }
     const num = parseInt(rawVal, 10);
     setAmount(num ? num.toLocaleString('vi-VN') : '');
+    if (num > 0) {
+      setAmountError('');
+      setErrorMsg('');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setAmountError('');
 
     const cleanAmountStr = String(amount).replace(/\D/g, '');
     const numAmount = parseInt(cleanAmountStr, 10);
 
     if (!numAmount || numAmount <= 0) {
-      setErrorMsg('Vui lòng nhập số tiền hợp lệ lớn hơn 0.');
+      setAmountError('Số tiền phải lớn hơn 0');
       amountInputRef.current?.focus();
       return;
     }
@@ -296,7 +396,7 @@ export function TransactionModal() {
               <label htmlFor="txn-amount-input" className="txn-label">
                 <span>Số tiền</span>
               </label>
-              <div className="txn-amount-box">
+              <div className={`txn-amount-box ${amountError ? 'has-error' : ''}`}>
                 <input
                   id="txn-amount-input"
                   ref={amountInputRef}
@@ -313,35 +413,105 @@ export function TransactionModal() {
                   VNĐ
                 </span>
               </div>
+              {amountError && (
+                <div className="txn-amount-error-inline" role="alert">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{amountError}</span>
+                </div>
+              )}
             </div>
 
-            {/* 3. Category Selection Grid */}
+            {/* 3. Smart Category Selection Grid */}
             <div className="txn-field-group">
               <label className="txn-label">
                 <span>Danh mục</span>
               </label>
-              <div className="txn-category-grid" role="radiogroup" aria-label="Chọn danh mục">
-                {categories.map((cat) => {
-                  const isSelected = category.toLowerCase() === cat.name.toLowerCase();
-                  return (
-                    <button
-                      type="button"
-                      key={cat.name}
-                      role="radio"
-                      aria-checked={isSelected}
-                      className={`txn-category-btn ${isSelected ? 'active' : ''}`}
-                      onClick={() => setCategory(cat.name)}
-                    >
-                      <span className="txn-category-icon" aria-hidden="true">
-                        {cat.icon}
-                      </span>
-                      <span className="txn-category-name" title={cat.name}>
-                        {cat.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+
+              {type === 'expense' && sortedCategories.length === 0 ? (
+                <div className="txn-empty-categories" role="status">
+                  <span className="txn-empty-icon" aria-hidden="true">📁</span>
+                  <h4 className="txn-empty-title">Chưa có danh mục</h4>
+                  <p className="txn-empty-desc">Hãy thiết lập danh mục trước khi thêm giao dịch.</p>
+                  <button
+                    type="button"
+                    className="txn-empty-cta-btn"
+                    onClick={() => {
+                      close();
+                      setActiveView('plan');
+                      setPlanSubTab('budgets');
+                    }}
+                  >
+                    Thiết lập danh mục
+                  </button>
+                </div>
+              ) : (
+                <div className="txn-category-grid" role="radiogroup" aria-label="Chọn danh mục">
+                  {sortedCategories.map((cat) => {
+                    const isSelected = category.toLowerCase() === cat.name.toLowerCase();
+                    const metric = categoryMetrics[cat.name];
+                    return (
+                      <button
+                        type="button"
+                        key={cat.name}
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={`txn-category-card ${isSelected ? 'active' : ''} ${metric && !metric.hasLimit ? 'is-unset' : ''}`}
+                        onClick={() => setCategory(cat.name)}
+                      >
+                        {isSelected && (
+                          <span className="txn-card-check-badge" aria-hidden="true">
+                            ✓
+                          </span>
+                        )}
+                        <span className="txn-card-icon" aria-hidden="true">
+                          {cat.icon || getCategoryIcon(cat.name, type)}
+                        </span>
+                        <span className="txn-card-name" title={cat.name}>
+                          {cat.name}
+                        </span>
+
+                        {type === 'expense' && metric ? (
+                          <>
+                            <div className="txn-card-amount">
+                              {metric.hasLimit
+                                ? `${formatCurrency(metric.remaining)}`
+                                : `${formatCurrency(0)}`}
+                            </div>
+                            <div
+                              className="txn-card-subtitle"
+                              style={{
+                                color:
+                                  metric.hasLimit && (metric.percent < 15 || metric.rawRemaining <= 0)
+                                    ? '#EF4444'
+                                    : undefined
+                              }}
+                            >
+                              {metric.statusLabel}
+                            </div>
+                            <div className="txn-card-progress-track" aria-hidden="true">
+                              <div
+                                className="txn-card-progress-fill"
+                                style={{
+                                  width: metric.hasLimit ? `${metric.percent}%` : '0%',
+                                  backgroundColor: metric.color
+                                }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="txn-card-income-tag">
+                            Thu nhập
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* 4. Wallet Selection (Chi từ / Nhận vào) */}

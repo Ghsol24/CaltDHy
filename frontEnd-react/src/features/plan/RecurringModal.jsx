@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
+import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
+import { DEFAULT_EXPENSE_CATEGORIES } from '../../utils/categories';
 
 const getRecurringIcon = (name) => {
   const lower = (name || '').toLowerCase();
@@ -19,9 +21,15 @@ const getRecurringIcon = (name) => {
 
 export function RecurringModal({ isOpen, onClose }) {
   const { createInstallment } = useJarStore();
+  const { expenseCategories } = useTransactionStore();
   const { addToast } = useToastStore();
 
+  const activeExpenseCats = expenseCategories && expenseCategories.length > 0
+    ? expenseCategories
+    : DEFAULT_EXPENSE_CATEGORIES;
+
   const [name, setName] = useState('');
+  const [category, setCategory] = useState(() => activeExpenseCats[0]?.name || 'Housing & Bills');
   const [amount, setAmount] = useState('');
   const [cycle, setCycle] = useState('monthly');
   const [nextDueDate, setNextDueDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -37,6 +45,7 @@ export function RecurringModal({ isOpen, onClose }) {
     if (!isOpen) return;
 
     setName('');
+    setCategory('Housing & Bills');
     setAmount('');
     setCycle('monthly');
     setNextDueDate(new Date().toISOString().split('T')[0]);
@@ -85,6 +94,7 @@ export function RecurringModal({ isOpen, onClose }) {
     try {
       await createInstallment({
         name: name.trim(),
+        category,
         amount: cleanAmount,
         cycle,
         nextDueDate,
@@ -164,6 +174,26 @@ export function RecurringModal({ isOpen, onClose }) {
                 maxLength={60}
                 required
               />
+            </div>
+
+            {/* Category Selection (SSOT từ categories.js) */}
+            <div className="txn-field-group">
+              <label htmlFor="rec-category" className="txn-label">
+                <span>Danh mục chi tiêu</span>
+              </label>
+              <select
+                id="rec-category"
+                className="txn-input"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+              >
+                {activeExpenseCats.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.icon} {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Amount */}

@@ -29,6 +29,40 @@ function validateTransactionPayload({ type, amount, category, date }) {
     return null;
 }
 
+async function validateTransactionWallets({ type, walletId, toWalletId, userId }) {
+    if (type === 'transfer') {
+        if (!walletId || !toWalletId) {
+            return 'Giao dịch chuyển tiền yêu cầu chọn cả ví nguồn và ví đích.';
+        }
+        if (!isValidObjectId(walletId) || !isValidObjectId(toWalletId)) {
+            return 'ID ví nguồn hoặc ví đích không hợp lệ.';
+        }
+        if (walletId.toString() === toWalletId.toString()) {
+            return 'Ví nguồn và ví đích không được trùng nhau.';
+        }
+        const fromWallet = await Wallet.findOne({ _id: walletId, userId, archived: false });
+        if (!fromWallet) {
+            return 'Ví nguồn không tồn tại hoặc không thuộc quyền sở hữu của bạn.';
+        }
+        const toWallet = await Wallet.findOne({ _id: toWalletId, userId, archived: false });
+        if (!toWallet) {
+            return 'Ví đích không tồn tại hoặc không thuộc quyền sở hữu của bạn.';
+        }
+    } else {
+        // income hoặc expense
+        if (walletId) {
+            if (!isValidObjectId(walletId)) {
+                return 'ID ví không hợp lệ.';
+            }
+            const wallet = await Wallet.findOne({ _id: walletId, userId, archived: false });
+            if (!wallet) {
+                return 'Ví đã chọn không tồn tại hoặc không thuộc quyền sở hữu của bạn.';
+            }
+        }
+    }
+    return null;
+}
+
 // =============================================
 // GET /api/spending/categories – Lấy danh mục tự định nghĩa của user
 // =============================================
@@ -116,18 +150,41 @@ router.put('/budget', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ.' });
         }
 
-        // Lọc các category hợp lệ (limit > 0)
-        const validEntries = Object.entries(budgetsObj)
-            .filter(([cat, limit]) => typeof cat === 'string' && cat.trim() && Number(limit) > 0);
+        const entries = Object.entries(budgetsObj);
 
-        const validCategories = validEntries.map(([cat]) => cat.trim());
+        // Kiểm tra chặt chẽ từng entry: không âm thầm nuốt lỗi vượt trần
+        for (const [cat, limit] of entries) {
+            if (typeof cat !== 'string' || !cat.trim()) {
+                return res.status(400).json({ success: false, message: 'Tên danh mục không hợp lệ.' });
+            }
+            const numLimit = Number(limit);
+            if (!Number.isFinite(numLimit)) {
+                return res.status(400).json({ success: false, message: `Hạn mức cho danh mục "${cat}" không hợp lệ.` });
+            }
+            if (numLimit < 0) {
+                return res.status(400).json({ success: false, message: `Hạn mức cho danh mục "${cat}" không được là số âm.` });
+            }
+            if (numLimit > 100000000000) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Hạn mức cho danh mục "${cat}" vượt quá giới hạn tối đa cho phép (100 tỷ VNĐ).`
+                });
+            }
+        }
+
+        // Lọc các category hợp lệ có limit > 0
+        const validEntries = entries
+            .map(([cat, limit]) => [cat.trim(), Number(limit)])
+            .filter(([_, limit]) => limit > 0);
+
+        const validCategories = validEntries.map(([cat]) => cat);
 
         // Bước 1: Upsert tất cả budget hợp lệ (atomic từng item)
         if (validEntries.length > 0) {
             const bulkOps = validEntries.map(([category, limit]) => ({
                 updateOne: {
-                    filter: { userId: req.user.id, category: category.trim() },
-                    update: { $set: { limit: Number(limit) } },
+                    filter: { userId: req.user.id, category },
+                    update: { $set: { limit } },
                     upsert: true
                 }
             }));
@@ -140,10 +197,17 @@ router.put('/budget', async (req, res) => {
             category: { $nin: validCategories }
         });
 
+        // Đọc lại state thực tế từ DB để trả về dữ liệu toàn vẹn
+        const persistedBudgets = await Budget.find({ userId: req.user.id });
+        const budgetMap = {};
+        persistedBudgets.forEach(b => {
+            budgetMap[b.category] = b.limit;
+        });
+
         res.json({
             success: true,
             message: 'Đã cập nhật hạn mức chi tiêu thành công!',
-            data: budgetsObj
+            data: budgetMap
         });
     } catch (error) {
         console.error('PUT /api/spending/budget error:', error);
@@ -165,6 +229,60 @@ router.get('/', async (req, res) => {
             ];
         }
 
+        // Lọc theo category
+        if (req.query.category && typeof req.query.category === 'string' && req.query.category.trim()) {
+            filter.category = req.query.category.trim();
+        }
+
+        // Lọc theo type
+        if (req.query.type && ['income', 'expense', 'transfer'].includes(req.query.type)) {
+            filter.type = req.query.type;
+        }
+
+        // Lọc theo tháng: 'YYYY-MM'
+        if (req.query.month && /^\d{4}-\d{2}$/.test(req.query.month)) {
+            const [year, month] = req.query.month.split('-').map(Number);
+            const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+            const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+            filter.date = { $gte: startOfMonth, $lte: endOfMonth };
+        } else if (req.query.startDate || req.query.endDate) {
+            const dateFilter = {};
+            if (req.query.startDate && parseTransactionDate(req.query.startDate)) {
+                dateFilter.$gte = parseTransactionDate(req.query.startDate);
+            }
+            if (req.query.endDate && parseTransactionDate(req.query.endDate)) {
+                const endParsed = parseTransactionDate(req.query.endDate);
+                endParsed.setUTCHours(23, 59, 59, 999);
+                dateFilter.$lte = endParsed;
+            }
+            if (Object.keys(dateFilter).length > 0) {
+                filter.date = dateFilter;
+            }
+        }
+
+        const page = parseInt(req.query.page, 10);
+        const limit = parseInt(req.query.limit, 10);
+
+        if (Number.isInteger(page) && page > 0 && Number.isInteger(limit) && limit > 0) {
+            const skip = (page - 1) * limit;
+            const [transactions, total] = await Promise.all([
+                Transaction.find(filter).sort({ date: -1, createdAt: -1 }).skip(skip).limit(limit),
+                Transaction.countDocuments(filter)
+            ]);
+
+            return res.json({
+                success: true,
+                data: transactions.map(t => t.toJSON()),
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            });
+        }
+
+        // Tương thích ngược: trả về toàn bộ mảng dữ liệu nếu không phân trang
         const transactions = await Transaction.find(filter).sort({ date: -1, createdAt: -1 });
 
         res.json({
@@ -186,6 +304,9 @@ router.post('/', async (req, res) => {
 
         const validationError = validateTransactionPayload({ type, amount, category, date });
         if (validationError) return res.status(400).json({ success: false, message: validationError });
+
+        const walletError = await validateTransactionWallets({ type, walletId, toWalletId, userId: req.user.id });
+        if (walletError) return res.status(400).json({ success: false, message: walletError });
 
         const createPayload = {
             userId: req.user.id,
@@ -229,9 +350,26 @@ router.put('/:id', async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
         }
 
+        const currentTx = await Transaction.findOne({ _id: id, userId: req.user.id });
+        if (!currentTx) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch hoặc bạn không có quyền chỉnh sửa.' });
+        }
+
         const { type, desc, amount, category, date, walletId, toWalletId, fee, jarId, installmentId } = req.body;
         const validationError = validateTransactionPayload({ type, amount, category, date });
         if (validationError) return res.status(400).json({ success: false, message: validationError });
+
+        const effectiveType = type || currentTx.type;
+        const effectiveWalletId = walletId !== undefined ? walletId : currentTx.walletId;
+        const effectiveToWalletId = toWalletId !== undefined ? toWalletId : currentTx.toWalletId;
+
+        const walletError = await validateTransactionWallets({
+            type: effectiveType,
+            walletId: effectiveWalletId,
+            toWalletId: effectiveToWalletId,
+            userId: req.user.id
+        });
+        if (walletError) return res.status(400).json({ success: false, message: walletError });
 
         const updatePayload = {
             type,
@@ -253,6 +391,10 @@ router.put('/:id', async (req, res) => {
         }
         if (toWalletId !== undefined) {
             updatePayload.toWalletId = isValidObjectId(toWalletId) ? toWalletId : null;
+        } else if (effectiveType !== 'transfer' && currentTx.toWalletId) {
+            // Đổi từ transfer sang income/expense nhưng client không gửi lại toWalletId
+            // -> dọn sạch field cũ, tránh sót dữ liệu "ma" không còn ý nghĩa với type mới.
+            updatePayload.toWalletId = null;
         }
         if (jarId !== undefined) {
             updatePayload.jarId = isValidObjectId(jarId) ? jarId : null;
@@ -266,10 +408,6 @@ router.put('/:id', async (req, res) => {
             updatePayload,
             { new: true, runValidators: true }
         );
-
-        if (!updated) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch hoặc bạn không có quyền chỉnh sửa.' });
-        }
 
         res.json({ success: true, message: 'Đã cập nhật giao dịch!', data: updated.toJSON() });
     } catch (error) {

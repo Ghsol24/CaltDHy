@@ -2,15 +2,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 /**
- * Middleware xác thực JWT – tối ưu hiệu năng
+ * Middleware xác thực JWT – Tối ưu hiệu năng và bảo mật
  *
  * Chiến lược:
- * 1. Verify signature + expiry của JWT (không cần DB).
- * 2. Kiểm tra passwordChangedAt để từ chối token cũ (nếu user vừa đổi/reset mật khẩu).
- *    Để tiết kiệm DB query, chỉ fetch user khi token không có trường `pca` (issued before
- *    the feature was added) HOẶC khi cần thiết theo yêu cầu business.
- *
- * Lưu ý: name/email được nhúng vào JWT payload nên không cần query DB mỗi request.
+ * 1. Verify chữ ký số và hạn dùng của token JWT (stateless check).
+ * 2. Sử dụng truy vấn .lean() chỉ lấy các trường cần thiết ('name email +passwordChangedAt')
+ *    để kiểm tra xem tài khoản còn tồn tại không và token có bị thu hồi do đổi mật khẩu không.
+ *    Việc dùng .lean() giúp loại bỏ hoàn toàn chi phí hydrate Mongoose Document, giảm đáng kể RAM/CPU.
  */
 const protect = async (req, res, next) => {
     try {
@@ -27,12 +25,11 @@ const protect = async (req, res, next) => {
             });
         }
 
-        // Xác minh chữ ký + hạn token – không cần DB
+        // Xác minh chữ ký + hạn token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Fetch user từ DB để kiểm tra passwordChangedAt — đảm bảo token cũ bị thu hồi sau khi đổi mật khẩu/email/tên
-        // Chỉ lấy các trường cần thiết để giảm tải DB
-        const user = await User.findById(decoded.id).select('+passwordChangedAt');
+        // Truy vấn nhẹ nhàng (lean) để kiểm tra tồn tại và thu hồi token nếu đổi mật khẩu
+        const user = await User.findById(decoded.id).select('name email +passwordChangedAt').lean();
 
         if (!user) {
             return res.status(401).json({
@@ -41,10 +38,11 @@ const protect = async (req, res, next) => {
             });
         }
 
-        // Kiểm tra token có được tạo TRƯỚC khi mật khẩu bị đổi không
+        // Kiểm tra token có được tạo TRƯỚC khi mật khẩu bị thay đổi không
         if (user.passwordChangedAt) {
             const tokenIssuedAt = decoded.iat * 1000; // iat là giây → đổi sang ms
-            if (tokenIssuedAt < user.passwordChangedAt.getTime()) {
+            const pwdChangedTime = new Date(user.passwordChangedAt).getTime();
+            if (tokenIssuedAt < pwdChangedTime) {
                 return res.status(401).json({
                     success: false,
                     message: 'Mật khẩu vừa được thay đổi. Vui lòng đăng nhập lại.'

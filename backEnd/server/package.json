@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "migrate:email": "node scripts/migrate-email-verified.js",
-    "migrate:dates": "node scripts/migrate-transaction-dates.js"
+    "migrate:dates": "node scripts/migrate-transaction-dates.js",
+    "migrate:categories": "node scripts/migrate-budget-categories.js"
   },
   "engines": {
     "node": ">=18.0.0"

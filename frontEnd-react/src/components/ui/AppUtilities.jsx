@@ -4,10 +4,12 @@ import { useThemeStore } from '../../stores/useThemeStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useLangStore } from '../../stores/useLangStore';
 import { useTranslation } from '../../i18n/useTranslation';
+import { GuideModal } from '../../features/guide/GuideModal';
+import { ContextualSectionGuide } from '../../features/guide/ContextualSectionGuide';
 
 const THEME_OPTIONS = [
-  { id: 'dark', labelKey: 'darkTheme', swatch: 'linear-gradient(135deg, #FF4B72 0%, #090A0F 100%)' },
-  { id: 'light', labelKey: 'lightTheme', swatch: 'linear-gradient(135deg, #008B57 0%, #F5FCF8 100%)' },
+  { id: 'dark', labelKey: 'darkTheme', swatch: 'linear-gradient(135deg, #2563EB 0%, #090A0F 100%)' },
+  { id: 'light', labelKey: 'lightTheme', swatch: 'linear-gradient(135deg, #6366F1 0%, #FAFAFB 100%)' },
   { id: 'cream', labelKey: 'creamTheme', swatch: 'linear-gradient(135deg, #C0531E 0%, #F5EDE0 100%)' },
   { id: 'green', labelKey: 'greenTheme', swatch: 'linear-gradient(135deg, #059669 0%, #EEF8F3 100%)' },
 ];
@@ -306,21 +308,11 @@ export function AppUtilities() {
         </ModalOverlayShell>
       )}
 
-      {/* ── Help / Guide Modal ── */}
-      {spending.isHelpOpen && (
-        <ModalOverlayShell
-          title={t('guideTitle')}
-          subtitle={t('guideSubtitle')}
-          onClose={spending.closeHelpModal}
-        >
-          <ol style={{ color: 'var(--color-text, #101B36)', lineHeight: 1.8, paddingLeft: 20, margin: 0, fontSize: '13.5px' }}>
-            <li><strong>{t('guideHome')}</strong></li>
-            <li><strong>{t('guidePlan')}</strong></li>
-            <li><strong>{t('guideAnalytics')}</strong></li>
-            <li><strong>{t('guideJars')}</strong></li>
-          </ol>
-        </ModalOverlayShell>
-      )}
+      {/* ── Contextual Per-Section First-time Guide ── */}
+      <ContextualSectionGuide />
+
+      {/* ── Master Guide Modal (5 Comprehensive Tabs) ── */}
+      <GuideModal />
     </>
   );
 }

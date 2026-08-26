@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
-import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
@@ -11,7 +10,6 @@ const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
 export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'deposit' }) {
   const { updateJarBalance } = useJarStore();
   const { wallets } = useWalletStore();
-  const { addTransaction } = useTransactionStore();
   const { addToast } = useToastStore();
 
   const [action, setAction] = useState(initialAction); // 'deposit' | 'withdraw'
@@ -96,36 +94,11 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
 
     setIsSubmitting(true);
     try {
-      // 1. Update jar balance
-      await updateJarBalance(jar.id, action, cleanAmount, reason.trim());
-
-      // 2. Optionally sync with wallet
-      if (selectedWalletId) {
-        const todayStr = new Date().toISOString().slice(0, 10);
-        if (action === 'deposit') {
-          // Tiền từ ví -> nạp vào hũ => Ghi nhận khoản chi/tiết kiệm từ ví đó
-          await addTransaction({
-            type: 'expense',
-            amount: cleanAmount,
-            category: 'Tiết kiệm',
-            desc: reason.trim() ? `${reason.trim()} (Nạp hũ ${jar.name})` : `Nạp vào hũ ${jar.name}`,
-            date: todayStr,
-            walletId: selectedWalletId,
-            jarId: jar.id
-          });
-        } else {
-          // Rút từ hũ -> đổ vào ví => Ghi nhận khoản thu nhập vào ví đó
-          await addTransaction({
-            type: 'income',
-            amount: cleanAmount,
-            category: 'Thu nhập khác',
-            desc: reason.trim() ? `${reason.trim()} (Rút từ hũ ${jar.name})` : `Rút từ hũ ${jar.name}`,
-            date: todayStr,
-            walletId: selectedWalletId,
-            jarId: jar.id
-          });
-        }
-      }
+      // Gộp việc đổi số dư hũ + đồng bộ ví (nếu có chọn) thành 1 lệnh gọi duy nhất.
+      // Backend xử lý atomic trong 1 Mongo transaction (xem PATCH /:id/deposit|withdraw),
+      // tránh tình trạng đổi số hũ thành công nhưng phần đồng bộ ví lỡ thất bại giữa chừng
+      // (ví dụ mất mạng) để lại trạng thái "hũ đã đổi nhưng không có giao dịch nào ghi nhận".
+      await updateJarBalance(jar.id, action, cleanAmount, reason.trim(), selectedWalletId || null);
 
       setIsSubmitting(false);
       onClose();

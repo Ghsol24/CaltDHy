@@ -21,7 +21,8 @@ const budgetSchema = new mongoose.Schema(
         limit: {
             type: Number,
             required: [true, 'limit không được để trống.'],
-            min: [0, 'Hạn mức không được âm.']
+            min: [0, 'Hạn mức không được âm.'],
+            max: [100000000000, 'Hạn mức không vượt quá 100 tỷ VNĐ.']
         }
     },
     {

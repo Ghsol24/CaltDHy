@@ -189,9 +189,9 @@
 
 /* ── Guide Banner ── */
 .guide-banner {
-  background: rgba(255, 75, 114, .08);
-  border-top: 1px solid rgba(255, 75, 114, .2);
-  border-bottom: 1px solid rgba(255, 75, 114, .2);
+  background: rgba(var(--accent-rgb), .08);
+  border-top: 1px solid rgba(var(--accent-rgb), .2);
+  border-bottom: 1px solid rgba(var(--accent-rgb), .2);
   padding: 10px 24px;
   text-align: center;
   font-family: var(--font-mono);

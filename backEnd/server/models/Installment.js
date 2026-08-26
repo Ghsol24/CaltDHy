@@ -34,6 +34,12 @@ const installmentSchema = new mongoose.Schema(
             default: '💳',
             maxlength: [8, 'Icon không hợp lệ.']
         },
+        category: {
+            type: String,
+            required: [true, 'Danh mục không được để trống.'],
+            default: 'Housing & Bills',
+            trim: true
+        },
         amount: {
             type: Number,
             required: [true, 'Số tiền không được để trống.'],

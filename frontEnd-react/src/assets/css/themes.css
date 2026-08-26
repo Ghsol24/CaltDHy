@@ -4,11 +4,11 @@
 @keyframes ventGlow {
   0%, 100% {
     opacity: 0.15;
-    filter: drop-shadow(0 0 1px rgba(255, 75, 114, 0));
+    filter: drop-shadow(0 0 1px rgba(96, 165, 250, 0));
   }
   50% {
     opacity: 0.35;
-    filter: drop-shadow(0 0 3px rgba(255, 75, 114, 0.4));
+    filter: drop-shadow(0 0 3px rgba(96, 165, 250, 0.4));
   }
 }
 

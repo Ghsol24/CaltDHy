@@ -8,7 +8,7 @@ import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categor
 
 export function BudgetsTab() {
   const { selectedMonth, setSelectedMonth } = useSpendingStore();
-  const { transactions, budgets } = useTransactionStore();
+  const { transactions, budgets, expenseCategories } = useTransactionStore();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
@@ -37,13 +37,13 @@ export function BudgetsTab() {
 
   // Gather categories to display
   const allCategoryNames = useMemo(() => {
+    const activeNames = (expenseCategories || []).map((c) => c.name);
     const set = new Set([
-      ...DEFAULT_EXPENSE_CATEGORIES.map((c) => c.name),
-      ...Object.keys(budgets || {}),
+      ...activeNames,
       ...Object.keys(monthlyStats.byCategory || {})
     ]);
     return Array.from(set);
-  }, [budgets, monthlyStats.byCategory]);
+  }, [expenseCategories, monthlyStats.byCategory]);
 
   let totalBudgetLimit = 0;
   let totalBudgetSpent = 0;

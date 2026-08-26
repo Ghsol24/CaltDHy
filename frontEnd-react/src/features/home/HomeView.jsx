@@ -14,19 +14,49 @@ export function HomeView() {
   const [, mStr] = currentMonthStr.split('-');
   const monthNum = parseInt(mStr, 10) || (new Date().getMonth() + 1);
 
-  // Check if finances are generally in good health
+  // Check finance health & context
   const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
+  const hasTransactions = (transactions || []).some(
+    (t) => (t.date || '').slice(0, 7) === currentMonthStr
+  );
+  
+  let hasAnyBudget = false;
   let hasCriticalBudget = false;
+  let hasWarningBudget = false;
+  let totalBudgetLimit = 0;
+
   if (budgets && typeof budgets === 'object') {
     Object.entries(budgets).forEach(([category, limit]) => {
       const numLimit = Number(limit) || 0;
       if (numLimit > 0) {
+        hasAnyBudget = true;
+        totalBudgetLimit += numLimit;
         const spent = monthlyStats.byCategory[category] || 0;
         if (spent >= numLimit) {
           hasCriticalBudget = true;
+        } else if (spent >= numLimit * 0.75) {
+          hasWarningBudget = true;
         }
       }
     });
+  }
+
+  // Dynamic context-aware greeting
+  let greeting = `Tháng ${monthNum} của bạn đang ổn`;
+  if (!hasTransactions && !hasAnyBudget) {
+    greeting = `Chào bạn, hãy bắt đầu quản lý tài chính tháng ${monthNum}`;
+  } else if (!hasTransactions && hasAnyBudget) {
+    greeting = `Tháng ${monthNum} đã sẵn sàng cho kế hoạch chi tiêu`;
+  } else if (hasCriticalBudget) {
+    greeting = `Tháng ${monthNum} có khoản đã vượt hạn mức!`;
+  } else if (hasWarningBudget) {
+    greeting = `Tháng ${monthNum} cần chú ý chi tiêu`;
+  } else if (!hasAnyBudget && monthlyStats.totalExpense > 0) {
+    greeting = `Tổng quan chi tiêu tháng ${monthNum}`;
+  } else if (monthlyStats.totalIncome > 0 && monthlyStats.totalIncome > monthlyStats.totalExpense * 1.5) {
+    greeting = `Dòng tiền tháng ${monthNum} đang tăng trưởng tích cực`;
+  } else if (hasAnyBudget) {
+    greeting = `Chi tiêu tháng ${monthNum} trong tầm kiểm soát`;
   }
 
   const now = new Date();
@@ -39,11 +69,7 @@ export function HomeView() {
       {/* ── TOP HEADER ROW ── */}
       <div className="home-dashboard-header">
         <div className="home-dashboard-title-box">
-          <h1 className="home-dashboard-greeting">
-            {hasCriticalBudget
-              ? `Tháng ${monthNum} của bạn cần chú ý`
-              : `Tháng ${monthNum} của bạn đang ổn`}
-          </h1>
+          <h1 className="home-dashboard-greeting">{greeting}</h1>
           <p className="home-dashboard-updated">{lastUpdatedText}</p>
         </div>
 

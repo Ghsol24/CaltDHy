@@ -212,42 +212,49 @@ export function AnalyticsView() {
   const doughnutChartData = useMemo(() => {
     if (monthData.categories.length === 0) return null;
 
+    const sliceBorderColor = theme === 'dark' ? '#12131C' : '#FFFFFF';
+
     return {
       labels: monthData.categories.map((c) => c.name),
       datasets: [
         {
           data: monthData.categories.map((c) => c.amount),
           backgroundColor: monthData.categories.map((c) => c.color),
-          borderColor: '#FFFFFF',
+          borderColor: sliceBorderColor,
           borderWidth: 2,
           hoverOffset: 6
         }
       ]
     };
-  }, [monthData.categories]);
+  }, [monthData.categories, theme]);
 
-  const doughnutOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '72%',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#101B36',
-        titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
-        bodyFont: { family: 'Inter, sans-serif', size: 13, weight: 'bold' },
-        padding: 10,
-        cornerRadius: 8,
-        callbacks: {
-          label: (context) => {
-            const val = context.parsed || 0;
-            const pct = monthData.expense > 0 ? Math.round((val / monthData.expense) * 100) : 0;
-            return ` ${formatCurrency(val)} (${pct}%)`;
+  const doughnutOptions = useMemo(() => {
+    const isDark = theme === 'dark';
+    const tooltipBg = isDark ? '#1A1C29' : '#101B36';
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
+          bodyFont: { family: 'Inter, sans-serif', size: 13, weight: 'bold' },
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: (context) => {
+              const val = context.parsed || 0;
+              const pct = monthData.expense > 0 ? Math.round((val / monthData.expense) * 100) : 0;
+              return ` ${formatCurrency(val)} (${pct}%)`;
+            }
           }
         }
       }
-    }
-  }), [monthData.expense]);
+    };
+  }, [monthData.expense, theme]);
 
   // Bar Chart Configuration
   const barChartData = useMemo(() => {

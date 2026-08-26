@@ -4,6 +4,7 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
+const { runWithTransaction } = require('../utils/mongoTransaction');
 
 // Tất cả routes wallets đều cần xác thực JWT
 router.use(protect);
@@ -133,7 +134,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // =============================================
-// DELETE /api/wallets/:id — Xóa ví (Chuyển giao dịch về ví mặc định)
+// DELETE /api/wallets/:id — Xóa ví (Bảo toàn initialBalance và chuyển giao dịch về ví mặc định)
 // =============================================
 router.delete('/:id', async (req, res) => {
     try {
@@ -147,43 +148,83 @@ router.delete('/:id', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Bạn không thể xóa ví duy nhất còn lại.' });
         }
 
-        const walletToDelete = await Wallet.findOne({ _id: id, userId: req.user.id, archived: false });
-        if (!walletToDelete) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy ví cần xóa.' });
-        }
+        const result = await runWithTransaction(async (session) => {
+            // 1. CHECKS
+            const queryDel = Wallet.findOne({ _id: id, userId: req.user.id, archived: false });
+            if (session) queryDel.session(session);
+            const walletToDelete = await queryDel;
 
-        // Tìm ví mặc định để nhận lại các giao dịch
-        let defaultWallet = await Wallet.findOne({ _id: { $ne: id }, userId: req.user.id, isDefault: true, archived: false });
-        if (!defaultWallet) {
-            defaultWallet = await Wallet.findOne({ _id: { $ne: id }, userId: req.user.id, archived: false });
-            if (defaultWallet) {
-                defaultWallet.isDefault = true;
-                await defaultWallet.save();
+            if (!walletToDelete) {
+                const err = new Error('WALLET_NOT_FOUND');
+                err.status = 404;
+                throw err;
             }
-        }
 
-        // Chuyển toàn bộ giao dịch từ ví bị xóa sang ví mặc định (Zero Data Loss)
-        if (defaultWallet) {
+            // Tìm ví mặc định hoặc ví thay thế khác để nhận lại các giao dịch & initialBalance
+            let queryDef = Wallet.findOne({ _id: { $ne: id }, userId: req.user.id, isDefault: true, archived: false });
+            if (session) queryDef.session(session);
+            let defaultWallet = await queryDef;
+
+            if (!defaultWallet) {
+                let queryAny = Wallet.findOne({ _id: { $ne: id }, userId: req.user.id, archived: false });
+                if (session) queryAny.session(session);
+                defaultWallet = await queryAny;
+                if (defaultWallet) {
+                    defaultWallet.isDefault = true;
+                }
+            }
+
+            if (!defaultWallet) {
+                const err = new Error('NO_FALLBACK_WALLET');
+                err.status = 400;
+                throw err;
+            }
+
+            // 2. EFFECTS
+            // A. Chuyển toàn bộ giao dịch từ ví bị xóa sang ví mặc định
+            const updateOpts = session ? { session } : {};
             await Transaction.updateMany(
                 { walletId: id, userId: req.user.id },
-                { $set: { walletId: defaultWallet._id } }
+                { $set: { walletId: defaultWallet._id } },
+                updateOpts
             );
             await Transaction.updateMany(
                 { toWalletId: id, userId: req.user.id },
-                { $set: { toWalletId: defaultWallet._id } }
+                { $set: { toWalletId: defaultWallet._id } },
+                updateOpts
             );
-        }
 
-        await Wallet.findOneAndDelete({ _id: id, userId: req.user.id });
+            // B. Bảo toàn 100% initialBalance: cộng dồn vào ví mặc định (Zero Data Loss thực sự)
+            const transferInitialBalance = Number(walletToDelete.initialBalance) || 0;
+            if (transferInitialBalance !== 0) {
+                defaultWallet.initialBalance = (Number(defaultWallet.initialBalance) || 0) + transferInitialBalance;
+            }
+            await defaultWallet.save(session ? { session } : {});
+
+            // C. Xóa ví
+            const delQuery = Wallet.findOneAndDelete({ _id: id, userId: req.user.id });
+            if (session) delQuery.session(session);
+            await delQuery;
+
+            return {
+                fallbackWalletId: defaultWallet._id.toString()
+            };
+        });
 
         res.json({
             success: true,
-            message: 'Đã xóa ví và chuyển các giao dịch liên quan về ví mặc định!',
-            fallbackWalletId: defaultWallet ? defaultWallet._id.toString() : null
+            message: 'Đã xóa ví, bảo toàn số dư gốc và chuyển các giao dịch liên quan về ví mặc định!',
+            fallbackWalletId: result.fallbackWalletId
         });
     } catch (error) {
+        if (error.message === 'WALLET_NOT_FOUND') {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy ví cần xóa.' });
+        }
+        if (error.message === 'NO_FALLBACK_WALLET') {
+            return res.status(400).json({ success: false, message: 'Không tìm thấy ví thay thế hợp lệ.' });
+        }
         console.error('DELETE /api/wallets/:id error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi khi xóa ví.' });
+        res.status(error.status || 500).json({ success: false, message: error.message || 'Lỗi khi xóa ví.' });
     }
 });
 

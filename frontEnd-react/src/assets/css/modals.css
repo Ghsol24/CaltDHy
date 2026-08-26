@@ -1227,9 +1227,9 @@ html.green-theme .budget-add-cat {
 
 /* Active state colours */
 .btn-new-cat-type.is-expense {
-  background: rgba(255,75,114,.1);
-  color: #FF4B72;
-  border-color: rgba(255,75,114,.4);
+  background: var(--color-danger-50, rgba(255,71,87,.1));
+  color: var(--color-danger, #FF4757);
+  border-color: rgba(255,71,87,.4);
 }
 
 .btn-new-cat-type.is-income {
@@ -1303,9 +1303,9 @@ html.green-theme .budget-add-cat {
 }
 
 .budget-type-option--expense.selected {
-  background: rgba(255,75,114,.08);
-  color: #FF4B72;
-  border-left-color: #FF4B72;
+  background: var(--color-danger-50, rgba(255,71,87,.08));
+  color: var(--color-danger, #FF4757);
+  border-left-color: var(--color-danger, #FF4757);
 }
 
 .budget-type-option--income.selected {
@@ -1679,8 +1679,8 @@ html.green-theme .month-grid-cell--active {
 
 .btn-help:hover {
   color: var(--accent);
-  border-color: rgba(255, 75, 114, .35);
-  box-shadow: 0 0 14px rgba(255, 75, 114, .2), var(--sh-raise);
+  border-color: rgba(var(--accent-rgb), .35);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), .2), var(--sh-raise);
   transform: translateY(-1px);
 }
 
@@ -1692,7 +1692,7 @@ html.green-theme .month-grid-cell--active {
 /* Pulse animation hint on first load */
 @keyframes helpPulse {
   0%, 100% { box-shadow: var(--sh-raise); }
-  50% { box-shadow: 0 0 0 4px rgba(255, 75, 114, .18), var(--sh-raise); }
+  50% { box-shadow: 0 0 0 4px rgba(var(--accent-rgb), .18), var(--sh-raise); }
 }
 
 /* ============================================================
@@ -1762,7 +1762,7 @@ html.green-theme .month-grid-cell--active {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.12) 40%, rgba(255, 75, 114, .2) 60%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.12) 40%, rgba(var(--accent-rgb), .2) 60%, transparent 100%);
   z-index: 1;
 }
 
@@ -1815,8 +1815,8 @@ html.green-theme .month-grid-cell--active {
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--accent);
-  background: rgba(255, 75, 114, .12);
-  border: 1px solid rgba(255, 75, 114, .25);
+  background: rgba(var(--accent-rgb), .12);
+  border: 1px solid rgba(var(--accent-rgb), .25);
   padding: 4px 10px;
   border-radius: 99px;
 }
@@ -1838,7 +1838,7 @@ html.green-theme .month-grid-cell--active {
 
 .guide-title__accent {
   color: var(--accent);
-  text-shadow: 0 0 12px rgba(255, 75, 114, .5);
+  text-shadow: 0 0 12px rgba(var(--accent-rgb), .5);
 }
 
 .guide-title__sub {
@@ -1867,7 +1867,7 @@ html.green-theme .month-grid-cell--active {
 
 .guide-close:hover {
   color: var(--accent);
-  background: rgba(255, 75, 114, .1);
+  background: rgba(var(--accent-rgb), .1);
 }
 
 .guide-close:active {
@@ -1937,10 +1937,10 @@ html.green-theme .month-grid-cell--active {
 
 .guide-tab.active {
   color: var(--accent);
-  background: rgba(255, 75, 114, .08);
+  background: rgba(var(--accent-rgb), .08);
   border-color: var(--accent);
   border-width: 2px;
-  box-shadow: 0 0 12px rgba(255, 75, 114, .15);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), .15);
 }
 
 /* ── Guide Body (scrollable) ── */
@@ -1992,8 +1992,8 @@ html.green-theme .month-grid-cell--active {
   display: flex;
   align-items: center;
   gap: 20px;
-  background: linear-gradient(135deg, rgba(255,75,114,.07) 0%, rgba(16,185,129,.05) 100%);
-  border: 1px solid rgba(255, 75, 114, .12);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), .07) 0%, rgba(16,185,129,.05) 100%);
+  border: 1px solid rgba(var(--accent-rgb), .12);
   border-radius: var(--r-lg);
   padding: 20px 24px;
   margin-bottom: 24px;
@@ -2093,8 +2093,8 @@ html.green-theme .month-grid-cell--active {
   font-size: 12px;
   font-weight: 800;
   color: var(--accent);
-  background: rgba(255,75,114,.08);
-  border: 2px solid rgba(255,75,114,.25);
+  background: rgba(var(--accent-rgb),.08);
+  border: 2px solid rgba(var(--accent-rgb),.25);
   width: 36px;
   height: 36px;
   border-radius: 8px;
@@ -2236,7 +2236,7 @@ html.green-theme .month-grid-cell--active {
   font-family: var(--font-mono);
   font-size: 28px;
   font-weight: 800;
-  color: rgba(255,75,114,.15);
+  color: rgba(var(--accent-rgb), .15);
   line-height: 1;
   margin-bottom: 8px;
   user-select: none;
@@ -2329,9 +2329,9 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-badge--expense {
-  background: rgba(255,75,114,.15);
-  border: 1px solid rgba(255,75,114,.3);
-  color: var(--accent);
+  background: var(--color-danger-50, rgba(255,71,87,.15));
+  border: 1px solid rgba(255,71,87,.3);
+  color: var(--color-danger, #FF4757);
 }
 
 .guide-badge--income {
@@ -2397,7 +2397,7 @@ html.green-theme .month-grid-cell--active {
 
 .guide-footer__close:hover {
   color: var(--accent);
-  border-color: rgba(255,75,114,.3);
+  border-color: rgba(var(--accent-rgb), .3);
 }
 
 .guide-footer__close:active {
@@ -2445,9 +2445,9 @@ html.green-theme .month-grid-cell--active {
 
 .report-tab.active {
   color: var(--accent);
-  background: rgba(255, 75, 114, .08);
-  border-color: rgba(255, 75, 114, .5);
-  box-shadow: 0 0 10px rgba(255, 75, 114, .18), var(--sh-press);
+  background: rgba(var(--accent-rgb), .08);
+  border-color: rgba(var(--accent-rgb), .5);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), .18), var(--sh-press);
 }
 
 /* ── Report Tab: Light Theme ── */
@@ -2683,8 +2683,8 @@ html.green-theme .custom-dropdown-item.active {
   max-height: 90vh;
   overflow-y: auto;
   background: var(--surface);
-  border: 1px solid rgba(255,75,114,0.3);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,75,114,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(var(--accent-rgb), 0.15), inset 0 1px 0 rgba(255,255,255,0.1);
   text-align: center;
   position: relative;
   overflow-x: hidden;
@@ -2700,7 +2700,7 @@ html.green-theme .custom-dropdown-item.active {
   letter-spacing: .15em;
   color: var(--accent);
   margin-bottom: 4px;
-  text-shadow: 0 0 16px rgba(255,75,114,0.4);
+  text-shadow: 0 0 16px rgba(var(--accent-rgb), 0.4);
 }
 .report-subtitle {
   font-family: var(--font-mono);
@@ -2736,8 +2736,8 @@ html.green-theme .custom-dropdown-item.active {
 }
 
 .report-col--current {
-  border-color: rgba(255,75,114,0.3);
-  background: rgba(255,75,114,0.04);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  background: rgba(var(--accent-rgb), 0.04);
 }
 
 .report-col__header {
@@ -2761,8 +2761,8 @@ html.green-theme .custom-dropdown-item.active {
   letter-spacing: .08em;
   padding: 2px 6px;
   border-radius: 99px;
-  background: rgba(255,75,114,0.15);
-  border: 1px solid rgba(255,75,114,0.3);
+  background: rgba(var(--accent-rgb), 0.15);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   color: var(--accent);
 }
 
@@ -2891,7 +2891,7 @@ html.green-theme .custom-dropdown-item.active {
 
 .segmented-btn.active.reset {
   color: var(--accent);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,75,114,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(var(--accent-rgb), 0.15);
 }
 
 .segmented-btn__icon {
@@ -2916,7 +2916,7 @@ html.green-theme .custom-dropdown-item.active {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle at 50% 0%, rgba(255,75,114,0.1) 0%, transparent 70%);
+  background-image: radial-gradient(circle at 50% 0%, rgba(var(--accent-rgb), 0.1) 0%, transparent 70%);
 }
 
 /* ── Light Theme Overrides ── */
@@ -3193,9 +3193,9 @@ html.light-theme .period-btn--active { background: #fff; color: #111827; box-sha
   justify-content: center;
   width: 28px; height: 28px;
   border-radius: 50%;
-  background: rgba(255,75,114,0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--accent);
-  border: 1px solid rgba(255,75,114,0.3);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -3235,7 +3235,7 @@ html.light-theme .period-btn--active { background: #fff; color: #111827; box-sha
 
 .analytics-grid--compare .metric-card {
   border: 1px dashed var(--accent);
-  background: rgba(255,75,114,0.03);
+  background: rgba(var(--accent-rgb), 0.03);
 }
 .analytics-grid--compare .metric-card__label { color: var(--accent); font-weight: 700; opacity: 0.8; }
 
@@ -3273,7 +3273,7 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
   gap: 6px;
   padding: 9px 14px;
   border-radius: 99px;
-  border: 1.5px solid rgba(255,75,114,0.35);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.35);
   background: var(--recessed);
   color: var(--txt);
   font-family: var(--font-mono);
@@ -3308,8 +3308,8 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
 .report-month-slider:hover .month-slider-trigger,
 .report-month-slider:focus-within .month-slider-trigger {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255,75,114,0.18), 0 4px 14px rgba(0,0,0,0.4);
-  background: rgba(255,75,114,0.06);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18), 0 4px 14px rgba(0,0,0,0.4);
+  background: rgba(var(--accent-rgb), 0.06);
 }
 
 .report-month-slider:hover .month-slider-trigger__caret,
@@ -3389,12 +3389,12 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
   border-color: var(--accent);
   color: #fff;
   font-weight: 700;
-  box-shadow: 0 0 12px rgba(255,75,114,0.4), 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4), 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .month-chip:not(.active):hover {
-  background: rgba(255,75,114,0.1);
-  border-color: rgba(255,75,114,0.4);
+  background: rgba(var(--accent-rgb), 0.1);
+  border-color: rgba(var(--accent-rgb), 0.4);
   color: var(--txt);
 }
 
@@ -3486,8 +3486,8 @@ html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.1
 .q-year-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  box-shadow: 0 0 8px rgba(255,75,114,0.3);
-  background: rgba(255,75,114,0.06);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb),0.3);
+  background: rgba(var(--accent-rgb),0.06);
 }
 
 .q-year-display {
@@ -3533,14 +3533,14 @@ html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.1
 .quarter-btn:hover:not(.no-data) {
   transform: translateY(-3px) scale(1.04);
   border-color: var(--accent);
-  box-shadow: 0 6px 20px rgba(255,75,114,0.25), 0 0 0 2px rgba(255,75,114,0.15);
-  background: rgba(255,75,114,0.07);
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb),0.25), 0 0 0 2px rgba(var(--accent-rgb),0.15);
+  background: rgba(var(--accent-rgb),0.07);
 }
 
 .quarter-btn.active {
   border-color: var(--accent);
-  background: rgba(255,75,114,0.12);
-  box-shadow: 0 0 0 2px rgba(255,75,114,0.3), 0 6px 20px rgba(255,75,114,0.2);
+  background: rgba(var(--accent-rgb),0.12);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.3), 0 6px 20px rgba(var(--accent-rgb),0.2);
 }
 
 /* Dimmed state for quarters with no data */
@@ -3584,7 +3584,7 @@ html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.1
   left: 50%;
   transform: translateX(-50%) translateY(6px);
   background: rgba(30, 30, 46, 0.97);
-  border: 1px solid rgba(255,75,114,0.4);
+  border: 1px solid rgba(var(--accent-rgb),0.4);
   color: #fff;
   font-family: var(--font-sans);
   font-size: 11px;
@@ -3613,7 +3613,7 @@ html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.1
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: rgba(255,75,114,0.4);
+  border-top-color: rgba(var(--accent-rgb),0.4);
 }
 
 /* Show tooltip on hover for no-data quarters only */
@@ -3979,8 +3979,8 @@ input[type="date"].jar-form-input::-webkit-calendar-picker-indicator {
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--accent);
-  background: rgba(255, 75, 114, .1);
-  border: 1px solid rgba(255, 75, 114, .2);
+  background: rgba(var(--accent-rgb), .1);
+  border: 1px solid rgba(var(--accent-rgb), .2);
   border-radius: 99px;
   padding: 3px 10px;
   white-space: nowrap;

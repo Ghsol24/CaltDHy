@@ -36,16 +36,28 @@ export function AttentionPanel() {
   // Sort by spent descending
   categoryStatusList.sort((a, b) => b.spent - a.spent);
 
+  const hasBudgets = categoryStatusList.length > 0;
+  const hasTransactions = (transactions || []).some(
+    (t) => (t.date || '').slice(0, 7) === currentMonthPrefix
+  );
+  const totalLimit = categoryStatusList.reduce((acc, c) => acc + c.limit, 0);
+  const totalBudgetSpent = categoryStatusList.reduce((acc, c) => acc + c.spent, 0);
+
   // Top 2 categories for the plan card
   const topCategories = categoryStatusList.slice(0, 2);
 
   // Top 1 Jar for the plan card
   const topJar = jars && jars.length > 0 ? jars[0] : null;
 
-  // Highest warning category (percent >= 75%)
+  // Critical category (percent >= 100%)
+  const dangerCategory = [...categoryStatusList]
+    .sort((a, b) => b.percent - a.percent)
+    .find((c) => c.percent >= 100);
+
+  // Warning category (75% <= percent < 100%)
   const warningCategory = [...categoryStatusList]
     .sort((a, b) => b.percent - a.percent)
-    .find((c) => c.percent >= 75);
+    .find((c) => c.percent >= 75 && c.percent < 100);
 
   // Days left in current month
   const now = new Date();
@@ -70,6 +82,75 @@ export function AttentionPanel() {
     setActiveView('jars');
   };
 
+  // Dynamic context-aware Callout Card configuration
+  const netCashFlow = monthlyStats.totalIncome - monthlyStats.totalExpense;
+  let calloutConfig = {
+    title: 'Kế hoạch chi tiêu đang rất ổn',
+    body: 'Bạn đang chi tiêu hoàn toàn trong tầm kiểm soát an toàn của tháng.',
+    ctaText: 'Xem ngân sách',
+    ctaAction: handleGoToBudgets,
+    cardClass: 'is-info'
+  };
+
+  if (!hasBudgets && !hasTransactions) {
+    calloutConfig = {
+      title: 'Chưa thiết lập kế hoạch ngân sách',
+      body: 'Hãy đặt hạn mức chi tiêu cho các danh mục để CaltDHy đồng hành giúp bạn kiểm soát dòng tiền hiệu quả nhất.',
+      ctaText: 'Thiết lập ngân sách ngay',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-info'
+    };
+  } else if (hasBudgets && !hasTransactions) {
+    calloutConfig = {
+      title: 'Kế hoạch tháng đã sẵn sàng',
+      body: `Bạn đã phân bổ ${formatCurrency(totalLimit)} ngân sách cho ${categoryStatusList.length} danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé!`,
+      ctaText: 'Xem chi tiết ngân sách',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-info'
+    };
+  } else if (!hasBudgets && monthlyStats.totalExpense > 0) {
+    calloutConfig = {
+      title: 'Nên đặt hạn mức chi tiêu',
+      body: `Bạn đã chi tiêu ${formatCurrency(monthlyStats.totalExpense)} trong tháng này. Đặt ngân sách giúp bạn chủ động kiểm soát chi tiêu tốt hơn.`,
+      ctaText: 'Tạo ngân sách ngay',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-warning'
+    };
+  } else if (dangerCategory) {
+    calloutConfig = {
+      title: `Cảnh báo: ${dangerCategory.category} vượt ngân sách`,
+      body: `Đã chi ${formatCurrency(dangerCategory.spent)} / ${formatCurrency(dangerCategory.limit)} (vượt +${formatCurrency(dangerCategory.spent - dangerCategory.limit)}). Hãy cân nhắc điều chỉnh các khoản tiếp theo!`,
+      ctaText: 'Xem và điều chỉnh ngân sách',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-danger'
+    };
+  } else if (warningCategory) {
+    calloutConfig = {
+      title: `${warningCategory.category} gần chạm ngân sách`,
+      body: `Bạn chỉ còn ${formatCurrency(Math.max(0, warningCategory.remaining))} cho ${daysLeft} ngày tới. Cần lưu ý khi phát sinh chi tiêu mới.`,
+      ctaText: 'Xem ngân sách',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-warning'
+    };
+  } else if (netCashFlow > 0 && monthlyStats.totalIncome > monthlyStats.totalExpense * 1.5 && jarsCount > 0) {
+    calloutConfig = {
+      title: 'Dòng tiền tháng này rất dồi dào',
+      body: `Thặng dư hiện tại đạt +${formatCurrency(netCashFlow)}. Hãy trích một phần vào các Hũ tiết kiệm để sớm đạt mục tiêu!`,
+      ctaText: 'Tích luỹ vào hũ tiết kiệm',
+      ctaAction: handleGoToJars,
+      cardClass: 'is-success'
+    };
+  } else if (hasBudgets && monthlyStats.totalExpense > 0) {
+    const usedPct = totalLimit > 0 ? Math.round((totalBudgetSpent / totalLimit) * 100) : 0;
+    calloutConfig = {
+      title: 'Kế hoạch chi tiêu rất tối ưu',
+      body: `Bạn mới sử dụng ${usedPct}% tổng ngân sách đã đặt. Tiến độ chi tiêu hoàn toàn an toàn.`,
+      ctaText: 'Xem ngân sách',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-success'
+    };
+  }
+
   return (
     <aside className="home-sidebar-panel" aria-label="Bảng kế hoạch và cảnh báo">
       {/* ── CARD 1: KẾ HOẠCH THÁNG NÀY ── */}
@@ -77,6 +158,23 @@ export function AttentionPanel() {
         <h3 className="home-plan-card-title">Kế hoạch tháng này</h3>
         
         <div className="home-plan-items-list">
+          {/* Empty state if no budgets and no jars */}
+          {topCategories.length === 0 && !topJar && (
+            <div className="home-plan-empty-state">
+              <span className="home-plan-empty-icon" role="img" aria-label="Mục tiêu">🎯</span>
+              <p className="home-plan-empty-text">
+                Chưa có hạn mức ngân sách hoặc hũ tiết kiệm nào được thiết lập.
+              </p>
+              <button
+                type="button"
+                className="home-plan-empty-btn"
+                onClick={handleGoToBudgets}
+              >
+                + Thiết lập ngay
+              </button>
+            </div>
+          )}
+
           {/* Top Budget Categories */}
           {topCategories.map((item, idx) => {
             const isWarning = item.percent >= 75 && item.percent < 100;
@@ -123,24 +221,20 @@ export function AttentionPanel() {
         </div>
       </div>
 
-      {/* ── CARD 2: ATTENTION CALLOUT CARD (AMBER) ── */}
-      <div className="home-callout-warning-card">
+      {/* ── CARD 2: ATTENTION CALLOUT CARD ── */}
+      <div className={`home-callout-warning-card ${calloutConfig.cardClass}`}>
         <h4 className="home-callout-title">
-          {warningCategory
-            ? `${warningCategory.category} gần chạm ngân sách`
-            : 'Kế hoạch chi tiêu đang rất ổn'}
+          {calloutConfig.title}
         </h4>
         <p className="home-callout-body">
-          {warningCategory
-            ? `Bạn còn ${formatCurrency(Math.max(0, warningCategory.remaining))} cho ${daysLeft} ngày tới. Có muốn điều chỉnh hạn mức?`
-            : 'Bạn đang chi tiêu hoàn toàn trong tầm kiểm soát an toàn của tháng.'}
+          {calloutConfig.body}
         </p>
         <button
           type="button"
           className="home-callout-link-btn"
-          onClick={handleGoToBudgets}
+          onClick={calloutConfig.ctaAction}
         >
-          <span>Xem ngân sách</span>
+          <span>{calloutConfig.ctaText}</span>
           <span aria-hidden="true"> →</span>
         </button>
       </div>

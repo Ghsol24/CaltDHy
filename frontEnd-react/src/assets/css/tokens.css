@@ -37,6 +37,7 @@
   --primary-hover: var(--color-brand-600);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
+  --color-brand-on-dark: var(--primary);
 
   /* ── Status Tokens: Warning ── */
   --warning: var(--color-warning);
@@ -159,12 +160,13 @@
    THEME OVERRIDES — CaltDHy v1 to v2 Unified System
    ============================================================ */
 
-/* ── 1. DARK THEME (CaltDHy 1 Dark Technical Panel — Obsidian & Magenta Accent) ── */
+/* ── 1. DARK THEME (CaltDHy Dark Technical Panel — Obsidian & Cobalt Accent) ── */
 html.dark-theme {
-  --color-brand-700: #FF4B72;
-  --color-brand-600: #FF6B8C;
-  --color-brand-100: rgba(255, 75, 114, 0.18);
-  --color-brand-50: rgba(255, 75, 114, 0.09);
+  --color-brand-700: #2563EB;
+  --color-brand-600: #1D4ED8;
+  --color-brand-100: rgba(96, 165, 250, 0.18);
+  --color-brand-50: rgba(96, 165, 250, 0.09);
+  --color-brand-on-dark: #60A5FA;
   --color-canvas: #090A0F;
   --color-surface: #12131C;
   --color-surface-muted: #1A1C29;
@@ -189,8 +191,8 @@ html.dark-theme {
   --primary-hover: var(--color-brand-600);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
-  --accent: #FF4B72;
-  --accent-rgb: 255, 75, 114;
+  --accent: #2563EB;
+  --accent-rgb: 37, 99, 235;
   --green: #10B981;
   --warn: #F59E0B;
   --border: var(--color-border);
@@ -204,9 +206,9 @@ html.dark-theme {
   --shadow-dialog: 0 24px 64px rgba(0, 0, 0, 0.85);
   --sh-raise: 0 8px 30px rgba(0, 0, 0, 0.60), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --sh-press: inset 0 2px 8px rgba(0, 0, 0, 0.70), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  --sh-accent: 0 0 20px rgba(255, 75, 114, 0.35), 0 2px 6px rgba(255, 75, 114, 0.15);
+  --sh-accent: 0 0 20px rgba(37, 99, 235, 0.35), 0 2px 6px rgba(37, 99, 235, 0.15);
   --sh-float: 0 20px 48px rgba(0, 0, 0, 0.80), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --focus-ring: 0 0 0 3px rgba(255, 75, 114, 0.35);
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
 
   --c-summary-bg: rgba(255, 255, 255, 0.02);
   --c-summary-border: rgba(255, 255, 255, 0.06);
@@ -221,7 +223,52 @@ html.dark-theme {
   --scrollbar-hover: #3D425A;
 }
 
-/* ── 2. CREAM THEME (Warm Parchment / Cozy Paper) ── */
+/* ── 2. LIGHT THEME (Minimalist Modern SaaS — Clean Slate & Indigo / Mint Accent) ── */
+html.light-theme {
+  --color-brand-700: #4F46E5;
+  --color-brand-600: #6366F1;
+  --color-brand-100: rgba(79, 70, 229, 0.12);
+  --color-brand-50: rgba(79, 70, 229, 0.05);
+  --color-canvas: #FAFAFB;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F4F4F5;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-text: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-danger: #DC2626;
+  --color-danger-50: #FEF2F2;
+  --color-warning: #D97706;
+  --color-overlay: rgba(15, 23, 42, 0.48);
+
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-card: var(--color-surface);
+  --surface-subtle: var(--color-surface-muted);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --primary: var(--color-brand-700);
+  --primary-hover: var(--color-brand-600);
+  --primary-light: var(--color-brand-100);
+  --primary-border: var(--color-border-strong);
+  --border: var(--color-border);
+  --txt: var(--color-text);
+  --muted: var(--color-text-secondary);
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px rgba(15, 23, 42, 0.04);
+  --shadow-dialog: 0 24px 60px rgba(15, 23, 42, 0.24);
+  --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.26);
+
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-hover: #94A3B8;
+}
+
+/* ── 3. CREAM THEME (Warm Parchment / Cozy Paper) ── */
 html.cream-theme {
   --color-brand-700: #C0531E;
   --color-brand-600: #D96024;

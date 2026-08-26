@@ -7,7 +7,7 @@ import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categor
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
-  const { budgets, updateBudgets } = useTransactionStore();
+  const { budgets, expenseCategories, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
   const { selectedMonth } = useSpendingStore();
   const { addToast } = useToastStore();
 
@@ -24,13 +24,13 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
   // New Category Panel state
   const [newCatName, setNewCatName] = useState('');
-  const [newCatMode, setNewCatMode] = useState('limited'); // 'limited' | 'unset'
   const [newCatAmount, setNewCatAmount] = useState('');
   const [newCatError, setNewCatError] = useState('');
 
   const modalRef = useRef(null);
   const listContainerRef = useRef(null);
   const triggerRef = useRef(null);
+  const prevIsOpenRef = useRef(false);
 
   useFocusTrap(modalRef, isOpen);
 
@@ -43,70 +43,54 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     onClose();
   }, [onClose]);
 
-  // Initialize draft data on open
+  // Initialize draft data ONLY when modal transitions from closed to open
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen && !prevIsOpenRef.current) {
+      // Save active element to restore focus on close
+      triggerRef.current = document.activeElement;
 
-    // Save active element to restore focus on close
-    triggerRef.current = document.activeElement;
+      // Build initial list from active expenseCategories
+      const currentCats = expenseCategories && expenseCategories.length > 0
+        ? expenseCategories
+        : DEFAULT_EXPENSE_CATEGORIES;
 
-    // Build initial list of categories
-    const initialList = DEFAULT_EXPENSE_CATEGORIES.map((c, idx) => {
-      const budgetVal = budgets && budgets[c.name] !== undefined ? Number(budgets[c.name]) : null;
-      return {
-        id: `cat_sys_${idx}`,
-        name: c.name,
-        icon: getCategoryIcon(c.name, 'expense'),
-        isSystem: true,
-        limit: budgetVal && budgetVal > 0 ? budgetVal : null,
-        order: idx + 1
-      };
-    });
-
-    // Add user custom categories from budgets store if any
-    if (budgets && typeof budgets === 'object') {
-      let customIdx = initialList.length + 1;
-      Object.entries(budgets).forEach(([catName, val]) => {
-        const alreadyInList = initialList.some((c) => c.name === catName);
-        if (!alreadyInList) {
-          const numVal = Number(val);
-          initialList.push({
-            id: `cat_custom_${customIdx}`,
-            name: catName,
-            icon: getCategoryIcon(catName, 'expense'),
-            isSystem: false,
-            limit: numVal && numVal > 0 ? numVal : null,
-            order: customIdx
-          });
-          customIdx++;
-        }
+      const initialList = currentCats.map((c, idx) => {
+        const budgetVal = budgets && budgets[c.name] !== undefined ? Number(budgets[c.name]) : null;
+        return {
+          id: `cat_${idx}`,
+          name: c.name,
+          icon: c.icon || getCategoryIcon(c.name, 'expense'),
+          isSystem: false,
+          limit: budgetVal && budgetVal > 0 ? budgetVal : null,
+          order: idx + 1
+        };
       });
+
+      setCategoriesDraft(initialList);
+
+      // Populate row inputs
+      const inputsMap = {};
+      initialList.forEach((c) => {
+        inputsMap[c.name] = c.limit ? c.limit.toLocaleString('vi-VN') : '';
+      });
+      setRowAmountInputs(inputsMap);
+
+      setIsDirty(false);
+      setErrorMsg('');
+      setNewCatName('');
+      setNewCatAmount('');
+      setNewCatError('');
+      setDeletingCat(null);
+
+      // If initialCategory is specified, expand and focus it
+      if (initialCategory) {
+        setExpandedCat(initialCategory);
+      } else {
+        setExpandedCat(null);
+      }
     }
-
-    setCategoriesDraft(initialList);
-
-    // Populate row inputs
-    const inputsMap = {};
-    initialList.forEach((c) => {
-      inputsMap[c.name] = c.limit ? c.limit.toLocaleString('vi-VN') : '';
-    });
-    setRowAmountInputs(inputsMap);
-
-    setIsDirty(false);
-    setErrorMsg('');
-    setNewCatName('');
-    setNewCatMode('limited');
-    setNewCatAmount('');
-    setNewCatError('');
-    setDeletingCat(null);
-
-    // If initialCategory is specified, expand and focus it
-    if (initialCategory) {
-      setExpandedCat(initialCategory);
-    } else {
-      setExpandedCat(null);
-    }
-  }, [isOpen, budgets, initialCategory]);
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, initialCategory, budgets, expenseCategories]);
 
   // Handle ESC key with unsaved change check
   useEffect(() => {
@@ -184,9 +168,9 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   // Delete category popover confirm
   const handleConfirmDelete = (cat) => {
     const deletedItem = { ...cat };
-    setLastDeletedCat(deletedItem);
+    const updatedDraft = categoriesDraft.filter((c) => c.name !== cat.name);
 
-    setCategoriesDraft((prev) => prev.filter((c) => c.name !== cat.name));
+    setCategoriesDraft(updatedDraft);
     setRowAmountInputs((prev) => {
       const copy = { ...prev };
       delete copy[cat.name];
@@ -195,18 +179,24 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     setDeletingCat(null);
     setIsDirty(true);
 
+    // Sync categories directly to store so BudgetsTab & TransactionModal update immediately
+    const newCategories = updatedDraft.map((c) => ({ name: c.name, icon: c.icon }));
+    setExpenseCategories(newCategories);
+
     addToast({
       type: 'info',
       message: `Đã xóa danh mục "${cat.name}".`,
       action: {
         label: 'Hoàn tác',
         onClick: () => {
-          setCategoriesDraft((prev) => [...prev, deletedItem]);
+          const restoredDraft = [...updatedDraft, deletedItem];
+          setCategoriesDraft(restoredDraft);
           setRowAmountInputs((prev) => ({
             ...prev,
             [deletedItem.name]: deletedItem.limit ? deletedItem.limit.toLocaleString('vi-VN') : ''
           }));
           setIsDirty(true);
+          setExpenseCategories(restoredDraft.map((c) => ({ name: c.name, icon: c.icon })));
           addToast({
             type: 'success',
             message: `Đã khôi phục danh mục "${deletedItem.name}".`
@@ -237,13 +227,11 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     }
 
     let parsedLimit = null;
-    if (newCatMode === 'limited') {
+    if (newCatAmount && newCatAmount.trim() !== '') {
       const cleanNum = parseInt(newCatAmount.replace(/\D/g, ''), 10);
-      if (!cleanNum || cleanNum <= 0) {
-        setNewCatError('Vui lòng nhập số tiền hạn mức hợp lệ (> 0 đ).');
-        return;
+      if (cleanNum && cleanNum > 0) {
+        parsedLimit = cleanNum;
       }
-      parsedLimit = cleanNum;
     }
 
     const newCategory = {
@@ -255,7 +243,8 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       order: categoriesDraft.length + 1
     };
 
-    setCategoriesDraft((prev) => [...prev, newCategory]);
+    const updatedDraft = [...categoriesDraft, newCategory];
+    setCategoriesDraft(updatedDraft);
     setRowAmountInputs((prev) => ({
       ...prev,
       [trimmedName]: parsedLimit ? parsedLimit.toLocaleString('vi-VN') : ''
@@ -263,9 +252,11 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
     setNewCatName('');
     setNewCatAmount('');
-    setNewCatMode('limited');
     setNewCatError('');
     setIsDirty(true);
+
+    // Sync categories directly to store
+    setExpenseCategories(updatedDraft.map((c) => ({ name: c.name, icon: c.icon })));
 
     setTimeout(() => {
       if (listContainerRef.current) {
@@ -286,9 +277,11 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       }
     });
 
+    const finalCategories = categoriesDraft.map((c) => ({ name: c.name, icon: c.icon }));
+
     setIsSubmitting(true);
     try {
-      await updateBudgets(payload);
+      await updateBudgetsAndCategories(payload, finalCategories);
       setIsSubmitting(false);
       onClose();
       addToast({
@@ -543,38 +536,26 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                     }}
                   />
 
-                  <select
-                    className="add-cat-mode-select"
-                    value={newCatMode}
-                    onChange={(e) => setNewCatMode(e.target.value)}
-                    aria-label="Loại hạn mức"
-                  >
-                    <option value="limited">Đặt giới hạn</option>
-                    <option value="unset">Chưa đặt hạn mức</option>
-                  </select>
-
-                  {newCatMode === 'limited' && (
-                    <div className="add-cat-amount-wrap">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className="add-cat-amount-input"
-                        placeholder="Số tiền (VNĐ)"
-                        value={newCatAmount}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/\D/g, '');
-                          setNewCatAmount(raw ? parseInt(raw, 10).toLocaleString('vi-VN') : '');
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddNewCategory();
-                          }
-                        }}
-                      />
-                      <span className="expanded-input-suffix">VNĐ</span>
-                    </div>
-                  )}
+                  <div className="add-cat-amount-wrap">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="add-cat-amount-input"
+                      placeholder="Số tiền (VNĐ)"
+                      value={newCatAmount}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        setNewCatAmount(raw ? parseInt(raw, 10).toLocaleString('vi-VN') : '');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddNewCategory();
+                        }
+                      }}
+                    />
+                    <span className="expanded-input-suffix">VNĐ</span>
+                  </div>
 
                   <button
                     type="button"
@@ -584,12 +565,6 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                     + Thêm
                   </button>
                 </div>
-
-                {newCatMode === 'unset' && (
-                  <p className="add-cat-helper-note">
-                    ℹ️ Danh mục sẽ được thêm mà chưa có hạn mức.
-                  </p>
-                )}
 
                 {newCatError && (
                   <div className="add-cat-error-msg" role="alert">

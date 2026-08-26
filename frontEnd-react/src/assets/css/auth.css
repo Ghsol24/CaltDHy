@@ -8,12 +8,12 @@
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'IBM Plex Mono', SFMono-Regular, Consolas, 'Liberation Mono', monospace;
   --chassis: #090A0F; --panel: #12131C; --recessed: #05060A;
-  --txt: #F3F4F6; --muted: #8F9CAE; --accent: #FF4B72;
+  --txt: #F3F4F6; --muted: #8F9CAE; --accent: #2563EB;
   --sh: rgba(0,0,0,.60); --hi: rgba(255,255,255,.04);
   --shadow-card: 0 8px 30px rgba(0,0,0,.60);
   --shadow-float: 0 20px 48px rgba(0,0,0,.80);
   --shadow-pressed: inset 0 2px 8px rgba(0,0,0,.70);
-  --shadow-accent: 0 0 20px rgba(255, 75, 114, .35);
+  --shadow-accent: 0 0 20px rgba(37, 99, 235, .35);
   --green: #10B981;
 }
 
@@ -264,8 +264,8 @@ html.green-theme .c-screw {
   box-shadow: inset 3px 3px 7px var(--sh), inset -3px -3px 7px var(--hi);
 }
 @keyframes ventGlow {
-  0%, 100% { opacity: 0.15; filter: drop-shadow(0 0 1px rgba(255, 75, 114, 0)); }
-  50% { opacity: 0.35; filter: drop-shadow(0 0 3px rgba(255, 75, 114, 0.4)); }
+  0%, 100% { opacity: 0.15; filter: drop-shadow(0 0 1px rgba(96, 165, 250, 0)); }
+  50% { opacity: 0.35; filter: drop-shadow(0 0 3px rgba(96, 165, 250, 0.4)); }
 }
 html:not(.light-theme):not(.cream-theme):not(.green-theme) .vent {
   animation: ventGlow 4s ease-in-out infinite;
@@ -325,7 +325,7 @@ html:not(.light-theme):not(.cream-theme):not(.green-theme) .vent {
 }
 .finput::placeholder { color: transparent; }
 .finput:focus {
-  box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(255, 75, 114, 0.2);
+  box-shadow: var(--shadow-pressed), 0 0 0 3px rgba(37, 99, 235, 0.2);
   border-color: var(--accent);
 }
 html.light-theme .finput:focus {
@@ -427,8 +427,8 @@ html.dark-theme .pw-strength__bar { background: #252a2b; }
   line-height: 1.5;
 }
 .form-err {
-  color: var(--accent); background: rgba(255, 75, 114, 0.08);
-  border-left: 3px solid var(--accent);
+  color: var(--color-danger, #FF4757); background: rgba(255, 71, 87, 0.08);
+  border-left: 3px solid var(--color-danger, #FF4757);
 }
 .form-ok {
   color: var(--green); background: rgba(16, 185, 129, 0.08);

@@ -126,7 +126,7 @@ export function TransactionList() {
                         width: '36px',
                         height: '36px',
                         borderRadius: '8px',
-                        background: isIncome ? 'rgba(16,185,129,0.1)' : 'rgba(255,75,114,0.1)',
+                        background: isIncome ? 'rgba(16,185,129,0.1)' : 'rgba(255,71,87,0.1)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

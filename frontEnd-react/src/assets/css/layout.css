@@ -24,7 +24,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,71,87,.4) 30%, rgba(255,71,87,.15) 70%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-rgb), .4) 30%, rgba(var(--accent-rgb), .15) 70%, transparent 100%);
 }
 
 .tb-brand {
@@ -43,7 +43,7 @@
 
 .tb-logo-accent {
   color: var(--accent);
-  text-shadow: 0 0 12px rgba(255, 71, 87, .5);
+  text-shadow: 0 0 12px rgba(var(--accent-rgb), .5);
 }
 
 /* Logo as home-nav link */
@@ -61,7 +61,7 @@
 }
 
 .tb-logo-link:hover .tb-logo-accent {
-  text-shadow: 0 0 16px rgba(255, 71, 87, .8);
+  text-shadow: 0 0 16px rgba(var(--accent-rgb), .8);
 }
 
 .tb-badge {
@@ -118,7 +118,7 @@
   height: 6px;
   background: var(--accent);
   border-radius: 50%;
-  box-shadow: 0 0 6px rgba(255, 71, 87, .7);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), .7);
   animation: ledPulse 2s ease-in-out infinite;
 }
 
@@ -410,7 +410,7 @@ html.light-theme .form-divider-label {
   /* Prevent Windows scrollbar from eating sidebar width */
   scrollbar-gutter: stable;
   /* Subtle gradient accent on right border */
-  box-shadow: inset -1px 0 0 rgba(255,71,87,.08), 2px 0 20px rgba(0,0,0,.2);
+  box-shadow: inset -1px 0 0 rgba(var(--accent-rgb), .08), 2px 0 20px rgba(0,0,0,.2);
   scrollbar-width: thin;
   scrollbar-color: var(--surface2) transparent;
 }
@@ -608,7 +608,7 @@ html.light-theme .form-divider-label {
 
 .btn-add-txn:hover {
   transform: translateY(-2px);
-  box-shadow: 6px 6px 22px rgba(255, 71, 87, .65), -6px -6px 16px rgba(255, 71, 87, .22);
+  box-shadow: 6px 6px 22px rgba(var(--accent-rgb), .65), -6px -6px 16px rgba(var(--accent-rgb), .22);
 }
 
 .btn-add-txn:active {
@@ -984,7 +984,7 @@ html.green-theme .tb-nav-btn.active {
   height: 2px;
   background: var(--accent);
   border-radius: 99px;
-  box-shadow: 0 0 6px rgba(255, 75, 114, .5);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), .5);
 }
 
 html.light-theme .tb-nav-btn.active::after { background: #4F46E5; box-shadow: 0 0 6px rgba(79,70,229,.4); }
@@ -1390,7 +1390,7 @@ html.green-theme .analytics-control-card .month-picker-dropdown {
 }
 
 #trendRange_custom .custom-select-option.selected {
-  background: rgba(255, 75, 114, 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
   border-left: 2px solid var(--accent);
   padding-left: 8px;
@@ -1399,7 +1399,7 @@ html.green-theme .analytics-control-card .month-picker-dropdown {
 /* Theme overrides for the compact dropdown */
 /* ── Dark theme ── */
 #trendRange_custom .custom-select-trigger:hover {
-  border-color: rgba(255, 75, 114, 0.4);
+  border-color: rgba(var(--accent-rgb), 0.4);
   transform: translateY(-1px);
 }
 

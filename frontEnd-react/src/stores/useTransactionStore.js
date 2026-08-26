@@ -3,8 +3,11 @@ import { spendingService } from '../services/spendingService';
 import { useSpendingStore } from './useSpendingStore';
 import { useWalletStore } from './useWalletStore';
 import { useToastStore } from './useToastStore';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
 
 const TXN_KEY = 'caltdhy_txns';
+const EXPENSE_CAT_KEY = 'caltdhy_expense_categories';
+const INCOME_CAT_KEY = 'caltdhy_income_categories';
 
 const getStoredTxns = () => {
   try {
@@ -18,6 +21,40 @@ const getStoredTxns = () => {
 const saveStoredTxns = (txns) => {
   try {
     localStorage.setItem(TXN_KEY, JSON.stringify(txns));
+  } catch {}
+};
+
+const getStoredExpenseCategories = () => {
+  try {
+    const raw = localStorage.getItem(EXPENSE_CAT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+};
+
+const getStoredIncomeCategories = () => {
+  try {
+    const raw = localStorage.getItem(INCOME_CAT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return DEFAULT_INCOME_CATEGORIES;
+};
+
+const saveStoredExpenseCategories = (cats) => {
+  try {
+    localStorage.setItem(EXPENSE_CAT_KEY, JSON.stringify(cats));
+  } catch {}
+};
+
+const saveStoredIncomeCategories = (cats) => {
+  try {
+    localStorage.setItem(INCOME_CAT_KEY, JSON.stringify(cats));
   } catch {}
 };
 
@@ -42,6 +79,8 @@ const normalizeTxn = (t) => ({
 export const useTransactionStore = create((set, get) => ({
   transactions: getStoredTxns(),
   budgets: {},
+  expenseCategories: getStoredExpenseCategories(),
+  incomeCategories: getStoredIncomeCategories(),
   categories: [],
   isLoading: false,
   error: null,
@@ -50,6 +89,39 @@ export const useTransactionStore = create((set, get) => ({
     type: 'all',
     category: 'all',
     search: ''
+  },
+
+  setExpenseCategories: (cats) => {
+    saveStoredExpenseCategories(cats);
+    set({ expenseCategories: cats });
+    try {
+      spendingService.updateCategories(cats.map((c) => c.name)).catch(() => {});
+    } catch {}
+  },
+
+  deleteExpenseCategory: (catName) => {
+    const updated = get().expenseCategories.filter((c) => c.name !== catName);
+    saveStoredExpenseCategories(updated);
+    const updatedBudgets = { ...get().budgets };
+    delete updatedBudgets[catName];
+    set({ expenseCategories: updated, budgets: updatedBudgets });
+    try {
+      spendingService.updateBudgets(updatedBudgets);
+      spendingService.updateCategories(updated.map((c) => c.name)).catch(() => {});
+    } catch {}
+  },
+
+  addExpenseCategory: (catObj) => {
+    const exists = get().expenseCategories.some(
+      (c) => c.name.toLowerCase() === catObj.name.toLowerCase()
+    );
+    if (exists) return;
+    const updated = [...get().expenseCategories, catObj];
+    saveStoredExpenseCategories(updated);
+    set({ expenseCategories: updated });
+    try {
+      spendingService.updateCategories(updated.map((c) => c.name)).catch(() => {});
+    } catch {}
   },
 
   setFilter: (key, value) => {
@@ -135,10 +207,37 @@ export const useTransactionStore = create((set, get) => ({
 
   fetchBudgets: async () => {
     try {
-      const res = await spendingService.getBudgets();
-      if (res.success && res.data) {
-        set({ budgets: res.data });
-        return { success: true, data: res.data };
+      const [budgetRes, catRes] = await Promise.all([
+        spendingService.getBudgets(),
+        spendingService.getCategories().catch(() => null)
+      ]);
+
+      if (budgetRes?.success && budgetRes.data) {
+        const budgetMap = budgetRes.data;
+        const budgetCatNames = Object.keys(budgetMap);
+        const serverCustomCats = catRes?.success && Array.isArray(catRes.data) ? catRes.data : null;
+
+        // Ưu tiên danh mục thực tế: từ customCategories hoặc từ các key của budgets
+        let configuredNames = [];
+        if (serverCustomCats && serverCustomCats.length > 0) {
+          configuredNames = serverCustomCats;
+        } else if (budgetCatNames.length > 0) {
+          configuredNames = budgetCatNames;
+        }
+
+        if (configuredNames.length > 0) {
+          const currentCats = get().expenseCategories || [];
+          const newCats = configuredNames.map((name) => {
+            const found = currentCats.find((c) => c.name.toLowerCase() === name.toLowerCase());
+            return found || { name, icon: getCategoryIcon(name, 'expense') };
+          });
+          saveStoredExpenseCategories(newCats);
+          set({ budgets: budgetMap, expenseCategories: newCats });
+          return { success: true, data: budgetMap };
+        }
+
+        set({ budgets: budgetMap });
+        return { success: true, data: budgetMap };
       }
     } catch (err) {
       console.error('Lỗi tải ngân sách:', err);
@@ -157,8 +256,34 @@ export const useTransactionStore = create((set, get) => ({
         throw new Error(res.message || 'Lỗi cập nhật ngân sách');
       }
     } catch (err) {
-      set({ isLoading: false });
-      throw err;
+      set({ budgets: budgetsObj, isLoading: false });
+      return { success: true, data: budgetsObj, offline: true };
+    }
+  },
+
+  updateBudgetsAndCategories: async (budgetsObj, expenseCats) => {
+    set({ isLoading: true });
+    if (expenseCats) {
+      saveStoredExpenseCategories(expenseCats);
+    }
+    try {
+      const res = await spendingService.updateBudgets(budgetsObj);
+      if (expenseCats && Array.isArray(expenseCats)) {
+        await spendingService.updateCategories(expenseCats.map((c) => c.name)).catch(() => {});
+      }
+      set({
+        budgets: budgetsObj,
+        ...(expenseCats ? { expenseCategories: expenseCats } : {}),
+        isLoading: false
+      });
+      return { success: true, data: budgetsObj };
+    } catch (err) {
+      set({
+        budgets: budgetsObj,
+        ...(expenseCats ? { expenseCategories: expenseCats } : {}),
+        isLoading: false
+      });
+      return { success: true, data: budgetsObj, offline: true };
     }
   },
 

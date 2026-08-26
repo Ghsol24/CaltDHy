@@ -110,8 +110,8 @@ router.post('/register', async (req, res) => {
         // Tạo một số danh mục ngân sách mặc định để tránh người dùng mới bị ngợp
         await Budget.insertMany([
             { userId: newUser._id, category: 'Food & Dining', limit: 3000000 },
-            { userId: newUser._id, category: 'Transport', limit: 1000000 },
-            { userId: newUser._id, category: 'Utilities', limit: 1500000 },
+            { userId: newUser._id, category: 'Transportation', limit: 1000000 },
+            { userId: newUser._id, category: 'Housing & Bills', limit: 1500000 },
             { userId: newUser._id, category: 'Entertainment', limit: 800000 }
         ]);
 
