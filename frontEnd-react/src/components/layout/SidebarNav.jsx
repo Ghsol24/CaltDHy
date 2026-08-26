@@ -21,6 +21,28 @@ export function SidebarNav() {
       setPlanSubTab(subTabId);
     } else if (viewId === 'analytics' && subTabId) {
       setAnalyticsSubTab(subTabId);
+      const targetMap = {
+        overview: 'analytics-overview',
+        spending: 'analytics-spending',
+        'cash-flow': 'analytics-cashflow',
+        reports: 'analytics-reports'
+      };
+      const targetId = targetMap[subTabId] || 'analytics-overview';
+      window.__caltdhy_programmatic_scroll = true;
+      const scrollAction = () => {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        setTimeout(() => {
+          window.__caltdhy_programmatic_scroll = false;
+        }, 800);
+      };
+      if (activeView === 'analytics') {
+        scrollAction();
+      } else {
+        setTimeout(scrollAction, 100);
+      }
     } else if (viewId === 'jars' && subTabId) {
       setJarsSubTab(subTabId);
     }

@@ -1703,3 +1703,459 @@
   position: relative;
   width: 100%;
 }
+
+/* ── 4. ANCHOR NAVIGATION & SMOOTH SCROLL MARGINS ── */
+#analytics-overview,
+#analytics-spending,
+#analytics-cashflow,
+#analytics-reports {
+  scroll-margin-top: 96px;
+}
+
+/* ── 5. FINANCIAL REPORT SECTION (BÁO CÁO TÀI CHÍNH CHUYÊN SÂU) ── */
+.analytics-report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-report-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--color-border, #E3ECE7);
+  background: var(--color-surface, #FFFFFF);
+  color: var(--color-text, #101B36);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+}
+
+.btn-report-action:hover {
+  background: var(--color-brand-50, #F1FBF6);
+  border-color: var(--color-brand-500, #00A86B);
+  color: var(--color-brand-700, #008B57);
+}
+
+.btn-report-action--primary {
+  background: var(--color-brand-50, #F1FBF6);
+  border-color: var(--color-brand-500, #00A86B);
+  color: var(--color-brand-700, #008B57);
+}
+
+.btn-report-action--primary:hover {
+  background: var(--color-brand-700, #008B57);
+  color: #FFFFFF;
+}
+
+/* Report Period Subtitle & Range Tag */
+.report-period-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--color-brand-50, #F1FBF6);
+  border: 1px solid var(--color-brand-100, #E6F7EF);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-brand-700, #008B57);
+}
+
+/* Comparison Executive Summary Cards */
+.report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1024px) {
+  .report-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .report-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.report-summary-card {
+  background: var(--color-surface-muted, #F7FAF8);
+  border: 1px solid var(--color-border, #E3ECE7);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-summary-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.report-summary-card__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #607086);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.report-summary-card__amount {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #101B36);
+  margin: 0;
+}
+
+.report-summary-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary, #607086);
+}
+
+.delta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-badge--up-good,
+.delta-badge--down-good {
+  background: var(--color-brand-100, #E6F7EF);
+  color: var(--color-brand-700, #008B57);
+}
+
+.delta-badge--up-bad,
+.delta-badge--down-bad {
+  background: var(--color-danger-50, #FFF0EF);
+  color: var(--color-danger, #E34B45);
+}
+
+.delta-badge--neutral {
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #E3ECE7);
+  color: var(--color-text-muted, #8A98A9);
+}
+
+/* Smart Financial Insights & Accolades Banner */
+.report-insights-banner {
+  background: linear-gradient(135deg, rgba(0, 139, 87, 0.08) 0%, rgba(37, 99, 235, 0.05) 100%);
+  border: 1px solid rgba(0, 139, 87, 0.2);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-insights-banner__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-brand-700, #008B57);
+}
+
+.report-insights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text, #101B36);
+  line-height: 1.5;
+}
+
+.insight-icon-pill {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.insight-icon-pill--accolade {
+  background: #E6F7EF;
+  color: #008B57;
+}
+
+.insight-icon-pill--warning {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.insight-icon-pill--info {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+
+/* Detailed Category Comparison Table */
+.report-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border, #E3ECE7);
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-surface, #FFFFFF);
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+  min-width: 820px;
+}
+
+.report-table th {
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text-secondary, #607086);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border, #E3ECE7);
+  white-space: nowrap;
+}
+
+.report-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border, #E3ECE7);
+  color: var(--color-text, #101B36);
+  vertical-align: middle;
+}
+
+.report-table tr:last-child td {
+  border-bottom: none;
+}
+
+.report-table tr:hover td {
+  background: var(--color-surface-muted, #F7FAF8);
+}
+
+.table-cat-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.table-cat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.table-num-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.table-num-cell--bold {
+  font-weight: 700;
+}
+
+.table-delta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-delta-sub {
+  font-size: 11px;
+  color: var(--color-text-muted, #8A98A9);
+}
+
+/* Category Progress Cell */
+.table-pct-cell {
+  min-width: 90px;
+}
+
+.table-pct-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-pct-track {
+  flex: 1;
+  height: 6px;
+  background: var(--color-border, #E3ECE7);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.table-pct-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+
+.table-pct-val {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  width: 32px;
+  text-align: right;
+  color: var(--color-text-secondary, #607086);
+}
+
+/* Status Badges */
+.budget-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.budget-status-pill--safe {
+  background: var(--color-brand-100, #E6F7EF);
+  color: var(--color-brand-700, #008B57);
+}
+
+.budget-status-pill--warning {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.budget-status-pill--danger {
+  background: var(--color-danger-50, #FFF0EF);
+  color: var(--color-danger, #E34B45);
+}
+
+.budget-status-pill--unset {
+  background: var(--color-surface-muted, #F7FAF8);
+  border: 1px solid var(--color-border, #E3ECE7);
+  color: var(--color-text-muted, #8A98A9);
+}
+
+/* Advice Text in Table */
+.table-advice-cell {
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 240px;
+}
+
+.table-advice-text--good {
+  color: var(--color-brand-700, #008B57);
+  font-weight: 500;
+}
+
+.table-advice-text--warning {
+  color: #B45309;
+  font-weight: 500;
+}
+
+.table-advice-text--danger {
+  color: var(--color-danger, #E34B45);
+  font-weight: 600;
+}
+
+.table-advice-text--neutral {
+  color: var(--color-text-secondary, #607086);
+}
+
+/* ── 6. PRINT STYLES (@media print) ── */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .topbar,
+  .app-sidebar-nav,
+  .analytics-header-controls,
+  .report-action-bar,
+  .btn-add-txn-empty,
+  .toast-region,
+  .confirm-backdrop {
+    display: none !important;
+  }
+
+  .app-body-container {
+    display: block !important;
+    min-height: auto !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .analytics-feature-view {
+    gap: 16px !important;
+  }
+
+  .analytics-section-panel {
+    box-shadow: none !important;
+    border: 1px solid #CCCCCC !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .report-table-wrapper {
+    border: 1px solid #CCCCCC !important;
+    box-shadow: none !important;
+  }
+
+  .report-table th {
+    background: #EEEEEE !important;
+    color: #000000 !important;
+  }
+
+  .report-table td {
+    color: #000000 !important;
+  }
+}
+

@@ -945,3 +945,410 @@
   cursor: not-allowed;
 }
 
+/* ============================================================
+   REDESIGNED JAR MODAL (TẠO HŨ TIẾT KIỆM MỚI - DESIGN V2)
+   ============================================================ */
+
+.jar-modal-card {
+  max-width: 580px;
+  border-radius: var(--radius-lg, 16px);
+  background: var(--surface, #171E2E);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+}
+
+.jar-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.jar-modal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jar-modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #F8FAFC);
+  letter-spacing: -0.01em;
+}
+
+.jar-modal-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #94A3B8);
+  line-height: 1.4;
+}
+
+.jar-modal-body {
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: calc(88vh - 150px);
+}
+
+.jar-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jar-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #E2E8F0);
+}
+
+/* Name input with 0/40 counter */
+.jar-name-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.jar-text-input {
+  width: 100%;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 10px);
+  padding: 0 54px 0 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary, #F8FAFC);
+  box-sizing: border-box;
+  outline: none;
+  transition: all var(--dur-fast) ease;
+}
+
+.jar-text-input:focus {
+  border-color: #2563EB;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.jar-text-input::placeholder {
+  color: var(--text-muted, #64748B);
+}
+
+.jar-char-counter {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #64748B);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Adornment Input Box (Target, Initial amount, Date) */
+.jar-adornment-input-box {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 10px);
+  padding: 0 14px;
+  gap: 10px;
+  box-sizing: border-box;
+  transition: all var(--dur-fast) ease;
+}
+
+.jar-adornment-input-box:focus-within {
+  border-color: #2563EB;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.jar-input-leading-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #10B981;
+}
+
+.jar-number-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #F8FAFC);
+  font-variant-numeric: tabular-nums;
+}
+
+.jar-number-input::placeholder {
+  color: var(--text-muted, #64748B);
+}
+
+.jar-date-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary, #F8FAFC);
+  color-scheme: dark;
+}
+
+.jar-currency-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #94A3B8);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.jar-currency-badge svg {
+  color: var(--text-muted, #64748B);
+}
+
+/* Optional 2-Column Grid */
+.jar-optional-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .jar-optional-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Realtime Summary Card: "Bạn còn cần tiết kiệm" */
+.jar-summary-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.jar-summary-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jar-summary-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.jar-summary-card__days-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+}
+
+.jar-summary-card__metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jar-summary-card__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jar-summary-card__coin-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #3B82F6;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+}
+
+.jar-summary-card__amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: #F8FAFC;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.jar-summary-card__pct {
+  font-size: 22px;
+  font-weight: 700;
+  color: #10B981;
+  font-variant-numeric: tabular-nums;
+}
+
+.jar-summary-card__track {
+  height: 6px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.jar-summary-card__fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+
+.jar-summary-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #94A3B8;
+}
+
+/* Color Presets Picker */
+.jar-color-presets {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.jar-color-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  position: relative;
+  outline: none;
+  padding: 0;
+}
+
+.jar-color-circle:hover {
+  transform: scale(1.1);
+}
+
+.jar-color-circle.is-selected {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--surface, #171E2E), 0 0 0 4px #2563EB;
+}
+
+/* Tip / Guidance Banner */
+.jar-tip-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md, 10px);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--text-secondary, #94A3B8);
+  line-height: 1.4;
+}
+
+.jar-tip-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.jar-tip-text {
+  flex: 1;
+}
+
+/* Modal Footer Buttons */
+.jar-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 26px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.jar-btn-cancel {
+  padding: 10px 22px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #94A3B8);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+}
+
+.jar-btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #F8FAFC);
+}
+
+.jar-btn-submit {
+  padding: 10px 24px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: #2563EB;
+  border: 1px solid #1D4ED8;
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  transition: all var(--dur-fast) ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jar-btn-submit:hover:not(:disabled) {
+  background: #1D4ED8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.jar-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+

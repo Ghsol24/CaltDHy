@@ -16,7 +16,7 @@ const getRecurringIcon = (name) => {
   if (lower.includes('điện thoại') || lower.includes('4g') || lower.includes('sim')) return '📱';
   if (lower.includes('học') || lower.includes('sách') || lower.includes('khóa')) return '📚';
   if (lower.includes('gym') || lower.includes('thể dục') || lower.includes('fitness')) return '🏋️';
-  return '📅';
+  return '🔁';
 };
 
 export function RecurringModal({ isOpen, onClose }) {
