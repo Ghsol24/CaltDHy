@@ -33,5 +33,9 @@ export const spendingService = {
 
   updateCategories: async (categories) => {
     return await api.put('/api/spending/categories', categories);
+  },
+
+  resetFinancialData: async () => {
+    return await api.post('/api/spending/reset-data');
   }
 };

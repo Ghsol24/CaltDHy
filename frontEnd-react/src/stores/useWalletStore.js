@@ -3,6 +3,7 @@ import { walletService } from '../services/walletService';
 import { spendingService } from '../services/spendingService';
 import { useTransactionStore } from './useTransactionStore';
 import { calculateWalletBalances } from '../utils/financeMath';
+import { getLocalDateString } from '../utils/formatters';
 
 const WALLET_KEY = 'caltdhy_wallets';
 
@@ -163,7 +164,7 @@ export const useWalletStore = create((set, get) => ({
       const res = await spendingService.createTransaction({
         type: 'transfer',
         amount: Number(amount),
-        date: date || new Date().toISOString().slice(0, 10),
+        date: date || getLocalDateString(),
         walletId: fromWalletId,
         toWalletId,
         desc: desc || 'Chuyển tiền',

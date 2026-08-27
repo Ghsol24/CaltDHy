@@ -1,46 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
+import React from 'react';
+import { Link } from 'react-router';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { formatDate } from '../../utils/formatters';
 
 export function Topbar() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const {
     activeView,
     setActiveView,
-    openHelpModal,
     openSettingsModal,
+    openAccountModal,
   } = useSpendingStore();
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    setIsMenuOpen(false);
-    logout();
-    navigate('/login');
-  };
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false);
-      }
-    }
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
 
   // Format initials and display name
   const userName = user?.name || user?.email?.split('@')[0] || 'Người dùng';
-  const userEmail = user?.email || '';
   const userInitials = userName
     .split(' ')
     .filter(Boolean)
@@ -140,119 +114,26 @@ export function Topbar() {
         </button>
 
 
-        {/* User Avatar Chip Dropdown */}
-        <div className="user-menu-wrapper" ref={menuRef}>
+        {/* User Account Trigger Button (1-Click Opens Account Modal) */}
+        <div className="user-menu-wrapper">
           <button
             type="button"
             className="user-chip"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            aria-expanded={isMenuOpen}
-            aria-haspopup="true"
-            aria-label="Menu tài khoản"
+            onClick={openAccountModal}
+            title="Quản lý tài khoản"
+            aria-label="Quản lý tài khoản"
           >
-            <span className="user-chip-avatar">{userInitials}</span>
+            {user?.avatar ? (
+              user.avatar.startsWith('data:image') || user.avatar.startsWith('http') ? (
+                <img src={user.avatar} alt={userName} className="user-chip-avatar-img" />
+              ) : (
+                <span className="user-chip-avatar user-chip-avatar--emoji">{user.avatar}</span>
+              )
+            ) : (
+              <span className="user-chip-avatar">{userInitials}</span>
+            )}
             <span className="user-chip-name">{userName}</span>
-            <svg
-              className="user-chip-caret"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
           </button>
-
-          {isMenuOpen && (
-            <div className="user-dropdown-menu" role="menu" aria-label="Tài khoản">
-              <div className="user-dropdown-header">
-                <div className="user-dropdown-user-name">{userName}</div>
-                {userEmail && <div className="user-dropdown-user-email">{userEmail}</div>}
-              </div>
-
-              <button
-                type="button"
-                className="user-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  openSettingsModal();
-                }}
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <span>Cài đặt</span>
-              </button>
-
-              <button
-                type="button"
-                className="user-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  openHelpModal();
-                }}
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                <span>Hướng dẫn</span>
-              </button>
-
-              <button
-                type="button"
-                className="user-dropdown-item user-dropdown-item--danger"
-                role="menuitem"
-                onClick={handleLogout}
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                <span>Đăng xuất</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </header>

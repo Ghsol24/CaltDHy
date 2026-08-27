@@ -21,6 +21,21 @@
   --color-info-50: #ECF8F1;
   --color-overlay: rgba(16, 27, 54, 0.48);
 
+  /* ── Dedicated Semantic Financial Indicators (Default Mint) ── */
+  --color-success: #008B57;
+  --color-success-bg: #E6F7EF;
+  --color-success-border: #C9DED3;
+  --color-danger-bg: #FFF0EF;
+  --color-danger-border: #FED7D5;
+  --color-warning-bg: #FEF3C7;
+  --color-warning-border: #FDE68A;
+  --color-info: #2563EB;
+  --color-info-bg: #EFF6FF;
+  --color-info-border: #BFDBFE;
+  --color-neutral-text: #607086;
+  --color-neutral-bg: #F5FCF8;
+  --color-neutral-border: #E3ECE7;
+
   /* ── Aliases mapping to spec ── */
   --bg: var(--color-canvas);
   --surface: var(--color-surface);
@@ -180,6 +195,21 @@ html.dark-theme {
   --color-warning: #F59E0B;
   --color-overlay: rgba(0, 0, 0, 0.78);
 
+  /* ── Dedicated Semantic Financial Indicators (Dark Obsidian) ── */
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.16);
+  --color-success-border: rgba(16, 185, 129, 0.30);
+  --color-danger-bg: rgba(255, 71, 87, 0.16);
+  --color-danger-border: rgba(255, 71, 87, 0.30);
+  --color-warning-bg: rgba(245, 158, 11, 0.16);
+  --color-warning-border: rgba(245, 158, 11, 0.30);
+  --color-info: #60A5FA;
+  --color-info-bg: rgba(96, 165, 250, 0.16);
+  --color-info-border: rgba(96, 165, 250, 0.30);
+  --color-neutral-text: #94A3B8;
+  --color-neutral-bg: rgba(255, 255, 255, 0.05);
+  --color-neutral-border: rgba(255, 255, 255, 0.10);
+
   --bg: var(--color-canvas);
   --surface: var(--color-surface);
   --surface-card: var(--color-surface);
@@ -242,6 +272,21 @@ html.light-theme {
   --color-warning: #D97706;
   --color-overlay: rgba(15, 23, 42, 0.48);
 
+  /* ── Dedicated Semantic Financial Indicators (Light Minimalist SaaS) ── */
+  --color-success: #059669;
+  --color-success-bg: #ECFDF5;
+  --color-success-border: #A7F3D0;
+  --color-danger-bg: #FEF2F2;
+  --color-danger-border: #FECACA;
+  --color-warning-bg: #FFFBEB;
+  --color-warning-border: #FDE68A;
+  --color-info: #2563EB;
+  --color-info-bg: #EFF6FF;
+  --color-info-border: #BFDBFE;
+  --color-neutral-text: #475569;
+  --color-neutral-bg: #F1F5F9;
+  --color-neutral-border: #E2E8F0;
+
   --bg: var(--color-canvas);
   --surface: var(--color-surface);
   --surface-card: var(--color-surface);
@@ -287,6 +332,21 @@ html.cream-theme {
   --color-warning: #B57D1A;
   --color-overlay: rgba(44, 29, 16, 0.5);
 
+  /* ── Dedicated Semantic Financial Indicators (Cream Warm Paper - Distinct from terracotta) ── */
+  --color-success: #1E7E34;
+  --color-success-bg: rgba(30, 126, 52, 0.12);
+  --color-success-border: rgba(30, 126, 52, 0.26);
+  --color-danger-bg: rgba(214, 62, 62, 0.10);
+  --color-danger-border: rgba(214, 62, 62, 0.24);
+  --color-warning-bg: rgba(181, 125, 26, 0.12);
+  --color-warning-border: rgba(181, 125, 26, 0.24);
+  --color-info: #1D4ED8;
+  --color-info-bg: rgba(29, 78, 216, 0.08);
+  --color-info-border: rgba(29, 78, 216, 0.20);
+  --color-neutral-text: #6B533E;
+  --color-neutral-bg: rgba(107, 83, 62, 0.08);
+  --color-neutral-border: rgba(107, 83, 62, 0.18);
+
   --bg: var(--color-canvas);
   --surface: var(--color-surface);
   --surface-card: var(--color-surface);
@@ -331,6 +391,21 @@ html.green-theme {
   --color-danger-50: #FEF2F2;
   --color-warning: #D97706;
   --color-overlay: rgba(14, 46, 30, 0.5);
+
+  /* ── Dedicated Semantic Financial Indicators (Green Forest Emerald) ── */
+  --color-success: #047857;
+  --color-success-bg: #D1FAE5;
+  --color-success-border: #A7F3D0;
+  --color-danger-bg: #FEF2F2;
+  --color-danger-border: #FECACA;
+  --color-warning-bg: #FEF3C7;
+  --color-warning-border: #FDE68A;
+  --color-info: #0284C7;
+  --color-info-bg: #E0F2FE;
+  --color-info-border: #BAE6FD;
+  --color-neutral-text: #3D6A56;
+  --color-neutral-bg: #E2F2E9;
+  --color-neutral-border: #B2DFC8;
 
   --bg: var(--color-canvas);
   --surface: var(--color-surface);

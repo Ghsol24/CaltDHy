@@ -10,6 +10,7 @@ import { AnalyticsView } from '../features/analytics/AnalyticsView';
 import { JarsView } from '../features/jars/JarsView';
 import { TransactionModal } from '../features/transactions/TransactionModal';
 import { AppUtilities } from '../components/ui/AppUtilities';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 export function SpendingPage() {
   const { activeView } = useSpendingStore();
@@ -26,17 +27,19 @@ export function SpendingPage() {
 
   return (
     <AppShell>
-      {/* ── VIEW 1: HOME (DASHBOARD TỔNG QUAN & TIMELINE) ── */}
-      {activeView === 'home' && <HomeView />}
+      <ErrorBoundary>
+        {/* ── VIEW 1: HOME (DASHBOARD TỔNG QUAN & TIMELINE) ── */}
+        {activeView === 'home' && <HomeView />}
 
-      {/* ── VIEW 2: PLAN (VÍ TIỀN, HẠN MỨC NGÂN SÁCH & ĐỊNH KỲ) ── */}
-      {activeView === 'plan' && <PlanView />}
+        {/* ── VIEW 2: PLAN (VÍ TIỀN, HẠN MỨC NGÂN SÁCH & ĐỊNH KỲ) ── */}
+        {activeView === 'plan' && <PlanView />}
 
-      {/* ── VIEW 3: ANALYTICS (PHÂN TÍCH THU CHI) ── */}
-      {activeView === 'analytics' && <AnalyticsView />}
+        {/* ── VIEW 3: ANALYTICS (PHÂN TÍCH THU CHI) ── */}
+        {activeView === 'analytics' && <AnalyticsView />}
 
-      {/* ── VIEW 4: JARS (HŨ CHI TIÊU & TIẾT KIỆM) ── */}
-      {activeView === 'jars' && <JarsView />}
+        {/* ── VIEW 4: JARS (HŨ CHI TIÊU & TIẾT KIỆM) ── */}
+        {activeView === 'jars' && <JarsView />}
+      </ErrorBoundary>
 
       {/* Global Modals */}
       <TransactionModal />

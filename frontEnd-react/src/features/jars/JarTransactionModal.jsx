@@ -164,28 +164,6 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="txn-modal-body">
-            {/* Action Switcher: Nạp vs Rút */}
-            <div className="txn-type-segment" role="tablist" aria-label="Loại giao dịch hũ">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={action === 'deposit'}
-                className={`txn-type-btn ${action === 'deposit' ? 'active-income' : ''}`}
-                onClick={() => setAction('deposit')}
-              >
-                <span>+ Nạp vào hũ</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={action === 'withdraw'}
-                className={`txn-type-btn ${action === 'withdraw' ? 'active-expense' : ''}`}
-                onClick={() => setAction('withdraw')}
-              >
-                <span>− Rút từ hũ</span>
-              </button>
-            </div>
-
             {/* Jar Status Mini Card */}
             <div className="jar-tx-summary-card">
               <div className="jar-tx-summary-col">

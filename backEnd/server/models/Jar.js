@@ -32,6 +32,12 @@ const jarSchema = new mongoose.Schema(
             trim: true,
             maxlength: [50, 'Tên hũ không được vượt quá 50 ký tự.']
         },
+        category: {
+            type: String,
+            trim: true,
+            default: 'Mục tiêu chung',
+            maxlength: [50, 'Danh mục không vượt quá 50 ký tự.']
+        },
         icon: {
             type: String,
             default: '🫙',

@@ -16,6 +16,11 @@ const mongoose = require('mongoose');
  * @returns {Promise<any>}
  */
 async function runWithTransaction(workFn) {
+    // Nếu chưa kết nối DB (vd chạy unit test mock hoặc offline), chạy trực tiếp workFn không session
+    if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+        return await workFn(null);
+    }
+
     let session = null;
     try {
         session = await mongoose.startSession();

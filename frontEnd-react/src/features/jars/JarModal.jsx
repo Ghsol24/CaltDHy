@@ -5,16 +5,15 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
 
 const PRESET_COLORS = [
-  '#078A59', // Emerald Mint
-  '#2563EB', // Royal Blue
+  '#059669', // Emerald Green
+  '#3B82F6', // Royal Blue (Selected by default)
   '#7C3AED', // Vivid Purple
-  '#EA580C', // Deep Orange
-  '#DC2626', // Crimson Red
-  '#0891B2', // Cyan Teal
+  '#F97316', // Orange
+  '#EF4444', // Red
+  '#0891B2', // Cyan / Teal
   '#4F46E5', // Indigo
-  '#D97706', // Amber Gold
-  '#EC4899', // Pink Rose
-  '#475569'  // Slate
+  '#D97706', // Amber / Gold
+  '#EC4899'  // Pink / Magenta
 ];
 
 export function JarModal({ isOpen, onClose, jarToEdit = null }) {
@@ -27,12 +26,9 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
   const [target, setTarget] = useState('');
   const [initialAmount, setInitialAmount] = useState('');
   const [targetDate, setTargetDate] = useState('');
-  const [color, setColor] = useState('#078A59');
+  const [color, setColor] = useState('#3B82F6');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Preserve existing icon or fallback to default
-  const jarIconRef = useRef('🫙');
 
   const modalRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -47,16 +43,14 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       setTarget(jarToEdit.target ? Number(jarToEdit.target).toLocaleString('vi-VN') : '');
       setInitialAmount(jarToEdit.current ? Number(jarToEdit.current).toLocaleString('vi-VN') : '');
       setTargetDate(jarToEdit.targetDate ? jarToEdit.targetDate.slice(0, 10) : '');
-      setColor(jarToEdit.color || '#078A59');
-      jarIconRef.current = jarToEdit.icon || '🫙';
+      setColor(jarToEdit.color || '#3B82F6');
       setErrorMsg('');
     } else {
       setName('');
       setTarget('');
       setInitialAmount('');
       setTargetDate('');
-      setColor('#078A59');
-      jarIconRef.current = '🫙';
+      setColor('#3B82F6');
       setErrorMsg('');
     }
 
@@ -75,25 +69,24 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
     return initialAmount ? parseInt(String(initialAmount).replace(/\D/g, ''), 10) || 0 : 0;
   }, [initialAmount]);
 
-  const remainingAmount = useMemo(() => {
-    return Math.max(cleanTarget - cleanCurrent, 0);
-  }, [cleanTarget, cleanCurrent]);
-
   const progress = useMemo(() => {
-    if (cleanTarget <= 0) return 0;
-    return Math.min(Math.round((cleanCurrent / cleanTarget) * 100), 100);
+    if (!cleanTarget || cleanTarget <= 0) return 0;
+    const ratio = Math.round((cleanCurrent / cleanTarget) * 100);
+    return Math.min(100, Math.max(0, ratio));
+  }, [cleanCurrent, cleanTarget]);
+
+  const remainingAmount = useMemo(() => {
+    return Math.max(0, cleanTarget - cleanCurrent);
   }, [cleanTarget, cleanCurrent]);
 
-  // Days Remaining calculation
   const daysRemainingText = useMemo(() => {
     if (!targetDate) return '-- ngày còn lại';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const targetD = new Date(targetDate);
-    targetD.setHours(0, 0, 0, 0);
-    const diffTime = targetD.getTime() - today.getTime();
+    const end = new Date(targetDate);
+    end.setHours(0, 0, 0, 0);
+    const diffTime = end.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (isNaN(diffDays)) return '-- ngày còn lại';
     if (diffDays < 0) return 'Đã quá hạn';
     if (diffDays === 0) return 'Hôm nay';
     return `${diffDays} ngày còn lại`;
@@ -101,6 +94,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
 
   if (!isOpen) return null;
 
+  // Format currency display as typing
   const handleTargetChange = (e) => {
     const rawVal = e.target.value.replace(/\D/g, '');
     if (!rawVal) {
@@ -108,7 +102,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setTarget(num ? num.toLocaleString('vi-VN') : '');
+    setTarget(num.toLocaleString('vi-VN'));
   };
 
   const handleInitialAmountChange = (e) => {
@@ -118,7 +112,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setInitialAmount(num ? num.toLocaleString('vi-VN') : '');
+    setInitialAmount(num.toLocaleString('vi-VN'));
   };
 
   const handleSubmit = async (e) => {
@@ -141,11 +135,12 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       if (isEditing) {
         await updateJar(jarToEdit.id, {
           name: name.trim(),
+          category: jarToEdit.category || 'Mục tiêu chung',
           target: cleanTarget,
           current: cleanCurrent,
           targetDate: targetDate || null,
-          icon: jarIconRef.current || '🫙',
-          color: color || '#078A59'
+          icon: jarToEdit.icon || '🫙',
+          color: color || '#3B82F6'
         });
         setIsSubmitting(false);
         onClose();
@@ -157,11 +152,12 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       } else {
         await createJar({
           name: name.trim(),
+          category: 'Mục tiêu chung',
           target: cleanTarget,
           current: cleanCurrent,
           targetDate: targetDate || null,
-          icon: jarIconRef.current || '🫙',
-          color: color || '#078A59'
+          icon: '🫙',
+          color: color || '#3B82F6'
         });
         setIsSubmitting(false);
         onClose();
@@ -251,58 +247,94 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
               </div>
             </div>
 
-            {/* 2. Mục tiêu mong muốn */}
-            <div className="jar-field-group">
-              <label htmlFor="jar-target" className="jar-field-label">
-                Mục tiêu mong muốn
-              </label>
-              <div className="jar-adornment-input-box">
-                <span className="jar-input-leading-icon" aria-hidden="true">
-                  {/* Target 🎯 Icon in Emerald */}
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#10B981"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <circle cx="12" cy="12" r="6" />
-                    <circle cx="12" cy="12" r="2" />
-                  </svg>
-                </span>
-                <input
-                  id="jar-target"
-                  type="text"
-                  inputMode="numeric"
-                  className="jar-number-input"
-                  placeholder="0"
-                  value={target}
-                  onChange={handleTargetChange}
-                  required
-                />
-                <span className="jar-currency-badge">
-                  <span>VND</span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </span>
+            {/* 2. Hai cột: Mục tiêu mong muốn & Ngày dự kiến hoàn thành */}
+            <div className="jar-form-grid-2col">
+              {/* Cột trái: Mục tiêu mong muốn */}
+              <div className="jar-field-group">
+                <label htmlFor="jar-target" className="jar-field-label">
+                  Mục tiêu mong muốn
+                </label>
+                <div className="jar-adornment-input-box">
+                  <span className="jar-input-leading-icon" aria-hidden="true">
+                    {/* Target 🎯 Icon in Emerald Green */}
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#10B981"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <circle cx="12" cy="12" r="6" />
+                      <circle cx="12" cy="12" r="2" />
+                    </svg>
+                  </span>
+                  <input
+                    id="jar-target"
+                    type="text"
+                    inputMode="numeric"
+                    className="jar-number-input"
+                    placeholder="0"
+                    value={target}
+                    onChange={handleTargetChange}
+                    required
+                  />
+                  <span className="jar-currency-badge">
+                    <span>VND</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+
+              {/* Cột phải: Ngày dự kiến hoàn thành */}
+              <div className="jar-field-group">
+                <label htmlFor="jar-deadline" className="jar-field-label">
+                  Ngày dự kiến hoàn thành
+                </label>
+                <div className="jar-adornment-input-box">
+                  <span className="jar-input-leading-icon" aria-hidden="true">
+                    {/* Calendar 📅 Icon in Violet */}
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#8B5CF6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect width="18" height="18" x="3" y="4" rx="2" />
+                      <line x1="16" x2="16" y1="2" y2="6" />
+                      <line x1="8" x2="8" y1="2" y2="6" />
+                      <line x1="3" x2="21" y1="10" y2="10" />
+                    </svg>
+                  </span>
+                  <input
+                    id="jar-deadline"
+                    type="date"
+                    className="jar-date-input"
+                    value={targetDate}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* 3. Hai field tùy chọn (Grid 2 cột) */}
-            <div className="jar-optional-grid">
-              {/* Field 3a: Số tiền bạn đã có */}
+            {/* 3. Số tiền bạn đã có (tùy chọn) - Chiếm 50% hàng */}
+            <div className="jar-form-grid-2col">
               <div className="jar-field-group">
                 <label htmlFor="jar-initial" className="jar-field-label">
                   Số tiền bạn đã có (tùy chọn)
                 </label>
                 <div className="jar-adornment-input-box">
                   <span className="jar-input-leading-icon" aria-hidden="true">
-                    {/* Wallet 💳 Icon in Emerald */}
+                    {/* Wallet/Card 💳 Icon in Emerald Green */}
                     <svg
                       width="18"
                       height="18"
@@ -333,41 +365,11 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                     </svg>
                   </span>
                 </div>
+                <span style={{ fontSize: '11.5px', color: '#64748B', marginTop: '4px', display: 'block' }}>
+                  Số tiền hiện có sẽ được cộng vào hũ khi tạo.
+                </span>
               </div>
-
-              {/* Field 3b: Ngày dự kiến hoàn thành */}
-              <div className="jar-field-group">
-                <label htmlFor="jar-deadline" className="jar-field-label">
-                  Ngày dự kiến hoàn thành (tùy chọn)
-                </label>
-                <div className="jar-adornment-input-box">
-                  <span className="jar-input-leading-icon" aria-hidden="true" style={{ color: '#8B5CF6' }}>
-                    {/* Calendar Vector Icon in Violet */}
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#8B5CF6"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect width="18" height="18" x="3" y="4" rx="2" />
-                      <line x1="16" x2="16" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="2" y2="6" />
-                      <line x1="3" x2="21" y1="10" y2="10" />
-                    </svg>
-                  </span>
-                  <input
-                    id="jar-deadline"
-                    type="date"
-                    className="jar-date-input"
-                    value={targetDate}
-                    onChange={(e) => setTargetDate(e.target.value)}
-                  />
-                </div>
-              </div>
+              <div aria-hidden="true" />
             </div>
 
             {/* 4. Card "Bạn còn cần tiết kiệm" (Realtime Summary) */}
@@ -388,10 +390,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                     {remainingAmount.toLocaleString('vi-VN')} VND
                   </strong>
                 </div>
-                <strong
-                  className="jar-summary-card__pct"
-                  style={{ color: progress >= 100 ? '#10B981' : (progress > 0 ? color : '#10B981') }}
-                >
+                <strong className="jar-summary-card__pct">
                   {progress}%
                 </strong>
               </div>
@@ -402,7 +401,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                   className="jar-summary-card__fill"
                   style={{
                     width: `${progress}%`,
-                    backgroundColor: color || '#10B981'
+                    backgroundColor: progress > 0 ? (color || '#4361EE') : '#4361EE'
                   }}
                 />
               </div>
@@ -428,14 +427,17 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                       role="radio"
                       aria-checked={isSelected}
                       className={`jar-color-circle ${isSelected ? 'is-selected' : ''}`}
-                      style={{ backgroundColor: hex }}
+                      style={{
+                        backgroundColor: hex,
+                        color: hex
+                      }}
                       onClick={() => setColor(hex)}
                       aria-label={`Màu ${hex}`}
                     >
                       {isSelected && (
                         <svg
-                          width="15"
-                          height="15"
+                          width="16"
+                          height="16"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="#FFFFFF"
@@ -455,10 +457,29 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
 
             {/* 6. Tip / Guidance Banner */}
             <div className="jar-tip-banner" role="note">
-              <span className="jar-tip-icon" aria-hidden="true">💡</span>
-              <span className="jar-tip-text">
-                Mẹo: Hãy chọn mục tiêu cụ thể và ngày hoàn thành để duy trì động lực nhé!
-              </span>
+              <div className="jar-tip-icon-box" aria-hidden="true">
+                {/* Lightbulb 💡 Vector Icon */}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                  <path d="M9 18h6" />
+                  <path d="M10 22h4" />
+                </svg>
+              </div>
+              <div className="jar-tip-content">
+                <span className="jar-tip-title">Mẹo nhỏ</span>
+                <span className="jar-tip-text">
+                  Hãy chọn mục tiêu cụ thể và ngày hoàn thành để duy trì động lực nhé!
+                </span>
+              </div>
             </div>
 
             {/* Error Message if any */}
@@ -506,21 +527,21 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                 </>
               ) : (
                 <>
-                  {/* Jar/Box Icon */}
+                  {/* Floppy Disk 💾 Icon matching Ảnh 4 */}
                   <svg
-                    width="18"
-                    height="18"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
+                    strokeWidth="2.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     aria-hidden="true"
                   >
-                    <path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1h-14v-1Z" />
-                    <path d="M5 9v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9" />
-                    <line x1="10" x2="14" y1="13" y2="13" />
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
                   </svg>
                   <span>{isEditing ? 'Cập nhật hũ' : 'Tạo hũ mới'}</span>
                 </>

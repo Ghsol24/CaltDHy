@@ -1053,6 +1053,36 @@ body.dark-theme .idx-screw {
   color: var(--accent);
 }
 
+.idx-lang-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+}
+
+.idx-lang-wrap .idx-lang-btn {
+  width: 100%;
+}
+
+.idx-lang-btn--disabled,
+.idx-lang-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+  pointer-events: auto;
+}
+
+.idx-lang-btn--disabled:hover,
+.idx-lang-btn:disabled:hover {
+  color: var(--text-muted) !important;
+  border-color: transparent !important;
+}
+
+.idx-lang-wrap:hover .lang-btn-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* Theme toggle */
 .idx-theme-row {
   display: flex;

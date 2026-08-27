@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const { wallets, transferMoney, fetchWallets } = useWalletStore();
@@ -12,7 +12,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const [toWalletId, setToWalletId] = useState('');
   const [amount, setAmount] = useState('');
   const [fee, setFee] = useState('');
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(() => getLocalDateString());
   const [desc, setDesc] = useState('Chuyển tiền ví');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -48,7 +48,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
 
     setAmount('');
     setFee('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(getLocalDateString());
     setDesc('Chuyển tiền ví');
     setErrorMsg('');
 

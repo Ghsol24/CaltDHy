@@ -181,9 +181,34 @@
   color: var(--color-text, #101B36);
 }
 
+/* Global Financial Text Color Utilities */
+.text-success {
+  color: var(--color-success, #008B57) !important;
+}
+
+.text-danger {
+  color: var(--color-danger, #E34B45) !important;
+}
+
+.text-warning {
+  color: var(--color-warning, #D9921E) !important;
+}
+
+.text-info {
+  color: var(--color-info, #2563EB) !important;
+}
+
+.text-brand {
+  color: var(--color-brand-700) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted, #8A98A9) !important;
+}
+
 .budget-ov-value.is-brand,
 .budget-ov-value.text-brand {
-  color: var(--color-brand-700, #008B57);
+  color: var(--color-success, #008B57);
 }
 
 .budget-ov-value.text-danger {
@@ -1316,29 +1341,31 @@
 }
 
 .badge-income {
-  background: var(--color-brand-100, #E6F7EF);
-  color: var(--color-brand-700, #008B57);
+  background: var(--color-success-bg, #E6F7EF);
+  color: var(--color-success, #008B57);
 }
 
 .badge-expense {
-  background: var(--color-danger-50, #FFF0EF);
+  background: var(--color-danger-bg, #FFF0EF);
   color: var(--color-danger, #E34B45);
 }
 
 .badge-net {
-  background: var(--color-brand-50, #F1FBF6);
+  background: var(--color-neutral-bg, #F1FBF6);
   color: var(--color-text, #101B36);
+  border: 1px solid var(--color-neutral-border, #E3ECE7);
 }
 
 .badge-savings {
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--color-warning-bg, #FEF3C7);
+  color: var(--color-warning, #D9921E);
 }
 
 .kpi-card-amount {
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text, #101B36);
 }
 
 .kpi-card-meta {
@@ -1349,25 +1376,35 @@
 .kpi-status-pill {
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
+  border: 1px solid transparent;
 }
 
 .pill-positive {
-  background: var(--color-brand-100, #E6F7EF);
-  color: var(--color-brand-700, #008B57);
+  background: var(--color-success-bg, #E6F7EF);
+  color: var(--color-success, #008B57);
+  border-color: var(--color-success-border, #C9DED3);
 }
 
 .pill-danger {
-  background: var(--color-danger-50, #FFF0EF);
+  background: var(--color-danger-bg, #FFF0EF);
   color: var(--color-danger, #E34B45);
+  border-color: var(--color-danger-border, #FED7D5);
+}
+
+.pill-warning {
+  background: var(--color-warning-bg, #FEF3C7);
+  color: var(--color-warning, #B45309);
+  border-color: var(--color-warning-border, #FDE68A);
 }
 
 .pill-neutral {
-  background: var(--color-surface-muted, #F7FAF8);
-  color: var(--color-text-secondary, #607086);
+  background: var(--color-neutral-bg, #F7FAF8);
+  color: var(--color-neutral-text, #607086);
+  border-color: var(--color-neutral-border, #E3ECE7);
 }
 
 /* Section Panels */
@@ -1837,35 +1874,57 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
   font-size: 11px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .delta-badge--up-good,
-.delta-badge--down-good {
-  background: var(--color-brand-100, #E6F7EF);
-  color: var(--color-brand-700, #008B57);
+.delta-badge--down-good,
+.delta-badge--positive {
+  background: var(--color-success-bg, #E6F7EF);
+  color: var(--color-success, #008B57);
+  border-color: var(--color-success-border, #C9DED3);
 }
 
 .delta-badge--up-bad,
-.delta-badge--down-bad {
-  background: var(--color-danger-50, #FFF0EF);
+.delta-badge--down-bad,
+.delta-badge--danger {
+  background: var(--color-danger-bg, #FFF0EF);
   color: var(--color-danger, #E34B45);
+  border-color: var(--color-danger-border, #FED7D5);
+}
+
+.delta-badge--up-warn,
+.delta-badge--down-warn,
+.delta-badge--warning {
+  background: var(--color-warning-bg, #FEF3C7);
+  color: var(--color-warning, #B45309);
+  border-color: var(--color-warning-border, #FDE68A);
+}
+
+.delta-badge--new,
+.delta-badge--info {
+  background: var(--color-info-bg, #EFF6FF);
+  color: var(--color-info, #2563EB);
+  border-color: var(--color-info-border, #BFDBFE);
 }
 
 .delta-badge--neutral {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E3ECE7);
-  color: var(--color-text-muted, #8A98A9);
+  background: var(--color-neutral-bg, #F5FCF8);
+  color: var(--color-neutral-text, #607086);
+  border-color: var(--color-neutral-border, #E3ECE7);
 }
 
 /* Smart Financial Insights & Accolades Banner */
 .report-insights-banner {
-  background: linear-gradient(135deg, rgba(0, 139, 87, 0.08) 0%, rgba(37, 99, 235, 0.05) 100%);
-  border: 1px solid rgba(0, 139, 87, 0.2);
+  background: var(--color-surface-muted, #F7FAF8);
+  border: 1px solid var(--color-border, #E3ECE7);
   border-radius: var(--radius-md, 12px);
   padding: 16px 20px;
   display: flex;
@@ -1879,7 +1938,7 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--color-brand-700, #008B57);
+  color: var(--color-text, #101B36);
 }
 
 .report-insights-list {
@@ -1906,21 +1965,25 @@
   justify-content: center;
   flex-shrink: 0;
   font-size: 12px;
+  border: 1px solid transparent;
 }
 
 .insight-icon-pill--accolade {
-  background: #E6F7EF;
-  color: #008B57;
+  background: var(--color-success-bg, #E6F7EF);
+  color: var(--color-success, #008B57);
+  border-color: var(--color-success-border, #C9DED3);
 }
 
 .insight-icon-pill--warning {
-  background: #FEF3C7;
-  color: #B45309;
+  background: var(--color-warning-bg, #FEF3C7);
+  color: var(--color-warning, #B45309);
+  border-color: var(--color-warning-border, #FDE68A);
 }
 
 .insight-icon-pill--info {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--color-info-bg, #EFF6FF);
+  color: var(--color-info, #2563EB);
+  border-color: var(--color-info-border, #BFDBFE);
 }
 
 /* Detailed Category Comparison Table */
@@ -2049,27 +2112,31 @@
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 
 .budget-status-pill--safe {
-  background: var(--color-brand-100, #E6F7EF);
-  color: var(--color-brand-700, #008B57);
+  background: var(--color-success-bg, #E6F7EF);
+  color: var(--color-success, #008B57);
+  border-color: var(--color-success-border, #C9DED3);
 }
 
 .budget-status-pill--warning {
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--color-warning-bg, #FEF3C7);
+  color: var(--color-warning, #B45309);
+  border-color: var(--color-warning-border, #FDE68A);
 }
 
 .budget-status-pill--danger {
-  background: var(--color-danger-50, #FFF0EF);
+  background: var(--color-danger-bg, #FFF0EF);
   color: var(--color-danger, #E34B45);
+  border-color: var(--color-danger-border, #FED7D5);
 }
 
 .budget-status-pill--unset {
-  background: var(--color-surface-muted, #F7FAF8);
-  border: 1px solid var(--color-border, #E3ECE7);
-  color: var(--color-text-muted, #8A98A9);
+  background: var(--color-neutral-bg, #F7FAF8);
+  border-color: var(--color-neutral-border, #E3ECE7);
+  color: var(--color-neutral-text, #8A98A9);
 }
 
 /* Advice Text in Table */
@@ -2080,12 +2147,12 @@
 }
 
 .table-advice-text--good {
-  color: var(--color-brand-700, #008B57);
+  color: var(--color-success, #008B57);
   font-weight: 500;
 }
 
 .table-advice-text--warning {
-  color: #B45309;
+  color: var(--color-warning, #B45309);
   font-weight: 500;
 }
 

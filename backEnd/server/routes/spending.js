@@ -50,7 +50,7 @@ async function validateTransactionWallets({ type, walletId, toWalletId, userId }
         }
     } else {
         // income hoặc expense
-        if (walletId) {
+        if (walletId && walletId !== 'w_default_cash') {
             if (!isValidObjectId(walletId)) {
                 return 'ID ví không hợp lệ.';
             }
@@ -441,6 +441,27 @@ router.delete('/:id', async (req, res) => {
     } catch (error) {
         console.error('DELETE /api/spending/:id error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi xóa giao dịch.' });
+    }
+});
+
+// =============================================
+// POST /api/spending/reset-data – Đặt lại toàn bộ dữ liệu chi tiêu của tài khoản
+// =============================================
+router.post('/reset-data', async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Xóa sạch transactions và budgets của user hiện tại
+        await Transaction.deleteMany({ userId });
+        await Budget.deleteMany({ userId });
+
+        res.json({
+            success: true,
+            message: 'Đã đặt lại toàn bộ dữ liệu chi tiêu thành công!'
+        });
+    } catch (error) {
+        console.error('POST /api/spending/reset-data error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server khi đặt lại dữ liệu chi tiêu.' });
     }
 });
 

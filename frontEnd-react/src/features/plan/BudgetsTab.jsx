@@ -3,8 +3,8 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { BudgetEditModal } from './BudgetEditModal';
 import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
-import { formatCurrency, formatPercent, formatDate } from '../../utils/formatters';
-import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '../../utils/formatters';
+import { getCategoryIcon } from '../../utils/categories';
 
 export function BudgetsTab() {
   const { selectedMonth, setSelectedMonth } = useSpendingStore();
@@ -14,22 +14,22 @@ export function BudgetsTab() {
   const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
 
   // Month navigation
-  const currentMonthStr = selectedMonth || new Date().toISOString().slice(0, 7);
+  const currentMonthStr = selectedMonth || getLocalMonthString();
 
   const handlePrevMonth = () => {
     const [y, m] = currentMonthStr.split('-').map(Number);
     const date = new Date(y, m - 2, 1);
-    setSelectedMonth(date.toISOString().slice(0, 7));
+    setSelectedMonth(getLocalMonthString(date));
   };
 
   const handleNextMonth = () => {
     const [y, m] = currentMonthStr.split('-').map(Number);
     const date = new Date(y, m, 1);
-    setSelectedMonth(date.toISOString().slice(0, 7));
+    setSelectedMonth(getLocalMonthString(date));
   };
 
   const handleResetToCurrentMonth = () => {
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    setSelectedMonth(getLocalMonthString());
   };
 
   // Compute monthly stats for selected month
@@ -172,7 +172,7 @@ export function BudgetsTab() {
             </svg>
           </button>
 
-          {currentMonthStr !== new Date().toISOString().slice(0, 7) && (
+          {currentMonthStr !== getLocalMonthString() && (
             <button
               type="button"
               className="month-today-btn"

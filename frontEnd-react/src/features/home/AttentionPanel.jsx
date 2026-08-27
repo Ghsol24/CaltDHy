@@ -3,14 +3,14 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
 export function AttentionPanel() {
   const { setActiveView, setPlanSubTab, selectedMonth } = useSpendingStore();
   const { transactions, budgets } = useTransactionStore();
   const { jars, installments } = useJarStore();
 
-  const currentMonthPrefix = selectedMonth || new Date().toISOString().slice(0, 7);
+  const currentMonthPrefix = selectedMonth || getLocalMonthString();
   const monthlyStats = calculateMonthlyStats(transactions, currentMonthPrefix);
 
   // 1. Gather all category budget statuses

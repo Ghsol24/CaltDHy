@@ -52,14 +52,46 @@ const VI_WEEKDAYS = [
 ];
 
 /**
- * Parse input date to Date object
+ * Lấy chuỗi ngày YYYY-MM-DD theo Giờ Địa Phương (Local Time) của người dùng.
+ * Tránh hoàn toàn lỗi lệch ngày do toISOString() chuyển sang UTC.
+ * @param {Date|string|number} [d=new Date()]
+ * @returns {string} Chuỗi định dạng 'YYYY-MM-DD'
+ */
+export function getLocalDateString(d = new Date()) {
+  const dateObj = d instanceof Date ? d : parseDate(d) || new Date();
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Lấy chuỗi tháng YYYY-MM theo Giờ Địa Phương (Local Time) của người dùng.
+ * Tránh lỗi đầu tháng bị thụt lùi về tháng cũ do UTC.
+ * @param {Date|string|number} [d=new Date()]
+ * @returns {string} Chuỗi định dạng 'YYYY-MM'
+ */
+export function getLocalMonthString(d = new Date()) {
+  const dateObj = d instanceof Date ? d : parseDate(d) || new Date();
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+/**
+ * Parse input date to Date object theo đúng giờ địa phương nếu chuỗi là YYYY-MM-DD.
  * @param {Date|string|number} dateInput
  * @returns {Date|null}
  */
-function parseDate(dateInput) {
+export function parseDate(dateInput) {
   if (!dateInput) return null;
   if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
     return dateInput;
+  }
+  if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+    const [y, m, d] = dateInput.split('-').map(Number);
+    const localD = new Date(y, m - 1, d);
+    return isNaN(localD.getTime()) ? null : localD;
   }
   const parsed = new Date(dateInput);
   return isNaN(parsed.getTime()) ? null : parsed;

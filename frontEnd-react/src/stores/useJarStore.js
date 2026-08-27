@@ -37,11 +37,23 @@ const saveStoredInstallments = (items) => {
 const normalizeJar = (j) => ({
   id: j._id || j.id,
   name: j.name || '',
+  category: j.category || 'Mục tiêu chung',
   target: Number(j.target) || 0,
   current: Number(j.current) || 0,
   targetDate: j.targetDate || null,
   icon: j.icon || '🫙',
-  color: j.color || '#078A59'
+  color: j.color || '#5356F1',
+  history: Array.isArray(j.history)
+    ? j.history.map((h) => ({
+        id: h._id || h.id || `hist_${Date.now()}_${Math.random()}`,
+        type: h.type,
+        amount: Number(h.amount) || 0,
+        reason: h.reason || '',
+        date: h.date || new Date().toISOString()
+      }))
+    : [],
+  createdAt: j.createdAt || null,
+  updatedAt: j.updatedAt || null
 });
 
 const normalizeInstallment = (i) => ({
@@ -109,9 +121,19 @@ export const useJarStore = create((set, get) => ({
       set({ jars: updated });
       return { success: true, data: newJar };
     } catch (err) {
+      const numInit = Number(data.current) || 0;
+      const initialHist = numInit > 0 ? [{
+        id: `hist_init_${Date.now()}`,
+        type: 'deposit',
+        amount: numInit,
+        reason: 'Số dư ban đầu khi tạo hũ',
+        date: new Date().toISOString()
+      }] : [];
       const fallbackJar = normalizeJar({
         ...data,
-        id: `local_jar_${Date.now()}`
+        id: `local_jar_${Date.now()}`,
+        history: initialHist,
+        createdAt: new Date().toISOString()
       });
       const updated = [fallbackJar, ...get().jars];
       saveStoredJars(updated);
@@ -161,7 +183,18 @@ export const useJarStore = create((set, get) => ({
           ? (targetJar.current || 0) + numAmt
           : Math.max(0, (targetJar.current || 0) - numAmt)
         : 0;
-      const updated = get().jars.map((jar) => (jar.id === id ? { ...jar, current: newBalance } : jar));
+      const newEntry = {
+        id: `local_hist_${Date.now()}`,
+        type: action,
+        amount: numAmt,
+        reason: reason || '',
+        date: new Date().toISOString()
+      };
+      const updated = get().jars.map((jar) => {
+        if (jar.id !== id) return jar;
+        const currentHist = Array.isArray(jar.history) ? jar.history : [];
+        return { ...jar, current: newBalance, history: [newEntry, ...currentHist] };
+      });
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: { id, current: newBalance }, offline: true };

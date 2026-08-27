@@ -4,7 +4,7 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { calculateAvailableToSpend } from '../../utils/financeMath';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
 export function AvailableToSpendCard() {
   const { selectedMonth } = useSpendingStore();
@@ -13,7 +13,7 @@ export function AvailableToSpendCard() {
   const { jars } = useJarStore();
 
   // Month prefix: e.g. "2026-08"
-  const currentMonthPrefix = selectedMonth || new Date().toISOString().slice(0, 7);
+  const currentMonthPrefix = selectedMonth || getLocalMonthString();
 
   // Calculate Safe-To-Spend and other key metrics
   const {

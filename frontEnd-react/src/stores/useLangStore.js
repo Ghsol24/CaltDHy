@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 
 const KEY = 'caltdhy_lang';
-const SUPPORTED = ['en', 'vi', 'zh'];
+// Tạm thời chỉ hỗ trợ 'vi', 'en' và 'zh' đang trong quá trình cập nhật
+const SUPPORTED = ['vi'];
 
 const getInitialLang = () => {
   try {

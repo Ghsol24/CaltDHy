@@ -1,11 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useLangStore } from '../../stores/useLangStore';
+import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { GuideModal } from '../../features/guide/GuideModal';
 import { ContextualSectionGuide } from '../../features/guide/ContextualSectionGuide';
+import { AccountModal } from '../../features/account/AccountModal';
 
 const THEME_OPTIONS = [
   { id: 'dark', labelKey: 'darkTheme', swatch: 'linear-gradient(135deg, #2563EB 0%, #090A0F 100%)' },
@@ -73,16 +76,13 @@ export function AppUtilities() {
   const { theme, setTheme } = useThemeStore();
   const { lang, setLang } = useLangStore();
   const { t } = useTranslation();
-  const { user, updateProfile } = useAuthStore();
+  const { logout } = useAuthStore();
+  const { confirm } = useConfirmStore();
+  const navigate = useNavigate();
 
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [message, setMessage] = useState('');
   const [currency, setCurrency] = useState(
     () => localStorage.getItem('caltdhy_curr') || 'VND'
   );
-  const [backupStatus, setBackupStatus] = useState('');
-  const importFileInputRef = useRef(null);
 
   const handleSetCurrency = (code) => {
     setCurrency(code);
@@ -93,21 +93,18 @@ export function AppUtilities() {
     }
   };
 
-  const handleImportFile = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setBackupStatus(t('importDeveloping'));
-    setTimeout(() => setBackupStatus(''), 4000);
-    event.target.value = '';
-  };
-
-  const saveProfile = async (event) => {
-    event.preventDefault();
-    try {
-      await updateProfile({ name, email });
-      setMessage(t('saveProfileSuccess'));
-    } catch (error) {
-      setMessage(error.message || 'Không thể cập nhật tài khoản.');
+  const handleLogout = async () => {
+    const confirmed = await confirm({
+      title: t('logoutConfirmTitle'),
+      message: t('logoutConfirmMessage'),
+      confirmText: t('logout'),
+      cancelText: t('done') === 'DONE' ? 'Cancel' : 'Hủy',
+      confirmVariant: 'danger'
+    });
+    if (confirmed) {
+      spending.closeSettingsModal();
+      logout();
+      navigate('/login');
     }
   };
 
@@ -123,16 +120,29 @@ export function AppUtilities() {
           <div className="settings-group">
             <p className="settings-group__label">{t('language')}</p>
             <div className="lang-switch" role="group" aria-label="Language selection">
-              {['en', 'vi', 'zh'].map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  className={`lang-btn ${lang === code ? 'lang-btn--active' : ''}`}
-                  onClick={() => setLang(code)}
-                >
-                  {code.toUpperCase()}
-                </button>
-              ))}
+              {['en', 'vi', 'zh'].map((code) => {
+                const isDisabled = code !== 'vi';
+                const isActive = lang === code;
+                return (
+                  <div key={code} className="lang-btn-wrap">
+                    <button
+                      type="button"
+                      disabled={isDisabled}
+                      className={`lang-btn ${isActive ? 'lang-btn--active' : ''} ${isDisabled ? 'lang-btn--disabled' : ''}`}
+                      onClick={() => !isDisabled && setLang(code)}
+                      title={isDisabled ? 'updating' : undefined}
+                      aria-disabled={isDisabled}
+                    >
+                      {code.toUpperCase()}
+                    </button>
+                    {isDisabled && (
+                      <span className="lang-btn-tooltip" role="tooltip">
+                        updating
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -183,130 +193,65 @@ export function AppUtilities() {
             </p>
           </div>
 
-          {/* 4. Nút tắt: Thiết lập ngân sách */}
+          {/* 4. Hướng dẫn sử dụng */}
           <div className="settings-group">
             <button
               type="button"
-              className="btn-set-budgets btn-set-budgets--full"
+              className="btn-settings-action btn-settings-action--guide"
               onClick={() => {
                 spending.closeSettingsModal();
-                spending.setActiveView('plan');
-                spending.setPlanSubTab('budgets');
+                spending.openHelpModal();
               }}
             >
-              {t('setBudgets')}
-            </button>
-          </div>
-
-          {/* 5. Sao lưu & Khôi phục — CHỈ CÒN IMPORT, đã bỏ EXPORT */}
-          <div className="settings-group settings-group--last">
-            <div className="settings-group__label-row">
-              <p className="settings-group__label">{t('backupRestore')}</p>
-              <div className="info-btn" tabIndex={0} role="button" aria-label="Hướng dẫn khôi phục dữ liệu">
-                ?
-                <div className="info-tooltip">
-                  <p className="info-tooltip__title">{t('settingsTooltipTitle')}</p>
-                  <p className="info-tooltip__body">
-                    {t('settingsTooltipBody')}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="settings-backup-row">
-              <button
-                type="button"
-                className="btn-set-budgets btn-set-budgets--full btn-backup btn-backup--import"
-                onClick={() => importFileInputRef.current?.click()}
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                {t('importBackup')}
-              </button>
-            </div>
-            {backupStatus && (
-              <p style={{ fontSize: '12px', color: 'var(--color-brand-700, #008B57)', marginTop: '8px', marginBottom: 0, fontWeight: 600 }}>
-                {backupStatus}
-              </p>
-            )}
-            <input
-              type="file"
-              ref={importFileInputRef}
-              accept=".json"
-              style={{ display: 'none' }}
-              onChange={handleImportFile}
-            />
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>{t('userGuide')}</span>
+            </button>
+          </div>
+
+          {/* 5. Đăng xuất tài khoản */}
+          <div className="settings-group settings-group--last">
+            <button
+              type="button"
+              className="btn-settings-action btn-settings-action--danger"
+              onClick={handleLogout}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>{t('logout')}</span>
+            </button>
           </div>
         </ModalOverlayShell>
       )}
 
-      {/* ── Account Modal ── */}
-      {spending.isAccountOpen && (
-        <ModalOverlayShell
-          title={t('accountInfo')}
-          subtitle="Quản lý thông tin hồ sơ và định danh người dùng."
-          onClose={spending.closeAccountModal}
-        >
-          <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-text-secondary, #607086)' }}>
-                {t('displayName')}
-              </label>
-              <input
-                className="finput"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nhập tên hiển thị"
-                required
-                style={{
-                  height: '40px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border, #E3ECE7)',
-                  padding: '0 12px',
-                  background: 'var(--color-surface-muted, #F7FAF8)',
-                  color: 'var(--color-text, #101B36)',
-                  fontSize: '13.5px',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-text-secondary, #607086)' }}>
-                {t('emailAddress')}
-              </label>
-              <input
-                className="finput"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                required
-                style={{
-                  height: '40px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--color-border, #E3ECE7)',
-                  padding: '0 12px',
-                  background: 'var(--color-surface-muted, #F7FAF8)',
-                  color: 'var(--color-text, #101B36)',
-                  fontSize: '13.5px',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn-setup-budget-primary"
-              style={{ height: '40px', marginTop: '6px' }}
-            >
-              {t('saveProfile')}
-            </button>
-            {message && (
-              <p style={{ color: 'var(--color-brand-700, #008B57)', fontSize: '12.5px', margin: 0, fontWeight: 600 }}>
-                {message}
-              </p>
-            )}
-          </form>
-        </ModalOverlayShell>
-      )}
+      {/* ── Account Management Modal (3 Tabs: Profile, Security, Data & Privacy) ── */}
+      {spending.isAccountOpen && <AccountModal />}
 
       {/* ── Contextual Per-Section First-time Guide ── */}
       <ContextualSectionGuide />

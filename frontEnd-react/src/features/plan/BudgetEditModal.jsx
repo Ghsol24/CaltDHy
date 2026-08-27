@@ -4,7 +4,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, getLocalMonthString } from '../../utils/formatters';
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const { budgets, expenseCategories, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
@@ -35,7 +35,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   useFocusTrap(modalRef, isOpen);
 
   // Active month display label
-  const activeMonthStr = selectedMonth || new Date().toISOString().slice(0, 7);
+  const activeMonthStr = selectedMonth || getLocalMonthString();
   const monthDateObj = new Date(`${activeMonthStr}-01`);
   const monthDisplay = formatDate(monthDateObj, 'month');
 

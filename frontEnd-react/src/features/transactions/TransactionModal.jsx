@@ -4,8 +4,10 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
-import { formatCurrency } from '../../utils/formatters';
+import { DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { formatCurrency, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
+
+const EMPTY_EXPENSE_CATS = [];
 
 export function TransactionModal() {
   const { isAddTxnOpen, closeAddTxnModal, setActiveView, setPlanSubTab } = useSpendingStore();
@@ -30,7 +32,7 @@ export function TransactionModal() {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [walletId, setWalletId] = useState('');
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(() => getLocalDateString());
   const [desc, setDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -38,6 +40,8 @@ export function TransactionModal() {
 
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
+  const prevOpenRef = useRef(false);
+  const prevEditIdRef = useRef(null);
 
   useFocusTrap(modalRef, isOpen);
 
@@ -49,7 +53,7 @@ export function TransactionModal() {
   }, [isOpen, wallets.length, fetchWallets]);
 
   // Categories list based on selected transaction type
-  const activeExpenseCats = expenseCategories || [];
+  const activeExpenseCats = expenseCategories || EMPTY_EXPENSE_CATS;
   const activeIncomeCats = incomeCategories && incomeCategories.length > 0
     ? incomeCategories
     : DEFAULT_INCOME_CATEGORIES;
@@ -59,7 +63,7 @@ export function TransactionModal() {
   // Tính toán ngân sách thời gian thực cho từng danh mục chi tiêu trong tháng được chọn
   const categoryMetrics = useMemo(() => {
     if (type !== 'expense') return {};
-    const curPrefix = date ? date.slice(0, 7) : new Date().toISOString().slice(0, 7);
+    const curPrefix = date ? date.slice(0, 7) : getLocalMonthString();
     const spentMap = {};
     transactions.forEach((t) => {
       if (t.type === 'expense' && t.date && t.date.startsWith(curPrefix)) {
@@ -137,47 +141,66 @@ export function TransactionModal() {
     });
   }, [type, categories, categoryMetrics]);
 
-  // Initialize or reset form values
+  // Initialize or reset form values only when modal is opened or target editing transaction changes
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      prevOpenRef.current = false;
+      prevEditIdRef.current = null;
+      return;
+    }
 
-    if (editingTransaction) {
-      setType(editingTransaction.type || 'expense');
-      setAmount(
-        editingTransaction.amount
-          ? Number(editingTransaction.amount).toLocaleString('vi-VN')
-          : ''
-      );
-      setCategory(editingTransaction.category || '');
-      setWalletId(editingTransaction.walletId || '');
-      setDate(
-        editingTransaction.date
-          ? typeof editingTransaction.date === 'string'
-            ? editingTransaction.date.slice(0, 10)
-            : new Date(editingTransaction.date).toISOString().slice(0, 10)
-          : new Date().toISOString().split('T')[0]
-      );
-      setDesc(editingTransaction.desc || '');
-      setErrorMsg('');
-      setAmountError('');
-    } else {
-      // New transaction default state
-      setType('expense');
-      setAmount('');
-      const defaultCat = sortedCategories[0]?.name || '';
-      setCategory(defaultCat);
-      setDate(new Date().toISOString().split('T')[0]);
-      setDesc('');
-      setErrorMsg('');
-      setAmountError('');
+    const isFirstOpen = !prevOpenRef.current && isOpen;
+    const isEditTargetChanged = prevEditIdRef.current !== (editingTransaction?.id || null);
 
-      // Preselect default wallet or first wallet
-      const defWallet = wallets.find((w) => w.isDefault) || wallets[0];
-      if (defWallet) {
-        setWalletId(defWallet.id);
+    if (isFirstOpen || isEditTargetChanged) {
+      prevOpenRef.current = true;
+      prevEditIdRef.current = editingTransaction?.id || null;
+
+      if (editingTransaction) {
+        setType(editingTransaction.type || 'expense');
+        setAmount(
+          editingTransaction.amount
+            ? Number(editingTransaction.amount).toLocaleString('vi-VN')
+            : ''
+        );
+        setCategory(editingTransaction.category || '');
+        setWalletId(editingTransaction.walletId || '');
+        setDate(
+          editingTransaction.date
+            ? typeof editingTransaction.date === 'string'
+              ? editingTransaction.date.slice(0, 10)
+              : getLocalDateString(editingTransaction.date)
+            : getLocalDateString()
+        );
+        setDesc(editingTransaction.desc || '');
+        setErrorMsg('');
+        setAmountError('');
+      } else {
+        // New transaction default state
+        setType('expense');
+        setAmount('');
+        const defaultCat = sortedCategories[0]?.name || categories[0]?.name || '';
+        setCategory(defaultCat);
+        setDate(getLocalDateString());
+        setDesc('');
+        setErrorMsg('');
+        setAmountError('');
+
+        // Preselect default wallet or first wallet
+        const defWallet = wallets.find((w) => w.isDefault) || wallets[0];
+        if (defWallet) {
+          setWalletId(defWallet.id);
+        }
       }
     }
-  }, [isOpen, editingTransaction, wallets, sortedCategories]);
+  }, [isOpen, editingTransaction, categories, wallets, sortedCategories]);
+
+  // Preselect category if empty when categories load
+  useEffect(() => {
+    if (isOpen && !isEditing && !category && sortedCategories.length > 0) {
+      setCategory(sortedCategories[0]?.name || '');
+    }
+  }, [isOpen, isEditing, category, sortedCategories]);
 
   // Preselect wallet if walletId is empty when wallets load
   useEffect(() => {

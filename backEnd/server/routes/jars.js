@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
 // POST /api/jars — Tạo hũ mới (3.2: Khởi tạo history giải trình nếu current > 0)
 router.post('/', async (req, res) => {
     try {
-        const { name, icon, target, current, targetDate, color } = req.body;
+        const { name, category, icon, target, current, targetDate, color } = req.body;
 
         if (!name || !target) {
             return res.status(400).json({ success: false, message: 'Tên và mục tiêu không được để trống.' });
@@ -51,11 +51,12 @@ router.post('/', async (req, res) => {
         const jar = await Jar.create({
             userId: req.user.id,
             name: name.trim(),
+            category: (category || 'Mục tiêu chung').trim(),
             icon: icon || '🫙',
             target: Number(target),
             current: initialAmount,
             targetDate: targetDate || null,
-            color: color || '#3498db',
+            color: color || '#5356F1',
             history: initialHistory
         });
 
@@ -72,9 +73,10 @@ router.put('/:id', async (req, res) => {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
         }
-        const { name, icon, target, targetDate, color } = req.body;
+        const { name, category, icon, target, targetDate, color } = req.body;
         const updateData = {};
         if (name !== undefined) updateData.name = name.trim();
+        if (category !== undefined) updateData.category = (category || 'Mục tiêu chung').trim();
         if (icon !== undefined) updateData.icon = icon;
         if (target !== undefined) {
             if (Number(target) <= 0) return res.status(400).json({ success: false, message: 'Mục tiêu phải lớn hơn 0.' });
@@ -462,7 +464,7 @@ router.patch('/installments/:id/pay', async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
         }
 
-        const { walletId } = req.body;
+        const { walletId } = req.body || {};
 
         const updatedItem = await runWithTransaction(async (session) => {
             // 1. CHECKS

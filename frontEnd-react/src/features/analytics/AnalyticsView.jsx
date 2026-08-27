@@ -16,7 +16,7 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useThemeStore } from '../../stores/useThemeStore';
-import { formatCurrency, formatPercent } from '../../utils/formatters';
+import { formatCurrency, formatPercent, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { getBudgetStatus } from '../../utils/financeMath';
 
@@ -56,7 +56,7 @@ export function AnalyticsView() {
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
 
   // Current active month in 'YYYY-MM' format
-  const activeMonth = selectedMonth || new Date().toISOString().slice(0, 7);
+  const activeMonth = selectedMonth || getLocalMonthString();
 
   // Month & Quarter navigation helpers
   const {
@@ -83,8 +83,7 @@ export function AnalyticsView() {
     const nextYear = nextDate.getFullYear();
     const nextM = String(nextDate.getMonth() + 1).padStart(2, '0');
 
-    const now = new Date();
-    const nowMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const nowMonthStr = getLocalMonthString();
 
     // Quarter calculations
     const cQuarter = Math.ceil(month / 3);
@@ -114,13 +113,12 @@ export function AnalyticsView() {
   const handlePrevMonth = () => setSelectedMonth(prevMonthStr);
   const handleNextMonth = () => setSelectedMonth(nextMonthStr);
   const handleSetThisMonth = () => {
-    const now = new Date();
-    setSelectedMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    setSelectedMonth(getLocalMonthString());
   };
   const handleSetLastMonth = () => {
     const now = new Date();
     const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    setSelectedMonth(`${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`);
+    setSelectedMonth(getLocalMonthString(lastMonthDate));
   };
 
   // 1. Current Month Stats & Breakdown
@@ -236,11 +234,56 @@ export function AnalyticsView() {
 
   const hasTrendData = trendMode === 'monthly' ? multiMonthTrend.hasAnyData : dailyTrend.hasAnyData;
 
+  // Dynamic Chart Theme Tokens tailored for dark, cream, green, and light themes
+  const chartThemeTokens = useMemo(() => {
+    switch (theme) {
+      case 'dark':
+        return {
+          income: '#10B981',
+          expense: '#FF5B69',
+          tick: '#8B949E',
+          grid: 'rgba(255, 255, 255, 0.08)',
+          legend: '#C9D1D9',
+          tooltipBg: '#1F242C',
+          sliceBorder: '#12131C'
+        };
+      case 'cream':
+        return {
+          income: '#1E7E34',
+          expense: '#C53030',
+          tick: '#8C7564',
+          grid: 'rgba(140, 117, 100, 0.16)',
+          legend: '#584133',
+          tooltipBg: '#2C1D10',
+          sliceBorder: '#FDF8F2'
+        };
+      case 'green':
+        return {
+          income: '#047857',
+          expense: '#DC2626',
+          tick: '#6B9582',
+          grid: 'rgba(75, 114, 96, 0.16)',
+          legend: '#3D6A56',
+          tooltipBg: '#0E2E1E',
+          sliceBorder: '#FFFFFF'
+        };
+      case 'light':
+      default:
+        return {
+          income: '#059669',
+          expense: '#DC2626',
+          tick: '#64748B',
+          grid: 'rgba(100, 116, 139, 0.12)',
+          legend: '#475569',
+          tooltipBg: '#0F172A',
+          sliceBorder: '#FFFFFF'
+        };
+    }
+  }, [theme]);
+
   // Doughnut Chart Configuration
   const doughnutChartData = useMemo(() => {
     if (monthData.categories.length === 0) return null;
-
-    const sliceBorderColor = theme === 'dark' ? '#12131C' : '#FFFFFF';
 
     return {
       labels: monthData.categories.map((c) => c.name),
@@ -248,18 +291,15 @@ export function AnalyticsView() {
         {
           data: monthData.categories.map((c) => c.amount),
           backgroundColor: monthData.categories.map((c) => c.color),
-          borderColor: sliceBorderColor,
+          borderColor: chartThemeTokens.sliceBorder,
           borderWidth: 2,
           hoverOffset: 6
         }
       ]
     };
-  }, [monthData.categories, theme]);
+  }, [monthData.categories, chartThemeTokens]);
 
   const doughnutOptions = useMemo(() => {
-    const isDark = theme === 'dark';
-    const tooltipBg = isDark ? '#1A1C29' : '#101B36';
-
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -267,7 +307,7 @@ export function AnalyticsView() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: tooltipBg,
+          backgroundColor: chartThemeTokens.tooltipBg,
           titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
           bodyFont: { family: 'Inter, sans-serif', size: 13, weight: 'bold' },
           padding: 10,
@@ -282,7 +322,7 @@ export function AnalyticsView() {
         }
       }
     };
-  }, [monthData.expense, theme]);
+  }, [monthData.expense, chartThemeTokens]);
 
   // Bar Chart Configuration
   const barChartData = useMemo(() => {
@@ -293,7 +333,7 @@ export function AnalyticsView() {
           {
             label: 'Thu nhập',
             data: multiMonthTrend.months.map((m) => m.income),
-            backgroundColor: '#008B57',
+            backgroundColor: chartThemeTokens.income,
             borderRadius: 6,
             barPercentage: 0.6,
             categoryPercentage: 0.7
@@ -301,7 +341,7 @@ export function AnalyticsView() {
           {
             label: 'Chi tiêu',
             data: multiMonthTrend.months.map((m) => m.expense),
-            backgroundColor: '#E34B45',
+            backgroundColor: chartThemeTokens.expense,
             borderRadius: 6,
             barPercentage: 0.6,
             categoryPercentage: 0.7
@@ -316,7 +356,7 @@ export function AnalyticsView() {
         {
           label: 'Thu nhập',
           data: dailyTrend.days.map((d) => d.income),
-          backgroundColor: '#008B57',
+          backgroundColor: chartThemeTokens.income,
           borderRadius: 4,
           barPercentage: 0.7,
           categoryPercentage: 0.8
@@ -324,22 +364,16 @@ export function AnalyticsView() {
         {
           label: 'Chi tiêu',
           data: dailyTrend.days.map((d) => d.expense),
-          backgroundColor: '#E34B45',
+          backgroundColor: chartThemeTokens.expense,
           borderRadius: 4,
           barPercentage: 0.7,
           categoryPercentage: 0.8
         }
       ]
     };
-  }, [trendMode, multiMonthTrend, dailyTrend]);
+  }, [trendMode, multiMonthTrend, dailyTrend, chartThemeTokens]);
 
   const barOptions = useMemo(() => {
-    const isDark = theme === 'dark';
-    const tickColor = isDark ? '#8B949E' : '#8A98A9';
-    const gridLineColor = isDark ? 'rgba(255, 255, 255, 0.08)' : '#E3ECE7';
-    const legendColor = isDark ? '#C9D1D9' : '#607086';
-    const tooltipBg = isDark ? '#1F242C' : '#101B36';
-
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -353,11 +387,11 @@ export function AnalyticsView() {
             usePointStyle: true,
             pointStyle: 'circle',
             font: { family: 'Inter, sans-serif', size: 12, weight: '500' },
-            color: legendColor
+            color: chartThemeTokens.legend
           }
         },
         tooltip: {
-          backgroundColor: tooltipBg,
+          backgroundColor: chartThemeTokens.tooltipBg,
           titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
           bodyFont: { family: 'Inter, sans-serif', size: 12 },
           padding: 10,
@@ -375,15 +409,15 @@ export function AnalyticsView() {
         x: {
           grid: { display: false },
           ticks: {
-            color: tickColor,
+            color: chartThemeTokens.tick,
             font: { family: 'Inter, sans-serif', size: 11 }
           }
         },
         y: {
           min: 0,
-          grid: { color: gridLineColor },
+          grid: { color: chartThemeTokens.grid },
           ticks: {
-            color: tickColor,
+            color: chartThemeTokens.tick,
             font: { family: 'Inter, sans-serif', size: 11 },
             callback: (value) => {
               if (value >= 1000000) return `${(value / 1000000).toFixed(0)}tr`;
@@ -394,7 +428,7 @@ export function AnalyticsView() {
         }
       }
     };
-  }, [theme]);
+  }, [chartThemeTokens]);
 
   // ── Financial Report Statistics & Comparison ──
   const reportData = useMemo(() => {
@@ -485,16 +519,74 @@ export function AnalyticsView() {
       const spentPrev = prevCat.amount;
       const countPrev = prevCat.count;
 
+      const isNewInPeriod = spentPrev === 0 && spentCur > 0;
+      const isEliminated = spentCur === 0 && spentPrev > 0;
       const deltaAmt = spentCur - spentPrev;
       const deltaPct = spentPrev > 0 
         ? ((spentCur - spentPrev) / spentPrev) * 100 
-        : (spentCur > 0 ? 100 : 0);
+        : 0;
 
       const pctOfTotal = curStats.expense > 0 ? (spentCur / curStats.expense) * 100 : 0;
 
       const rawLimit = budgets && budgets[catName] !== undefined ? Number(budgets[catName]) : null;
       const limit = rawLimit && rawLimit > 0 ? rawLimit * multiplier : null;
       const budgetStatus = getBudgetStatus(spentCur, limit || 0);
+
+      // Evaluate delta badge status accurately (never show false alarms)
+      let deltaBadgeType = 'neutral'; // 'good' | 'bad' | 'warn' | 'new' | 'neutral'
+      let deltaBadgeText = '';
+
+      if (spentCur === 0 && spentPrev === 0) {
+        deltaBadgeType = 'neutral';
+        deltaBadgeText = '0 đ';
+      } else if (isNewInPeriod) {
+        if (limit && budgetStatus.isOver) {
+          deltaBadgeType = 'bad';
+          deltaBadgeText = 'Mới (Vượt trần)';
+        } else if (limit && (budgetStatus.status === 'warning' || budgetStatus.percent >= 100)) {
+          deltaBadgeType = 'warn';
+          deltaBadgeText = 'Mới (Cận trần)';
+        } else {
+          deltaBadgeType = 'new';
+          deltaBadgeText = '✨ Mới trong kỳ';
+        }
+      } else if (isEliminated) {
+        deltaBadgeType = 'good';
+        deltaBadgeText = '↓ -100%';
+      } else if (deltaAmt < 0) {
+        deltaBadgeType = 'good';
+        deltaBadgeText = `↓ -${Math.abs(deltaPct).toFixed(1)}%`;
+      } else if (deltaAmt === 0 || Math.abs(deltaPct) < 0.5) {
+        deltaBadgeType = 'neutral';
+        deltaBadgeText = '~ 0.0%';
+      } else {
+        // deltaAmt > 0 (Chi tiêu tăng so với kỳ trước)
+        if (limit && budgetStatus.isOver) {
+          deltaBadgeType = 'bad';
+          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+        } else if (limit && (budgetStatus.status === 'warning' || budgetStatus.percent >= 100)) {
+          deltaBadgeType = 'warn';
+          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+        } else if (limit && spentCur <= limit * 0.75) {
+          // Tăng nhưng an toàn dưới 75% hạn mức
+          if (deltaPct > 30) {
+            deltaBadgeType = 'warn';
+          } else {
+            deltaBadgeType = 'neutral';
+          }
+          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+        } else {
+          // Chưa đặt hạn mức
+          if (deltaPct > 50) {
+            deltaBadgeType = 'bad';
+          } else if (deltaPct > 20) {
+            deltaBadgeType = 'warn';
+          } else {
+            deltaBadgeType = 'neutral';
+          }
+          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+        }
+      }
 
       let adviceText = '';
       let adviceType = 'neutral';
@@ -509,6 +601,9 @@ export function AnalyticsView() {
         const overPct = budgetStatus.percent - 100;
         adviceText = `Vượt ${formatPercent(overPct)} ngân sách! Cần thắt chặt chi tiêu ⚠️`;
         adviceType = 'danger';
+      } else if (limit && budgetStatus.percent === 100) {
+        adviceText = `Đã chạm 100% hạn mức trần! Hạn chế phát sinh thêm chi phí ⚡`;
+        adviceType = 'warning';
       } else if (limit && budgetStatus.status === 'warning') {
         adviceText = `Đã chạm ${budgetStatus.percent}% hạn mức, còn ${formatCurrency(budgetStatus.remaining)} ⚡`;
         adviceType = 'warning';
@@ -538,6 +633,10 @@ export function AnalyticsView() {
         countPrev,
         deltaAmt,
         deltaPct,
+        isNewInPeriod,
+        isEliminated,
+        deltaBadgeType,
+        deltaBadgeText,
         pctOfTotal,
         limit,
         budgetStatus,
@@ -821,7 +920,7 @@ export function AnalyticsView() {
               </svg>
             </div>
           </div>
-          <div className="kpi-card-amount text-brand">
+          <div className="kpi-card-amount text-success">
             {formatCurrency(monthData.income)}
           </div>
           <div className="kpi-card-meta">
@@ -840,7 +939,7 @@ export function AnalyticsView() {
               </svg>
             </div>
           </div>
-          <div className="kpi-card-amount text-danger">
+          <div className={`kpi-card-amount ${monthData.expense > 0 ? 'text-danger' : 'text-muted'}`}>
             {formatCurrency(monthData.expense)}
           </div>
           <div className="kpi-card-meta">
@@ -860,12 +959,12 @@ export function AnalyticsView() {
               </svg>
             </div>
           </div>
-          <div className={`kpi-card-amount ${monthData.net >= 0 ? 'text-brand' : 'text-danger'}`}>
+          <div className={`kpi-card-amount ${monthData.net > 0 ? 'text-success' : (monthData.net < 0 ? 'text-danger' : 'text-muted')}`}>
             {formatCurrency(monthData.net)}
           </div>
           <div className="kpi-card-meta">
-            <span className={`kpi-status-pill ${monthData.net >= 0 ? 'pill-positive' : 'pill-danger'}`}>
-              {monthData.net >= 0 ? '✓ Thặng dư dòng tiền' : '⚠ Thâm hụt dòng tiền'}
+            <span className={`kpi-status-pill ${monthData.net > 0 ? 'pill-positive' : (monthData.net < 0 ? 'pill-danger' : 'pill-neutral')}`}>
+              {monthData.net > 0 ? '✓ Thặng dư dòng tiền' : (monthData.net < 0 ? '⚠ Thâm hụt dòng tiền' : 'Cân bằng thu chi')}
             </span>
           </div>
         </div>
@@ -880,12 +979,34 @@ export function AnalyticsView() {
               </svg>
             </div>
           </div>
-          <div className="kpi-card-amount text-brand">
-            {monthData.income > 0 ? formatPercent(Math.max(0, monthData.savingsRate)) : '0%'}
+          <div className={`kpi-card-amount ${
+            monthData.income <= 0
+              ? 'text-muted'
+              : monthData.savingsRate >= 20
+              ? 'text-success'
+              : monthData.savingsRate >= 0
+              ? 'text-warning'
+              : 'text-danger'
+          }`}>
+            {monthData.income > 0 ? formatPercent(monthData.savingsRate) : '0%'}
           </div>
           <div className="kpi-card-meta">
-            <span className="kpi-status-pill pill-neutral">
-              {monthData.income > 0 ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} thu nhập` : 'Chưa có dữ liệu'}
+            <span className={`kpi-status-pill ${
+              monthData.income <= 0
+                ? 'pill-neutral'
+                : monthData.savingsRate >= 20
+                ? 'pill-positive'
+                : monthData.savingsRate >= 0
+                ? 'pill-warning'
+                : 'pill-danger'
+            }`}>
+              {monthData.income <= 0
+                ? 'Chưa có dữ liệu'
+                : monthData.savingsRate >= 20
+                ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Mục tiêu ≥ 20% ✓)`
+                : monthData.savingsRate >= 0
+                ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Dưới mục tiêu 20%)`
+                : `Thâm hụt ${formatPercent(Math.abs(monthData.savingsRate))} thu nhập ⚠️`}
             </span>
           </div>
         </div>
@@ -1119,11 +1240,25 @@ export function AnalyticsView() {
           <div className="report-summary-card">
             <div className="report-summary-card__header">
               <span className="report-summary-card__title">Tổng thu nhập</span>
-              <span className={`delta-badge ${reportData.incomeDelta >= 0 ? 'delta-badge--up-good' : 'delta-badge--down-bad'}`}>
-                {reportData.incomeDelta >= 0 ? '↑ +' : '↓ -'}{Math.abs(reportData.incomeDeltaPct).toFixed(1)}%
+              <span className={`delta-badge ${
+                reportData.prevStats.income === 0 && reportData.curStats.income > 0
+                  ? 'delta-badge--up-good'
+                  : reportData.incomeDelta > 0
+                  ? 'delta-badge--up-good'
+                  : reportData.incomeDelta < 0
+                  ? 'delta-badge--down-bad'
+                  : 'delta-badge--neutral'
+              }`}>
+                {reportData.prevStats.income === 0 && reportData.curStats.income > 0
+                  ? '↑ +100.0%'
+                  : reportData.incomeDelta > 0
+                  ? `↑ +${Math.abs(reportData.incomeDeltaPct).toFixed(1)}%`
+                  : reportData.incomeDelta < 0
+                  ? `↓ -${Math.abs(reportData.incomeDeltaPct).toFixed(1)}%`
+                  : '~ 0.0%'}
               </span>
             </div>
-            <strong className="report-summary-card__amount text-brand">
+            <strong className="report-summary-card__amount text-success">
               {formatCurrency(reportData.curStats.income)}
             </strong>
             <div className="report-summary-card__meta">
@@ -1136,11 +1271,31 @@ export function AnalyticsView() {
           <div className="report-summary-card">
             <div className="report-summary-card__header">
               <span className="report-summary-card__title">Tổng chi tiêu</span>
-              <span className={`delta-badge ${reportData.expenseDelta <= 0 ? 'delta-badge--down-good' : 'delta-badge--up-bad'}`}>
-                {reportData.expenseDelta >= 0 ? '↑ +' : '↓ -'}{Math.abs(reportData.expenseDeltaPct).toFixed(1)}%
+              <span className={`delta-badge ${
+                reportData.prevStats.expense === 0 && reportData.curStats.expense > 0
+                  ? 'delta-badge--new'
+                  : reportData.prevStats.expense > 0 && reportData.curStats.expense === 0
+                  ? 'delta-badge--down-good'
+                  : reportData.expenseDelta < 0
+                  ? 'delta-badge--down-good'
+                  : reportData.curStats.net < 0 || reportData.expenseDeltaPct > 30
+                  ? 'delta-badge--up-bad'
+                  : reportData.expenseDelta > 0
+                  ? 'delta-badge--up-warn'
+                  : 'delta-badge--neutral'
+              }`}>
+                {reportData.prevStats.expense === 0 && reportData.curStats.expense > 0
+                  ? 'Mới ghi nhận'
+                  : reportData.prevStats.expense > 0 && reportData.curStats.expense === 0
+                  ? '↓ -100.0%'
+                  : reportData.expenseDelta > 0
+                  ? `↑ +${Math.abs(reportData.expenseDeltaPct).toFixed(1)}%`
+                  : reportData.expenseDelta < 0
+                  ? `↓ -${Math.abs(reportData.expenseDeltaPct).toFixed(1)}%`
+                  : '~ 0.0%'}
               </span>
             </div>
-            <strong className="report-summary-card__amount text-danger">
+            <strong className={`report-summary-card__amount ${reportData.curStats.expense > 0 ? 'text-danger' : 'text-muted'}`}>
               {formatCurrency(reportData.curStats.expense)}
             </strong>
             <div className="report-summary-card__meta">
@@ -1153,11 +1308,19 @@ export function AnalyticsView() {
           <div className="report-summary-card">
             <div className="report-summary-card__header">
               <span className="report-summary-card__title">Dòng tiền thuần (Net)</span>
-              <span className={`delta-badge ${reportData.curStats.net >= 0 ? 'delta-badge--up-good' : 'delta-badge--down-bad'}`}>
-                {reportData.curStats.net >= 0 ? '✓ Thặng dư' : '⚠ Thâm hụt'}
+              <span className={`delta-badge ${
+                reportData.curStats.net > 0
+                  ? 'delta-badge--up-good'
+                  : reportData.curStats.net < 0
+                  ? 'delta-badge--down-bad'
+                  : 'delta-badge--neutral'
+              }`}>
+                {reportData.curStats.net > 0 ? '✓ Thặng dư' : (reportData.curStats.net < 0 ? '⚠ Thâm hụt' : 'Cân bằng')}
               </span>
             </div>
-            <strong className={`report-summary-card__amount ${reportData.curStats.net >= 0 ? 'text-brand' : 'text-danger'}`}>
+            <strong className={`report-summary-card__amount ${
+              reportData.curStats.net > 0 ? 'text-success' : (reportData.curStats.net < 0 ? 'text-danger' : 'text-muted')
+            }`}>
               {formatCurrency(reportData.curStats.net)}
             </strong>
             <div className="report-summary-card__meta">
@@ -1170,11 +1333,31 @@ export function AnalyticsView() {
           <div className="report-summary-card">
             <div className="report-summary-card__header">
               <span className="report-summary-card__title">Tỷ lệ tiết kiệm</span>
-              <span className={`delta-badge ${reportData.savingsRateDelta >= 0 ? 'delta-badge--up-good' : 'delta-badge--neutral'}`}>
-                {reportData.savingsRateDelta >= 0 ? '↑ +' : '↓ '}{reportData.savingsRateDelta.toFixed(1)}%
+              <span className={`delta-badge ${
+                reportData.curStats.income <= 0
+                  ? 'delta-badge--neutral'
+                  : reportData.curStats.savingsRate < 0
+                  ? 'delta-badge--down-bad'
+                  : reportData.savingsRateDelta >= 0
+                  ? 'delta-badge--up-good'
+                  : 'delta-badge--down-warn'
+              }`}>
+                {reportData.curStats.income <= 0
+                  ? '—'
+                  : reportData.savingsRateDelta >= 0
+                  ? `↑ +${reportData.savingsRateDelta.toFixed(1)}%`
+                  : `↓ ${reportData.savingsRateDelta.toFixed(1)}%`}
               </span>
             </div>
-            <strong className="report-summary-card__amount text-brand">
+            <strong className={`report-summary-card__amount ${
+              reportData.curStats.income <= 0
+                ? 'text-muted'
+                : reportData.curStats.savingsRate >= 20
+                ? 'text-success'
+                : reportData.curStats.savingsRate >= 0
+                ? 'text-warning'
+                : 'text-danger'
+            }`}>
               {formatPercent(reportData.curStats.savingsRate)}
             </strong>
             <div className="report-summary-card__meta">
@@ -1227,16 +1410,16 @@ export function AnalyticsView() {
                 </tr>
               ) : (
                 reportData.categoryRows.map((cat) => {
-                  const isOver = cat.limit && cat.budgetStatus.isOver;
-                  const isWarning = cat.limit && cat.budgetStatus.status === 'warning';
-                  const isSaved = cat.deltaAmt < 0 && cat.spentCur > 0;
+                  const isOver = cat.limit && (cat.budgetStatus.isOver || cat.budgetStatus.percent > 100);
+                  const isMaxed = cat.limit && cat.budgetStatus.percent === 100;
+                  const isWarning = cat.limit && (cat.budgetStatus.status === 'warning' || isMaxed);
 
                   return (
                     <tr key={cat.name}>
                       {/* 1. Category */}
                       <td>
                         <div className="table-cat-cell">
-                          <span className="table-cat-icon" style={{ backgroundColor: 'rgba(0, 139, 87, 0.08)' }}>
+                          <span className="table-cat-icon" style={{ backgroundColor: 'var(--color-success-bg, rgba(0, 139, 87, 0.08))' }}>
                             {cat.icon}
                           </span>
                           <span className="table-cat-name">{cat.name}</span>
@@ -1253,8 +1436,18 @@ export function AnalyticsView() {
                       {/* 3. Delta vs Previous */}
                       <td>
                         <div className="table-delta-cell">
-                          <span className={`delta-badge ${isSaved ? 'delta-badge--down-good' : (cat.deltaAmt > 0 ? 'delta-badge--up-bad' : 'delta-badge--neutral')}`}>
-                            {cat.deltaAmt > 0 ? `+${cat.deltaPct.toFixed(1)}%` : `${cat.deltaPct.toFixed(1)}%`}
+                          <span className={`delta-badge ${
+                            cat.deltaBadgeType === 'good'
+                              ? 'delta-badge--down-good'
+                              : cat.deltaBadgeType === 'bad'
+                              ? 'delta-badge--up-bad'
+                              : cat.deltaBadgeType === 'warn'
+                              ? 'delta-badge--up-warn'
+                              : cat.deltaBadgeType === 'new'
+                              ? 'delta-badge--new'
+                              : 'delta-badge--neutral'
+                          }`}>
+                            {cat.deltaBadgeText}
                           </span>
                           <span className="table-delta-sub">
                             Kỳ trước: {formatCurrency(cat.spentPrev)}
@@ -1270,7 +1463,11 @@ export function AnalyticsView() {
                               className="table-pct-fill"
                               style={{
                                 width: `${Math.max(2, cat.pctOfTotal)}%`,
-                                backgroundColor: isOver ? '#E34B45' : (isWarning ? '#F59E0B' : '#008B57')
+                                backgroundColor: isOver
+                                  ? 'var(--color-danger)'
+                                  : isWarning
+                                  ? 'var(--color-warning)'
+                                  : 'var(--color-success)'
                               }}
                             />
                           </div>
@@ -1299,9 +1496,13 @@ export function AnalyticsView() {
                             <span className="budget-status-pill budget-status-pill--danger">
                               ⚠️ Vượt ({cat.budgetStatus.percent}%)
                             </span>
-                          ) : isWarning ? (
+                          ) : isMaxed ? (
                             <span className="budget-status-pill budget-status-pill--warning">
                               ⚡ Chạm ({cat.budgetStatus.percent}%)
+                            </span>
+                          ) : isWarning ? (
+                            <span className="budget-status-pill budget-status-pill--warning">
+                              ⚡ Cận trần ({cat.budgetStatus.percent}%)
                             </span>
                           ) : (
                             <span className="budget-status-pill budget-status-pill--safe">

@@ -75,10 +75,12 @@ export function LandingPage() {
   const { theme, setTheme } = useThemeStore();
   const [lang, setLang] = useState(() => {
     try {
-      return localStorage.getItem('caltdhy_lang') || 'en';
+      const saved = localStorage.getItem('caltdhy_lang');
+      if (saved === 'vi') return 'vi';
     } catch {
-      return 'en';
+      // ignore
     }
+    return 'vi';
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -365,24 +367,39 @@ export function LandingPage() {
           <div className="idx-group">
             <p className="idx-group-label">{t.langLabel}</p>
             <div className="idx-lang-row" role="group" aria-label="Language selection">
-              <button
-                className={`idx-lang-btn ${lang === 'en' ? 'active' : ''}`}
-                onClick={() => handleSetLang('en')}
-              >
-                EN
-              </button>
-              <button
-                className={`idx-lang-btn ${lang === 'vi' ? 'active' : ''}`}
-                onClick={() => handleSetLang('vi')}
-              >
-                VI
-              </button>
-              <button
-                className={`idx-lang-btn ${lang === 'zh' ? 'active' : ''}`}
-                onClick={() => handleSetLang('zh')}
-              >
-                ZH
-              </button>
+              <div className="idx-lang-wrap">
+                <button
+                  type="button"
+                  disabled
+                  className="idx-lang-btn idx-lang-btn--disabled"
+                  title="updating"
+                  aria-disabled="true"
+                >
+                  EN
+                </button>
+                <span className="lang-btn-tooltip" role="tooltip">updating</span>
+              </div>
+              <div className="idx-lang-wrap">
+                <button
+                  type="button"
+                  className={`idx-lang-btn ${lang === 'vi' ? 'active' : ''}`}
+                  onClick={() => handleSetLang('vi')}
+                >
+                  VI
+                </button>
+              </div>
+              <div className="idx-lang-wrap">
+                <button
+                  type="button"
+                  disabled
+                  className="idx-lang-btn idx-lang-btn--disabled"
+                  title="updating"
+                  aria-disabled="true"
+                >
+                  ZH
+                </button>
+                <span className="lang-btn-tooltip" role="tooltip">updating</span>
+              </div>
             </div>
           </div>
 

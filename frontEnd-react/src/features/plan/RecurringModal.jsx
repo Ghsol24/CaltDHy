@@ -3,7 +3,7 @@ import { useJarStore } from '../../stores/useJarStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES } from '../../utils/categories';
 
 const getRecurringIcon = (name) => {
@@ -32,7 +32,7 @@ export function RecurringModal({ isOpen, onClose }) {
   const [category, setCategory] = useState(() => activeExpenseCats[0]?.name || 'Housing & Bills');
   const [amount, setAmount] = useState('');
   const [cycle, setCycle] = useState('monthly');
-  const [nextDueDate, setNextDueDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [nextDueDate, setNextDueDate] = useState(() => getLocalDateString());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -48,7 +48,7 @@ export function RecurringModal({ isOpen, onClose }) {
     setCategory('Housing & Bills');
     setAmount('');
     setCycle('monthly');
-    setNextDueDate(new Date().toISOString().split('T')[0]);
+    setNextDueDate(getLocalDateString());
     setErrorMsg('');
 
     const timer = setTimeout(() => {

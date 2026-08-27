@@ -12,6 +12,7 @@ export function SidebarNav() {
     jarsSubTab,
     setJarsSubTab,
     isSidebarCollapsed,
+    setSidebarCollapsed,
     toggleSidebar
   } = useSpendingStore();
 
@@ -45,6 +46,31 @@ export function SidebarNav() {
       }
     } else if (viewId === 'jars' && subTabId) {
       setJarsSubTab(subTabId);
+      const targetMap = {
+        jars: 'jars-section-list',
+        goals: 'jars-section-goals',
+        history: 'jars-section-history'
+      };
+      const targetId = targetMap[subTabId] || 'jars-section-list';
+      window.__caltdhy_programmatic_scroll = true;
+      const scrollAction = () => {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        setTimeout(() => {
+          window.__caltdhy_programmatic_scroll = false;
+        }, 800);
+      };
+      if (activeView === 'jars') {
+        scrollAction();
+      } else {
+        setTimeout(scrollAction, 120);
+      }
+    }
+
+    if (window.innerWidth <= 900) {
+      setSidebarCollapsed(true);
     }
   };
 
@@ -182,30 +208,30 @@ export function SidebarNav() {
       groupLabel: 'HŨ CHI TIÊU',
       items: [
         {
-          id: 'jars_list',
-          viewId: 'jars',
-          subTabId: 'jars',
-          label: 'Danh sách hũ',
-          isActive: activeView === 'jars' && (jarsSubTab === 'jars' || !jarsSubTab),
-          icon: (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="20" height="5" x="2" y="3" rx="1" />
-              <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-              <path d="M10 12h4" />
-            </svg>
-          )
-        },
-        {
           id: 'jars_goals',
           viewId: 'jars',
           subTabId: 'goals',
           label: 'Mục tiêu',
-          isActive: activeView === 'jars' && jarsSubTab === 'goals',
+          isActive: activeView === 'jars' && (jarsSubTab === 'goals' || !jarsSubTab),
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <circle cx="12" cy="12" r="6" />
               <circle cx="12" cy="12" r="2" />
+            </svg>
+          )
+        },
+        {
+          id: 'jars_list',
+          viewId: 'jars',
+          subTabId: 'jars',
+          label: 'Danh sách hũ',
+          isActive: activeView === 'jars' && jarsSubTab === 'jars',
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="5" x="2" y="3" rx="1" />
+              <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+              <path d="M10 12h4" />
             </svg>
           )
         },

@@ -68,28 +68,6 @@ const SECTION_GUIDE_DATA = {
         desc: 'So sánh dòng tiền qua từng tháng hoặc từng ngày để thấy rõ chu kỳ.'
       }
     ]
-  },
-  jars: {
-    badge: 'HŨ CHI TIÊU',
-    title: 'Phương pháp Quản lý 6 Hũ',
-    subtitle: 'Chia thu nhập thành 6 hũ tài chính để tự do và đạt mục tiêu.',
-    points: [
-      {
-        icon: '🏺',
-        title: 'Quy tắc 6 Hũ',
-        desc: 'Thiết yếu 55%, Tiết kiệm 10%, Đầu tư 10%, Giáo dục 10%, Hưởng thụ 10%, Cho đi 5%.'
-      },
-      {
-        icon: '📥',
-        title: 'Nạp & Rút tiền hũ',
-        desc: 'Nạp tiền khi có thu nhập và rút tiền từ đúng hũ khi phát sinh nhu cầu.'
-      },
-      {
-        icon: '🎯',
-        title: 'Mục tiêu có hạn chót',
-        desc: 'Theo dõi tiến độ % và thời gian để duy trì động lực tích lũy.'
-      }
-    ]
   }
 };
 

@@ -3,7 +3,8 @@ import { spendingService } from '../services/spendingService';
 import { useSpendingStore } from './useSpendingStore';
 import { useWalletStore } from './useWalletStore';
 import { useToastStore } from './useToastStore';
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
+import { DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
+import { getLocalDateString } from '../utils/formatters';
 
 const TXN_KEY = 'caltdhy_txns';
 const EXPENSE_CAT_KEY = 'caltdhy_expense_categories';
@@ -67,7 +68,7 @@ const normalizeTxn = (t) => ({
   date: t.date
     ? typeof t.date === 'string'
       ? t.date.slice(0, 10)
-      : new Date(t.date).toISOString().slice(0, 10)
+      : getLocalDateString(t.date)
     : '',
   walletId: t.walletId?._id || t.walletId || null,
   toWalletId: t.toWalletId?._id || t.toWalletId || null,
@@ -399,5 +400,27 @@ export const useTransactionStore = create((set, get) => ({
       type: 'info',
       message: 'Đã hoàn tác thêm giao dịch.'
     });
+  },
+
+  resetAllFinancialData: async () => {
+    set({ isLoading: true });
+    try {
+      await spendingService.resetFinancialData();
+      saveStoredTxns([]);
+      set({
+        transactions: [],
+        budgets: {},
+        isLoading: false
+      });
+      get().updateSpendingMetrics([]);
+      const walletStore = useWalletStore.getState();
+      if (walletStore?.syncWalletBalances) {
+        walletStore.syncWalletBalances();
+      }
+      return { success: true };
+    } catch (err) {
+      set({ isLoading: false });
+      throw err;
+    }
   }
 }));

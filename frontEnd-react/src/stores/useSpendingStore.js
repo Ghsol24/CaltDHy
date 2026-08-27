@@ -1,12 +1,13 @@
 import { create } from 'zustand';
+import { getLocalMonthString } from '../utils/formatters';
 
 export const useSpendingStore = create((set) => ({
   activeView: 'home', // 'home' | 'plan' | 'analytics' | 'jars'
   planSubTab: 'wallets', // 'wallets' | 'budgets' | 'recurring'
   analyticsSubTab: 'overview', // 'overview' | 'spending' | 'cash-flow' | 'reports'
-  jarsSubTab: 'jars', // 'jars' | 'goals' | 'history'
+  jarsSubTab: 'goals', // 'goals' | 'jars' | 'history'
   isSidebarCollapsed: false,
-  selectedMonth: new Date().toISOString().slice(0, 7), // 'YYYY-MM'
+  selectedMonth: getLocalMonthString(), // 'YYYY-MM' theo giờ địa phương
 
   totalBalance: 0,
   monthlyIncome: 0,
