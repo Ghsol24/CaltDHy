@@ -115,14 +115,19 @@ async function migrateBudgetCategories() {
     console.log('\n🎉 Hoàn thành xuất sắc toàn bộ quá trình migration category!');
 }
 
-migrateBudgetCategories()
-    .catch((error) => {
-        console.error('❌ Migration thất bại:', error);
-        process.exitCode = 1;
-    })
-    .finally(async () => {
-        if (mongoose.connection.readyState !== 0) {
-            await mongoose.disconnect();
-            console.log('🔌 Đã ngắt kết nối database an toàn.');
-        }
-    });
+// Chạy trực tiếp từ CLI — không tự chạy nếu file này bị require() từ nơi khác.
+if (require.main === module) {
+    migrateBudgetCategories()
+        .catch((error) => {
+            console.error('❌ Migration thất bại:', error);
+            process.exitCode = 1;
+        })
+        .finally(async () => {
+            if (mongoose.connection.readyState !== 0) {
+                await mongoose.disconnect();
+                console.log('🔌 Đã ngắt kết nối database an toàn.');
+            }
+        });
+}
+
+module.exports = { migrateBudgetCategories };

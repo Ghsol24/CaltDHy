@@ -3,7 +3,7 @@ import { getLocalMonthString } from '../utils/formatters';
 
 export const useSpendingStore = create((set) => ({
   activeView: 'home', // 'home' | 'plan' | 'analytics' | 'jars'
-  planSubTab: 'wallets', // 'wallets' | 'budgets' | 'recurring'
+  planSubTab: 'overview', // 'overview' | 'wallets' | 'budgets' | 'recurring'
   analyticsSubTab: 'overview', // 'overview' | 'spending' | 'cash-flow' | 'reports'
   jarsSubTab: 'goals', // 'goals' | 'jars' | 'history'
   isSidebarCollapsed: false,
@@ -19,7 +19,11 @@ export const useSpendingStore = create((set) => ({
   isAccountOpen: false,
   isHelpOpen: false,
 
-  setActiveView: (view) => set({ activeView: view }),
+  setActiveView: (view) =>
+    set((state) => ({
+      activeView: view,
+      planSubTab: view === 'plan' ? 'overview' : state.planSubTab
+    })),
   setPlanSubTab: (subTab) => set({ planSubTab: subTab }),
   setAnalyticsSubTab: (subTab) => set({ analyticsSubTab: subTab }),
   setJarsSubTab: (subTab) => set({ jarsSubTab: subTab }),

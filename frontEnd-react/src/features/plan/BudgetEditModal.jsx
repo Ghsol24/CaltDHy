@@ -7,7 +7,7 @@ import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categor
 import { formatCurrency, formatDate, getLocalMonthString } from '../../utils/formatters';
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
-  const { budgets, expenseCategories, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
+  const { budgets, expenseCategories, transactions, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
   const { selectedMonth } = useSpendingStore();
   const { addToast } = useToastStore();
 
@@ -49,15 +49,58 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       // Save active element to restore focus on close
       triggerRef.current = document.activeElement;
 
-      // Build initial list from active expenseCategories
-      const currentCats = expenseCategories && expenseCategories.length > 0
-        ? expenseCategories
-        : DEFAULT_EXPENSE_CATEGORIES;
+      // Build unified list of categories:
+      // 1. Current expenseCategories
+      // 2. Any categories with expense transactions
+      // 3. Any categories configured in budgets object
+      // 4. Default expense categories (Housing & Bills, Food & Dining, etc.)
+      const currentCats = expenseCategories && expenseCategories.length > 0 ? expenseCategories : [];
+      const knownCategoryNames = new Set(currentCats.map((c) => c.name.toLowerCase()));
 
-      const initialList = currentCats.map((c, idx) => {
+      const list = [...currentCats];
+
+      // Add categories from transactions that aren't in expenseCategories yet
+      (transactions || []).forEach((t) => {
+        if (t.type === 'expense' && t.category) {
+          const lower = t.category.toLowerCase();
+          if (!knownCategoryNames.has(lower)) {
+            knownCategoryNames.add(lower);
+            list.push({
+              name: t.category,
+              icon: getCategoryIcon(t.category, 'expense')
+            });
+          }
+        }
+      });
+
+      // Add categories from budgets that aren't in list yet
+      Object.keys(budgets || {}).forEach((catName) => {
+        const lower = catName.toLowerCase();
+        if (!knownCategoryNames.has(lower)) {
+          knownCategoryNames.add(lower);
+          list.push({
+            name: catName,
+            icon: getCategoryIcon(catName, 'expense')
+          });
+        }
+      });
+
+      // Add default expense categories so user has the standard set
+      DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
+        const lower = defCat.name.toLowerCase();
+        if (!knownCategoryNames.has(lower)) {
+          knownCategoryNames.add(lower);
+          list.push({
+            name: defCat.name,
+            icon: defCat.icon
+          });
+        }
+      });
+
+      const initialList = list.map((c, idx) => {
         const budgetVal = budgets && budgets[c.name] !== undefined ? Number(budgets[c.name]) : null;
         return {
-          id: `cat_${idx}`,
+          id: `cat_${idx}_${c.name}`,
           name: c.name,
           icon: c.icon || getCategoryIcon(c.name, 'expense'),
           isSystem: false,
@@ -85,12 +128,19 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       // If initialCategory is specified, expand and focus it
       if (initialCategory) {
         setExpandedCat(initialCategory);
+        setTimeout(() => {
+          const el = document.getElementById(`input-amount-${initialCategory}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus();
+          }
+        }, 100);
       } else {
         setExpandedCat(null);
       }
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen, initialCategory, budgets, expenseCategories]);
+  }, [isOpen, initialCategory, budgets, expenseCategories, transactions]);
 
   // Handle ESC key with unsaved change check
   useEffect(() => {

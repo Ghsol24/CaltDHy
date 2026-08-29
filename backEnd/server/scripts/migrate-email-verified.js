@@ -66,14 +66,19 @@ async function migrateEmailVerified() {
     console.log(`🎉 Hoàn thành migration! Đã cập nhật ${result.modifiedCount} tài khoản legacy thành emailVerified: true.`);
 }
 
-migrateEmailVerified()
-    .catch((error) => {
-        console.error('❌ Migration thất bại:', error.message);
-        process.exitCode = 1;
-    })
-    .finally(async () => {
-        if (mongoose.connection.readyState !== 0) {
-            await mongoose.disconnect();
-            console.log('🔌 Đã ngắt kết nối database.');
-        }
-    });
+// Chạy trực tiếp từ CLI — không tự chạy nếu file này bị require() từ nơi khác.
+if (require.main === module) {
+    migrateEmailVerified()
+        .catch((error) => {
+            console.error('❌ Migration thất bại:', error.message);
+            process.exitCode = 1;
+        })
+        .finally(async () => {
+            if (mongoose.connection.readyState !== 0) {
+                await mongoose.disconnect();
+                console.log('🔌 Đã ngắt kết nối database.');
+            }
+        });
+}
+
+module.exports = { migrateEmailVerified };

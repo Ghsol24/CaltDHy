@@ -75,11 +75,18 @@ async function cleanup() {
     });
 }
 
-cleanup()
-    .catch((err) => {
-        console.error('❌ Lỗi dọn dẹp:', err);
-    })
-    .finally(async () => {
-        await mongoose.disconnect();
-        console.log('🔌 Đã ngắt kết nối database.');
-    });
+// Chạy trực tiếp từ CLI — không tự chạy nếu file này bị require() từ nơi khác,
+// vì đây là thao tác XÓA DỮ LIỆU THẬT (mọi user không phải admin), không được
+// phép tự kích hoạt ngoài ý muốn.
+if (require.main === module) {
+    cleanup()
+        .catch((err) => {
+            console.error('❌ Lỗi dọn dẹp:', err);
+        })
+        .finally(async () => {
+            await mongoose.disconnect();
+            console.log('🔌 Đã ngắt kết nối database.');
+        });
+}
+
+module.exports = { cleanup };

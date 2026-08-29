@@ -122,7 +122,8 @@ export function formatDate(date, format = 'full') {
       return `${weekday}, ${day} tháng ${month}, ${year}`;
     case 'short':
       return `${day} thg ${month}, ${year}`;
-    case 'compact': {
+    case 'compact':
+    case 'day-date': {
       const dd = String(day).padStart(2, '0');
       const mm = String(month).padStart(2, '0');
       return `${dd}/${mm}/${year}`;
@@ -169,3 +170,90 @@ export function formatPercent(val) {
   if (isNaN(num)) return '0%';
   return `${Math.round(num)}%`;
 }
+
+/**
+ * Tính số ngày còn lại đến hạn thanh toán từ chuỗi ngày (YYYY-MM-DD hoặc ISO).
+ * Trả về object: { diffDays: number|null, text: string, isOverdue: boolean, isToday: boolean, isSoon: boolean }
+ *
+ * @param {Date|string|number} dateInput
+ * @returns {{ diffDays: number|null, text: string, isOverdue: boolean, isToday: boolean, isSoon: boolean }}
+ */
+export function getDueStatus(dateInput) {
+  const d = parseDate(dateInput);
+  if (!d) {
+    return {
+      diffDays: null,
+      text: 'Chưa định ngày',
+      isOverdue: false,
+      isToday: false,
+      isSoon: false
+    };
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const diffMs = target.getTime() - today.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    const abs = Math.abs(diffDays);
+    return {
+      diffDays,
+      text: `Quá hạn ${abs} ngày`,
+      isOverdue: true,
+      isToday: false,
+      isSoon: true
+    };
+  }
+
+  if (diffDays === 0) {
+    return {
+      diffDays: 0,
+      text: 'Đến hạn hôm nay',
+      isOverdue: false,
+      isToday: true,
+      isSoon: true
+    };
+  }
+
+  if (diffDays === 1) {
+    return {
+      diffDays: 1,
+      text: 'Còn 1 ngày',
+      isOverdue: false,
+      isToday: false,
+      isSoon: true
+    };
+  }
+
+  return {
+    diffDays,
+    text: `Còn ${diffDays} ngày`,
+    isOverdue: false,
+    isToday: false,
+    isSoon: diffDays <= 7
+  };
+}
+
+/**
+ * Phân tích ngày tháng thành các phần: Thứ viết hoa ngắn (THỨ 2, THỨ 6, CN...) và Ngày 2 chữ số (29, 31).
+ * Phục vụ cho component Calendar Date Block trên thẻ khoản định kỳ.
+ *
+ * @param {Date|string|number} dateInput
+ * @returns {{ weekdayShort: string, day: string, month: string }}
+ */
+export function getCalendarDateParts(dateInput) {
+  const d = parseDate(dateInput);
+  if (!d) {
+    return { weekdayShort: 'THỨ', day: '--', month: '--' };
+  }
+  const weekdays = ['CN', 'THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7'];
+  return {
+    weekdayShort: weekdays[d.getDay()],
+    day: String(d.getDate()).padStart(2, '0'),
+    month: String(d.getMonth() + 1)
+  };
+}
+

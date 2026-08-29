@@ -6,6 +6,8 @@ const Transaction = require('../models/Transaction');
 const Budget = require('../models/Budget');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
+const Category = require('../models/Category');
+const { isValidVNDAmount } = require('../utils/money');
 
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
@@ -23,7 +25,7 @@ function validateTransactionPayload({ type, amount, category, date }) {
         return 'Vui lòng điền đầy đủ các thông tin bắt buộc.';
     }
     if (!['income', 'expense', 'transfer'].includes(type)) return 'Loại giao dịch không hợp lệ.';
-    if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) return 'Số tiền phải lớn hơn 0.';
+    if (!isValidVNDAmount(amount)) return 'Số tiền phải là số nguyên lớn hơn 0 (VNĐ không có phần thập phân).';
     if (typeof category !== 'string' || !category.trim()) return 'Danh mục không hợp lệ.';
     if (!parseTransactionDate(date)) return 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
     return null;
@@ -106,6 +108,9 @@ router.put('/categories', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy user.' });
         }
 
+        // Tự động đảm bảo danh mục có trong collection Category (best-effort, không chặn response)
+        await Promise.all(cleanCategories.map(cat => Category.ensureCategorySafe(req.user.id, cat)));
+
         res.json({
             success: true,
             message: 'Đã cập nhật danh mục thành công!',
@@ -161,6 +166,9 @@ router.put('/budget', async (req, res) => {
             if (!Number.isFinite(numLimit)) {
                 return res.status(400).json({ success: false, message: `Hạn mức cho danh mục "${cat}" không hợp lệ.` });
             }
+            if (!Number.isInteger(numLimit)) {
+                return res.status(400).json({ success: false, message: `Hạn mức cho danh mục "${cat}" phải là số nguyên (VNĐ không có phần thập phân).` });
+            }
             if (numLimit < 0) {
                 return res.status(400).json({ success: false, message: `Hạn mức cho danh mục "${cat}" không được là số âm.` });
             }
@@ -178,6 +186,9 @@ router.put('/budget', async (req, res) => {
             .filter(([_, limit]) => limit > 0);
 
         const validCategories = validEntries.map(([cat]) => cat);
+
+        // Tự động đảm bảo category tồn tại trong collection Category của user (best-effort)
+        await Promise.all(validCategories.map(cat => Category.ensureCategorySafe(req.user.id, cat)));
 
         // Bước 1: Upsert tất cả budget hợp lệ (atomic từng item)
         if (validEntries.length > 0) {
@@ -282,12 +293,20 @@ router.get('/', async (req, res) => {
             });
         }
 
-        // Tương thích ngược: trả về toàn bộ mảng dữ liệu nếu không phân trang
+        // Tương thích ngược: trả về toàn bộ mảng dữ liệu nếu không phân trang.
+        // Vẫn kèm `pagination` để response luôn cùng một hình dạng dù có phân trang hay không —
+        // trước đây thiếu field này ở nhánh dưới khiến client phải tự đoán 2 kiểu response khác nhau.
         const transactions = await Transaction.find(filter).sort({ date: -1, createdAt: -1 });
 
         res.json({
             success: true,
-            data: transactions.map(t => t.toJSON())
+            data: transactions.map(t => t.toJSON()),
+            pagination: {
+                total: transactions.length,
+                page: 1,
+                limit: transactions.length,
+                totalPages: 1
+            }
         });
     } catch (error) {
         console.error('GET /api/spending error:', error);
@@ -315,7 +334,7 @@ router.post('/', async (req, res) => {
             amount: Number(amount),
             category: category.trim(),
             date: parseTransactionDate(date),
-            fee: Number.isFinite(Number(fee)) && Number(fee) >= 0 ? Number(fee) : 0
+            fee: isValidVNDAmount(fee, { allowZero: true }) ? Number(fee) : 0
         };
         if (isValidObjectId(walletId)) {
             createPayload.walletId = walletId;
@@ -328,6 +347,8 @@ router.post('/', async (req, res) => {
         if (isValidObjectId(installmentId)) createPayload.installmentId = installmentId;
 
         const newRecord = await Transaction.create(createPayload);
+        // Tự động lưu category vào Category collection nếu chưa tồn tại (best-effort, không chặn response)
+        await Category.ensureCategorySafe(req.user.id, createPayload.category);
 
         res.status(201).json({
             success: true,
@@ -379,7 +400,7 @@ router.put('/:id', async (req, res) => {
             date: parseTransactionDate(date)
         };
         if (fee !== undefined) {
-            updatePayload.fee = Number.isFinite(Number(fee)) && Number(fee) >= 0 ? Number(fee) : 0;
+            updatePayload.fee = isValidVNDAmount(fee, { allowZero: true }) ? Number(fee) : 0;
         }
         if (walletId !== undefined) {
             if (isValidObjectId(walletId)) {
@@ -445,7 +466,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 // =============================================
-// POST /api/spending/reset-data – Đặt lại toàn bộ dữ liệu chi tiêu của tài khoản
+// POST /api/spending/reset-data – Xóa toàn bộ giao dịch & ngân sách của tài khoản
+// (KHÔNG đụng tới Wallet/Jar/Installment — nếu cần reset cả những phần đó thì đây chưa đủ phạm vi)
 // =============================================
 router.post('/reset-data', async (req, res) => {
     try {
@@ -457,7 +479,7 @@ router.post('/reset-data', async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Đã đặt lại toàn bộ dữ liệu chi tiêu thành công!'
+            message: 'Đã xóa toàn bộ giao dịch và ngân sách. Ví, hũ tiết kiệm và khoản định kỳ được giữ nguyên.'
         });
     } catch (error) {
         console.error('POST /api/spending/reset-data error:', error);

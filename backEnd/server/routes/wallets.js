@@ -5,6 +5,8 @@ const { protect } = require('../middleware/authMiddleware');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
 const { runWithTransaction } = require('../utils/mongoTransaction');
+const { getWalletBalance, getAllWalletBalances } = require('../utils/walletBalance');
+const { isValidVNDAmount, isFiniteInteger } = require('../utils/money');
 
 // Tất cả routes wallets đều cần xác thực JWT
 router.use(protect);
@@ -50,6 +52,37 @@ router.get('/', async (req, res) => {
 });
 
 // =============================================
+// GET /api/wallets/balances — Lấy số dư thực tế tính on-the-fly của các ví
+// Hỗ trợ query ?walletId=<id> để lấy 1 ví hoặc không truyền để lấy tất cả
+// =============================================
+router.get('/balances', async (req, res) => {
+    try {
+        const { walletId } = req.query;
+        if (walletId) {
+            if (!isValidObjectId(walletId)) {
+                return res.status(400).json({ success: false, message: 'ID ví không hợp lệ.' });
+            }
+            const balance = await getWalletBalance(req.user.id, walletId);
+            return res.json({
+                success: true,
+                data: {
+                    [walletId]: balance
+                }
+            });
+        }
+
+        const balances = await getAllWalletBalances(req.user.id);
+        res.json({
+            success: true,
+            data: balances
+        });
+    } catch (error) {
+        console.error('GET /api/wallets/balances error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi tính số dư ví.' });
+    }
+});
+
+// =============================================
 // POST /api/wallets — Tạo ví mới
 // =============================================
 router.post('/', async (req, res) => {
@@ -73,8 +106,8 @@ router.post('/', async (req, res) => {
             type: walletType,
             icon: icon || (walletType === 'bank' ? '🏦' : walletType === 'credit' ? '💳' : walletType === 'e-wallet' ? '📱' : '💵'),
             color: color || '#2ed573',
-            initialBalance: Number.isFinite(Number(initialBalance)) ? Number(initialBalance) : 0,
-            creditLimit: Number.isFinite(Number(creditLimit)) ? Number(creditLimit) : 0,
+            initialBalance: isFiniteInteger(initialBalance) ? Number(initialBalance) : 0,
+            creditLimit: isValidVNDAmount(creditLimit, { allowZero: true }) ? Number(creditLimit) : 0,
             isExcludedFromTotal: Boolean(isExcludedFromTotal),
             isDefault: Boolean(isDefault)
         });
@@ -111,8 +144,8 @@ router.put('/:id', async (req, res) => {
         if (type && ['cash', 'bank', 'e-wallet', 'credit', 'savings'].includes(type)) wallet.type = type;
         if (icon !== undefined) wallet.icon = icon;
         if (color !== undefined) wallet.color = color;
-        if (initialBalance !== undefined && Number.isFinite(Number(initialBalance))) wallet.initialBalance = Number(initialBalance);
-        if (creditLimit !== undefined && Number.isFinite(Number(creditLimit))) wallet.creditLimit = Number(creditLimit);
+        if (initialBalance !== undefined && isFiniteInteger(initialBalance)) wallet.initialBalance = Number(initialBalance);
+        if (creditLimit !== undefined && isValidVNDAmount(creditLimit, { allowZero: true })) wallet.creditLimit = Number(creditLimit);
         if (isExcludedFromTotal !== undefined) wallet.isExcludedFromTotal = Boolean(isExcludedFromTotal);
 
         if (isDefault && !wallet.isDefault) {

@@ -6,7 +6,9 @@ const Jar = require('../models/Jar');
 const Installment = require('../models/Installment');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
+const Category = require('../models/Category');
 const { runWithTransaction } = require('../utils/mongoTransaction');
+const { isValidVNDAmount } = require('../utils/money');
 
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
@@ -36,11 +38,11 @@ router.post('/', async (req, res) => {
         if (!name || !target) {
             return res.status(400).json({ success: false, message: 'Tên và mục tiêu không được để trống.' });
         }
-        if (Number(target) <= 0) {
-            return res.status(400).json({ success: false, message: 'Mục tiêu phải lớn hơn 0.' });
+        if (!isValidVNDAmount(target)) {
+            return res.status(400).json({ success: false, message: 'Mục tiêu phải là số nguyên lớn hơn 0 (VNĐ không có phần thập phân).' });
         }
 
-        const initialAmount = Number(current) || 0;
+        const initialAmount = isValidVNDAmount(current, { allowZero: true }) ? Number(current) : 0;
         const initialHistory = initialAmount > 0 ? [{
             type: 'deposit',
             amount: initialAmount,
@@ -79,7 +81,7 @@ router.put('/:id', async (req, res) => {
         if (category !== undefined) updateData.category = (category || 'Mục tiêu chung').trim();
         if (icon !== undefined) updateData.icon = icon;
         if (target !== undefined) {
-            if (Number(target) <= 0) return res.status(400).json({ success: false, message: 'Mục tiêu phải lớn hơn 0.' });
+            if (!isValidVNDAmount(target)) return res.status(400).json({ success: false, message: 'Mục tiêu phải là số nguyên lớn hơn 0 (VNĐ không có phần thập phân).' });
             updateData.target = Number(target);
         }
         if (targetDate !== undefined) updateData.targetDate = targetDate || null;
@@ -107,8 +109,8 @@ router.patch('/:id/deposit', async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
         }
         const { amount, reason, walletId } = req.body;
-        if (!amount || Number(amount) <= 0) {
-            return res.status(400).json({ success: false, message: 'Số tiền nạp phải lớn hơn 0.' });
+        if (!isValidVNDAmount(amount)) {
+            return res.status(400).json({ success: false, message: 'Số tiền nạp phải là số nguyên lớn hơn 0.' });
         }
 
         const amt = Number(amount);
@@ -200,8 +202,8 @@ router.patch('/:id/withdraw', async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
         }
         const { amount, reason, walletId } = req.body;
-        if (!amount || Number(amount) <= 0) {
-            return res.status(400).json({ success: false, message: 'Số tiền rút phải lớn hơn 0.' });
+        if (!isValidVNDAmount(amount)) {
+            return res.status(400).json({ success: false, message: 'Số tiền rút phải là số nguyên lớn hơn 0.' });
         }
 
         const amt = Number(amount);
@@ -350,8 +352,8 @@ router.post('/installments', async (req, res) => {
         if (!['monthly', 'quarterly', 'yearly'].includes(cycle)) {
             return res.status(400).json({ success: false, message: 'Chu kỳ không hợp lệ.' });
         }
-        if (Number(amount) <= 0) {
-            return res.status(400).json({ success: false, message: 'Số tiền phải lớn hơn 0.' });
+        if (!isValidVNDAmount(amount)) {
+            return res.status(400).json({ success: false, message: 'Số tiền phải là số nguyên lớn hơn 0.' });
         }
         if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDueDate)) {
             return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ (YYYY-MM-DD).' });
@@ -368,6 +370,9 @@ router.post('/installments', async (req, res) => {
             active: true,
             totalPaid: 0
         });
+
+        // Tự động đảm bảo category có trong collection Category của user (best-effort, không chặn response)
+        await Category.ensureCategorySafe(req.user.id, category);
 
         res.status(201).json({ success: true, message: 'Đã thêm khoản định kỳ!', data: item.toJSON() });
     } catch (error) {
@@ -395,7 +400,7 @@ router.put('/installments/:id', async (req, res) => {
         }
         if (icon !== undefined) item.icon = icon;
         if (amount !== undefined) {
-            if (Number(amount) <= 0) return res.status(400).json({ success: false, message: 'Số tiền phải lớn hơn 0.' });
+            if (!isValidVNDAmount(amount)) return res.status(400).json({ success: false, message: 'Số tiền phải là số nguyên lớn hơn 0.' });
             item.amount = Number(amount);
         }
         if (cycle !== undefined) {
@@ -413,6 +418,7 @@ router.put('/installments/:id', async (req, res) => {
         if (category !== undefined) {
             if (!category.trim()) return res.status(400).json({ success: false, message: 'Danh mục không được để trống.' });
             item.category = category.trim();
+            await Category.ensureCategorySafe(req.user.id, category);
         }
 
         await item.save();

@@ -3,7 +3,7 @@ import { spendingService } from '../services/spendingService';
 import { useSpendingStore } from './useSpendingStore';
 import { useWalletStore } from './useWalletStore';
 import { useToastStore } from './useToastStore';
-import { DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
 import { getLocalDateString } from '../utils/formatters';
 
 const TXN_KEY = 'caltdhy_txns';
@@ -30,10 +30,10 @@ const getStoredExpenseCategories = () => {
     const raw = localStorage.getItem(EXPENSE_CAT_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch {}
-  return [];
+  return DEFAULT_EXPENSE_CATEGORIES;
 };
 
 const getStoredIncomeCategories = () => {
@@ -218,26 +218,32 @@ export const useTransactionStore = create((set, get) => ({
         const budgetCatNames = Object.keys(budgetMap);
         const serverCustomCats = catRes?.success && Array.isArray(catRes.data) ? catRes.data : null;
 
-        // Ưu tiên danh mục thực tế: từ customCategories hoặc từ các key của budgets
-        let configuredNames = [];
-        if (serverCustomCats && serverCustomCats.length > 0) {
-          configuredNames = serverCustomCats;
-        } else if (budgetCatNames.length > 0) {
-          configuredNames = budgetCatNames;
-        }
+        // Hợp nhất danh mục từ server customCats, các key của budgets và default categories
+        const serverCats = (serverCustomCats && serverCustomCats.length > 0)
+          ? serverCustomCats.map((name) => ({ name, icon: getCategoryIcon(name, 'expense') }))
+          : (get().expenseCategories && get().expenseCategories.length > 0)
+          ? get().expenseCategories
+          : DEFAULT_EXPENSE_CATEGORIES;
 
-        if (configuredNames.length > 0) {
-          const currentCats = get().expenseCategories || [];
-          const newCats = configuredNames.map((name) => {
-            const found = currentCats.find((c) => c.name.toLowerCase() === name.toLowerCase());
-            return found || { name, icon: getCategoryIcon(name, 'expense') };
-          });
-          saveStoredExpenseCategories(newCats);
-          set({ budgets: budgetMap, expenseCategories: newCats });
-          return { success: true, data: budgetMap };
-        }
+        const known = new Set(serverCats.map((c) => c.name.toLowerCase()));
+        const merged = [...serverCats];
 
-        set({ budgets: budgetMap });
+        budgetCatNames.forEach((name) => {
+          if (!known.has(name.toLowerCase())) {
+            known.add(name.toLowerCase());
+            merged.push({ name, icon: getCategoryIcon(name, 'expense') });
+          }
+        });
+
+        DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
+          if (!known.has(defCat.name.toLowerCase())) {
+            known.add(defCat.name.toLowerCase());
+            merged.push({ name: defCat.name, icon: defCat.icon });
+          }
+        });
+
+        saveStoredExpenseCategories(merged);
+        set({ budgets: budgetMap, expenseCategories: merged });
         return { success: true, data: budgetMap };
       }
     } catch (err) {

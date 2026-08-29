@@ -404,7 +404,13 @@ async function seedAdmin() {
   await mongoose.disconnect();
 }
 
-seedAdmin().catch((err) => {
-  console.error('❌ Lỗi khi khởi tạo seed data:', err);
-  process.exit(1);
-});
+// Chạy trực tiếp từ CLI — không tự chạy nếu file này bị require() từ nơi khác,
+// vì đây là thao tác tạo tài khoản demo với mật khẩu cố định (123456) trên DB thật.
+if (require.main === module) {
+    seedAdmin().catch((err) => {
+        console.error('❌ Lỗi khi khởi tạo seed data:', err);
+        process.exit(1);
+    });
+}
+
+module.exports = { seedAdmin };

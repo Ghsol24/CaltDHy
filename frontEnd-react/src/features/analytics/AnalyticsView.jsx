@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -52,7 +52,7 @@ export function AnalyticsView() {
   const { selectedMonth, setSelectedMonth, openAddTxnModal, analyticsSubTab, setAnalyticsSubTab } = useSpendingStore();
   const { theme } = useThemeStore();
 
-  const [trendMode, setTrendMode] = useState('monthly'); // 'monthly' | 'daily'
+  const [trendMode, setTrendMode] = useState('daily'); // 'daily' | '3months' | '6months'
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
 
   // Current active month in 'YYYY-MM' format
@@ -171,34 +171,40 @@ export function AnalyticsView() {
     };
   }, [transactions, activeMonth]);
 
-  // 2. Multi-Month Trend (Last 6 months)
-  const multiMonthTrend = useMemo(() => {
-    const months = [];
-    let hasAnyData = false;
+  // 2. Multi-Month Trend calculation helper (Last N months based on activeMonth)
+  const getMultiMonthTrend = useCallback(
+    (numMonths) => {
+      const months = [];
+      let hasAnyData = false;
 
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(currentYear, currentMonthNum - 1 - i, 1);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const prefix = `${y}-${m}`;
-      const label = `T${d.getMonth() + 1}/${String(y).slice(2)}`;
+      for (let i = numMonths - 1; i >= 0; i--) {
+        const d = new Date(currentYear, currentMonthNum - 1 - i, 1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const prefix = `${y}-${m}`;
+        const label = `T${d.getMonth() + 1}/${String(y).slice(2)}`;
 
-      let inc = 0;
-      let exp = 0;
-      transactions.forEach((t) => {
-        if (t.date && t.date.startsWith(prefix)) {
-          const amt = Number(t.amount) || 0;
-          const fee = Number(t.fee) || 0;
-          if (t.type === 'income') inc += amt;
-          else if (t.type === 'expense') exp += (amt + fee);
-        }
-      });
+        let inc = 0;
+        let exp = 0;
+        transactions.forEach((t) => {
+          if (t.date && t.date.startsWith(prefix)) {
+            const amt = Number(t.amount) || 0;
+            const fee = Number(t.fee) || 0;
+            if (t.type === 'income') inc += amt;
+            else if (t.type === 'expense') exp += amt + fee;
+          }
+        });
 
-      if (inc > 0 || exp > 0) hasAnyData = true;
-      months.push({ prefix, label, income: inc, expense: exp });
-    }
-    return { months, hasAnyData };
-  }, [transactions, currentYear, currentMonthNum]);
+        if (inc > 0 || exp > 0) hasAnyData = true;
+        months.push({ prefix, label, income: inc, expense: exp });
+      }
+      return { months, hasAnyData };
+    },
+    [transactions, currentYear, currentMonthNum]
+  );
+
+  const trend3Months = useMemo(() => getMultiMonthTrend(3), [getMultiMonthTrend]);
+  const trend6Months = useMemo(() => getMultiMonthTrend(6), [getMultiMonthTrend]);
 
   // 3. Daily Trend in current activeMonth
   const dailyTrend = useMemo(() => {
@@ -216,7 +222,7 @@ export function AnalyticsView() {
           const amt = Number(t.amount) || 0;
           const fee = Number(t.fee) || 0;
           if (t.type === 'income') inc += amt;
-          else if (t.type === 'expense') exp += (amt + fee);
+          else if (t.type === 'expense') exp += amt + fee;
         }
       });
 
@@ -232,7 +238,12 @@ export function AnalyticsView() {
     return { days, hasAnyData };
   }, [transactions, currentYear, currentMonthNum, activeMonth]);
 
-  const hasTrendData = trendMode === 'monthly' ? multiMonthTrend.hasAnyData : dailyTrend.hasAnyData;
+  const hasTrendData = useMemo(() => {
+    if (trendMode === 'daily') return dailyTrend.hasAnyData;
+    if (trendMode === '3months') return trend3Months.hasAnyData;
+    if (trendMode === '6months') return trend6Months.hasAnyData;
+    return false;
+  }, [trendMode, dailyTrend, trend3Months, trend6Months]);
 
   // Dynamic Chart Theme Tokens tailored for dark, cream, green, and light themes
   const chartThemeTokens = useMemo(() => {
@@ -326,52 +337,56 @@ export function AnalyticsView() {
 
   // Bar Chart Configuration
   const barChartData = useMemo(() => {
-    if (trendMode === 'monthly') {
+    if (trendMode === 'daily') {
       return {
-        labels: multiMonthTrend.months.map((m) => m.label),
+        labels: dailyTrend.days.map((d) => d.label),
         datasets: [
           {
             label: 'Thu nhập',
-            data: multiMonthTrend.months.map((m) => m.income),
+            data: dailyTrend.days.map((d) => d.income),
             backgroundColor: chartThemeTokens.income,
-            borderRadius: 6,
-            barPercentage: 0.6,
-            categoryPercentage: 0.7
+            borderRadius: 4,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
           },
           {
             label: 'Chi tiêu',
-            data: multiMonthTrend.months.map((m) => m.expense),
+            data: dailyTrend.days.map((d) => d.expense),
             backgroundColor: chartThemeTokens.expense,
-            borderRadius: 6,
-            barPercentage: 0.6,
-            categoryPercentage: 0.7
+            borderRadius: 4,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
           }
         ]
       };
     }
 
+    const currentMultiTrend = trendMode === '3months' ? trend3Months : trend6Months;
+    const barPercentage = trendMode === '3months' ? 0.45 : 0.6;
+    const categoryPercentage = trendMode === '3months' ? 0.55 : 0.7;
+
     return {
-      labels: dailyTrend.days.map((d) => d.label),
+      labels: currentMultiTrend.months.map((m) => m.label),
       datasets: [
         {
           label: 'Thu nhập',
-          data: dailyTrend.days.map((d) => d.income),
+          data: currentMultiTrend.months.map((m) => m.income),
           backgroundColor: chartThemeTokens.income,
-          borderRadius: 4,
-          barPercentage: 0.7,
-          categoryPercentage: 0.8
+          borderRadius: 6,
+          barPercentage,
+          categoryPercentage
         },
         {
           label: 'Chi tiêu',
-          data: dailyTrend.days.map((d) => d.expense),
+          data: currentMultiTrend.months.map((m) => m.expense),
           backgroundColor: chartThemeTokens.expense,
-          borderRadius: 4,
-          barPercentage: 0.7,
-          categoryPercentage: 0.8
+          borderRadius: 6,
+          barPercentage,
+          categoryPercentage
         }
       ]
     };
-  }, [trendMode, multiMonthTrend, dailyTrend, chartThemeTokens]);
+  }, [trendMode, dailyTrend, trend3Months, trend6Months, chartThemeTokens]);
 
   const barOptions = useMemo(() => {
     return {
@@ -397,6 +412,14 @@ export function AnalyticsView() {
           padding: 10,
           cornerRadius: 8,
           callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const item = items[0];
+              if (trendMode === 'daily') {
+                return `Ngày ${item.label}/${currentMonthNum}/${currentYear}`;
+              }
+              return item.label;
+            },
             label: (context) => {
               const label = context.dataset.label || '';
               const val = context.parsed.y || 0;
@@ -428,7 +451,7 @@ export function AnalyticsView() {
         }
       }
     };
-  }, [chartThemeTokens]);
+  }, [trendMode, currentMonthNum, currentYear, chartThemeTokens]);
 
   // ── Financial Report Statistics & Comparison ──
   const reportData = useMemo(() => {
@@ -1114,20 +1137,29 @@ export function AnalyticsView() {
               <button
                 type="button"
                 role="radio"
-                aria-checked={trendMode === 'monthly'}
-                className={`trend-seg-btn ${trendMode === 'monthly' ? 'active' : ''}`}
-                onClick={() => setTrendMode('monthly')}
-              >
-                6 tháng gần đây
-              </button>
-              <button
-                type="button"
-                role="radio"
                 aria-checked={trendMode === 'daily'}
                 className={`trend-seg-btn ${trendMode === 'daily' ? 'active' : ''}`}
                 onClick={() => setTrendMode('daily')}
               >
                 Theo ngày trong tháng
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={trendMode === '3months'}
+                className={`trend-seg-btn ${trendMode === '3months' ? 'active' : ''}`}
+                onClick={() => setTrendMode('3months')}
+              >
+                3 tháng gần đây
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={trendMode === '6months'}
+                className={`trend-seg-btn ${trendMode === '6months' ? 'active' : ''}`}
+                onClick={() => setTrendMode('6months')}
+              >
+                6 tháng gần đây
               </button>
             </div>
           </div>

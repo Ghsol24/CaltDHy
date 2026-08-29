@@ -89,6 +89,11 @@ export function BudgetsTab() {
     ? Math.round((totalBudgetSpent / totalBudgetLimit) * 100)
     : null;
 
+  // Hướng A: Chỉ hiển thị các danh mục đã đặt hạn mức HOẶC đã có phát sinh chi tiêu trong tháng
+  const visibleCategories = useMemo(() => {
+    return categoryBudgets.filter((item) => item.hasLimit || item.spent > 0);
+  }, [categoryBudgets]);
+
   const handleOpenEdit = (category = null) => {
     setSelectedCategoryToEdit(category);
     setIsEditModalOpen(true);
@@ -99,11 +104,11 @@ export function BudgetsTab() {
   const monthDisplayLabel = formatDate(monthDateObj, 'month');
 
   return (
-    <div className="budgets-tab-container" role="region" aria-label="Hạn mức ngân sách">
+    <div className="budgets-tab-container" role="region" aria-label="Quản lý ngân sách">
       {/* ── Page Header: Title, Subtitle, and Primary Action ── */}
       <div className="budgets-page-header">
         <div className="budgets-header-titles">
-          <h2 className="budgets-view-title">Hạn mức ngân sách</h2>
+          <h2 className="budgets-view-title">Ngân sách</h2>
           <p className="budgets-view-subtitle">
             Lập kế hoạch chi tiêu thông minh và kiểm soát tài chính hiệu quả
           </p>
@@ -299,19 +304,19 @@ export function BudgetsTab() {
           </button>
         </div>
 
-        {/* First-use informational alert (Only when zero categories have numerical limits) */}
-        {!hasAnyLimit && (
+        {/* First-use informational alert (When zero visible categories exist in the active month) */}
+        {visibleCategories.length === 0 && (
           <div className="budget-empty-alert" role="status">
             <div className="alert-bulb-icon" aria-hidden="true">💡</div>
             <p className="alert-bulb-text">
-              Bạn chưa đặt hạn mức chi tiêu cho danh mục nào. Hãy bấm nút <strong>"Thiết lập hạn mức"</strong> để chủ động kiểm soát chi tiêu!
+              Tháng này chưa có danh mục nào được đặt hạn mức hoặc phát sinh chi tiêu. Hãy bấm nút <strong>"Thiết lập hạn mức"</strong> để bắt đầu quản lý ngân sách!
             </p>
           </div>
         )}
 
         {/* 4 Columns Category Cards Grid */}
         <div className="budget-categories-grid">
-          {categoryBudgets.map((item) => {
+          {visibleCategories.map((item) => {
             const hasLimit = item.hasLimit;
             const isDanger = item.status === 'danger' || (hasLimit && item.percent >= 100);
             const isWarning = item.status === 'warning' || (hasLimit && item.percent >= 80 && item.percent < 100);

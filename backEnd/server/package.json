@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "migrate:email": "node scripts/migrate-email-verified.js",
     "migrate:dates": "node scripts/migrate-transaction-dates.js",
-    "migrate:categories": "node scripts/migrate-budget-categories.js"
+    "migrate:categories": "node scripts/migrate-budget-categories.js",
+    "migrate:categories-collection": "node scripts/migrate-categories-to-collection.js",
+    "test:integration": "node --test tests/integration.test.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -25,6 +27,8 @@
     "nodemailer": "^6.9.12"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.1.0",
+    "supertest": "^7.2.2"
   }
 }

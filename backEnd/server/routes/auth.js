@@ -26,6 +26,21 @@ const createToken = (user) => {
     });
 };
 
+// ─────────────────────────────────────────────────────────────────
+// Helper: Thời điểm hiện tại, làm tròn XUỐNG tới giây gần nhất.
+// BẮT BUỘC dùng khi set passwordChangedAt (thay vì `new Date()` trần).
+// Lý do: claim `iat` trong JWT chỉ có độ chính xác GIÂY (chuẩn JWT, bị làm tròn
+// xuống), còn `Date` của JS có độ chính xác mili-giây. Nếu passwordChangedAt giữ
+// nguyên mili-giây, mỗi khi route set passwordChangedAt rồi cấp token mới ngay
+// trong cùng request (đổi tên/email/mật khẩu ở PUT /profile), `iat` của token mới
+// gần như luôn làm tròn xuống THẤP HƠN passwordChangedAt (vì 2 giá trị chỉ cách
+// nhau vài chục mili-giây, cùng nằm trong 1 giây) — khiến authMiddleware.js coi
+// token vừa cấp là "được tạo trước khi đổi mật khẩu" và từ chối ngay lập tức.
+// Làm tròn passwordChangedAt xuống giây khớp với cách iat bị làm tròn, nên token
+// cấp sau đó luôn có iat >= passwordChangedAt (không bao giờ bị tự từ chối oan).
+// ─────────────────────────────────────────────────────────────────
+const secondPrecisionNow = () => new Date(Math.floor(Date.now() / 1000) * 1000);
+
 // Helper: Cấu hình Nodemailer với Gmail
 const createTransporter = () => {
     return nodemailer.createTransport({
@@ -362,7 +377,7 @@ router.post('/reset-password', async (req, res) => {
         user.resetPasswordToken = undefined;
         user.resetPasswordExpiry = undefined;
         // Ghi lại thời điểm đổi mật khẩu → vô hiệu hóa các JWT cũ
-        user.passwordChangedAt = new Date();
+        user.passwordChangedAt = secondPrecisionNow();
         await user.save();
 
         res.json({
@@ -413,7 +428,7 @@ router.put('/profile', protect, async (req, res) => {
             // Hash mật khẩu mới
             user.password = await bcrypt.hash(newPassword, 12);
             // Ghi lại thời điểm đổi mật khẩu → vô hiệu hóa các JWT cũ
-            user.passwordChangedAt = new Date();
+            user.passwordChangedAt = secondPrecisionNow();
         }
 
         // 2. Cập nhật email (nếu có yêu cầu thay đổi)
@@ -433,14 +448,14 @@ router.put('/profile', protect, async (req, res) => {
             user.email = trimmedEmail;
             user.emailVerified = true;
             // ⚠️ Bảo mật: đổi email ⇒ vô hiệu hóa toàn bộ JWT token cũ được cấp trước đó
-            user.passwordChangedAt = new Date();
+            user.passwordChangedAt = secondPrecisionNow();
         }
 
         // 3. Cập nhật tên hiển thị
         if (name && name.trim() && name.trim() !== user.name) {
             user.name = name.trim();
             // ⚠️ Bảo mật: đổi tên ⇒ vô hiệu hóa toàn bộ JWT token cũ (tên được nhúng trong payload token)
-            user.passwordChangedAt = new Date();
+            user.passwordChangedAt = secondPrecisionNow();
         }
 
         // 4. Validate và cập nhật ảnh đại diện (Base64 string)

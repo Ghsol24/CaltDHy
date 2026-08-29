@@ -25,8 +25,25 @@ const protect = async (req, res, next) => {
             });
         }
 
-        // Xác minh chữ ký + hạn token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Xác minh chữ ký + hạn token — tách riêng để phân biệt 2 loại lỗi khác hẳn nhau về bản chất:
+        // hết hạn (bình thường, chỉ cần đăng nhập lại) và chữ ký/định dạng sai (có thể là token giả mạo).
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (jwtError) {
+            if (jwtError.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+                    code: 'TOKEN_EXPIRED'
+                });
+            }
+            return res.status(401).json({
+                success: false,
+                message: 'Token không hợp lệ. Vui lòng đăng nhập lại.',
+                code: 'TOKEN_INVALID'
+            });
+        }
 
         // Truy vấn nhẹ nhàng (lean) để kiểm tra tồn tại và thu hồi token nếu đổi mật khẩu
         const user = await User.findById(decoded.id).select('name email +passwordChangedAt').lean();

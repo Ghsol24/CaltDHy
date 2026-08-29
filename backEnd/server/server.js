@@ -65,13 +65,14 @@ const authLimiter = rateLimit({
     max: getPositiveIntegerEnv(process.env.AUTH_RATE_LIMIT_MAX, 10),
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === 'test',
     message: {
         success: false,
         message: 'Quá nhiều yêu cầu từ địa chỉ IP này. Vui lòng thử lại sau 15 phút.'
     }
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 // Serve static files (React Frontend Production Build)
 const reactDistPath = path.join(__dirname, '..', '..', 'frontEnd-react', 'dist');
@@ -121,6 +122,12 @@ if (fs.existsSync(reactDistPath)) {
 // Global error handler
 app.use((err, req, res, next) => {
     console.error('❌ Server error:', err.stack || err.message);
+    if (err.type === 'entity.too.large') {
+        return res.status(413).json({
+            success: false,
+            message: 'Dung lượng yêu cầu quá lớn. Vui lòng giảm kích thước dữ liệu (tối đa 2MB).'
+        });
+    }
     if (err.message && err.message.includes('CORS')) {
         return res.status(403).json({
             success: false,
@@ -156,28 +163,32 @@ function startServer() {
     });
 }
 
-if (!process.env.MONGODB_URI) {
-    console.error('');
-    console.error('⚠️  [CẢNH BÁO] Chưa cấu hình MONGODB_URI trong file .env');
-    console.error('   → Server vẫn sẽ khởi động ở chế độ Offline Mode.');
-    console.error('');
-    startServer();
-} else {
-    mongoose
-        .connect(process.env.MONGODB_URI, {
-            serverSelectionTimeoutMS: 5000
-        })
-        .then(() => {
-            console.log('✅ Connected to MongoDB Atlas successfully');
-            console.log(`   URI: ${process.env.MONGODB_URI?.replace(/:([^@]+)@/, ':****@')}`);
-            startServer();
-        })
-        .catch((error) => {
-            console.error('');
-            console.error('⚠️  [CẢNH BÁO] Không thể kết nối MongoDB Atlas:');
-            console.error('   Message:', error.message);
-            console.error('   → Server vẫn sẽ khởi động ở chế độ Offline Mode.');
-            console.error('');
-            startServer(); // ✅ Vẫn khởi động server – phục vụ file tĩnh Frontend
-        });
+if (require.main === module) {
+    if (!process.env.MONGODB_URI) {
+        console.error('');
+        console.error('⚠️  [CẢNH BÁO] Chưa cấu hình MONGODB_URI trong file .env');
+        console.error('   → Server vẫn sẽ khởi động ở chế độ Offline Mode.');
+        console.error('');
+        startServer();
+    } else {
+        mongoose
+            .connect(process.env.MONGODB_URI, {
+                serverSelectionTimeoutMS: 5000
+            })
+            .then(() => {
+                console.log('✅ Connected to MongoDB Atlas successfully');
+                console.log(`   URI: ${process.env.MONGODB_URI?.replace(/:([^@]+)@/, ':****@')}`);
+                startServer();
+            })
+            .catch((error) => {
+                console.error('');
+                console.error('⚠️  [CẢNH BÁO] Không thể kết nối MongoDB Atlas:');
+                console.error('   Message:', error.message);
+                console.error('   → Server vẫn sẽ khởi động ở chế độ Offline Mode.');
+                console.error('');
+                startServer(); // ✅ Vẫn khởi động server – phục vụ file tĩnh Frontend
+            });
+    }
 }
+
+module.exports = app;

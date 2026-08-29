@@ -7,7 +7,6 @@ import { formatDate } from '../../utils/formatters';
 export function Topbar() {
   const { user } = useAuthStore();
   const {
-    activeView,
     setActiveView,
     openSettingsModal,
     openAccountModal,
@@ -24,13 +23,6 @@ export function Topbar() {
     .toUpperCase() || 'U';
 
   const todayStr = formatDate(new Date(), 'full');
-
-  const navTabs = [
-    { id: 'home', label: 'Trang chủ' },
-    { id: 'plan', label: 'Kế hoạch' },
-    { id: 'analytics', label: 'Phân tích' },
-    { id: 'jars', label: 'Hũ chi tiêu' },
-  ];
 
   return (
     <header className="topbar" role="banner">
@@ -49,21 +41,6 @@ export function Topbar() {
         </Link>
         <span className="tb-badge">v2.0</span>
       </div>
-
-      {/* ── 4 Main Tabs Navigation ── */}
-      <nav className="tb-nav" role="navigation" aria-label="Điều hướng chính">
-        {navTabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`tb-nav-btn ${activeView === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveView(tab.id)}
-            aria-current={activeView === tab.id ? 'page' : undefined}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
 
       {/* ── Right Actions ── */}
       <div className="tb-right">
