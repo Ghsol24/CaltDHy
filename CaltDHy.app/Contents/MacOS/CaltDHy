@@ -21,6 +21,7 @@ else
 fi
 
 FRONTEND_DIR="$PROJECT_DIR/frontEnd-react"
+SERVER_DIR="$PROJECT_DIR/backEnd/server"
 
 # Auto self-healing: if server node_modules is missing, install dependencies
 if [ ! -d "$SERVER_DIR/node_modules" ]; then

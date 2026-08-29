@@ -4,6 +4,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
+import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 
 const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
 
@@ -241,24 +242,18 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
 
             {/* Wallet Selection for Auto-Sync */}
             <div className="txn-field-group">
-              <label htmlFor="jar-tx-wallet" className="txn-label">
+              <label className="txn-label">
                 <span>
                   {action === 'deposit' ? 'Trừ tiền từ ví (tùy chọn)' : 'Cộng tiền vào ví (tùy chọn)'}
                 </span>
               </label>
-              <select
-                id="jar-tx-wallet"
-                className="txn-input"
+              <CustomWalletDropdown
+                wallets={wallets}
                 value={selectedWalletId}
-                onChange={(e) => setSelectedWalletId(e.target.value)}
-              >
-                <option value="">-- Không đồng bộ ví (chỉ ghi nhận hũ độc lập) --</option>
-                {wallets.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.icon || '💳'} {w.name} ({formatCurrency(w.currentBalance ?? w.initialBalance ?? 0)})
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedWalletId}
+                allowNone={true}
+                noneLabel="-- Không đồng bộ ví (chỉ ghi nhận hũ độc lập) --"
+              />
               <span className="txn-field-hint">
                 {selectedWalletId
                   ? action === 'deposit'

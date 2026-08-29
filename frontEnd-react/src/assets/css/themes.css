@@ -1726,3 +1726,1009 @@ html.green-theme {
   --c-jar-panel-bg:     #F7FDF9;
   --c-jar-panel-border: #B2DFC8;
 }
+
+/* ============================================================
+   THEME-SPECIFIC UX/UI POLISH: MODALS, BUTTONS & FORM CONTROLS
+   ============================================================ */
+
+/* ── 1. LIGHT THEME (Modern SaaS Indigo) ── */
+html.light-theme .txn-modal-card,
+html.light-theme .jar-modal-card,
+html.light-theme .jar-detail-modal-dialog,
+html.light-theme .jar-history-modal-dialog,
+html.light-theme .financial-tips-dialog {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.14) !important;
+}
+
+html.light-theme .txn-modal-header,
+html.light-theme .jar-modal-header,
+html.light-theme .jar-detail-header,
+html.light-theme .jar-history-header,
+html.light-theme .financial-tips-header,
+html.light-theme .txn-modal-footer,
+html.light-theme .jar-modal-footer,
+html.light-theme .jar-detail-footer,
+html.light-theme .financial-tips-footer {
+  background: #FFFFFF !important;
+  border-color: #F1F5F9 !important;
+}
+
+html.light-theme .txn-modal-title,
+html.light-theme .jar-modal-title,
+html.light-theme .jar-detail-title,
+html.light-theme .financial-tips-title {
+  color: #0F172A !important;
+}
+
+html.light-theme .txn-modal-close-btn,
+html.light-theme .jar-detail-close-btn,
+html.light-theme .jar-history-close-btn,
+html.light-theme .financial-tips-close-btn {
+  color: #64748B !important;
+}
+html.light-theme .txn-modal-close-btn:hover,
+html.light-theme .jar-detail-close-btn:hover,
+html.light-theme .jar-history-close-btn:hover,
+html.light-theme .financial-tips-close-btn:hover {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+/* Light Theme: Type Switchers & Tabs */
+html.light-theme .txn-type-toggle,
+html.light-theme .jar-history-tab-group {
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+}
+html.light-theme .txn-type-btn,
+html.light-theme .jar-history-tab-btn {
+  color: #475569 !important;
+}
+html.light-theme .txn-type-btn:hover:not(.active),
+html.light-theme .jar-history-tab-btn:hover:not(.active) {
+  color: #0F172A !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+html.light-theme .txn-type-btn--expense.active {
+  background: #FFFFFF !important;
+  color: #DC2626 !important;
+  border-color: #FECACA !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.12) !important;
+}
+html.light-theme .txn-type-btn--income.active {
+  background: #FFFFFF !important;
+  color: #059669 !important;
+  border-color: #A7F3D0 !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.12) !important;
+}
+html.light-theme .jar-history-tab-btn.active,
+html.light-theme .financial-tips-tab-btn.active {
+  background: #FFFFFF !important;
+  color: #4F46E5 !important;
+  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* Light Theme: Inputs & Custom Styled Selects */
+html.light-theme .txn-input,
+html.light-theme .txn-select,
+html.light-theme .jar-text-input,
+html.light-theme .jar-adornment-input-box,
+html.light-theme .jar-history-select,
+html.light-theme .jar-history-search-input,
+html.light-theme .financial-tips-input {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #0F172A !important;
+}
+html.light-theme .txn-amount-input {
+  background: #FFFFFF !important;
+  border: 1.5px solid #CBD5E1 !important;
+  color: #0F172A !important;
+}
+html.light-theme .txn-amount-suffix {
+  background: #F1F5F9 !important;
+  color: #475569 !important;
+}
+html.light-theme .txn-input:focus,
+html.light-theme .txn-select:focus,
+html.light-theme .txn-amount-input:focus,
+html.light-theme .jar-text-input:focus,
+html.light-theme .jar-adornment-input-box:focus-within,
+html.light-theme .jar-history-select:focus,
+html.light-theme .jar-history-search-input:focus,
+html.light-theme .financial-tips-input:focus {
+  border-color: #4F46E5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+/* Light Theme: Category Cards */
+html.light-theme .txn-category-card {
+  background: #F8FAFC !important;
+  border: 1.5px solid #E2E8F0 !important;
+}
+html.light-theme .txn-category-card:hover {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+html.light-theme .txn-card-name {
+  color: #475569 !important;
+}
+html.light-theme .txn-card-amount {
+  color: #0F172A !important;
+}
+html.light-theme .txn-category-card.active {
+  background: rgba(79, 70, 229, 0.06) !important;
+  border-color: #4F46E5 !important;
+  box-shadow: 0 0 0 1px #4F46E5, 0 4px 12px rgba(79, 70, 229, 0.15) !important;
+}
+html.light-theme .txn-category-card.active .txn-card-name {
+  color: #4F46E5 !important;
+  font-weight: 700 !important;
+}
+html.light-theme .txn-card-check-badge {
+  background: #4F46E5 !important;
+  color: #FFFFFF !important;
+}
+
+/* Light Theme: Quick Chips */
+html.light-theme .jar-tx-chip-btn {
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+}
+html.light-theme .jar-tx-chip-btn:hover {
+  background: #EEF2FF !important;
+  border-color: #818CF8 !important;
+  color: #4F46E5 !important;
+}
+html.light-theme .jar-tx-chip-btn--accent {
+  background: rgba(79, 70, 229, 0.1) !important;
+  border-color: #818CF8 !important;
+  color: #4F46E5 !important;
+}
+html.light-theme .jar-tx-chip-btn--accent:hover {
+  background: #4F46E5 !important;
+  border-color: #4F46E5 !important;
+  color: #FFFFFF !important;
+}
+
+/* Light Theme: Action Buttons */
+html.light-theme .txn-btn-cancel,
+html.light-theme .jar-btn-cancel,
+html.light-theme .jar-detail-btn-edit,
+html.light-theme .jar-detail-btn-withdraw,
+html.light-theme .jar-btn-withdraw {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #334155 !important;
+}
+html.light-theme .txn-btn-cancel:hover:not(:disabled),
+html.light-theme .jar-btn-cancel:hover:not(:disabled),
+html.light-theme .jar-detail-btn-edit:hover:not(:disabled),
+html.light-theme .jar-detail-btn-withdraw:hover:not(:disabled),
+html.light-theme .jar-btn-withdraw:hover:not(:disabled) {
+  background: #F1F5F9 !important;
+  border-color: #94A3B8 !important;
+  color: #0F172A !important;
+}
+
+html.light-theme .txn-btn-submit,
+html.light-theme .jar-btn-submit,
+html.light-theme .jar-detail-btn-deposit,
+html.light-theme .financial-tips-ack-btn,
+html.light-theme .jars-hero-cta-btn,
+html.light-theme .jars-recom-action-btn,
+html.light-theme .btn-add-txn {
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32) !important;
+}
+html.light-theme .txn-btn-submit:hover:not(:disabled),
+html.light-theme .jar-btn-submit:hover:not(:disabled),
+html.light-theme .jar-detail-btn-deposit:hover:not(:disabled),
+html.light-theme .financial-tips-ack-btn:hover:not(:disabled),
+html.light-theme .jars-hero-cta-btn:hover:not(:disabled),
+html.light-theme .jars-recom-action-btn:hover:not(:disabled),
+html.light-theme .btn-add-txn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45) !important;
+}
+
+html.light-theme .txn-btn-submit--withdraw {
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32) !important;
+}
+html.light-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%) !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
+}
+
+html.light-theme .jar-tx-summary-card,
+html.light-theme .jar-detail-stats-banner,
+html.light-theme .jar-detail-roadmap-box,
+html.light-theme .jar-detail-history-item,
+html.light-theme .jar-history-item,
+html.light-theme .financial-tips-card {
+  background: #FAFBFD !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+
+/* ── 2. CREAM THEME (Warm Terracotta & Paper) ── */
+html.cream-theme .txn-modal-card,
+html.cream-theme .jar-modal-card,
+html.cream-theme .jar-detail-modal-dialog,
+html.cream-theme .jar-history-modal-dialog,
+html.cream-theme .financial-tips-dialog {
+  background: #FDF8F2 !important;
+  border-color: #E0D4C4 !important;
+  box-shadow: 0 20px 48px rgba(100, 60, 20, 0.16) !important;
+}
+
+html.cream-theme .txn-modal-header,
+html.cream-theme .jar-modal-header,
+html.cream-theme .jar-detail-header,
+html.cream-theme .jar-history-header,
+html.cream-theme .financial-tips-header,
+html.cream-theme .txn-modal-footer,
+html.cream-theme .jar-modal-footer,
+html.cream-theme .jar-detail-footer,
+html.cream-theme .financial-tips-footer {
+  background: #FDF8F2 !important;
+  border-color: #EDE4D8 !important;
+}
+
+html.cream-theme .txn-modal-title,
+html.cream-theme .jar-modal-title,
+html.cream-theme .jar-detail-title,
+html.cream-theme .financial-tips-title {
+  color: #2C1D10 !important;
+}
+
+html.cream-theme .txn-modal-close-btn,
+html.cream-theme .jar-detail-close-btn,
+html.cream-theme .jar-history-close-btn,
+html.cream-theme .financial-tips-close-btn {
+  color: #8C7564 !important;
+}
+html.cream-theme .txn-modal-close-btn:hover,
+html.cream-theme .jar-detail-close-btn:hover,
+html.cream-theme .jar-history-close-btn:hover,
+html.cream-theme .financial-tips-close-btn:hover {
+  background: #EDE4D8 !important;
+  color: #2C1D10 !important;
+}
+
+/* Cream Theme: Type Switchers & Tabs */
+html.cream-theme .txn-type-toggle,
+html.cream-theme .jar-history-tab-group {
+  background: #EDE4D8 !important;
+  border: 1px solid #E0D4C4 !important;
+}
+html.cream-theme .txn-type-btn,
+html.cream-theme .jar-history-tab-btn {
+  color: #6E5849 !important;
+}
+html.cream-theme .txn-type-btn:hover:not(.active),
+html.cream-theme .jar-history-tab-btn:hover:not(.active) {
+  color: #2C1D10 !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+html.cream-theme .txn-type-btn--expense.active {
+  background: #FDF8F2 !important;
+  color: #C0531E !important;
+  border-color: #F8D5D5 !important;
+  box-shadow: 0 1px 3px rgba(192, 83, 30, 0.15) !important;
+}
+html.cream-theme .txn-type-btn--income.active {
+  background: #FDF8F2 !important;
+  color: #2D7A3E !important;
+  border-color: #C3E6CB !important;
+  box-shadow: 0 1px 3px rgba(45, 122, 62, 0.15) !important;
+}
+html.cream-theme .jar-history-tab-btn.active,
+html.cream-theme .financial-tips-tab-btn.active {
+  background: #FDF8F2 !important;
+  color: #C0531E !important;
+  box-shadow: 0 1px 3px rgba(192, 83, 30, 0.15) !important;
+}
+
+/* Cream Theme: Inputs & Custom Styled Selects */
+html.cream-theme .txn-input,
+html.cream-theme .txn-select,
+html.cream-theme .jar-text-input,
+html.cream-theme .jar-adornment-input-box,
+html.cream-theme .jar-history-select,
+html.cream-theme .jar-history-search-input,
+html.cream-theme .financial-tips-input {
+  background: #F5EDE0 !important;
+  border: 1px solid #D8CCBE !important;
+  color: #2C1D10 !important;
+}
+html.cream-theme .txn-amount-input {
+  background: #F5EDE0 !important;
+  border: 1.5px solid #D8CCBE !important;
+  color: #2C1D10 !important;
+}
+html.cream-theme .txn-amount-suffix {
+  background: #EDE4D8 !important;
+  color: #6E5849 !important;
+}
+html.cream-theme .txn-input:focus,
+html.cream-theme .txn-select:focus,
+html.cream-theme .txn-amount-input:focus,
+html.cream-theme .jar-text-input:focus,
+html.cream-theme .jar-adornment-input-box:focus-within,
+html.cream-theme .jar-history-select:focus,
+html.cream-theme .jar-history-search-input:focus,
+html.cream-theme .financial-tips-input:focus {
+  border-color: #C0531E !important;
+  box-shadow: 0 0 0 3px rgba(192, 83, 30, 0.18) !important;
+}
+
+/* Cream Theme: Category Cards */
+html.cream-theme .txn-category-card {
+  background: #F5EDE0 !important;
+  border: 1.5px solid #E0D4C4 !important;
+}
+html.cream-theme .txn-category-card:hover {
+  background: #EDE4D8 !important;
+  border-color: #C8B8A4 !important;
+}
+html.cream-theme .txn-card-name {
+  color: #584133 !important;
+}
+html.cream-theme .txn-card-amount {
+  color: #2C1D10 !important;
+}
+html.cream-theme .txn-category-card.active {
+  background: rgba(192, 83, 30, 0.10) !important;
+  border-color: #C0531E !important;
+  box-shadow: 0 0 0 1px #C0531E, 0 4px 12px rgba(192, 83, 30, 0.20) !important;
+}
+html.cream-theme .txn-category-card.active .txn-card-name {
+  color: #C0531E !important;
+  font-weight: 700 !important;
+}
+html.cream-theme .txn-card-check-badge {
+  background: #C0531E !important;
+  color: #FFFFFF !important;
+}
+
+/* Cream Theme: Quick Chips */
+html.cream-theme .jar-tx-chip-btn {
+  background: #F5EDE0 !important;
+  border: 1px solid #E0D4C4 !important;
+  color: #584133 !important;
+}
+html.cream-theme .jar-tx-chip-btn:hover {
+  background: #EDE4D8 !important;
+  border-color: #C0531E !important;
+  color: #C0531E !important;
+}
+html.cream-theme .jar-tx-chip-btn--accent {
+  background: rgba(192, 83, 30, 0.12) !important;
+  border-color: #C0531E !important;
+  color: #C0531E !important;
+}
+html.cream-theme .jar-tx-chip-btn--accent:hover {
+  background: #C0531E !important;
+  border-color: #C0531E !important;
+  color: #FFFFFF !important;
+}
+
+/* Cream Theme: Action Buttons */
+html.cream-theme .txn-btn-cancel,
+html.cream-theme .jar-btn-cancel,
+html.cream-theme .jar-detail-btn-edit,
+html.cream-theme .jar-detail-btn-withdraw,
+html.cream-theme .jar-btn-withdraw {
+  background: #F5EDE0 !important;
+  border: 1px solid #D8CCBE !important;
+  color: #584133 !important;
+}
+html.cream-theme .txn-btn-cancel:hover:not(:disabled),
+html.cream-theme .jar-btn-cancel:hover:not(:disabled),
+html.cream-theme .jar-detail-btn-edit:hover:not(:disabled),
+html.cream-theme .jar-detail-btn-withdraw:hover:not(:disabled),
+html.cream-theme .jar-btn-withdraw:hover:not(:disabled) {
+  background: #EDE4D8 !important;
+  border-color: #C0531E !important;
+  color: #2C1D10 !important;
+}
+
+html.cream-theme .txn-btn-submit,
+html.cream-theme .jar-btn-submit,
+html.cream-theme .jar-detail-btn-deposit,
+html.cream-theme .financial-tips-ack-btn,
+html.cream-theme .jars-hero-cta-btn,
+html.cream-theme .jars-recom-action-btn,
+html.cream-theme .btn-add-txn {
+  background: linear-gradient(135deg, #C0531E 0%, #D96024 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(192, 83, 30, 0.32) !important;
+}
+html.cream-theme .txn-btn-submit:hover:not(:disabled),
+html.cream-theme .jar-btn-submit:hover:not(:disabled),
+html.cream-theme .jar-detail-btn-deposit:hover:not(:disabled),
+html.cream-theme .financial-tips-ack-btn:hover:not(:disabled),
+html.cream-theme .jars-hero-cta-btn:hover:not(:disabled),
+html.cream-theme .jars-recom-action-btn:hover:not(:disabled),
+html.cream-theme .btn-add-txn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #A84414 0%, #C0531E 100%) !important;
+  box-shadow: 0 6px 18px rgba(192, 83, 30, 0.45) !important;
+}
+
+html.cream-theme .txn-btn-submit--withdraw {
+  background: linear-gradient(135deg, #D63E3E 0%, #E55353 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(214, 62, 62, 0.32) !important;
+}
+html.cream-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B82E2E 0%, #D63E3E 100%) !important;
+  box-shadow: 0 6px 18px rgba(214, 62, 62, 0.45) !important;
+}
+
+html.cream-theme .jar-tx-summary-card,
+html.cream-theme .jar-detail-stats-banner,
+html.cream-theme .jar-detail-roadmap-box,
+html.cream-theme .jar-detail-history-item,
+html.cream-theme .jar-history-item,
+html.cream-theme .financial-tips-card {
+  background: #FAF3EA !important;
+  border: 1px solid #E0D4C4 !important;
+}
+
+
+/* ── 3. GREEN THEME (Eco Nature Emerald) ── */
+html.green-theme .txn-modal-card,
+html.green-theme .jar-modal-card,
+html.green-theme .jar-detail-modal-dialog,
+html.green-theme .jar-history-modal-dialog,
+html.green-theme .financial-tips-dialog {
+  background: #FFFFFF !important;
+  border-color: #B2DFC8 !important;
+  box-shadow: 0 20px 48px rgba(14, 46, 30, 0.16) !important;
+}
+
+html.green-theme .txn-modal-header,
+html.green-theme .jar-modal-header,
+html.green-theme .jar-detail-header,
+html.green-theme .jar-history-header,
+html.green-theme .financial-tips-header,
+html.green-theme .txn-modal-footer,
+html.green-theme .jar-modal-footer,
+html.green-theme .jar-detail-footer,
+html.green-theme .financial-tips-footer {
+  background: #FFFFFF !important;
+  border-color: #E2F2E9 !important;
+}
+
+html.green-theme .txn-modal-title,
+html.green-theme .jar-modal-title,
+html.green-theme .jar-detail-title,
+html.green-theme .financial-tips-title {
+  color: #0E2E1E !important;
+}
+
+html.green-theme .txn-modal-close-btn,
+html.green-theme .jar-detail-close-btn,
+html.green-theme .jar-history-close-btn,
+html.green-theme .financial-tips-close-btn {
+  color: #6B9582 !important;
+}
+html.green-theme .txn-modal-close-btn:hover,
+html.green-theme .jar-detail-close-btn:hover,
+html.green-theme .jar-history-close-btn:hover,
+html.green-theme .financial-tips-close-btn:hover {
+  background: #E2F2E9 !important;
+  color: #0E2E1E !important;
+}
+
+/* Green Theme: Type Switchers & Tabs */
+html.green-theme .txn-type-toggle,
+html.green-theme .jar-history-tab-group {
+  background: #E2F2E9 !important;
+  border: 1px solid #B2DFC8 !important;
+}
+html.green-theme .txn-type-btn,
+html.green-theme .jar-history-tab-btn {
+  color: #3D6A56 !important;
+}
+html.green-theme .txn-type-btn:hover:not(.active),
+html.green-theme .jar-history-tab-btn:hover:not(.active) {
+  color: #0E2E1E !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+html.green-theme .txn-type-btn--expense.active {
+  background: #FFFFFF !important;
+  color: #DC2626 !important;
+  border-color: #FECACA !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.12) !important;
+}
+html.green-theme .txn-type-btn--income.active {
+  background: #FFFFFF !important;
+  color: #047857 !important;
+  border-color: #A7F3D0 !important;
+  box-shadow: 0 1px 3px rgba(4, 120, 87, 0.12) !important;
+}
+html.green-theme .jar-history-tab-btn.active,
+html.green-theme .financial-tips-tab-btn.active {
+  background: #FFFFFF !important;
+  color: #059669 !important;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Green Theme: Inputs & Custom Styled Selects */
+html.green-theme .txn-input,
+html.green-theme .txn-select,
+html.green-theme .jar-text-input,
+html.green-theme .jar-adornment-input-box,
+html.green-theme .jar-history-select,
+html.green-theme .jar-history-search-input,
+html.green-theme .financial-tips-input {
+  background: #FFFFFF !important;
+  border: 1px solid #B2DFC8 !important;
+  color: #0E2E1E !important;
+}
+html.green-theme .txn-amount-input {
+  background: #FFFFFF !important;
+  border: 1.5px solid #B2DFC8 !important;
+  color: #0E2E1E !important;
+}
+html.green-theme .txn-amount-suffix {
+  background: #E2F2E9 !important;
+  color: #3D6A56 !important;
+}
+html.green-theme .txn-input:focus,
+html.green-theme .txn-select:focus,
+html.green-theme .txn-amount-input:focus,
+html.green-theme .jar-text-input:focus,
+html.green-theme .jar-adornment-input-box:focus-within,
+html.green-theme .jar-history-select:focus,
+html.green-theme .jar-history-search-input:focus,
+html.green-theme .financial-tips-input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.18) !important;
+}
+
+/* Green Theme: Category Cards */
+html.green-theme .txn-category-card {
+  background: #F0FDF4 !important;
+  border: 1.5px solid #B2DFC8 !important;
+}
+html.green-theme .txn-category-card:hover {
+  background: #E2F2E9 !important;
+  border-color: #84C7A3 !important;
+}
+html.green-theme .txn-card-name {
+  color: #3D6A56 !important;
+}
+html.green-theme .txn-card-amount {
+  color: #0E2E1E !important;
+}
+html.green-theme .txn-category-card.active {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 1px #059669, 0 4px 12px rgba(5, 150, 105, 0.20) !important;
+}
+html.green-theme .txn-category-card.active .txn-card-name {
+  color: #059669 !important;
+  font-weight: 700 !important;
+}
+html.green-theme .txn-card-check-badge {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+}
+
+/* Green Theme: Quick Chips */
+html.green-theme .jar-tx-chip-btn {
+  background: #E2F2E9 !important;
+  border: 1px solid #B2DFC8 !important;
+  color: #3D6A56 !important;
+}
+html.green-theme .jar-tx-chip-btn:hover {
+  background: #D1FAE5 !important;
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+html.green-theme .jar-tx-chip-btn--accent {
+  background: rgba(5, 150, 105, 0.14) !important;
+  border-color: #059669 !important;
+  color: #047857 !important;
+}
+html.green-theme .jar-tx-chip-btn--accent:hover {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  color: #FFFFFF !important;
+}
+
+/* Green Theme: Action Buttons */
+html.green-theme .txn-btn-cancel,
+html.green-theme .jar-btn-cancel,
+html.green-theme .jar-detail-btn-edit,
+html.green-theme .jar-detail-btn-withdraw,
+html.green-theme .jar-btn-withdraw {
+  background: #FFFFFF !important;
+  border: 1px solid #B2DFC8 !important;
+  color: #3D6A56 !important;
+}
+html.green-theme .txn-btn-cancel:hover:not(:disabled),
+html.green-theme .jar-btn-cancel:hover:not(:disabled),
+html.green-theme .jar-detail-btn-edit:hover:not(:disabled),
+html.green-theme .jar-detail-btn-withdraw:hover:not(:disabled),
+html.green-theme .jar-btn-withdraw:hover:not(:disabled) {
+  background: #E2F2E9 !important;
+  border-color: #059669 !important;
+  color: #0E2E1E !important;
+}
+
+html.green-theme .txn-btn-submit,
+html.green-theme .jar-btn-submit,
+html.green-theme .jar-detail-btn-deposit,
+html.green-theme .financial-tips-ack-btn,
+html.green-theme .jars-hero-cta-btn,
+html.green-theme .jars-recom-action-btn,
+html.green-theme .btn-add-txn {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32) !important;
+}
+html.green-theme .txn-btn-submit:hover:not(:disabled),
+html.green-theme .jar-btn-submit:hover:not(:disabled),
+html.green-theme .jar-detail-btn-deposit:hover:not(:disabled),
+html.green-theme .financial-tips-ack-btn:hover:not(:disabled),
+html.green-theme .jars-hero-cta-btn:hover:not(:disabled),
+html.green-theme .jars-recom-action-btn:hover:not(:disabled),
+html.green-theme .btn-add-txn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45) !important;
+}
+
+html.green-theme .txn-btn-submit--withdraw {
+  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32) !important;
+}
+html.green-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%) !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
+}
+
+html.green-theme .jar-tx-summary-card,
+html.green-theme .jar-detail-stats-banner,
+html.green-theme .jar-detail-roadmap-box,
+html.green-theme .jar-detail-history-item,
+html.green-theme .jar-history-item,
+html.green-theme .financial-tips-card {
+  background: #F0FDF4 !important;
+  border: 1px solid #B2DFC8 !important;
+}
+
+
+/* ── 4. DARK THEME (Obsidian Cobalt Panel) ── */
+html.dark-theme .txn-modal-card,
+html.dark-theme .jar-modal-card,
+html.dark-theme .jar-detail-modal-dialog,
+html.dark-theme .jar-history-modal-dialog,
+html.dark-theme .financial-tips-dialog {
+  background: #12131C !important;
+  border-color: #26293A !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75) !important;
+}
+
+html.dark-theme .txn-modal-header,
+html.dark-theme .jar-modal-header,
+html.dark-theme .jar-detail-header,
+html.dark-theme .jar-history-header,
+html.dark-theme .financial-tips-header,
+html.dark-theme .txn-modal-footer,
+html.dark-theme .jar-modal-footer,
+html.dark-theme .jar-detail-footer,
+html.dark-theme .financial-tips-footer {
+  background: #12131C !important;
+  border-color: #1A1C29 !important;
+}
+
+html.dark-theme .txn-modal-title,
+html.dark-theme .jar-modal-title,
+html.dark-theme .jar-detail-title,
+html.dark-theme .financial-tips-title {
+  color: #F3F4F6 !important;
+}
+
+html.dark-theme .txn-modal-close-btn,
+html.dark-theme .jar-detail-close-btn,
+html.dark-theme .jar-history-close-btn,
+html.dark-theme .financial-tips-close-btn {
+  color: #8F9CAE !important;
+}
+html.dark-theme .txn-modal-close-btn:hover,
+html.dark-theme .jar-detail-close-btn:hover,
+html.dark-theme .jar-history-close-btn:hover,
+html.dark-theme .financial-tips-close-btn:hover {
+  background: #1A1C29 !important;
+  color: #F3F4F6 !important;
+}
+
+/* Dark Theme: Type Switchers & Tabs */
+html.dark-theme .txn-type-toggle,
+html.dark-theme .jar-history-tab-group {
+  background: #1A1C29 !important;
+  border: 1px solid #26293A !important;
+}
+html.dark-theme .txn-type-btn,
+html.dark-theme .jar-history-tab-btn {
+  color: #8F9CAE !important;
+}
+html.dark-theme .txn-type-btn:hover:not(.active),
+html.dark-theme .jar-history-tab-btn:hover:not(.active) {
+  color: #F3F4F6 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+html.dark-theme .txn-type-btn--expense.active {
+  background: #2D1517 !important;
+  color: #FF4757 !important;
+  border-color: rgba(255, 71, 87, 0.4) !important;
+  box-shadow: 0 1px 3px rgba(255, 71, 87, 0.2) !important;
+}
+html.dark-theme .txn-type-btn--income.active {
+  background: #0F291E !important;
+  color: #10B981 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2) !important;
+}
+html.dark-theme .jar-history-tab-btn.active,
+html.dark-theme .financial-tips-tab-btn.active {
+  background: #26293A !important;
+  color: #60A5FA !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dark Theme: Inputs & Custom Styled Selects */
+html.dark-theme .txn-input,
+html.dark-theme .txn-select,
+html.dark-theme .jar-text-input,
+html.dark-theme .jar-adornment-input-box,
+html.dark-theme .jar-history-select,
+html.dark-theme .jar-history-search-input,
+html.dark-theme .financial-tips-input {
+  background: #1A1C29 !important;
+  border: 1px solid #26293A !important;
+  color: #F3F4F6 !important;
+}
+html.dark-theme .txn-amount-input {
+  background: #1A1C29 !important;
+  border: 1.5px solid #26293A !important;
+  color: #F3F4F6 !important;
+}
+html.dark-theme .txn-amount-suffix {
+  background: #26293A !important;
+  color: #8F9CAE !important;
+}
+html.dark-theme .txn-input:focus,
+html.dark-theme .txn-select:focus,
+html.dark-theme .txn-amount-input:focus,
+html.dark-theme .jar-text-input:focus,
+html.dark-theme .jar-adornment-input-box:focus-within,
+html.dark-theme .jar-history-select:focus,
+html.dark-theme .jar-history-search-input:focus,
+html.dark-theme .financial-tips-input:focus {
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3) !important;
+}
+
+/* Dark Theme: Category Cards */
+html.dark-theme .txn-category-card {
+  background: #1A1C29 !important;
+  border: 1.5px solid #26293A !important;
+}
+html.dark-theme .txn-category-card:hover {
+  background: #222538 !important;
+  border-color: #3D425A !important;
+}
+html.dark-theme .txn-card-name {
+  color: #8F9CAE !important;
+}
+html.dark-theme .txn-card-amount {
+  color: #F3F4F6 !important;
+}
+html.dark-theme .txn-category-card.active {
+  background: rgba(37, 99, 235, 0.16) !important;
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 1px #3B82F6, 0 4px 16px rgba(37, 99, 235, 0.30) !important;
+}
+html.dark-theme .txn-category-card.active .txn-card-name {
+  color: #60A5FA !important;
+  font-weight: 700 !important;
+}
+html.dark-theme .txn-card-check-badge {
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+}
+
+/* Dark Theme: Quick Chips */
+html.dark-theme .jar-tx-chip-btn {
+  background: #1A1C29 !important;
+  border: 1px solid #26293A !important;
+  color: #8F9CAE !important;
+}
+html.dark-theme .jar-tx-chip-btn:hover {
+  background: #26293A !important;
+  border-color: #3B82F6 !important;
+  color: #60A5FA !important;
+}
+html.dark-theme .jar-tx-chip-btn--accent {
+  background: rgba(37, 99, 235, 0.2) !important;
+  border-color: #3B82F6 !important;
+  color: #60A5FA !important;
+}
+html.dark-theme .jar-tx-chip-btn--accent:hover {
+  background: #2563EB !important;
+  border-color: #2563EB !important;
+  color: #FFFFFF !important;
+}
+
+/* Dark Theme: Action Buttons */
+html.dark-theme .txn-btn-cancel,
+html.dark-theme .jar-btn-cancel,
+html.dark-theme .jar-detail-btn-edit,
+html.dark-theme .jar-detail-btn-withdraw,
+html.dark-theme .jar-btn-withdraw {
+  background: #1A1C29 !important;
+  border: 1px solid #26293A !important;
+  color: #8F9CAE !important;
+}
+html.dark-theme .txn-btn-cancel:hover:not(:disabled),
+html.dark-theme .jar-btn-cancel:hover:not(:disabled),
+html.dark-theme .jar-detail-btn-edit:hover:not(:disabled),
+html.dark-theme .jar-detail-btn-withdraw:hover:not(:disabled),
+html.dark-theme .jar-btn-withdraw:hover:not(:disabled) {
+  background: #26293A !important;
+  border-color: #3D425A !important;
+  color: #F3F4F6 !important;
+}
+
+html.dark-theme .txn-btn-submit,
+html.dark-theme .jar-btn-submit,
+html.dark-theme .jar-detail-btn-deposit,
+html.dark-theme .financial-tips-ack-btn,
+html.dark-theme .jars-hero-cta-btn,
+html.dark-theme .jars-recom-action-btn,
+html.dark-theme .btn-add-txn {
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4) !important;
+}
+html.dark-theme .txn-btn-submit:hover:not(:disabled),
+html.dark-theme .jar-btn-submit:hover:not(:disabled),
+html.dark-theme .jar-detail-btn-deposit:hover:not(:disabled),
+html.dark-theme .financial-tips-ack-btn:hover:not(:disabled),
+html.dark-theme .jars-hero-cta-btn:hover:not(:disabled),
+html.dark-theme .jars-recom-action-btn:hover:not(:disabled),
+html.dark-theme .btn-add-txn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55) !important;
+}
+
+html.dark-theme .txn-btn-submit--withdraw {
+  background: linear-gradient(135deg, #DC2626 0%, #FF4757 100%) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4) !important;
+}
+html.dark-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.55) !important;
+}
+
+html.dark-theme .jar-tx-summary-card,
+html.dark-theme .jar-detail-stats-banner,
+html.dark-theme .jar-detail-roadmap-box,
+html.dark-theme .jar-detail-history-item,
+html.dark-theme .jar-history-item,
+html.dark-theme .financial-tips-card {
+  background: #1A1C29 !important;
+  border: 1px solid #26293A !important;
+}
+
+/* ── Custom Wallet Dropdown Theme Overrides ── */
+/* Light Theme */
+html.light-theme .custom-wallet-trigger {
+  background: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+html.light-theme .custom-wallet-trigger:hover,
+html.light-theme .custom-wallet-item:hover {
+  background: #F1F5F9 !important;
+}
+html.light-theme .custom-wallet-menu {
+  background: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16) !important;
+}
+html.light-theme .custom-wallet-item.is-active {
+  background: rgba(79, 70, 229, 0.08) !important;
+}
+html.light-theme .custom-wallet-badge {
+  background: rgba(79, 70, 229, 0.12) !important;
+  color: #4F46E5 !important;
+}
+
+/* Cream Theme */
+html.cream-theme .custom-wallet-trigger {
+  background: #F5EDE0 !important;
+  border-color: #D8CCBE !important;
+}
+html.cream-theme .custom-wallet-trigger:hover,
+html.cream-theme .custom-wallet-item:hover {
+  background: #EDE4D8 !important;
+}
+html.cream-theme .custom-wallet-menu {
+  background: #FDF8F2 !important;
+  border-color: #D8CCBE !important;
+  box-shadow: 0 16px 36px rgba(100, 60, 20, 0.18) !important;
+}
+html.cream-theme .custom-wallet-item.is-active {
+  background: rgba(192, 83, 30, 0.10) !important;
+}
+html.cream-theme .custom-wallet-badge {
+  background: rgba(192, 83, 30, 0.12) !important;
+  color: #C0531E !important;
+}
+
+/* Green Theme */
+html.green-theme .custom-wallet-trigger {
+  background: #FFFFFF !important;
+  border-color: #B2DFC8 !important;
+}
+html.green-theme .custom-wallet-trigger:hover,
+html.green-theme .custom-wallet-item:hover {
+  background: #E2F2E9 !important;
+}
+html.green-theme .custom-wallet-menu {
+  background: #FFFFFF !important;
+  border-color: #B2DFC8 !important;
+  box-shadow: 0 16px 36px rgba(14, 46, 30, 0.18) !important;
+}
+html.green-theme .custom-wallet-item.is-active {
+  background: rgba(5, 150, 105, 0.10) !important;
+}
+html.green-theme .custom-wallet-badge {
+  background: rgba(5, 150, 105, 0.14) !important;
+  color: #047857 !important;
+}
+
+/* Dark Theme */
+html.dark-theme .custom-wallet-trigger {
+  background: #1A1C29 !important;
+  border-color: #26293A !important;
+}
+html.dark-theme .custom-wallet-trigger:hover,
+html.dark-theme .custom-wallet-item:hover {
+  background: #26293A !important;
+}
+html.dark-theme .custom-wallet-menu {
+  background: #1A1C29 !important;
+  border-color: #26293A !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8) !important;
+}
+html.dark-theme .custom-wallet-item.is-active {
+  background: rgba(37, 99, 235, 0.2) !important;
+}
+html.dark-theme .custom-wallet-badge {
+  background: rgba(37, 99, 235, 0.25) !important;
+  color: #60A5FA !important;
+}
+
+

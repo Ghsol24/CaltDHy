@@ -159,22 +159,38 @@ export function JarsView() {
 
     let thisMonthTotal = 0;
     let lastMonthTotal = 0;
+    let hasTransactions = false;
 
     jars.forEach((jar) => {
       const history = Array.isArray(jar.history) ? jar.history : [];
       history.forEach((h) => {
-        if (h.type === 'deposit' || h.type === 'initial') {
-          const d = new Date(h.date || Date.now());
-          if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
-            thisMonthTotal += Number(h.amount) || 0;
-          } else if (d.getFullYear() === lastYear && d.getMonth() === lastMonth) {
-            lastMonthTotal += Number(h.amount) || 0;
+        const amt = Number(h.amount) || 0;
+        const d = new Date(h.date || Date.now());
+        const isDeposit = h.type === 'deposit' || h.type === 'initial';
+        const isWithdraw = h.type === 'withdraw';
+
+        if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
+          if (isDeposit) {
+            thisMonthTotal += amt;
+            hasTransactions = true;
+          } else if (isWithdraw) {
+            thisMonthTotal -= amt;
+            hasTransactions = true;
+          }
+        } else if (d.getFullYear() === lastYear && d.getMonth() === lastMonth) {
+          if (isDeposit) {
+            lastMonthTotal += amt;
+          } else if (isWithdraw) {
+            lastMonthTotal -= amt;
           }
         }
       });
     });
 
-    if (thisMonthTotal === 0 && totalSaved > 0) {
+    thisMonthTotal = Math.max(0, thisMonthTotal);
+    lastMonthTotal = Math.max(0, lastMonthTotal);
+
+    if (!hasTransactions && totalSaved > 0) {
       thisMonthTotal = totalSaved;
     }
 
@@ -212,32 +228,35 @@ export function JarsView() {
     const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
     const currentDay = isCurrentMonth ? Math.min(now.getDate(), daysInMonth) : daysInMonth;
 
-    // Track daily deposit amounts strictly from user's actual jar history
+    // Track daily net savings, deposits, and withdrawals strictly from user's actual jar history
+    const dailyNet = new Array(daysInMonth + 1).fill(0);
     const dailyDeposits = new Array(daysInMonth + 1).fill(0);
-    let highestSingleDeposit = 0;
-    let highestDepositDay = currentDay;
+    const dailyWithdrawals = new Array(daysInMonth + 1).fill(0);
     const activeDaysSet = new Set();
-    let totalMonthDeposits = 0;
+    let totalMonthNet = 0;
 
     jars.forEach((jar) => {
       const history = Array.isArray(jar.history) ? jar.history : [];
-      let jarDepositsThisMonth = 0;
+      let jarNetThisMonth = 0;
 
       history.forEach((h) => {
-        if (h.type === 'deposit' || h.type === 'initial') {
-          const d = new Date(h.date || Date.now());
-          if (d.getFullYear() === year && d.getMonth() === month) {
-            const day = Math.min(daysInMonth, Math.max(1, d.getDate()));
-            const amt = Number(h.amount) || 0;
-            if (amt > 0) {
+        const d = new Date(h.date || Date.now());
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          const day = Math.min(daysInMonth, Math.max(1, d.getDate()));
+          const amt = Number(h.amount) || 0;
+          if (amt > 0) {
+            if (h.type === 'deposit' || h.type === 'initial') {
+              dailyNet[day] += amt;
               dailyDeposits[day] += amt;
-              jarDepositsThisMonth += amt;
-              totalMonthDeposits += amt;
+              jarNetThisMonth += amt;
+              totalMonthNet += amt;
               activeDaysSet.add(day);
-              if (amt > highestSingleDeposit) {
-                highestSingleDeposit = amt;
-                highestDepositDay = day;
-              }
+            } else if (h.type === 'withdraw') {
+              dailyNet[day] -= amt;
+              dailyWithdrawals[day] += amt;
+              jarNetThisMonth -= amt;
+              totalMonthNet -= amt;
+              activeDaysSet.add(day);
             }
           }
         }
@@ -245,42 +264,60 @@ export function JarsView() {
 
       // If jar has current balance created in this month but history was not explicitly logged
       const jarCurrent = Number(jar.current) || 0;
-      if (jarCurrent > jarDepositsThisMonth && jar.createdAt) {
+      if (jarCurrent > jarNetThisMonth && jar.createdAt) {
         const createD = new Date(jar.createdAt);
         if (createD.getFullYear() === year && createD.getMonth() === month) {
           const day = Math.min(daysInMonth, Math.max(1, createD.getDate()));
-          const delta = jarCurrent - jarDepositsThisMonth;
+          const delta = jarCurrent - jarNetThisMonth;
           if (delta > 0) {
+            dailyNet[day] += delta;
             dailyDeposits[day] += delta;
-            totalMonthDeposits += delta;
+            totalMonthNet += delta;
             activeDaysSet.add(day);
-            if (delta > highestSingleDeposit) {
-              highestSingleDeposit = delta;
-              highestDepositDay = day;
-            }
           }
         }
       }
     });
 
     // Fallback: If no explicit history records exist yet, use totalSaved on currentDay
-    if (totalMonthDeposits === 0 && totalSaved > 0) {
+    if (activeDaysSet.size === 0 && totalSaved > 0) {
+      dailyNet[currentDay] = totalSaved;
       dailyDeposits[currentDay] = totalSaved;
-      totalMonthDeposits = totalSaved;
+      totalMonthNet = totalSaved;
       activeDaysSet.add(currentDay);
-      highestSingleDeposit = totalSaved;
-      highestDepositDay = currentDay;
     }
 
     // Compute actual cumulative savings across each day in the month
     const cumulativeByDay = new Array(daysInMonth + 1).fill(0);
     let running = 0;
     for (let d = 1; d <= daysInMonth; d++) {
-      running += dailyDeposits[d];
-      cumulativeByDay[d] = running;
+      running += dailyNet[d];
+      cumulativeByDay[d] = Math.max(0, running);
     }
 
-    const monthSavingsTotal = running;
+    const monthSavingsTotal = Math.max(0, running);
+
+    // Calculate highest day amount based on net daily savings or single highest deposit
+    let highestDayAmount = 0;
+    let highestDepositDay = currentDay;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const netDay = dailyNet[d];
+      if (netDay > highestDayAmount) {
+        highestDayAmount = netDay;
+        highestDepositDay = d;
+      }
+    }
+    if (highestDayAmount === 0) {
+      for (let d = 1; d <= daysInMonth; d++) {
+        if (dailyDeposits[d] > highestDayAmount) {
+          highestDayAmount = dailyDeposits[d];
+          highestDepositDay = d;
+        }
+      }
+    }
+    if (highestDayAmount === 0 && monthSavingsTotal > 0) {
+      highestDayAmount = monthSavingsTotal;
+    }
 
     // Determine the furthest day to plot:
     // For current month, stop at currentDay (today, e.g. 27); for past months, plot entire daysInMonth
@@ -301,6 +338,7 @@ export function JarsView() {
       day: d,
       value: cumulativeByDay[d],
       hasDeposit: dailyDeposits[d] > 0,
+      hasWithdraw: dailyWithdrawals[d] > 0,
       isToday: isCurrentMonth && d === currentDay
     }));
 
@@ -388,7 +426,7 @@ export function JarsView() {
     const dailyAverage = currentDay > 0 ? Math.round(monthSavingsTotal / currentDay) : 0;
     const streakDays = activeDaysSet.size || (monthSavingsTotal > 0 ? 1 : 0);
     const highestDayStr = `${String(highestDepositDay).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}`;
-    const highestDayAmt = highestSingleDeposit > 0 ? highestSingleDeposit : monthSavingsTotal;
+    const highestDayAmt = highestDayAmount > 0 ? highestDayAmount : monthSavingsTotal;
 
     return {
       monthSavingsTotal,

@@ -6,6 +6,7 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { formatCurrency, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
+import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 
 const EMPTY_EXPENSE_CATS = [];
 
@@ -482,11 +483,11 @@ export function TransactionModal() {
                         key={cat.name}
                         role="radio"
                         aria-checked={isSelected}
-                        className={`txn-category-card ${isSelected ? 'active' : ''} ${metric && !metric.hasLimit ? 'is-unset' : ''}`}
+                        className={`txn-category-card ${isSelected ? 'active' : ''} ${isSelected ? (type === 'income' ? 'active--income' : 'active--expense') : ''} ${metric && !metric.hasLimit ? 'is-unset' : ''}`}
                         onClick={() => setCategory(cat.name)}
                       >
                         {isSelected && (
-                          <span className="txn-card-check-badge" aria-hidden="true">
+                          <span className={`txn-card-check-badge ${type === 'income' ? 'txn-card-check-badge--income' : ''}`} aria-hidden="true">
                             ✓
                           </span>
                         )}
@@ -542,23 +543,12 @@ export function TransactionModal() {
               <label htmlFor="txn-wallet-select" className="txn-label">
                 <span>{type === 'expense' ? 'Chi từ ví / tài khoản' : 'Nhận vào ví / tài khoản'}</span>
               </label>
-              <select
-                id="txn-wallet-select"
-                className="txn-select"
+              <CustomWalletDropdown
+                wallets={wallets}
                 value={walletId}
-                onChange={(e) => setWalletId(e.target.value)}
-              >
-                {wallets.length === 0 ? (
-                  <option value="">💵 Tiền mặt</option>
-                ) : (
-                  wallets.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.icon || '💵'} {w.name} {w.isDefault ? '(Mặc định)' : ''} — Số dư:{' '}
-                      {formatCurrency(w.currentBalance ?? w.initialBalance ?? 0)}
-                    </option>
-                  ))
-                )}
-              </select>
+                onChange={setWalletId}
+                placeholder="Chọn ví / tài khoản..."
+              />
             </div>
 
             {/* 5. Date Field */}
@@ -628,7 +618,7 @@ export function TransactionModal() {
             </button>
             <button
               type="submit"
-              className="txn-btn-submit"
+              className={`txn-btn-submit ${type === 'income' ? 'txn-btn-submit--income' : ''}`}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
