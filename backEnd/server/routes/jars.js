@@ -9,6 +9,7 @@ const Wallet = require('../models/Wallet');
 const Category = require('../models/Category');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { isValidVNDAmount } = require('../utils/money');
+const { getVietnamTodayString, nowAsVietnamDateAnchor } = require('../utils/localDate');
 
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
@@ -160,15 +161,21 @@ router.patch('/:id/deposit', async (req, res) => {
                 throw err;
             }
 
-            // Nếu user chọn trừ tiền từ ví, tạo Transaction Other Expense
+            // Nạp vào hũ là CHUYỂN TIỀN nội bộ (ví -> hũ), không phải chi tiêu thật.
+            // Trước đây ghi type: 'expense', category: 'Other Expense' khiến số tiền này
+            // cộng dồn vĩnh viễn vào ngân sách "Other Expense" mà không bao giờ được trừ lại
+            // khi rút hũ ra — gây ra hiện tượng "Other Expense" phình to bất thường dù
+            // người dùng chỉ đang tạm giữ tiền trong hũ. Dùng type: 'transfer' (giống hệt
+            // cơ chế chuyển tiền giữa 2 ví) để khoản này bị loại khỏi calculateMonthlyStats
+            // (không tính vào category/income/expense) nhưng vẫn trừ đúng số dư ví.
             if (syncWallet) {
                 const txPayload = {
                     userId: req.user.id,
-                    type: 'expense',
+                    type: 'transfer',
                     desc: (reason || '').trim() ? `${reason.trim()} (Nạp hũ ${jar.name})` : `Nạp vào hũ ${jar.name}`,
                     amount: amt,
-                    category: 'Other Expense',
-                    date: new Date(),
+                    category: 'Chuyển vào hũ',
+                    date: nowAsVietnamDateAnchor(),
                     walletId: syncWallet._id,
                     jarId: jar._id
                 };
@@ -235,7 +242,7 @@ router.patch('/:id/withdraw', async (req, res) => {
                 type: 'withdraw',
                 amount: amt,
                 reason: (reason || '').trim().slice(0, 200),
-                date: new Date()
+                date: nowAsVietnamDateAnchor()
             };
             const updateQuery = Jar.findOneAndUpdate(
                 { _id: req.params.id, userId: req.user.id, current: { $gte: amt } },
@@ -264,16 +271,20 @@ router.patch('/:id/withdraw', async (req, res) => {
                 throw err;
             }
 
-            // Nếu user chọn cộng tiền vào ví, tạo Transaction Other Income
+            // Rút từ hũ cũng là CHUYỂN TIỀN nội bộ (hũ -> ví), không phải thu nhập thật.
+            // Trước đây ghi type: 'income', category: 'Other Income' khiến "Thu nhập tháng này"
+            // bị thổi phồng bởi chính tiền của người dùng quay vòng lại, chứ không phải tiền
+            // kiếm được mới. Dùng type: 'transfer' với toWalletId để cộng đúng vào ví nhận mà
+            // không tính vào income/expense hay bất kỳ ngân sách danh mục nào.
             if (syncWallet) {
                 const txPayload = {
                     userId: req.user.id,
-                    type: 'income',
+                    type: 'transfer',
                     desc: (reason || '').trim() ? `${reason.trim()} (Rút từ hũ ${jar.name})` : `Rút từ hũ ${jar.name}`,
                     amount: amt,
-                    category: 'Other Income',
-                    date: new Date(),
-                    walletId: syncWallet._id,
+                    category: 'Chuyển từ hũ',
+                    date: nowAsVietnamDateAnchor(),
+                    toWalletId: syncWallet._id,
                     jarId: jar._id
                 };
                 if (session) {
@@ -518,7 +529,7 @@ router.patch('/installments/:id/pay', async (req, res) => {
             const prevDueDate = item.nextDueDate;
             const nextDate = advanceNextDueDate(item.nextDueDate, item.cycle);
 
-            const todayDate = new Date().toISOString().slice(0, 10);
+            const todayDate = getVietnamTodayString();
             const historyEntry = {
                 amount: item.amount,
                 paidDate: todayDate,
@@ -541,7 +552,7 @@ router.patch('/installments/:id/pay', async (req, res) => {
                 desc: `Thanh toán định kỳ: ${item.name}`,
                 amount: item.amount,
                 category: item.category || 'Housing & Bills',
-                date: new Date(),
+                date: nowAsVietnamDateAnchor(),
                 walletId: payWallet ? payWallet._id : null,
                 installmentId: item._id
             };

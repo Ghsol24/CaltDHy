@@ -466,10 +466,10 @@ export function PlanOverviewTab() {
           </div>
         </div>
 
-        {/* Card 2: Ngân sách còn lại */}
+        {/* Card 2: Ngân sách còn lại / Đã vượt ngân sách */}
         <div className="plan-metric-card">
           <div className="metric-card-top-row">
-            <div className="metric-icon-circle metric-icon--emerald" aria-hidden="true">
+            <div className={`metric-icon-circle ${hasAnyBudgetLimit && totalBudgetRemaining !== null && totalBudgetRemaining < 0 ? 'metric-icon--danger' : 'metric-icon--emerald'}`} aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" x2="12" y1="20" y2="10" />
                 <line x1="18" x2="18" y1="20" y2="4" />
@@ -477,11 +477,15 @@ export function PlanOverviewTab() {
               </svg>
             </div>
             <div className="metric-titles">
-              <span className="metric-label">Ngân sách còn lại</span>
+              <span className="metric-label">
+                {hasAnyBudgetLimit && totalBudgetRemaining !== null && totalBudgetRemaining < 0
+                  ? 'Đã vượt ngân sách'
+                  : 'Ngân sách còn lại'}
+              </span>
               <strong className={`metric-value ${!hasAnyBudgetLimit ? 'is-unset' : totalBudgetRemaining < 0 ? 'text-danger' : ''}`}>
                 {hasAnyBudgetLimit
                   ? totalBudgetRemaining < 0
-                    ? `−${formatCurrency(Math.abs(totalBudgetRemaining))}`
+                    ? formatCurrency(Math.abs(totalBudgetRemaining))
                     : formatCurrency(totalBudgetRemaining)
                   : 'Chưa thiết lập'}
               </strong>

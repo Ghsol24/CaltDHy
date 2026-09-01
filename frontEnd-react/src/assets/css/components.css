@@ -3997,6 +3997,32 @@ html.dark-theme .jars-global-progress-fill {
   border-color: var(--color-danger, #FECACA);
 }
 
+/* Nhãn cho giao dịch do Hũ/Khoản định kỳ tự sinh — không cho sửa/xóa trực
+   tiếp ở đây vì sẽ làm lệch số dư giữa Transaction và Jar/Installment. */
+.home-txn-locked-hint {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--muted));
+  background: var(--color-surface-subtle, var(--surface-subtle));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.home-txn-locked-hint svg {
+  color: var(--color-text-secondary, var(--muted));
+  flex-shrink: 0;
+}
+
+.home-txn-row:hover .home-txn-locked-hint {
+  display: inline-flex;
+}
+
 /* ── Right Column: Sidebar Panel ── */
 .home-sidebar-panel {
   display: flex;
@@ -4724,6 +4750,11 @@ html.dark-theme .top-alert-pill-item {
 .metric-icon--orange {
   background: rgba(249, 115, 22, 0.12);
   color: #F97316;
+}
+
+.metric-icon--danger {
+  background: var(--color-danger-50, rgba(239, 68, 68, 0.12));
+  color: var(--color-danger, #EF4444);
 }
 
 .metric-titles {

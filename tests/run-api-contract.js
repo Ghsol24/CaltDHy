@@ -548,8 +548,55 @@ async function testLinkedInstallmentAtomicRollback() {
     assert.equal(ctx.transactions.length, 0, 'Transaction should rollback from transactions array on sync failure');
 }
 
+async function testJarLinkedTransactionGuard() {
+    // PUT /:id và DELETE /:id phải CHẶN nếu giao dịch hiện tại đã gắn jarId/installmentId
+    // (do Hũ/Khoản định kỳ tự sinh ra) — sửa/xóa trực tiếp sẽ làm lệch Jar.current /
+    // Installment.totalPaid so với Transaction thật. Xem docs/financial-transaction-rules.md.
+    const update = routeHandler(spendingRouter, 'put', '/:id');
+    const del = routeHandler(spendingRouter, 'delete', '/:id');
+    const jarId = '507f1f77bcf86cd799439022';
+    const installmentId = '507f1f77bcf86cd799439099';
+    let deleteOneCalled = false;
+
+    // --- Bị chặn: giao dịch gắn jarId ---
+    Transaction.findOne = async () => ({ _id: transactionId, userId, type: 'transfer', jarId, installmentId: null });
+    let res = response();
+    await update({ params: { id: transactionId }, user: { id: userId }, body: { type: 'transfer', amount: '50000', category: 'x', date: '2026-08-22' } }, res);
+    assert.equal(res.statusCode, 400, 'PUT phải trả 400 cho giao dịch gắn jarId');
+    assert(/Hũ/.test(res.body.message), 'Thông báo lỗi phải nhắc tới Hũ');
+
+    deleteOneCalled = false;
+    Transaction.deleteOne = async () => { deleteOneCalled = true; };
+    res = response();
+    await del({ params: { id: transactionId }, user: { id: userId } }, res);
+    assert.equal(res.statusCode, 400, 'DELETE phải trả 400 cho giao dịch gắn jarId');
+    assert.equal(deleteOneCalled, false, 'Không được gọi deleteOne khi bị chặn');
+
+    // --- Bị chặn: giao dịch gắn installmentId ---
+    Transaction.findOne = async () => ({ _id: transactionId, userId, type: 'expense', jarId: null, installmentId });
+    res = response();
+    await update({ params: { id: transactionId }, user: { id: userId }, body: { type: 'expense', amount: '50000', category: 'x', date: '2026-08-22' } }, res);
+    assert.equal(res.statusCode, 400, 'PUT phải trả 400 cho giao dịch gắn installmentId');
+    assert(/Khoản định kỳ/.test(res.body.message), 'Thông báo lỗi phải nhắc tới Khoản định kỳ');
+
+    deleteOneCalled = false;
+    res = response();
+    await del({ params: { id: transactionId }, user: { id: userId } }, res);
+    assert.equal(res.statusCode, 400, 'DELETE phải trả 400 cho giao dịch gắn installmentId');
+    assert.equal(deleteOneCalled, false, 'Không được gọi deleteOne khi bị chặn');
+
+    // --- Vẫn cho phép: giao dịch thường, không gắn jarId/installmentId ---
+    Transaction.findOne = async () => ({ _id: transactionId, userId, type: 'expense', jarId: null, installmentId: null });
+    deleteOneCalled = false;
+    res = response();
+    await del({ params: { id: transactionId }, user: { id: userId } }, res);
+    assert.equal(res.statusCode, 200, 'DELETE phải cho phép với giao dịch thường');
+    assert.equal(deleteOneCalled, true, 'Phải gọi deleteOne với giao dịch thường');
+}
+
 (async () => {
     await testTransactionRoutes();
+    await testJarLinkedTransactionGuard();
     await testJarRoutes();
     await testInstallmentRoutes();
     await testWalletRoutes();

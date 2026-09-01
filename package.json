@@ -7,7 +7,8 @@
     "test": "node tests/run-api-contract.js",
     "test:e2e": "node tests/run-e2e.js",
     "migrate:email": "node backEnd/server/scripts/migrate-email-verified.js",
-    "migrate:dates": "node backEnd/server/scripts/migrate-transaction-dates.js"
+    "migrate:dates": "node backEnd/server/scripts/migrate-transaction-dates.js",
+    "migrate:jar-transfers": "node backEnd/server/scripts/migrate-jar-transfer-types.js"
   },
   "dependencies": {
     "jsdom": "^29.1.1"

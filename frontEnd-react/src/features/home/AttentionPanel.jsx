@@ -2,16 +2,27 @@ import React from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useJarStore } from '../../stores/useJarStore';
-import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
+import { useWalletStore } from '../../stores/useWalletStore';
+import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
 export function AttentionPanel() {
   const { setActiveView, setPlanSubTab, selectedMonth } = useSpendingStore();
   const { transactions, budgets } = useTransactionStore();
   const { jars, installments } = useJarStore();
+  const { wallets } = useWalletStore();
 
   const currentMonthPrefix = selectedMonth || getLocalMonthString();
   const monthlyStats = calculateMonthlyStats(transactions, currentMonthPrefix);
+
+  // Số dư khả dụng thật sự (độc lập với ngân sách) — dùng để "bắc cầu" cho banner
+  // cảnh báo vượt ngân sách bên dưới, tránh cảm giác hai con số mâu thuẫn nhau.
+  const { availableToSpend } = calculateAvailableToSpend({
+    wallets,
+    transactions,
+    jars,
+    currentMonthPrefix
+  });
 
   // 1. Gather all category budget statuses
   const categoryStatusList = [];
@@ -119,7 +130,11 @@ export function AttentionPanel() {
   } else if (dangerCategory) {
     calloutConfig = {
       title: `Cảnh báo: ${dangerCategory.category} vượt ngân sách`,
-      body: `Đã chi ${formatCurrency(dangerCategory.spent)} / ${formatCurrency(dangerCategory.limit)} (vượt +${formatCurrency(dangerCategory.spent - dangerCategory.limit)}). Hãy cân nhắc điều chỉnh các khoản tiếp theo!`,
+      body: `Đã chi ${formatCurrency(dangerCategory.spent)} / ${formatCurrency(dangerCategory.limit)} (vượt +${formatCurrency(dangerCategory.spent - dangerCategory.limit)}) so với hạn mức bạn tự đặt cho danh mục này. ${
+        availableToSpend > 0
+          ? `Bạn vẫn còn ${formatCurrency(availableToSpend)} khả dụng nói chung, nhưng nên điều chỉnh hạn mức hoặc giảm chi ở đây.`
+          : 'Hãy cân nhắc điều chỉnh các khoản tiếp theo!'
+      }`,
       ctaText: 'Xem và điều chỉnh ngân sách',
       ctaAction: handleGoToBudgets,
       cardClass: 'is-danger'

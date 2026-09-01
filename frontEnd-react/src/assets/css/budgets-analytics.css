@@ -330,6 +330,37 @@
   line-height: 1.5;
 }
 
+/* Disclosure: spending in categories with no budget limit set */
+.budget-unbudgeted-note {
+  background: var(--color-warning-bg, #FEF3C7);
+  border: 1px solid var(--color-warning-border, #FDE68A);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.budget-unbudgeted-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-warning, #D9921E);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.budget-unbudgeted-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text, #101B36);
+  margin: 0;
+}
+
+.budget-unbudgeted-text strong {
+  color: var(--color-warning, #D9921E);
+}
+
 /* 4-Columns Category Grid */
 .budget-categories-grid {
   display: grid;
@@ -716,6 +747,58 @@
   font-size: 15px;
   color: var(--color-text-muted, #8A98A9);
   font-weight: 600;
+}
+
+/* Tier 4: allocation vs real available money note (budget setup modal) */
+.budget-allocation-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+.budget-allocation-note.is-ok {
+  background: var(--color-success-bg, var(--color-brand-50, #F1FBF6));
+  border-color: var(--color-success-border, var(--color-border-strong, #C9DED3));
+}
+
+.budget-allocation-note.is-over {
+  background: var(--color-danger-bg, var(--color-danger-50, #FFF0EF));
+  border-color: var(--color-danger-border, var(--color-danger, #E34B45));
+}
+
+.budget-allocation-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.budget-allocation-note.is-ok .budget-allocation-icon {
+  color: var(--color-success, var(--color-brand-700, #008B57));
+}
+
+.budget-allocation-note.is-over .budget-allocation-icon {
+  color: var(--color-danger, #E34B45);
+}
+
+.budget-allocation-text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text, #101B36);
+  margin: 0;
+}
+
+.budget-allocation-note.is-ok .budget-allocation-text strong {
+  color: var(--color-success, var(--color-brand-700, #008B57));
+}
+
+.budget-allocation-note.is-over .budget-allocation-text strong {
+  color: var(--color-danger, #E34B45);
 }
 
 /* Scrollable Category List */

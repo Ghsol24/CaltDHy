@@ -2,14 +2,19 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useToastStore } from '../../stores/useToastStore';
+import { useWalletStore } from '../../stores/useWalletStore';
+import { useJarStore } from '../../stores/useJarStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { calculateAvailableToSpend } from '../../utils/financeMath';
 import { formatCurrency, formatDate, getLocalMonthString } from '../../utils/formatters';
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const { budgets, expenseCategories, transactions, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
   const { selectedMonth } = useSpendingStore();
   const { addToast } = useToastStore();
+  const { wallets } = useWalletStore();
+  const { jars } = useJarStore();
 
   // Local draft state
   const [categoriesDraft, setCategoriesDraft] = useState([]);
@@ -169,6 +174,15 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     });
     return { totalLimitDraft: sum, limitedCount: count };
   }, [categoriesDraft]);
+
+  // Tier 4: so tổng hạn mức nháp với "Tiền có thể chi còn lại" thực tế (availableToSpend),
+  // để người dùng thấy ngay lúc THIẾT LẬP nếu hạn mức đang vượt quá số tiền họ thực sự có —
+  // thay vì chỉ phát hiện ra sau khi đã tiêu vượt (như bug đã báo cáo ở trang Ngân sách/Trang chủ).
+  const { availableToSpend } = useMemo(
+    () => calculateAvailableToSpend({ wallets, transactions, jars, currentMonthPrefix: activeMonthStr }),
+    [wallets, transactions, jars, activeMonthStr]
+  );
+  const unallocated = availableToSpend - totalLimitDraft;
 
   // Toggle row expand / state
   const handleToggleRow = (catName) => {
@@ -421,6 +435,30 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                   {limitedCount === 0 ? 'Chưa thiết lập' : formatCurrency(totalLimitDraft)}
                 </strong>
               </div>
+            </div>
+
+            {/* Tier 4: đối chiếu hạn mức nháp với tiền khả dụng thực tế (chỉ gợi ý, không chặn lưu) */}
+            <div className={`budget-allocation-note ${unallocated < 0 ? 'is-over' : 'is-ok'}`} role="status">
+              <span className="budget-allocation-icon" aria-hidden="true">
+                {unallocated < 0 ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </span>
+              <p className="budget-allocation-text">
+                {unallocated >= 0 ? (
+                  <>Còn <strong>{formatCurrency(unallocated)}</strong> khả dụng chưa gán vào danh mục nào (trên tổng {formatCurrency(availableToSpend)} bạn có thể chi).</>
+                ) : (
+                  <>Tổng hạn mức đang <strong>vượt {formatCurrency(Math.abs(unallocated))}</strong> so với số tiền khả dụng thực tế ({formatCurrency(availableToSpend)}) — hạn mức này sẽ khó khả thi.</>
+                )}
+              </p>
             </div>
 
             {/* 2. Scrollable Category List */}

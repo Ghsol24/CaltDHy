@@ -94,6 +94,15 @@ export function BudgetsTab() {
     return categoryBudgets.filter((item) => item.hasLimit || item.spent > 0);
   }, [categoryBudgets]);
 
+  // Danh mục CHƯA đặt hạn mức nhưng vẫn phát sinh chi tiêu trong tháng.
+  // Khoản này không được cộng vào totalBudgetLimit/totalBudgetSpent ở trên,
+  // nên "Đã chi trong tháng" / "Đã vượt ngân sách" phía trên KHÔNG phải là tổng
+  // chi tiêu thật của cả tháng — cần công khai phần chênh lệch này cho người dùng thấy.
+  const unbudgetedCategories = useMemo(() => {
+    return categoryBudgets.filter((item) => !item.hasLimit && item.spent > 0);
+  }, [categoryBudgets]);
+  const unbudgetedTotal = unbudgetedCategories.reduce((sum, item) => sum + item.spent, 0);
+
   const handleOpenEdit = (category = null) => {
     setSelectedCategoryToEdit(category);
     setIsEditModalOpen(true);
@@ -203,9 +212,14 @@ export function BudgetsTab() {
 
           <div className="budget-ov-divider" aria-hidden="true" />
 
-          {/* Cell 2: Đã chi trong tháng */}
+          {/* Cell 2: Đã chi (chỉ tính danh mục có hạn mức) */}
           <div className="budget-ov-item">
-            <span className="budget-ov-label">Đã chi trong tháng</span>
+            <span
+              className="budget-ov-label"
+              title="Chỉ cộng chi tiêu của các danh mục đã đặt hạn mức bên dưới — không phải tổng chi tiêu cả tháng"
+            >
+              Đã chi (có hạn mức)
+            </span>
             <strong className="budget-ov-value text-danger">
               {formatCurrency(totalBudgetSpent)}
             </strong>
@@ -272,6 +286,27 @@ export function BudgetsTab() {
           </div>
         )}
       </div>
+
+      {/* ── Disclosure: chi tiêu ở các danh mục CHƯA đặt hạn mức ── */}
+      {unbudgetedTotal > 0 && (
+        <div className="budget-unbudgeted-note" role="status">
+          <span className="budget-unbudgeted-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </span>
+          <p className="budget-unbudgeted-text">
+            Số liệu ở trên chỉ tính {categoryBudgets.filter((c) => c.hasLimit).length} danh mục đã đặt hạn mức.
+            Ngoài ra bạn đã chi thêm{' '}
+            <strong>{formatCurrency(unbudgetedTotal)}</strong> ở{' '}
+            {unbudgetedCategories.length} danh mục chưa đặt hạn mức
+            {' '}({unbudgetedCategories.map((c) => c.category).join(', ')})
+            {' '}— khoản này chưa được tính vào &quot;Đã vượt ngân sách&quot; ở trên.
+          </p>
+        </div>
+      )}
 
       {/* ── Category Breakdown Grid Section ── */}
       <div className="budget-categories-list-section">

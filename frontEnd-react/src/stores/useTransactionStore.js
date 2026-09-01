@@ -376,16 +376,28 @@ export const useTransactionStore = create((set, get) => ({
       }
       return { success: true };
     } catch (err) {
-      const updated = get().transactions.filter((t) => t.id !== id);
-      saveStoredTxns(updated);
-      set({ transactions: updated, isLoading: false });
-      get().updateSpendingMetrics(updated);
+      set({ isLoading: false });
 
-      const walletStore = useWalletStore.getState();
-      if (walletStore?.syncWalletBalances) {
-        walletStore.syncWalletBalances();
+      // Chỉ coi là "xóa cục bộ, đồng bộ sau" khi THỰC SỰ mất kết nối (status 503 do
+      // apiFetch gán khi fetch() ném lỗi mạng). Nếu server đã trả lời nhưng từ chối
+      // (400/403/404/500 — ví dụ giao dịch thuộc Hũ/Khoản định kỳ bị chặn ở backend),
+      // TUYỆT ĐỐI không được xóa khỏi state cục bộ rồi báo success — làm vậy sẽ khiến
+      // UI hiển thị "đã xóa" trong khi giao dịch vẫn còn nguyên trong database, gây
+      // lệch dữ liệu ẩn giữa client và server.
+      if (err && err.status === 503) {
+        const updated = get().transactions.filter((t) => t.id !== id);
+        saveStoredTxns(updated);
+        set({ transactions: updated });
+        get().updateSpendingMetrics(updated);
+
+        const walletStore = useWalletStore.getState();
+        if (walletStore?.syncWalletBalances) {
+          walletStore.syncWalletBalances();
+        }
+        return { success: true, offline: true, error: err.message };
       }
-      return { success: true, error: err.message };
+
+      throw err;
     }
   },
 

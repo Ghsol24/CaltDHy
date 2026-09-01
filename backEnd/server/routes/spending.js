@@ -376,6 +376,24 @@ router.put('/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch hoặc bạn không có quyền chỉnh sửa.' });
         }
 
+        // Giao dịch được sinh tự động bởi Hũ/Khoản định kỳ (jarId/installmentId) có
+        // side-effect riêng trên Jar.current / Installment.totalPaid+history+nextDueDate
+        // mà route chung này không biết để đồng bộ lại. Sửa thẳng ở đây sẽ làm lệch số
+        // tiền thật giữa Transaction và Jar/Installment. Chặn tại đây, hướng user quay về
+        // đúng trang quản lý (rút hũ để hoàn tác nạp/rút, sửa trực tiếp ở trang Khoản định kỳ).
+        if (currentTx.jarId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Giao dịch này thuộc về một Hũ tiết kiệm. Vào trang Hũ và dùng nút "Rút" để hoàn tác thay vì sửa trực tiếp ở đây.'
+            });
+        }
+        if (currentTx.installmentId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Giao dịch này thuộc về một Khoản định kỳ. Vào trang Khoản định kỳ để chỉnh sửa thay vì sửa trực tiếp ở đây.'
+            });
+        }
+
         const { type, desc, amount, category, date, walletId, toWalletId, fee, jarId, installmentId } = req.body;
         const validationError = validateTransactionPayload({ type, amount, category, date });
         if (validationError) return res.status(400).json({ success: false, message: validationError });
@@ -446,14 +464,31 @@ router.delete('/:id', async (req, res) => {
         if (!isValidObjectId(id)) {
             return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
         }
-        const deleted = await Transaction.findOneAndDelete({ _id: id, userId: req.user.id });
 
-        if (!deleted) {
+        const existing = await Transaction.findOne({ _id: id, userId: req.user.id });
+        if (!existing) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy giao dịch hoặc bạn không có quyền xóa.'
             });
         }
+
+        // Xem chú thích ở PUT /:id — cùng lý do, chặn xóa trực tiếp giao dịch
+        // do Hũ/Khoản định kỳ sinh ra để tránh lệch số dư "ma".
+        if (existing.jarId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Giao dịch này thuộc về một Hũ tiết kiệm. Vào trang Hũ và dùng nút "Rút" để hoàn tác thay vì xóa trực tiếp ở đây.'
+            });
+        }
+        if (existing.installmentId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Giao dịch này thuộc về một Khoản định kỳ. Vào trang Khoản định kỳ để chỉnh sửa thay vì xóa trực tiếp ở đây.'
+            });
+        }
+
+        await Transaction.deleteOne({ _id: id, userId: req.user.id });
 
         res.json({
             success: true,

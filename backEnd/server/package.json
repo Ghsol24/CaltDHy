@@ -10,6 +10,7 @@
     "migrate:dates": "node scripts/migrate-transaction-dates.js",
     "migrate:categories": "node scripts/migrate-budget-categories.js",
     "migrate:categories-collection": "node scripts/migrate-categories-to-collection.js",
+    "migrate:jar-transfers": "node scripts/migrate-jar-transfer-types.js",
     "test:integration": "node --test tests/integration.test.js"
   },
   "engines": {
