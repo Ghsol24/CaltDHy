@@ -8,10 +8,10 @@ import { RecentTransactions } from './RecentTransactions';
 import { AttentionPanel } from './AttentionPanel';
 
 export function HomeView() {
-  const { openAddTxnModal, selectedMonth } = useSpendingStore();
+  const { openAddTxnModal } = useSpendingStore();
   const { transactions, budgets } = useTransactionStore();
 
-  const currentMonthStr = selectedMonth || getLocalMonthString();
+  const currentMonthStr = getLocalMonthString();
   const [, mStr] = currentMonthStr.split('-');
   const monthNum = parseInt(mStr, 10) || (new Date().getMonth() + 1);
 

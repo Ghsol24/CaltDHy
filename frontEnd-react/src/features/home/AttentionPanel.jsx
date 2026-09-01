@@ -7,12 +7,12 @@ import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } fro
 import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
 export function AttentionPanel() {
-  const { setActiveView, setPlanSubTab, selectedMonth } = useSpendingStore();
+  const { setActiveView, setPlanSubTab } = useSpendingStore();
   const { transactions, budgets } = useTransactionStore();
   const { jars, installments } = useJarStore();
   const { wallets } = useWalletStore();
 
-  const currentMonthPrefix = selectedMonth || getLocalMonthString();
+  const currentMonthPrefix = getLocalMonthString();
   const monthlyStats = calculateMonthlyStats(transactions, currentMonthPrefix);
 
   // Số dư khả dụng thật sự (độc lập với ngân sách) — dùng để "bắc cầu" cho banner

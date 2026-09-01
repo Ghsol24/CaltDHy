@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
@@ -7,13 +6,12 @@ import { calculateAvailableToSpend } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
 export function AvailableToSpendCard() {
-  const { selectedMonth } = useSpendingStore();
   const { transactions } = useTransactionStore();
   const { wallets } = useWalletStore();
   const { jars } = useJarStore();
 
-  // Month prefix: e.g. "2026-08"
-  const currentMonthPrefix = selectedMonth || getLocalMonthString();
+  // Month prefix: e.g. "2026-09"
+  const currentMonthPrefix = getLocalMonthString();
 
   // Calculate Safe-To-Spend and other key metrics
   const {

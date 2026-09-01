@@ -18,7 +18,7 @@ const WALLET_TYPE_LABELS = {
 };
 
 export function PlanOverviewTab() {
-  const { setPlanSubTab, setActiveView, selectedMonth } = useSpendingStore();
+  const { setPlanSubTab, setActiveView } = useSpendingStore();
   const { wallets, isLoading: isWalletsLoading } = useWalletStore();
   const { transactions, budgets, expenseCategories, isLoading: isTxnsLoading } = useTransactionStore();
   const { installments, isLoading: isJarsLoading } = useJarStore();
@@ -56,7 +56,7 @@ export function PlanOverviewTab() {
   }, [isDropdownOpen]);
 
   // Current month calculation
-  const currentMonthStr = selectedMonth || getLocalMonthString();
+  const currentMonthStr = getLocalMonthString();
   const [, currentMonthNum] = currentMonthStr.split('-').map(Number);
   const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
 
