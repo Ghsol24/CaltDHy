@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { jarsService } from '../services/jarsService';
+import { useTransactionStore } from './useTransactionStore';
+import { useWalletStore } from './useWalletStore';
 
 const JARS_KEY = 'caltdhy_jars';
 const INSTALLMENTS_KEY = 'caltdhy_installments';
@@ -73,6 +75,7 @@ const normalizeInstallment = (i) => ({
   dueDate: i.dueDate || i.nextDueDate || null,
   totalMonths: Number(i.totalMonths) || 0,
   paidMonths: Number(i.paidMonths) || 0,
+  walletId: i.walletId || null,
   isActive: i.active !== undefined ? i.active : (i.isActive !== undefined ? i.isActive : true)
 });
 
@@ -167,6 +170,9 @@ export const useJarStore = create((set, get) => ({
       const updated = get().jars.map((jar) => (jar.id === id ? updatedJar : jar));
       saveStoredJars(updated);
       set({ jars: updated });
+      // Tự động đồng bộ giao dịch và số dư ví sau khi nạp/rút hũ
+      useTransactionStore.getState()?.fetchTransactions?.();
+      useWalletStore.getState()?.fetchWallets?.();
       return { success: true, data: updatedJar };
     } catch (err) {
       // Chỉ áp dụng fallback lưu-cục-bộ khi THỰC SỰ mất kết nối (api.js gán status 503
@@ -234,6 +240,24 @@ export const useJarStore = create((set, get) => ({
     }
   },
 
+  updateInstallment: async (id, data) => {
+    try {
+      const response = await jarsService.updateInstallment(id, data);
+      const updatedInst = normalizeInstallment(response.data);
+      const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
+      saveStoredInstallments(updated);
+      set({ installments: updated });
+      return { success: true, data: updatedInst };
+    } catch (_err) {
+      const updated = get().installments.map((item) =>
+        item.id === id ? normalizeInstallment({ ...item, ...data }) : item
+      );
+      saveStoredInstallments(updated);
+      set({ installments: updated });
+      return { success: true, data: { id, ...data }, offline: true };
+    }
+  },
+
   payInstallment: async (id) => {
     try {
       const response = await jarsService.payInstallment(id);
@@ -241,6 +265,9 @@ export const useJarStore = create((set, get) => ({
       const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
       saveStoredInstallments(updated);
       set({ installments: updated });
+      // Tự động đồng bộ giao dịch chi tiêu mới và số dư ví sau khi thanh toán định kỳ
+      useTransactionStore.getState()?.fetchTransactions?.();
+      useWalletStore.getState()?.fetchWallets?.();
     } catch (err) {
       const updated = get().installments.map((item) => {
         if (item.id !== id) return item;

@@ -57,6 +57,11 @@ const installmentSchema = new mongoose.Schema(
             type: String, // ISO date string: 'YYYY-MM-DD'
             required: [true, 'Ngày đến hạn tiếp theo không được để trống.']
         },
+        walletId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Wallet',
+            default: null
+        },
         active: {
             type: Boolean,
             default: true
@@ -77,6 +82,7 @@ const installmentSchema = new mongoose.Schema(
             transform: (doc, ret) => {
                 ret.id = ret._id.toString();
                 ret.userId = ret.userId.toString();
+                if (ret.walletId) ret.walletId = ret.walletId.toString();
                 if (Array.isArray(ret.history)) {
                     ret.history = ret.history.map(h => ({
                         id: h._id ? h._id.toString() : undefined,

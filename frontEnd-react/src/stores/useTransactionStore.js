@@ -206,10 +206,10 @@ export const useTransactionStore = create((set, get) => ({
     }
   },
 
-  fetchBudgets: async () => {
+  fetchBudgets: async (month = null) => {
     try {
       const [budgetRes, catRes] = await Promise.all([
-        spendingService.getBudgets(),
+        spendingService.getBudgets(month),
         spendingService.getCategories().catch(() => null)
       ]);
 
@@ -252,10 +252,10 @@ export const useTransactionStore = create((set, get) => ({
     return { success: false };
   },
 
-  updateBudgets: async (budgetsObj) => {
+  updateBudgets: async (budgetsObj, month = null) => {
     set({ isLoading: true });
     try {
-      const res = await spendingService.updateBudgets(budgetsObj);
+      const res = await spendingService.updateBudgets(budgetsObj, month);
       if (res.success) {
         set({ budgets: budgetsObj, isLoading: false });
         return { success: true, data: budgetsObj };
@@ -268,13 +268,13 @@ export const useTransactionStore = create((set, get) => ({
     }
   },
 
-  updateBudgetsAndCategories: async (budgetsObj, expenseCats) => {
+  updateBudgetsAndCategories: async (budgetsObj, expenseCats, month = null) => {
     set({ isLoading: true });
     if (expenseCats) {
       saveStoredExpenseCategories(expenseCats);
     }
     try {
-      const res = await spendingService.updateBudgets(budgetsObj);
+      const res = await spendingService.updateBudgets(budgetsObj, month);
       if (expenseCats && Array.isArray(expenseCats)) {
         await spendingService.updateCategories(expenseCats.map((c) => c.name)).catch(() => {});
       }

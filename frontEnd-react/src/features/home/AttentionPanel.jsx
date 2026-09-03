@@ -94,7 +94,7 @@ export function AttentionPanel() {
   };
 
   // Dynamic context-aware Callout Card configuration
-  const netCashFlow = monthlyStats.totalIncome - monthlyStats.totalExpense;
+  const netCashFlow = monthlyStats.income - monthlyStats.expense;
   let calloutConfig = {
     title: 'Kế hoạch chi tiêu đang rất ổn',
     body: 'Bạn đang chi tiêu hoàn toàn trong tầm kiểm soát an toàn của tháng.',
@@ -119,10 +119,10 @@ export function AttentionPanel() {
       ctaAction: handleGoToBudgets,
       cardClass: 'is-info'
     };
-  } else if (!hasBudgets && monthlyStats.totalExpense > 0) {
+  } else if (!hasBudgets && monthlyStats.expense > 0) {
     calloutConfig = {
       title: 'Nên đặt hạn mức chi tiêu',
-      body: `Bạn đã chi tiêu ${formatCurrency(monthlyStats.totalExpense)} trong tháng này. Đặt ngân sách giúp bạn chủ động kiểm soát chi tiêu tốt hơn.`,
+      body: `Bạn đã chi tiêu ${formatCurrency(monthlyStats.expense)} trong tháng này. Đặt ngân sách giúp bạn chủ động kiểm soát chi tiêu tốt hơn.`,
       ctaText: 'Tạo ngân sách ngay',
       ctaAction: handleGoToBudgets,
       cardClass: 'is-warning'
@@ -147,7 +147,7 @@ export function AttentionPanel() {
       ctaAction: handleGoToBudgets,
       cardClass: 'is-warning'
     };
-  } else if (netCashFlow > 0 && monthlyStats.totalIncome > monthlyStats.totalExpense * 1.5 && jarsCount > 0) {
+  } else if (netCashFlow > 0 && monthlyStats.income > monthlyStats.expense * 1.5 && jarsCount > 0) {
     calloutConfig = {
       title: 'Dòng tiền tháng này rất dồi dào',
       body: `Thặng dư hiện tại đạt +${formatCurrency(netCashFlow)}. Hãy trích một phần vào các Hũ tiết kiệm để sớm đạt mục tiêu!`,
@@ -155,7 +155,7 @@ export function AttentionPanel() {
       ctaAction: handleGoToJars,
       cardClass: 'is-success'
     };
-  } else if (hasBudgets && monthlyStats.totalExpense > 0) {
+  } else if (hasBudgets && monthlyStats.expense > 0) {
     const usedPct = totalLimit > 0 ? Math.round((totalBudgetSpent / totalLimit) * 100) : 0;
     calloutConfig = {
       title: 'Kế hoạch chi tiêu rất tối ưu',

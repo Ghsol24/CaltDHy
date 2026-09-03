@@ -324,10 +324,10 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
         }
 
-        // Tự động dọn sạch các giao dịch liên kết với hũ này để tránh giao dịch mồ côi
-        await Transaction.deleteMany({ jarId: req.params.id, userId: req.user.id });
+        // Gỡ liên kết jarId khỏi các giao dịch để tránh mồ côi mà vẫn bảo toàn lịch sử dòng tiền thật
+        await Transaction.updateMany({ jarId: req.params.id, userId: req.user.id }, { $unset: { jarId: 1 } });
 
-        res.json({ success: true, message: 'Đã xóa hũ và dọn dẹp các giao dịch liên quan!' });
+        res.json({ success: true, message: 'Đã xóa hũ và bảo toàn lịch sử giao dịch liên quan!' });
     } catch (error) {
         console.error('DELETE /api/jars/:id error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi xóa hũ.' });
@@ -352,7 +352,7 @@ router.get('/installments', async (req, res) => {
 // POST /api/jars/installments — Tạo khoản định kỳ mới (Điểm 7: bắt buộc category)
 router.post('/installments', async (req, res) => {
     try {
-        const { name, icon, amount, cycle, nextDueDate, category } = req.body;
+        const { name, icon, amount, cycle, nextDueDate, category, walletId } = req.body;
 
         if (!name || !amount || !cycle || !nextDueDate) {
             return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc.' });
@@ -370,7 +370,7 @@ router.post('/installments', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ (YYYY-MM-DD).' });
         }
 
-        const item = await Installment.create({
+        const itemPayload = {
             userId: req.user.id,
             name: name.trim(),
             category: category.trim(),
@@ -380,7 +380,12 @@ router.post('/installments', async (req, res) => {
             nextDueDate,
             active: true,
             totalPaid: 0
-        });
+        };
+        if (isValidObjectId(walletId)) {
+            itemPayload.walletId = walletId;
+        }
+
+        const item = await Installment.create(itemPayload);
 
         // Tự động đảm bảo category có trong collection Category của user (best-effort, không chặn response)
         await Category.ensureCategorySafe(req.user.id, category);
@@ -404,7 +409,7 @@ router.put('/installments/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
 
-        const { name, icon, amount, cycle, nextDueDate, category } = req.body;
+        const { name, icon, amount, cycle, nextDueDate, category, walletId } = req.body;
         if (name !== undefined) {
             if (!name.trim()) return res.status(400).json({ success: false, message: 'Tên không được để trống.' });
             item.name = name.trim();
@@ -430,6 +435,9 @@ router.put('/installments/:id', async (req, res) => {
             if (!category.trim()) return res.status(400).json({ success: false, message: 'Danh mục không được để trống.' });
             item.category = category.trim();
             await Category.ensureCategorySafe(req.user.id, category);
+        }
+        if (walletId !== undefined) {
+            item.walletId = isValidObjectId(walletId) ? walletId : null;
         }
 
         await item.save();
@@ -512,8 +520,14 @@ router.patch('/installments/:id/pay', async (req, res) => {
                     err.status = 400;
                     throw err;
                 }
-            } else {
-                // Không truyền walletId -> fallback về ví mặc định hoặc ví bất kỳ
+            } else if (item.walletId) {
+                const queryItemW = Wallet.findOne({ _id: item.walletId, userId: req.user.id, archived: false });
+                if (session) queryItemW.session(session);
+                payWallet = await queryItemW;
+            }
+
+            if (!payWallet) {
+                // Không tìm thấy ví chỉ định -> fallback về ví mặc định hoặc ví bất kỳ
                 const queryDef = Wallet.findOne({ userId: req.user.id, isDefault: true, archived: false });
                 if (session) queryDef.session(session);
                 payWallet = await queryDef;
@@ -608,10 +622,10 @@ router.delete('/installments/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
 
-        // Tự động dọn sạch các giao dịch liên kết với khoản định kỳ này
-        await Transaction.deleteMany({ installmentId: req.params.id, userId: req.user.id });
+        // Gỡ liên kết installmentId khỏi các giao dịch chi tiêu để bảo toàn lịch sử chi tiêu thật của người dùng
+        await Transaction.updateMany({ installmentId: req.params.id, userId: req.user.id }, { $unset: { installmentId: 1 } });
 
-        res.json({ success: true, message: 'Đã xóa khoản định kỳ và dọn dẹp các giao dịch liên quan!' });
+        res.json({ success: true, message: 'Đã xóa khoản định kỳ và bảo toàn lịch sử chi tiêu liên quan!' });
     } catch (error) {
         console.error('DELETE /api/jars/installments/:id error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi xóa khoản định kỳ.' });

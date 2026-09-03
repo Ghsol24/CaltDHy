@@ -169,6 +169,22 @@ export function RecurringTab() {
     let remainingAmount = 0;
     let remainingCount = 0;
 
+    const now = new Date();
+    const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // 1. Tính các khoản đã thanh toán trong tháng hiện tại từ lịch sử giao dịch
+    installments.forEach((item) => {
+      if (Array.isArray(item.history)) {
+        item.history.forEach((h) => {
+          if (h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthPrefix)) {
+            paidAmount += Number(h.amount) || 0;
+            paidCount++;
+          }
+        });
+      }
+    });
+
+    // 2. Phân loại các khoản sắp đến hạn và còn lại
     activeItems.forEach((item) => {
       const due = getDueStatus(item.nextDueDate);
       const amt = Number(item.amount) || 0;
@@ -192,7 +208,7 @@ export function RecurringTab() {
       remainingAmount,
       remainingCount
     };
-  }, [activeItems]);
+  }, [installments, activeItems]);
 
   // Actions
   const handleOpenCreate = () => {
@@ -312,6 +328,15 @@ export function RecurringTab() {
             <span className="banner-stat-label">Khoản đang theo dõi</span>
             <strong className="banner-stat-val">
               {activeItems.length} / {installments.length} khoản
+            </strong>
+          </div>
+
+          <div className="banner-stat-divider" aria-hidden="true" />
+
+          <div className="banner-stat-block">
+            <span className="banner-stat-label">Sắp đến hạn (7 ngày)</span>
+            <strong className="banner-stat-val" style={{ color: '#EF4444' }}>
+              {counts.soon} khoản
             </strong>
           </div>
         </div>

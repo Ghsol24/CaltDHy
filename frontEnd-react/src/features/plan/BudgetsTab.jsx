@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { BudgetEditModal } from './BudgetEditModal';
@@ -8,13 +8,20 @@ import { getCategoryIcon } from '../../utils/categories';
 
 export function BudgetsTab() {
   const { selectedMonth, setSelectedMonth } = useSpendingStore();
-  const { transactions, budgets, expenseCategories } = useTransactionStore();
+  const { transactions, budgets, expenseCategories, fetchBudgets } = useTransactionStore();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
 
   // Month navigation
   const currentMonthStr = selectedMonth || getLocalMonthString();
+  const localCurrentMonth = getLocalMonthString();
+  const isPastMonth = currentMonthStr < localCurrentMonth;
+
+  // Tự động tải hạn mức chuẩn của tháng được chọn
+  useEffect(() => {
+    fetchBudgets(currentMonthStr);
+  }, [currentMonthStr, fetchBudgets]);
 
   const handlePrevMonth = () => {
     const [y, m] = currentMonthStr.split('-').map(Number);
@@ -104,6 +111,7 @@ export function BudgetsTab() {
   const unbudgetedTotal = unbudgetedCategories.reduce((sum, item) => sum + item.spent, 0);
 
   const handleOpenEdit = (category = null) => {
+    if (isPastMonth) return;
     setSelectedCategoryToEdit(category);
     setIsEditModalOpen(true);
   };
@@ -123,28 +131,67 @@ export function BudgetsTab() {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="btn-setup-budget-primary"
-          onClick={() => handleOpenEdit(null)}
-          aria-label="Thiết lập hạn mức ngân sách"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        {isPastMonth ? (
+          <div
+            className="budget-closed-indicator"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              backgroundColor: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(8px)',
+              color: 'var(--muted)',
+              fontSize: '13px',
+              fontWeight: 500,
+              userSelect: 'none'
+            }}
+            title="Kỳ ngân sách của tháng này đã kết thúc. Chỉ hỗ trợ xem lại lịch sử."
           >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>Thiết lập hạn mức</span>
-        </button>
+            {/* Transparent elegant stroke-only lock SVG */}
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ opacity: 0.5 }}
+              aria-hidden="true"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>Đã đóng kỳ</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn-setup-budget-primary"
+            onClick={() => handleOpenEdit(null)}
+            aria-label="Thiết lập hạn mức ngân sách"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>Thiết lập hạn mức</span>
+          </button>
+        )}
       </div>
 
       {/* ── Month Selector Bar ── */}
@@ -314,29 +361,31 @@ export function BudgetsTab() {
           <h3 className="budget-section-heading">
             Chi tiết ngân sách từng danh mục ({monthDisplayLabel})
           </h3>
-          <button
-            type="button"
-            className="btn-edit-all-budgets"
-            onClick={() => handleOpenEdit(null)}
-            aria-label="Chỉnh sửa toàn bộ hạn mức ngân sách"
-            title="Chỉnh sửa toàn bộ hạn mức"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+          {!isPastMonth && (
+            <button
+              type="button"
+              className="btn-edit-all-budgets"
+              onClick={() => handleOpenEdit(null)}
+              aria-label="Chỉnh sửa toàn bộ hạn mức ngân sách"
+              title="Chỉnh sửa toàn bộ hạn mức"
             >
-              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-              <path d="m15 5 4 4" />
-            </svg>
-            <span>Chỉnh sửa toàn bộ</span>
-          </button>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                <path d="m15 5 4 4" />
+              </svg>
+              <span>Chỉnh sửa toàn bộ</span>
+            </button>
+          )}
         </div>
 
         {/* First-use informational alert (When zero visible categories exist in the active month) */}
@@ -385,16 +434,18 @@ export function BudgetsTab() {
                   isDanger ? 'is-danger' : isWarning ? 'is-warning' : hasLimit ? 'is-limited' : 'is-unset'
                 }`}
                 role="button"
-                tabIndex={0}
-                onClick={() => handleOpenEdit(item.category)}
+                tabIndex={isPastMonth ? -1 : 0}
+                style={{ cursor: isPastMonth ? 'default' : 'pointer' }}
+                onClick={isPastMonth ? undefined : () => handleOpenEdit(item.category)}
                 onKeyDown={(e) => {
+                  if (isPastMonth) return;
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     handleOpenEdit(item.category);
                   }
                 }}
-                aria-label={`Thiết lập hạn mức cho ${item.category}`}
-                title={`Bấm để thiết lập hạn mức cho ${item.category}`}
+                aria-label={isPastMonth ? `Ngân sách ${item.category}` : `Thiết lập hạn mức cho ${item.category}`}
+                title={isPastMonth ? 'Kỳ ngân sách đã kết thúc' : `Bấm để thiết lập hạn mức cho ${item.category}`}
               >
                 {/* Header: 40px Emoji tile & Category Title */}
                 <div className="budget-card-top">

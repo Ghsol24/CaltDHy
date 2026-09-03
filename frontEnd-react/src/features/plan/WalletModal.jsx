@@ -3,6 +3,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
+import { WalletOutlineIcon } from './WalletsTab';
 
 const PRESET_COLORS = [
   '#078A59', // Brand Mint Emerald
@@ -18,12 +19,7 @@ const PRESET_COLORS = [
 ];
 
 const getWalletIconByType = (walletType) => {
-  switch (walletType) {
-    case 'bank': return '🏦';
-    case 'credit': return '💳';
-    case 'e-wallet': return '📱';
-    default: return '💵';
-  }
+  return '';
 };
 
 export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
@@ -214,10 +210,10 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
               </label>
               <div className="wallet-type-grid" role="radiogroup" aria-label="Loại ví">
                 {[
-                  { id: 'cash', label: 'Tiền mặt', icon: '💵' },
-                  { id: 'bank', label: 'Ngân hàng', icon: '🏦' },
-                  { id: 'credit', label: 'Thẻ tín dụng', icon: '💳' },
-                  { id: 'e-wallet', label: 'Ví điện tử', icon: '📱' }
+                  { id: 'cash', label: 'Tiền mặt' },
+                  { id: 'bank', label: 'Ngân hàng' },
+                  { id: 'credit', label: 'Thẻ tín dụng' },
+                  { id: 'e-wallet', label: 'Ví điện tử' }
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -227,7 +223,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                     className={`wallet-type-pill ${type === item.id ? 'active' : ''}`}
                     onClick={() => handleTypeChange(item.id)}
                   >
-                    <span>{item.icon}</span>
+                    <WalletOutlineIcon type={item.id} size={18} color="currentColor" />
                     <span>{item.label}</span>
                   </button>
                 ))}

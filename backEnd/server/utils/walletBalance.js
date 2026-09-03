@@ -28,27 +28,48 @@ async function getWalletBalance(userId, walletId) {
             }
         },
         {
+            $project: {
+                flows: [
+                    // Luồng 1: Tác động lên walletId (ví nguồn / ví chi / ví nhận income)
+                    {
+                        walletId: '$walletId',
+                        change: {
+                            $switch: {
+                                branches: [
+                                    { case: { $eq: ['$type', 'income'] }, then: '$amount' },
+                                    { case: { $eq: ['$type', 'expense'] }, then: { $multiply: [{ $add: ['$amount', { $ifNull: ['$fee', 0] }] }, -1] } },
+                                    { case: { $eq: ['$type', 'transfer'] }, then: { $multiply: [{ $add: ['$amount', { $ifNull: ['$fee', 0] }] }, -1] } }
+                                ],
+                                default: 0
+                            }
+                        }
+                    },
+                    // Luồng 2: Tác động lên toWalletId (ví đích nhận tiền chuyển đến)
+                    {
+                        walletId: {
+                            $cond: [
+                                { $eq: ['$type', 'transfer'] },
+                                '$toWalletId',
+                                null
+                            ]
+                        },
+                        change: {
+                            $cond: [
+                                { $eq: ['$type', 'transfer'] },
+                                '$amount',
+                                0
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        { $unwind: '$flows' },
+        { $match: { 'flows.walletId': walletObjectId } },
+        {
             $group: {
                 _id: null,
-                totalChange: {
-                    $sum: {
-                        $cond: [
-                            { $eq: ['$walletId', walletObjectId] },
-                            {
-                                $switch: {
-                                    branches: [
-                                        { case: { $eq: ['$type', 'income'] }, then: '$amount' },
-                                        { case: { $eq: ['$type', 'expense'] }, then: { $multiply: [{ $add: ['$amount', { $ifNull: ['$fee', 0] }] }, -1] } },
-                                        { case: { $eq: ['$type', 'transfer'] }, then: { $multiply: [{ $add: ['$amount', { $ifNull: ['$fee', 0] }] }, -1] } }
-                                    ],
-                                    default: 0
-                                }
-                            },
-                            // Trường hợp toWalletId nhận transfer
-                            '$amount'
-                        ]
-                    }
-                }
+                totalChange: { $sum: '$flows.change' }
             }
         }
     ]);

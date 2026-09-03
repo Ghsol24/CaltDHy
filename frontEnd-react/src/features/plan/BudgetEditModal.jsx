@@ -343,9 +343,14 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
     const finalCategories = categoriesDraft.map((c) => ({ name: c.name, icon: c.icon }));
 
+    if (activeMonthStr < getLocalMonthString()) {
+      setErrorMsg('Kỳ ngân sách của tháng trước đã kết thúc. Không thể chỉnh sửa ngân sách quá khứ.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await updateBudgetsAndCategories(payload, finalCategories);
+      await updateBudgetsAndCategories(payload, finalCategories, activeMonthStr);
       setIsSubmitting(false);
       onClose();
       addToast({

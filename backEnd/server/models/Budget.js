@@ -23,6 +23,12 @@ const budgetSchema = new mongoose.Schema(
             required: [true, 'limit không được để trống.'],
             min: [0, 'Hạn mức không được âm.'],
             max: [100000000000, 'Hạn mức không vượt quá 100 tỷ VNĐ.']
+        },
+        month: {
+            type: String,
+            default: 'global',
+            trim: true,
+            index: true
         }
     },
     {
@@ -40,7 +46,7 @@ const budgetSchema = new mongoose.Schema(
     }
 );
 
-// Ràng buộc unique kép: Một user chỉ có 1 hạn mức duy nhất cho mỗi danh mục chi tiêu
-budgetSchema.index({ userId: 1, category: 1 }, { unique: true });
+// Ràng buộc unique: Một user chỉ có 1 hạn mức cho mỗi danh mục trong 1 tháng cụ thể (hoặc global)
+budgetSchema.index({ userId: 1, month: 1, category: 1 }, { unique: true });
 
 module.exports = mongoose.model('Budget', budgetSchema);

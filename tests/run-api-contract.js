@@ -115,13 +115,15 @@ async function testJarRoutes() {
     await deposit({ params: { id: 'bad-id' }, user: { id: userId }, body: { amount: '10' } }, res);
     assert.equal(res.statusCode, 400);
 
-    // Test cascade delete of transactions when jar is deleted
+    // Test safe transaction unlinking when jar is deleted
     Jar.findOneAndDelete = async () => ({ _id: transactionId });
-    Transaction.deleteMany = async (...args) => { deleteManyCall = args; return { deletedCount: 3 }; };
+    let jarUpdateManyCall;
+    Transaction.updateMany = async (...args) => { jarUpdateManyCall = args; return { modifiedCount: 3 }; };
     res = response();
     await deleteJar({ params: { id: transactionId }, user: { id: userId } }, res);
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(deleteManyCall[0], { jarId: transactionId, userId });
+    assert.deepEqual(jarUpdateManyCall[0], { jarId: transactionId, userId });
+    assert.deepEqual(jarUpdateManyCall[1], { $unset: { jarId: 1 } });
 }
 
 function testTransactionSerialization() {
@@ -251,13 +253,15 @@ async function testInstallmentRoutes() {
     assert.equal(mockItem.history[0].amount, 250000);
     assert.equal(mockItem.history[0].cycleDate, '2026-01-31');
 
-    // Test cascade delete of transactions when installment is deleted
+    // Test safe transaction unlinking when installment is deleted
     Installment.findOneAndDelete = async () => ({ _id: transactionId });
-    Transaction.deleteMany = async (...args) => { deleteManyCall = args; return { deletedCount: 2 }; };
+    let instUpdateManyCall;
+    Transaction.updateMany = async (...args) => { instUpdateManyCall = args; return { modifiedCount: 2 }; };
     res = response();
     await deleteInst({ params: { id: transactionId }, user: { id: userId } }, res);
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(deleteManyCall[0], { installmentId: transactionId, userId });
+    assert.deepEqual(instUpdateManyCall[0], { installmentId: transactionId, userId });
+    assert.deepEqual(instUpdateManyCall[1], { $unset: { installmentId: 1 } });
 }
 
 function testDuplicateTransactionDetection() {
@@ -487,6 +491,25 @@ async function testBudgetRoutes() {
         userId,
         category: { $nin: ['Food & Dining', 'Shopping'] }
     });
+
+    // Test PUT /api/spending/budget with past month blocked (400)
+    res = response();
+    await updateBudget({
+        user: { id: userId },
+        query: { month: '2020-01' },
+        body: { 'Food & Dining': 1000000 }
+    }, res);
+    assert.equal(res.statusCode, 400);
+
+    // Test PUT /api/spending/budget with future month scoped
+    res = response();
+    await updateBudget({
+        user: { id: userId },
+        query: { month: '2030-01' },
+        body: { 'Food & Dining': 4000000 }
+    }, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(bulkOpsCalled[0].updateOne.filter.month, '2030-01');
 }
 
 async function testLinkedInstallmentAtomicRollback() {

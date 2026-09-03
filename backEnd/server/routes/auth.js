@@ -72,7 +72,7 @@ function createEmailVerificationToken(user) {
 
 async function sendVerificationEmail(user, token, req) {
     const clientUrl = (process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-    const verificationUrl = `${clientUrl}/verify-email.html?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    const verificationUrl = `${clientUrl}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
     const transporter = createTransporter();
     await transporter.sendMail({
         from: `"CaltDHy" <${process.env.GMAIL_USER}>`,
@@ -286,7 +286,8 @@ router.post('/forgot-password', async (req, res) => {
         user.resetPasswordExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
         await user.save();
 
-        const resetUrl = `${process.env.CLIENT_URL}/reset-password.html?token=${resetToken}&email=${email}`;
+        const clientUrl = (process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
+        const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
         console.log(`\n🔑 [RESET PASSWORD] Link đặt lại mật khẩu cho ${email}:\n   ${resetUrl}\n`);
 

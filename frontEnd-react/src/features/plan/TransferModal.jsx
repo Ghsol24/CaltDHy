@@ -3,6 +3,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, getLocalDateString } from '../../utils/formatters';
+import { WalletOutlineIcon } from './WalletsTab';
 
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const { wallets, transferMoney, fetchWallets } = useWalletStore();
@@ -154,8 +155,14 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
       >
         {/* Header */}
         <div className="txn-modal-header">
-          <h2 id="transfer-modal-title" className="txn-modal-title">
-            ⇄ Chuyển tiền giữa các ví
+          <h2 id="transfer-modal-title" className="txn-modal-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M17 1l4 4-4 4" />
+              <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+              <path d="M7 23l-4-4 4-4" />
+              <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+            </svg>
+            <span>Chuyển tiền giữa các ví</span>
           </h2>
           <button
             type="button"
@@ -186,20 +193,25 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
             <div className="transfer-route-preview">
               <div className="transfer-route-item">
                 <span className="transfer-route-role">Từ ví</span>
-                <span className="transfer-route-name">
-                  {fromWallet?.icon || '💳'} {fromWallet?.name || 'Chọn ví'}
+                <span className="transfer-route-name" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <WalletOutlineIcon type={fromWallet?.type} size={16} color="currentColor" />
+                  <span>{fromWallet?.name || 'Chọn ví'}</span>
                 </span>
                 <span className="transfer-route-balance">
                   Số dư: {formatCurrency(fromWallet?.currentBalance ?? 0)}
                 </span>
               </div>
-              <div className="transfer-route-arrow" aria-hidden="true">
-                ➔
+              <div className="transfer-route-arrow" aria-hidden="true" style={{ display: 'flex', alignItems: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
               </div>
               <div className="transfer-route-item">
                 <span className="transfer-route-role">Đến ví</span>
-                <span className="transfer-route-name">
-                  {toWallet?.icon || '💳'} {toWallet?.name || 'Chọn ví'}
+                <span className="transfer-route-name" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <WalletOutlineIcon type={toWallet?.type} size={16} color="currentColor" />
+                  <span>{toWallet?.name || 'Chọn ví'}</span>
                 </span>
                 <span className="transfer-route-balance">
                   Số dư: {formatCurrency(toWallet?.currentBalance ?? 0)}
@@ -222,7 +234,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 >
                   {wallets.map((w) => (
                     <option key={w.id} value={w.id}>
-                      {w.icon || '💳'} {w.name} ({formatCurrency(w.currentBalance ?? 0)})
+                      {w.name} ({formatCurrency(w.currentBalance ?? 0)})
                     </option>
                   ))}
                 </select>
@@ -243,7 +255,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                     .filter((w) => w.id !== fromWalletId)
                     .map((w) => (
                       <option key={w.id} value={w.id}>
-                        {w.icon || '💳'} {w.name} ({formatCurrency(w.currentBalance ?? 0)})
+                        {w.name} ({formatCurrency(w.currentBalance ?? 0)})
                       </option>
                     ))}
                 </select>

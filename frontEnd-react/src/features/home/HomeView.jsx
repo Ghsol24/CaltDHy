@@ -52,9 +52,9 @@ export function HomeView() {
     greeting = `Tháng ${monthNum} có khoản đã vượt hạn mức!`;
   } else if (hasWarningBudget) {
     greeting = `Tháng ${monthNum} cần chú ý chi tiêu`;
-  } else if (!hasAnyBudget && monthlyStats.totalExpense > 0) {
+  } else if (!hasAnyBudget && monthlyStats.expense > 0) {
     greeting = `Tổng quan chi tiêu tháng ${monthNum}`;
-  } else if (monthlyStats.totalIncome > 0 && monthlyStats.totalIncome > monthlyStats.totalExpense * 1.5) {
+  } else if (monthlyStats.income > 0 && monthlyStats.income > monthlyStats.expense * 1.5) {
     greeting = `Dòng tiền tháng ${monthNum} đang tăng trưởng tích cực`;
   } else if (hasAnyBudget) {
     greeting = `Chi tiêu tháng ${monthNum} trong tầm kiểm soát`;

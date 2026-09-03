@@ -19,12 +19,14 @@ export const spendingService = {
     return await api.delete(`/api/spending/${id}`);
   },
 
-  getBudgets: async () => {
-    return await api.get('/api/spending/budget');
+  getBudgets: async (month = null) => {
+    const url = month ? `/api/spending/budget?month=${encodeURIComponent(month)}` : '/api/spending/budget';
+    return await api.get(url);
   },
 
-  updateBudgets: async (budgetsObj) => {
-    return await api.put('/api/spending/budget', budgetsObj);
+  updateBudgets: async (budgetsObj, month = null) => {
+    const url = month ? `/api/spending/budget?month=${encodeURIComponent(month)}` : '/api/spending/budget';
+    return await api.put(url, budgetsObj);
   },
 
   getCategories: async () => {

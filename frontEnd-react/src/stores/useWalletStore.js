@@ -140,17 +140,14 @@ export const useWalletStore = create((set, get) => ({
       if (!res.success) {
         throw new Error(res.message || 'Xóa ví thất bại.');
       }
-      const updated = get().wallets.filter((w) => w.id !== id);
-      saveStoredWallets(updated);
-
       // Re-fetch transactions because backend moved orphaned transactions to fallback wallet
       if (useTransactionStore.getState()?.fetchTransactions) {
         await useTransactionStore.getState().fetchTransactions();
       }
 
-      const txns = useTransactionStore.getState()?.transactions || [];
-      const { wallets: calculated } = calculateWalletBalances(updated, txns);
-      set({ wallets: calculated, isLoading: false });
+      // Tải lại danh sách ví từ server để cập nhật initialBalance mới của ví mặc định (đã được cộng dồn)
+      await get().fetchWallets();
+      set({ isLoading: false });
       return { success: true };
     } catch (err) {
       set({ isLoading: false });

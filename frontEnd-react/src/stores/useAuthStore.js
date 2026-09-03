@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { authService } from '../services/authService';
+import { useTransactionStore } from './useTransactionStore';
+import { useWalletStore } from './useWalletStore';
+import { useJarStore } from './useJarStore';
 
 const TOKEN_KEY = 'caltdhy_token';
 const USER_KEY = 'caltdhy_user';
@@ -71,17 +74,41 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: () => {
+    // 1. Dọn sạch toàn bộ dữ liệu tài chính của user trong localStorage (giữ lại theme, lang, curr)
     const keysToRemove = [
       TOKEN_KEY,
       USER_KEY,
+      'caltdhy_wallets',
+      'caltdhy_jars',
+      'caltdhy_installments',
       'caltdhy_txns',
       'caltdhy_budgets',
+      'caltdhy_expense_categories',
+      'caltdhy_income_categories',
       'caltdhy_custom_cats',
       'caltdhy_hidden_cats',
       'caltdhy_last_reported_month',
       'caltdhy_is_new_user'
     ];
-    keysToRemove.forEach((k) => localStorage.removeItem(k));
+    keysToRemove.forEach((k) => {
+      try {
+        localStorage.removeItem(k);
+      } catch {}
+    });
+
+    // 2. Reset triệt để state trong RAM của các store tài chính
+    try {
+      useTransactionStore.setState({
+        transactions: [],
+        budgets: {},
+        expenseCategories: [],
+        incomeCategories: []
+      });
+      useWalletStore.setState({ wallets: [] });
+      useJarStore.setState({ jars: [], installments: [] });
+    } catch {}
+
+    // 3. Reset trạng thái xác thực
     set({
       user: null,
       token: null,

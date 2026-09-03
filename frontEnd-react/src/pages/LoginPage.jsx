@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 
 export const LoginPage = () => {
+  const [searchParams] = useSearchParams();
+  const isExpired = searchParams.get('expired') === '1';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -84,6 +87,12 @@ export const LoginPage = () => {
                 FORGOT PASSWORD?
               </Link>
             </div>
+
+            {isExpired && !error && (
+              <div className="form-err show" style={{ background: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.3)', color: '#eab308' }} role="status">
+                ⏱ Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.
+              </div>
+            )}
 
             {error && (
               <div id="formErr" className="form-err show" role="alert">

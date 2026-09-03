@@ -26,6 +26,10 @@ export const apiFetch = async (endpoint, options = {}) => {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
+      if (res.status === 401 && token && !endpoint.includes('/api/auth/login')) {
+        // Token hết hạn hoặc không hợp lệ -> phát sự kiện để ứng dụng tự động đăng xuất an toàn
+        window.dispatchEvent(new CustomEvent('caltdhy:auth-expired', { detail: data }));
+      }
       const errorMsg = data.message || `Lỗi yêu cầu: HTTP ${res.status}`;
       const err = new Error(errorMsg);
       err.status = res.status;

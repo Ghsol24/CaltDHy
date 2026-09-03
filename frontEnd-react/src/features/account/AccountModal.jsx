@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
+import { useWalletStore } from '../../stores/useWalletStore';
+import { useJarStore } from '../../stores/useJarStore';
 import { formatDate } from '../../utils/formatters';
 
 // Bộ sưu tập avatar preset (biểu tượng tài chính & phong cách cao cấp, tuyệt đối không có khỉ)
@@ -94,7 +96,9 @@ function detectCurrentDevice() {
 export function AccountModal() {
   const { user, updateProfile } = useAuthStore();
   const spending = useSpendingStore();
-  const { transactions, budgets, resetAllFinancialData } = useTransactionStore();
+  const { transactions, budgets, expenseCategories, incomeCategories, resetAllFinancialData } = useTransactionStore();
+  const { wallets } = useWalletStore();
+  const { jars, installments } = useJarStore();
 
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'security' | 'data'
 
@@ -276,17 +280,25 @@ export function AccountModal() {
     setTimeout(() => setCopySuccess(false), 2500);
   };
 
-  // Xuất dữ liệu JSON
+  // Xuất dữ liệu JSON (Sao lưu toàn diện 100% tài sản và danh mục)
   const handleExportData = () => {
     const exportPayload = {
+      version: '2.2.0',
       exportDate: new Date().toISOString(),
       user: {
         id: user?.id,
         name: user?.name,
         email: user?.email
       },
+      wallets: wallets || [],
+      jars: jars || [],
+      installments: installments || [],
       transactions: transactions || [],
-      budgets: budgets || {}
+      budgets: budgets || {},
+      categories: {
+        expense: expenseCategories || [],
+        income: incomeCategories || []
+      }
     };
 
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));

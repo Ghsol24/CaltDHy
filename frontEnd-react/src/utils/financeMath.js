@@ -109,8 +109,10 @@ export function calculateAvailableToSpend({
     }
   });
 
-  // Tiền khả dụng an toàn = Số dư các ví khả dụng - Tiền đã cam kết bỏ vào Hũ
-  const availableToSpend = availableWalletsBalance - jarMoney;
+  // Tiền khả dụng an toàn = Số dư các ví chi tiêu khả dụng
+  // Lưu ý: Nạp tiền vào Hũ đã là giao dịch 'transfer' trừ trực tiếp vào số dư ví nguồn (ở calculateWalletBalances),
+  // do đó availableWalletsBalance đã tự động loại trừ tiền trong Hũ. Tuyệt đối không trừ jarMoney lần 2.
+  const availableToSpend = availableWalletsBalance;
 
   return {
     availableToSpend,
@@ -158,6 +160,8 @@ export function calculateMonthlyStats(transactions = [], monthPrefix = '') {
   return {
     income,
     expense,
+    totalIncome: income,
+    totalExpense: expense,
     net,
     count,
     byCategory,

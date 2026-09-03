@@ -8,6 +8,7 @@ const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 const Category = require('../models/Category');
 const { isValidVNDAmount } = require('../utils/money');
+const { getVietnamTodayString } = require('../utils/localDate');
 
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
@@ -70,13 +71,21 @@ async function validateTransactionWallets({ type, walletId, toWalletId, userId }
 // =============================================
 router.get('/categories', async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('customCategories');
+        const user = await User.findById(req.user.id).select('customCategories').lean();
         if (!user) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy user.' });
         }
+
+        // Hợp nhất danh mục từ Category collection và User.customCategories để đảm bảo toàn vẹn
+        const catDocs = await Category.find({ userId: req.user.id }).select('name').lean();
+        const docNames = catDocs.map(c => c.name);
+        const userNames = user.customCategories || [];
+        const mergedSet = new Set([...userNames, ...docNames]);
+        const finalCategories = Array.from(mergedSet);
+
         res.json({
             success: true,
-            data: user.customCategories || []
+            data: finalCategories
         });
     } catch (error) {
         console.error('GET /api/spending/categories error:', error);
@@ -118,16 +127,40 @@ router.put('/categories', async (req, res) => {
         });
     } catch (error) {
         console.error('PUT /api/spending/categories error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi khi cập nhật danh mục.' });
+        res.status(500).json({ success: false, message: 'Lỗi khi lưu danh mục.' });
     }
 });
 
 // =============================================
-// GET /api/spending/budget – Lấy ngân sách của user
+// GET /api/spending/budget – Lấy ngân sách của user (Hỗ trợ Scoped Month + Auto-Carryover)
 // =============================================
 router.get('/budget', async (req, res) => {
     try {
-        const budgets = await Budget.find({ userId: req.user.id });
+        const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
+        let budgets = [];
+
+        if (monthQuery && /^\d{4}-\d{2}$/.test(monthQuery)) {
+            // 1. Tìm ngân sách riêng của tháng này
+            budgets = await Budget.find({ userId: req.user.id, month: monthQuery });
+
+            // 2. Kế thừa thông minh (Auto-Carryover): nếu tháng này chưa có, lấy tháng gần nhất trước đó hoặc 'global'
+            if (budgets.length === 0) {
+                const previous = await Budget.find({
+                    userId: req.user.id,
+                    month: { $lt: monthQuery, $ne: 'global' }
+                }).sort({ month: -1 });
+
+                if (previous.length > 0) {
+                    const latestMonth = previous[0].month;
+                    budgets = previous.filter(b => b.month === latestMonth);
+                } else {
+                    budgets = await Budget.find({ userId: req.user.id, month: 'global' });
+                }
+            }
+        } else {
+            budgets = await Budget.find({ userId: req.user.id });
+        }
+
         const budgetMap = {};
         budgets.forEach(b => {
             budgetMap[b.category] = b.limit;
@@ -145,17 +178,35 @@ router.get('/budget', async (req, res) => {
 
 // =============================================
 // PUT /api/spending/budget – Cập nhật hạn mức ngân sách
-// Dùng bulkWrite upsert thay vì delete-all + reinsert để tránh mất data
+// Dùng bulkWrite upsert theo targetMonth và khóa sửa tháng quá khứ
 // =============================================
 router.put('/budget', async (req, res) => {
     try {
-        const budgetsObj = req.body; // Cấu trúc: { "Food & Dining": 500000, "Cà phê": 200000 }
+        const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
+        const bodyMonth = typeof req.body?.month === 'string' ? req.body.month.trim() : '';
+        const targetMonth = monthQuery || bodyMonth || '';
+
+        // Khóa chỉnh sửa ngân sách của tháng trước!
+        if (targetMonth && /^\d{4}-\d{2}$/.test(targetMonth)) {
+            const currentMonth = getVietnamTodayString().slice(0, 7);
+            if (targetMonth < currentMonth) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Kỳ ngân sách của tháng trước đã kết thúc. Không thể chỉnh sửa ngân sách quá khứ.'
+                });
+            }
+        }
+
+        // Hỗ trợ cả payload trực tiếp { "Food": 500000 } hoặc { budgets: { "Food": 500000 }, month: "..." }
+        const budgetsObj = (req.body && typeof req.body.budgets === 'object' && req.body.budgets !== null)
+            ? req.body.budgets
+            : req.body;
 
         if (!budgetsObj || typeof budgetsObj !== 'object' || Array.isArray(budgetsObj)) {
             return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ.' });
         }
 
-        const entries = Object.entries(budgetsObj);
+        const entries = Object.entries(budgetsObj).filter(([cat]) => cat !== 'month');
 
         // Kiểm tra chặt chẽ từng entry: không âm thầm nuốt lỗi vượt trần
         for (const [cat, limit] of entries) {
@@ -192,24 +243,40 @@ router.put('/budget', async (req, res) => {
 
         // Bước 1: Upsert tất cả budget hợp lệ (atomic từng item)
         if (validEntries.length > 0) {
-            const bulkOps = validEntries.map(([category, limit]) => ({
-                updateOne: {
-                    filter: { userId: req.user.id, category },
-                    update: { $set: { limit } },
-                    upsert: true
+            const bulkOps = validEntries.map(([category, limit]) => {
+                const filter = { userId: req.user.id, category };
+                const updateSet = { limit };
+                if (targetMonth) {
+                    filter.month = targetMonth;
+                    updateSet.month = targetMonth;
                 }
-            }));
+                return {
+                    updateOne: {
+                        filter,
+                        update: { $set: updateSet },
+                        upsert: true
+                    }
+                };
+            });
             await Budget.bulkWrite(bulkOps);
         }
 
         // Bước 2: Xóa các category không còn trong list mới (hoặc limit = 0)
-        await Budget.deleteMany({
+        const deleteFilter = {
             userId: req.user.id,
             category: { $nin: validCategories }
-        });
+        };
+        if (targetMonth) {
+            deleteFilter.month = targetMonth;
+        }
+        await Budget.deleteMany(deleteFilter);
 
         // Đọc lại state thực tế từ DB để trả về dữ liệu toàn vẹn
-        const persistedBudgets = await Budget.find({ userId: req.user.id });
+        const findQuery = { userId: req.user.id };
+        if (targetMonth) {
+            findQuery.month = targetMonth;
+        }
+        const persistedBudgets = await Budget.find(findQuery);
         const budgetMap = {};
         persistedBudgets.forEach(b => {
             budgetMap[b.category] = b.limit;
