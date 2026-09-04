@@ -225,12 +225,19 @@ function WalletFilterDropdown({ value, options, onChange, label, className = '' 
  * SVG Donut Chart for Wallet Balance Distribution
  * Clean, seamless, interactive donut chart without messy floating labels
  */
-function WalletDonutChart({ slices, totalBalance, hoveredId, onHoverSlice }) {
-  const size = 200;
-  const strokeWidth = 18;
-  const center = size / 2; // 100
-  const radius = 68;
-  const circumference = 2 * Math.PI * radius;
+function WalletDonutChart({
+  slices,
+  totalBalance,
+  hoveredId,
+  onHoverSlice,
+  centerLabel = 'Tổng số dư',
+  isCountMode = false
+}) {
+  const size = 260;
+  const strokeWidth = 34;
+  const center = size / 2; // 130
+  const radius = 94;
+  const circumference = 2 * Math.PI * radius; // ~590.62
 
   const hoveredSlice = useMemo(() => {
     if (!hoveredId || !slices) return null;
@@ -245,27 +252,29 @@ function WalletDonutChart({ slices, totalBalance, hoveredId, onHoverSlice }) {
           height={size}
           viewBox={`0 0 ${size} ${size}`}
           className="wallet-donut-svg"
+          role="img"
+          aria-label="Biểu đồ phân bổ chưa có dữ liệu"
         >
           <circle
             cx={center}
             cy={center}
             r={radius}
             fill="none"
-            stroke="var(--surface-subtle, #F1F5F9)"
+            stroke="var(--donut-track-bg, #F1F5F9)"
             strokeWidth={strokeWidth}
           />
         </svg>
         <div className="wallet-donut-center-overlay">
+          <span className="donut-center-label">{centerLabel}</span>
           <strong className="donut-center-val">0 đ</strong>
-          <span className="donut-center-label">Tổng số dư</span>
         </div>
       </div>
     );
   }
 
-  // Nếu có nhiều hơn 1 lát cắt, tạo gap nhỏ 3px phân tách vi tế, sạch đẹp
+  // Phân tách giữa các lát cắt bằng khe 4px radial sắc nét chuẩn thiết kế Ảnh 1
   const hasMultiple = slices.length > 1;
-  const gapLength = hasMultiple ? 3 : 0;
+  const gapLength = hasMultiple ? 4 : 0;
 
   let accumulatedPercent = 0;
   const sliceElements = [];
@@ -312,13 +321,15 @@ function WalletDonutChart({ slices, totalBalance, hoveredId, onHoverSlice }) {
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="wallet-donut-svg"
+        role="img"
+        aria-label="Biểu đồ phân bổ"
       >
         <circle
           cx={center}
           cy={center}
           r={radius}
           fill="none"
-          stroke="var(--surface-subtle, #F1F5F9)"
+          stroke="var(--donut-track-bg, #F1F5F9)"
           strokeWidth={strokeWidth}
         />
         {sliceElements}
@@ -326,17 +337,19 @@ function WalletDonutChart({ slices, totalBalance, hoveredId, onHoverSlice }) {
       <div className="wallet-donut-center-overlay">
         {hoveredSlice ? (
           <>
-            <strong className="donut-center-val" style={{ color: hoveredSlice.color }}>
-              {formatCurrency(hoveredSlice.balance)}
-            </strong>
             <span className="donut-center-label">
               {hoveredSlice.name} • {hoveredSlice.percent.toFixed(1)}%
             </span>
+            <strong className="donut-center-val" style={{ color: hoveredSlice.color }}>
+              {isCountMode ? `${hoveredSlice.balance} GD` : formatCurrency(hoveredSlice.balance)}
+            </strong>
           </>
         ) : (
           <>
-            <strong className="donut-center-val">{formatCurrency(totalBalance)}</strong>
-            <span className="donut-center-label">Tổng số dư</span>
+            <span className="donut-center-label">{centerLabel}</span>
+            <strong className="donut-center-val">
+              {isCountMode ? `${totalBalance} GD` : formatCurrency(totalBalance)}
+            </strong>
           </>
         )}
       </div>
@@ -368,10 +381,18 @@ export function WalletsTab() {
   const [openMenuWalletId, setOpenMenuWalletId] = useState(null);
   const menuRef = useRef(null);
 
+  // Phân bổ số dư: chế độ xem ('balance' | 'txCount') và popover dropdown
+  const [distributionMode, setDistributionMode] = useState('balance');
+  const [isDistDropdownOpen, setIsDistDropdownOpen] = useState(false);
+  const distDropdownRef = useRef(null);
+
   useEffect(() => {
     const handleOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpenMenuWalletId(null);
+      }
+      if (distDropdownRef.current && !distDropdownRef.current.contains(e.target)) {
+        setIsDistDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutside);
@@ -420,8 +441,29 @@ export function WalletsTab() {
     return map;
   }, [transactions]);
 
-  // Slices for Donut Chart
+  // Color palette hài hòa, chuẩn thiết kế hiện đại
+  const CHART_PALETTE = ['#2563EB', '#D97706', '#0D9488', '#DC2626', '#6366F1', '#10B981', '#EC4899', '#8B5CF6', '#F59E0B', '#0284C7'];
+
+  // Slices for Donut Chart (Hỗ trợ theo Số dư hoặc Số giao dịch)
   const donutSlices = useMemo(() => {
+    if (distributionMode === 'txCount') {
+      const activeWallets = wallets.filter((w) => (walletTxCountMap[w.id] || 0) > 0);
+      const totalTx = activeWallets.reduce(
+        (sum, w) => sum + (walletTxCountMap[w.id] || 0),
+        0
+      );
+
+      if (totalTx <= 0) return [];
+
+      return activeWallets.map((w, idx) => ({
+        id: w.id,
+        name: w.name,
+        color: w.color || CHART_PALETTE[idx % CHART_PALETTE.length],
+        balance: walletTxCountMap[w.id] || 0,
+        percent: ((walletTxCountMap[w.id] || 0) / totalTx) * 100
+      }));
+    }
+
     const positiveWallets = wallets.filter((w) => Number(w.currentBalance) > 0);
     const sumPositive = positiveWallets.reduce(
       (s, w) => s + Number(w.currentBalance),
@@ -430,14 +472,21 @@ export function WalletsTab() {
 
     if (sumPositive <= 0) return [];
 
-    return positiveWallets.map((w) => ({
+    return positiveWallets.map((w, idx) => ({
       id: w.id,
       name: w.name,
-      color: w.color || '#10B981',
+      color: w.color || CHART_PALETTE[idx % CHART_PALETTE.length],
       balance: Number(w.currentBalance),
       percent: (Number(w.currentBalance) / sumPositive) * 100
     }));
-  }, [wallets]);
+  }, [wallets, distributionMode, walletTxCountMap]);
+
+  const chartTotal = useMemo(() => {
+    if (distributionMode === 'txCount') {
+      return donutSlices.reduce((sum, s) => sum + s.balance, 0);
+    }
+    return totalBalance;
+  }, [distributionMode, donutSlices, totalBalance]);
 
   // Tổng số dư dương để tính % phân bổ số dư / tỷ lệ sử dụng
   const positiveTotal = useMemo(() => {
@@ -850,6 +899,46 @@ export function WalletsTab() {
                                 type="button"
                                 className="wallet-popover-action"
                                 role="menuitem"
+                                onClick={() => {
+                                  setOpenMenuWalletId(null);
+                                  openAddTxnModal({
+                                    type: 'income',
+                                    title: `Nạp tiền vào ${w.name}`,
+                                    walletId: w.id
+                                  });
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <line x1="12" y1="5" x2="12" y2="19" />
+                                  <polyline points="19 12 12 19 5 12" />
+                                </svg>
+                                <span>Nạp tiền vào ví</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                className="wallet-popover-action"
+                                role="menuitem"
+                                onClick={() => {
+                                  setOpenMenuWalletId(null);
+                                  openAddTxnModal({
+                                    type: 'expense',
+                                    title: `Rút tiền từ ${w.name}`,
+                                    walletId: w.id
+                                  });
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <line x1="12" y1="19" x2="12" y2="5" />
+                                  <polyline points="5 12 12 5 19 12" />
+                                </svg>
+                                <span>Rút tiền từ ví</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                className="wallet-popover-action"
+                                role="menuitem"
                                 onClick={() => handleTransfer(w.id)}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1029,6 +1118,46 @@ export function WalletsTab() {
                               type="button"
                               className="wallet-popover-action"
                               role="menuitem"
+                              onClick={() => {
+                                setOpenMenuWalletId(null);
+                                openAddTxnModal({
+                                  type: 'income',
+                                  title: `Nạp tiền vào ${w.name}`,
+                                  walletId: w.id
+                                });
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <polyline points="19 12 12 19 5 12" />
+                              </svg>
+                              <span>Nạp tiền vào ví</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              className="wallet-popover-action"
+                              role="menuitem"
+                              onClick={() => {
+                                setOpenMenuWalletId(null);
+                                openAddTxnModal({
+                                  type: 'expense',
+                                  title: `Rút tiền từ ${w.name}`,
+                                  walletId: w.id
+                                });
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <line x1="12" y1="19" x2="12" y2="5" />
+                                <polyline points="5 12 12 5 19 12" />
+                              </svg>
+                              <span>Rút tiền từ ví</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              className="wallet-popover-action"
+                              role="menuitem"
                               onClick={() => handleTransfer(w.id)}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1126,7 +1255,13 @@ export function WalletsTab() {
               <button
                 type="button"
                 className="wallet-quick-action-card"
-                onClick={openAddTxnModal}
+                onClick={() =>
+                  openAddTxnModal({
+                    type: 'income',
+                    title: defaultWallet ? `Nạp tiền vào ${defaultWallet.name}` : 'Nạp tiền vào ví',
+                    walletId: defaultWallet?.id
+                  })
+                }
               >
                 <div className="quick-action-icon-box" style={{ background: '#06B6D418', color: '#06B6D4' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1144,7 +1279,13 @@ export function WalletsTab() {
               <button
                 type="button"
                 className="wallet-quick-action-card"
-                onClick={openAddTxnModal}
+                onClick={() =>
+                  openAddTxnModal({
+                    type: 'expense',
+                    title: defaultWallet ? `Rút tiền từ ${defaultWallet.name}` : 'Rút tiền từ ví',
+                    walletId: defaultWallet?.id
+                  })
+                }
               >
                 <div className="quick-action-icon-box" style={{ background: '#F9731618', color: '#F97316' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1195,41 +1336,167 @@ export function WalletsTab() {
         {/* ── CỘT PHẢI (~38%): Phân bổ số dư + Hoạt động gần đây + Mẹo tài chính ── */}
         <div className="wallets-v2-col-right">
           {/* Card 1: Phân bổ số dư */}
-          <div className="wallets-side-card">
-            <div className="side-card-header">
-              <h3 className="side-card-title">Phân bổ số dư</h3>
-              <div className="side-card-badge">Tỷ lệ theo số dư</div>
+          <div className="wallets-side-card wallets-donut-card">
+            <div className="side-card-header donut-card-header">
+              <div className="donut-card-title-group">
+                <div className="donut-header-icon-box" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10 5.523 0 10-4.477 10-10 0-0.553-0.447-1-1-1h-8V3c0-0.553-0.447-1-1-1z" />
+                    <path d="M14 2.05A10.01 10.01 0 0 1 21.95 10H14V2.05z" />
+                  </svg>
+                </div>
+                <h3 className="side-card-title donut-card-title">Phân bổ số dư</h3>
+              </div>
+
+              <div className="donut-dist-dropdown-wrap" ref={distDropdownRef}>
+                <button
+                  type="button"
+                  className="donut-dist-dropdown-trigger"
+                  onClick={() => setIsDistDropdownOpen((prev) => !prev)}
+                  aria-expanded={isDistDropdownOpen}
+                  aria-haspopup="listbox"
+                  title="Thay đổi cách tính tỷ lệ"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                  </svg>
+                  <span>{distributionMode === 'balance' ? 'Tỷ lệ theo số dư' : 'Tỷ lệ theo giao dịch'}</span>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`donut-dropdown-chevron ${isDistDropdownOpen ? 'is-open' : ''}`}
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                {isDistDropdownOpen && (
+                  <div className="donut-dist-dropdown-menu" role="listbox">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={distributionMode === 'balance'}
+                      className={`donut-dist-dropdown-item ${distributionMode === 'balance' ? 'is-active' : ''}`}
+                      onClick={() => {
+                        setDistributionMode('balance');
+                        setIsDistDropdownOpen(false);
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                      <span>Tỷ lệ theo số dư</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={distributionMode === 'txCount'}
+                      className={`donut-dist-dropdown-item ${distributionMode === 'txCount' ? 'is-active' : ''}`}
+                      onClick={() => {
+                        setDistributionMode('txCount');
+                        setIsDistDropdownOpen(false);
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                      </svg>
+                      <span>Tỷ lệ theo giao dịch</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="donut-chart-and-legend">
               <WalletDonutChart
                 slices={donutSlices}
-                totalBalance={totalBalance}
+                totalBalance={chartTotal}
                 hoveredId={hoveredSliceId}
                 onHoverSlice={setHoveredSliceId}
+                centerLabel={distributionMode === 'balance' ? 'Tổng số dư' : 'Tổng giao dịch'}
+                isCountMode={distributionMode === 'txCount'}
               />
 
-              <div className="donut-legend-list">
-                {donutSlices.map((slice) => {
-                  const isHovered = hoveredSliceId === slice.id;
-                  return (
-                    <div
-                      key={slice.id}
-                      className={`donut-legend-item ${isHovered ? 'is-hovered' : ''}`}
-                      onMouseEnter={() => setHoveredSliceId(slice.id)}
-                      onMouseLeave={() => setHoveredSliceId(null)}
-                    >
-                      <div className="donut-legend-left">
-                        <span className="donut-legend-dot" style={{ backgroundColor: slice.color }} />
-                        <span className="donut-legend-name" title={slice.name}>{slice.name}</span>
-                      </div>
-                      <div className="donut-legend-right">
-                        <strong className="donut-legend-pct">{slice.percent.toFixed(1)}%</strong>
-                        <span className="donut-legend-bal">{formatCurrency(slice.balance)}</span>
-                      </div>
+              <div className="donut-table-wrapper">
+                <div className="donut-table-header">
+                  <span className="donut-th-cat">Danh mục</span>
+                  <span className="donut-th-pct">Tỷ lệ</span>
+                  <span className="donut-th-val">
+                    {distributionMode === 'balance' ? 'Số tiền' : 'Số GD'}
+                  </span>
+                  <span className="donut-th-spacer" aria-hidden="true" />
+                </div>
+
+                <div className="donut-table-card">
+                  {donutSlices.length === 0 ? (
+                    <div className="donut-table-empty">
+                      <span>Chưa có dữ liệu phân bổ</span>
                     </div>
-                  );
-                })}
+                  ) : (
+                    donutSlices.map((slice) => {
+                      const isHovered = hoveredSliceId === slice.id;
+                      return (
+                        <div
+                          key={slice.id}
+                          className={`donut-table-row ${isHovered ? 'is-hovered' : ''}`}
+                          onMouseEnter={() => setHoveredSliceId(slice.id)}
+                          onMouseLeave={() => setHoveredSliceId(null)}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`${slice.name}: ${slice.percent.toFixed(1)}%, ${distributionMode === 'balance' ? formatCurrency(slice.balance) : `${slice.balance} giao dịch`}`}
+                        >
+                          <div className="donut-row-cat">
+                            <span
+                              className="donut-row-dot"
+                              style={{ backgroundColor: slice.color }}
+                              aria-hidden="true"
+                            />
+                            <span className="donut-row-name" title={slice.name}>
+                              {slice.name}
+                            </span>
+                          </div>
+
+                          <div className="donut-row-pct">
+                            {slice.percent.toFixed(1)}%
+                          </div>
+
+                          <div className="donut-row-val">
+                            {distributionMode === 'balance'
+                              ? formatCurrency(slice.balance)
+                              : `${slice.balance} GD`}
+                          </div>
+
+                          <div className="donut-row-chevron" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {donutSlices.length > 0 && (
+                  <div className="donut-table-footer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>Tổng {donutSlices.length} danh mục</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -11,7 +11,7 @@ import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 const EMPTY_EXPENSE_CATS = [];
 
 export function TransactionModal() {
-  const { isAddTxnOpen, closeAddTxnModal, setActiveView, setPlanSubTab } = useSpendingStore();
+  const { isAddTxnOpen, addTxnInitialState, closeAddTxnModal, setActiveView, setPlanSubTab } = useSpendingStore();
   const {
     addTransaction,
     updateTransaction,
@@ -178,40 +178,57 @@ export function TransactionModal() {
         setAmountError('');
       } else {
         // New transaction default state
-        setType('expense');
-        setAmount('');
-        const defaultCat = sortedCategories[0]?.name || categories[0]?.name || '';
+        const targetType = addTxnInitialState?.type === 'income' ? 'income' : 'expense';
+        setType(targetType);
+        setAmount(
+          addTxnInitialState?.amount
+            ? Number(addTxnInitialState.amount).toLocaleString('vi-VN')
+            : ''
+        );
+        const initialCats =
+          targetType === 'income'
+            ? activeIncomeCats
+            : (sortedCategories.length > 0 ? sortedCategories : activeExpenseCats);
+        const defaultCat = addTxnInitialState?.category || initialCats[0]?.name || '';
         setCategory(defaultCat);
         setDate(getLocalDateString());
-        setDesc('');
+        setDesc(addTxnInitialState?.desc || '');
         setErrorMsg('');
         setAmountError('');
 
-        // Preselect default wallet or first wallet
-        const defWallet = wallets.find((w) => w.isDefault) || wallets[0];
+        // Preselect wallet: prioritize addTxnInitialState.walletId, then default wallet, then first wallet
+        const targetWalletId = addTxnInitialState?.walletId;
+        const targetWallet = targetWalletId ? wallets.find((w) => w.id === targetWalletId) : null;
+        const defWallet = targetWallet || wallets.find((w) => w.isDefault) || wallets[0];
         if (defWallet) {
           setWalletId(defWallet.id);
         }
       }
     }
-  }, [isOpen, editingTransaction, categories, wallets, sortedCategories]);
+  }, [isOpen, editingTransaction, categories, wallets, sortedCategories, addTxnInitialState, activeIncomeCats, activeExpenseCats]);
 
   // Preselect category if empty when categories load
   useEffect(() => {
-    if (isOpen && !isEditing && !category && sortedCategories.length > 0) {
-      setCategory(sortedCategories[0]?.name || '');
+    if (isOpen && !isEditing && !category) {
+      if (type === 'expense' && sortedCategories.length > 0) {
+        setCategory(sortedCategories[0]?.name || '');
+      } else if (type === 'income' && activeIncomeCats.length > 0) {
+        setCategory(activeIncomeCats[0]?.name || '');
+      }
     }
-  }, [isOpen, isEditing, category, sortedCategories]);
+  }, [isOpen, isEditing, category, type, sortedCategories, activeIncomeCats]);
 
   // Preselect wallet if walletId is empty when wallets load
   useEffect(() => {
     if (isOpen && !walletId && wallets.length > 0) {
-      const defWallet = wallets.find((w) => w.isDefault) || wallets[0];
+      const targetWalletId = addTxnInitialState?.walletId;
+      const targetWallet = targetWalletId ? wallets.find((w) => w.id === targetWalletId) : null;
+      const defWallet = targetWallet || wallets.find((w) => w.isDefault) || wallets[0];
       if (defWallet) {
         setWalletId(defWallet.id);
       }
     }
-  }, [isOpen, walletId, wallets]);
+  }, [isOpen, walletId, wallets, addTxnInitialState]);
 
   // Auto focus amount input when opened
   useEffect(() => {
@@ -365,7 +382,13 @@ export function TransactionModal() {
         {/* Header */}
         <div className="txn-modal-header">
           <h2 id="txn-modal-title" className="txn-modal-title">
-            {isEditing ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch mới'}
+            {isEditing
+              ? 'Chỉnh sửa giao dịch'
+              : addTxnInitialState?.title && type === addTxnInitialState?.type
+                ? addTxnInitialState.title
+                : type === 'income'
+                  ? 'Nạp tiền / Thêm thu nhập'
+                  : 'Thêm giao dịch mới'}
           </h2>
           <button
             type="button"

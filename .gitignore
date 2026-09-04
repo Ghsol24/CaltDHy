@@ -13,6 +13,7 @@ caltdhy_db.json
 .DS_Store
 Thumbs.db
 *.log
+*.zip
 
 # Test artifacts
 tests/last-run-results.json

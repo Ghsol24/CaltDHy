@@ -168,16 +168,31 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
     >
       <div
         ref={modalRef}
-        className="txn-modal-card"
+        className="txn-modal-card modal-pro-card"
         role="dialog"
         aria-modal="true"
         aria-labelledby="wallet-modal-title"
       >
         {/* Header */}
-        <div className="txn-modal-header">
-          <h2 id="wallet-modal-title" className="txn-modal-title">
-            {isEditing ? 'Chỉnh sửa ví / tài khoản' : 'Thêm ví / tài khoản mới'}
-          </h2>
+        <div className="txn-modal-header modal-pro-header">
+          <div className="modal-pro-header-left">
+            <div className="modal-header-icon-badge" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+            </div>
+            <div className="modal-pro-header-titles">
+              <h2 id="wallet-modal-title" className="txn-modal-title modal-pro-title">
+                {isEditing ? 'Chỉnh sửa ví / tài khoản' : 'Thêm ví / tài khoản mới'}
+              </h2>
+              <p className="modal-pro-subtitle">
+                {isEditing
+                  ? 'Cập nhật thông tin ví hoặc tài khoản của bạn'
+                  : 'Tạo mới một ví hoặc liên kết tài khoản ngân hàng'}
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             className="txn-modal-close-btn"
@@ -202,13 +217,13 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body">
-            {/* Wallet Type Segment */}
+          <div className="txn-modal-body modal-pro-body">
+            {/* 1. Loại ví / tài khoản */}
             <div className="txn-field-group">
-              <label className="txn-label">
-                <span>Loại ví / tài khoản</span>
+              <label className="modal-section-label">
+                <span>1. Loại ví / tài khoản</span>
               </label>
-              <div className="wallet-type-grid" role="radiogroup" aria-label="Loại ví">
+              <div className="wallet-type-grid-pro" role="radiogroup" aria-label="Loại ví">
                 {[
                   { id: 'cash', label: 'Tiền mặt' },
                   { id: 'bank', label: 'Ngân hàng' },
@@ -220,121 +235,239 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                     type="button"
                     role="radio"
                     aria-checked={type === item.id}
-                    className={`wallet-type-pill ${type === item.id ? 'active' : ''}`}
+                    className={`wallet-type-card-pro ${type === item.id ? 'active' : ''}`}
                     onClick={() => handleTypeChange(item.id)}
                   >
-                    <WalletOutlineIcon type={item.id} size={18} color="currentColor" />
-                    <span>{item.label}</span>
+                    <div className="wallet-type-icon-box">
+                      <WalletOutlineIcon type={item.id} size={22} color="currentColor" />
+                    </div>
+                    <span className="wallet-type-card-title">{item.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Wallet Name */}
+            {/* 2. Tên ví / tài khoản */}
             <div className="txn-field-group">
-              <label htmlFor="wallet-name" className="txn-label">
-                <span>Tên ví / tài khoản</span>
+              <label htmlFor="wallet-name" className="modal-section-label">
+                <span>2. Tên ví / tài khoản</span>
               </label>
-              <input
-                id="wallet-name"
-                ref={nameInputRef}
-                type="text"
-                className="txn-input"
-                placeholder="VD: Ví tiền mặt, MB Bank, MoMo, Techcom Visa..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={40}
-                required
-              />
+              <div className="modal-input-icon-wrap">
+                <span className="modal-input-prefix-icon tag" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                    <line x1="7" y1="7" x2="7.01" y2="7" />
+                  </svg>
+                </span>
+                <input
+                  id="wallet-name"
+                  ref={nameInputRef}
+                  type="text"
+                  className="modal-pro-input with-prefix with-clear"
+                  placeholder="VD: Ví tiền mặt, MB Bank, MoMo, Techcom Visa..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={40}
+                  required
+                />
+                {name && (
+                  <button
+                    type="button"
+                    className="modal-input-clear-btn"
+                    onClick={() => {
+                      setName('');
+                      nameInputRef.current?.focus();
+                    }}
+                    aria-label="Xóa tên ví"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="10" opacity="0.18" />
+                      <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                      <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Initial Balance */}
+            {/* 3. Số dư khởi tạo */}
             <div className="txn-field-group">
-              <label htmlFor="wallet-balance" className="txn-label">
-                <span>{isEditing ? 'Số dư khởi tạo' : 'Số dư hiện tại ban đầu'}</span>
+              <label htmlFor="wallet-balance" className="modal-section-label">
+                <span>3. Số dư khởi tạo</span>
               </label>
-              <div className="txn-amount-box">
+              <div className="modal-pro-amount-box">
+                <div className="amount-prefix-badge wallet" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                    <circle cx="17" cy="14" r="1.5" />
+                  </svg>
+                </div>
                 <input
                   id="wallet-balance"
                   type="text"
                   inputMode="numeric"
-                  className="txn-amount-input"
+                  className="modal-pro-amount-input"
                   placeholder="0"
                   value={initialBalance}
                   onChange={handleBalanceChange}
                 />
-                <span className="txn-amount-suffix">VNĐ</span>
+                <div className="amount-currency-pill" title="Đơn vị tiền tệ">
+                  <span>VNĐ</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
               </div>
+              <p className="modal-field-hint">Nhập số dư hiện có khi tạo ví</p>
             </div>
 
-            {/* Credit Limit (Only for Credit Card type) */}
+            {/* Hạn mức thẻ tín dụng (Chỉ hiển thị khi chọn loại thẻ tín dụng) */}
             {type === 'credit' && (
               <div className="txn-field-group">
-                <label htmlFor="wallet-limit" className="txn-label">
+                <label htmlFor="wallet-limit" className="modal-section-label">
                   <span>Hạn mức thẻ tín dụng</span>
                 </label>
-                <div className="txn-amount-box">
+                <div className="modal-pro-amount-box">
+                  <div className="amount-prefix-badge credit-card" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                      <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                  </div>
                   <input
                     id="wallet-limit"
                     type="text"
                     inputMode="numeric"
-                    className="txn-amount-input"
+                    className="modal-pro-amount-input"
                     placeholder="0"
                     value={creditLimit}
                     onChange={handleLimitChange}
                   />
-                  <span className="txn-amount-suffix">VNĐ</span>
+                  <div className="amount-currency-pill">
+                    <span>VNĐ</span>
+                  </div>
                 </div>
               </div>
             )}
 
-
-            {/* Color Palette */}
+            {/* 4. Màu nhận diện */}
             <div className="txn-field-group">
-              <label className="txn-label">
-                <span>Màu nhận diện</span>
+              <label className="modal-section-label">
+                <span>4. Màu nhận diện</span>
               </label>
-              <div className="wallet-color-presets">
-                {PRESET_COLORS.map((hex) => (
-                  <button
-                    key={hex}
-                    type="button"
-                    className={`wallet-color-dot ${color === hex ? 'active' : ''}`}
-                    style={{ backgroundColor: hex }}
-                    onClick={() => setColor(hex)}
-                    aria-label={`Màu ${hex}`}
-                  />
-                ))}
+              <div className="wallet-color-presets-pro">
+                {PRESET_COLORS.map((hex) => {
+                  const isSelected = color.toLowerCase() === hex.toLowerCase();
+                  return (
+                    <button
+                      key={hex}
+                      type="button"
+                      className={`wallet-color-dot-pro ${isSelected ? 'active' : ''}`}
+                      style={{ backgroundColor: hex }}
+                      onClick={() => setColor(hex)}
+                      aria-label={`Màu ${hex}`}
+                    />
+                  );
+                })}
               </div>
             </div>
 
-            {/* Checkboxes */}
-            <div className="wallet-checkbox-list">
-              <label className="wallet-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
-                  className="wallet-checkbox-input"
-                />
-                <span className="wallet-checkbox-text">
-                  <strong>Đặt làm ví mặc định</strong>
-                  <small>Tự động chọn ví này khi mở popup thêm giao dịch mới</small>
-                </span>
+            {/* 5. Tùy chọn */}
+            <div className="txn-field-group">
+              <label className="modal-section-label">
+                <span>5. Tùy chọn</span>
               </label>
+              <div className="wallet-options-stack">
+                {/* Option 1: Đặt làm ví mặc định */}
+                <div
+                  className={`wallet-option-card-pro ${isDefault ? 'active' : ''}`}
+                  onClick={() => setIsDefault(!isDefault)}
+                  role="checkbox"
+                  aria-checked={isDefault}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      setIsDefault(!isDefault);
+                    }
+                  }}
+                >
+                  <div className="option-check-wrap">
+                    <input
+                      type="checkbox"
+                      checked={isDefault}
+                      onChange={(e) => setIsDefault(e.target.checked)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="option-native-checkbox"
+                      aria-hidden="true"
+                    />
+                    <span className={`option-custom-checkbox ${isDefault ? 'checked' : ''}`}>
+                      {isDefault && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </span>
+                  </div>
 
-              <label className="wallet-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={isExcludedFromTotal}
-                  onChange={(e) => setIsExcludedFromTotal(e.target.checked)}
-                  className="wallet-checkbox-input"
-                />
-                <span className="wallet-checkbox-text">
-                  <strong>Không tính vào tổng tài sản chi tiêu</strong>
-                  <small>Phù hợp cho tài khoản tiết kiệm dài hạn hoặc tài khoản doanh nghiệp</small>
-                </span>
-              </label>
+                  <div className="option-icon-symbol sparkle" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+                    </svg>
+                  </div>
+
+                  <div className="option-content">
+                    <strong className="option-title">Đặt làm ví mặc định</strong>
+                    <p className="option-desc">Tự động chọn ví này khi mở popup thêm giao dịch mới</p>
+                  </div>
+                </div>
+
+                {/* Option 2: Không tính vào tổng tài sản chi tiêu */}
+                <div
+                  className={`wallet-option-card-pro ${isExcludedFromTotal ? 'active' : ''}`}
+                  onClick={() => setIsExcludedFromTotal(!isExcludedFromTotal)}
+                  role="checkbox"
+                  aria-checked={isExcludedFromTotal}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      setIsExcludedFromTotal(!isExcludedFromTotal);
+                    }
+                  }}
+                >
+                  <div className="option-check-wrap">
+                    <input
+                      type="checkbox"
+                      checked={isExcludedFromTotal}
+                      onChange={(e) => setIsExcludedFromTotal(e.target.checked)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="option-native-checkbox"
+                      aria-hidden="true"
+                    />
+                    <span className={`option-custom-checkbox ${isExcludedFromTotal ? 'checked' : ''}`}>
+                      {isExcludedFromTotal && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="option-icon-symbol lock" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+
+                  <div className="option-content">
+                    <strong className="option-title">Không tính vào tổng tài sản chi tiêu</strong>
+                    <p className="option-desc">Phù hợp cho tài khoản tiết kiệm dài hạn hoặc tài khoản doanh nghiệp</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Error Message */}
@@ -364,7 +497,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
           <div className="txn-modal-footer">
             <button
               type="button"
-              className="txn-btn-cancel"
+              className="txn-btn-cancel modal-btn-cancel-pro"
               onClick={onClose}
               disabled={isSubmitting}
             >
@@ -372,7 +505,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
             </button>
             <button
               type="submit"
-              className="txn-btn-submit"
+              className="txn-btn-submit modal-btn-submit-pro"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -380,10 +513,13 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                   <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
                   <span>Đang lưu...</span>
                 </>
-              ) : isEditing ? (
-                'Cập nhật ví'
               ) : (
-                'Tạo ví mới'
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>{isEditing ? 'Cập nhật ví' : 'Tạo ví mới'}</span>
+                </>
               )}
             </button>
           </div>

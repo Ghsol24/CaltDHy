@@ -14,6 +14,7 @@ export const useSpendingStore = create((set) => ({
   monthlyExpense: 0,
 
   isAddTxnOpen: false,
+  addTxnInitialState: null,
   isSettingsOpen: false,
   isWrapupOpen: false,
   isAccountOpen: false,
@@ -38,8 +39,10 @@ export const useSpendingStore = create((set) => ({
       monthlyExpense: expense !== undefined ? expense : state.monthlyExpense
     })),
 
-  openAddTxnModal: () => set({ isAddTxnOpen: true }),
-  closeAddTxnModal: () => set({ isAddTxnOpen: false }),
+  openAddTxnModal: (initialState = null) =>
+    set({ isAddTxnOpen: true, addTxnInitialState: initialState }),
+  closeAddTxnModal: () =>
+    set({ isAddTxnOpen: false, addTxnInitialState: null }),
 
   openSettingsModal: () => set({ isSettingsOpen: true }),
   closeSettingsModal: () => set({ isSettingsOpen: false }),
