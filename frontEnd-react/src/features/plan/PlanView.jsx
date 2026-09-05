@@ -6,7 +6,7 @@ import { BudgetsTab } from './BudgetsTab';
 import { RecurringTab } from './RecurringTab';
 
 export function PlanView() {
-  const { planSubTab } = useSpendingStore();
+  const planSubTab = useSpendingStore((s) => s.planSubTab);
 
   return (
     <div className="plan-feature-view">

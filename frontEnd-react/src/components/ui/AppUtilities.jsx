@@ -72,7 +72,10 @@ function ModalOverlayShell({ title, subtitle, onClose, children }) {
 }
 
 export function AppUtilities() {
-  const spending = useSpendingStore();
+  const isSettingsOpen = useSpendingStore((s) => s.isSettingsOpen);
+  const closeSettingsModal = useSpendingStore((s) => s.closeSettingsModal);
+  const openHelpModal = useSpendingStore((s) => s.openHelpModal);
+  const isAccountOpen = useSpendingStore((s) => s.isAccountOpen);
   const { theme, setTheme } = useThemeStore();
   const { lang, setLang } = useLangStore();
   const { t } = useTranslation();
@@ -102,7 +105,7 @@ export function AppUtilities() {
       confirmVariant: 'danger'
     });
     if (confirmed) {
-      spending.closeSettingsModal();
+      closeSettingsModal();
       logout();
       navigate('/login');
     }
@@ -111,10 +114,10 @@ export function AppUtilities() {
   return (
     <>
       {/* ── Settings Modal: Language, Theme, Currency, Budgets, Backup ── */}
-      {spending.isSettingsOpen && (
+      {isSettingsOpen && (
         <ModalOverlayShell
           title={t('settings')}
-          onClose={spending.closeSettingsModal}
+          onClose={closeSettingsModal}
         >
           {/* 1. Ngôn ngữ / Language */}
           <div className="settings-group">
@@ -199,8 +202,8 @@ export function AppUtilities() {
               type="button"
               className="btn-settings-action btn-settings-action--guide"
               onClick={() => {
-                spending.closeSettingsModal();
-                spending.openHelpModal();
+                closeSettingsModal();
+                openHelpModal();
               }}
             >
               <svg
@@ -251,7 +254,7 @@ export function AppUtilities() {
       )}
 
       {/* ── Account Management Modal (3 Tabs: Profile, Security, Data & Privacy) ── */}
-      {spending.isAccountOpen && <AccountModal />}
+      {isAccountOpen && <AccountModal />}
 
       {/* ── Contextual Per-Section First-time Guide ── */}
       <ContextualSectionGuide />

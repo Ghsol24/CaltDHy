@@ -8,62 +8,65 @@ import { RecentTransactions } from './RecentTransactions';
 import { AttentionPanel } from './AttentionPanel';
 
 export function HomeView() {
-  const { openAddTxnModal } = useSpendingStore();
-  const { transactions, budgets } = useTransactionStore();
+  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
+  const transactions = useTransactionStore((s) => s.transactions);
+  const budgets = useTransactionStore((s) => s.budgets);
 
   const currentMonthStr = getLocalMonthString();
   const [, mStr] = currentMonthStr.split('-');
   const monthNum = parseInt(mStr, 10) || (new Date().getMonth() + 1);
 
   // Check finance health & context
-  const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
-  const hasTransactions = (transactions || []).some(
-    (t) => (t.date || '').slice(0, 7) === currentMonthStr
-  );
-  
-  let hasAnyBudget = false;
-  let hasCriticalBudget = false;
-  let hasWarningBudget = false;
-  let totalBudgetLimit = 0;
+  const { greeting, lastUpdatedText } = React.useMemo(() => {
+    const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
+    const hasTransactions = (transactions || []).some(
+      (t) => (t.date || '').slice(0, 7) === currentMonthStr
+    );
+    
+    let hasAnyBudget = false;
+    let hasCriticalBudget = false;
+    let hasWarningBudget = false;
 
-  if (budgets && typeof budgets === 'object') {
-    Object.entries(budgets).forEach(([category, limit]) => {
-      const numLimit = Number(limit) || 0;
-      if (numLimit > 0) {
-        hasAnyBudget = true;
-        totalBudgetLimit += numLimit;
-        const spent = monthlyStats.byCategory[category] || 0;
-        if (spent >= numLimit) {
-          hasCriticalBudget = true;
-        } else if (spent >= numLimit * 0.75) {
-          hasWarningBudget = true;
+    if (budgets && typeof budgets === 'object') {
+      Object.entries(budgets).forEach(([category, limit]) => {
+        const numLimit = Number(limit) || 0;
+        if (numLimit > 0) {
+          hasAnyBudget = true;
+          const spent = monthlyStats.byCategory[category] || 0;
+          if (spent >= numLimit) {
+            hasCriticalBudget = true;
+          } else if (spent >= numLimit * 0.75) {
+            hasWarningBudget = true;
+          }
         }
-      }
-    });
-  }
+      });
+    }
 
-  // Dynamic context-aware greeting
-  let greeting = `Tháng ${monthNum} của bạn đang ổn`;
-  if (!hasTransactions && !hasAnyBudget) {
-    greeting = `Chào bạn, hãy bắt đầu quản lý tài chính tháng ${monthNum}`;
-  } else if (!hasTransactions && hasAnyBudget) {
-    greeting = `Tháng ${monthNum} đã sẵn sàng cho kế hoạch chi tiêu`;
-  } else if (hasCriticalBudget) {
-    greeting = `Tháng ${monthNum} có khoản đã vượt hạn mức!`;
-  } else if (hasWarningBudget) {
-    greeting = `Tháng ${monthNum} cần chú ý chi tiêu`;
-  } else if (!hasAnyBudget && monthlyStats.expense > 0) {
-    greeting = `Tổng quan chi tiêu tháng ${monthNum}`;
-  } else if (monthlyStats.income > 0 && monthlyStats.income > monthlyStats.expense * 1.5) {
-    greeting = `Dòng tiền tháng ${monthNum} đang tăng trưởng tích cực`;
-  } else if (hasAnyBudget) {
-    greeting = `Chi tiêu tháng ${monthNum} trong tầm kiểm soát`;
-  }
+    // Dynamic context-aware greeting
+    let gr = `Tháng ${monthNum} của bạn đang ổn`;
+    if (!hasTransactions && !hasAnyBudget) {
+      gr = `Chào bạn, hãy bắt đầu quản lý tài chính tháng ${monthNum}`;
+    } else if (!hasTransactions && hasAnyBudget) {
+      gr = `Tháng ${monthNum} đã sẵn sàng cho kế hoạch chi tiêu`;
+    } else if (hasCriticalBudget) {
+      gr = `Tháng ${monthNum} có khoản đã vượt hạn mức!`;
+    } else if (hasWarningBudget) {
+      gr = `Tháng ${monthNum} cần chú ý chi tiêu`;
+    } else if (!hasAnyBudget && monthlyStats.expense > 0) {
+      gr = `Tổng quan chi tiêu tháng ${monthNum}`;
+    } else if (monthlyStats.income > 0 && monthlyStats.income > monthlyStats.expense * 1.5) {
+      gr = `Dòng tiền tháng ${monthNum} đang tăng trưởng tích cực`;
+    } else if (hasAnyBudget) {
+      gr = `Chi tiêu tháng ${monthNum} trong tầm kiểm soát`;
+    }
 
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const lastUpdatedText = `Cập nhật lần cuối hôm nay, ${hours}:${minutes}`;
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const updatedText = `Cập nhật lần cuối hôm nay, ${hours}:${minutes}`;
+
+    return { greeting: gr, lastUpdatedText: updatedText };
+  }, [transactions, budgets, currentMonthStr, monthNum]);
 
   return (
     <div className="home-dashboard-v2-container">

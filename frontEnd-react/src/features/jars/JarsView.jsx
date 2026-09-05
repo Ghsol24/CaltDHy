@@ -26,11 +26,15 @@ function formatTick(num) {
 }
 
 export function JarsView() {
-  const { jars, isLoading, error, fetchData, deleteJar } = useJarStore();
-  const { confirm } = useConfirmStore();
-  const { addToast } = useToastStore();
-  const { setJarsSubTab } = useSpendingStore();
-  const { theme } = useThemeStore();
+  const jars = useJarStore((s) => s.jars);
+  const isLoading = useJarStore((s) => s.isLoading);
+  const error = useJarStore((s) => s.error);
+  const fetchData = useJarStore((s) => s.fetchData);
+  const deleteJar = useJarStore((s) => s.deleteJar);
+  const confirm = useConfirmStore((s) => s.confirm);
+  const addToast = useToastStore((s) => s.addToast);
+  const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
+  const theme = useThemeStore((s) => s.theme);
 
   // Modals state
   const [isJarModalOpen, setIsJarModalOpen] = useState(false);
@@ -94,19 +98,24 @@ export function JarsView() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (window.__caltdhy_programmatic_scroll) return;
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const match = sectionList.find((s) => s.id === entry.target.id);
-            if (match) {
+        const visible = entries.filter((e) => e.isIntersecting);
+        if (visible.length > 0) {
+          visible.sort((a, b) => {
+            return Math.abs(a.boundingClientRect.top - 88) - Math.abs(b.boundingClientRect.top - 88);
+          });
+          const match = sectionList.find((s) => s.id === visible[0].target.id);
+          if (match) {
+            const currentTab = useSpendingStore.getState().jarsSubTab;
+            if (currentTab !== match.tab) {
               setJarsSubTab(match.tab);
             }
           }
-        });
+        }
       },
       {
         root: null,
         rootMargin: '-88px 0px -50% 0px',
-        threshold: 0.2
+        threshold: [0.1, 0.25, 0.5]
       }
     );
 

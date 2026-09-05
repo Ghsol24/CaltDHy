@@ -7,7 +7,8 @@ import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '
 import { getCategoryIcon } from '../../utils/categories';
 
 export function BudgetsTab() {
-  const { selectedMonth, setSelectedMonth } = useSpendingStore();
+  const selectedMonth = useSpendingStore((s) => s.selectedMonth);
+  const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const { transactions, budgets, expenseCategories, fetchBudgets } = useTransactionStore();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

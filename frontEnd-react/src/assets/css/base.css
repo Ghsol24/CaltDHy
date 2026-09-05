@@ -31,11 +31,11 @@ body.dark-panel {
 }
 
 /* ── Global Sleek Scrollbar (overrides chunky Windows default) ── */
-* {
+html, body {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
-*::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }

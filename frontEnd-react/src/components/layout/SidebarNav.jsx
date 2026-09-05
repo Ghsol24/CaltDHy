@@ -2,20 +2,18 @@ import React from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 
 export function SidebarNav() {
-  const {
-    activeView,
-    setActiveView,
-    planSubTab,
-    setPlanSubTab,
-    analyticsSubTab,
-    setAnalyticsSubTab,
-    jarsSubTab,
-    setJarsSubTab,
-    isSidebarCollapsed,
-    setSidebarCollapsed,
-    toggleSidebar,
-    openAddTxnModal
-  } = useSpendingStore();
+  const activeView = useSpendingStore((s) => s.activeView);
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const planSubTab = useSpendingStore((s) => s.planSubTab);
+  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+  const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
+  const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
+  const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
+  const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
+  const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
+  const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
+  const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
+  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
 
   const handleNavClick = (viewId, subTabId) => {
     setActiveView(viewId);

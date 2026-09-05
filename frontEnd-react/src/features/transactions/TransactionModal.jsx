@@ -11,20 +11,25 @@ import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 const EMPTY_EXPENSE_CATS = [];
 
 export function TransactionModal() {
-  const { isAddTxnOpen, addTxnInitialState, closeAddTxnModal, setActiveView, setPlanSubTab } = useSpendingStore();
-  const {
-    addTransaction,
-    updateTransaction,
-    undoAddTransaction,
-    editingTransaction,
-    closeEditTransaction,
-    expenseCategories,
-    incomeCategories,
-    budgets,
-    transactions
-  } = useTransactionStore();
-  const { wallets, fetchWallets } = useWalletStore();
-  const { addToast } = useToastStore();
+  const isAddTxnOpen = useSpendingStore((s) => s.isAddTxnOpen);
+  const addTxnInitialState = useSpendingStore((s) => s.addTxnInitialState);
+  const closeAddTxnModal = useSpendingStore((s) => s.closeAddTxnModal);
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+
+  const addTransaction = useTransactionStore((s) => s.addTransaction);
+  const updateTransaction = useTransactionStore((s) => s.updateTransaction);
+  const undoAddTransaction = useTransactionStore((s) => s.undoAddTransaction);
+  const editingTransaction = useTransactionStore((s) => s.editingTransaction);
+  const closeEditTransaction = useTransactionStore((s) => s.closeEditTransaction);
+  const expenseCategories = useTransactionStore((s) => s.expenseCategories);
+  const incomeCategories = useTransactionStore((s) => s.incomeCategories);
+  const budgets = useTransactionStore((s) => s.budgets);
+  const transactions = useTransactionStore((s) => s.transactions);
+
+  const wallets = useWalletStore((s) => s.wallets);
+  const fetchWallets = useWalletStore((s) => s.fetchWallets);
+  const addToast = useToastStore((s) => s.addToast);
 
   const isOpen = Boolean(isAddTxnOpen || editingTransaction);
   const isEditing = Boolean(editingTransaction);

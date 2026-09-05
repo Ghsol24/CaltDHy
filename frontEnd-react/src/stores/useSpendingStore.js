@@ -21,16 +21,26 @@ export const useSpendingStore = create((set) => ({
   isHelpOpen: false,
 
   setActiveView: (view) =>
-    set((state) => ({
-      activeView: view,
-      planSubTab: view === 'plan' ? 'overview' : state.planSubTab
-    })),
-  setPlanSubTab: (subTab) => set({ planSubTab: subTab }),
-  setAnalyticsSubTab: (subTab) => set({ analyticsSubTab: subTab }),
-  setJarsSubTab: (subTab) => set({ jarsSubTab: subTab }),
-  setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+    set((state) => {
+      if (state.activeView === view && (view !== 'plan' || state.planSubTab === 'overview')) {
+        return state;
+      }
+      return {
+        activeView: view,
+        planSubTab: view === 'plan' ? 'overview' : state.planSubTab
+      };
+    }),
+  setPlanSubTab: (subTab) =>
+    set((state) => (state.planSubTab === subTab ? state : { planSubTab: subTab })),
+  setAnalyticsSubTab: (subTab) =>
+    set((state) => (state.analyticsSubTab === subTab ? state : { analyticsSubTab: subTab })),
+  setJarsSubTab: (subTab) =>
+    set((state) => (state.jarsSubTab === subTab ? state : { jarsSubTab: subTab })),
+  setSidebarCollapsed: (collapsed) =>
+    set((state) => (state.isSidebarCollapsed === collapsed ? state : { isSidebarCollapsed: collapsed })),
   toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
-  setSelectedMonth: (month) => set({ selectedMonth: month }),
+  setSelectedMonth: (month) =>
+    set((state) => (state.selectedMonth === month ? state : { selectedMonth: month })),
 
   setMetrics: ({ balance, income, expense }) =>
     set((state) => ({

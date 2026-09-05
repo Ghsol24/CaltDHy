@@ -5,12 +5,10 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { formatDate } from '../../utils/formatters';
 
 export function Topbar() {
-  const { user } = useAuthStore();
-  const {
-    setActiveView,
-    openSettingsModal,
-    openAccountModal,
-  } = useSpendingStore();
+  const user = useAuthStore((s) => s.user);
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const openSettingsModal = useSpendingStore((s) => s.openSettingsModal);
+  const openAccountModal = useSpendingStore((s) => s.openAccountModal);
 
   // Format initials and display name
   const userName = user?.name || user?.email?.split('@')[0] || 'Người dùng';

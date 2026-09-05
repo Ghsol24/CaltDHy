@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 
 export function GuideModal() {
-  const { isHelpOpen, closeHelpModal, setActiveView, setPlanSubTab, setAnalyticsSubTab, setJarsSubTab } = useSpendingStore();
+  const isHelpOpen = useSpendingStore((s) => s.isHelpOpen);
+  const closeHelpModal = useSpendingStore((s) => s.closeHelpModal);
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+  const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
+  const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
   const [activeTab, setActiveTab] = useState('quickstart'); // 'quickstart' | 'home' | 'plan' | 'analytics' | 'jars'
 
   if (!isHelpOpen) return null;

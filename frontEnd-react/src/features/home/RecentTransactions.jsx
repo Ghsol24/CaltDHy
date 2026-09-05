@@ -9,17 +9,15 @@ import { getCategoryIcon } from '../../utils/categories';
 import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
 
 export function RecentTransactions() {
-  const {
-    transactions,
-    deleteTransaction,
-    undoDeleteTransaction,
-    openEditTransaction
-  } = useTransactionStore();
+  const transactions = useTransactionStore((s) => s.transactions);
+  const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
+  const undoDeleteTransaction = useTransactionStore((s) => s.undoDeleteTransaction);
+  const openEditTransaction = useTransactionStore((s) => s.openEditTransaction);
 
-  const { wallets } = useWalletStore();
-  const { openAddTxnModal } = useSpendingStore();
-  const { confirm } = useConfirmStore();
-  const { addToast } = useToastStore();
+  const wallets = useWalletStore((s) => s.wallets);
+  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
+  const confirm = useConfirmStore((s) => s.confirm);
+  const addToast = useToastStore((s) => s.addToast);
 
   // Create a map of walletId -> wallet object
   const walletMap = React.useMemo(() => {

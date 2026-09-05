@@ -11,7 +11,7 @@ import { formatCurrency, formatDate, getLocalMonthString } from '../../utils/for
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const { budgets, expenseCategories, transactions, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
-  const { selectedMonth } = useSpendingStore();
+  const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const { addToast } = useToastStore();
   const { wallets } = useWalletStore();
   const { jars } = useJarStore();

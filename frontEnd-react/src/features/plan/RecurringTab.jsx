@@ -39,7 +39,7 @@ export function RecurringTab() {
   const { wallets } = useWalletStore();
   const { confirm } = useConfirmStore();
   const { addToast } = useToastStore();
-  const { selectedMonth } = useSpendingStore();
+  const selectedMonth = useSpendingStore((s) => s.selectedMonth);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);

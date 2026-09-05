@@ -18,7 +18,8 @@ const WALLET_TYPE_LABELS = {
 };
 
 export function PlanOverviewTab() {
-  const { setPlanSubTab, setActiveView } = useSpendingStore();
+  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
   const { wallets, isLoading: isWalletsLoading } = useWalletStore();
   const { transactions, budgets, expenseCategories, isLoading: isTxnsLoading } = useTransactionStore();
   const { installments, isLoading: isJarsLoading } = useJarStore();

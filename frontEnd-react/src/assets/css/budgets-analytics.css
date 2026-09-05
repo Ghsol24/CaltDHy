@@ -1642,8 +1642,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 340px;
+  max-height: 380px;
   overflow-y: auto;
+  overscroll-behavior: auto;
 }
 
 .analytics-cat-item-row {

@@ -2038,9 +2038,7 @@ html.green-theme .modal-close:hover {
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
 .btn-add-jar:hover,
@@ -2090,10 +2088,8 @@ html.green-theme .modal-close:hover {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   cursor: default;
   box-shadow: var(--c-card-shadow);
   /* Fix #2: Giới hạn chiều rộng tối đa tránh card bị kéo giãn khi là item duy nhất */
@@ -2535,9 +2531,7 @@ html.green-theme .modal-close:hover {
   background: var(--c-inst-bg);
   border: 1px solid var(--c-inst-border);
   border-radius: 16px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .inst-item:hover {
   background: var(--c-inst-hover-bg);
@@ -3775,9 +3769,7 @@ html.dark-theme .jars-global-progress-fill {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.14);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.18);
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -3844,7 +3836,7 @@ html.dark-theme .jars-global-progress-fill {
   box-shadow: var(--shadow-sm);
   max-height: clamp(340px, calc(100vh - 460px), 540px);
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }

@@ -95,7 +95,7 @@ function detectCurrentDevice() {
 
 export function AccountModal() {
   const { user, updateProfile } = useAuthStore();
-  const spending = useSpendingStore();
+  const closeAccountModal = useSpendingStore((s) => s.closeAccountModal);
   const { transactions, budgets, expenseCategories, incomeCategories, resetAllFinancialData } = useTransactionStore();
   const { wallets } = useWalletStore();
   const { jars, installments } = useJarStore();
@@ -144,13 +144,13 @@ export function AccountModal() {
         if (isResetDialogOpen) {
           setIsResetDialogOpen(false);
         } else {
-          spending.closeAccountModal();
+          closeAccountModal();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isResetDialogOpen, spending]);
+  }, [isResetDialogOpen, closeAccountModal]);
 
   // Dirty state tracking cho tab Profile
   const isProfileDirty = useMemo(() => {
@@ -321,7 +321,7 @@ export function AccountModal() {
       await resetAllFinancialData();
       setIsResetDialogOpen(false);
       setResetConfirmInput('');
-      spending.closeAccountModal();
+      closeAccountModal();
     } catch (err) {
       setResetError(err.message || 'Không thể đặt lại dữ liệu. Vui lòng thử lại.');
     } finally {
@@ -335,7 +335,7 @@ export function AccountModal() {
         className="account-modal-overlay"
         onClick={(e) => {
           if (e.target === e.currentTarget && !isResetDialogOpen) {
-            spending.closeAccountModal();
+            closeAccountModal();
           }
         }}
         role="presentation"
@@ -363,7 +363,7 @@ export function AccountModal() {
             <button
               type="button"
               className="account-modal-close-btn"
-              onClick={spending.closeAccountModal}
+              onClick={closeAccountModal}
               aria-label="Đóng quản lý tài khoản"
             >
               ✕

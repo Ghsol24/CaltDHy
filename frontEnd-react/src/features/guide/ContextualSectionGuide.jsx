@@ -72,7 +72,8 @@ const SECTION_GUIDE_DATA = {
 };
 
 export function ContextualSectionGuide() {
-  const { activeView, openHelpModal } = useSpendingStore();
+  const activeView = useSpendingStore((s) => s.activeView);
+  const openHelpModal = useSpendingStore((s) => s.openHelpModal);
   const { user } = useAuthStore();
   const [currentGuide, setCurrentGuide] = useState(null);
 

@@ -7,77 +7,104 @@ import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } fro
 import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
 export function AttentionPanel() {
-  const { setActiveView, setPlanSubTab } = useSpendingStore();
-  const { transactions, budgets } = useTransactionStore();
-  const { jars, installments } = useJarStore();
-  const { wallets } = useWalletStore();
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+  const transactions = useTransactionStore((s) => s.transactions);
+  const budgets = useTransactionStore((s) => s.budgets);
+  const jars = useJarStore((s) => s.jars);
+  const installments = useJarStore((s) => s.installments);
+  const wallets = useWalletStore((s) => s.wallets);
 
   const currentMonthPrefix = getLocalMonthString();
-  const monthlyStats = calculateMonthlyStats(transactions, currentMonthPrefix);
 
-  // Số dư khả dụng thật sự (độc lập với ngân sách) — dùng để "bắc cầu" cho banner
-  // cảnh báo vượt ngân sách bên dưới, tránh cảm giác hai con số mâu thuẫn nhau.
-  const { availableToSpend } = calculateAvailableToSpend({
-    wallets,
-    transactions,
-    jars,
-    currentMonthPrefix
-  });
+  // Memoize all expensive aggregate metrics
+  const {
+    monthlyStats,
+    availableToSpend,
+    categoryStatusList,
+    hasBudgets,
+    hasTransactions,
+    totalLimit,
+    totalBudgetSpent,
+    topCategories,
+    topJar,
+    dangerCategory,
+    warningCategory,
+    daysLeft,
+    activeInstallmentsCount,
+    jarsCount
+  } = React.useMemo(() => {
+    const stats = calculateMonthlyStats(transactions, currentMonthPrefix);
 
-  // 1. Gather all category budget statuses
-  const categoryStatusList = [];
-  if (budgets && typeof budgets === 'object') {
-    Object.entries(budgets).forEach(([category, limit]) => {
-      const numLimit = Number(limit) || 0;
-      if (numLimit > 0) {
-        const spent = monthlyStats.byCategory[category] || 0;
-        const status = getBudgetStatus(spent, numLimit);
-        categoryStatusList.push({
-          category,
-          spent,
-          limit: numLimit,
-          percent: status.percent,
-          remaining: status.remaining,
-          status: status.status
-        });
-      }
+    const { availableToSpend: ats } = calculateAvailableToSpend({
+      wallets,
+      transactions,
+      jars,
+      currentMonthPrefix
     });
-  }
 
-  // Sort by spent descending
-  categoryStatusList.sort((a, b) => b.spent - a.spent);
+    const catList = [];
+    if (budgets && typeof budgets === 'object') {
+      Object.entries(budgets).forEach(([category, limit]) => {
+        const numLimit = Number(limit) || 0;
+        if (numLimit > 0) {
+          const spent = stats.byCategory[category] || 0;
+          const status = getBudgetStatus(spent, numLimit);
+          catList.push({
+            category,
+            spent,
+            limit: numLimit,
+            percent: status.percent,
+            remaining: status.remaining,
+            status: status.status
+          });
+        }
+      });
+    }
 
-  const hasBudgets = categoryStatusList.length > 0;
-  const hasTransactions = (transactions || []).some(
-    (t) => (t.date || '').slice(0, 7) === currentMonthPrefix
-  );
-  const totalLimit = categoryStatusList.reduce((acc, c) => acc + c.limit, 0);
-  const totalBudgetSpent = categoryStatusList.reduce((acc, c) => acc + c.spent, 0);
+    catList.sort((a, b) => b.spent - a.spent);
 
-  // Top 2 categories for the plan card
-  const topCategories = categoryStatusList.slice(0, 2);
+    const hasB = catList.length > 0;
+    const hasT = (transactions || []).some(
+      (t) => (t.date || '').slice(0, 7) === currentMonthPrefix
+    );
+    const totLimit = catList.reduce((acc, c) => acc + c.limit, 0);
+    const totSpent = catList.reduce((acc, c) => acc + c.spent, 0);
+    const topCats = catList.slice(0, 2);
+    const tj = jars && jars.length > 0 ? jars[0] : null;
 
-  // Top 1 Jar for the plan card
-  const topJar = jars && jars.length > 0 ? jars[0] : null;
+    const dangerCat = [...catList]
+      .sort((a, b) => b.percent - a.percent)
+      .find((c) => c.percent >= 100);
 
-  // Critical category (percent >= 100%)
-  const dangerCategory = [...categoryStatusList]
-    .sort((a, b) => b.percent - a.percent)
-    .find((c) => c.percent >= 100);
+    const warningCat = [...catList]
+      .sort((a, b) => b.percent - a.percent)
+      .find((c) => c.percent >= 75 && c.percent < 100);
 
-  // Warning category (75% <= percent < 100%)
-  const warningCategory = [...categoryStatusList]
-    .sort((a, b) => b.percent - a.percent)
-    .find((c) => c.percent >= 75 && c.percent < 100);
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const dLeft = Math.max(1, daysInMonth - now.getDate());
 
-  // Days left in current month
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const daysLeft = Math.max(1, daysInMonth - now.getDate());
+    const instCount = (installments || []).filter((i) => i.active !== false).length;
+    const jCount = (jars || []).length;
 
-  // Count upcoming active installments
-  const activeInstallmentsCount = (installments || []).filter((i) => i.active !== false).length;
-  const jarsCount = (jars || []).length;
+    return {
+      monthlyStats: stats,
+      availableToSpend: ats,
+      categoryStatusList: catList,
+      hasBudgets: hasB,
+      hasTransactions: hasT,
+      totalLimit: totLimit,
+      totalBudgetSpent: totSpent,
+      topCategories: topCats,
+      topJar: tj,
+      dangerCategory: dangerCat,
+      warningCategory: warningCat,
+      daysLeft: dLeft,
+      activeInstallmentsCount: instCount,
+      jarsCount: jCount
+    };
+  }, [transactions, budgets, jars, installments, wallets, currentMonthPrefix]);
 
   const handleGoToBudgets = () => {
     setActiveView('plan');

@@ -13,10 +13,11 @@ import { AppUtilities } from '../components/ui/AppUtilities';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 export function SpendingPage() {
-  const { activeView } = useSpendingStore();
-  const { fetchTransactions, fetchBudgets } = useTransactionStore();
-  const { fetchWallets } = useWalletStore();
-  const { fetchData: fetchJarData } = useJarStore();
+  const activeView = useSpendingStore((s) => s.activeView);
+  const fetchTransactions = useTransactionStore((s) => s.fetchTransactions);
+  const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
+  const fetchWallets = useWalletStore((s) => s.fetchWallets);
+  const fetchJarData = useJarStore((s) => s.fetchData);
 
   useEffect(() => {
     fetchTransactions();

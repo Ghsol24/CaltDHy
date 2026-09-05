@@ -360,7 +360,8 @@ function WalletDonutChart({
 export function WalletsTab() {
   const { wallets, deleteWallet, isLoading } = useWalletStore();
   const { transactions } = useTransactionStore();
-  const { setActiveView, openAddTxnModal } = useSpendingStore();
+  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const { confirm } = useConfirmStore();
   const { addToast } = useToastStore();
 

@@ -48,9 +48,14 @@ const CATEGORY_COLORS = [
 ];
 
 export function AnalyticsView() {
-  const { transactions, budgets } = useTransactionStore();
-  const { selectedMonth, setSelectedMonth, openAddTxnModal, analyticsSubTab, setAnalyticsSubTab } = useSpendingStore();
-  const { theme } = useThemeStore();
+  const transactions = useTransactionStore((s) => s.transactions);
+  const budgets = useTransactionStore((s) => s.budgets);
+  const selectedMonth = useSpendingStore((s) => s.selectedMonth);
+  const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
+  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
+  const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
+  const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
+  const theme = useThemeStore((s) => s.theme);
 
   const [trendMode, setTrendMode] = useState('daily'); // 'daily' | '3months' | '6months'
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
@@ -819,7 +824,8 @@ export function AnalyticsView() {
           });
           const activeEntry = visibleEntries[0];
           const subTab = subTabMap[activeEntry.target.id];
-          if (subTab && subTab !== analyticsSubTab) {
+          const currentTab = useSpendingStore.getState().analyticsSubTab;
+          if (subTab && subTab !== currentTab) {
             setAnalyticsSubTab(subTab);
           }
         }
@@ -836,7 +842,7 @@ export function AnalyticsView() {
     return () => {
       observer.disconnect();
     };
-  }, [analyticsSubTab, setAnalyticsSubTab]);
+  }, [setAnalyticsSubTab]);
 
   // Initial scroll if subTab was clicked from outside
   const hasInitialScrolledRef = useRef(false);
