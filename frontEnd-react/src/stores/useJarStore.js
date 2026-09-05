@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { jarsService } from '../services/jarsService';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
+import { advanceNextDueDate, getLocalDateString } from '../utils/formatters';
 
 const JARS_KEY = 'caltdhy_jars';
 const INSTALLMENTS_KEY = 'caltdhy_installments';
@@ -268,12 +269,30 @@ export const useJarStore = create((set, get) => ({
       // Tự động đồng bộ giao dịch chi tiêu mới và số dư ví sau khi thanh toán định kỳ
       useTransactionStore.getState()?.fetchTransactions?.();
       useWalletStore.getState()?.fetchWallets?.();
-    } catch (err) {
+    } catch (_err) {
       const updated = get().installments.map((item) => {
         if (item.id !== id) return item;
+        const prevDueDate = item.nextDueDate;
+        const nextDate = advanceNextDueDate(item.nextDueDate, item.cycle);
+        const todayDate = getLocalDateString();
+        const historyEntry = {
+          id: `hist_${Date.now()}`,
+          amount: item.amount,
+          paidDate: todayDate,
+          cycleDate: prevDueDate,
+          createdAt: new Date().toISOString()
+        };
+        const newHistory = [historyEntry, ...(Array.isArray(item.history) ? item.history : [])];
         const newPaid = (item.paidMonths || 0) + 1;
-        const newRemaining = Math.max(0, (item.remainingAmount || 0) - (item.monthlyAmount || 0));
-        return { ...item, paidMonths: newPaid, remainingAmount: newRemaining };
+        const newTotalPaid = (item.totalPaid || 0) + item.amount;
+        return {
+          ...item,
+          nextDueDate: nextDate,
+          dueDate: nextDate,
+          history: newHistory,
+          paidMonths: newPaid,
+          totalPaid: newTotalPaid
+        };
       });
       saveStoredInstallments(updated);
       set({ installments: updated });

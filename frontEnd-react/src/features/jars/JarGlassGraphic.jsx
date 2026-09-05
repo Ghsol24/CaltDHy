@@ -10,7 +10,7 @@ import React from 'react';
  * @param {number} width - Render width in px (default 80)
  * @param {number} height - Render height in px (default 96)
  */
-export function JarGlassGraphic({
+export const JarGlassGraphic = React.memo(function JarGlassGraphic({
   percent = 0,
   color = '#5356F1',
   icon = '🫙',
@@ -193,4 +193,4 @@ export function JarGlassGraphic({
       </span>
     </div>
   );
-}
+});

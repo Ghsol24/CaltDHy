@@ -17,6 +17,60 @@ export function SidebarNav() {
 
   const handleNavClick = (viewId, subTabId) => {
     setActiveView(viewId);
+    const triggerProgrammaticScroll = (targetId, delay = 0) => {
+      if (typeof window.__caltdhy_cancel_scroll === 'function') {
+        window.__caltdhy_cancel_scroll();
+      }
+
+      window.__caltdhy_programmatic_scroll = true;
+      let timerId = null;
+      let delayTimerId = null;
+
+      const resetFlag = () => {
+        window.__caltdhy_programmatic_scroll = false;
+        window.__caltdhy_cancel_scroll = null;
+        window.removeEventListener('wheel', onUserInterrupt);
+        window.removeEventListener('touchstart', onUserInterrupt);
+        if ('onscrollend' in window) {
+          window.removeEventListener('scrollend', resetFlag);
+        }
+      };
+
+      const onUserInterrupt = () => {
+        if (timerId) clearTimeout(timerId);
+        if (delayTimerId) clearTimeout(delayTimerId);
+        resetFlag();
+      };
+
+      window.__caltdhy_cancel_scroll = () => {
+        if (timerId) clearTimeout(timerId);
+        if (delayTimerId) clearTimeout(delayTimerId);
+        resetFlag();
+      };
+
+      const scrollAction = () => {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        window.addEventListener('wheel', onUserInterrupt, { passive: true, once: true });
+        window.addEventListener('touchstart', onUserInterrupt, { passive: true, once: true });
+
+        if ('onscrollend' in window) {
+          window.addEventListener('scrollend', resetFlag, { once: true });
+        }
+
+        timerId = setTimeout(resetFlag, 500);
+      };
+
+      if (delay > 0) {
+        delayTimerId = setTimeout(scrollAction, delay);
+      } else {
+        scrollAction();
+      }
+    };
+
     if (viewId === 'plan' && subTabId) {
       setPlanSubTab(subTabId);
     } else if (viewId === 'analytics' && subTabId) {
@@ -28,21 +82,7 @@ export function SidebarNav() {
         reports: 'analytics-reports'
       };
       const targetId = targetMap[subTabId] || 'analytics-overview';
-      window.__caltdhy_programmatic_scroll = true;
-      const scrollAction = () => {
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        setTimeout(() => {
-          window.__caltdhy_programmatic_scroll = false;
-        }, 800);
-      };
-      if (activeView === 'analytics') {
-        scrollAction();
-      } else {
-        setTimeout(scrollAction, 100);
-      }
+      triggerProgrammaticScroll(targetId, activeView === 'analytics' ? 0 : 100);
     } else if (viewId === 'jars' && subTabId) {
       setJarsSubTab(subTabId);
       const targetMap = {
@@ -51,21 +91,7 @@ export function SidebarNav() {
         history: 'jars-section-history'
       };
       const targetId = targetMap[subTabId] || 'jars-section-list';
-      window.__caltdhy_programmatic_scroll = true;
-      const scrollAction = () => {
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        setTimeout(() => {
-          window.__caltdhy_programmatic_scroll = false;
-        }, 800);
-      };
-      if (activeView === 'jars') {
-        scrollAction();
-      } else {
-        setTimeout(scrollAction, 120);
-      }
+      triggerProgrammaticScroll(targetId, activeView === 'jars' ? 0 : 120);
     }
 
     if (window.innerWidth <= 900) {

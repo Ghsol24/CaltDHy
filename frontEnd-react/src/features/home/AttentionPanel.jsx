@@ -6,7 +6,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
-export function AttentionPanel() {
+export const AttentionPanel = React.memo(function AttentionPanel() {
   const setActiveView = useSpendingStore((s) => s.setActiveView);
   const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
   const transactions = useTransactionStore((s) => s.transactions);
@@ -307,4 +307,4 @@ export function AttentionPanel() {
       </div>
     </aside>
   );
-}
+});

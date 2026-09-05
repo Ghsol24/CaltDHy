@@ -5,10 +5,10 @@ import { useJarStore } from '../../stores/useJarStore';
 import { calculateAvailableToSpend } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
 
-export function AvailableToSpendCard() {
-  const { transactions } = useTransactionStore();
-  const { wallets } = useWalletStore();
-  const { jars } = useJarStore();
+export const AvailableToSpendCard = React.memo(function AvailableToSpendCard() {
+  const transactions = useTransactionStore((s) => s.transactions);
+  const wallets = useWalletStore((s) => s.wallets);
+  const jars = useJarStore((s) => s.jars);
 
   // Month prefix: e.g. "2026-09"
   const currentMonthPrefix = getLocalMonthString();
@@ -18,12 +18,14 @@ export function AvailableToSpendCard() {
     availableToSpend,
     monthlyIncome,
     monthlyExpense
-  } = calculateAvailableToSpend({
-    wallets,
-    transactions,
-    jars,
-    currentMonthPrefix
-  });
+  } = React.useMemo(() => {
+    return calculateAvailableToSpend({
+      wallets,
+      transactions,
+      jars,
+      currentMonthPrefix
+    });
+  }, [wallets, transactions, jars, currentMonthPrefix]);
 
   return (
     <div className="home-hero-balance-card" role="region" aria-label="Tổng quan tiền khả dụng">
@@ -63,4 +65,4 @@ export function AvailableToSpendCard() {
       </div>
     </div>
   );
-}
+});

@@ -71,7 +71,7 @@ function ModalOverlayShell({ title, subtitle, onClose, children }) {
   );
 }
 
-export function AppUtilities() {
+export const AppUtilities = React.memo(function AppUtilities() {
   const isSettingsOpen = useSpendingStore((s) => s.isSettingsOpen);
   const closeSettingsModal = useSpendingStore((s) => s.closeSettingsModal);
   const openHelpModal = useSpendingStore((s) => s.openHelpModal);
@@ -263,6 +263,6 @@ export function AppUtilities() {
       <GuideModal />
     </>
   );
-}
+});
 
 

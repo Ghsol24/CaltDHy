@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { getCategoryIcon } from '../../utils/categories';
 import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
 
-export function RecentTransactions() {
+export const RecentTransactions = React.memo(function RecentTransactions() {
   const transactions = useTransactionStore((s) => s.transactions);
   const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
   const undoDeleteTransaction = useTransactionStore((s) => s.undoDeleteTransaction);
@@ -192,4 +192,4 @@ export function RecentTransactions() {
       </div>
     </section>
   );
-}
+});

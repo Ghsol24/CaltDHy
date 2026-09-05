@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -53,7 +53,6 @@ export function AnalyticsView() {
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
-  const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
   const theme = useThemeStore((s) => s.theme);
 
@@ -844,24 +843,23 @@ export function AnalyticsView() {
     };
   }, [setAnalyticsSubTab]);
 
-  // Initial scroll if subTab was clicked from outside
-  const hasInitialScrolledRef = useRef(false);
+  // Initial scroll if subTab was clicked from outside (runs once on mount)
   useEffect(() => {
-    if (!hasInitialScrolledRef.current && analyticsSubTab && analyticsSubTab !== 'overview') {
-      hasInitialScrolledRef.current = true;
+    const initialTab = useSpendingStore.getState().analyticsSubTab;
+    if (initialTab && initialTab !== 'overview') {
       const targetMap = {
         spending: 'analytics-spending',
         'cash-flow': 'analytics-cashflow',
         reports: 'analytics-reports'
       };
-      const targetId = targetMap[analyticsSubTab];
+      const targetId = targetMap[initialTab];
       if (targetId) {
         setTimeout(() => {
           document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 150);
       }
     }
-  }, [analyticsSubTab]);
+  }, []);
 
   return (
     <div className="analytics-feature-view" role="region" aria-label="Báo cáo phân tích thu chi">

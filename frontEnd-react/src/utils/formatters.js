@@ -257,3 +257,43 @@ export function getCalendarDateParts(dateInput) {
   };
 }
 
+/**
+ * Tịnh tiến ngày đến hạn kế tiếp dựa theo chu kỳ (monthly, quarterly, yearly).
+ * Đảm bảo ngày cuối tháng được căn chỉnh chính xác (vd: 31/01 -> 28/02).
+ *
+ * @param {string} dateStr - Định dạng YYYY-MM-DD
+ * @param {string} cycle - 'monthly' | 'quarterly' | 'yearly'
+ * @returns {string} Ngày kế tiếp định dạng YYYY-MM-DD
+ */
+export function advanceNextDueDate(dateStr, cycle = 'monthly') {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  let targetYear = year;
+  let targetMonth = month;
+  if (cycle === 'monthly') {
+    targetMonth = month + 1;
+    if (targetMonth > 11) {
+      targetYear += Math.floor(targetMonth / 12);
+      targetMonth = targetMonth % 12;
+    }
+  } else if (cycle === 'quarterly') {
+    targetMonth = month + 3;
+    if (targetMonth > 11) {
+      targetYear += Math.floor(targetMonth / 12);
+      targetMonth = targetMonth % 12;
+    }
+  } else if (cycle === 'yearly') {
+    targetYear += 1;
+  }
+
+  const daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+  const targetDay = Math.min(day, daysInTargetMonth);
+
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${targetYear}-${pad(targetMonth + 1)}-${pad(targetDay)}`;
+}

@@ -169,14 +169,13 @@ export function RecurringTab() {
     let remainingAmount = 0;
     let remainingCount = 0;
 
-    const now = new Date();
-    const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const targetMonth = currentMonthStr || getLocalMonthString();
 
-    // 1. Tính các khoản đã thanh toán trong tháng hiện tại từ lịch sử giao dịch
+    // 1. Tính các khoản đã thanh toán trong tháng mục tiêu từ lịch sử
     installments.forEach((item) => {
       if (Array.isArray(item.history)) {
         item.history.forEach((h) => {
-          if (h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthPrefix)) {
+          if (h && typeof h.paidDate === 'string' && h.paidDate.startsWith(targetMonth)) {
             paidAmount += Number(h.amount) || 0;
             paidCount++;
           }
@@ -184,19 +183,31 @@ export function RecurringTab() {
       }
     });
 
-    // 2. Phân loại các khoản sắp đến hạn và còn lại
+    // 2. Phân loại các khoản chưa thanh toán trong tháng mục tiêu
     activeItems.forEach((item) => {
-      const due = getDueStatus(item.nextDueDate);
-      const amt = Number(item.amount) || 0;
+      const isPaidInMonth = Array.isArray(item.history) && item.history.some(
+        (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(targetMonth)
+      );
 
-      if (due.diffDays !== null) {
-        if (due.isToday || (due.diffDays >= 1 && due.diffDays <= 7)) {
-          upcomingSoonAmount += amt;
-          upcomingSoonCount++;
-        } else if (due.diffDays > 7) {
-          remainingAmount += amt;
-          remainingCount++;
-        }
+      // Nếu đã thanh toán trong tháng này thì không còn là khoản cần trả trong tháng
+      if (isPaidInMonth) return;
+
+      const dueMonth = item.nextDueDate ? item.nextDueDate.slice(0, 7) : '';
+      // Khoản định kỳ đến hạn trong tháng này hoặc đã quá hạn từ trước
+      const isDueThisMonth = dueMonth ? dueMonth <= targetMonth : true;
+      if (!isDueThisMonth) return;
+
+      const amt = Number(item.amount) || 0;
+      const due = getDueStatus(item.nextDueDate);
+
+      // Cộng dồn vào các khoản còn lại trong tháng
+      remainingAmount += amt;
+      remainingCount++;
+
+      // Nếu khoản này đến hạn hôm nay, sắp đến hạn trong 7 ngày hoặc đã quá hạn -> tính vào Sắp thanh toán
+      if (due.isOverdue || due.isToday || (due.diffDays !== null && due.diffDays >= 1 && due.diffDays <= 7)) {
+        upcomingSoonAmount += amt;
+        upcomingSoonCount++;
       }
     });
 
@@ -208,7 +219,7 @@ export function RecurringTab() {
       remainingAmount,
       remainingCount
     };
-  }, [installments, activeItems]);
+  }, [installments, activeItems, currentMonthStr]);
 
   // Actions
   const handleOpenCreate = () => {
@@ -510,6 +521,10 @@ export function RecurringTab() {
             const assignedWallet = wallets.find((w) => w.id === item.walletId) || wallets[0];
             const categoryLabel = CATEGORY_TAG_LABELS[item.category] || item.category || brandInfo.categoryDefault;
 
+            const isPaidThisMonth = Array.isArray(item.history) && item.history.some(
+              (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthStr)
+            );
+
             const isMenuOpen = openActionMenuId === item.id;
             const isWalletMenuOpen = openWalletSelectorId === item.id;
 
@@ -604,7 +619,9 @@ export function RecurringTab() {
                 {/* 4. Due Status Countdown Pill */}
                 <div className="recurring-row-due-col">
                   <div className={`recurring-due-pill-box ${
-                    dueStatus.isOverdue
+                    isPaidThisMonth
+                      ? 'due-paid'
+                      : dueStatus.isOverdue
                       ? 'due-danger'
                       : dueStatus.isToday
                       ? 'due-warning'
@@ -612,16 +629,32 @@ export function RecurringTab() {
                       ? 'due-soon'
                       : 'due-normal'
                   }`}>
-                    <div className="due-pill-top">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      <strong>{dueStatus.text}</strong>
-                    </div>
-                    <span className="due-pill-sub">
-                      Đến hạn vào {formattedDueDate}
-                    </span>
+                    {isPaidThisMonth ? (
+                      <>
+                        <div className="due-pill-top">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          <strong>Đã trả tháng này</strong>
+                        </div>
+                        <span className="due-pill-sub">
+                          Kỳ tới: {formattedDueDate}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="due-pill-top">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          <strong>{dueStatus.text}</strong>
+                        </div>
+                        <span className="due-pill-sub">
+                          Đến hạn vào {formattedDueDate}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -663,7 +696,7 @@ export function RecurringTab() {
                           <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
-                          <span>Đánh dấu đã trả kỳ này</span>
+                          <span>{isPaidThisMonth ? 'Đánh dấu đã trả kỳ tới' : 'Đánh dấu đã trả kỳ này'}</span>
                         </button>
                         <button
                           type="button"

@@ -1833,6 +1833,13 @@
   scroll-margin-top: 96px;
 }
 
+#analytics-spending,
+#analytics-cashflow,
+#analytics-reports {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 550px;
+}
+
 /* ── 5. FINANCIAL REPORT SECTION (BÁO CÁO TÀI CHÍNH CHUYÊN SÂU) ── */
 .analytics-report-section {
   display: flex;

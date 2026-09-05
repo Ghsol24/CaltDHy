@@ -18,6 +18,12 @@
   scroll-margin-top: 88px;
 }
 
+#jars-section-list,
+#jars-section-history {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 450px;
+}
+
 /* ── Generic Section Headers ── */
 .jars-section-header-row {
   display: flex;
