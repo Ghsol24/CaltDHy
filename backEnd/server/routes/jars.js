@@ -7,6 +7,8 @@ const Installment = require('../models/Installment');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 const Category = require('../models/Category');
+const User = require('../models/User');
+const Budget = require('../models/Budget');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { isValidVNDAmount } = require('../utils/money');
 const { getVietnamTodayString, nowAsVietnamDateAnchor } = require('../utils/localDate');
@@ -409,6 +411,9 @@ router.put('/installments/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
 
+        const oldCategory = item.category;
+        const oldName = item.name;
+
         const { name, icon, amount, cycle, nextDueDate, category, walletId } = req.body;
         if (name !== undefined) {
             if (!name.trim()) return res.status(400).json({ success: false, message: 'Tên không được để trống.' });
@@ -441,6 +446,40 @@ router.put('/installments/:id', async (req, res) => {
         }
 
         await item.save();
+
+        // 1. Nếu thay đổi category: Cập nhật toàn bộ giao dịch đã sinh từ khoản định kỳ này
+        if (category !== undefined && category.trim() !== oldCategory) {
+            const newCategory = category.trim();
+            await Transaction.updateMany(
+                { installmentId: item._id, userId: req.user.id },
+                { $set: { category: newCategory } }
+            );
+
+            // Dọn dẹp danh mục cũ nếu không còn giao dịch, khoản định kỳ hoặc ngân sách nào sử dụng
+            try {
+                const isUsedInTx = await Transaction.exists({ userId: req.user.id, category: oldCategory });
+                const isUsedInInst = await Installment.exists({ userId: req.user.id, category: oldCategory });
+                const isUsedInBudget = await Budget.exists({ userId: req.user.id, category: oldCategory });
+                if (!isUsedInTx && !isUsedInInst && !isUsedInBudget) {
+                    await Category.deleteOne({ userId: req.user.id, nameLower: oldCategory.toLowerCase() });
+                    await User.updateOne(
+                        { _id: req.user.id },
+                        { $pull: { customCategories: oldCategory } }
+                    );
+                }
+            } catch (cleanupErr) {
+                console.warn('Category cleanup warning:', cleanupErr.message);
+            }
+        }
+
+        // 2. Nếu thay đổi name: Cập nhật desc cho các giao dịch liên quan
+        if (name !== undefined && name.trim() !== oldName) {
+            const newName = name.trim();
+            await Transaction.updateMany(
+                { installmentId: item._id, userId: req.user.id, desc: `Thanh toán định kỳ: ${oldName}` },
+                { $set: { desc: `Thanh toán định kỳ: ${newName}` } }
+            );
+        }
 
         res.json({ success: true, message: 'Đã cập nhật khoản định kỳ!', data: item.toJSON() });
     } catch (error) {

@@ -54,6 +54,10 @@ const walletSchema = new mongoose.Schema(
         archived: {
             type: Boolean,
             default: false
+        },
+        archivedAt: {
+            type: Date,
+            default: null
         }
     },
     {

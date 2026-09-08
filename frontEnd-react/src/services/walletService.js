@@ -1,8 +1,22 @@
 import { api } from './api';
 
 export const walletService = {
-  getWallets: async () => {
-    return await api.get('/api/wallets');
+  getWallets: async (includeArchived = false) => {
+    return await api.get('/api/wallets', {
+      params: includeArchived ? { includeArchived: 'true' } : {}
+    });
+  },
+
+  getPreArchiveInfo: async (id) => {
+    return await api.get(`/api/wallets/${id}/pre-archive`);
+  },
+
+  archiveWallet: async (id, data = {}) => {
+    return await api.post(`/api/wallets/${id}/archive`, data);
+  },
+
+  unarchiveWallet: async (id) => {
+    return await api.post(`/api/wallets/${id}/unarchive`);
   },
 
   createWallet: async (data) => {

@@ -35,10 +35,16 @@ if [ ! -d "$FRONTEND_DIR/dist" ]; then
     fi
 fi
 
-# If already running, just open browser
-if lsof -i:24127 -t >/dev/null 2>&1; then
-    open "http://localhost:24127"
-    exit 0
+# Restart server cleanly if already running to pick up the latest code updates
+EXISTING_PID=$(lsof -i:24127 -t 2>/dev/null)
+if [ -n "$EXISTING_PID" ]; then
+    kill -TERM $EXISTING_PID 2>/dev/null
+    sleep 0.5
+    STILL_RUNNING=$(lsof -i:24127 -t 2>/dev/null)
+    if [ -n "$STILL_RUNNING" ]; then
+        kill -9 $STILL_RUNNING 2>/dev/null
+        sleep 0.3
+    fi
 fi
 
 # Start server in background

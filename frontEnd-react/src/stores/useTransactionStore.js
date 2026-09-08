@@ -53,7 +53,7 @@ const saveStoredExpenseCategories = (cats) => {
   } catch {}
 };
 
-const saveStoredIncomeCategories = (cats) => {
+const _saveStoredIncomeCategories = (cats) => {
   try {
     localStorage.setItem(INCOME_CAT_KEY, JSON.stringify(cats));
   } catch {}
@@ -235,12 +235,12 @@ export const useTransactionStore = create((set, get) => ({
           }
         });
 
-        DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
-          if (!known.has(defCat.name.toLowerCase())) {
-            known.add(defCat.name.toLowerCase());
+        // Chỉ fallback về danh mục mặc định nếu danh sách sau khi merge hoàn toàn rỗng (user mới chưa có dữ liệu)
+        if (merged.length === 0) {
+          DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
             merged.push({ name: defCat.name, icon: defCat.icon });
-          }
-        });
+          });
+        }
 
         saveStoredExpenseCategories(merged);
         set({ budgets: budgetMap, expenseCategories: merged });
@@ -263,8 +263,12 @@ export const useTransactionStore = create((set, get) => ({
         throw new Error(res.message || 'Lỗi cập nhật ngân sách');
       }
     } catch (err) {
-      set({ budgets: budgetsObj, isLoading: false });
-      return { success: true, data: budgetsObj, offline: true };
+      set({ isLoading: false });
+      if (err && err.status === 503) {
+        set({ budgets: budgetsObj });
+        return { success: true, data: budgetsObj, offline: true };
+      }
+      throw err;
     }
   },
 
@@ -274,9 +278,9 @@ export const useTransactionStore = create((set, get) => ({
       saveStoredExpenseCategories(expenseCats);
     }
     try {
-      const res = await spendingService.updateBudgets(budgetsObj, month);
+      await spendingService.updateBudgets(budgetsObj, month);
       if (expenseCats && Array.isArray(expenseCats)) {
-        await spendingService.updateCategories(expenseCats.map((c) => c.name)).catch(() => {});
+        await spendingService.updateCategories(expenseCats.map((c) => c.name));
       }
       set({
         budgets: budgetsObj,
@@ -285,12 +289,15 @@ export const useTransactionStore = create((set, get) => ({
       });
       return { success: true, data: budgetsObj };
     } catch (err) {
-      set({
-        budgets: budgetsObj,
-        ...(expenseCats ? { expenseCategories: expenseCats } : {}),
-        isLoading: false
-      });
-      return { success: true, data: budgetsObj, offline: true };
+      set({ isLoading: false });
+      if (err && err.status === 503) {
+        set({
+          budgets: budgetsObj,
+          ...(expenseCats ? { expenseCategories: expenseCats } : {})
+        });
+        return { success: true, data: budgetsObj, offline: true };
+      }
+      throw err;
     }
   },
 
@@ -315,21 +322,25 @@ export const useTransactionStore = create((set, get) => ({
         throw new Error(res.message || 'Thêm giao dịch thất bại.');
       }
     } catch (err) {
-      // Offline fallback
-      const newTxn = normalizeTxn({
-        ...data,
-        id: `local_${Date.now()}`
-      });
-      const updated = [newTxn, ...get().transactions];
-      saveStoredTxns(updated);
-      set({ transactions: updated, isLoading: false });
-      get().updateSpendingMetrics(updated);
+      set({ isLoading: false });
+      // Chỉ offline fallback khi THỰC SỰ mất mạng (status 503 do apiFetch)
+      if (err && err.status === 503) {
+        const newTxn = normalizeTxn({
+          ...data,
+          id: `local_${Date.now()}`
+        });
+        const updated = [newTxn, ...get().transactions];
+        saveStoredTxns(updated);
+        set({ transactions: updated });
+        get().updateSpendingMetrics(updated);
 
-      const walletStore = useWalletStore.getState();
-      if (walletStore?.syncWalletBalances) {
-        walletStore.syncWalletBalances();
+        const walletStore = useWalletStore.getState();
+        if (walletStore?.syncWalletBalances) {
+          walletStore.syncWalletBalances();
+        }
+        return { success: true, data: newTxn, offline: true, error: err.message };
       }
-      return { success: true, data: newTxn, offline: true, error: err.message };
+      throw err;
     }
   },
 

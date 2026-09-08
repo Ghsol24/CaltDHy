@@ -130,7 +130,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     if (installmentToEdit) {
       setName(installmentToEdit.name || '');
       setCategory(installmentToEdit.category || defaultCatName);
-      setWalletId(installmentToEdit.walletId || wallets[0]?.id || '');
+      setWalletId(installmentToEdit.walletId ? String(installmentToEdit.walletId) : (wallets[0]?.id || ''));
       setAmount(installmentToEdit.amount ? Number(installmentToEdit.amount).toLocaleString('vi-VN') : '');
       setCycle(installmentToEdit.cycle || 'monthly');
       setNextDueDate(installmentToEdit.nextDueDate ? String(installmentToEdit.nextDueDate).slice(0, 10) : getLocalDateString());
@@ -288,7 +288,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     }
   };
 
-  const selectedWallet = wallets.find((w) => w.id === walletId) || wallets[0];
+  const selectedWallet = wallets.find((w) => String(w.id) === String(walletId)) || wallets[0];
   const selectedCycleLabel = CYCLE_OPTIONS.find((c) => c.value === cycle)?.label || 'Hàng tháng';
   const categoryDisplayName = STANDARD_CATEGORY_NAMES_VN[category] || category || 'Chọn danh mục';
 
@@ -353,334 +353,371 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body">
-            {/* 1. Name */}
-            <div className="txn-field-group">
-              <label htmlFor="rec-name" className="txn-label">
-                <span>Tên khoản chi / dịch vụ</span>
-              </label>
-              <input
-                id="rec-name"
-                ref={nameInputRef}
-                type="text"
-                className="txn-input modal-themed-input"
-                placeholder="VD: Netflix Premium, Spotify, Internet FPT, Tiền nhà..."
-                value={name}
-                onChange={handleNameChange}
-                maxLength={60}
-                required
-              />
-            </div>
-
-            {/* 2. Category & Wallet with Synchronized User Categories */}
-            <div className="transfer-wallet-row">
-              {/* Category Custom Dropdown synced with User's Categories */}
-              <div className="txn-field-group" ref={catRef}>
-                <label className="txn-label">
-                  <span>Danh mục chi tiêu</span>
-                </label>
-                <div className="modal-custom-dropdown-wrap">
-                  <button
-                    type="button"
-                    className={`modal-custom-dropdown-btn ${isCategoryDropdownOpen ? 'is-open' : ''}`}
-                    onClick={() => {
-                      setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-                      setIsWalletDropdownOpen(false);
-                      setIsCycleDropdownOpen(false);
-                      setIsAddingNewCategory(false);
-                    }}
-                    aria-expanded={isCategoryDropdownOpen}
-                  >
-                    <div className="dropdown-btn-content">
-                      <CategoryOutlineIcon name={category} size={16} className="dropdown-outline-icon text-brand" />
-                      <span className="dropdown-btn-text">{categoryDisplayName}</span>
-                    </div>
-                    <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-
-                  {isCategoryDropdownOpen && (
-                    <div className="modal-custom-dropdown-menu" role="listbox">
-                      <div className="modal-dropdown-scroll-list">
-                        {syncedExpenseCategories.map((c) => {
-                          const isSelected = c.name.toLowerCase() === category.toLowerCase();
-                          const labelDisplay = STANDARD_CATEGORY_NAMES_VN[c.name] || c.name;
-                          return (
-                            <button
-                              key={c.name}
-                              type="button"
-                              className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
-                              onClick={() => {
-                                setCategory(c.name);
-                                setIsCategoryDropdownOpen(false);
-                              }}
-                              role="option"
-                              aria-selected={isSelected}
-                            >
-                              <div className="dropdown-item-left">
-                                <CategoryOutlineIcon name={c.name} size={16} className="dropdown-outline-icon" />
-                                <span className="dropdown-item-label">{labelDisplay}</span>
-                              </div>
-                              {isSelected && (
-                                <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Nút hoặc Form tạo nhanh danh mục mới */}
-                      <div className="modal-dropdown-footer-action">
-                        {!isAddingNewCategory ? (
-                          <button
-                            type="button"
-                            className="dropdown-add-cat-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsAddingNewCategory(true);
-                              setTimeout(() => newCatInputRef.current?.focus(), 50);
-                            }}
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <line x1="12" y1="5" x2="12" y2="19" />
-                              <line x1="5" y1="12" x2="19" y2="12" />
-                            </svg>
-                            <span>Thêm danh mục mới</span>
-                          </button>
-                        ) : (
-                          <div className="dropdown-add-cat-form" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              ref={newCatInputRef}
-                              type="text"
-                              className="dropdown-add-cat-input"
-                              placeholder="Tên danh mục mới..."
-                              value={newCatInputName}
-                              onChange={(e) => setNewCatInputName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleCreateNewCategory();
-                                } else if (e.key === 'Escape') {
-                                  setIsAddingNewCategory(false);
-                                }
-                              }}
-                              maxLength={40}
-                            />
-                            <div className="dropdown-add-cat-btns">
-                              <button
-                                type="button"
-                                className="dropdown-cat-confirm-btn"
-                                onClick={handleCreateNewCategory}
-                              >
-                                Lưu
-                              </button>
-                              <button
-                                type="button"
-                                className="dropdown-cat-cancel-btn"
-                                onClick={() => setIsAddingNewCategory(false)}
-                              >
-                                Hủy
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+          <div className="txn-modal-body recurring-modal-body-grouped">
+            {/* ── Section 1: Định danh & Phân loại ── */}
+            <div className="recurring-form-section">
+              <div className="recurring-section-header">
+                <svg className="section-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <line x1="7" y1="7" x2="7.01" y2="7" />
+                </svg>
+                <span className="section-header-title">Định danh & Phân loại</span>
               </div>
 
-              {/* Wallet Custom Dropdown */}
-              <div className="txn-field-group" ref={walRef}>
-                <label className="txn-label">
-                  <span>Ví trừ tiền</span>
-                </label>
-                <div className="modal-custom-dropdown-wrap">
-                  <button
-                    type="button"
-                    className={`modal-custom-dropdown-btn ${isWalletDropdownOpen ? 'is-open' : ''}`}
-                    onClick={() => {
-                      setIsWalletDropdownOpen(!isWalletDropdownOpen);
-                      setIsCategoryDropdownOpen(false);
-                      setIsCycleDropdownOpen(false);
-                    }}
-                    aria-expanded={isWalletDropdownOpen}
-                  >
-                    <div className="dropdown-btn-content">
-                      <svg className="dropdown-outline-icon text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <rect width="20" height="14" x="2" y="5" rx="2" />
-                        <line x1="2" x2="22" y1="10" y2="10" />
-                      </svg>
-                      <span className="dropdown-btn-text">{selectedWallet?.name || 'Chọn ví'}</span>
-                    </div>
-                    <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-
-                  {isWalletDropdownOpen && (
-                    <div className="modal-custom-dropdown-menu" role="listbox">
-                      {wallets.map((w) => {
-                        const isSelected = w.id === (selectedWallet?.id || '');
-                        return (
-                          <button
-                            key={w.id}
-                            type="button"
-                            className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
-                            onClick={() => {
-                              setWalletId(w.id);
-                              setIsWalletDropdownOpen(false);
-                            }}
-                            role="option"
-                            aria-selected={isSelected}
-                          >
-                            <div className="dropdown-item-left">
-                              <svg className="dropdown-outline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <rect width="20" height="14" x="2" y="5" rx="2" />
-                                <line x1="2" x2="22" y1="10" y2="10" />
-                              </svg>
-                              <div className="wallet-dropdown-text-group">
-                                <span className="dropdown-item-label">{w.name}</span>
-                                <span className="dropdown-item-sub">{formatCurrency(w.currentBalance ?? 0)}</span>
-                              </div>
-                            </div>
-                            {isSelected && (
-                              <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Amount */}
-            <div className="txn-field-group">
-              <label htmlFor="rec-amount" className="txn-label">
-                <span>Số tiền mỗi kỳ thanh toán</span>
-              </label>
-              <div className="txn-amount-box modal-themed-amount-box">
-                <input
-                  id="rec-amount"
-                  type="text"
-                  inputMode="numeric"
-                  className="txn-amount-input"
-                  placeholder="0"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  required
-                />
-                <span className="txn-amount-suffix">VNĐ</span>
-              </div>
-            </div>
-
-            {/* 4. Cycle & Next Due Date */}
-            <div className="transfer-wallet-row">
-              {/* Cycle Custom Dropdown */}
-              <div className="txn-field-group" ref={cycRef}>
-                <label className="txn-label">
-                  <span>Chu kỳ lặp</span>
-                </label>
-                <div className="modal-custom-dropdown-wrap">
-                  <button
-                    type="button"
-                    className={`modal-custom-dropdown-btn ${isCycleDropdownOpen ? 'is-open' : ''}`}
-                    onClick={() => {
-                      setIsCycleDropdownOpen(!isCycleDropdownOpen);
-                      setIsCategoryDropdownOpen(false);
-                      setIsWalletDropdownOpen(false);
-                    }}
-                    aria-expanded={isCycleDropdownOpen}
-                  >
-                    <div className="dropdown-btn-content">
-                      <svg className="dropdown-outline-icon text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="23 4 23 10 17 10" />
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                      </svg>
-                      <span className="dropdown-btn-text">{selectedCycleLabel}</span>
-                    </div>
-                    <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-
-                  {isCycleDropdownOpen && (
-                    <div className="modal-custom-dropdown-menu" role="listbox">
-                      {CYCLE_OPTIONS.map((opt) => {
-                        const isSelected = opt.value === cycle;
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
-                            onClick={() => {
-                              setCycle(opt.value);
-                              setIsCycleDropdownOpen(false);
-                            }}
-                            role="option"
-                            aria-selected={isSelected}
-                          >
-                            <div className="dropdown-item-left">
-                              <span className="dropdown-item-label">{opt.label}</span>
-                            </div>
-                            {isSelected && (
-                              <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Next Due Date with Calendar Outline Icon */}
-              <div className="txn-field-group">
-                <label htmlFor="rec-date" className="txn-label">
-                  <span>Ngày đến hạn tiếp theo</span>
-                </label>
-                <div className="modal-date-input-wrap">
-                  <svg className="date-input-prefix-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect width="18" height="18" x="3" y="4" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
+              <div className="recurring-section-content">
+                {/* 1. Tên khoản chi / dịch vụ */}
+                <div className="txn-field-group">
+                  <label htmlFor="rec-name" className="txn-label">
+                    <span>Tên khoản chi / dịch vụ</span>
+                  </label>
                   <input
-                    id="rec-date"
-                    type="date"
-                    className="txn-input modal-themed-date-input"
-                    value={nextDueDate}
-                    onChange={(e) => setNextDueDate(e.target.value)}
+                    id="rec-name"
+                    ref={nameInputRef}
+                    type="text"
+                    className="txn-input modal-themed-input"
+                    placeholder="VD: Youtube Premium, Netflix, Tiền nhà, Internet FPT..."
+                    value={name}
+                    onChange={handleNameChange}
+                    maxLength={60}
                     required
                   />
                 </div>
+
+                {/* 2. Danh mục chi tiêu */}
+                <div className="txn-field-group" ref={catRef}>
+                  <label className="txn-label">
+                    <span>Danh mục chi tiêu</span>
+                  </label>
+                  <div className="modal-custom-dropdown-wrap">
+                    <button
+                      type="button"
+                      className={`modal-custom-dropdown-btn ${isCategoryDropdownOpen ? 'is-open' : ''}`}
+                      onClick={() => {
+                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
+                        setIsWalletDropdownOpen(false);
+                        setIsCycleDropdownOpen(false);
+                        setIsAddingNewCategory(false);
+                      }}
+                      aria-expanded={isCategoryDropdownOpen}
+                    >
+                      <div className="dropdown-btn-content">
+                        <CategoryOutlineIcon name={category} size={16} className="dropdown-outline-icon text-brand" />
+                        <span className="dropdown-btn-text">{categoryDisplayName}</span>
+                      </div>
+                      <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+
+                    {isCategoryDropdownOpen && (
+                      <div className="modal-custom-dropdown-menu" role="listbox">
+                        <div className="modal-dropdown-scroll-list">
+                          {syncedExpenseCategories.map((c) => {
+                            const isSelected = c.name.toLowerCase() === category.toLowerCase();
+                            const labelDisplay = STANDARD_CATEGORY_NAMES_VN[c.name] || c.name;
+                            return (
+                              <button
+                                key={c.name}
+                                type="button"
+                                className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
+                                onClick={() => {
+                                  setCategory(c.name);
+                                  setIsCategoryDropdownOpen(false);
+                                }}
+                                role="option"
+                                aria-selected={isSelected}
+                              >
+                                <div className="dropdown-item-left">
+                                  <CategoryOutlineIcon name={c.name} size={16} className="dropdown-outline-icon" />
+                                  <span className="dropdown-item-label">{labelDisplay}</span>
+                                </div>
+                                {isSelected && (
+                                  <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Nút hoặc Form tạo nhanh danh mục mới */}
+                        <div className="modal-dropdown-footer-action">
+                          {!isAddingNewCategory ? (
+                            <button
+                              type="button"
+                              className="dropdown-add-cat-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsAddingNewCategory(true);
+                                setTimeout(() => newCatInputRef.current?.focus(), 50);
+                              }}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                              </svg>
+                              <span>Thêm danh mục mới</span>
+                            </button>
+                          ) : (
+                            <div className="dropdown-add-cat-form" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                ref={newCatInputRef}
+                                type="text"
+                                className="dropdown-add-cat-input"
+                                placeholder="Tên danh mục mới..."
+                                value={newCatInputName}
+                                onChange={(e) => setNewCatInputName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleCreateNewCategory();
+                                  } else if (e.key === 'Escape') {
+                                    setIsAddingNewCategory(false);
+                                  }
+                                }}
+                                maxLength={40}
+                              />
+                              <div className="dropdown-add-cat-btns">
+                                <button
+                                  type="button"
+                                  className="dropdown-cat-confirm-btn"
+                                  onClick={handleCreateNewCategory}
+                                >
+                                  Lưu
+                                </button>
+                                <button
+                                  type="button"
+                                  className="dropdown-cat-cancel-btn"
+                                  onClick={() => setIsAddingNewCategory(false)}
+                                >
+                                  Hủy
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* 5. Note / Description */}
-            <div className="txn-field-group">
-              <label htmlFor="rec-note" className="txn-label">
-                <span>Ghi chú gói cước / Hợp đồng (Tùy chọn)</span>
-              </label>
-              <input
-                id="rec-note"
-                type="text"
-                className="txn-input modal-themed-input"
-                placeholder="VD: Gói Premium 4K, Gói Super 100 Mbps, Trả góp kỳ 3/12..."
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                maxLength={100}
-              />
+            {/* ── Section 2: Thiết lập dòng tiền & Chu kỳ ── */}
+            <div className="recurring-form-section">
+              <div className="recurring-section-header">
+                <svg className="section-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect width="20" height="14" x="2" y="5" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <span className="section-header-title">Thiết lập dòng tiền & Chu kỳ</span>
+              </div>
+
+              <div className="recurring-section-content">
+                <div className="recurring-form-grid-2col">
+                  {/* Số tiền mỗi kỳ */}
+                  <div className="txn-field-group">
+                    <label htmlFor="rec-amount" className="txn-label">
+                      <span>Số tiền mỗi kỳ</span>
+                    </label>
+                    <div className="txn-amount-box modal-themed-amount-box">
+                      <input
+                        id="rec-amount"
+                        type="text"
+                        inputMode="numeric"
+                        className="txn-amount-input"
+                        placeholder="0"
+                        value={amount}
+                        onChange={handleAmountChange}
+                        required
+                      />
+                      <span className="txn-amount-suffix">VNĐ</span>
+                    </div>
+                  </div>
+
+                  {/* Ví trừ tiền mặc định */}
+                  <div className="txn-field-group" ref={walRef}>
+                    <label className="txn-label">
+                      <span>Ví trừ tiền</span>
+                    </label>
+                    <div className="modal-custom-dropdown-wrap">
+                      <button
+                        type="button"
+                        className={`modal-custom-dropdown-btn ${isWalletDropdownOpen ? 'is-open' : ''}`}
+                        onClick={() => {
+                          setIsWalletDropdownOpen(!isWalletDropdownOpen);
+                          setIsCategoryDropdownOpen(false);
+                          setIsCycleDropdownOpen(false);
+                        }}
+                        aria-expanded={isWalletDropdownOpen}
+                      >
+                        <div className="dropdown-btn-content">
+                          <svg className="dropdown-outline-icon text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect width="20" height="14" x="2" y="5" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                          </svg>
+                          <span className="dropdown-btn-text">{selectedWallet?.name || 'Chọn ví'}</span>
+                        </div>
+                        <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+
+                      {isWalletDropdownOpen && (
+                        <div className="modal-custom-dropdown-menu" role="listbox">
+                          {wallets.map((w) => {
+                            const isSelected = String(w.id) === String(selectedWallet?.id || '');
+                            return (
+                              <button
+                                key={w.id}
+                                type="button"
+                                className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
+                                onClick={() => {
+                                  setWalletId(w.id);
+                                  setIsWalletDropdownOpen(false);
+                                }}
+                                role="option"
+                                aria-selected={isSelected}
+                              >
+                                <div className="dropdown-item-left">
+                                  <svg className="dropdown-outline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <rect width="20" height="14" x="2" y="5" rx="2" />
+                                    <line x1="2" y1="10" x2="22" y2="10" />
+                                  </svg>
+                                  <div className="wallet-dropdown-text-group">
+                                    <span className="dropdown-item-label">{w.name}</span>
+                                    <span className="dropdown-item-sub">{formatCurrency(w.currentBalance ?? 0)}</span>
+                                  </div>
+                                </div>
+                                {isSelected && (
+                                  <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Chu kỳ thanh toán */}
+                  <div className="txn-field-group" ref={cycRef}>
+                    <label className="txn-label">
+                      <span>Chu kỳ lặp</span>
+                    </label>
+                    <div className="modal-custom-dropdown-wrap">
+                      <button
+                        type="button"
+                        className={`modal-custom-dropdown-btn ${isCycleDropdownOpen ? 'is-open' : ''}`}
+                        onClick={() => {
+                          setIsCycleDropdownOpen(!isCycleDropdownOpen);
+                          setIsCategoryDropdownOpen(false);
+                          setIsWalletDropdownOpen(false);
+                        }}
+                        aria-expanded={isCycleDropdownOpen}
+                      >
+                        <div className="dropdown-btn-content">
+                          <svg className="dropdown-outline-icon text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <polyline points="23 4 23 10 17 10" />
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                          </svg>
+                          <span className="dropdown-btn-text">{selectedCycleLabel}</span>
+                        </div>
+                        <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+
+                      {isCycleDropdownOpen && (
+                        <div className="modal-custom-dropdown-menu" role="listbox">
+                          {CYCLE_OPTIONS.map((opt) => {
+                            const isSelected = opt.value === cycle;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
+                                onClick={() => {
+                                  setCycle(opt.value);
+                                  setIsCycleDropdownOpen(false);
+                                }}
+                                role="option"
+                                aria-selected={isSelected}
+                              >
+                                <div className="dropdown-item-left">
+                                  <span className="dropdown-item-label">{opt.label}</span>
+                                </div>
+                                {isSelected && (
+                                  <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ngày đến hạn tiếp theo */}
+                  <div className="txn-field-group">
+                    <label htmlFor="rec-date" className="txn-label">
+                      <span>Ngày đến hạn tiếp theo</span>
+                    </label>
+                    <div className="modal-date-input-wrap">
+                      <svg className="date-input-prefix-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect width="18" height="18" x="3" y="4" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      <input
+                        id="rec-date"
+                        type="date"
+                        className="txn-input modal-themed-date-input"
+                        value={nextDueDate}
+                        onChange={(e) => setNextDueDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Section 3: Ghi chú & Thông tin bổ sung ── */}
+            <div className="recurring-form-section">
+              <div className="recurring-section-header">
+                <svg className="section-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <span className="section-header-title">Thông tin bổ sung</span>
+              </div>
+
+              <div className="recurring-section-content">
+                <div className="txn-field-group">
+                  <label htmlFor="rec-note" className="txn-label">
+                    <span>Ghi chú gói cước / Hợp đồng (Tùy chọn)</span>
+                  </label>
+                  <input
+                    id="rec-note"
+                    type="text"
+                    className="txn-input modal-themed-input"
+                    placeholder="VD: Gói Family 6 người, Trả góp kỳ 3/12, HĐ 24 tháng..."
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    maxLength={100}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Error Message */}

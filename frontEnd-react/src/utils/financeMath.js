@@ -73,15 +73,17 @@ export function calculateAvailableToSpend({
   // Tính số dư cho các ví
   const { wallets: calculatedWallets } = calculateWalletBalances(wallets, transactions);
 
-  // Tổng tài sản thực tế của tất cả các ví
-  const totalBalance = calculatedWallets.reduce(
-    (sum, w) => sum + (Number(w.currentBalance) || 0),
-    0
-  );
+  // Tổng tài sản thực tế của tất cả các ví đang hoạt động (không bao gồm ví đã lưu trữ)
+  const totalBalance = calculatedWallets
+    .filter((w) => !w.archived)
+    .reduce(
+      (sum, w) => sum + (Number(w.currentBalance) || 0),
+      0
+    );
 
-  // Tổng số dư các ví chi tiêu khả dụng: KHÔNG bị exclude và KHÔNG phải thẻ tín dụng (credit)
+  // Tổng số dư các ví chi tiêu khả dụng: KHÔNG bị exclude, KHÔNG phải thẻ tín dụng (credit) và KHÔNG bị lưu trữ
   const availableWalletsBalance = calculatedWallets
-    .filter((w) => !w.isExcludedFromTotal && !w.excludeFromTotal && w.type !== 'credit')
+    .filter((w) => !w.isExcludedFromTotal && !w.excludeFromTotal && w.type !== 'credit' && !w.archived)
     .reduce((sum, w) => sum + (Number(w.currentBalance) || 0), 0);
 
   // Tổng tiền đang nằm trong các Hũ tiết kiệm / dự phòng
@@ -145,13 +147,15 @@ export function calculateMonthlyStats(transactions = [], monthPrefix = '') {
 
     count += 1;
     const amount = Number(tx.amount || 0);
+    const fee = Number(tx.fee || 0);
 
     if (tx.type === 'income') {
       income += amount;
     } else if (tx.type === 'expense') {
-      expense += amount;
+      const totalExpense = amount + fee;
+      expense += totalExpense;
       const cat = tx.category || 'Khác';
-      byCategory[cat] = (byCategory[cat] || 0) + amount;
+      byCategory[cat] = (byCategory[cat] || 0) + totalExpense;
     }
   });
 

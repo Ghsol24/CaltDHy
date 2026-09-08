@@ -37,6 +37,7 @@ const normalizeWallet = (w) => ({
 
 export const useWalletStore = create((set, get) => ({
   wallets: getStoredWallets(),
+  archivedWallets: [],
   selectedWalletId: null,
   isLoading: false,
   error: null,
@@ -45,22 +46,33 @@ export const useWalletStore = create((set, get) => ({
 
   syncWalletBalances: () => {
     const currentWallets = get().wallets;
+    const currentArchived = get().archivedWallets;
     const txns = useTransactionStore.getState()?.transactions || [];
-    const { wallets: calculated } = calculateWalletBalances(currentWallets, txns);
-    set({ wallets: calculated });
+    const { wallets: calculatedActive } = calculateWalletBalances(currentWallets, txns);
+    const { wallets: calculatedArchived } = calculateWalletBalances(currentArchived, txns);
+    set({ wallets: calculatedActive, archivedWallets: calculatedArchived });
   },
 
   fetchWallets: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await walletService.getWallets();
+      const res = await walletService.getWallets(true);
       if (res.success && Array.isArray(res.data)) {
         const normalized = res.data.map(normalizeWallet);
-        saveStoredWallets(normalized);
+        const activeList = normalized.filter((w) => !w.archived);
+        const archivedList = normalized.filter((w) => w.archived);
+
+        saveStoredWallets(activeList);
         const txns = useTransactionStore.getState()?.transactions || [];
-        const { wallets: calculated } = calculateWalletBalances(normalized, txns);
-        set({ wallets: calculated, isLoading: false });
-        return { success: true, data: calculated };
+        const { wallets: calculatedActive } = calculateWalletBalances(activeList, txns);
+        const { wallets: calculatedArchived } = calculateWalletBalances(archivedList, txns);
+
+        set({
+          wallets: calculatedActive,
+          archivedWallets: calculatedArchived,
+          isLoading: false
+        });
+        return { success: true, data: calculatedActive, archived: calculatedArchived };
       } else {
         throw new Error(res.message || 'Lỗi tải danh sách ví');
       }
@@ -149,6 +161,45 @@ export const useWalletStore = create((set, get) => ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true };
+    } catch (err) {
+      set({ isLoading: false });
+      throw err;
+    }
+  },
+
+  archiveWallet: async (id, options = {}) => {
+    set({ isLoading: true });
+    try {
+      const res = await walletService.archiveWallet(id, options);
+      if (!res.success) {
+        throw new Error(res.message || 'Không thể đóng và lưu trữ ví.');
+      }
+
+      // Nếu có chuyển tiền tất toán, fetch lại transactions
+      if (options.transferToWalletId && useTransactionStore.getState()?.fetchTransactions) {
+        await useTransactionStore.getState().fetchTransactions();
+      }
+
+      // Tải lại danh sách ví
+      await get().fetchWallets();
+      set({ isLoading: false });
+      return { success: true, data: res.data };
+    } catch (err) {
+      set({ isLoading: false });
+      throw err;
+    }
+  },
+
+  unarchiveWallet: async (id) => {
+    set({ isLoading: true });
+    try {
+      const res = await walletService.unarchiveWallet(id);
+      if (!res.success) {
+        throw new Error(res.message || 'Không thể mở lại ví.');
+      }
+      await get().fetchWallets();
+      set({ isLoading: false });
+      return { success: true, data: res.data };
     } catch (err) {
       set({ isLoading: false });
       throw err;

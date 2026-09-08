@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Budget = require('../models/Budget');
+const Wallet = require('../models/Wallet');
 const { protect } = require('../middleware/authMiddleware');
 
 // ─────────────────────────────────────────────────────────────────
@@ -120,6 +121,16 @@ router.post('/register', async (req, res) => {
             email: email.toLowerCase().trim(),
             password: hashedPassword,
             emailVerified: true
+        });
+
+        // Tự động tạo ví tiền mặt mặc định để các giao dịch đầu tiên không bị mồ côi ví
+        await Wallet.create({
+            userId: newUser._id,
+            name: 'Tiền mặt',
+            type: 'cash',
+            icon: '💵',
+            initialBalance: 0,
+            isDefault: true
         });
 
         // Tạo một số danh mục ngân sách mặc định để tránh người dùng mới bị ngợp

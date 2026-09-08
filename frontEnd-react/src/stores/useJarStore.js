@@ -76,7 +76,7 @@ const normalizeInstallment = (i) => ({
   dueDate: i.dueDate || i.nextDueDate || null,
   totalMonths: Number(i.totalMonths) || 0,
   paidMonths: Number(i.paidMonths) || 0,
-  walletId: i.walletId || null,
+  walletId: (i.walletId && typeof i.walletId === 'object') ? (i.walletId._id || i.walletId.id) : (i.walletId || null),
   isActive: i.active !== undefined ? i.active : (i.isActive !== undefined ? i.isActive : true)
 });
 
@@ -124,7 +124,7 @@ export const useJarStore = create((set, get) => ({
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: newJar };
-    } catch (err) {
+    } catch {
       const numInit = Number(data.current) || 0;
       const initialHist = numInit > 0 ? [{
         id: `hist_init_${Date.now()}`,
@@ -154,7 +154,7 @@ export const useJarStore = create((set, get) => ({
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: updatedJar };
-    } catch (err) {
+    } catch {
       const updated = get().jars.map((jar) => (jar.id === id ? { ...jar, ...data } : jar));
       saveStoredJars(updated);
       set({ jars: updated });
@@ -217,9 +217,8 @@ export const useJarStore = create((set, get) => ({
       saveStoredJars(updated);
       set({ jars: updated });
     } catch (err) {
-      const updated = get().jars.filter((jar) => jar.id !== id);
-      saveStoredJars(updated);
-      set({ jars: updated });
+      console.error('Lỗi khi xóa hũ từ server:', err);
+      throw err;
     }
   },
 
@@ -230,7 +229,7 @@ export const useJarStore = create((set, get) => ({
       const updated = [...get().installments, newInst];
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch (err) {
+    } catch {
       const fallbackInst = normalizeInstallment({
         ...data,
         id: `local_inst_${Date.now()}`
@@ -248,14 +247,24 @@ export const useJarStore = create((set, get) => ({
       const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
       saveStoredInstallments(updated);
       set({ installments: updated });
+
+      // Đồng bộ lại transactions và budgets nếu category hoặc name có thay đổi
+      if (data && (data.category !== undefined || data.name !== undefined)) {
+        useTransactionStore.getState()?.fetchTransactions?.();
+        useTransactionStore.getState()?.fetchBudgets?.();
+      }
+
       return { success: true, data: updatedInst };
-    } catch (_err) {
-      const updated = get().installments.map((item) =>
-        item.id === id ? normalizeInstallment({ ...item, ...data }) : item
-      );
-      saveStoredInstallments(updated);
-      set({ installments: updated });
-      return { success: true, data: { id, ...data }, offline: true };
+    } catch (err) {
+      if (err && err.status === 503) {
+        const updated = get().installments.map((item) =>
+          item.id === id ? normalizeInstallment({ ...item, ...data }) : item
+        );
+        saveStoredInstallments(updated);
+        set({ installments: updated });
+        return { success: true, data: { id, ...data }, offline: true };
+      }
+      throw err;
     }
   },
 
@@ -269,7 +278,7 @@ export const useJarStore = create((set, get) => ({
       // Tự động đồng bộ giao dịch chi tiêu mới và số dư ví sau khi thanh toán định kỳ
       useTransactionStore.getState()?.fetchTransactions?.();
       useWalletStore.getState()?.fetchWallets?.();
-    } catch (_err) {
+    } catch {
       const updated = get().installments.map((item) => {
         if (item.id !== id) return item;
         const prevDueDate = item.nextDueDate;
@@ -306,7 +315,7 @@ export const useJarStore = create((set, get) => ({
       const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch (err) {
+    } catch {
       const updated = get().installments.map((item) => (item.id === id ? { ...item, isActive: !item.isActive } : item));
       saveStoredInstallments(updated);
       set({ installments: updated });
@@ -322,9 +331,8 @@ export const useJarStore = create((set, get) => ({
       saveStoredInstallments(updated);
       set({ installments: updated });
     } catch (err) {
-      const updated = get().installments.filter((item) => item.id !== id);
-      saveStoredInstallments(updated);
-      set({ installments: updated });
+      console.error('Lỗi khi xóa khoản định kỳ từ server:', err);
+      throw err;
     }
   }
 }));

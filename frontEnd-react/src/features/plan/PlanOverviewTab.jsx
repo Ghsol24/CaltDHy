@@ -461,8 +461,8 @@ export function PlanOverviewTab() {
 
           <div className="metric-card-bottom-row">
             <span className="metric-sub-left">{wallets.length} tài khoản</span>
-            <span className="metric-sub-trend trend-positive">
-              ▲ 5.2% <span className="trend-note">so với tháng trước</span>
+            <span className="metric-sub-trend">
+              <span className="trend-note">{wallets.filter((w) => !w.archived).length} đang hoạt động</span>
             </span>
           </div>
         </div>
@@ -495,9 +495,15 @@ export function PlanOverviewTab() {
 
           <div className="metric-card-bottom-row">
             <span className="metric-sub-left">Trong tháng {currentMonthNum}</span>
-            <span className="metric-sub-trend trend-positive">
-              ▲ 12.4% <span className="trend-note">so với tháng trước</span>
-            </span>
+            {hasAnyBudgetLimit && totalBudgetLimit > 0 ? (
+              <span className={`metric-sub-trend ${totalBudgetRemaining < 0 ? 'trend-down' : 'trend-positive'}`}>
+                {Math.round((totalBudgetSpent / totalBudgetLimit) * 100)}% <span className="trend-note">đã dùng</span>
+              </span>
+            ) : (
+              <span className="metric-sub-trend">
+                <span className="trend-note">Chưa thiết lập</span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -522,8 +528,8 @@ export function PlanOverviewTab() {
 
           <div className="metric-card-bottom-row">
             <span className="metric-sub-left">{activeInstallments.length} khoản đang theo dõi</span>
-            <span className="metric-sub-trend trend-down">
-              ▼ 8.1% <span className="trend-note">so với tháng trước</span>
+            <span className="metric-sub-trend">
+              <span className="trend-note">Ước tính tháng</span>
             </span>
           </div>
         </div>
@@ -581,7 +587,15 @@ export function PlanOverviewTab() {
                         <strong className={`wallet-amount-val ${isNegative ? 'is-negative' : ''}`}>
                           {formatCurrency(w.currentBalance ?? w.initialBalance ?? 0)}
                         </strong>
-                        <span className="wallet-growth-tag">▲ 3.5%</span>
+                        {w.isDefault ? (
+                          <span className="wallet-growth-tag" style={{ color: 'var(--color-brand, #078A59)', backgroundColor: 'var(--color-brand-bg, rgba(7, 138, 89, 0.12))' }}>
+                            Mặc định
+                          </span>
+                        ) : totalAssets > 0 && Number(w.currentBalance) > 0 ? (
+                          <span className="wallet-growth-tag" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                            {((Number(w.currentBalance) / totalAssets) * 100).toFixed(0)}%
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                   );

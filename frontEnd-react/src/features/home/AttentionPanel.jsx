@@ -4,7 +4,7 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } from '../../utils/financeMath';
-import { formatCurrency, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
 
 export const AttentionPanel = React.memo(function AttentionPanel() {
   const setActiveView = useSpendingStore((s) => s.setActiveView);
@@ -31,6 +31,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     dangerCategory,
     warningCategory,
     daysLeft,
+    upcomingBillsCount,
     activeInstallmentsCount,
     jarsCount
   } = React.useMemo(() => {
@@ -85,7 +86,25 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const dLeft = Math.max(1, daysInMonth - now.getDate());
 
-    const instCount = (installments || []).filter((i) => i.active !== false).length;
+    // Hóa đơn sắp tới (Hướng 1): Chỉ đếm các khoản định kỳ đang active,
+    // chưa thanh toán trong tháng hiện tại, và đến hạn trong tháng này (hoặc quá hạn / sắp tới hạn trong 7 ngày tới)
+    const upcomingCount = (installments || []).filter((item) => {
+      if (item.active === false) return false;
+
+      // 1. Đã thanh toán trong tháng hiện tại chưa
+      const isPaidInMonth = Array.isArray(item.history) && item.history.some(
+        (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthPrefix)
+      );
+      if (isPaidInMonth) return false;
+
+      // 2. Kiểm tra hạn thanh toán: đến hạn trong tháng này (hoặc quá hạn) hoặc sắp tới hạn trong 7 ngày tới
+      const due = getDueStatus(item.nextDueDate);
+      const dueMonth = item.nextDueDate ? String(item.nextDueDate).slice(0, 7) : '';
+      const isDueThisMonth = dueMonth ? dueMonth <= currentMonthPrefix : true;
+
+      return isDueThisMonth || due.isSoon;
+    }).length;
+
     const jCount = (jars || []).length;
 
     return {
@@ -101,7 +120,8 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
       dangerCategory: dangerCat,
       warningCategory: warningCat,
       daysLeft: dLeft,
-      activeInstallmentsCount: instCount,
+      upcomingBillsCount: upcomingCount,
+      activeInstallmentsCount: upcomingCount,
       jarsCount: jCount
     };
   }, [transactions, budgets, jars, installments, wallets, currentMonthPrefix]);
@@ -291,7 +311,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
           onKeyDown={(e) => e.key === 'Enter' && handleGoToRecurring()}
         >
           <span className="home-mini-stat-label">Hóa đơn sắp tới</span>
-          <strong className="home-mini-stat-val">{activeInstallmentsCount}</strong>
+          <strong className="home-mini-stat-val">{upcomingBillsCount}</strong>
         </div>
 
         <div

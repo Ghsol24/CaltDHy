@@ -2157,4 +2157,72 @@
   cursor: pointer;
 }
 
+/* ── Recurring Modal Grouped Sections (Senior UX Layout) ── */
+.recurring-modal-dialog {
+  max-width: 560px;
+}
+
+.recurring-modal-body-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.recurring-form-section {
+  background: var(--surface-subtle, var(--color-brand-50));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.recurring-form-section:focus-within {
+  border-color: var(--color-brand-700, var(--primary));
+  box-shadow: 0 0 0 1px var(--color-brand-700, var(--primary));
+}
+
+.recurring-section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-brand-700, var(--primary));
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--color-border, var(--border));
+}
+
+.section-header-icon {
+  flex-shrink: 0;
+  color: var(--color-brand-700, var(--primary));
+}
+
+.section-header-title {
+  color: var(--color-brand-700, var(--primary));
+}
+
+.recurring-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recurring-form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .recurring-form-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
 

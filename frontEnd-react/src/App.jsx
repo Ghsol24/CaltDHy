@@ -7,6 +7,7 @@ import { SignupPage } from './pages/SignupPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { SpendingPage } from './pages/SpendingPage';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 function RedirectWithQuery({ to }) {
   const location = useLocation();
@@ -52,8 +53,22 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/verify-email.html" element={<RedirectWithQuery to="/verify-email" />} />
         
-        <Route path="/spending" element={<SpendingPage />} />
-        <Route path="/spending.html" element={<RedirectWithQuery to="/spending" />} />
+        <Route
+          path="/spending"
+          element={
+            <ProtectedRoute>
+              <SpendingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/spending.html"
+          element={
+            <ProtectedRoute>
+              <RedirectWithQuery to="/spending" />
+            </ProtectedRoute>
+          }
+        />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

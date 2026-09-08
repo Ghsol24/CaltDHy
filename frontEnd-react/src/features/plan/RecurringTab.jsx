@@ -518,7 +518,7 @@ export function RecurringTab() {
             const dayOfMonth = parsedDueDate ? String(parsedDueDate.getDate()).padStart(2, '0') : '01';
 
             // Assigned wallet
-            const assignedWallet = wallets.find((w) => w.id === item.walletId) || wallets[0];
+            const assignedWallet = wallets.find((w) => String(w.id) === String(item.walletId)) || wallets[0];
             const categoryLabel = CATEGORY_TAG_LABELS[item.category] || item.category || brandInfo.categoryDefault;
 
             const isPaidThisMonth = Array.isArray(item.history) && item.history.some(
@@ -531,7 +531,7 @@ export function RecurringTab() {
             return (
               <div
                 key={item.id}
-                className={`recurring-row-card ${!isActive ? 'is-paused' : ''}`}
+                className={`recurring-row-card ${!isActive ? 'is-paused' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''}`}
               >
                 {/* 1. Brand Logo Tile */}
                 <div className="recurring-row-logo-col">
@@ -581,6 +581,7 @@ export function RecurringTab() {
                       className="recurring-wallet-chip-btn"
                       onClick={() => setOpenWalletSelectorId(isWalletMenuOpen ? null : item.id)}
                       aria-expanded={isWalletMenuOpen}
+                      title={assignedWallet?.name ? `Ví trừ tiền: ${assignedWallet.name}` : 'Chọn ví trừ tiền'}
                     >
                       <span className="wallet-chip-icon" aria-hidden="true">{assignedWallet?.icon || '💳'}</span>
                       <span className="wallet-chip-name">{assignedWallet?.name || 'Chọn ví'}</span>
@@ -590,21 +591,30 @@ export function RecurringTab() {
                     </button>
 
                     {isWalletMenuOpen && (
-                      <div className="recurring-wallet-popover-menu" role="menu">
+                      <div
+                        className="recurring-wallet-popover-menu"
+                        role="menu"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="wallet-popover-header">Chọn ví trừ tiền</div>
                         {wallets.map((w) => (
                           <button
                             key={w.id}
                             type="button"
-                            className={`wallet-popover-item ${w.id === assignedWallet?.id ? 'is-active' : ''}`}
-                            onClick={() => handleAssignWallet(item, w.id)}
+                            className={`wallet-popover-item ${String(w.id) === String(assignedWallet?.id) ? 'is-active' : ''}`}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAssignWallet(item, w.id);
+                            }}
                           >
                             <span className="wallet-popover-icon">{w.icon || '💳'}</span>
                             <div className="wallet-popover-info">
                               <span className="wallet-popover-name">{w.name}</span>
                               <span className="wallet-popover-bal">{formatCurrency(w.currentBalance ?? 0)}</span>
                             </div>
-                            {w.id === assignedWallet?.id && (
+                            {String(w.id) === String(assignedWallet?.id) && (
                               <svg className="wallet-check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>

@@ -46,7 +46,17 @@ const protect = async (req, res, next) => {
         }
 
         // Truy vấn nhẹ nhàng (lean) để kiểm tra tồn tại và thu hồi token nếu đổi mật khẩu
-        const user = await User.findById(decoded.id).select('name email +passwordChangedAt').lean();
+        let user;
+        try {
+            user = await User.findById(decoded.id).select('name email +passwordChangedAt').lean();
+        } catch (dbError) {
+            console.error('Lỗi kết nối cơ sở dữ liệu trong authMiddleware:', dbError);
+            return res.status(503).json({
+                success: false,
+                message: 'Máy chủ cơ sở dữ liệu tạm thời gián đoạn. Vui lòng thử lại sau giây lát.',
+                code: 'DATABASE_ERROR'
+            });
+        }
 
         if (!user) {
             return res.status(401).json({
@@ -76,9 +86,10 @@ const protect = async (req, res, next) => {
 
         next();
     } catch (error) {
-        return res.status(401).json({
+        console.error('Lỗi không xác định trong authMiddleware:', error);
+        return res.status(500).json({
             success: false,
-            message: 'Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
+            message: 'Đã xảy ra lỗi máy chủ trong quá trình xác thực.'
         });
     }
 };

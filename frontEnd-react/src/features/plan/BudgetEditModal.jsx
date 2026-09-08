@@ -90,17 +90,15 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
         }
       });
 
-      // Add default expense categories so user has the standard set
-      DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
-        const lower = defCat.name.toLowerCase();
-        if (!knownCategoryNames.has(lower)) {
-          knownCategoryNames.add(lower);
+      // Chỉ nạp danh mục mặc định nếu danh sách hoàn toàn rỗng (user mới chưa thiết lập danh mục nào)
+      if (list.length === 0) {
+        DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
           list.push({
             name: defCat.name,
             icon: defCat.icon
           });
-        }
-      });
+        });
+      }
 
       const initialList = list.map((c, idx) => {
         const budgetVal = budgets && budgets[c.name] !== undefined ? Number(budgets[c.name]) : null;

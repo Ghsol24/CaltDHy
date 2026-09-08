@@ -7,6 +7,8 @@ const Budget = require('../models/Budget');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 const Category = require('../models/Category');
+const Jar = require('../models/Jar');
+const Installment = require('../models/Installment');
 const { isValidVNDAmount } = require('../utils/money');
 const { getVietnamTodayString } = require('../utils/localDate');
 
@@ -66,6 +68,33 @@ async function validateTransactionWallets({ type, walletId, toWalletId, userId }
     return null;
 }
 
+async function validateTransactionOwnership({ jarId, installmentId, userId }) {
+    // Bỏ qua nếu DB chưa kết nối (offline mode hoặc unit/contract test không có DB)
+    if (mongoose.connection.readyState !== 1 && mongoose.connection.readyState !== 2) {
+        return null;
+    }
+
+    if (jarId) {
+        if (!isValidObjectId(jarId)) {
+            return 'ID Hũ tiết kiệm không hợp lệ.';
+        }
+        const jar = await Jar.findOne({ _id: jarId, userId });
+        if (!jar) {
+            return 'Hũ tiết kiệm không tồn tại hoặc không thuộc quyền sở hữu của bạn.';
+        }
+    }
+    if (installmentId) {
+        if (!isValidObjectId(installmentId)) {
+            return 'ID Khoản định kỳ không hợp lệ.';
+        }
+        const inst = await Installment.findOne({ _id: installmentId, userId });
+        if (!inst) {
+            return 'Khoản định kỳ không tồn tại hoặc không thuộc quyền sở hữu của bạn.';
+        }
+    }
+    return null;
+}
+
 // =============================================
 // GET /api/spending/categories – Lấy danh mục tự định nghĩa của user
 // =============================================
@@ -76,7 +105,15 @@ router.get('/categories', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy user.' });
         }
 
-        // Hợp nhất danh mục từ Category collection và User.customCategories để đảm bảo toàn vẹn
+        // Nếu user đã có danh mục tự định nghĩa, tôn trọng danh sách này (tránh tự động hồi sinh danh mục đã xoá)
+        if (Array.isArray(user.customCategories) && user.customCategories.length > 0) {
+            return res.json({
+                success: true,
+                data: user.customCategories
+            });
+        }
+
+        // Fallback: Hợp nhất danh mục từ Category collection và User.customCategories cho user chưa cấu hình
         const catDocs = await Category.find({ userId: req.user.id }).select('name').lean();
         const docNames = catDocs.map(c => c.name);
         const userNames = user.customCategories || [];
@@ -95,15 +132,19 @@ router.get('/categories', async (req, res) => {
 
 // =============================================
 // PUT /api/spending/categories – Cập nhật danh mục tự định nghĩa
+// Hỗ trợ cả 2 dạng payload: { categories: [...] } hoặc direct array [...]
 // =============================================
 router.put('/categories', async (req, res) => {
     try {
-        const { categories } = req.body;
-        if (!Array.isArray(categories)) {
+        const rawCategories = Array.isArray(req.body)
+            ? req.body
+            : (req.body && typeof req.body === 'object' && Array.isArray(req.body.categories) ? req.body.categories : null);
+
+        if (!Array.isArray(rawCategories)) {
             return res.status(400).json({ success: false, message: 'Dữ liệu danh mục không hợp lệ.' });
         }
 
-        const cleanCategories = categories
+        const cleanCategories = rawCategories
             .map(c => (typeof c === 'string' ? c.trim() : ''))
             .filter(c => c.length > 0 && c.length <= 50);
 
@@ -120,6 +161,31 @@ router.put('/categories', async (req, res) => {
         // Tự động đảm bảo danh mục có trong collection Category (best-effort, không chặn response)
         await Promise.all(cleanCategories.map(cat => Category.ensureCategorySafe(req.user.id, cat)));
 
+        // Dọn dẹp các Category documents bị xoá khỏi danh mục nếu không còn giao dịch nào sử dụng
+        try {
+            if (
+                mongoose.connection.readyState === 1 &&
+                typeof Category.find === 'function' &&
+                typeof Category.deleteOne === 'function' &&
+                typeof Transaction.exists === 'function'
+            ) {
+                const cleanLowerSet = new Set(cleanCategories.map(c => c.toLowerCase()));
+                const existingCatDocs = await Category.find({ userId: req.user.id }).lean();
+                if (Array.isArray(existingCatDocs)) {
+                    for (const doc of existingCatDocs) {
+                        if (!cleanLowerSet.has(doc.nameLower)) {
+                            const isUsed = await Transaction.exists({ userId: req.user.id, category: doc.name });
+                            if (!isUsed) {
+                                await Category.deleteOne({ _id: doc._id });
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (cleanupErr) {
+            // Best-effort cleanup, không chặn phản hồi
+        }
+
         res.json({
             success: true,
             message: 'Đã cập nhật danh mục thành công!',
@@ -132,39 +198,54 @@ router.put('/categories', async (req, res) => {
 });
 
 // =============================================
-// GET /api/spending/budget – Lấy ngân sách của user (Hỗ trợ Scoped Month + Auto-Carryover)
+// GET /api/spending/budget – Lấy ngân sách của user (Hỗ trợ Scoped Month + Per-Category Auto-Carryover)
 // =============================================
 router.get('/budget', async (req, res) => {
     try {
         const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
-        let budgets = [];
+        const budgetMap = {};
 
         if (monthQuery && /^\d{4}-\d{2}$/.test(monthQuery)) {
-            // 1. Tìm ngân sách riêng của tháng này
-            budgets = await Budget.find({ userId: req.user.id, month: monthQuery });
+            // 1. Kế thừa thông minh theo từng danh mục (Per-Category Auto-Carryover):
+            // Lấy ngân sách của tháng trước gần nhất hoặc 'global' để làm baseline
+            const previous = await Budget.find({
+                userId: req.user.id,
+                month: { $lt: monthQuery, $ne: 'global' }
+            }).sort({ month: -1 });
 
-            // 2. Kế thừa thông minh (Auto-Carryover): nếu tháng này chưa có, lấy tháng gần nhất trước đó hoặc 'global'
-            if (budgets.length === 0) {
-                const previous = await Budget.find({
-                    userId: req.user.id,
-                    month: { $lt: monthQuery, $ne: 'global' }
-                }).sort({ month: -1 });
-
-                if (previous.length > 0) {
-                    const latestMonth = previous[0].month;
-                    budgets = previous.filter(b => b.month === latestMonth);
-                } else {
-                    budgets = await Budget.find({ userId: req.user.id, month: 'global' });
-                }
+            let baselineBudgets = [];
+            if (previous.length > 0) {
+                const latestMonth = previous[0].month;
+                baselineBudgets = previous.filter(b => b.month === latestMonth);
+            } else {
+                baselineBudgets = await Budget.find({ userId: req.user.id, month: 'global' });
             }
-        } else {
-            budgets = await Budget.find({ userId: req.user.id });
-        }
 
-        const budgetMap = {};
-        budgets.forEach(b => {
-            budgetMap[b.category] = b.limit;
-        });
+            baselineBudgets.forEach(b => {
+                if (b.category && b.limit > 0) {
+                    budgetMap[b.category] = b.limit;
+                }
+            });
+
+            // 2. Lấy ngân sách đã thiết lập riêng của tháng này để override theo từng category
+            const currentMonthBudgets = await Budget.find({ userId: req.user.id, month: monthQuery });
+            currentMonthBudgets.forEach(b => {
+                if (b.category) {
+                    if (b.limit > 0) {
+                        budgetMap[b.category] = b.limit;
+                    } else {
+                        delete budgetMap[b.category];
+                    }
+                }
+            });
+        } else {
+            const budgets = await Budget.find({ userId: req.user.id, month: 'global' });
+            budgets.forEach(b => {
+                if (b.category && b.limit > 0) {
+                    budgetMap[b.category] = b.limit;
+                }
+            });
+        }
 
         res.json({
             success: true,
@@ -394,6 +475,9 @@ router.post('/', async (req, res) => {
         const walletError = await validateTransactionWallets({ type, walletId, toWalletId, userId: req.user.id });
         if (walletError) return res.status(400).json({ success: false, message: walletError });
 
+        const ownershipError = await validateTransactionOwnership({ jarId, installmentId, userId: req.user.id });
+        if (ownershipError) return res.status(400).json({ success: false, message: ownershipError });
+
         const createPayload = {
             userId: req.user.id,
             type,
@@ -476,6 +560,9 @@ router.put('/:id', async (req, res) => {
             userId: req.user.id
         });
         if (walletError) return res.status(400).json({ success: false, message: walletError });
+
+        const ownershipError = await validateTransactionOwnership({ jarId, installmentId, userId: req.user.id });
+        if (ownershipError) return res.status(400).json({ success: false, message: ownershipError });
 
         const updatePayload = {
             type,
@@ -568,20 +655,26 @@ router.delete('/:id', async (req, res) => {
 });
 
 // =============================================
-// POST /api/spending/reset-data – Xóa toàn bộ giao dịch & ngân sách của tài khoản
-// (KHÔNG đụng tới Wallet/Jar/Installment — nếu cần reset cả những phần đó thì đây chưa đủ phạm vi)
+// POST /api/spending/reset-data – Xóa toàn bộ giao dịch & ngân sách và đặt lại số dư Hũ, Trả góp
 // =============================================
 router.post('/reset-data', async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Xóa sạch transactions và budgets của user hiện tại
+        // 1. Xóa sạch transactions và budgets của user hiện tại
         await Transaction.deleteMany({ userId });
         await Budget.deleteMany({ userId });
 
+        // 2. Đặt lại số dư Hũ tiết kiệm và tiến độ Trả góp định kỳ về 0 để bảo toàn tính nhất quán sổ cái
+        const canRunExtraModelOps = (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) || (Jar.updateMany !== mongoose.Model.updateMany);
+        if (canRunExtraModelOps) {
+            await Jar.updateMany({ userId }, { $set: { current: 0, history: [] } });
+            await Installment.updateMany({ userId }, { $set: { totalPaid: 0, paidMonths: 0, history: [] } });
+        }
+
         res.json({
             success: true,
-            message: 'Đã xóa toàn bộ giao dịch và ngân sách. Ví, hũ tiết kiệm và khoản định kỳ được giữ nguyên.'
+            message: 'Đã xóa toàn bộ giao dịch, ngân sách, và đặt lại số dư hũ tiết kiệm, tiến độ khoản định kỳ về 0.'
         });
     } catch (error) {
         console.error('POST /api/spending/reset-data error:', error);

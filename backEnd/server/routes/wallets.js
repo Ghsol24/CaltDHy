@@ -4,6 +4,7 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
+const Installment = require('../models/Installment');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { getWalletBalance, getAllWalletBalances } = require('../utils/walletBalance');
 const { isValidVNDAmount, isFiniteInteger } = require('../utils/money');
@@ -36,11 +37,17 @@ async function ensureDefaultWallet(userId) {
 
 // =============================================
 // GET /api/wallets — Lấy danh sách ví của user
+// Hỗ trợ query ?includeArchived=true để lấy cả các ví đã đóng / lưu trữ
 // =============================================
 router.get('/', async (req, res) => {
     try {
         await ensureDefaultWallet(req.user.id);
-        const wallets = await Wallet.find({ userId: req.user.id, archived: false }).sort({ isDefault: -1, createdAt: 1 });
+        const includeArchived = req.query?.includeArchived === 'true';
+        const query = { userId: req.user.id };
+        if (!includeArchived) {
+            query.archived = false;
+        }
+        const wallets = await Wallet.find(query).sort({ isDefault: -1, createdAt: 1 });
         res.json({
             success: true,
             data: wallets.map(w => w.toJSON())
@@ -48,6 +55,228 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error('GET /api/wallets error:', error);
         res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách ví.' });
+    }
+});
+
+// =============================================
+// GET /api/wallets/:id/pre-archive — Kiểm tra nhanh trạng thái ví trước khi đóng/lưu trữ
+// =============================================
+router.get('/:id/pre-archive', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID ví không hợp lệ.' });
+        }
+
+        const wallet = await Wallet.findOne({ _id: id, userId: req.user.id });
+        if (!wallet) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy ví.' });
+        }
+
+        const balance = await getWalletBalance(req.user.id, id);
+
+        const activeInstallments = await Installment.find({
+            userId: req.user.id,
+            walletId: id,
+            $or: [{ active: true }, { isActive: true }]
+        }).select('name amount monthlyAmount totalAmount cycle nextDueDate dueDate');
+
+        const transactionsCount = await Transaction.countDocuments({
+            userId: req.user.id,
+            $or: [{ walletId: id }, { toWalletId: id }]
+        });
+
+        const activeWalletsCount = await Wallet.countDocuments({ userId: req.user.id, archived: false });
+
+        res.json({
+            success: true,
+            data: {
+                wallet: wallet.toJSON(),
+                balance,
+                activeInstallments: activeInstallments.map(i => ({
+                    id: i._id.toString(),
+                    name: i.name,
+                    amount: i.monthlyAmount || i.amount,
+                    cycle: i.cycle,
+                    nextDueDate: i.nextDueDate || i.dueDate
+                })),
+                transactionsCount,
+                activeWalletsCount,
+                isDefault: Boolean(wallet.isDefault),
+                canArchiveDirectly: balance === 0 && activeInstallments.length === 0 && !wallet.isDefault && activeWalletsCount > 1
+            }
+        });
+    } catch (error) {
+        console.error('GET /api/wallets/:id/pre-archive error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi kiểm tra thông tin ví.' });
+    }
+});
+
+// =============================================
+// POST /api/wallets/:id/archive — Đóng và lưu trữ ví (Soft-delete theo chuẩn FinTech)
+// =============================================
+router.post('/:id/archive', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { transferToWalletId, replacementWalletId } = req.body || {};
+
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID ví không hợp lệ.' });
+        }
+
+        const wallet = await Wallet.findOne({ _id: id, userId: req.user.id, archived: false });
+        if (!wallet) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy ví hoặc ví đã được lưu trữ trước đó.' });
+        }
+
+        if (wallet.isDefault) {
+            return res.status(400).json({
+                success: false,
+                code: 'CANNOT_ARCHIVE_DEFAULT_WALLET',
+                message: 'Không thể đóng ví mặc định. Vui lòng chọn một ví khác làm mặc định trước.'
+            });
+        }
+
+        const activeWalletsCount = await Wallet.countDocuments({ userId: req.user.id, archived: false });
+        if (activeWalletsCount <= 1) {
+            return res.status(400).json({
+                success: false,
+                code: 'LAST_ACTIVE_WALLET',
+                message: 'Bạn không thể đóng ví hoạt động duy nhất còn lại.'
+            });
+        }
+
+        const currentBalance = await getWalletBalance(req.user.id, id);
+
+        // 1. Kiểm tra dư nợ âm (thẻ tín dụng hoặc thấu chi)
+        if (currentBalance < 0) {
+            return res.status(400).json({
+                success: false,
+                code: 'SETTLE_DEBT_FIRST',
+                message: `Ví hiện đang có dư nợ (${Math.abs(currentBalance).toLocaleString('vi-VN')} đ). Vui lòng thanh toán hết dư nợ trước khi đóng ví.`,
+                balance: currentBalance
+            });
+        }
+
+        // 2. Kiểm tra số dư dương
+        if (currentBalance > 0) {
+            if (!transferToWalletId) {
+                return res.status(400).json({
+                    success: false,
+                    code: 'WALLET_BALANCE_NOT_ZERO',
+                    message: `Ví vẫn còn số dư (${currentBalance.toLocaleString('vi-VN')} đ). Vui lòng chọn ví nhận số dư trước khi đóng ví.`,
+                    balance: currentBalance
+                });
+            }
+            if (transferToWalletId.toString() === id.toString()) {
+                return res.status(400).json({ success: false, message: 'Ví nhận số dư phải khác ví đang đóng.' });
+            }
+            const targetWallet = await Wallet.findOne({ _id: transferToWalletId, userId: req.user.id, archived: false });
+            if (!targetWallet) {
+                return res.status(400).json({ success: false, message: 'Ví nhận số dư không tồn tại hoặc đã bị lưu trữ.' });
+            }
+        }
+
+        // 3. Kiểm tra các khoản chi trả góp / định kỳ
+        const activeInstallments = await Installment.find({
+            userId: req.user.id,
+            walletId: id,
+            $or: [{ active: true }, { isActive: true }]
+        });
+
+        if (activeInstallments.length > 0) {
+            if (!replacementWalletId) {
+                return res.status(400).json({
+                    success: false,
+                    code: 'HAS_ACTIVE_INSTALLMENTS',
+                    message: `Ví đang liên kết với ${activeInstallments.length} khoản trả góp định kỳ. Vui lòng chọn ví thanh toán thay thế.`,
+                    installments: activeInstallments.map(i => i.name)
+                });
+            }
+            if (replacementWalletId.toString() === id.toString()) {
+                return res.status(400).json({ success: false, message: 'Ví thay thế cho các khoản định kỳ phải khác ví đang đóng.' });
+            }
+            const repWallet = await Wallet.findOne({ _id: replacementWalletId, userId: req.user.id, archived: false });
+            if (!repWallet) {
+                return res.status(400).json({ success: false, message: 'Ví thay thế cho các khoản định kỳ không tồn tại hoặc đã bị lưu trữ.' });
+            }
+        }
+
+        // 4. Thực thi transaction an toàn
+        await runWithTransaction(async (session) => {
+            const opts = session ? { session } : {};
+
+            // A. Tự động tạo giao dịch transfer chuyển sạch số dư sang ví đích nếu có
+            if (currentBalance > 0 && transferToWalletId) {
+                await Transaction.create([
+                    {
+                        userId: req.user.id,
+                        type: 'transfer',
+                        amount: currentBalance,
+                        date: new Date().toISOString().slice(0, 10),
+                        walletId: id,
+                        toWalletId: transferToWalletId,
+                        category: 'Chuyển tiền',
+                        desc: `Tất toán số dư đóng ví "${wallet.name}"`,
+                        fee: 0
+                    }
+                ], opts);
+            }
+
+            // B. Cập nhật các khoản trả góp sang ví thay thế
+            if (activeInstallments.length > 0 && replacementWalletId) {
+                await Installment.updateMany(
+                    { userId: req.user.id, walletId: id },
+                    { $set: { walletId: replacementWalletId } },
+                    opts
+                );
+            }
+
+            // C. Cập nhật trạng thái lưu trữ
+            wallet.archived = true;
+            wallet.archivedAt = new Date();
+            wallet.isDefault = false;
+            await wallet.save(opts);
+        });
+
+        res.json({
+            success: true,
+            message: `Đã đóng và lưu trữ ví "${wallet.name}" thành công!`,
+            data: wallet.toJSON()
+        });
+    } catch (error) {
+        console.error('POST /api/wallets/:id/archive error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi đóng ví.' });
+    }
+});
+
+// =============================================
+// POST /api/wallets/:id/unarchive — Mở lại ví đã lưu trữ
+// =============================================
+router.post('/:id/unarchive', async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID ví không hợp lệ.' });
+        }
+
+        const wallet = await Wallet.findOne({ _id: id, userId: req.user.id, archived: true });
+        if (!wallet) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy ví đã lưu trữ.' });
+        }
+
+        wallet.archived = false;
+        wallet.archivedAt = null;
+        await wallet.save();
+
+        res.json({
+            success: true,
+            message: `Đã mở lại ví "${wallet.name}".`,
+            data: wallet.toJSON()
+        });
+    } catch (error) {
+        console.error('POST /api/wallets/:id/unarchive error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi khi mở lại ví.' });
     }
 });
 
@@ -226,6 +455,52 @@ router.delete('/:id', async (req, res) => {
                 { $set: { toWalletId: defaultWallet._id } },
                 updateOpts
             );
+
+            // Xử lý các giao dịch transfer bị trùng cả ví nguồn và ví đích (chuyển tiền cho chính nó sau khi gộp ví)
+            // và cập nhật các khoản định kỳ
+            const canRunExtraOps = (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) || (Installment.updateMany !== mongoose.Model.updateMany);
+            if (canRunExtraOps) {
+                // Nếu có phí (fee > 0): chuyển thành giao dịch expense ghi nhận đúng khoản phí đó
+                await Transaction.updateMany(
+                    {
+                        userId: req.user.id,
+                        type: 'transfer',
+                        walletId: defaultWallet._id,
+                        toWalletId: defaultWallet._id,
+                        fee: { $gt: 0 }
+                    },
+                    [
+                        {
+                            $set: {
+                                type: 'expense',
+                                category: 'Khác',
+                                amount: '$fee',
+                                fee: 0,
+                                toWalletId: null,
+                                desc: { $concat: ['$desc', ' (Phí chuyển tiền - đã gộp ví)'] }
+                            }
+                        }
+                    ],
+                    updateOpts
+                );
+                // Nếu không có phí: dọn dẹp giao dịch transfer tự thân vô nghĩa này
+                await Transaction.deleteMany(
+                    {
+                        userId: req.user.id,
+                        type: 'transfer',
+                        walletId: defaultWallet._id,
+                        toWalletId: defaultWallet._id
+                    },
+                    updateOpts
+                );
+
+                // Cập nhật các khoản thanh toán định kỳ trỏ về ví mặc định
+                await Installment.updateMany(
+                    { walletId: id, userId: req.user.id },
+                    { $set: { walletId: defaultWallet._id } },
+                    updateOpts
+                );
+            }
 
             // B. Bảo toàn 100% initialBalance: cộng dồn vào ví mặc định (Zero Data Loss thực sự)
             const transferInitialBalance = Number(walletToDelete.initialBalance) || 0;

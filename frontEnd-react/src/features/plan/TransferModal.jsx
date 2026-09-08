@@ -355,7 +355,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                   />
                   <span className="modal-pro-amount-suffix">VNĐ</span>
                 </div>
-                <p className="modal-field-hint">Phí sẽ được cộng vào ví nhận</p>
+                <p className="modal-field-hint">Phí giao dịch sẽ được trừ thêm vào ví gửi</p>
               </div>
             </div>
 
