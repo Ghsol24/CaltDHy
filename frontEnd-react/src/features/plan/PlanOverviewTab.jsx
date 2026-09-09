@@ -7,8 +7,10 @@ import { WalletModal } from './WalletModal';
 import { BudgetEditModal } from './BudgetEditModal';
 import { RecurringModal } from './RecurringModal';
 import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
-import { formatCurrency, formatPercent, getDueStatus, getCalendarDateParts, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
+import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
+import { CategoryOutlineIcon, SparkleOutlineIcon, ChartOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
 
 const WALLET_TYPE_LABELS = {
   cash: 'Tiền mặt',
@@ -123,43 +125,55 @@ export function PlanOverviewTab() {
 
     // A. Recurring alerts
     activeInstallments.forEach((item) => {
-      const due = getDueStatus(item.nextDueDate);
+      const tierInfo = getRecurringTier(item, currentMonthStr);
+      // Đã trả trong tháng -> Không hiển thị cảnh báo
+      if (tierInfo.isPaidThisMonth) return;
+
       const dateParts = getCalendarDateParts(item.nextDueDate);
-      if (due.diffDays !== null) {
-        if (due.isOverdue) {
-          list.push({
-            id: `rec-overdue-${item.id}`,
-            type: 'recurring',
-            priority: 0,
-            variant: 'danger',
-            dateParts,
-            title: `Khoản "${item.name}" đã quá hạn!`,
-            subText: `${formatCurrency(item.amount)} (${due.text})`,
-            targetTab: 'recurring'
-          });
-        } else if (due.isToday) {
-          list.push({
-            id: `rec-today-${item.id}`,
-            type: 'recurring',
-            priority: 1,
-            variant: 'today',
-            dateParts,
-            title: `Khoản "${item.name}" đến hạn hôm nay!`,
-            subText: formatCurrency(item.amount),
-            targetTab: 'recurring'
-          });
-        } else if (due.diffDays >= 1 && due.diffDays <= 7) {
-          list.push({
-            id: `rec-soon-${item.id}`,
-            type: 'recurring',
-            priority: 3,
-            variant: 'soon',
-            dateParts,
-            title: `Khoản "${item.name}" sắp đến hạn`,
-            subText: `Còn ${due.diffDays} ngày (${formatCurrency(item.amount)})`,
-            targetTab: 'recurring'
-          });
-        }
+      if (tierInfo.isOverdue) {
+        list.push({
+          id: `rec-overdue-${item.id}`,
+          type: 'recurring',
+          priority: 0,
+          variant: 'danger',
+          dateParts,
+          title: `Khoản "${item.name}" đã quá hạn!`,
+          subText: `${formatCurrency(item.amount)} (${tierInfo.text})`,
+          targetTab: 'recurring'
+        });
+      } else if (tierInfo.isToday) {
+        list.push({
+          id: `rec-today-${item.id}`,
+          type: 'recurring',
+          priority: 1,
+          variant: 'today',
+          dateParts,
+          title: `Khoản "${item.name}" đến hạn hôm nay!`,
+          subText: formatCurrency(item.amount),
+          targetTab: 'recurring'
+        });
+      } else if (tierInfo.tier === 'danger') {
+        list.push({
+          id: `rec-danger-${item.id}`,
+          type: 'recurring',
+          priority: 2,
+          variant: 'danger',
+          dateParts,
+          title: `Khoản "${item.name}" sắp đến hạn (< 3 ngày)`,
+          subText: `${tierInfo.text} (${formatCurrency(item.amount)})`,
+          targetTab: 'recurring'
+        });
+      } else if (tierInfo.tier === 'warning') {
+        list.push({
+          id: `rec-soon-${item.id}`,
+          type: 'recurring',
+          priority: 3,
+          variant: 'soon',
+          dateParts,
+          title: `Khoản "${item.name}" sắp đến hạn`,
+          subText: `${tierInfo.text} (${formatCurrency(item.amount)})`,
+          targetTab: 'recurring'
+        });
       }
     });
 
@@ -203,7 +217,7 @@ export function PlanOverviewTab() {
     // Sort by priority ascending, take max 3
     list.sort((a, b) => a.priority - b.priority);
     return list.slice(0, 3);
-  }, [activeInstallments, categoryBudgets]);
+  }, [activeInstallments, categoryBudgets, currentMonthStr]);
 
   // Top items for summary columns
   const topWallets = useMemo(() => {
@@ -224,12 +238,18 @@ export function PlanOverviewTab() {
   const topInstallments = useMemo(() => {
     return [...activeInstallments]
       .sort((a, b) => {
-        const dueA = getDueStatus(a.nextDueDate).diffDays ?? 9999;
-        const dueB = getDueStatus(b.nextDueDate).diffDays ?? 9999;
+        const tierA = getRecurringTier(a, currentMonthStr);
+        const tierB = getRecurringTier(b, currentMonthStr);
+        // Ưu tiên hiển thị khoản chưa thanh toán lên trước, khoản đã trả xếp sau
+        if (tierA.isPaidThisMonth !== tierB.isPaidThisMonth) {
+          return tierA.isPaidThisMonth ? 1 : -1;
+        }
+        const dueA = tierA.diffDays ?? 9999;
+        const dueB = tierB.diffDays ?? 9999;
         return dueA - dueB;
       })
       .slice(0, 4);
-  }, [activeInstallments]);
+  }, [activeInstallments, currentMonthStr]);
 
   // Find top spending category for Insight recommendation
   const highestSpendCategory = useMemo(() => {
@@ -423,7 +443,7 @@ export function PlanOverviewTab() {
           </div>
         ) : (
           <div className="top-alerts-empty-reassurance">
-            <span className="reassurance-sparkle" aria-hidden="true">✨</span>
+            <SparkleOutlineIcon size={16} className="reassurance-sparkle" />
             <span>Tất cả ngân sách và khoản định kỳ của bạn đang trong trạng thái kiểm soát tốt!</span>
           </div>
         )}
@@ -559,7 +579,9 @@ export function PlanOverviewTab() {
               </div>
             ) : topWallets.length === 0 ? (
               <div className="column-empty-state">
-                <span className="empty-emoji" aria-hidden="true">💳</span>
+                <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
+                  <WalletOutlineIcon type="credit" size={28} color="currentColor" />
+                </span>
                 <p>Chưa có tài khoản nào.</p>
               </div>
             ) : (
@@ -575,7 +597,7 @@ export function PlanOverviewTab() {
                           style={{ backgroundColor: `${w.color || '#4F46E5'}18`, color: w.color || '#4F46E5' }}
                           aria-hidden="true"
                         >
-                          <span>{w.icon || '💳'}</span>
+                          <WalletOutlineIcon type={w.type} size={18} color="currentColor" />
                         </div>
                         <div className="wallet-meta-info">
                           <strong className="wallet-name-text" title={w.name}>{w.name}</strong>
@@ -637,7 +659,9 @@ export function PlanOverviewTab() {
               </div>
             ) : topBudgetCategories.length === 0 || !hasAnyBudgetLimit ? (
               <div className="column-empty-state">
-                <span className="empty-emoji" aria-hidden="true">📊</span>
+                <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
+                  <ChartOutlineIcon size={28} color="currentColor" />
+                </span>
                 <p>Chưa có ngân sách nào được thiết lập trong tháng này.</p>
               </div>
             ) : (
@@ -652,7 +676,9 @@ export function PlanOverviewTab() {
                     <div key={cat.category} className="plan-item-box plan-item-box--budget">
                       <div className="budget-item-top-row">
                         <div className="budget-item-title-group">
-                          <span className="budget-item-icon" aria-hidden="true">{cat.icon}</span>
+                          <span className="budget-item-icon" aria-hidden="true">
+                            <CategoryOutlineIcon name={cat.name || cat.category} size={16} />
+                          </span>
                           <div className="budget-item-names">
                             <strong className="budget-item-name" title={cat.category}>{cat.category}</strong>
                             <span className="budget-item-amounts">
@@ -721,13 +747,15 @@ export function PlanOverviewTab() {
               </div>
             ) : topInstallments.length === 0 ? (
               <div className="column-empty-state">
-                <span className="empty-emoji" aria-hidden="true">🔄</span>
+                <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
+                  <RefreshOutlineIcon size={28} color="currentColor" />
+                </span>
                 <p>Bạn chưa theo dõi khoản định kỳ nào.</p>
               </div>
             ) : (
               <div className="column-items-list">
                 {topInstallments.map((item) => {
-                  const due = getDueStatus(item.nextDueDate);
+                  const tierInfo = getRecurringTier(item, currentMonthStr);
                   const dateParts = getCalendarDateParts(item.nextDueDate);
                   const cycleSuffix = item.cycle === 'yearly' ? '/ năm' : item.cycle === 'quarterly' ? '/ quý' : '/ tháng';
 
@@ -736,7 +764,7 @@ export function PlanOverviewTab() {
                       <div className="item-box-left">
                         {/* Calendar Date Block (Mockup Style) */}
                         <div className="recurring-calendar-block" aria-hidden="true">
-                          <span className={`cal-weekday ${due.isToday || due.isOverdue ? 'cal-danger' : ''}`}>
+                          <span className={`cal-weekday ${tierInfo.tier === 'danger' ? 'cal-danger' : tierInfo.tier === 'warning' ? 'cal-warning' : tierInfo.tier === 'paid' ? 'cal-paid' : ''}`}>
                             {dateParts.weekdayShort}
                           </span>
                           <strong className="cal-day-number">{dateParts.day}</strong>
@@ -751,23 +779,14 @@ export function PlanOverviewTab() {
                       </div>
 
                       <div className="item-box-right item-box-right--recurring">
-                        {due.diffDays !== null ? (
-                          <span className={`recurring-pill-badge ${
-                            due.isOverdue
-                              ? 'pill-danger'
-                              : due.isToday
-                              ? 'pill-today'
-                              : due.isSoon
-                              ? 'pill-soon'
-                              : 'pill-normal'
-                          }`}>
-                            {due.text}
-                          </span>
-                        ) : (
-                          <span className="recurring-pill-badge pill-normal">
-                            {item.nextDueDate || 'Chưa định ngày'}
-                          </span>
-                        )}
+                        <span className={`recurring-pill-badge pill-${tierInfo.tier}`}>
+                          {tierInfo.tier === 'paid' && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: '4px' }}>
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                          {tierInfo.shortText}
+                        </span>
 
                         <button
                           type="button"

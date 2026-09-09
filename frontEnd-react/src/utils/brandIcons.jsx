@@ -145,7 +145,9 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
           title="Tiền điện"
           aria-hidden="true"
         >
-          <div className="utility-icon-box utility-electric">⚡</div>
+          <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
         </div>
       );
 
@@ -157,7 +159,9 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
           title="Tiền nước"
           aria-hidden="true"
         >
-          <div className="utility-icon-box utility-water">💧</div>
+          <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+          </svg>
         </div>
       );
 
@@ -169,7 +173,10 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
           title="Tiền nhà"
           aria-hidden="true"
         >
-          <div className="utility-icon-box utility-rent">🏠</div>
+          <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
         </div>
       );
 
@@ -181,7 +188,10 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
           title="Trả góp"
           aria-hidden="true"
         >
-          <div className="utility-icon-box utility-installment">💳</div>
+          <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+          </svg>
         </div>
       );
 
@@ -193,7 +203,9 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
           title="Thể thao"
           aria-hidden="true"
         >
-          <div className="utility-icon-box utility-gym">🏋️</div>
+          <svg width={size * 0.45} height={size * 0.45} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
         </div>
       );
 

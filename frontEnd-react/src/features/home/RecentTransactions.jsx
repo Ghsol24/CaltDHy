@@ -5,7 +5,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { getCategoryIcon } from '../../utils/categories';
+import { CategoryOutlineIcon, ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
 
 export const RecentTransactions = React.memo(function RecentTransactions() {
@@ -91,7 +91,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
       <div className="home-txns-card-container">
         {recentList.length === 0 ? (
           <EmptyState
-            icon="💸"
+            icon={<ArrowUpRightOutlineIcon size={32} color="var(--color-text-muted, #94A3B8)" />}
             title="Chưa có giao dịch gần đây"
             description="Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn."
             actionText="+ Thêm giao dịch"
@@ -103,7 +103,6 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
               const isIncome = txn.type === 'income';
               const isTransfer = txn.type === 'transfer';
               const isLocked = Boolean(txn.jarId || txn.installmentId);
-              const icon = isTransfer ? '⇄' : getCategoryIcon(txn.category, txn.type);
               
               const walletName = txn.walletId && walletMap[txn.walletId]
                 ? walletMap[txn.walletId].name
@@ -126,7 +125,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                 >
                   {/* Left Icon */}
                   <div className={`home-txn-icon-box ${isIncome ? 'is-income' : ''} ${isTransfer ? 'is-transfer' : ''}`} aria-hidden="true">
-                    <span>{icon}</span>
+                    <CategoryOutlineIcon name={isTransfer ? 'transfer' : txn.category} size={18} />
                   </div>
 
                   {/* Middle Content */}

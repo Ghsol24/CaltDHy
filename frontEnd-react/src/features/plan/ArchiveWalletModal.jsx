@@ -4,6 +4,7 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { walletService } from '../../services/walletService';
 import { formatCurrency } from '../../utils/formatters';
+import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
 
 export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess = null }) {
   const { wallets, archiveWallet } = useWalletStore();
@@ -313,10 +314,14 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                       fontSize: '0.84rem',
                       color: 'var(--color-danger, #ef4444)',
                       lineHeight: 1.4,
-                      marginTop: '6px'
+                      marginTop: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
                     }}
                   >
-                    ⚠️ Ví đang có dư nợ. Theo chuẩn kế toán, bạn cần nạp tiền thanh toán hết dư nợ trước khi đóng ví này.
+                    <AlertTriangleOutlineIcon size={16} color="currentColor" />
+                    <span>Ví đang có dư nợ. Theo chuẩn kế toán, bạn cần nạp tiền thanh toán hết dư nợ trước khi đóng ví này.</span>
                   </div>
                 )}
 
@@ -339,7 +344,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     >
                       {availableTargetWallets.map((w) => (
                         <option key={w.id} value={w.id}>
-                          {w.icon ? `${w.icon} ` : ''}{w.name} {w.isDefault ? '(Mặc định)' : ''}
+                          {w.name} {w.isDefault ? '(Mặc định)' : ''}
                         </option>
                       ))}
                     </select>
@@ -435,7 +440,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     >
                       {availableTargetWallets.map((w) => (
                         <option key={w.id} value={w.id}>
-                          {w.icon ? `${w.icon} ` : ''}{w.name} {w.isDefault ? '(Mặc định)' : ''}
+                          {w.name} {w.isDefault ? '(Mặc định)' : ''}
                         </option>
                       ))}
                     </select>

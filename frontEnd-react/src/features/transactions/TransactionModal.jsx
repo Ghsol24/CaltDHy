@@ -4,7 +4,8 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
+import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 
@@ -429,7 +430,7 @@ export function TransactionModal() {
                 onClick={() => handleTypeChange('expense')}
                 aria-pressed={type === 'expense'}
               >
-                <span>💸</span>
+                <ArrowUpRightOutlineIcon size={16} />
                 <span>Chi tiêu</span>
               </button>
               <button
@@ -438,7 +439,7 @@ export function TransactionModal() {
                 onClick={() => handleTypeChange('income')}
                 aria-pressed={type === 'income'}
               >
-                <span>💵</span>
+                <ArrowDownLeftOutlineIcon size={16} />
                 <span>Thu nhập</span>
               </button>
             </div>
@@ -485,7 +486,9 @@ export function TransactionModal() {
 
               {type === 'expense' && sortedCategories.length === 0 ? (
                 <div className="txn-empty-categories" role="status">
-                  <span className="txn-empty-icon" aria-hidden="true">📁</span>
+                  <span className="txn-empty-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <FolderOutlineIcon size={24} color="currentColor" />
+                  </span>
                   <h4 className="txn-empty-title">Chưa có danh mục</h4>
                   <p className="txn-empty-desc">Hãy thiết lập danh mục trước khi thêm giao dịch.</p>
                   <button
@@ -516,11 +519,11 @@ export function TransactionModal() {
                       >
                         {isSelected && (
                           <span className={`txn-card-check-badge ${type === 'income' ? 'txn-card-check-badge--income' : ''}`} aria-hidden="true">
-                            ✓
+                            <CheckOutlineIcon size={10} />
                           </span>
                         )}
                         <span className="txn-card-icon" aria-hidden="true">
-                          {cat.icon || getCategoryIcon(cat.name, type)}
+                          <CategoryOutlineIcon name={cat.name} size={18} />
                         </span>
                         <span className="txn-card-name" title={cat.name}>
                           {cat.name}

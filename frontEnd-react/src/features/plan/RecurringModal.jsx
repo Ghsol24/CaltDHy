@@ -8,6 +8,7 @@ import { formatCurrency, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { detectBrandInfo } from '../../utils/brandDetection';
 import { CategoryOutlineIcon } from '../../utils/categoryIcons';
+import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 
 const CYCLE_OPTIONS = [
   { value: 'monthly', label: 'Hàng tháng' },
@@ -553,10 +554,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                         aria-expanded={isWalletDropdownOpen}
                       >
                         <div className="dropdown-btn-content">
-                          <svg className="dropdown-outline-icon text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <rect width="20" height="14" x="2" y="5" rx="2" />
-                            <line x1="2" y1="10" x2="22" y2="10" />
-                          </svg>
+                          <WalletOutlineIcon type={selectedWallet?.type} size={16} color="currentColor" className="dropdown-outline-icon text-brand" />
                           <span className="dropdown-btn-text">{selectedWallet?.name || 'Chọn ví'}</span>
                         </div>
                         <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -581,10 +579,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                                 aria-selected={isSelected}
                               >
                                 <div className="dropdown-item-left">
-                                  <svg className="dropdown-outline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                                    <line x1="2" y1="10" x2="22" y2="10" />
-                                  </svg>
+                                  <WalletOutlineIcon type={w.type} size={16} color="currentColor" className="dropdown-outline-icon" />
                                   <div className="wallet-dropdown-text-group">
                                     <span className="dropdown-item-label">{w.name}</span>
                                     <span className="dropdown-item-sub">{formatCurrency(w.currentBalance ?? 0)}</span>

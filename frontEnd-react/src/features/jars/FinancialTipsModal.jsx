@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
+import { TargetOutlineIcon, ChartOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 
 export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) {
   const modalRef = useRef(null);
@@ -43,15 +44,19 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
               type="button"
               onClick={() => setTopic('smart')}
               className={`financial-tips-tab-btn ${topic === 'smart' ? 'active' : ''}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🎯 Tại sao cần mục tiêu?
+              <TargetOutlineIcon size={15} />
+              <span>Tại sao cần mục tiêu?</span>
             </button>
             <button
               type="button"
               onClick={() => setTopic('50-30-20')}
               className={`financial-tips-tab-btn ${topic === '50-30-20' ? 'active' : ''}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              📊 Quy tắc 50/30/20
+              <ChartOutlineIcon size={15} />
+              <span>Quy tắc 50/30/20</span>
             </button>
           </div>
 
@@ -61,7 +66,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
             className="financial-tips-close-btn"
             aria-label="Đóng"
           >
-            ✕
+            <CloseOutlineIcon size={14} />
           </button>
         </div>
 

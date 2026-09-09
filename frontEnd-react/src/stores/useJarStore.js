@@ -63,7 +63,7 @@ const normalizeInstallment = (i) => ({
   id: i._id || i.id,
   name: i.name || '',
   category: i.category || 'Housing & Bills',
-  icon: i.icon || '💳',
+  icon: i.icon || 'recurring',
   amount: Number(i.amount) || 0,
   cycle: i.cycle || 'monthly',
   nextDueDate: i.nextDueDate || null,

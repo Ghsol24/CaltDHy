@@ -18,7 +18,7 @@ const PRESET_COLORS = [
   '#475569'  // Slate Gray
 ];
 
-const getWalletIconByType = (walletType) => {
+const getWalletIconByType = (_walletType) => {
   return '';
 };
 

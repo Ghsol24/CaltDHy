@@ -5,6 +5,7 @@ import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
+import { TargetOutlineIcon } from '../../components/ui/AppIcons';
 
 export const AttentionPanel = React.memo(function AttentionPanel() {
   const setActiveView = useSpendingStore((s) => s.setActiveView);
@@ -223,7 +224,9 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
           {/* Empty state if no budgets and no jars */}
           {topCategories.length === 0 && !topJar && (
             <div className="home-plan-empty-state">
-              <span className="home-plan-empty-icon" role="img" aria-label="Mục tiêu">🎯</span>
+              <span className="home-plan-empty-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <TargetOutlineIcon size={24} color="currentColor" />
+              </span>
               <p className="home-plan-empty-text">
                 Chưa có hạn mức ngân sách hoặc hũ tiết kiệm nào được thiết lập.
               </p>

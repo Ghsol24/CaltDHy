@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangleOutlineIcon } from './AppIcons';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -43,11 +44,10 @@ export class ErrorBoundary extends React.Component {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '22px',
               margin: '0 auto 16px'
             }}
           >
-            ⚠️
+            <AlertTriangleOutlineIcon size={24} />
           </div>
           <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px' }}>
             Đã xảy ra lỗi hiển thị

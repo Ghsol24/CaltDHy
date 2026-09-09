@@ -4,6 +4,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency } from '../../utils/formatters';
+import { CheckOutlineIcon, TargetOutlineIcon, ArrowUpRightOutlineIcon, BulbOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 
 const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
@@ -136,8 +137,8 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
             <h2 id="jar-tx-modal-title" className="txn-modal-title">
               {action === 'deposit' ? 'Nạp tiền vào hũ' : 'Rút tiền từ hũ'}
             </h2>
-            <span className="jar-tx-subtitle">
-              {jar.icon} {jar.name} · Hiện có {formatCurrency(currentBal)}
+            <span className="jar-tx-subtitle" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <JarOutlineIcon size={14} /> {jar.name} · Hiện có {formatCurrency(currentBal)}
             </span>
           </div>
           <button
@@ -180,7 +181,14 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
               <div className="jar-tx-summary-col">
                 <span className="jar-tx-summary-label">Còn thiếu</span>
                 <strong className="jar-tx-summary-val text-secondary">
-                  {remaining > 0 ? formatCurrency(remaining) : '🎉 Đã đạt'}
+                  {remaining > 0 ? (
+                    formatCurrency(remaining)
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--color-success, #10B981)' }}>
+                      <CheckOutlineIcon size={13} />
+                      <span>Đã đạt</span>
+                    </span>
+                  )}
                 </strong>
               </div>
             </div>
@@ -224,8 +232,10 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
                   type="button"
                   className="jar-tx-chip-btn jar-tx-chip-btn--accent"
                   onClick={handleQuickFillRemaining}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 >
-                  🎯 Nạp đủ mục tiêu
+                  <TargetOutlineIcon size={13} />
+                  <span>Nạp đủ mục tiêu</span>
                 </button>
               )}
 
@@ -234,8 +244,10 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
                   type="button"
                   className="jar-tx-chip-btn jar-tx-chip-btn--accent"
                   onClick={handleQuickFillAllBalance}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 >
-                  💸 Rút toàn bộ số dư
+                  <ArrowUpRightOutlineIcon size={13} />
+                  <span>Rút toàn bộ số dư</span>
                 </button>
               )}
             </div>
@@ -254,12 +266,15 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
                 allowNone={true}
                 noneLabel="-- Không đồng bộ ví (chỉ ghi nhận hũ độc lập) --"
               />
-              <span className="txn-field-hint">
-                {selectedWalletId
-                  ? action === 'deposit'
-                    ? '💡 Hệ thống sẽ tự động tạo 1 giao dịch Chi tiêu từ ví này để số dư ví luôn chính xác.'
-                    : '💡 Hệ thống sẽ tự động tạo 1 giao dịch Thu nhập vào ví này để cập nhật số dư ví.'
-                  : '💡 Tiền trong hũ sẽ được cập nhật độc lập, không làm thay đổi số dư ví nào.'}
+              <span className="txn-field-hint" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <BulbOutlineIcon size={13} style={{ flexShrink: 0 }} />
+                <span>
+                  {selectedWalletId
+                    ? action === 'deposit'
+                      ? 'Hệ thống sẽ tự động tạo 1 giao dịch Chi tiêu từ ví này để số dư ví luôn chính xác.'
+                      : 'Hệ thống sẽ tự động tạo 1 giao dịch Thu nhập vào ví này để cập nhật số dư ví.'
+                    : 'Tiền trong hũ sẽ được cập nhật độc lập, không làm thay đổi số dư ví nào.'}
+                </span>
               </span>
             </div>
 

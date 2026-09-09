@@ -4,7 +4,7 @@ import { useSpendingStore } from './useSpendingStore';
 import { useWalletStore } from './useWalletStore';
 import { useToastStore } from './useToastStore';
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
-import { getLocalDateString } from '../utils/formatters';
+import { getLocalDateString, getLocalMonthString } from '../utils/formatters';
 
 const TXN_KEY = 'caltdhy_txns';
 const EXPENSE_CAT_KEY = 'caltdhy_expense_categories';
@@ -80,6 +80,7 @@ const normalizeTxn = (t) => ({
 export const useTransactionStore = create((set, get) => ({
   transactions: getStoredTxns(),
   budgets: {},
+  budgetMonth: null,
   expenseCategories: getStoredExpenseCategories(),
   incomeCategories: getStoredIncomeCategories(),
   categories: [],
@@ -207,9 +208,13 @@ export const useTransactionStore = create((set, get) => ({
   },
 
   fetchBudgets: async (month = null) => {
+    const targetMonth = (typeof month === 'string' && month.trim())
+      ? month.trim()
+      : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
+
     try {
       const [budgetRes, catRes] = await Promise.all([
-        spendingService.getBudgets(month),
+        spendingService.getBudgets(targetMonth),
         spendingService.getCategories().catch(() => null)
       ]);
 
@@ -243,7 +248,7 @@ export const useTransactionStore = create((set, get) => ({
         }
 
         saveStoredExpenseCategories(merged);
-        set({ budgets: budgetMap, expenseCategories: merged });
+        set({ budgets: budgetMap, budgetMonth: targetMonth, expenseCategories: merged });
         return { success: true, data: budgetMap };
       }
     } catch (err) {
@@ -253,11 +258,14 @@ export const useTransactionStore = create((set, get) => ({
   },
 
   updateBudgets: async (budgetsObj, month = null) => {
+    const targetMonth = (typeof month === 'string' && month.trim())
+      ? month.trim()
+      : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
     set({ isLoading: true });
     try {
-      const res = await spendingService.updateBudgets(budgetsObj, month);
+      const res = await spendingService.updateBudgets(budgetsObj, targetMonth);
       if (res.success) {
-        set({ budgets: budgetsObj, isLoading: false });
+        set({ budgets: budgetsObj, budgetMonth: targetMonth, isLoading: false });
         return { success: true, data: budgetsObj };
       } else {
         throw new Error(res.message || 'Lỗi cập nhật ngân sách');
@@ -265,7 +273,7 @@ export const useTransactionStore = create((set, get) => ({
     } catch (err) {
       set({ isLoading: false });
       if (err && err.status === 503) {
-        set({ budgets: budgetsObj });
+        set({ budgets: budgetsObj, budgetMonth: targetMonth });
         return { success: true, data: budgetsObj, offline: true };
       }
       throw err;
@@ -273,17 +281,21 @@ export const useTransactionStore = create((set, get) => ({
   },
 
   updateBudgetsAndCategories: async (budgetsObj, expenseCats, month = null) => {
+    const targetMonth = (typeof month === 'string' && month.trim())
+      ? month.trim()
+      : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
     set({ isLoading: true });
     if (expenseCats) {
       saveStoredExpenseCategories(expenseCats);
     }
     try {
-      await spendingService.updateBudgets(budgetsObj, month);
+      await spendingService.updateBudgets(budgetsObj, targetMonth);
       if (expenseCats && Array.isArray(expenseCats)) {
         await spendingService.updateCategories(expenseCats.map((c) => c.name));
       }
       set({
         budgets: budgetsObj,
+        budgetMonth: targetMonth,
         ...(expenseCats ? { expenseCategories: expenseCats } : {}),
         isLoading: false
       });
@@ -293,6 +305,7 @@ export const useTransactionStore = create((set, get) => ({
       if (err && err.status === 503) {
         set({
           budgets: budgetsObj,
+          budgetMonth: targetMonth,
           ...(expenseCats ? { expenseCategories: expenseCats } : {})
         });
         return { success: true, data: budgetsObj, offline: true };
@@ -439,6 +452,7 @@ export const useTransactionStore = create((set, get) => ({
       set({
         transactions: [],
         budgets: {},
+        budgetMonth: null,
         isLoading: false
       });
       get().updateSpendingMetrics([]);

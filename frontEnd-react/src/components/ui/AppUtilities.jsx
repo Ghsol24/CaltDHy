@@ -9,6 +9,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { GuideModal } from '../../features/guide/GuideModal';
 import { ContextualSectionGuide } from '../../features/guide/ContextualSectionGuide';
 import { AccountModal } from '../../features/account/AccountModal';
+import { CloseOutlineIcon } from './AppIcons';
 
 const THEME_OPTIONS = [
   { id: 'dark', labelKey: 'darkTheme', swatch: 'linear-gradient(135deg, #2563EB 0%, #090A0F 100%)' },
@@ -53,7 +54,7 @@ function ModalOverlayShell({ title, subtitle, onClose, children }) {
             onClick={onClose}
             aria-label="Đóng cài đặt"
           >
-            ✕
+            <CloseOutlineIcon size={18} />
           </button>
         </div>
 

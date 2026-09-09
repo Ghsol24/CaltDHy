@@ -156,6 +156,37 @@ async function runTests() {
     assert.equal(res.body.data['Đi lại'], 1000000, 'Previous category "Đi lại" carried over');
     console.log('✅ Test C-03 Passed: Per-category carryover merges customized and previous categories.\n');
 
+    // ── Test C-04: Default targetMonth fallback when query.month is omitted ──
+    console.log('--- Test C-04: Default targetMonth fallback when query.month is omitted ---');
+    const { getVietnamTodayString } = require('../backEnd/server/utils/localDate');
+    const currentVnMonth = getVietnamTodayString().slice(0, 7);
+
+    Budget.find = (query) => {
+        if (query.month && query.month.$lt) {
+            return {
+                sort: () => [
+                    { category: 'Other Expense', limit: 200000, month: '2026-08' }
+                ]
+            };
+        }
+        if (query.month === currentVnMonth) {
+            return Promise.resolve([
+                { category: 'Other Expense', limit: 450000, month: currentVnMonth }
+            ]);
+        }
+        return Promise.resolve([]);
+    };
+
+    res = mockRes();
+    await getBudget({
+        user: { id: userA },
+        query: {} // không truyền month!
+    }, res);
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.data['Other Expense'], 450000, 'When query.month is omitted, defaults to current month instead of stale global');
+    console.log('✅ Test C-04 Passed: Default targetMonth fallback resolves current month budget correctly.\n');
+
     Object.defineProperty(mongoose.connection, 'readyState', { value: originalReadyState, configurable: true });
 
     console.log('🎉 ALL CATEGORY C BACKEND TESTS PASSED SUCCESSFULLY!\n');

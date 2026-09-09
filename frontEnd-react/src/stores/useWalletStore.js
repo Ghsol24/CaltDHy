@@ -26,7 +26,7 @@ const normalizeWallet = (w) => ({
   id: w._id || w.id,
   name: w.name || '',
   type: w.type || 'cash',
-  icon: w.icon || (w.type === 'bank' ? '🏦' : w.type === 'credit' ? '💳' : w.type === 'e-wallet' ? '📱' : '💵'),
+  icon: w.icon || w.type || 'cash',
   color: w.color || '#078A59',
   initialBalance: Number(w.initialBalance ?? w.balance ?? 0),
   creditLimit: Number(w.creditLimit ?? 0),

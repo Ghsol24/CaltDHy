@@ -148,4 +148,27 @@ describe('Backend Integration Test Suite (Real MongoDB & Real Middleware)', () =
         // Ví ban đầu 5,000,000 - chi tiêu 65,000 = 4,935,000
         assert.equal(res.body.data[walletId], 4935000);
     });
+
+    it('7. Cập nhật và lấy ngân sách mặc định qua /api/spending/budget', async () => {
+        const putRes = await request(app)
+            .put('/api/spending/budget')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                'Other Expense': 450000,
+                'Ăn uống': 2000000
+            });
+
+        assert.equal(putRes.status, 200);
+        assert.equal(putRes.body.success, true);
+        assert.equal(putRes.body.data['Other Expense'], 450000);
+
+        // Gọi GET /api/spending/budget KHÔNG truyền query month
+        const getRes = await request(app)
+            .get('/api/spending/budget')
+            .set('Authorization', `Bearer ${token}`);
+
+        assert.equal(getRes.status, 200);
+        assert.equal(getRes.body.success, true);
+        assert.equal(getRes.body.data['Other Expense'], 450000, 'GET /budget without month must return current month budget');
+    });
 });

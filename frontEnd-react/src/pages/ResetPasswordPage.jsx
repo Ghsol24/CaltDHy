@@ -4,6 +4,10 @@ import { authService } from '../services/authService';
 import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
+import {
+  AlertTriangleOutlineIcon,
+  CheckOutlineIcon
+} from '../components/ui/AppIcons';
 
 export const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
@@ -129,14 +133,14 @@ export const ResetPasswordPage = () => {
               />
 
               {forgotError && (
-                <div id="forgotError" className="form-err show" role="alert">
-                  ⚠ {forgotError}
+                <div id="forgotError" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+                  <AlertTriangleOutlineIcon size={14} /> {forgotError}
                 </div>
               )}
 
               {forgotSuccess && (
-                <div id="forgotSuccess" className="form-success show" role="alert" style={{ color: 'var(--success)', marginTop: '8px', fontSize: '12px', textAlign: 'center' }}>
-                  ✓ {forgotSuccess}
+                <div id="forgotSuccess" className="form-success show" role="alert" style={{ color: 'var(--success)', marginTop: '8px', fontSize: '12px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <CheckOutlineIcon size={14} /> {forgotSuccess}
                 </div>
               )}
 
@@ -170,14 +174,14 @@ export const ResetPasswordPage = () => {
               />
 
               {resetError && (
-                <div id="resetError" className="form-err show" role="alert">
-                  ⚠ {resetError}
+                <div id="resetError" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+                  <AlertTriangleOutlineIcon size={14} /> {resetError}
                 </div>
               )}
 
               {resetSuccess && (
-                <div id="resetSuccess" className="form-success show" role="alert" style={{ color: 'var(--success)', marginTop: '8px', fontSize: '12px', textAlign: 'center' }}>
-                  ✓ {resetSuccess}
+                <div id="resetSuccess" className="form-success show" role="alert" style={{ color: 'var(--success)', marginTop: '8px', fontSize: '12px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <CheckOutlineIcon size={14} /> {resetSuccess}
                 </div>
               )}
 

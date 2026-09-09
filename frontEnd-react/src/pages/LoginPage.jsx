@@ -4,6 +4,11 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
+import {
+  ClockOutlineIcon,
+  AlertTriangleOutlineIcon,
+  LockOutlineIcon
+} from '../components/ui/AppIcons';
 
 export const LoginPage = () => {
   const [searchParams] = useSearchParams();
@@ -89,14 +94,14 @@ export const LoginPage = () => {
             </div>
 
             {isExpired && !error && (
-              <div className="form-err show" style={{ background: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.3)', color: '#eab308' }} role="status">
-                ⏱ Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.
+              <div className="form-err show" style={{ background: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.3)', color: '#eab308', display: 'flex', alignItems: 'center', gap: '6px' }} role="status">
+                <ClockOutlineIcon size={14} /> Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.
               </div>
             )}
 
             {error && (
-              <div id="formErr" className="form-err show" role="alert">
-                ⚠ {error}
+              <div id="formErr" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+                <AlertTriangleOutlineIcon size={14} /> {error}
               </div>
             )}
 
@@ -105,8 +110,8 @@ export const LoginPage = () => {
               <span className="btn-text">{isSubmitting ? 'Đang đăng nhập...' : 'LOG IN'}</span>
             </button>
 
-            <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0 }}>
-              🔒 Thông tin đăng nhập của bạn được mã hoá an toàn.
+            <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <LockOutlineIcon size={13} /> Thông tin đăng nhập của bạn được mã hoá an toàn.
             </p>
           </form>
 

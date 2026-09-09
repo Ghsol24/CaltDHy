@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
 import { JarGlassGraphic } from './JarGlassGraphic';
+import { TargetOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 
 export function JarDetailModal({
   isOpen,
@@ -89,7 +90,7 @@ export function JarDetailModal({
             onClick={onClose}
             aria-label="Đóng"
           >
-            ✕
+            <CloseOutlineIcon size={14} />
           </button>
         </div>
 
@@ -148,7 +149,10 @@ export function JarDetailModal({
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
               <span>
                 {isCompleted ? (
-                  <strong style={{ color: '#10B981' }}>✓ Đã hoàn thành 100% mục tiêu!</strong>
+                  <strong style={{ color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <CheckOutlineIcon size={13} />
+                    <span>Đã hoàn thành 100% mục tiêu!</span>
+                  </strong>
                 ) : (
                   <span>Còn thiếu: <strong style={{ color: 'var(--text-primary)' }}>{formatCurrency(remaining)}</strong></span>
                 )}
@@ -167,7 +171,7 @@ export function JarDetailModal({
           {jar.targetDate && !isCompleted && daysRemaining > 0 && remaining > 0 && (
             <div className="jar-detail-roadmap-box">
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>
-                <span>🎯</span>
+                <TargetOutlineIcon size={15} />
                 <span>Kế hoạch tích lũy gợi ý</span>
               </div>
               <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>

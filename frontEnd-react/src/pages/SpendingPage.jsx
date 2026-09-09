@@ -11,6 +11,7 @@ import { JarsView } from '../features/jars/JarsView';
 import { TransactionModal } from '../features/transactions/TransactionModal';
 import { AppUtilities } from '../components/ui/AppUtilities';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { getLocalMonthString } from '../utils/formatters';
 
 export function SpendingPage() {
   const activeView = useSpendingStore((s) => s.activeView);
@@ -20,9 +21,10 @@ export function SpendingPage() {
   const fetchJarData = useJarStore((s) => s.fetchData);
 
   useEffect(() => {
+    const currentMonth = getLocalMonthString();
     fetchTransactions();
     fetchWallets();
-    fetchBudgets();
+    fetchBudgets(currentMonth);
     fetchJarData();
   }, [fetchTransactions, fetchWallets, fetchBudgets, fetchJarData]);
 

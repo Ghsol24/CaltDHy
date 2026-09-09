@@ -258,6 +258,97 @@ export function getCalendarDateParts(dateInput) {
 }
 
 /**
+ * Phân tầng trạng thái hạn thanh toán khoản định kỳ theo quy chuẩn CaltDHy:
+ * - isPaidThisMonth: 'paid' (Xanh lá - Bất kể còn bao nhiêu ngày đến kỳ tháng sau)
+ * - Quá hạn / Hôm nay / diffDays <= 3: 'danger' (Đỏ)
+ * - 3 < diffDays <= 10: 'warning' (Vàng)
+ * - diffDays > 10: 'normal' (Xám / Trung tính)
+ *
+ * @param {Object} item - Đối tượng khoản định kỳ
+ * @param {string} [currentMonthStr] - Chuỗi tháng định dạng YYYY-MM
+ * @returns {{ tier: 'paid'|'danger'|'warning'|'normal', isPaidThisMonth: boolean, isOverdue: boolean, isToday: boolean, text: string, shortText: string, diffDays: number|null }}
+ */
+export function getRecurringTier(item, currentMonthStr = getLocalMonthString()) {
+  if (!item) {
+    return {
+      tier: 'normal',
+      isPaidThisMonth: false,
+      isOverdue: false,
+      isToday: false,
+      text: 'Chưa định ngày',
+      shortText: 'Chưa định ngày',
+      diffDays: null
+    };
+  }
+
+  const isPaidThisMonth = Array.isArray(item.history) && item.history.some(
+    (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthStr)
+  );
+
+  if (isPaidThisMonth) {
+    return {
+      tier: 'paid',
+      isPaidThisMonth: true,
+      isOverdue: false,
+      isToday: false,
+      text: 'Đã trả tháng này',
+      shortText: 'Đã trả',
+      diffDays: null
+    };
+  }
+
+  const due = getDueStatus(item.nextDueDate);
+  if (due.diffDays === null) {
+    return {
+      tier: 'normal',
+      isPaidThisMonth: false,
+      isOverdue: false,
+      isToday: false,
+      text: due.text,
+      shortText: due.text,
+      diffDays: null
+    };
+  }
+
+  // Dưới hoặc bằng 3 ngày (hoặc hôm nay, hoặc quá hạn) -> Đỏ (danger)
+  if (due.isOverdue || due.isToday || due.diffDays <= 3) {
+    return {
+      tier: 'danger',
+      isPaidThisMonth: false,
+      isOverdue: due.isOverdue,
+      isToday: due.isToday,
+      text: due.text,
+      shortText: due.text,
+      diffDays: due.diffDays
+    };
+  }
+
+  // Dưới hoặc bằng 10 ngày -> Vàng (warning)
+  if (due.diffDays <= 10) {
+    return {
+      tier: 'warning',
+      isPaidThisMonth: false,
+      isOverdue: false,
+      isToday: false,
+      text: due.text,
+      shortText: due.text,
+      diffDays: due.diffDays
+    };
+  }
+
+  // Còn lại (> 10 ngày) -> Bình thường (normal)
+  return {
+    tier: 'normal',
+    isPaidThisMonth: false,
+    isOverdue: false,
+    isToday: false,
+    text: due.text,
+    shortText: due.text,
+    diffDays: due.diffDays
+  };
+}
+
+/**
  * Tịnh tiến ngày đến hạn kế tiếp dựa theo chu kỳ (monthly, quarterly, yearly).
  * Đảm bảo ngày cuối tháng được căn chỉnh chính xác (vd: 31/01 -> 28/02).
  *

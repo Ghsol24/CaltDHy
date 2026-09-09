@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { HistoryOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 
 export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
   const modalRef = useRef(null);
@@ -21,7 +22,7 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
           jarId: jar.id,
           jarName: jar.name,
           jarColor: jar.color || '#5356F1',
-          jarIcon: jar.icon || '🫙',
+          jarIcon: jar.icon || 'jar',
           jarCategory: jar.category || 'Mục tiêu chung'
         });
       });
@@ -75,7 +76,9 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
         {/* Header */}
         <div className="jar-history-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>📜</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--color-brand-600, #059669)' }}>
+              <HistoryOutlineIcon size={20} />
+            </span>
             <h3 className="jar-history-title">
               Lịch sử hoạt động hũ chi tiêu
             </h3>
@@ -86,7 +89,7 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
             onClick={onClose}
             aria-label="Đóng"
           >
-            ✕
+            <CloseOutlineIcon size={14} />
           </button>
         </div>
 

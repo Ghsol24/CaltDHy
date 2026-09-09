@@ -9,12 +9,26 @@ import { AttentionPanel } from './AttentionPanel';
 
 export function HomeView() {
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
+  const selectedMonth = useSpendingStore((s) => s.selectedMonth);
+  const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
+  const budgetMonth = useTransactionStore((s) => s.budgetMonth);
+  const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
 
   const currentMonthStr = getLocalMonthString();
   const [, mStr] = currentMonthStr.split('-');
   const monthNum = parseInt(mStr, 10) || (new Date().getMonth() + 1);
+
+  // Tự động kiểm tra và đồng bộ dữ liệu ngân sách chuẩn của tháng hiện tại khi mở Trang chủ
+  React.useEffect(() => {
+    if (budgetMonth !== currentMonthStr) {
+      fetchBudgets(currentMonthStr);
+    }
+    if (selectedMonth !== currentMonthStr) {
+      setSelectedMonth(currentMonthStr);
+    }
+  }, [budgetMonth, currentMonthStr, fetchBudgets, selectedMonth, setSelectedMonth]);
 
   // Check finance health & context
   const { greeting, lastUpdatedText } = React.useMemo(() => {

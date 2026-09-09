@@ -538,7 +538,7 @@ html.light-theme .form-divider-label {
 
 .metric-card__value {
   font-family: var(--font-mono);
-  font-size: clamp(16px, 3.5vw, 26px); /* ✅ Lỗi 2.2: tự co font trên màn hình nhỏ */
+  font-size: clamp(16px, 3.5vw, 26px); /* Loi 2.2: tu co font tren man hinh nho */
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -.02em;
@@ -940,7 +940,7 @@ html.green-theme .tb-nav-btn.active {
   width: 100%;
 }
 
-/* ✅ Lỗi 2.3: Hiệu ứng chuyển tab mượt mà Dashboard ↔ Analytics */
+/* Loi 2.3: Hieu ung chuyen tab muot ma Dashboard <-> Analytics */
 @keyframes viewFadeIn {
   from {
     opacity: 0;

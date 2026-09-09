@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { formatCurrency } from '../../utils/formatters';
+import { WalletOutlineIcon } from './WalletOutlineIcon';
 
 export function CustomWalletDropdown({
   wallets = [],
@@ -61,7 +62,7 @@ export function CustomWalletDropdown({
           {selectedWallet ? (
             <>
               <span className="custom-wallet-icon" aria-hidden="true">
-                {selectedWallet.icon || '💳'}
+                <WalletOutlineIcon type={selectedWallet.type} size={18} color="currentColor" />
               </span>
               <div className="custom-wallet-text-group">
                 <span className="custom-wallet-name">
@@ -133,7 +134,7 @@ export function CustomWalletDropdown({
               >
                 <div className="custom-wallet-item-left">
                   <span className="custom-wallet-item-icon" aria-hidden="true">
-                    {wallet.icon || '💳'}
+                    <WalletOutlineIcon type={wallet.type} size={18} color="currentColor" />
                   </span>
                   <div className="custom-wallet-item-details">
                     <div className="custom-wallet-item-name-row">

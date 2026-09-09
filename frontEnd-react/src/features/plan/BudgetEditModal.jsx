@@ -6,6 +6,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { CategoryOutlineIcon, SparkleOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { calculateAvailableToSpend } from '../../utils/financeMath';
 import { formatCurrency, formatDate, getLocalMonthString } from '../../utils/formatters';
 
@@ -479,8 +480,8 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                     {/* Top Row: Icon, Name, State Control, Delete */}
                     <div className="editor-row-main">
                       <div className="editor-row-cat-info">
-                        <div className="editor-row-emoji-tile" aria-hidden="true">
-                          {cat.icon}
+                        <div className="editor-row-emoji-tile" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <CategoryOutlineIcon name={cat.name} size={18} />
                         </div>
                         <span className="editor-row-name">{cat.name}</span>
                       </div>
@@ -607,7 +608,9 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
               {/* 3. Add Custom Category Panel */}
               <div className="budget-add-category-panel">
                 <div className="add-cat-header">
-                  <span className="add-cat-icon">✨</span>
+                  <span className="add-cat-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <SparkleOutlineIcon size={16} color="currentColor" />
+                  </span>
                   <strong className="add-cat-title">+ Thêm danh mục mới</strong>
                 </div>
 
@@ -658,8 +661,9 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                 </div>
 
                 {newCatError && (
-                  <div className="add-cat-error-msg" role="alert">
-                    ⚠️ {newCatError}
+                  <div className="add-cat-error-msg" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertTriangleOutlineIcon size={14} color="currentColor" />
+                    <span>{newCatError}</span>
                   </div>
                 )}
               </div>
@@ -667,8 +671,9 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
             {/* Error Message */}
             {errorMsg && (
-              <div className="budget-dialog-error" role="alert">
-                ⚠️ {errorMsg}
+              <div className="budget-dialog-error" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertTriangleOutlineIcon size={14} color="currentColor" />
+                <span>{errorMsg}</span>
               </div>
             )}
           </div>

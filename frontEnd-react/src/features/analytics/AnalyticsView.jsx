@@ -19,6 +19,18 @@ import { useThemeStore } from '../../stores/useThemeStore';
 import { formatCurrency, formatPercent, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { getBudgetStatus } from '../../utils/financeMath';
+import {
+  CategoryOutlineIcon,
+  ChartOutlineIcon,
+  TrendOutlineIcon,
+  ClipboardOutlineIcon,
+  BulbOutlineIcon,
+  StarOutlineIcon,
+  AlertTriangleOutlineIcon,
+  InfoOutlineIcon,
+  CheckOutlineIcon,
+  ZapOutlineIcon
+} from '../../utils/categoryIcons';
 
 // Register Chart.js components
 ChartJS.register(
@@ -575,7 +587,7 @@ export function AnalyticsView() {
           deltaBadgeText = 'Mới (Cận trần)';
         } else {
           deltaBadgeType = 'new';
-          deltaBadgeText = '✨ Mới trong kỳ';
+          deltaBadgeText = 'Mới trong kỳ';
         }
       } else if (isEliminated) {
         deltaBadgeType = 'good';
@@ -622,29 +634,29 @@ export function AnalyticsView() {
         adviceText = 'Không phát sinh chi tiêu trong kỳ';
         adviceType = 'neutral';
       } else if (spentCur === 0 && spentPrev > 0) {
-        adviceText = 'Không phát sinh chi tiêu (tiết kiệm 100% so với kỳ trước) 👏';
+        adviceText = 'Không phát sinh chi tiêu (tiết kiệm 100% so với kỳ trước)';
         adviceType = 'good';
       } else if (limit && budgetStatus.isOver) {
         const overPct = budgetStatus.percent - 100;
-        adviceText = `Vượt ${formatPercent(overPct)} ngân sách! Cần thắt chặt chi tiêu ⚠️`;
+        adviceText = `Vượt ${formatPercent(overPct)} ngân sách! Cần thắt chặt chi tiêu`;
         adviceType = 'danger';
       } else if (limit && budgetStatus.percent === 100) {
-        adviceText = `Đã chạm 100% hạn mức trần! Hạn chế phát sinh thêm chi phí ⚡`;
+        adviceText = `Đã chạm 100% hạn mức trần! Hạn chế phát sinh thêm chi phí`;
         adviceType = 'warning';
       } else if (limit && budgetStatus.status === 'warning') {
-        adviceText = `Đã chạm ${budgetStatus.percent}% hạn mức, còn ${formatCurrency(budgetStatus.remaining)} ⚡`;
+        adviceText = `Đã chạm ${budgetStatus.percent}% hạn mức, còn ${formatCurrency(budgetStatus.remaining)}`;
         adviceType = 'warning';
       } else if (limit && spentCur < limit * 0.75 && deltaAmt < 0) {
-        adviceText = `Tiết kiệm tốt (giảm ${formatPercent(Math.abs(deltaPct))}), an toàn dưới ngân sách 👏`;
+        adviceText = `Tiết kiệm tốt (giảm ${formatPercent(Math.abs(deltaPct))}), an toàn dưới ngân sách`;
         adviceType = 'good';
       } else if (limit && spentCur < limit * 0.75) {
-        adviceText = `Kiểm soát tốt dưới hạn mức ngân sách (${budgetStatus.percent}%) ✓`;
+        adviceText = `Kiểm soát tốt dưới hạn mức ngân sách (${budgetStatus.percent}%)`;
         adviceType = 'good';
       } else if (!limit && deltaAmt < 0) {
-        adviceText = `Chi tiêu giảm ${formatPercent(Math.abs(deltaPct))} so với kỳ trước 👍`;
+        adviceText = `Chi tiêu giảm ${formatPercent(Math.abs(deltaPct))} so với kỳ trước`;
         adviceType = 'good';
       } else if (!limit && deltaPct > 30) {
-        adviceText = `Tăng ${formatPercent(deltaPct)} so với kỳ trước, nên thiết lập hạn mức 💡`;
+        adviceText = `Tăng ${formatPercent(deltaPct)} so với kỳ trước, nên thiết lập hạn mức`;
         adviceType = 'warning';
       } else {
         adviceText = 'Nên đặt hạn mức ngân sách để kiểm soát dòng tiền tốt hơn';
@@ -991,7 +1003,7 @@ export function AnalyticsView() {
           </div>
           <div className="kpi-card-meta">
             <span className={`kpi-status-pill ${monthData.net > 0 ? 'pill-positive' : (monthData.net < 0 ? 'pill-danger' : 'pill-neutral')}`}>
-              {monthData.net > 0 ? '✓ Thặng dư dòng tiền' : (monthData.net < 0 ? '⚠ Thâm hụt dòng tiền' : 'Cân bằng thu chi')}
+              {monthData.net > 0 ? 'Thặng dư dòng tiền' : (monthData.net < 0 ? 'Thâm hụt dòng tiền' : 'Cân bằng thu chi')}
             </span>
           </div>
         </div>
@@ -1030,10 +1042,10 @@ export function AnalyticsView() {
               {monthData.income <= 0
                 ? 'Chưa có dữ liệu'
                 : monthData.savingsRate >= 20
-                ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Mục tiêu ≥ 20% ✓)`
+                ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Mục tiêu ≥ 20%)`
                 : monthData.savingsRate >= 0
                 ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Dưới mục tiêu 20%)`
-                : `Thâm hụt ${formatPercent(Math.abs(monthData.savingsRate))} thu nhập ⚠️`}
+                : `Thâm hụt ${formatPercent(Math.abs(monthData.savingsRate))} thu nhập`}
             </span>
           </div>
         </div>
@@ -1043,7 +1055,9 @@ export function AnalyticsView() {
       <div className="analytics-section-panel" id="analytics-spending">
         <div className="panel-header">
           <div className="panel-titles">
-            <h3 className="panel-main-title">📊 Chi tiêu theo danh mục</h3>
+            <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <ChartOutlineIcon size={18} /> Chi tiêu theo danh mục
+            </h3>
             <p className="panel-subtitle">
               {monthData.categories.length > 0
                 ? `${monthData.categories.length} danh mục có phát sinh chi tiêu trong ${monthLabel}`
@@ -1093,8 +1107,8 @@ export function AnalyticsView() {
                 <div key={cat.name} className="analytics-cat-item-row">
                   <div className="cat-item-top">
                     <div className="cat-item-lead">
-                      <span className="cat-avatar-tile" style={{ backgroundColor: `${cat.color}16` }}>
-                        {cat.icon}
+                      <span className="cat-avatar-tile" style={{ backgroundColor: `${cat.color}16`, color: cat.color, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CategoryOutlineIcon name={cat.name} size={16} />
                       </span>
                       <div className="cat-text-info">
                         <span className="cat-title-text">{cat.name}</span>
@@ -1125,7 +1139,9 @@ export function AnalyticsView() {
       <div className="analytics-section-panel" id="analytics-cashflow">
         <div className="panel-header">
           <div className="panel-titles">
-            <h3 className="panel-main-title">📈 Xu hướng dòng tiền</h3>
+            <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <TrendOutlineIcon size={18} /> Xu hướng dòng tiền
+            </h3>
             <p className="panel-subtitle">
               So sánh tương quan giữa Tổng thu nhập và Tổng chi tiêu
             </p>
@@ -1194,7 +1210,9 @@ export function AnalyticsView() {
         {/* Header & Controls */}
         <div className="panel-header">
           <div className="panel-titles">
-            <h3 className="panel-main-title">📋 Báo cáo tổng hợp tài chính</h3>
+            <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <ClipboardOutlineIcon size={18} /> Báo cáo tổng hợp tài chính
+            </h3>
             <p className="panel-subtitle">
               Đối chiếu chi tiết chỉ số tài chính, nhóm chi phí và tình trạng ngân sách giữa các kỳ
             </p>
@@ -1351,7 +1369,7 @@ export function AnalyticsView() {
                   ? 'delta-badge--down-bad'
                   : 'delta-badge--neutral'
               }`}>
-                {reportData.curStats.net > 0 ? '✓ Thặng dư' : (reportData.curStats.net < 0 ? '⚠ Thâm hụt' : 'Cân bằng')}
+                {reportData.curStats.net > 0 ? 'Thặng dư' : (reportData.curStats.net < 0 ? 'Thâm hụt' : 'Cân bằng')}
               </span>
             </div>
             <strong className={`report-summary-card__amount ${
@@ -1407,13 +1425,21 @@ export function AnalyticsView() {
         {reportData.insights.length > 0 && (
           <div className="report-insights-banner">
             <div className="report-insights-banner__head">
-              <span>💡 Nhận định & Khuyến nghị tài chính kỳ này</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <BulbOutlineIcon size={16} /> Nhận định & Khuyến nghị tài chính kỳ này
+              </span>
             </div>
             <div className="report-insights-list">
               {reportData.insights.map((item, idx) => (
                 <div key={idx} className="report-insight-item">
                   <span className={`insight-icon-pill insight-icon-pill--${item.type}`}>
-                    {item.type === 'accolade' ? '🌟' : (item.type === 'warning' ? '⚠️' : 'ℹ️')}
+                    {item.type === 'accolade' ? (
+                      <StarOutlineIcon size={14} />
+                    ) : item.type === 'warning' ? (
+                      <AlertTriangleOutlineIcon size={14} />
+                    ) : (
+                      <InfoOutlineIcon size={14} />
+                    )}
                   </span>
                   <span>{item.text}</span>
                 </div>
@@ -1455,8 +1481,8 @@ export function AnalyticsView() {
                       {/* 1. Category */}
                       <td>
                         <div className="table-cat-cell">
-                          <span className="table-cat-icon" style={{ backgroundColor: 'var(--color-success-bg, rgba(0, 139, 87, 0.08))' }}>
-                            {cat.icon}
+                          <span className="table-cat-icon" style={{ backgroundColor: 'var(--color-success-bg, rgba(0, 139, 87, 0.08))', color: 'var(--color-brand, #008B57)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CategoryOutlineIcon name={cat.name} size={15} />
                           </span>
                           <span className="table-cat-name">{cat.name}</span>
                         </div>
@@ -1530,19 +1556,23 @@ export function AnalyticsView() {
                         {cat.limit ? (
                           isOver ? (
                             <span className="budget-status-pill budget-status-pill--danger">
-                              ⚠️ Vượt ({cat.budgetStatus.percent}%)
+                              <AlertTriangleOutlineIcon size={12} style={{ marginRight: 4, verticalAlign: '-1px' }} />
+                              Vượt ({cat.budgetStatus.percent}%)
                             </span>
                           ) : isMaxed ? (
                             <span className="budget-status-pill budget-status-pill--warning">
-                              ⚡ Chạm ({cat.budgetStatus.percent}%)
+                              <ZapOutlineIcon size={12} style={{ marginRight: 4, verticalAlign: '-1px' }} />
+                              Chạm ({cat.budgetStatus.percent}%)
                             </span>
                           ) : isWarning ? (
                             <span className="budget-status-pill budget-status-pill--warning">
-                              ⚡ Cận trần ({cat.budgetStatus.percent}%)
+                              <ZapOutlineIcon size={12} style={{ marginRight: 4, verticalAlign: '-1px' }} />
+                              Cận trần ({cat.budgetStatus.percent}%)
                             </span>
                           ) : (
                             <span className="budget-status-pill budget-status-pill--safe">
-                              ✓ An toàn ({cat.budgetStatus.percent}%)
+                              <CheckOutlineIcon size={12} style={{ marginRight: 4, verticalAlign: '-1px' }} />
+                              An toàn ({cat.budgetStatus.percent}%)
                             </span>
                           )
                         ) : (

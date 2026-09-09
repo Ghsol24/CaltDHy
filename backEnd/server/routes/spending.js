@@ -205,16 +205,25 @@ router.get('/budget', async (req, res) => {
         const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
         const budgetMap = {};
 
-        if (monthQuery && /^\d{4}-\d{2}$/.test(monthQuery)) {
+        // Nếu client không chỉ định month hoặc query rỗng, mặc định lấy ngân sách của tháng hiện tại theo giờ Việt Nam.
+        // Chỉ truy vấn riêng 'global' nếu client truyền chính xác month=global.
+        const targetMonth = (monthQuery && /^\d{4}-\d{2}$/.test(monthQuery))
+            ? monthQuery
+            : (monthQuery === 'global' ? 'global' : getVietnamTodayString().slice(0, 7));
+
+        if (targetMonth !== 'global') {
             // 1. Kế thừa thông minh theo từng danh mục (Per-Category Auto-Carryover):
             // Lấy ngân sách của tháng trước gần nhất hoặc 'global' để làm baseline
-            const previous = await Budget.find({
+            const findQuery = Budget.find({
                 userId: req.user.id,
-                month: { $lt: monthQuery, $ne: 'global' }
-            }).sort({ month: -1 });
+                month: { $lt: targetMonth, $ne: 'global' }
+            });
+            const previous = (findQuery && typeof findQuery.sort === 'function')
+                ? await findQuery.sort({ month: -1 })
+                : await findQuery;
 
             let baselineBudgets = [];
-            if (previous.length > 0) {
+            if (Array.isArray(previous) && previous.length > 0) {
                 const latestMonth = previous[0].month;
                 baselineBudgets = previous.filter(b => b.month === latestMonth);
             } else {
@@ -228,7 +237,7 @@ router.get('/budget', async (req, res) => {
             });
 
             // 2. Lấy ngân sách đã thiết lập riêng của tháng này để override theo từng category
-            const currentMonthBudgets = await Budget.find({ userId: req.user.id, month: monthQuery });
+            const currentMonthBudgets = await Budget.find({ userId: req.user.id, month: targetMonth });
             currentMonthBudgets.forEach(b => {
                 if (b.category) {
                     if (b.limit > 0) {

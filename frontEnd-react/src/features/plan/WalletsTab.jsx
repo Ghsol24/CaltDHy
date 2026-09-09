@@ -17,91 +17,9 @@ const WALLET_TYPE_LABELS = {
   'e-wallet': 'Ví điện tử'
 };
 
-/**
- * Helper: Render Outline/Line SVG icon based on wallet type.
- * Tuyệt đối không dùng emoji, không dùng filled icon.
- */
-export function WalletOutlineIcon({ type, size = 22, color = 'currentColor' }) {
-  if (type === 'bank') {
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <line x1="3" y1="21" x2="21" y2="21" />
-        <line x1="6" y1="18" x2="6" y2="11" />
-        <line x1="10" y1="18" x2="10" y2="11" />
-        <line x1="14" y1="18" x2="14" y2="11" />
-        <line x1="18" y1="18" x2="18" y2="11" />
-        <polygon points="12 2 20 7 4 7" />
-      </svg>
-    );
-  }
-
-  if (type === 'credit') {
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <line x1="2" y1="10" x2="22" y2="10" />
-      </svg>
-    );
-  }
-
-  if (type === 'e-wallet') {
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-        <line x1="12" y1="18" x2="12.01" y2="18" />
-      </svg>
-    );
-  }
-
-  // default / cash
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-      <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-    </svg>
-  );
-}
+import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
+import { BulbOutlineIcon, StarOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+export { WalletOutlineIcon };
 
 /**
  * Format relative date/time for recent wallet transfers
@@ -731,8 +649,8 @@ export function WalletsTab() {
               </div>
               <div className="stat-cell-info">
                 <span className="stat-cell-label">Ví mặc định</span>
-                <strong className="stat-cell-val text-brand-default">
-                  {defaultWallet?.name || 'Chưa đặt'} <span className="check-mark">✓</span>
+                <strong className="stat-cell-val text-brand-default" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  {defaultWallet?.name || 'Chưa đặt'} <CheckOutlineIcon size={13} className="check-mark" />
                 </strong>
               </div>
             </div>
@@ -763,7 +681,7 @@ export function WalletsTab() {
                       onClick={() => setSearchQuery('')}
                       aria-label="Xóa tìm kiếm"
                     >
-                      ✕
+                      <CloseOutlineIcon size={12} />
                     </button>
                   )}
                 </div>
@@ -898,7 +816,10 @@ export function WalletsTab() {
                             <div className="wallet-grid-name-row">
                               <h4 className="wallet-grid-name" title={w.name}>{w.name}</h4>
                               {w.isDefault && (
-                                <span className="wallet-badge-default-pill">★ Mặc định</span>
+                                <span className="wallet-badge-default-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <StarOutlineIcon size={11} />
+                                  <span>Mặc định</span>
+                                </span>
                               )}
                               {w.isExcludedFromTotal && (
                                 <span className="wallet-badge-excluded-pill">⊘</span>
@@ -1108,8 +1029,9 @@ export function WalletsTab() {
                             {w.name}
                           </h4>
                           {w.isDefault && (
-                            <span className="wallet-badge-default-pill">
-                              ★ Mặc định
+                            <span className="wallet-badge-default-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <StarOutlineIcon size={11} />
+                              <span>Mặc định</span>
                             </span>
                           )}
                           {w.isExcludedFromTotal && (
@@ -1385,7 +1307,9 @@ export function WalletsTab() {
               className="wallet-history-redirect-banner"
               onClick={handleGoToFullHistory}
             >
-              <span className="banner-bulb-icon">💡</span>
+              <span className="banner-bulb-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <BulbOutlineIcon size={16} color="currentColor" />
+              </span>
               <span className="banner-text">
                 Lịch sử giao dịch sẽ mở trang tổng hợp toàn bộ giao dịch của bạn (chi tiêu, thu nhập, nạp/rút, chuyển tiền, ...)
               </span>
@@ -1652,7 +1576,9 @@ export function WalletsTab() {
             <div className="wallet-finance-tip-card">
               <div className="tip-header-row">
                 <div className="tip-title-lead">
-                  <span className="tip-bulb" aria-hidden="true">💡</span>
+                  <span className="tip-bulb" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <BulbOutlineIcon size={16} color="currentColor" />
+                  </span>
                   <strong className="tip-title">Mẹo quản lý tài chính</strong>
                 </div>
                 <button
@@ -1661,7 +1587,7 @@ export function WalletsTab() {
                   onClick={() => setShowTip(false)}
                   aria-label="Đóng mẹo"
                 >
-                  ✕
+                  <CloseOutlineIcon size={14} />
                 </button>
               </div>
               <p className="tip-body-content">
@@ -1771,7 +1697,9 @@ export function WalletsTab() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '1.4rem' }}>{aw.icon || '💵'}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--text-secondary, #6b7280)' }}>
+                      <WalletOutlineIcon type={aw.type} size={22} color="currentColor" />
+                    </span>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary, #111827)' }}>{aw.name}</strong>

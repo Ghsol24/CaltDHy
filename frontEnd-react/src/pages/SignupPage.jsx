@@ -4,6 +4,10 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
+import {
+  AlertTriangleOutlineIcon,
+  LockOutlineIcon
+} from '../components/ui/AppIcons';
 
 function getPasswordStrength(pw) {
   if (!pw) return { level: 0, label: '—', cls: '' };
@@ -121,8 +125,8 @@ export const SignupPage = () => {
             )}
 
             {error && (
-              <div id="formErr" className="form-err show" role="alert">
-                ⚠ {error}
+              <div id="formErr" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+                <AlertTriangleOutlineIcon size={14} /> {error}
               </div>
             )}
 
@@ -131,8 +135,8 @@ export const SignupPage = () => {
               <span className="btn-text">{isSubmitting ? 'Đang tạo tài khoản...' : 'CREATE ACCOUNT'}</span>
             </button>
 
-            <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0 }}>
-              🔒 Thông tin đăng ký của bạn được mã hoá an toàn.
+            <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <LockOutlineIcon size={13} /> Thông tin đăng ký của bạn được mã hoá an toàn.
             </p>
           </form>
 

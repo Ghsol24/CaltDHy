@@ -5,6 +5,7 @@ import { BudgetEditModal } from './BudgetEditModal';
 import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
+import { CategoryOutlineIcon, BulbOutlineIcon } from '../../utils/categoryIcons';
 
 export function BudgetsTab() {
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
@@ -392,7 +393,9 @@ export function BudgetsTab() {
         {/* First-use informational alert (When zero visible categories exist in the active month) */}
         {visibleCategories.length === 0 && (
           <div className="budget-empty-alert" role="status">
-            <div className="alert-bulb-icon" aria-hidden="true">💡</div>
+            <div className="alert-bulb-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <BulbOutlineIcon size={20} color="currentColor" />
+            </div>
             <p className="alert-bulb-text">
               Tháng này chưa có danh mục nào được đặt hạn mức hoặc phát sinh chi tiêu. Hãy bấm nút <strong>"Thiết lập hạn mức"</strong> để bắt đầu quản lý ngân sách!
             </p>
@@ -451,8 +454,8 @@ export function BudgetsTab() {
                 {/* Header: 40px Emoji tile & Category Title */}
                 <div className="budget-card-top">
                   <div className="budget-card-lead">
-                    <div className="budget-card-emoji-tile" aria-hidden="true">
-                      {item.icon}
+                    <div className="budget-card-emoji-tile" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <CategoryOutlineIcon name={item.category} size={20} />
                     </div>
                     <div className="budget-card-titles">
                       <h4 className="budget-card-name" title={item.category}>

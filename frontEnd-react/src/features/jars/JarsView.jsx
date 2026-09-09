@@ -12,7 +12,39 @@ import { FinancialTipsModal } from './FinancialTipsModal';
 import { JarGlassGraphic } from './JarGlassGraphic';
 import { formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
 import { EmptyState } from '../../components/ui/EmptyState';
+import {
+  FlameOutlineIcon,
+  BulbOutlineIcon,
+  RefreshOutlineIcon,
+  TargetOutlineIcon,
+  TrophyOutlineIcon,
+  AlertTriangleOutlineIcon,
+  CheckOutlineIcon,
+  JarOutlineIcon,
+  HistoryOutlineIcon,
+  SparkleOutlineIcon,
+  LeafOutlineIcon,
+  ZapOutlineIcon,
+  ClockOutlineIcon,
+  TrendOutlineIcon,
+  ScaleOutlineIcon,
+  ShieldOutlineIcon
+} from '../../components/ui/AppIcons';
 import '../../assets/css/jars.css';
+
+function renderNoteIcon(iconKey) {
+  if (!iconKey) return <TargetOutlineIcon size={18} />;
+  if (iconKey === 'sparkle') return <SparkleOutlineIcon size={18} />;
+  if (iconKey === 'leaf') return <LeafOutlineIcon size={18} />;
+  if (iconKey === 'bulb') return <BulbOutlineIcon size={18} />;
+  if (iconKey === 'target') return <TargetOutlineIcon size={18} />;
+  if (iconKey === 'zap') return <ZapOutlineIcon size={18} />;
+  if (iconKey === 'clock') return <ClockOutlineIcon size={18} />;
+  if (iconKey === 'trend') return <TrendOutlineIcon size={18} />;
+  if (iconKey === 'scale') return <ScaleOutlineIcon size={18} />;
+  if (iconKey === 'shield') return <ShieldOutlineIcon size={18} />;
+  return <TargetOutlineIcon size={18} />;
+}
 
 function formatTick(num) {
   if (num >= 1000000) {
@@ -520,10 +552,10 @@ export function JarsView() {
           actionText: 'Tạo hũ ngay',
           actionType: 'create',
           jar: null,
-          note1Icon: '✨',
+          note1Icon: 'sparkle',
           note1Label: 'Mục tiêu rõ ràng',
           note1Desc: 'Xác định số tiền cụ thể giúp tăng 70% khả năng hoàn thành.',
-          note2Icon: '🌱',
+          note2Icon: 'leaf',
           note2Label: 'Khởi đầu nhẹ nhàng',
           note2Desc: 'Bắt đầu từ số tiền nhỏ để hình thành thói quen tài chính vững vàng.'
         }
@@ -543,10 +575,10 @@ export function JarsView() {
         actionType: 'deposit',
         jar: zeroJar,
         amount: 50000,
-        note1Icon: '🌱',
+        note1Icon: 'leaf',
         note1Label: 'Bước khởi đầu',
         note1Desc: 'Nạp những đồng đầu tiên để kích hoạt thói quen tích lũy.',
-        note2Icon: '💡',
+        note2Icon: 'bulb',
         note2Label: 'Gợi ý số tiền',
         note2Desc: 'Thử bắt đầu với 50.000 đ - 100.000 đ để tạo đà nhẹ nhàng.'
       });
@@ -576,12 +608,12 @@ export function JarsView() {
         actionType: 'deposit',
         jar: topJar,
         amount: Math.min(remaining, 200000),
-        note1Icon: '🎯',
+        note1Icon: 'target',
         note1Label: `Mốc kế tiếp: ${nextMilestone}%`,
         note1Desc: nextMilestone === 100 
           ? `Chỉ cần nạp thêm ${formatCurrency(remaining)} là về đích trọn vẹn!` 
           : `Cần thêm ${formatCurrency(amtToMilestone)} để chạm mốc ${nextMilestone}%.`,
-        note2Icon: '⚡',
+        note2Icon: 'zap',
         note2Label: 'Chiến lược giữ nhịp',
         note2Desc: 'Chia nhỏ nạp đều đặn theo tuần giúp giảm 50% áp lực tài chính.'
       });
@@ -607,10 +639,10 @@ export function JarsView() {
         actionType: 'deposit',
         jar: datedJar,
         amount: suggested,
-        note1Icon: '⏱️',
+        note1Icon: 'clock',
         note1Label: 'Thời gian còn lại',
         note1Desc: `Còn ${monthsRemaining} tháng (${diffDays} ngày) tới ngày hẹn (${formatDate(datedJar.targetDate)}).`,
-        note2Icon: '📈',
+        note2Icon: 'trend',
         note2Label: 'Kỷ luật tài chính',
         note2Desc: `Nạp đúng ${formatCurrency(suggested)}/tháng để đảm bảo 100% về đích đúng hạn.`
       });
@@ -624,10 +656,10 @@ export function JarsView() {
       actionText: 'Tạo thêm mục tiêu mới',
       actionType: 'create',
       jar: null,
-      note1Icon: '⚖️',
+      note1Icon: 'scale',
       note1Label: 'Quy tắc 50/30/20',
       note1Desc: 'Dành 20% thu nhập hàng tháng cho các mục tiêu tích lũy tương lai.',
-      note2Icon: '🛡️',
+      note2Icon: 'shield',
       note2Label: 'Mẹo phân bổ',
       note2Desc: 'Nên hoàn thành quỹ dự phòng khẩn cấp trước các hũ mua sắm xa xỉ.'
     });
@@ -1191,7 +1223,7 @@ export function JarsView() {
               <div className="jars-chart-footer-text">
                 <span>Chuỗi tiết kiệm: </span>
                 <strong>{detailedChartData.streakDays} ngày</strong>
-                <span style={{ fontSize: '13px', marginLeft: '3px' }} aria-hidden="true">🔥</span>
+                <FlameOutlineIcon size={14} style={{ marginLeft: '4px', verticalAlign: '-2px' }} />
               </div>
             </div>
           </div>
@@ -1202,7 +1234,7 @@ export function JarsView() {
           {/* Top Header Row */}
           <div className="jars-recom-header-row">
             <span className="jars-recom-badge">
-              <span>💡</span>
+              <BulbOutlineIcon size={14} />
               <span>{currentSuggestion.title || 'Gợi ý cho bạn'}</span>
             </span>
             {smartSuggestions.length > 1 && (
@@ -1213,7 +1245,7 @@ export function JarsView() {
                 title="Xem gợi ý khác"
               >
                 <span>Gợi ý khác</span>
-                <span>↻</span>
+                <RefreshOutlineIcon size={12} />
               </button>
             )}
           </div>
@@ -1289,7 +1321,7 @@ export function JarsView() {
           <div className="jars-recom-notes-grid">
             <div className="jars-recom-note-item">
               <div className="jars-recom-note-icon-box" aria-hidden="true">
-                {currentSuggestion.note1Icon || '🎯'}
+                {renderNoteIcon(currentSuggestion.note1Icon)}
               </div>
               <div className="jars-recom-note-content">
                 <span className="jars-recom-note-label">{currentSuggestion.note1Label}</span>
@@ -1299,7 +1331,7 @@ export function JarsView() {
 
             <div className="jars-recom-note-item">
               <div className="jars-recom-note-icon-box" aria-hidden="true">
-                {currentSuggestion.note2Icon || '💡'}
+                {renderNoteIcon(currentSuggestion.note2Icon)}
               </div>
               <div className="jars-recom-note-content">
                 <span className="jars-recom-note-label">{currentSuggestion.note2Label}</span>
@@ -1314,7 +1346,7 @@ export function JarsView() {
       <section id="jars-section-progress" className="jars-progress-overview-section">
         <div className="jars-section-header-row">
           <h2 className="jars-section-title">
-            <span>🎯</span>
+            <TargetOutlineIcon size={20} />
             <span>Tổng quan tiến độ</span>
           </h2>
           <button
@@ -1335,7 +1367,7 @@ export function JarsView() {
           <div className="jars-status-card jars-status-card--closest">
             <div className="jars-status-card-header">
               <div className="jars-status-card-header-left">
-                <span>🏆</span>
+                <TrophyOutlineIcon size={16} />
                 <span>Gần đạt nhất</span>
               </div>
             </div>
@@ -1393,7 +1425,7 @@ export function JarsView() {
           <div className="jars-status-card jars-status-card--ontrack">
             <div className="jars-status-card-header">
               <div className="jars-status-card-header-left">
-                <span>🎯</span>
+                <TargetOutlineIcon size={16} />
                 <span>Đang đúng tiến độ</span>
               </div>
               {progressOverview.onTrack.length > 0 && (
@@ -1454,7 +1486,7 @@ export function JarsView() {
           <div className="jars-status-card jars-status-card--attention">
             <div className="jars-status-card-header">
               <div className="jars-status-card-header-left">
-                <span>⚠️</span>
+                <AlertTriangleOutlineIcon size={16} />
                 <span>Cần chú ý</span>
               </div>
               {progressOverview.needsAttention.length > 0 && (
@@ -1485,8 +1517,9 @@ export function JarsView() {
                 </>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span className="jars-status-tag jars-status-tag--safe" style={{ alignSelf: 'flex-start' }}>
-                    ✓ 100% An toàn
+                  <span className="jars-status-tag jars-status-tag--safe" style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <CheckOutlineIcon size={12} />
+                    <span>100% An toàn</span>
                   </span>
                   <span className="jars-status-empty-text" style={{ color: '#059669' }}>
                     Tuyệt vời! Tất cả các hũ đều đang tiến triển tốt, không có hũ nào trễ hạn.
@@ -1612,7 +1645,7 @@ export function JarsView() {
                   monthlyHintText = 'Đã đến hạn mục tiêu!';
                 }
               } else if (isCompleted) {
-                monthlyHintText = '🎉 Đã hoàn thành 100% mục tiêu xuất sắc!';
+                monthlyHintText = 'Đã hoàn thành 100% mục tiêu xuất sắc!';
               }
 
               return (
@@ -1812,7 +1845,9 @@ export function JarsView() {
                   onClick={() => handleOpenDetail(jar)}
                 >
                   <div className="jar-list-left">
-                    <span style={{ fontSize: '24px' }}>{jar.icon || '🫙'}</span>
+                    <span style={{ width: '36px', height: '36px', borderRadius: '8px', background: `${accentColor}18`, color: accentColor, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <JarOutlineIcon size={20} color="currentColor" />
+                    </span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <strong style={{ fontSize: '14px', color: '#0F172A' }}>{jar.name}</strong>
@@ -1913,7 +1948,7 @@ export function JarsView() {
       <section id="jars-section-history" className="jars-recent-activities-section">
         <div className="jars-section-header-row">
           <h2 className="jars-section-title">
-            <span>📜</span>
+            <HistoryOutlineIcon size={20} />
             <span>Hoạt động gần đây</span>
           </h2>
           <button

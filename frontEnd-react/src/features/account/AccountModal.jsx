@@ -5,6 +5,11 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { formatDate } from '../../utils/formatters';
+import {
+  CloseOutlineIcon,
+  CheckOutlineIcon,
+  AlertTriangleOutlineIcon
+} from '../../components/ui/AppIcons';
 
 // Bộ sưu tập avatar preset (biểu tượng tài chính & phong cách cao cấp, tuyệt đối không có khỉ)
 const AVATAR_PRESETS = [
@@ -366,7 +371,7 @@ export function AccountModal() {
               onClick={closeAccountModal}
               aria-label="Đóng quản lý tài khoản"
             >
-              ✕
+              <CloseOutlineIcon size={18} />
             </button>
           </div>
 
@@ -505,7 +510,9 @@ export function AccountModal() {
                 <div className="account-form-group">
                   <label htmlFor="acc-email" className="account-label">
                     <span>Địa chỉ Email</span>
-                    <span className="account-verified-badge">✓ Đã xác minh</span>
+                    <span className="account-verified-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <CheckOutlineIcon size={12} /> Đã xác minh
+                    </span>
                   </label>
                   <div className="account-input-box">
                     <input
@@ -778,7 +785,8 @@ export function AccountModal() {
             aria-label="Xác nhận đặt lại dữ liệu"
           >
             <h3 className="account-reset-title">
-              ⚠️ Xác nhận đặt lại dữ liệu chi tiêu
+              <AlertTriangleOutlineIcon size={18} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+              Xác nhận đặt lại dữ liệu chi tiêu
             </h3>
 
             <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-primary, #173126)' }}>

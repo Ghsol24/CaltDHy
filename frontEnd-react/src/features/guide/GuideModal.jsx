@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import {
+  BookOutlineIcon,
+  CloseOutlineIcon,
+  RocketOutlineIcon,
+  HomeOutlineIcon,
+  ClipboardOutlineIcon,
+  ChartOutlineIcon,
+  JarOutlineIcon
+} from '../../components/ui/AppIcons';
 
 export function GuideModal() {
   const isHelpOpen = useSpendingStore((s) => s.isHelpOpen);
@@ -38,7 +47,7 @@ export function GuideModal() {
         <div className="budget-dialog-header">
           <div className="budget-dialog-header-lead">
             <div className="budget-dialog-icon-tile guide-header-icon">
-              📖
+              <BookOutlineIcon size={20} />
             </div>
             <div className="budget-dialog-titles">
               <h2 className="budget-dialog-title">Hướng dẫn sử dụng CaltDHy</h2>
@@ -51,7 +60,7 @@ export function GuideModal() {
             onClick={closeHelpModal}
             aria-label="Đóng hướng dẫn"
           >
-            ✕
+            <CloseOutlineIcon size={18} />
           </button>
         </div>
 
@@ -62,35 +71,35 @@ export function GuideModal() {
             className={`guide-tab-btn ${activeTab === 'quickstart' ? 'active' : ''}`}
             onClick={() => setActiveTab('quickstart')}
           >
-            🚀 Bắt đầu nhanh
+            <RocketOutlineIcon size={16} /> Bắt đầu nhanh
           </button>
           <button
             type="button"
             className={`guide-tab-btn ${activeTab === 'home' ? 'active' : ''}`}
             onClick={() => setActiveTab('home')}
           >
-            🏠 Trang chủ
+            <HomeOutlineIcon size={16} /> Trang chủ
           </button>
           <button
             type="button"
             className={`guide-tab-btn ${activeTab === 'plan' ? 'active' : ''}`}
             onClick={() => setActiveTab('plan')}
           >
-            📋 Kế hoạch
+            <ClipboardOutlineIcon size={16} /> Kế hoạch
           </button>
           <button
             type="button"
             className={`guide-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
             onClick={() => setActiveTab('analytics')}
           >
-            📊 Phân tích
+            <ChartOutlineIcon size={16} /> Phân tích
           </button>
           <button
             type="button"
             className={`guide-tab-btn ${activeTab === 'jars' ? 'active' : ''}`}
             onClick={() => setActiveTab('jars')}
           >
-            🏺 6 Hũ chi tiêu
+            <JarOutlineIcon size={16} /> 6 Hũ chi tiêu
           </button>
         </div>
 
