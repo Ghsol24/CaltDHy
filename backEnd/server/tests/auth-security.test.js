@@ -12,7 +12,7 @@ process.env.JWT_SECRET = crypto.randomBytes(32).toString('hex');
 process.env.JWT_EXPIRES_IN = '1h';
 process.env.AUTH_RATE_LIMIT_MAX = '1000';
 process.env.API_RATE_LIMIT_MAX = '100000';
-for (const key of ['MONGODB_URI', 'GMAIL_USER', 'GMAIL_PASS', 'CORS_WHITELIST', 'CLIENT_URL', 'COOKIE_SECURE']) delete process.env[key];
+for (const key of ['MONGODB_URI', 'GMAIL_USER', 'GMAIL_PASS', 'BREVO_API_KEY', 'EMAIL_FROM', 'EMAIL_PROVIDER', 'CORS_WHITELIST', 'CLIENT_URL', 'COOKIE_SECURE']) delete process.env[key];
 const app = require('../server');
 const User = require('../models/User');
 const AuthSession = require('../models/AuthSession');
@@ -141,6 +141,87 @@ describe('Account security regressions', { concurrency: false }, () => {
         } finally {
             nodemailer.createTransport = transport; console.error = log;
             for (const key of ['CLIENT_URL', 'GMAIL_USER', 'GMAIL_PASS']) delete process.env[key];
+        }
+    });
+
+    it('sends reset links through the HTTPS email API and consumes the token once', async () => {
+        const c = await account();
+        const originalFetch = global.fetch;
+        let endpoint, options;
+        process.env.CLIENT_URL = 'http://127.0.0.1:24127';
+        process.env.EMAIL_PROVIDER = 'brevo';
+        process.env.BREVO_API_KEY = 'SYNTHETIC_API_KEY';
+        process.env.EMAIL_FROM = 'sender@example.test';
+        global.fetch = async (url, requestOptions) => {
+            endpoint = url; options = requestOptions;
+            return { ok: true, status: 201 };
+        };
+        try {
+            const response = await c.send('post', 'forgot-password', { email: c.email });
+            assert.equal(response.status, 200);
+            assert.equal(endpoint, 'https://api.brevo.com/v3/smtp/email');
+            assert.equal(options.method, 'POST');
+            assert.equal(options.headers['api-key'], 'SYNTHETIC_API_KEY');
+            const mail = JSON.parse(options.body);
+            assert.deepEqual(mail.to, [{ email: c.email }]);
+            assert.equal(mail.sender.email, 'sender@example.test');
+            assert.ok(mail.htmlContent.includes('Synthetic &lt;name&gt;'));
+            const link = new URL(/href="([^"]+)"/.exec(mail.htmlContent)[1].replaceAll('&amp;', '&'));
+            assert.equal(link.pathname, '/reset-password');
+            assert.equal(mail.textContent.includes(link.toString()), true);
+            const token = link.searchParams.get('token');
+            assert.equal(response.text.includes(token), false);
+            const stored = await User.findById(c.userId).select('+resetPasswordToken');
+            assert.equal(stored.resetPasswordToken, crypto.createHash('sha256').update(token).digest('hex'));
+            assert.equal((await c.send('post', 'reset-password', {
+                email: c.email, token, newPassword: password + '-new'
+            })).status, 200);
+            assert.equal((await c.send('post', 'reset-password', {
+                email: c.email, token, newPassword: password + '-again'
+            })).status, 400);
+        } finally {
+            global.fetch = originalFetch;
+            for (const key of ['CLIENT_URL', 'EMAIL_PROVIDER', 'BREVO_API_KEY', 'EMAIL_FROM']) delete process.env[key];
+        }
+    });
+
+    it('HTTPS email rejection keeps responses private and removes an undelivered token', async () => {
+        const c = await account();
+        const originalFetch = global.fetch, originalLog = console.error;
+        const logs = [];
+        process.env.CLIENT_URL = 'http://127.0.0.1:24127';
+        process.env.EMAIL_PROVIDER = 'brevo';
+        process.env.BREVO_API_KEY = 'SENSITIVE_API_KEY';
+        process.env.EMAIL_FROM = 'sender@example.test';
+        global.fetch = async () => ({ ok: false, status: 401 });
+        console.error = (...args) => logs.push(args.join(' '));
+        try {
+            const response = await c.send('post', 'forgot-password', { email: c.email });
+            const unknown = await c.send('post', 'forgot-password', { email: 'unknown@example.test' });
+            assert.equal(response.status, 200);
+            assert.deepEqual(response.body, unknown.body);
+            const stored = await User.findById(c.userId).select('+resetPasswordToken +resetPasswordExpiry');
+            assert.equal(stored.resetPasswordToken, undefined);
+            assert.equal(stored.resetPasswordExpiry, undefined);
+            assert.ok(logs.some(entry => entry.includes('email_delivery_failed')));
+            assert.equal(logs.join('\n').includes('SENSITIVE_API_KEY'), false);
+        } finally {
+            global.fetch = originalFetch; console.error = originalLog;
+            for (const key of ['CLIENT_URL', 'EMAIL_PROVIDER', 'BREVO_API_KEY', 'EMAIL_FROM']) delete process.env[key];
+        }
+    });
+
+    it('does not advertise email recovery when the selected provider is incomplete', async () => {
+        const c = await anonymous();
+        process.env.CLIENT_URL = 'http://127.0.0.1:24127';
+        process.env.EMAIL_PROVIDER = 'brevo';
+        process.env.BREVO_API_KEY = 'SYNTHETIC_API_KEY';
+        try {
+            const response = await c.send('post', 'forgot-password', { email: 'unknown@example.test' });
+            assert.equal(response.status, 503);
+            assert.equal(response.body.success, false);
+        } finally {
+            for (const key of ['CLIENT_URL', 'EMAIL_PROVIDER', 'BREVO_API_KEY']) delete process.env[key];
         }
     });
 

@@ -99,12 +99,32 @@ quy trình nâng cấp an toàn.
 Render Free [ngủ sau 15 phút không có truy cập và có thể mất khoảng một phút để
 khởi động lại](https://render.com/docs/free). Gói này phù hợp chạy thử, không
 phù hợp khi cần luôn sẵn sàng hoặc dữ liệu thật quan trọng. Render Free cũng
-**chặn SMTP cổng 25, 465 và 587**, nên Gmail hiện có sẽ không gửi được email
-xác minh/đặt lại mật khẩu. API nay báo chức năng email chưa sẵn sàng khi chưa
-cấu hình. Trước khi mời bạn bè dùng lâu dài, chuyển sang gói cho phép SMTP và
-đặt `GMAIL_USER`, `GMAIL_PASS` trong Render, hoặc triển khai nhà cung cấp email
-qua HTTPS riêng; sau đó thử gửi và đặt lại mật khẩu thực tế. Chi phí gói trả phí
-cần được bạn chọn trong Render.
+**chặn SMTP cổng 25, 465 và 587**; Gmail SMTP không dùng được ở đây. Ứng dụng
+hỗ trợ Brevo API qua HTTPS để gửi email xác minh/đặt lại mật khẩu. Dịch vụ
+`CaltDHy` hiện hữu không tự nhận biến mới từ `render.yaml`; cần cấu hình trong
+Render → Environment:
+
+1. Tạo tài khoản Brevo và xác minh địa chỉ gửi ở **Senders**. Nếu chưa có tên
+   miền riêng, địa chỉ Gmail có thể được xác minh làm sender nhưng Brevo sẽ
+   [thay địa chỉ gửi](https://help.brevo.com/hc/en-us/articles/14925263522578-Comply-with-Gmail-Yahoo-and-Microsoft-s-requirements-for-email-senders);
+   đây chỉ là giải pháp ban đầu. Khi dùng lâu dài, dùng tên miền riêng và xác
+   thực DNS theo [hướng dẫn Brevo](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email).
+2. Lấy API key của Brevo, đặt `EMAIL_PROVIDER=brevo`, `BREVO_API_KEY` và
+   `EMAIL_FROM` (địa chỉ sender đã xác minh) trong **Render → Environment**.
+   Giữ nguyên `CLIENT_URL=https://caltdhy.onrender.com`. Không đưa key vào chat,
+   Git hoặc frontend. Lưu cấu hình để Render triển khai lại bản mã có hỗ trợ
+   Brevo. Gói Brevo Free hiện giới hạn
+   [300 thư/ngày](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan).
+3. Dùng một tài khoản thử nghiệm được phép, yêu cầu đặt lại mật khẩu và kiểm
+   tra thư đến (kể cả Spam), mở link, đặt mật khẩu mới, rồi xác nhận mật khẩu
+   cũ không còn đăng nhập được. Link đặt lại mật khẩu hết hạn sau 15 phút và
+   chỉ dùng một lần. API luôn trả phản hồi chung khi đã cấu hình để tránh tiết
+   lộ email nào có tài khoản; phản hồi thành công chưa chứng minh thư đã phát.
+
+Trên môi trường hỗ trợ SMTP, có thể dùng `EMAIL_PROVIDER=gmail`, `GMAIL_USER`,
+`GMAIL_PASS` thay Brevo. Nếu không cấu hình dịch vụ nào, API sẽ báo 503 và
+không phát link. Khi Brevo từ chối gửi, kiểm tra sender, API key, hạn mức và
+nhật ký giao dịch trong Brevo; server không ghi token hoặc key vào log.
 
 ## Bước 3 — Tạo và gửi lời mời
 

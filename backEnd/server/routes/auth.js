@@ -2,7 +2,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('node:crypto');
-const nodemailer = require('nodemailer');
 const User = require('../models/User');
 const Invitation = require('../models/Invitation');
 const Wallet = require('../models/Wallet');
@@ -11,6 +10,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { issueCsrf, createSession, setSession, revokeSession, clearSession } = require('../utils/sessionSecurity');
 const { validEmail, normalizeEmail } = require('../utils/emailAddress');
+const { configuredProvider, sendAccountEmail } = require('../utils/accountEmail');
 const router = express.Router();
 
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
@@ -40,18 +40,15 @@ function buildAccountLink(pathname, token, email) {
     return link.toString();
 }
 async function sendLink(user, link, verification) {
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) throw new Error('Email unavailable.');
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', logger: false, debug: false,
-        disableFileAccess: true, disableUrlAccess: true,
-        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
-    });
-    await transporter.sendMail({
-        from: '"CaltDHy" <' + process.env.GMAIL_USER + '>', to: user.email,
-        subject: verification ? 'Xác minh email – CaltDHy' : 'Đặt lại mật khẩu – CaltDHy',
+    const action = verification ? 'Xác minh email' : 'Đặt lại mật khẩu';
+    await sendAccountEmail({
+        to: user.email,
+        subject: action + ' – CaltDHy',
         html: '<p>Xin chào ' + escapeHtml(user.name) + ',</p><p><a href="' +
-            escapeHtml(link) + '">' + (verification ? 'Xác minh email' : 'Đặt lại mật khẩu') +
-            '</a></p><p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.</p>'
+            escapeHtml(link) + '">' + action +
+            '</a></p><p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.</p>',
+        text: 'Xin chào ' + user.name + ',\n\n' + action + ': ' + link +
+            '\n\nNếu bạn không yêu cầu thao tác này, hãy bỏ qua email.'
     });
 }
 function failure(res, event, error) {
@@ -156,7 +153,7 @@ router.post('/verify-email', async (req, res) => {
 
 async function requestEmail(req, res, verification) {
     const generic = { success: true, message: 'Nếu email phù hợp, hệ thống sẽ xử lý yêu cầu gửi liên kết.' };
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS || !process.env.CLIENT_URL) {
+    if (!configuredProvider() || !process.env.CLIENT_URL) {
         return res.status(503).json({ success: false,
             message: 'Chức năng gửi email chưa sẵn sàng. Vui lòng liên hệ chủ ứng dụng.' });
     }

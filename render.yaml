@@ -33,3 +33,9 @@ services:
         generateValue: true
       - key: MONGODB_URI
         sync: false
+      - key: EMAIL_PROVIDER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
