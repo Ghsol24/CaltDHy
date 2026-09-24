@@ -114,6 +114,24 @@ describe('Security and financial invariants on a real replica set', { concurrenc
         assert.equal(response.status, 400);
         assert.equal(await Transaction.countDocuments({ userId: a.user.id }), 0);
     });
+    it('expected high-spend dates are validated and scoped to each account', async () => {
+        const owner = await client('expected-owner'), other = await client('expected-other');
+        const url = '/api/spending/expected-days/2026-09-03';
+        assert.equal((await owner.send('put', url, { expected: true })).status, 200);
+        assert.deepEqual((await owner.agent.get('/api/spending/expected-days?month=2026-09')).body.data, ['2026-09-03']);
+        assert.deepEqual((await other.agent.get('/api/spending/expected-days?month=2026-09')).body.data, []);
+        assert.equal((await other.send('put', url, { expected: true })).status, 200);
+        assert.equal((await owner.send('put', url, { expected: false })).status, 200);
+        assert.deepEqual((await owner.agent.get('/api/spending/expected-days?month=2026-09')).body.data, []);
+        assert.deepEqual((await other.agent.get('/api/spending/expected-days?month=2026-09')).body.data, ['2026-09-03']);
+        assert.equal((await owner.send('put', '/api/spending/expected-days/2026-02-30', { expected: true })).status, 400);
+        assert.equal((await owner.send('put', url, { expected: 'yes' })).status, 400);
+        assert.equal((await owner.agent.get('/api/spending/expected-days?month=2026-13')).status, 400);
+        assert.equal((await owner.send('put', url, { expected: true })).status, 200);
+        assert.equal((await owner.send('post', '/api/spending/reset-data', {})).status, 200);
+        assert.deepEqual((await owner.agent.get('/api/spending/expected-days?month=2026-09')).body.data, []);
+        assert.deepEqual((await other.agent.get('/api/spending/expected-days?month=2026-09')).body.data, ['2026-09-03']);
+    });
     it('rejects decimal, coercible and unsafe money without persisting a write', async () => {
         const c = await client('money'); const id = await wallet(c);
         for (const amount of [0.1, 1.005, '100', null, true, Number.MAX_SAFE_INTEGER + 1]) {

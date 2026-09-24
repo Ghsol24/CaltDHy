@@ -16,6 +16,7 @@ const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ defa
 const HomeView = lazyNamed(() => import('../features/home/HomeView'), 'HomeView');
 const PlanView = lazyNamed(() => import('../features/plan/PlanView'), 'PlanView');
 const AnalyticsView = lazyNamed(() => import('../features/analytics/AnalyticsView'), 'AnalyticsView');
+const TransactionHistoryView = lazyNamed(() => import('../features/transactions/TransactionHistoryView'), 'TransactionHistoryView');
 const JarsView = lazyNamed(() => import('../features/jars/JarsView'), 'JarsView');
 const TransactionModal = lazyNamed(() => import('../features/transactions/TransactionModal'), 'TransactionModal');
 const AppUtilities = lazyNamed(() => import('../components/ui/AppUtilities'), 'AppUtilities');
@@ -24,6 +25,7 @@ export function SpendingPage() {
   const lang = useLangStore((state) => state.lang);
   const displayCurrency = useCurrencyStore((state) => state.displayCurrency);
   const activeView = useSpendingStore((s) => s.activeView);
+  const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const fetchTransactions = useTransactionStore((s) => s.fetchTransactions);
   const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
   const fetchWallets = useWalletStore((s) => s.fetchWallets);
@@ -57,7 +59,8 @@ export function SpendingPage() {
             {activeView === 'plan' && <PlanView />}
 
             {/* ── VIEW 3: ANALYTICS (PHÂN TÍCH THU CHI) ── */}
-            {activeView === 'analytics' && <AnalyticsView />}
+            {activeView === 'analytics' && (analyticsSubTab === 'transactions'
+              ? <TransactionHistoryView /> : <AnalyticsView />)}
 
             {/* ── VIEW 4: JARS (HŨ CHI TIÊU & TIẾT KIỆM) ── */}
             {activeView === 'jars' && <JarsView />}

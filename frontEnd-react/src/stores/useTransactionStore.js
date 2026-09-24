@@ -52,6 +52,7 @@ return ({
   categories: [],
   isLoading: false,
   hasLoadedTransactions: false,
+  financialResetVersion: 0,
   error: null,
   editingTransaction: null,
   filters: {
@@ -361,12 +362,13 @@ return ({
     try {
       await spendingService.resetFinancialData();
       saveStoredTxns([]);
-      set({
+      set((state) => ({
         transactions: [],
         budgets: {},
         budgetMonth: null,
+        financialResetVersion: state.financialResetVersion + 1,
         isLoading: false
-      });
+      }));
       get().updateSpendingMetrics([]);
       const walletStore = useWalletStore.getState();
       if (walletStore?.syncWalletBalances) {

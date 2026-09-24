@@ -3832,7 +3832,7 @@ html.dark-theme .jars-global-progress-fill {
   color: #FCA5A5;
 }
 
-/* ── Left Column: Recent Transactions (Scrollable Fixed-Height) ── */
+/* ── Left Column: Recent Transactions ── */
 .home-recent-txns-section {
   display: flex;
   flex-direction: column;
@@ -3843,6 +3843,7 @@ html.dark-theme .jars-global-progress-fill {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 0 4px;
 }
 
@@ -3853,10 +3854,29 @@ html.dark-theme .jars-global-progress-fill {
   margin: 0;
 }
 
-.home-txns-subtitle {
-  font-size: 13px;
-  color: var(--color-text-secondary, var(--muted));
-  font-weight: 500;
+.home-txns-view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-brand-700);
+  font: 700 12px var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+  transition: background-color var(--dur-fast), border-color var(--dur-fast);
+}
+.home-txns-view-all-btn:hover {
+  background: var(--color-brand-50);
+  border-color: var(--color-brand-700);
+}
+.home-txns-view-all-btn:focus-visible {
+  outline: 2px solid var(--color-brand-700);
+  outline-offset: 2px;
 }
 
 .home-txns-card-container {
@@ -3864,28 +3884,7 @@ html.dark-theme .jars-global-progress-fill {
   border: 1px solid var(--color-border, var(--border));
   border-radius: 20px;
   box-shadow: var(--shadow-sm);
-  max-height: clamp(340px, calc(100vh - 460px), 540px);
-  overflow-y: auto;
-  overscroll-behavior: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.home-txns-card-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.home-txns-card-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.home-txns-card-container::-webkit-scrollbar-thumb {
-  background-color: var(--color-border);
-  border-radius: 99px;
-}
-
-.home-txns-card-container::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-border-strong);
+  overflow: hidden;
 }
 
 .home-txns-list {
@@ -11641,7 +11640,6 @@ html.green-theme .cal-weekday.cal-danger {
   background: var(--color-brand-600, var(--primary-hover));
   transform: translateY(-1px);
 }
-
 
 
 

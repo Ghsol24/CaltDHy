@@ -7,6 +7,10 @@ export const spendingService = {
     return await api.get(url);
   },
 
+  getExpectedDays: async (month) => api.get(`/api/spending/expected-days?month=${encodeURIComponent(month)}`),
+
+  setExpectedDay: async (date, expected) => api.put(`/api/spending/expected-days/${encodeURIComponent(date)}`, { expected }),
+
   createTransaction: async (data) => {
     return await api.post('/api/spending', data);
   },

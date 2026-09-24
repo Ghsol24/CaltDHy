@@ -352,6 +352,9 @@ const password = 'Browser-test-1234';
       const box = await item.boundingBox();
       assert.ok(box && box.height >= 44, 'Mỗi mục điều hướng mobile phải cao ít nhất 44px');
     }
+    await mobilePage.reload();
+    await expect(mobilePage.locator('.home-txn-row')).toHaveCount(2);
+    await expect(mobilePage.locator('.home-txns-view-all-btn')).toBeVisible();
 
     await primaryNav.getByRole('button', { name: 'Kế hoạch' }).click();
     await mobilePage.waitForURL('**/spending/plan/overview');
@@ -360,7 +363,7 @@ const password = 'Browser-test-1234';
     await planNav.getByRole('button', { name: 'Ngân sách' }).click();
     await mobilePage.waitForURL('**/spending/plan/budgets');
     await expect(mobilePage.getByRole('heading', { name: 'Ngân sách', exact: true })).toBeVisible();
-    assert.equal(await mobilePage.title(), 'Ngân sách – CaltDHy');
+    await expect(mobilePage).toHaveTitle('Ngân sách – CaltDHy');
     await mobilePage.reload();
     await expect(mobilePage.getByRole('heading', { name: 'Ngân sách', exact: true })).toBeVisible();
     await expect(mobilePage.locator('.budget-category-card.is-overdue-danger')).toHaveCount(1);
@@ -419,6 +422,19 @@ const password = 'Browser-test-1234';
     await expect(mobilePage.locator('#analytics-spending')).toBeVisible();
     await expect(mobilePage.locator('#analytics-overview, #analytics-cashflow, #analytics-reports')).toHaveCount(0);
     await expect(mobilePage).toHaveTitle('Chi tiêu – CaltDHy');
+    await mobilePage.locator('.analytics-cat-item-row').filter({ hasText: 'Dịch vụ' })
+      .getByRole('button', { name: 'Xem giao dịch' }).click();
+    await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?from=/);
+    await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(1);
+    await expect(mobilePage.locator('.transaction-ledger-table')).toBeVisible();
+    const categoryFilter = mobilePage.locator('.transaction-filter-dropdown').nth(1);
+    await expect(categoryFilter.locator('.transaction-filter-value')).toContainText('Dịch vụ');
+    await categoryFilter.locator('.transaction-filter-trigger').click();
+    await expect(categoryFilter.getByRole('listbox')).toBeVisible();
+    await categoryFilter.getByRole('option', { name: 'Dịch vụ' }).click();
+    await expect(categoryFilter.getByRole('listbox')).toHaveCount(0);
+    await analyticsNav.getByRole('button', { name: 'Chi tiêu' }).click();
+    await mobilePage.waitForURL('**/spending/analytics/spending');
     await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();
     await mobilePage.waitForURL('**/spending/analytics/cash-flow');
     const recurringToggle = mobilePage.getByRole('button', { name: 'Gồm định kỳ' });
@@ -443,6 +459,75 @@ const password = 'Browser-test-1234';
     await expect(restoredToggle).toBeEnabled();
     await expect(mobilePage.locator('.toast-item')).toHaveCount(1);
     await expect(mobilePage.locator('.toast-item')).toContainText(/Đã đưa 1 khoản định kỳ trở lại biểu đồ/);
+    await mobilePage.locator('.analytics-top-days button').first().click();
+    const dayDrawer = mobilePage.getByRole('dialog', { name: /Giao dịch ngày/ });
+    await expect(dayDrawer).toBeVisible();
+    await expect(dayDrawer.locator('.day-drawer-summary strong')).toContainText(/410\.000/);
+    await expect(dayDrawer.locator('.transaction-inspection-row')).toHaveCount(2);
+    await dayDrawer.getByRole('button', { name: 'Đánh dấu ngày đã dự kiến' }).click();
+    await expect(dayDrawer.getByRole('button', { name: 'Bỏ đánh dấu ngày dự kiến' })).toBeVisible();
+    await dayDrawer.getByRole('button', { name: 'Xem đầy đủ trong lịch sử' }).click();
+    await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?date=/);
+    await expect(mobilePage.getByRole('heading', { name: 'Lịch sử giao dịch' })).toBeVisible();
+    await expect(analyticsNav.locator('button[aria-current="page"]').filter({ hasText: 'Lịch sử' })).toHaveCount(1);
+    await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(2);
+    const recurringHistoryFilter = mobilePage.getByRole('checkbox', { name: 'Ẩn khoản định kỳ' });
+    await recurringHistoryFilter.check();
+    await expect(recurringHistoryFilter).toBeChecked();
+    await expect(mobilePage.locator('.transaction-history-checkbox')).toHaveClass(/is-active/);
+    await mobilePage.getByRole('button', { name: 'Xóa bộ lọc' }).click();
+    await expect(recurringHistoryFilter).not.toBeChecked();
+    for (const theme of ['dark', 'cream', 'green', 'light']) {
+      await mobilePage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+      await mobilePage.reload();
+      await expect(mobilePage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+      const periodFilter = mobilePage.locator('.transaction-filter-dropdown').nth(3);
+      await periodFilter.locator('.transaction-filter-trigger').click();
+      await periodFilter.getByRole('option', { name: 'Tùy chọn ngày' }).click();
+      await expect(mobilePage.locator('.transaction-filter-custom-dates input[type="date"]')).toHaveCount(2);
+      const walletFilter = mobilePage.locator('.transaction-filter-dropdown').nth(2);
+      const walletTrigger = walletFilter.locator('.transaction-filter-trigger');
+      await walletTrigger.click();
+      await expect(walletFilter.getByRole('listbox')).toBeVisible();
+      const styles = await mobilePage.locator('.transaction-history').evaluate((history) => {
+        const trigger = history.querySelectorAll('.transaction-filter-trigger')[2];
+        const menu = history.querySelector('.transaction-filter-menu');
+        const icon = history.querySelector('.transaction-inspection-icon svg');
+        const swatch = document.createElement('span');
+        swatch.style.backgroundColor = 'var(--color-surface)';
+        history.append(swatch);
+        const surfaceBackground = getComputedStyle(swatch).backgroundColor;
+        swatch.remove();
+        return {
+          menuBackground: getComputedStyle(menu).backgroundColor,
+          surfaceBackground,
+          menuBorderRadius: getComputedStyle(menu).borderRadius,
+          triggerExpanded: trigger.getAttribute('aria-expanded'),
+          dateColorScheme: getComputedStyle(history.querySelector('input[type="date"]')).colorScheme,
+          iconFill: icon?.getAttribute('fill'),
+          clearIconFill: history.querySelector('.transaction-history-clear svg')?.getAttribute('fill'),
+          clearRadius: getComputedStyle(history.querySelector('.transaction-history-clear')).borderRadius,
+          pageOverflows: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+        };
+      });
+      assert.equal(styles.triggerExpanded, 'true', `${theme}: menu tự vẽ đang mở`);
+      assert.notEqual(styles.menuBorderRadius, '0px', `${theme}: menu phải bo góc`);
+      assert.equal(styles.iconFill, 'none', `${theme}: icon giao dịch là nét rỗng`);
+      assert.equal(styles.clearIconFill, 'none', `${theme}: icon xóa bộ lọc là nét rỗng`);
+      assert.ok(styles.clearRadius !== '0px', `${theme}: nút xóa bộ lọc phải bo góc`);
+      assert.equal(styles.pageOverflows, false, `${theme}: lịch sử không được tràn ngang`);
+      assert.equal(styles.menuBackground, styles.surfaceBackground, `${theme}: menu cần màu nền theo theme`);
+      assert.equal(styles.dateColorScheme, theme === 'dark' ? 'dark' : 'light', `${theme}: ô ngày cần đúng bảng màu`);
+      await walletFilter.getByRole('option', { selected: true }).press('Escape');
+      await expect(walletFilter.getByRole('listbox')).toHaveCount(0);
+      await expect(walletTrigger).toBeFocused();
+    }
+    await mobilePage.getByPlaceholder('Tìm mô tả hoặc danh mục').fill('Internet');
+    await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(1);
+    await mobilePage.getByRole('button', { name: 'Xóa bộ lọc' }).click();
+    await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(2);
+    await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();
+    await mobilePage.waitForURL('**/spending/analytics/cash-flow');
     await analyticsNav.getByRole('button', { name: 'Chi tiêu' }).click();
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();
@@ -596,7 +681,7 @@ const password = 'Browser-test-1234';
     await expect(mobilePage.locator('.jar-premium-card')).toHaveCount(12);
     await mobilePage.waitForTimeout(700);
     await mobilePage.locator('#jars-section-history').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
-    await expect(mobilePage.getByRole('button', { name: 'Lịch sử', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(mobilePage.locator('button.sidebar-nav-item.active').filter({ hasText: 'Lịch sử' })).toHaveAttribute('aria-current', 'page');
     assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false,
       'Trang desktop không được tràn ngang khi dựng đồng thời mọi khu vực');
 
@@ -707,6 +792,11 @@ const password = 'Browser-test-1234';
     await expect(mobilePage.locator('.mobile-primary-nav')).toContainText('Trang chủ');
     assert.equal(await mobilePage.evaluate(() => window.__localizationObserverStarts), observerStartsBeforeVietnamese,
       'Chuyển về tiếng Việt phải khôi phục văn bản mà không khởi chạy observer mới');
+    await mobilePage.getByRole('button', { name: 'Đóng trung tâm cài đặt' }).click();
+    await expect(mobilePage.locator('.settings-center-dialog')).toHaveCount(0);
+    await mobilePage.locator('.home-txns-view-all-btn').click();
+    await mobilePage.waitForURL('**/spending/analytics/transactions');
+    await expect(mobilePage.locator('.transaction-ledger-table')).toBeVisible();
     assert.deepEqual(mobileErrors, []);
     await mobileContext.close();
   });

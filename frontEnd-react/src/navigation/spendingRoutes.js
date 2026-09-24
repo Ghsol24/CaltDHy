@@ -1,5 +1,5 @@
 const PLAN_TABS = new Set(['overview', 'wallets', 'budgets', 'recurring']);
-const ANALYTICS_TABS = new Set(['overview', 'spending', 'cash-flow', 'reports']);
+const ANALYTICS_TABS = new Set(['overview', 'spending', 'cash-flow', 'reports', 'transactions']);
 const JARS_PATH_TO_TAB = { goals: 'goals', list: 'jars', history: 'history' };
 const JARS_TAB_TO_PATH = { goals: 'goals', jars: 'list', history: 'history' };
 
@@ -13,6 +13,7 @@ const ROUTE_META = {
   'analytics:spending': { titleKey: 'nav.spending', focus: '#analytics-spending' },
   'analytics:cash-flow': { titleKey: 'nav.cashFlow', focus: '#analytics-cashflow' },
   'analytics:reports': { titleKey: 'nav.reports', focus: '#analytics-reports' },
+  'analytics:transactions': { titleKey: 'nav.transactionHistory', focus: '#transaction-history-title' },
   'jars:goals': { titleKey: 'nav.goals', focus: '#jars-section-goals' },
   'jars:jars': { titleKey: 'nav.jarList', focus: '#jars-section-list' },
   'jars:history': { titleKey: 'nav.history', focus: '#jars-section-history' }

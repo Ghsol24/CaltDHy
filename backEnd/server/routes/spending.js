@@ -10,11 +10,50 @@ const User = require('../models/User');
 const Category = require('../models/Category');
 const Jar = require('../models/Jar');
 const Installment = require('../models/Installment');
+const ExpectedHighSpendDay = require('../models/ExpectedHighSpendDay');
 const { isValidVNDAmount } = require('../utils/money');
 const { getVietnamTodayString } = require('../utils/localDate');
 
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
+
+// Acknowledged high-spend dates belong to the signed-in user and never affect balances.
+router.get('/expected-days', async (req, res) => {
+    try {
+        const month = req.query.month;
+        if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+            return res.status(400).json({ success: false, message: 'Tháng không hợp lệ.' });
+        }
+        const records = await ExpectedHighSpendDay.find({
+            userId: req.user.id,
+            date: { $gte: `${month}-01`, $lte: `${month}-31` }
+        }).select('date -_id').lean();
+        return res.json({ success: true, data: records.map((record) => record.date) });
+    } catch {
+        console.error('[finance] expected_days_read_failed');
+        return res.status(500).json({ success: false, message: 'Không thể tải các ngày đã xác nhận.' });
+    }
+});
+
+router.put('/expected-days/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        if (!parseTransactionDate(date) || typeof req.body?.expected !== 'boolean') {
+            return res.status(400).json({ success: false, message: 'Ngày hoặc trạng thái không hợp lệ.' });
+        }
+        const filter = { userId: req.user.id, date };
+        if (req.body.expected) {
+            await ExpectedHighSpendDay.updateOne(filter, { $setOnInsert: filter }, { upsert: true });
+        } else {
+            await ExpectedHighSpendDay.deleteOne(filter);
+        }
+        return res.json({ success: true, data: { date, expected: req.body.expected } });
+    } catch (error) {
+        if (error?.code === 11000) return res.json({ success: true, data: { date: req.params.date, expected: true } });
+        console.error('[finance] expected_days_write_failed');
+        return res.status(500).json({ success: false, message: 'Không thể lưu trạng thái ngày.' });
+    }
+});
 
 const isValidObjectId = (id) => (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) || id instanceof mongoose.Types.ObjectId;
 
@@ -687,9 +726,10 @@ router.post('/reset-data', financialRequest(async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // 1. Xóa sạch transactions và budgets của user hiện tại
+        // 1. Xóa sạch giao dịch, ngân sách và ngày chi tiêu được đánh dấu của user hiện tại
         await Transaction.deleteMany({ userId });
         await Budget.deleteMany({ userId });
+        await ExpectedHighSpendDay.deleteMany({ userId });
 
         // 2. Đặt lại số dư Hũ tiết kiệm và tiến độ Trả góp định kỳ về 0 để bảo toàn tính nhất quán sổ cái
         const canRunExtraModelOps = (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) || (Jar.updateMany !== mongoose.Model.updateMany);

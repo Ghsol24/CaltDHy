@@ -110,6 +110,10 @@ const finance = {
     'Đã cập nhật hạn mức chi tiêu thành công!': ['Budget limits updated.', '预算限额已更新！'],
     'Lỗi khi tải ngân sách.': ['Unable to load budgets.', '无法加载预算。'],
     'Lỗi khi lưu hạn mức chi tiêu.': ['Unable to save budget limits.', '无法保存预算限额。'],
+    'Tháng không hợp lệ.': ['Invalid month.', '月份无效。'],
+    'Không thể tải các ngày đã xác nhận.': ['Unable to load expected days.', '无法加载已确认日期。'],
+    'Ngày hoặc trạng thái không hợp lệ.': ['Invalid date or status.', '日期或状态无效。'],
+    'Không thể lưu trạng thái ngày.': ['Unable to save day status.', '无法保存日期状态。'],
 };
 
 const remainingApiMessages = {

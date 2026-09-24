@@ -18,6 +18,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
 
   const wallets = useWalletStore((s) => s.wallets);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const confirm = useConfirmStore((s) => s.confirm);
   const addToast = useToastStore((s) => s.addToast);
   const [deletingTxnId, setDeletingTxnId] = React.useState(null);
@@ -33,11 +34,11 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
     return map;
   }, [wallets]);
 
-  // Take the most recent 25 transactions for smooth internal scrolling
+  // Keep the dashboard glanceable; the full ledger lives in History.
   const recentList = React.useMemo(() => {
     return [...transactions]
       .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-      .slice(0, 25);
+      .slice(0, 5);
   }, [transactions]);
 
   // Delete transaction with safe confirmation dialog & undo toast
@@ -80,7 +81,14 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
       {/* Section Header */}
       <div className="home-txns-header-row">
         <h2 className="home-txns-title">{t('home.recent')}</h2>
-        <span className="home-txns-subtitle">{t('date.today')}</span>
+        <button type="button" className="home-txns-view-all-btn"
+          onClick={() => navigateTo('analytics', 'transactions')}>
+          <span>{t('home.viewAll')}</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Transaction List Card Container */}

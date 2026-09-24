@@ -163,6 +163,19 @@ export function SidebarNav() {
               <path d="M16 17H8" />
             </svg>
           )
+        },
+        {
+          id: 'analytics_transactions',
+          viewId: 'analytics',
+          subTabId: 'transactions',
+          label: t('nav.transactionHistory'),
+          isActive: activeView === 'analytics' && analyticsSubTab === 'transactions',
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M7 8h10M7 12h10M7 16h7" />
+            </svg>
+          )
         }
       ]
     },

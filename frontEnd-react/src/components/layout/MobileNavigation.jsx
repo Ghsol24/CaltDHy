@@ -18,7 +18,8 @@ const SECTION_ITEMS = {
     { id: 'overview', labelKey: 'nav.overview', target: 'analytics-overview' },
     { id: 'spending', labelKey: 'nav.spending', target: 'analytics-spending' },
     { id: 'cash-flow', labelKey: 'nav.cashFlow', target: 'analytics-cashflow' },
-    { id: 'reports', labelKey: 'nav.reports', target: 'analytics-reports' }
+    { id: 'reports', labelKey: 'nav.reports', target: 'analytics-reports' },
+    { id: 'transactions', labelKey: 'nav.transactionHistory', target: 'transaction-history-title' }
   ],
   jars: [
     { id: 'goals', labelKey: 'nav.goals', target: 'jars-section-goals' },

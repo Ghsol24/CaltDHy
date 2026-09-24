@@ -234,24 +234,26 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
         assert.equal((await c.agent.get('/api/health')).status, 200);
     });
 
-    it('development cleanup removes only the selected account sessions, receipts and money fence', async () => {
+    it('development cleanup removes only the selected account sessions, receipts, money fence and expected days', async () => {
         const connection = await mongoose.createConnection(db.getUri('caltdhy_test')).asPromise();
         try {
             const selected = new mongoose.Types.ObjectId(), untouched = new mongoose.Types.ObjectId();
             for (const name of ['users', 'moneylocks']) {
                 await connection.db.collection(name).insertMany([{ _id: selected }, { _id: untouched }]);
             }
-            for (const name of ['authsessions', 'idempotencyreceipts']) {
+            for (const name of ['authsessions', 'idempotencyreceipts', 'expectedhighspenddays']) {
                 await connection.db.collection(name).insertMany([{ userId: selected }, { userId: untouched }]);
             }
             const { cleanup } = require('../scripts/cleanup-users');
             const options = { mongoUri: db.getUri('caltdhy_test'), expectedDb: 'caltdhy_test', userIds: [selected.toString()] };
             const preview = await cleanup(options);
             assert.equal(preview.counts.moneylocks, 1); assert.equal(preview.counts.authsessions, 1);
+            assert.equal(preview.counts.expectedhighspenddays, 1);
             assert.equal(await connection.db.collection('users').countDocuments(), 2);
             const result = await cleanup({ ...options, apply: true, confirm: preview.confirmation });
             assert.equal(result.deleted.idempotencyreceipts, 1);
-            for (const name of ['users', 'moneylocks', 'authsessions', 'idempotencyreceipts']) {
+            assert.equal(result.deleted.expectedhighspenddays, 1);
+            for (const name of ['users', 'moneylocks', 'authsessions', 'idempotencyreceipts', 'expectedhighspenddays']) {
                 const filter = ['users', 'moneylocks'].includes(name) ? { _id: untouched } : { userId: untouched };
                 assert.equal(await connection.db.collection(name).countDocuments(), 1);
                 assert.equal(await connection.db.collection(name).countDocuments(filter), 1);

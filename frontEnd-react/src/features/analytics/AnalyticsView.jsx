@@ -13,11 +13,12 @@ import {
   Filler
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
+import { useNavigate } from 'react-router';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useThemeStore } from '../../stores/useThemeStore';
-import { formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatMonthShort, formatPercent, getLocalMonthString } from '../../utils/formatters';
+import { formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatMonthShort, formatPercent, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { getBudgetStatus } from '../../utils/financeMath';
 import { filterTrendTransactions, summarizeRecurringExpenses } from '../../utils/analyticsFilters';
@@ -26,6 +27,9 @@ import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { ClockOutlineIcon } from '../../components/ui/AppIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
+import { spendingService } from '../../services/spendingService';
+import { unusualSpendingDays } from '../../utils/transactionInsights';
+import { DailyTransactionsDrawer } from './DailyTransactionsDrawer';
 import {
   CategoryOutlineIcon,
   ChartOutlineIcon,
@@ -89,27 +93,59 @@ function usePrefersReducedMotion() {
 }
 
 export function AnalyticsView() {
-  const { t, label, lang } = useTranslation();
+  const { t, label, lang, intlLocale } = useTranslation();
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
+  const financialResetVersion = useTransactionStore((s) => s.financialResetVersion);
+  const openEditTransaction = useTransactionStore((s) => s.openEditTransaction);
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const excludeRecurring = useSpendingStore((s) => s.analyticsExcludeRecurring);
   const setAnalyticsExcludeRecurring = useSpendingStore((s) => s.setAnalyticsExcludeRecurring);
   const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile(900);
+  const navigate = useNavigate();
 
   const [trendMode, setTrendMode] = useState('daily'); // 'daily' | '3months' | '6months'
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [expectedDays, setExpectedDays] = useState([]);
+  const [savingExpectedDay, setSavingExpectedDay] = useState('');
   const barChartRef = useRef(null);
 
   // Current active month in 'YYYY-MM' format
   const activeMonth = selectedMonth || getLocalMonthString();
+
+  useEffect(() => { setSelectedDay(null); }, [activeMonth]);
+
+  useEffect(() => {
+    let active = true;
+    setExpectedDays([]);
+    spendingService.getExpectedDays(activeMonth).then((result) => {
+      if (active) setExpectedDays(Array.isArray(result.data) ? result.data : []);
+    }).catch((error) => {
+      if (active && error.code !== 'SESSION_CHANGED') addToast({ type: 'error', message: t('analytics.unusualLoadFailed') });
+    });
+    return () => { active = false; };
+  }, [activeMonth, financialResetVersion, addToast, t]);
+
+  const toggleExpectedDay = useCallback(async (date, expected) => {
+    setSavingExpectedDay(date);
+    try {
+      await spendingService.setExpectedDay(date, expected);
+      setExpectedDays((days) => expected ? [...new Set([...days, date])] : days.filter((day) => day !== date));
+    } catch (error) {
+      if (error.code !== 'SESSION_CHANGED') addToast({ type: 'error', message: t('analytics.unusualSaveFailed') });
+    } finally {
+      setSavingExpectedDay('');
+    }
+  }, [addToast, t]);
 
   // Month & Quarter navigation helpers
   const {
@@ -296,6 +332,41 @@ export function AnalyticsView() {
     return { days, hasAnyData };
   }, [trendTransactions, currentYear, currentMonthNum, activeMonth]);
 
+  const highestSpendingDays = useMemo(() => dailyTrend.days
+    .filter((day) => day.expense > 0)
+    .sort((a, b) => b.expense - a.expense)
+    .slice(0, 5), [dailyTrend]);
+  const unusualDays = useMemo(() => unusualSpendingDays(
+    transactions, activeMonth, expectedDays, getLocalDateString()
+  ).slice(0, 3), [transactions, activeMonth, expectedDays]);
+
+  const openDay = useCallback((date, type = 'expense') => {
+    setSelectedDay({ date, type });
+  }, []);
+
+  const viewDayHistory = useCallback((date, type) => {
+    setSelectedDay(null);
+    const search = new URLSearchParams({ date, type });
+    if (excludeRecurring) search.set('excludeRecurring', '1');
+    navigate(`/spending/analytics/transactions?${search.toString()}`);
+  }, [excludeRecurring, navigate]);
+
+  const viewCategoryHistory = useCallback((category, months = [activeMonth]) => {
+    const firstMonth = months[0];
+    const lastMonth = months.at(-1);
+    const [year, month] = lastMonth.split('-').map(Number);
+    const lastDay = String(new Date(year, month, 0).getDate()).padStart(2, '0');
+    const search = new URLSearchParams({
+      from: `${firstMonth}-01`, to: `${lastMonth}-${lastDay}`, type: 'expense', category
+    });
+    navigate(`/spending/analytics/transactions?${search.toString()}`);
+  }, [activeMonth, navigate]);
+
+  const manageTransactionSource = useCallback((source) => {
+    setSelectedDay(null);
+    navigateTo(source === 'jars' ? 'jars' : 'plan', source === 'jars' ? 'history' : 'recurring');
+  }, [navigateTo]);
+
   const recurringFilterSummary = useMemo(() => {
     const prefixes = trendMode === 'daily'
       ? [activeMonth]
@@ -397,6 +468,13 @@ export function AnalyticsView() {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: (_event, elements) => {
+        const category = monthData.categories[elements[0]?.index];
+        if (category) viewCategoryHistory(category.name);
+      },
+      onHover: (_event, elements, chart) => {
+        chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
+      },
       animation: prefersReducedMotion ? false : {
         duration: 850,
         easing: 'easeOutQuart'
@@ -421,7 +499,7 @@ export function AnalyticsView() {
         }
       }
     };
-  }, [monthData.expense, chartThemeTokens, prefersReducedMotion]);
+  }, [monthData.expense, monthData.categories, chartThemeTokens, prefersReducedMotion, viewCategoryHistory]);
 
   // Bar Chart Configuration
   const barChartData = useMemo(() => {
@@ -480,6 +558,24 @@ export function AnalyticsView() {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: (_event, elements) => {
+        if (!elements.length) return;
+        const { index, datasetIndex } = elements[0];
+        if (trendMode === 'daily') {
+          const day = dailyTrend.days[index];
+          if (day) openDay(`${activeMonth}-${String(day.day).padStart(2, '0')}`,
+            datasetIndex === 0 ? 'income' : 'expense');
+        } else {
+          const month = (trendMode === '3months' ? trend3Months : trend6Months).months[index];
+          if (month) {
+            setSelectedMonth(month.prefix);
+            setTrendMode('daily');
+          }
+        }
+      },
+      onHover: (_event, elements, chart) => {
+        chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
+      },
       animation: prefersReducedMotion ? false : {
         duration: 250,
         easing: 'easeOutQuart'
@@ -542,7 +638,8 @@ export function AnalyticsView() {
         }
       }
     };
-  }, [trendMode, currentMonthNum, currentYear, chartThemeTokens, prefersReducedMotion, lang]);
+  }, [trendMode, currentMonthNum, currentYear, chartThemeTokens, prefersReducedMotion, lang,
+    dailyTrend.days, activeMonth, trend3Months, trend6Months, openDay, setSelectedMonth]);
 
   // ── Financial Report Statistics & Comparison ──
   const reportData = useMemo(() => {
@@ -1159,6 +1256,8 @@ export function AnalyticsView() {
                       }}
                     />
                   </div>
+                  <button type="button" className="category-history-link"
+                    onClick={() => viewCategoryHistory(cat.name)}>{t('history.viewCategory')}</button>
                 </div>
               ))}
             </div>
@@ -1178,7 +1277,7 @@ export function AnalyticsView() {
               <TrendOutlineIcon size={18} /> Xu hướng dòng tiền
             </h3>
             <p className="panel-subtitle">
-              So sánh tương quan giữa Tổng thu nhập và Tổng chi tiêu
+              So sánh tương quan giữa Tổng thu nhập và Tổng chi tiêu · {monthLabel}
             </p>
           </div>
 
@@ -1251,6 +1350,42 @@ export function AnalyticsView() {
             <Bar ref={barChartRef} data={barChartData} options={barOptions} />
           </div>
         )}
+        {trendMode === 'daily' && <div className="analytics-day-inspection">
+          <p>{t('analytics.chartHint')}</p>
+          <div className="analytics-day-picker">
+            <label>
+              <span>{t('analytics.pickDay')}</span>
+              <input type="date" min={`${activeMonth}-01`}
+                max={`${activeMonth}-${String(dailyTrend.days.length).padStart(2, '0')}`}
+                value={selectedDay?.date || ''}
+                onChange={(event) => { if (event.target.value) openDay(event.target.value); }} />
+            </label>
+            <button type="button" onClick={() => navigateTo('analytics', 'transactions')}>
+              {t('analytics.viewHistory')}
+            </button>
+          </div>
+          {highestSpendingDays.length > 0 && <div className="analytics-top-days" aria-label={t('analytics.highestDays')}>
+            <strong>{t('analytics.highestDays')}</strong>
+            <div>{highestSpendingDays.map((day) => <button key={day.day} type="button"
+              onClick={() => openDay(`${activeMonth}-${String(day.day).padStart(2, '0')}`)}>
+              {formatDate(`${activeMonth}-${String(day.day).padStart(2, '0')}`, 'short', { locale: lang })}
+              <span>{formatCurrency(day.expense)}</span>
+            </button>)}</div>
+          </div>}
+          {unusualDays.length > 0 && <div className="analytics-unusual-days">
+            <div><strong>{t('analytics.unusualTitle')}</strong><p>{t('analytics.unusualExplanation')}</p></div>
+            {unusualDays.map((day) => <div className="analytics-unusual-row" key={day.date}>
+              <button type="button" onClick={() => openDay(day.date)}>
+                <strong>{formatDate(day.date, 'short', { locale: lang })}</strong>
+                <span>{formatCurrency(day.amount)} · {t('analytics.unusualRatio', {
+                  ratio: day.ratio.toLocaleString(intlLocale, { maximumFractionDigits: 1 })
+                })}</span>
+              </button>
+              <button type="button" disabled={savingExpectedDay === day.date}
+                onClick={() => toggleExpectedDay(day.date, true)}>{t('analytics.unusualMarkExpected')}</button>
+            </div>)}
+          </div>}
+        </div>}
       </div>
       </>
       )}
@@ -1538,6 +1673,11 @@ export function AnalyticsView() {
                           </span>
                           <span className="table-cat-name">{cat.name}</span>
                         </div>
+                        {cat.spentCur > 0 && <button type="button" className="category-history-link"
+                          onClick={() => viewCategoryHistory(cat.name,
+                            reportPeriodType === 'quarterly' ? curQuarterMonths : [activeMonth])}>
+                          {t('history.viewCategory')}
+                        </button>}
                       </td>
 
                       {/* 2. Current Spent */}
@@ -1650,6 +1790,13 @@ export function AnalyticsView() {
       </div>
       </>
       )}
+      {selectedDay && <DailyTransactionsDrawer key={`${selectedDay.date}:${selectedDay.type}`}
+        date={selectedDay.date} initialType={selectedDay.type} transactions={transactions}
+        excludeRecurring={excludeRecurring} expected={expectedDays.includes(selectedDay.date)}
+        savingExpected={savingExpectedDay === selectedDay.date} onToggleExpected={toggleExpectedDay}
+        onClose={() => setSelectedDay(null)}
+        onEdit={(transaction) => { setSelectedDay(null); openEditTransaction(transaction); }}
+        onManage={manageTransactionSource} onViewHistory={viewDayHistory} />}
     </div>
   );
 }

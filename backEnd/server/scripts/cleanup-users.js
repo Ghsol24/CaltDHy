@@ -14,7 +14,7 @@ const { createHash } = require('node:crypto');
 const ALLOWED_DATABASES = new Set(['caltdhy_dev', 'caltdhy_test']);
 const COLLECTIONS = [
     'wallets', 'transactions', 'budgets', 'jars',
-    'installments', 'categories', 'authsessions', 'idempotencyreceipts', 'moneylocks', 'users'
+    'installments', 'categories', 'expectedhighspenddays', 'authsessions', 'idempotencyreceipts', 'moneylocks', 'users'
 ];
 const MAX_USERS = 100;
 const QUERY_TIMEOUT_MS = 10000;

@@ -15,6 +15,7 @@ import './assets/css/themes.css'
 import './assets/css/auth.css'
 import './assets/css/landing.css'
 import './assets/css/responsive.css'
+import './assets/css/transaction-inspection.css'
 import './assets/css/spa-overrides.css'  // Must be LAST — fixes body conflicts in SPA
 
 import App from './App.jsx'
