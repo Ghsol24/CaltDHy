@@ -26,3 +26,5 @@ npm run package:source
 Test dùng dữ liệu tổng hợp và MongoDB tạm. `prepare:release` tạo runtime đã cài dependency/build trong `release/`; `package:source` tạo ZIP mã nguồn sạch và checksum, không phải app macOS độc lập. Không đưa `.env` thật vào ZIP hoặc frontend.
 
 Đọc [hướng dẫn production](docs/PRODUCTION-RUNBOOK.md) trước nâng cấp dữ liệu, cấu hình HTTPS/cookie, chạy script quản trị hoặc phát hành. Hướng dẫn nêu các kiểm tra bắt buộc, phạm vi bảo đảm của idempotency, vận hành sau proxy và các công việc phải làm tại hạ tầng triển khai.
+
+Để chia sẻ ứng dụng qua URL HTTPS và cho phép cài lên điện thoại/máy tính, đọc [hướng dẫn triển khai PWA](docs/PWA-DEPLOYMENT.md).

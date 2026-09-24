@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppShellSkeleton } from './components/layout/AppShellSkeleton';
 import { useTranslation } from './i18n/useTranslation';
 import { LocalizationObserver } from './i18n/LocalizationObserver';
+import { PwaUpdateNotice } from './components/layout/PwaUpdateNotice';
 
 const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
 const LandingPage = lazyNamed(() => import('./pages/LandingPage'), 'LandingPage');
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <LocalizationObserver />
+      <PwaUpdateNotice />
       <AuthExpirationListener />
       <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>

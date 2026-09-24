@@ -5,8 +5,9 @@
 - Node.js 24 trở lên; MongoDB replica set hoặc sharded cluster có transaction. MongoDB standalone bị từ chối. Test dùng database tạm độc lập, không dùng database thật.
 - Triển khai web cùng origin cho giao diện và `/api`, qua HTTPS. Cấp cấu hình riêng theo `backEnd/server/.env.example`; bật `COOKIE_SECURE=true` cho web HTTPS. Không đưa `.env` thật vào mã nguồn, CI artifact hoặc frontend.
 - Khóa `JWT_SECRET` hiện dùng cho HMAC phiên opaque và CSRF, tên biến được giữ để tương thích cấu hình. Phiên có cookie HttpOnly, SameSite Strict; bearer JWT cũ không còn hợp lệ. Đổi khóa sẽ vô hiệu hóa các phiên cũ. Mật khẩu mới cần ít nhất 12 ký tự, tối đa 72 byte UTF-8.
-- Rate limit hiện lưu trong từng tiến trình. Backend không tin `X-Forwarded-For`; nếu đặt sau reverse proxy, bộ đếm sẽ thấy IP của proxy. Trước khi triển khai nhiều instance, cần shared rate-limit store và cấu hình chính xác proxy tin cậy cùng giới hạn tại gateway. Không bật `trust proxy=true` vô điều kiện.
+- Rate limit hiện lưu trong từng tiến trình. Mặc định backend không tin `X-Forwarded-For`; sau reverse proxy, cấu hình `TRUST_PROXY_HOPS` theo đúng số lớp ingress được bảo vệ và kiểm tra IP thực tế trước khi mời người dùng. Không bật `trust proxy=true` vô điều kiện. Trước khi triển khai nhiều instance, cần shared rate-limit store và giới hạn tại gateway.
 - Launcher chỉ phục vụ ứng dụng HTTP trên máy cục bộ. Cookie Secure phải tắt cho bản loopback này. `CLIENT_URL` HTTPS hoặc `HOST` ngoài loopback luôn bắt buộc Secure, kể cả khi `COOKIE_SECURE=false`; phải tách cấu hình web HTTPS và launcher HTTP. Không dùng cấu hình launcher làm cấu hình website công khai.
+- PWA cache tài nguyên giao diện tĩnh, không cache `/api` hay dữ liệu tài chính. Người dùng chọn thời điểm nạp bản giao diện mới để không mất biểu mẫu đang nhập. Xem [hướng dẫn triển khai PWA](PWA-DEPLOYMENT.md) trước khi gửi URL cài ứng dụng.
 
 ## Kiểm tra dữ liệu trước nâng cấp
 
@@ -52,7 +53,7 @@ CI có ba job: **Backend security and money integrity**, **Browser session and f
 
 Client xác minh phiên với server trước khi mở trang bảo vệ, bỏ credential/cache tài chính cũ khỏi localStorage, hủy request cũ khi chuyển phiên và đồng bộ đăng xuất giữa tab. Logout khi mất mạng vẫn khóa đăng nhập tự động trên trình duyệt đó cho tới lần đăng nhập có chủ ý tiếp theo; phiên máy chủ chỉ bị thu hồi khi request logout đến được server hoặc phiên hết hạn.
 
-Đăng ký tạo tài khoản chưa xác minh email. Không coi cờ đăng nhập là bằng chứng email đã xác minh. Luồng gửi lại email xác minh và đặt lại mật khẩu cần SMTP cùng `CLIENT_URL` hợp lệ; phản hồi chung không bảo đảm thư đã gửi. Không ghi token/link reset vào log. Gửi thư production cần được kiểm tra riêng bằng tài khoản thử nghiệm được phép.
+Production mặc định chỉ cho đăng ký bằng lời mời một lần, gắn với email và hết hạn; script quản trị tạo URL mời được mô tả trong [hướng dẫn PWA](PWA-DEPLOYMENT.md). Đăng ký tạo tài khoản chưa xác minh email. Không coi cờ đăng nhập là bằng chứng email đã xác minh. Luồng gửi lại email xác minh và đặt lại mật khẩu cần SMTP cùng `CLIENT_URL` hợp lệ; khi chưa cấu hình, API trả 503. Phản hồi chung khi đã cấu hình không bảo đảm thư đã gửi. Không ghi token/link reset vào log. Gửi thư production cần được kiểm tra riêng bằng tài khoản thử nghiệm được phép.
 
 Cleanup và seed demo chỉ cho phép development/test trên database `caltdhy_dev` hoặc `caltdhy_test` và dùng URI riêng. Migration có thể chạy môi trường khác theo các tham số bảo vệ riêng, dry-run và xác nhận phạm vi; đọc hướng dẫn của từng script trước khi thực thi. Không cấp production URI cho tác vụ demo. Không tự động chạy các script này trong launcher hay CI.
 

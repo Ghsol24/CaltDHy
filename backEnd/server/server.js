@@ -25,6 +25,12 @@ function integerSetting(name, fallback, maximum) {
     return number;
 }
 
+function trustedProxyHops() {
+    const value = process.env.TRUST_PROXY_HOPS || (process.env.RENDER === 'true' ? '1' : '0');
+    if (!/^[0-3]$/.test(value)) throw new Error('Invalid proxy configuration.');
+    return value === '0' ? false : Number(value);
+}
+
 function originSetting(value, production, allowPath = false) {
     const url = new URL(value);
     const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
@@ -48,8 +54,11 @@ try {
     if (process.env.COOKIE_SECURE && !['true', 'false'].includes(process.env.COOKIE_SECURE)) {
         throw new Error('Invalid cookie configuration.');
     }
-    const port = integerSetting('PORT', 24127, 65535);
-    const host = process.env.HOST || '127.0.0.1';
+    const registrationMode = process.env.REGISTRATION_MODE || (mode === 'production' ? 'invite' : 'open');
+    if (!['open', 'invite'].includes(registrationMode)) throw new Error('Invalid registration configuration.');
+    const onRender = process.env.RENDER === 'true';
+    const port = integerSetting('PORT', onRender ? 10000 : 24127, 65535);
+    const host = process.env.HOST || (onRender ? '0.0.0.0' : '127.0.0.1');
     if (!net.isIP(host)) throw new Error('Invalid configuration.');
     const origins = new Set([
         'http://localhost:' + port,
@@ -69,7 +78,8 @@ try {
         origins.add(originSetting(process.env.CLIENT_URL, mode === 'production', true));
     }
     config = {
-        port, host, origins,
+        port, host, origins, registrationMode,
+        proxyHops: trustedProxyHops(),
         apiLimit: integerSetting('API_RATE_LIMIT_MAX', 300, 100000),
         authLimit: integerSetting('AUTH_RATE_LIMIT_MAX', 10, 1000),
         publicProduction: mode === 'production' &&
@@ -88,7 +98,8 @@ mongoose.set('autoCreate', false);
 mongoose.set('autoIndex', false);
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', false);
+app.set('trust proxy', config.proxyHops);
+app.locals.registrationMode = config.registrationMode;
 
 app.use(helmet({
     contentSecurityPolicy: {

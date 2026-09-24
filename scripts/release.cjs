@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const TOP = new Set(['backEnd', 'frontEnd-react', 'CaltDHy.app', 'scripts', 'tests', 'docs', '.github']);
-const ROOT_FILES = new Set(['package.json', 'package-lock.json', '.gitignore', 'README.md']);
+const ROOT_FILES = new Set(['package.json', 'package-lock.json', '.gitignore', 'README.md', '.node-version', 'render.yaml']);
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.git', '.agents', '.codex', 'coverage', 'release', 'test-results', 'playwright-report']);
 const EXTENSIONS = new Set(['.js', '.jsx', '.cjs', '.mjs', '.css', '.html', '.md', '.yml', '.yaml', '.svg', '.png', '.jpg', '.jpeg', '.ico', '.icns', '.webp', '.woff', '.woff2', '.ttf', '.plist']);
 function allowed(relative) {
@@ -17,6 +17,7 @@ function allowed(relative) {
     if (!TOP.has(parts[0])) return false;
     if (name.startsWith('.') && name !== '.env.example') return false;
     if (name === '.env.example') return relative === 'backEnd/server/.env.example';
+    if (relative === 'frontEnd-react/public/manifest.json') return true;
     if (['package.json', 'package-lock.json'].includes(name)) return ['backEnd/server', 'frontEnd-react'].includes(parts.slice(0, -1).join('/'));
     if (relative === 'CaltDHy.app/Contents/MacOS/CaltDHy' || relative === 'CaltDHy.app/Contents/PkgInfo') return true;
     return EXTENSIONS.has(path.extname(name));

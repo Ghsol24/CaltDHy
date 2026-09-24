@@ -1,6 +1,7 @@
 import { apiFetch } from './api';
 
 export const authService = {
+  registration: async () => apiFetch('/api/auth/registration'),
   login: async (credentials) => {
     return await apiFetch('/api/auth/login', {
       method: 'POST',

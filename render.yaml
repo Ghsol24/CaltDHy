@@ -1,0 +1,35 @@
+# Template for a fresh installation only. Upgrade the existing CaltDHy service
+# in its Render settings so its URL, database connection and secrets are kept.
+services:
+  - type: web
+    name: caltdhy-fresh
+    runtime: node
+    plan: free
+    autoDeployTrigger: off
+    buildCommand: npm ci --ignore-scripts --include=dev --prefix frontEnd-react && npm run build --prefix frontEnd-react && npm ci --ignore-scripts --omit=dev --prefix backEnd/server
+    startCommand: node backEnd/server/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "10000"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: REGISTRATION_MODE
+        value: invite
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: CLIENT_URL
+        fromService:
+          type: web
+          name: caltdhy-fresh
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false

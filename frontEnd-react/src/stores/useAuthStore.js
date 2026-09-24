@@ -74,12 +74,12 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
-  register: async (name, email, password) => {
+  register: async (name, email, password, inviteToken) => {
     clearPrivateState();
     const epoch = sessionEpoch();
     set({ user: null, isAuthenticated: false, status: 'checking', isLoading: true });
     try {
-      const data = await authService.register({ name, email, password });
+      const data = await authService.register({ name, email, password, inviteToken });
       assertSession(epoch);
       storage.remove(LOGOUT_KEY);
       set({ user: data.user, isAuthenticated: true, status: 'authenticated', isLoading: false });

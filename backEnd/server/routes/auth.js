@@ -4,24 +4,15 @@ const bcrypt = require('bcryptjs');
 const crypto = require('node:crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
+const Invitation = require('../models/Invitation');
 const Wallet = require('../models/Wallet');
 const AuthSession = require('../models/AuthSession');
 const { protect } = require('../middleware/authMiddleware');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { issueCsrf, createSession, setSession, revokeSession, clearSession } = require('../utils/sessionSecurity');
+const { validEmail, normalizeEmail } = require('../utils/emailAddress');
 const router = express.Router();
 
-// Accept one mailbox only; never pass address lists/comments to the mail transport.
-const validEmail = value => {
-    if (typeof value !== 'string' || value.trim().length > 254) return false;
-    const parts = value.trim().split('@');
-    if (parts.length !== 2) return false;
-    const [local, domain] = parts;
-    return local.length <= 64 && /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*$/.test(local) &&
-        domain.includes('.') && domain.split('.').every(label =>
-            /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label));
-};
-const normalizeEmail = value => value.trim().toLowerCase();
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
     Buffer.byteLength(value, 'utf8') <= 72;
 const validToken = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
@@ -70,6 +61,9 @@ function failure(res, event, error) {
 }
 
 router.get('/csrf', (req, res) => res.json({ success: true, csrfToken: issueCsrf(req, res) }));
+router.get('/registration', (req, res) => res.json({
+    success: true, inviteOnly: req.app.locals.registrationMode === 'invite'
+}));
 router.get(['/session', '/profile'], protect, (req, res) => {
     res.json({ success: true, user: req.user, csrfToken: issueCsrf(req, res) });
 });
@@ -83,14 +77,29 @@ router.post('/logout', async (req, res) => {
 
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body || {};
+        const { name, email, password, inviteToken } = req.body || {};
         if (typeof name !== 'string' || !name.trim() || name.trim().length > 100 ||
             !validEmail(email) || !validPassword(password)) {
             return res.status(400).json({ success: false,
                 message: 'Tên/email không hợp lệ. Mật khẩu cần ít nhất 12 ký tự và tối đa 72 byte.' });
         }
+        const inviteOnly = req.app.locals.registrationMode === 'invite';
+        if (inviteOnly && (typeof inviteToken !== 'string' || !/^[a-f0-9]{64}$/.test(inviteToken))) {
+            return res.status(403).json({ success: false, message: 'Cần liên kết mời hợp lệ để tạo tài khoản.' });
+        }
         const passwordHash = await bcrypt.hash(password, 12);
         const result = await runWithTransaction(async session => {
+            if (inviteOnly) {
+                const invitation = await Invitation.findOneAndUpdate({
+                    tokenHash: hash(inviteToken), email: normalizeEmail(email),
+                    expiresAt: { $gt: new Date() }, usedAt: null
+                }, { $set: { usedAt: new Date() } }, { session, new: true });
+                if (!invitation) {
+                    const error = new Error('Invalid invitation.');
+                    error.code = 'INVITE_INVALID';
+                    throw error;
+                }
+            }
             const [user] = await User.create([{
                 name: name.trim(), email: normalizeEmail(email), password: passwordHash, emailVerified: false
             }], { session });
@@ -101,7 +110,12 @@ router.post('/register', async (req, res) => {
         });
         return res.status(201).json({ success: true, message: 'Đăng ký thành công!',
             user: publicUser(result.user), csrfToken: setSession(req, res, result.issued) });
-    } catch (error) { return failure(res, 'register_failed', error); }
+    } catch (error) {
+        if (error?.code === 'INVITE_INVALID') {
+            return res.status(403).json({ success: false, message: 'Liên kết mời không hợp lệ hoặc đã hết hạn.' });
+        }
+        return failure(res, 'register_failed', error);
+    }
 });
 
 router.post('/login', async (req, res) => {
@@ -142,6 +156,10 @@ router.post('/verify-email', async (req, res) => {
 
 async function requestEmail(req, res, verification) {
     const generic = { success: true, message: 'Nếu email phù hợp, hệ thống sẽ xử lý yêu cầu gửi liên kết.' };
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS || !process.env.CLIENT_URL) {
+        return res.status(503).json({ success: false,
+            message: 'Chức năng gửi email chưa sẵn sàng. Vui lòng liên hệ chủ ứng dụng.' });
+    }
     try {
         const email = req.body?.email;
         if (!validEmail(email)) return res.json(generic);

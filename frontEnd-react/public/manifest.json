@@ -1,13 +1,23 @@
 {
-    "name": "CaltDHy Quản Lý",
+    "id": "/",
+    "name": "CaltDHy — Quản lý tài chính cá nhân",
     "short_name": "CaltDHy",
-    "start_url": "/index.html",
+    "description": "Theo dõi chi tiêu, ví và kế hoạch tài chính cá nhân.",
+    "lang": "vi",
+    "start_url": "/spending/home",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#000000",
-    "theme_color": "#00ff88",
+    "background_color": "#F7F8FF",
+    "theme_color": "#4F46E5",
     "icons": [
         {
-            "src": "logo.png",
+            "src": "/app-icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/app-icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"

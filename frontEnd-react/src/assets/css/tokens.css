@@ -4,6 +4,8 @@
 :root {
   /* ── Core Color Tokens (v2 Mint Clean Theme Spec) ── */
   --color-brand-700: #008B57;
+  --color-action-contrast-bg: #007547;
+  --color-on-action: #FFFFFF;
   --color-brand-600: #009A5D;
   --color-brand-100: #E6F7EF;
   --color-brand-50: #F1FBF6;
@@ -178,6 +180,7 @@
 /* ── 1. DARK THEME (CaltDHy Dark Technical Panel — Obsidian & Cobalt Accent) ── */
 html.dark-theme {
   --color-brand-700: #2563EB;
+  --color-action-contrast-bg: #2563EB;
   --color-brand-600: #1D4ED8;
   --color-brand-100: rgba(96, 165, 250, 0.18);
   --color-brand-50: rgba(96, 165, 250, 0.09);
@@ -256,6 +259,7 @@ html.dark-theme {
 /* ── 2. LIGHT THEME (Minimalist Modern SaaS — Clean Slate & Indigo / Mint Accent) ── */
 html.light-theme {
   --color-brand-700: #4F46E5;
+  --color-action-contrast-bg: #4F46E5;
   --color-brand-600: #6366F1;
   --color-brand-100: rgba(79, 70, 229, 0.12);
   --color-brand-50: rgba(79, 70, 229, 0.05);
@@ -316,6 +320,7 @@ html.light-theme {
 /* ── 3. CREAM THEME (Warm Parchment / Cozy Paper) ── */
 html.cream-theme {
   --color-brand-700: #C0531E;
+  --color-action-contrast-bg: #C0531E;
   --color-brand-600: #D96024;
   --color-brand-100: #F6E2D5;
   --color-brand-50: #FBF2EB;
@@ -376,6 +381,7 @@ html.cream-theme {
 /* ── 3. GREEN THEME (Forest Emerald / Eco Mint) ── */
 html.green-theme {
   --color-brand-700: #059669;
+  --color-action-contrast-bg: #047857;
   --color-brand-600: #10B981;
   --color-brand-100: #D1FAE5;
   --color-brand-50: #ECFDF5;

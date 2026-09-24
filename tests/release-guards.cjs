@@ -16,6 +16,9 @@ test('release allowlist rejects secrets, dumps, archives and symlink-prone runti
         assert.equal(allowed(name), false, name);
     }
     assert.equal(allowed('backEnd/server/.env.example'), true);
+    assert.equal(allowed('render.yaml'), true);
+    assert.equal(allowed('.node-version'), true);
+    assert.equal(allowed('frontEnd-react/public/manifest.json'), true);
     assert.ok(checkSources().length > 50);
 });
 test('release rejects symlinks and build credentials without printing secret contents', () => {

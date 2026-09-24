@@ -51,6 +51,54 @@ const password = 'Browser-test-1234';
     await page.locator('.confirm-dialog-card button').filter({ hasText: /Đăng xuất/i }).click();
     await page.waitForURL('**/login');
   }
+  await check('PWA manifest and service worker install without caching private API responses', async () => {
+    const manifest = await (await context.request.get('/manifest.json')).json();
+    assert.equal(manifest.display, 'standalone');
+    assert.ok(manifest.icons.some(icon => icon.sizes === '192x192'));
+    assert.ok(manifest.icons.some(icon => icon.sizes === '512x512'));
+    const sw = await context.request.get('/sw.js');
+    assert.equal(sw.status(), 200);
+    await page.goto('/signup');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.evaluate(() => fetch('/api/health'));
+    const cachedPaths = await page.evaluate(async () => {
+      const names = await caches.keys();
+      const entries = await Promise.all(names.map(async name => (await (await caches.open(name)).keys())
+        .map(request => new URL(request.url).pathname)));
+      return entries.flat();
+    });
+    assert.ok(!cachedPaths.some(path => path.startsWith('/api/')));
+  });
+  await check('invite-only signup explains access and accepts only a private link', async () => {
+    app.locals.registrationMode = 'invite';
+    try {
+      await page.goto('/signup');
+      await expect(page.getByText('Đăng ký chỉ dành cho người được mời.')).toBeVisible();
+      await expect(page.locator('#signupForm')).toHaveCount(0);
+      const backgrounds = new Set();
+      for (const theme of ['dark', 'cream', 'green', 'light']) {
+        await page.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+        await page.reload();
+        const notice = page.locator('.signup-invite-message');
+        await expect(notice).toBeVisible();
+        backgrounds.add(await notice.evaluate(element => getComputedStyle(element).backgroundColor));
+      }
+      assert.equal(backgrounds.size, 4, 'Invitation notice must follow every theme');
+      const invitedEmail = crypto.randomUUID() + '@example.test';
+      const token = crypto.randomBytes(32).toString('hex');
+      await backend('./models/Invitation').create({
+        email: invitedEmail,
+        tokenHash: crypto.createHash('sha256').update(token).digest('hex'),
+        expiresAt: new Date(Date.now() + 86400000)
+      });
+      await page.goto('/signup?invite=' + token + '&email=' + encodeURIComponent(invitedEmail));
+      await expect(page.locator('#signupForm')).toBeVisible();
+      await expect(page.locator('#emailIn')).toHaveValue(invitedEmail);
+      await expect(page.locator('#emailIn')).toHaveAttribute('readonly', '');
+    } finally {
+      app.locals.registrationMode = 'open';
+    }
+  });
   await check('register through UI, verified server session, HttpOnly cookies, no stored credentials', async () => {
     await signup(page, 'Account Alpha', emailA);
     const cookies = await context.cookies();

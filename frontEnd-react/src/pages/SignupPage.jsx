@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
+import { authService } from '../services/authService';
 import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
@@ -24,14 +25,31 @@ function getPasswordStrength(pw, t) {
 
 export const SignupPage = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite') || '';
+  const invitedEmail = searchParams.get('email') || '';
+  const validInviteLink = /^[a-f0-9]{64}$/.test(inviteToken);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(invitedEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState('checking');
 
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    authService.registration().then(data => {
+      if (active) setRegistrationStatus(data.inviteOnly === true ? 'invite' : 'open');
+    }).catch(() => {
+      if (active) setRegistrationStatus('error');
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => { if (invitedEmail) setEmail(invitedEmail); }, [invitedEmail]);
 
   const isNameValid = name.trim().length >= 2;
   const isEmailValid = /\S+@\S+\.\S+/.test(email.trim());
@@ -58,7 +76,7 @@ export const SignupPage = () => {
     setIsSubmitting(true);
 
     try {
-      await register(name.trim(), email.trim(), password);
+      await register(name.trim(), email.trim(), password, inviteToken);
       setTimeout(() => {
         navigate('/spending/home');
       }, 300);
@@ -81,7 +99,20 @@ export const SignupPage = () => {
 
       <main>
         <IndustrialPanel eyebrow={t('auth.account')} title={t('auth.createAccount')} titleHighlight="">
+          {registrationStatus === 'checking' && (
+            <p className="signup-invite-message" role="status">{t('auth.registrationChecking')}</p>
+          )}
+          {registrationStatus === 'error' && (
+            <p className="signup-invite-message" role="alert">{t('auth.registrationUnavailable')}</p>
+          )}
+          {registrationStatus === 'invite' && !validInviteLink && (
+            <p className="signup-invite-message" role="status">{t('auth.inviteRequired')}</p>
+          )}
+          {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
           <form id="signupForm" onSubmit={handleSubmit} noValidate>
+            {registrationStatus === 'invite' && (
+              <p className="signup-invite-message">{t('auth.inviteEmail')}</p>
+            )}
             <FloatingInput
               id="fullName"
               type="text"
@@ -102,6 +133,7 @@ export const SignupPage = () => {
               isValid={isEmailValid}
               autoComplete="email"
               required
+              readOnly={registrationStatus === 'invite' && Boolean(invitedEmail)}
             />
 
             <FloatingInput
@@ -141,6 +173,7 @@ export const SignupPage = () => {
               <LockOutlineIcon size={13} /> {t('auth.secureSignupNote')}
             </p>
           </form>
+          )}
 
           <div className="divider">
             <span>{t('auth.or')}</span>

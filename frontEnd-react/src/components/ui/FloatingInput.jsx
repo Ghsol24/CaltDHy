@@ -10,7 +10,8 @@ export const FloatingInput = ({
   onInput,
   isValid = false,
   autoComplete,
-  required = false
+  required = false,
+  readOnly = false
 }) => {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +32,7 @@ export const FloatingInput = ({
             onInput={onInput}
             autoComplete={autoComplete}
             required={required}
+            readOnly={readOnly}
           />
           <label className="flabel" htmlFor={id}>
             {label}
@@ -78,6 +80,7 @@ export const FloatingInput = ({
             onInput={onInput}
             autoComplete={autoComplete}
             required={required}
+            readOnly={readOnly}
           />
           <label className="flabel" htmlFor={id}>
             {label}

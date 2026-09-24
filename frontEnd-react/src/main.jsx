@@ -16,8 +16,11 @@ import './assets/css/auth.css'
 import './assets/css/landing.css'
 import './assets/css/responsive.css'
 import './assets/css/transaction-inspection.css'
+import './assets/css/pwa.css'
 import './assets/css/spa-overrides.css'  // Must be LAST — fixes body conflicts in SPA
 
+// Restore the saved theme on public routes as well as authenticated pages.
+import './stores/useThemeStore'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
