@@ -1,509 +1,240 @@
+'use strict';
 const express = require('express');
-const router = express.Router();
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const nodemailer = require('nodemailer');
 const User = require('../models/User');
-const Budget = require('../models/Budget');
 const Wallet = require('../models/Wallet');
+const AuthSession = require('../models/AuthSession');
 const { protect } = require('../middleware/authMiddleware');
+const { runWithTransaction } = require('../utils/mongoTransaction');
+const { issueCsrf, createSession, setSession, revokeSession, clearSession } = require('../utils/sessionSecurity');
+const router = express.Router();
 
-// ─────────────────────────────────────────────────────────────────
-// Helper: Tạo JWT token
-// Nhúng name + email vào payload để middleware không cần query DB
-// Nhúng pca (passwordChangedAt timestamp) để detect token bị thu hồi
-// ─────────────────────────────────────────────────────────────────
-const createToken = (user) => {
-    const payload = {
-        id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        // pca = passwordChangedAt (ms). Dùng để invalidate token sau khi đổi mật khẩu.
-        pca: user.passwordChangedAt ? user.passwordChangedAt.getTime() : 0
-    };
-    return jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-    });
+// Accept one mailbox only; never pass address lists/comments to the mail transport.
+const validEmail = value => {
+    if (typeof value !== 'string' || value.trim().length > 254) return false;
+    const parts = value.trim().split('@');
+    if (parts.length !== 2) return false;
+    const [local, domain] = parts;
+    return local.length <= 64 && /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*$/.test(local) &&
+        domain.includes('.') && domain.split('.').every(label =>
+            /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label));
 };
+const normalizeEmail = value => value.trim().toLowerCase();
+const validPassword = value => typeof value === 'string' && value.length >= 12 &&
+    Buffer.byteLength(value, 'utf8') <= 72;
+const validToken = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+const avatarPresets = new Set(['💼', '🚀', '⚡', '🎯', '👑', '💎', '🏆', '☕', '🦁', '🦊', '🐱', '🌲', '🍀', '🛸', '🎮', '💻']);
+const hash = value => crypto.createHash('sha256').update(value).digest('hex');
+const publicUser = user => ({
+    id: user._id.toString(), name: user.name, email: user.email,
+    avatar: user.avatar || '', emailVerified: user.emailVerified === true
+});
+const escapeHtml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-// ─────────────────────────────────────────────────────────────────
-// Helper: Thời điểm hiện tại, làm tròn XUỐNG tới giây gần nhất.
-// BẮT BUỘC dùng khi set passwordChangedAt (thay vì `new Date()` trần).
-// Lý do: claim `iat` trong JWT chỉ có độ chính xác GIÂY (chuẩn JWT, bị làm tròn
-// xuống), còn `Date` của JS có độ chính xác mili-giây. Nếu passwordChangedAt giữ
-// nguyên mili-giây, mỗi khi route set passwordChangedAt rồi cấp token mới ngay
-// trong cùng request (đổi tên/email/mật khẩu ở PUT /profile), `iat` của token mới
-// gần như luôn làm tròn xuống THẤP HƠN passwordChangedAt (vì 2 giá trị chỉ cách
-// nhau vài chục mili-giây, cùng nằm trong 1 giây) — khiến authMiddleware.js coi
-// token vừa cấp là "được tạo trước khi đổi mật khẩu" và từ chối ngay lập tức.
-// Làm tròn passwordChangedAt xuống giây khớp với cách iat bị làm tròn, nên token
-// cấp sau đó luôn có iat >= passwordChangedAt (không bao giờ bị tự từ chối oan).
-// ─────────────────────────────────────────────────────────────────
-const secondPrecisionNow = () => new Date(Math.floor(Date.now() / 1000) * 1000);
-
-// Helper: Cấu hình Nodemailer với Gmail
-const createTransporter = () => {
-    return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_PASS
-        }
-    });
-};
-
-// Giới hạn kích thước avatar: 1MB cho Base64 string (≈ 1.37MB raw → ~1MB ảnh)
-// Base64 overhead ≈ 33%, nên 1MB ảnh ≈ 1.37MB string
-const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024; // 1.5MB string limit
-
-const escapeHtml = (value) => String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-function createEmailVerificationToken(user) {
-    const token = crypto.randomBytes(32).toString('hex');
-    user.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
-    user.emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    return token;
+function buildAccountLink(pathname, token, email) {
+    const configured = process.env.CLIENT_URL;
+    if (typeof configured !== 'string' || !/^https?:\/\//.test(configured)) throw new Error('Invalid link configuration.');
+    const base = new URL(configured);
+    const local = ['development', 'test'].includes(process.env.NODE_ENV) &&
+        ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
+    if (base.username || base.password || base.search || base.hash ||
+        (base.protocol !== 'https:' && !(base.protocol === 'http:' && local))) throw new Error('Invalid link configuration.');
+    base.pathname = base.pathname.replace(/\/+$/, '') + '/';
+    const link = new URL(pathname, base);
+    link.searchParams.set('token', token);
+    link.searchParams.set('email', email);
+    return link.toString();
 }
-
-async function sendVerificationEmail(user, token, req) {
-    const clientUrl = (process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-    const verificationUrl = `${clientUrl}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
-    const transporter = createTransporter();
+async function sendLink(user, link, verification) {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) throw new Error('Email unavailable.');
+    const transporter = nodemailer.createTransport({
+        service: 'gmail', logger: false, debug: false,
+        disableFileAccess: true, disableUrlAccess: true,
+        auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS }
+    });
     await transporter.sendMail({
-        from: `"CaltDHy" <${process.env.GMAIL_USER}>`,
-        to: user.email,
-        subject: 'Xác minh địa chỉ email – CaltDHy',
-        html: `<p>Xin chào ${escapeHtml(user.name)},</p>
-          <p>Vui lòng xác minh địa chỉ email để kích hoạt tài khoản CaltDHy của bạn.</p>
-          <p><a href="${verificationUrl}">Xác minh email</a></p>
-          <p>Liên kết hết hạn sau 24 giờ. Nếu bạn không tạo tài khoản này, hãy bỏ qua email.</p>`
+        from: '"CaltDHy" <' + process.env.GMAIL_USER + '>', to: user.email,
+        subject: verification ? 'Xác minh email – CaltDHy' : 'Đặt lại mật khẩu – CaltDHy',
+        html: '<p>Xin chào ' + escapeHtml(user.name) + ',</p><p><a href="' +
+            escapeHtml(link) + '">' + (verification ? 'Xác minh email' : 'Đặt lại mật khẩu') +
+            '</a></p><p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.</p>'
     });
 }
+function failure(res, event, error) {
+    console.error('[auth] ' + event);
+    if (error?.code === 11000) return res.status(409).json({ success: false, message: 'Thông tin tài khoản đã được sử dụng.' });
+    return res.status(500).json({ success: false, message: 'Không thể hoàn thành yêu cầu. Vui lòng thử lại.' });
+}
 
-// =============================================
-// POST /api/auth/register – Đăng ký tài khoản
-// =============================================
+router.get('/csrf', (req, res) => res.json({ success: true, csrfToken: issueCsrf(req, res) }));
+router.get(['/session', '/profile'], protect, (req, res) => {
+    res.json({ success: true, user: req.user, csrfToken: issueCsrf(req, res) });
+});
+router.post('/logout', async (req, res) => {
+    try {
+        await revokeSession(req);
+        clearSession(res);
+        return res.json({ success: true });
+    } catch (error) { return failure(res, 'logout_failed', error); }
+});
+
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-
-        if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin.' });
+        const { name, email, password } = req.body || {};
+        if (typeof name !== 'string' || !name.trim() || name.trim().length > 100 ||
+            !validEmail(email) || !validPassword(password)) {
+            return res.status(400).json({ success: false,
+                message: 'Tên/email không hợp lệ. Mật khẩu cần ít nhất 12 ký tự và tối đa 72 byte.' });
         }
-        if (password.length < 6) {
-            return res.status(400).json({ success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự.' });
-        }
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
-            return res.status(400).json({ success: false, message: 'Email không hợp lệ.' });
-        }
-
-        // Kiểm tra email đã tồn tại chưa
-        const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email này đã được đăng ký. Vui lòng dùng email khác.'
-            });
-        }
-
-        // Hash mật khẩu – truyền rounds trực tiếp (gọn hơn genSalt riêng)
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        // Tạo user mới (Tự động kích hoạt emailVerified: true để tiện test và sử dụng)
-        const newUser = await User.create({
-            name: name.trim(),
-            email: email.toLowerCase().trim(),
-            password: hashedPassword,
-            emailVerified: true
+        const passwordHash = await bcrypt.hash(password, 12);
+        const result = await runWithTransaction(async session => {
+            const [user] = await User.create([{
+                name: name.trim(), email: normalizeEmail(email), password: passwordHash, emailVerified: false
+            }], { session });
+            await Wallet.create([{ userId: user._id, name: 'Tiền mặt', type: 'cash',
+                icon: '💵', initialBalance: 0, isDefault: true }], { session });
+            await revokeSession(req, session);
+            return { user, issued: await createSession(user, session) };
         });
-
-        // Tự động tạo ví tiền mặt mặc định để các giao dịch đầu tiên không bị mồ côi ví
-        await Wallet.create({
-            userId: newUser._id,
-            name: 'Tiền mặt',
-            type: 'cash',
-            icon: '💵',
-            initialBalance: 0,
-            isDefault: true
-        });
-
-        // Tạo một số danh mục ngân sách mặc định để tránh người dùng mới bị ngợp
-        await Budget.insertMany([
-            { userId: newUser._id, category: 'Food & Dining', limit: 3000000 },
-            { userId: newUser._id, category: 'Transportation', limit: 1000000 },
-            { userId: newUser._id, category: 'Housing & Bills', limit: 1500000 },
-            { userId: newUser._id, category: 'Entertainment', limit: 800000 }
-        ]);
-
-        const token = createToken(newUser);
-
-        res.status(201).json({
-            success: true,
-            message: 'Đăng ký thành công!',
-            token,
-            user: {
-                id: newUser._id.toString(),
-                name: newUser.name,
-                email: newUser.email,
-                avatar: newUser.avatar,
-                emailVerified: true
-            }
-        });
-    } catch (error) {
-        console.error('POST /register error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
-    }
+        return res.status(201).json({ success: true, message: 'Đăng ký thành công!',
+            user: publicUser(result.user), csrfToken: setSession(req, res, result.issued) });
+    } catch (error) { return failure(res, 'register_failed', error); }
 });
 
-// =============================================
-// POST /api/auth/login – Đăng nhập
-// =============================================
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Vui lòng nhập email và mật khẩu.'
-            });
+        const { email, password } = req.body || {};
+        if (!validEmail(email) || typeof password !== 'string' || password.length === 0 ||
+            Buffer.byteLength(password, 'utf8') > 72) {
+            return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không hợp lệ.' });
         }
-
-        // Phải select password vì schema ẩn nó trong toJSON
-        const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Email hoặc mật khẩu không đúng.'
-            });
+        const user = await User.findOne({ email: normalizeEmail(email) }).select('+password +authVersion');
+        if (!user || !await bcrypt.compare(password, user.password)) {
+            return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({
-                success: false,
-                message: 'Email hoặc mật khẩu không đúng.'
-            });
-        }
-
-        const token = createToken(user);
-
-        res.json({
-            success: true,
-            message: 'Đăng nhập thành công!',
-            token,
-            user: {
-                id: user._id.toString(),
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar
-            }
+        const issued = await runWithTransaction(async session => {
+            await revokeSession(req, session);
+            return createSession(user, session);
         });
-    } catch (error) {
-        console.error('POST /login error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
-    }
+        return res.json({ success: true, message: 'Đăng nhập thành công!',
+            user: publicUser(user), csrfToken: setSession(req, res, issued) });
+    } catch (error) { return failure(res, 'login_failed', error); }
 });
 
-// =============================================
-// POST /api/auth/verify-email – Kích hoạt email theo token một lần
-// =============================================
 router.post('/verify-email', async (req, res) => {
     try {
-        const { email, token } = req.body;
-        if (!email || !token) {
+        const { email, token } = req.body || {};
+        if (!validEmail(email) || !validToken(token)) {
             return res.status(400).json({ success: false, message: 'Liên kết xác minh không hợp lệ.' });
         }
-
-        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-        const user = await User.findOne({
-            email: email.toLowerCase().trim(),
-            emailVerificationToken: tokenHash,
+        const user = await User.findOneAndUpdate({
+            email: normalizeEmail(email), emailVerificationToken: hash(token),
             emailVerificationExpiry: { $gt: new Date() }
-        }).select('+emailVerificationToken +emailVerificationExpiry');
-
-        if (!user) {
-            return res.status(400).json({ success: false, message: 'Liên kết xác minh không hợp lệ hoặc đã hết hạn.' });
-        }
-
-        user.emailVerified = true;
-        user.emailVerificationToken = undefined;
-        user.emailVerificationExpiry = undefined;
-        await user.save();
-        res.json({ success: true, message: 'Email đã được xác minh. Bạn có thể đăng nhập.' });
-    } catch (error) {
-        console.error('POST /verify-email error:', error);
-        res.status(500).json({ success: false, message: 'Không thể xác minh email. Vui lòng thử lại.' });
-    }
+        }, { $set: { emailVerified: true },
+            $unset: { emailVerificationToken: '', emailVerificationExpiry: '' } });
+        if (!user) return res.status(400).json({ success: false, message: 'Liên kết không hợp lệ hoặc đã hết hạn.' });
+        return res.json({ success: true, message: 'Email đã được xác minh.' });
+    } catch (error) { return failure(res, 'verify_email_failed', error); }
 });
 
-// =============================================
-// POST /api/auth/resend-verification – gửi lại link, không tiết lộ email tồn tại
-// =============================================
-router.post('/resend-verification', async (req, res) => {
+async function requestEmail(req, res, verification) {
+    const generic = { success: true, message: 'Nếu email phù hợp, hệ thống sẽ xử lý yêu cầu gửi liên kết.' };
     try {
-        const email = req.body.email?.toLowerCase().trim();
-        const genericResponse = {
-            success: true,
-            message: 'Nếu email chưa được xác minh, chúng tôi đã gửi liên kết kích hoạt mới.'
-        };
-        if (!email || !/^\S+@\S+\.\S+$/.test(email)) return res.json(genericResponse);
-
-        const user = await User.findOne({ email }).select('+emailVerificationToken +emailVerificationExpiry');
-        if (!user || user.emailVerified) return res.json(genericResponse);
-
-        const token = createEmailVerificationToken(user);
-        await user.save();
-        try {
-            await sendVerificationEmail(user, token, req);
-        } catch (emailError) {
-            console.error('Không thể gửi lại email xác minh:', emailError.message);
+        const email = req.body?.email;
+        if (!validEmail(email)) return res.json(generic);
+        const user = await User.findOne({ email: normalizeEmail(email) });
+        if (!user || (verification && user.emailVerified)) return res.json(generic);
+        const token = crypto.randomBytes(32).toString('hex');
+        const link = buildAccountLink(verification ? 'verify-email' : 'reset-password', token, user.email);
+        const tokenField = verification ? 'emailVerificationToken' : 'resetPasswordToken';
+        const expiryField = verification ? 'emailVerificationExpiry' : 'resetPasswordExpiry';
+        await User.updateOne({ _id: user._id }, { $set: {
+            [tokenField]: hash(token), [expiryField]: new Date(Date.now() + (verification ? 86400000 : 900000))
+        } });
+        try { await sendLink(user, link, verification); } catch {
+            console.error('[auth] email_delivery_failed');
+            await User.updateOne({ _id: user._id, [tokenField]: hash(token) },
+                { $unset: { [tokenField]: '', [expiryField]: '' } });
         }
-        res.json(genericResponse);
-    } catch (error) {
-        console.error('POST /resend-verification error:', error);
-        res.status(500).json({ success: false, message: 'Không thể gửi lại email xác minh. Vui lòng thử lại.' });
-    }
-});
+    } catch { console.error('[auth] email_request_failed'); }
+    return res.json(generic);
+}
+router.post('/resend-verification', (req, res) => requestEmail(req, res, true));
+router.post('/forgot-password', (req, res) => requestEmail(req, res, false));
 
-// =============================================
-// POST /api/auth/forgot-password – Quên mật khẩu
-// =============================================
-router.post('/forgot-password', async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        const user = await User.findOne({ email: email?.toLowerCase().trim() }).select('+resetPasswordToken +resetPasswordExpiry');
-
-        if (!user) {
-            // Không tiết lộ email có tồn tại hay không (bảo mật)
-            return res.json({
-                success: true,
-                message: 'Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.'
-            });
-        }
-
-        // Tạo reset token ngẫu nhiên
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-        user.resetPasswordToken = hashedToken;
-        user.resetPasswordExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 phút
-        await user.save();
-
-        const clientUrl = (process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');
-        const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-
-        console.log(`\n🔑 [RESET PASSWORD] Link đặt lại mật khẩu cho ${email}:\n   ${resetUrl}\n`);
-
-        // Gửi email
-        try {
-            const transporter = createTransporter();
-            const mailOptions = {
-                from: `"CaltDHy" <${process.env.GMAIL_USER}>`,
-                to: email,
-                subject: '🔑 Đặt lại mật khẩu – CaltDHy',
-                html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f0f2f5; padding: 20px; border-radius: 8px;">
-              <div style="background: #FF4B72; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">📅 CaltDHy</h1>
-              </div>
-              <div style="background: white; padding: 30px; border-radius: 0 0 8px 8px;">
-                <h2 style="color: #1c1e21;">Xin chào ${user.name},</h2>
-                <p style="color: #606770; font-size: 15px;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
-                <p style="color: #606770; font-size: 15px;">Nhấn vào nút bên dưới để đặt lại mật khẩu. Link này sẽ hết hạn sau <strong>15 phút</strong>.</p>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${resetUrl}" style="background: #FF4B72; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; display: inline-block;">
-                    Đặt lại mật khẩu
-                  </a>
-                </div>
-                <p style="color: #606770; font-size: 13px;">Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>
-                <hr style="border: none; border-top: 1px solid #e4e6eb; margin: 20px 0;">
-                <p style="color: #8a8d91; font-size: 12px; text-align: center;">© 2024 CaltDHy</p>
-              </div>
-            </div>
-          `
-            };
-
-            await transporter.sendMail(mailOptions);
-            res.json({
-                success: true,
-                message: 'Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư.'
-            });
-        } catch (emailErr) {
-            console.error('⚠️ Lỗi gửi email thực tế:', emailErr.message);
-            res.json({
-                success: true,
-                message: 'Đã tạo yêu cầu đặt lại mật khẩu. Vui lòng kiểm tra terminal/console để lấy link đặt lại mật khẩu (hoặc hộp thư của bạn).'
-            });
-        }
-    } catch (error) {
-        console.error('POST /forgot-password error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
-    }
-});
-
-// =============================================
-// POST /api/auth/reset-password – Đặt lại mật khẩu
-// =============================================
 router.post('/reset-password', async (req, res) => {
     try {
-        const { token, email, newPassword } = req.body;
-
-        if (!token || !email || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Thông tin không đầy đủ.'
-            });
+        const { token, email, newPassword } = req.body || {};
+        if (!validToken(token) || !validEmail(email) || !validPassword(newPassword)) {
+            return res.status(400).json({ success: false, message: 'Thông tin không hợp lệ. Mật khẩu cần 12 ký tự, tối đa 72 byte.' });
         }
-        if (newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'Mật khẩu mới phải có ít nhất 6 ký tự.'
-            });
-        }
-
-        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-        const user = await User.findOne({
-            email: email.toLowerCase().trim(),
-            resetPasswordToken: hashedToken,
-            resetPasswordExpiry: { $gt: new Date() } // Token còn hạn
-        }).select('+password +resetPasswordToken +resetPasswordExpiry');
-
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: 'Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'
-            });
-        }
-
-        // Hash mật khẩu mới
-        user.password = await bcrypt.hash(newPassword, 12);
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpiry = undefined;
-        // Ghi lại thời điểm đổi mật khẩu → vô hiệu hóa các JWT cũ
-        user.passwordChangedAt = secondPrecisionNow();
-        await user.save();
-
-        res.json({
-            success: true,
-            message: 'Mật khẩu đã được đặt lại thành công! Vui lòng đăng nhập lại.'
+        const password = await bcrypt.hash(newPassword, 12);
+        // One atomic consume: concurrent requests cannot both use the same token.
+        const user = await User.findOneAndUpdate({
+            email: normalizeEmail(email), resetPasswordToken: hash(token),
+            resetPasswordExpiry: { $gt: new Date() }
+        }, {
+            $set: { password, passwordChangedAt: new Date() }, $inc: { authVersion: 1 },
+            $unset: { resetPasswordToken: '', resetPasswordExpiry: '' }
         });
-    } catch (error) {
-        console.error('POST /reset-password error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
-    }
+        if (!user) return res.status(400).json({ success: false, message: 'Liên kết không hợp lệ hoặc đã hết hạn.' });
+        return res.json({ success: true, message: 'Đã đặt lại mật khẩu. Vui lòng đăng nhập lại.' });
+    } catch (error) { return failure(res, 'reset_password_failed', error); }
 });
 
-// =============================================
-// PUT /api/auth/profile – Cập nhật tài khoản
-// =============================================
 router.put('/profile', protect, async (req, res) => {
     try {
-        const { name, email, avatar, currentPassword, newPassword } = req.body;
-        const userId = req.user.id;
-
-        // Tìm user trong database
-        const user = await User.findById(userId).select('+password');
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng.' });
+        const { name, email, avatar, currentPassword, newPassword } = req.body || {};
+        if ((name !== undefined && (typeof name !== 'string' || !name.trim() || name.trim().length > 100)) ||
+            (email !== undefined && !validEmail(email)) ||
+            (newPassword !== undefined && newPassword !== '' && !validPassword(newPassword)) ||
+            (avatar !== undefined && (typeof avatar !== 'string' ||
+                (avatar && !avatarPresets.has(avatar) && !/^data:image\/(?:png|jpeg|webp|gif);base64,[a-zA-Z0-9+/]+=*$/.test(avatar))))) {
+            return res.status(400).json({ success: false, message: 'Thông tin tài khoản không hợp lệ.' });
         }
-
-        // 1. Validate và cập nhật mật khẩu (nếu có yêu cầu)
-        if (newPassword) {
-            if (!currentPassword) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Vui lòng nhập mật khẩu hiện tại để đặt mật khẩu mới.'
-                });
-            }
-            if (newPassword.length < 6) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Mật khẩu mới phải có ít nhất 6 ký tự.'
-                });
-            }
-            const isMatch = await bcrypt.compare(currentPassword, user.password);
-            if (!isMatch) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Mật khẩu hiện tại không chính xác.'
-                });
-            }
-            // Hash mật khẩu mới
-            user.password = await bcrypt.hash(newPassword, 12);
-            // Ghi lại thời điểm đổi mật khẩu → vô hiệu hóa các JWT cũ
-            user.passwordChangedAt = secondPrecisionNow();
+        if (avatar && Buffer.byteLength(avatar, 'utf8') > 1.5 * 1024 * 1024) {
+            return res.status(400).json({ success: false, message: 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 1MB.' });
         }
-
-        // 2. Cập nhật email (nếu có yêu cầu thay đổi)
-        if (email && email.toLowerCase().trim() !== user.email) {
-            const trimmedEmail = email.toLowerCase().trim();
-            if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
-                return res.status(400).json({ success: false, message: 'Email không hợp lệ.' });
+        const result = await runWithTransaction(async session => {
+            const user = await User.findById(req.user.id).select('+password +authVersion').session(session);
+            const currentSession = await AuthSession.findById(req.authSession._id).session(session);
+            if (!currentSession || currentSession.expiresAt <= new Date() || !user ||
+                currentSession.authVersion !== (user.authVersion || 0) ||
+                (user.authVersion || 0) !== req.authSession.authVersion) {
+                const error = new Error('Session changed.'); error.status = 401; throw error;
             }
-            // Kiểm tra email đã có người sử dụng chưa
-            const emailExists = await User.findOne({ email: trimmedEmail });
-            if (emailExists) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email này đã được sử dụng bởi tài khoản khác.'
-                });
+            const changedEmail = email !== undefined && normalizeEmail(email) !== user.email;
+            if (newPassword || changedEmail) {
+                if (typeof currentPassword !== 'string' || Buffer.byteLength(currentPassword) > 72 ||
+                    !await bcrypt.compare(currentPassword, user.password)) {
+                    const error = new Error('Current password required.'); error.status = 400; throw error;
+                }
+                user.authVersion = (user.authVersion || 0) + 1;
+                user.passwordChangedAt = new Date();
+                user.resetPasswordToken = undefined;
+                user.resetPasswordExpiry = undefined;
             }
-            user.email = trimmedEmail;
-            user.emailVerified = true;
-            // ⚠️ Bảo mật: đổi email ⇒ vô hiệu hóa toàn bộ JWT token cũ được cấp trước đó
-            user.passwordChangedAt = secondPrecisionNow();
-        }
-
-        // 3. Cập nhật tên hiển thị
-        if (name && name.trim() && name.trim() !== user.name) {
-            user.name = name.trim();
-            // ⚠️ Bảo mật: đổi tên ⇒ vô hiệu hóa toàn bộ JWT token cũ (tên được nhúng trong payload token)
-            user.passwordChangedAt = secondPrecisionNow();
-        }
-
-        // 4. Validate và cập nhật ảnh đại diện (Base64 string)
-        if (avatar !== undefined) {
-            // Server-side: kiểm tra kích thước avatar (tối đa ~1.5MB string)
-            if (avatar && Buffer.byteLength(avatar, 'utf8') > MAX_AVATAR_BYTES) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 1MB.'
-                });
+            if (newPassword) user.password = await bcrypt.hash(newPassword, 12);
+            if (changedEmail) {
+                user.email = normalizeEmail(email); user.emailVerified = false;
+                user.emailVerificationToken = undefined; user.emailVerificationExpiry = undefined;
             }
-            user.avatar = avatar;
-        }
-
-        // Lưu thông tin cập nhật
-        await user.save();
-
-        // Tạo token mới (bao gồm thông tin mới + pca mới)
-        const token = createToken(user);
-
-        res.json({
-            success: true,
-            message: 'Cập nhật tài khoản thành công!',
-            token,
-            user: {
-                id: user._id.toString(),
-                name: user.name,
-                email: user.email,
-                avatar: user.avatar,
-                emailVerified: user.emailVerified
-            }
+            if (name !== undefined) user.name = name.trim();
+            if (avatar !== undefined) user.avatar = avatar;
+            await user.save({ session });
+            currentSession.authVersion = user.authVersion || 0;
+            await currentSession.save({ session });
+            return { user };
         });
+        return res.json({ success: true, message: 'Cập nhật tài khoản thành công!',
+            user: publicUser(result.user), csrfToken: issueCsrf(req, res) });
     } catch (error) {
-        console.error('PUT /profile error:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server. Vui lòng thử lại.' });
+        if ([400, 401].includes(error.status)) return res.status(error.status).json({ success: false,
+            message: error.status === 400 ? 'Cần mật khẩu hiện tại chính xác để đổi email/mật khẩu.' : 'Phiên đăng nhập đã thay đổi.' });
+        return failure(res, 'profile_update_failed', error);
     }
 });
-
 module.exports = router;

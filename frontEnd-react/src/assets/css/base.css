@@ -129,6 +129,29 @@ html, body {
   from { width: 0 !important; }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Universal Button Spinners */
+.spinner,
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 
 /* ============================================================
    TACTILE MECHANICAL CLICK FEEDBACK (OPTION B)
@@ -315,6 +338,40 @@ select:focus:not(:focus-visible) {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+.route-loading,
+.feature-loading {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  color: var(--text-secondary);
+  background: var(--color-canvas, var(--bg));
+  font: 600 14px/1.5 var(--font-sans);
+}
+
+.route-loading {
+  min-height: 100vh;
+}
+
+/* ── Page Skeleton Loading ── */
+.page-skeleton-container {
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  animation: viewFadeIn 200ms ease both;
+}
+
+.page-skeleton-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.page-skeleton-card {
+  min-height: 110px;
+  padding: 20px;
 }
 
 .u-flex-col {

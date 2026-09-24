@@ -1,28 +1,37 @@
 import { create } from 'zustand';
+import { DEFAULT_LOCALE, normalizeLocale, SUPPORTED_LOCALES } from '../i18n/translations';
+import { setActiveFormattingLocale } from '../utils/formatters';
 
 const KEY = 'caltdhy_lang';
-// Tạm thời chỉ hỗ trợ 'vi', 'en' và 'zh' đang trong quá trình cập nhật
-const SUPPORTED = ['vi'];
 
 const getInitialLang = () => {
   try {
     const saved = localStorage.getItem(KEY);
-    if (saved && SUPPORTED.includes(saved)) return saved;
+    if (saved) return normalizeLocale(saved);
+    const browserLocale = navigator.language || '';
+    if (browserLocale.toLowerCase().startsWith('zh')) return 'zh-CN';
+    if (browserLocale.toLowerCase().startsWith('en')) return 'en';
   } catch {
-    // ignore
+    // Browser storage can be unavailable in restricted contexts.
   }
-  return 'vi';
+  return DEFAULT_LOCALE;
 };
 
+const initialLang = getInitialLang();
+setActiveFormattingLocale(initialLang);
+
 export const useLangStore = create((set) => ({
-  lang: getInitialLang(),
-  setLang: (lang) => {
-    if (!SUPPORTED.includes(lang)) return;
+  lang: initialLang,
+  supportedLocales: SUPPORTED_LOCALES,
+  setLang: (value) => {
+    const lang = normalizeLocale(value);
     try {
       localStorage.setItem(KEY, lang);
+      document.documentElement.lang = lang;
     } catch {
-      // ignore
+      // Keep the in-memory preference when persistence is unavailable.
     }
+    setActiveFormattingLocale(lang);
     set({ lang });
   },
 }));

@@ -1,62 +1,215 @@
 #!/bin/bash
-# CaltDHy Native App Launcher for macOS
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$HOME/.nvm/versions/node/$(ls -1 $HOME/.nvm/versions/node 2>/dev/null | tail -n 1)/bin:$HOME/.fnm/current/bin:$HOME/.volta/bin:$PATH"
+set -euo pipefail
+umask 077
 
-if ! command -v node &> /dev/null; then
-    if [ -s "$HOME/.nvm/nvm.sh" ]; then
-        . "$HOME/.nvm/nvm.sh"
-    elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
-        . "/opt/homebrew/opt/nvm/nvm.sh"
-    fi
+# Never source shell profiles or discover/execute NVM initialization scripts.
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+unset NODE_OPTIONS NODE_PATH NODE_REPL_EXTERNAL_MODULE
+unset DYLD_INSERT_LIBRARIES DYLD_LIBRARY_PATH LD_PRELOAD LD_LIBRARY_PATH
+
+fail() {
+    printf 'CaltDHy: %s\n' "$1" >&2
+    /usr/bin/osascript - "$1" <<'APPLESCRIPT' >/dev/null 2>&1 || true
+on run argv
+    display alert "Không thể mở CaltDHy" message (item 1 of argv) as critical
+end run
+APPLESCRIPT
+    exit 1
+}
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd -P)"
+RESOURCES_DIR="$(cd -- "$SCRIPT_DIR/../Resources" && pwd -P)"
+PROJECT_DIR="$(cd -- "$SCRIPT_DIR/../../.." && pwd -P)"
+
+# A packaged app takes precedence; otherwise use the adjacent project tree.
+if [ -d "$RESOURCES_DIR/app" ]; then
+    PROJECT_DIR="$RESOURCES_DIR/app"
 fi
 
-# Determine project root directory dynamically or fallback
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CANDIDATE_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+if [ ! -f "$PROJECT_DIR/backEnd/server/server.js" ] ||
+   [ ! -f "$PROJECT_DIR/backEnd/server/package.json" ]; then
+    fail "Không tìm thấy backend. Hãy dùng bộ phát hành CaltDHy đầy đủ."
+fi
+if [ ! -f "$PROJECT_DIR/frontEnd-react/dist/index.html" ]; then
+    fail "Thiếu bản build giao diện. Hãy chuẩn bị bản build trong bước đóng gói."
+fi
+if [ ! -d "$PROJECT_DIR/backEnd/server/node_modules" ]; then
+    fail "Thiếu dependency backend. Hãy cài dependency trong bước đóng gói."
+fi
 
-if [ -f "$CANDIDATE_DIR/backEnd/server/server.js" ]; then
-    PROJECT_DIR="$CANDIDATE_DIR"
+# Prefer a bundled runtime. An explicit override must be an absolute path.
+if [ -n "${CALTDHY_NODE:-}" ]; then
+    NODE_BIN="$CALTDHY_NODE"
+elif [ -e "$RESOURCES_DIR/node/bin/node" ]; then
+    NODE_BIN="$RESOURCES_DIR/node/bin/node"
+elif [ -x /opt/homebrew/bin/node ]; then
+    NODE_BIN=/opt/homebrew/bin/node
+elif [ -x /usr/local/bin/node ]; then
+    NODE_BIN=/usr/local/bin/node
 else
-    PROJECT_DIR="/Users/ghtude10./Documents/10.gh/proJectLinhTinh/CaltDHy"
+    fail "Thiếu Node.js. Hãy dùng runtime đóng gói hoặc đặt CALTDHY_NODE tới file node."
+fi
+case "$NODE_BIN" in
+    /*) ;;
+    *) fail "CALTDHY_NODE phải là đường dẫn tuyệt đối tới file node." ;;
+esac
+if [ ! -f "$NODE_BIN" ] || [ ! -x "$NODE_BIN" ]; then
+    fail "Runtime Node.js không tồn tại hoặc không có quyền thực thi."
 fi
 
-FRONTEND_DIR="$PROJECT_DIR/frontEnd-react"
-SERVER_DIR="$PROJECT_DIR/backEnd/server"
+exec "$NODE_BIN" - "$PROJECT_DIR" <<'NODE'
+'use strict';
 
-# Auto self-healing: if server node_modules is missing, install dependencies
-if [ ! -d "$SERVER_DIR/node_modules" ]; then
-    cd "$SERVER_DIR" && npm install
-fi
+const path = require('node:path');
+const http = require('node:http');
+const { createRequire } = require('node:module');
+const { spawn, spawnSync } = require('node:child_process');
+const { setTimeout: delay } = require('node:timers/promises');
 
-# Auto build React app if dist is missing
-if [ ! -d "$FRONTEND_DIR/dist" ]; then
-    if [ -d "$FRONTEND_DIR" ]; then
-        cd "$FRONTEND_DIR" && npm run build
-    fi
-fi
+class LauncherError extends Error {}
 
-# Restart server cleanly if already running to pick up the latest code updates
-EXISTING_PID=$(lsof -i:24127 -t 2>/dev/null)
-if [ -n "$EXISTING_PID" ]; then
-    kill -TERM $EXISTING_PID 2>/dev/null
-    sleep 0.5
-    STILL_RUNNING=$(lsof -i:24127 -t 2>/dev/null)
-    if [ -n "$STILL_RUNNING" ]; then
-        kill -9 $STILL_RUNNING 2>/dev/null
-        sleep 0.3
-    fi
-fi
+const serverDir = path.join(process.argv[2], 'backEnd', 'server');
+const port = 24127;
+const appUrl = 'http://localhost:' + port;
+let child;
+let running = false;
+let stopping = false;
 
-# Start server in background
-cd "$SERVER_DIR"
-nohup node server.js >/tmp/caltdhy_server.log 2>&1 &
+function listenerPids() {
+    const result = spawnSync('/usr/sbin/lsof', [
+        '-nP', '-iTCP:' + port, '-sTCP:LISTEN', '-t'
+    ], { encoding: 'utf8', timeout: 2000, maxBuffer: 65536 });
+    if (result.error || (result.status !== 0 && result.status !== 1)) {
+        throw new LauncherError('Không thể kiểm tra cổng ứng dụng một cách an toàn.');
+    }
+    const output = result.stdout.trim();
+    if (!output) return [];
+    const values = output.split(/\s+/);
+    if (values.some(value => !/^[1-9]\d*$/.test(value))) {
+        throw new LauncherError('Không thể xác minh tiến trình đang sử dụng cổng ứng dụng.');
+    }
+    return [...new Set(values.map(Number))];
+}
 
-# Wait for server to bind port
-for i in {1..30}; do
-    if lsof -i:24127 -t >/dev/null 2>&1; then
-        break
-    fi
-    sleep 0.15
-done
+function ownsPort() {
+    const pids = listenerPids();
+    return running && pids.length === 1 && pids[0] === child.pid;
+}
 
-open "http://localhost:24127"
+function readHealth() {
+    return new Promise(resolve => {
+        let settled = false;
+        const finish = value => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(deadline);
+            resolve(value);
+        };
+        const request = http.get({
+            hostname: '127.0.0.1', port, path: '/api/health',
+            agent: false, headers: { Accept: 'application/json' }
+        }, response => {
+            let body = '';
+            response.setEncoding('utf8');
+            response.on('data', chunk => {
+                body += chunk;
+                if (body.length > 16384) {
+                    finish(null);
+                    request.destroy();
+                }
+            });
+            response.on('error', () => finish(null));
+            response.on('end', () => {
+                if (response.statusCode !== 200) return finish(null);
+                try { finish(JSON.parse(body)); } catch { finish(null); }
+            });
+        });
+        const deadline = setTimeout(() => {
+            finish(null);
+            request.destroy();
+        }, 1000);
+        request.on('error', () => finish(null));
+    });
+}
+
+async function fail(message) {
+    if (stopping) return;
+    stopping = true;
+    // Only signal our own child, never a PID obtained by looking up a port.
+    if (child && running) {
+        child.kill('SIGTERM');
+        for (let i = 0; i < 30 && running; i += 1) await delay(100);
+        if (running) child.kill('SIGKILL');
+    }
+    console.error('CaltDHy: ' + message);
+    spawnSync('/usr/bin/osascript', ['-e',
+        'on run argv\n' +
+        'display alert "Không thể mở CaltDHy" message (item 1 of argv) as critical\n' +
+        'end run', message
+    ], { stdio: 'ignore', timeout: 30000 });
+    process.exit(1);
+}
+
+async function main() {
+    if (Number(process.versions.node.split('.')[0]) < 24) {
+        throw new LauncherError('Runtime không đáp ứng yêu cầu Node.js của backend.');
+    }
+    try {
+        const requireServer = createRequire(path.join(serverDir, 'package.json'));
+        const manifest = requireServer('./package.json');
+        for (const dependency of Object.keys(manifest.dependencies || {})) {
+            requireServer.resolve(dependency);
+        }
+    } catch {
+        throw new LauncherError('Dependency backend không đầy đủ. Hãy chuẩn bị lại bộ phát hành.');
+    }
+    if (listenerPids().length !== 0) {
+        throw new LauncherError('Cổng 24127 đang được sử dụng. Hãy đóng phiên đang chạy rồi mở lại ứng dụng.');
+    }
+
+    child = spawn(process.execPath, [path.join(serverDir, 'server.js')], {
+        cwd: serverDir,
+        env: { ...process.env, PORT: String(port), NODE_ENV: 'production' },
+        detached: true,
+        // Do not forward raw server errors or credentials into a launcher log.
+        stdio: 'ignore'
+    });
+    running = true;
+    child.once('error', () => { running = false; });
+    child.once('exit', () => { running = false; });
+
+    const deadline = Date.now() + 30000;
+    while (Date.now() < deadline) {
+        if (stopping) return;
+        if (!running) throw new LauncherError('Backend không khởi động được. Hãy kiểm tra cấu hình ứng dụng.');
+        if (ownsPort()) {
+            const health = await readHealth();
+            if (stopping) return;
+            if (health && health.status === 'OK') {
+                if (health.db !== 'connected') {
+                    throw new LauncherError('Backend chưa kết nối database. Hãy kiểm tra cấu hình trước khi mở lại.');
+                }
+                if (ownsPort()) {
+                    const opened = spawnSync('/usr/bin/open', [appUrl], {
+                        stdio: 'ignore', timeout: 5000
+                    });
+                    if (opened.error || opened.status !== 0) {
+                        throw new LauncherError('Không mở được trình duyệt. Hãy kiểm tra trình duyệt mặc định.');
+                    }
+                    child.unref();
+                    return;
+                }
+            }
+        }
+        await delay(200);
+    }
+    throw new LauncherError('Backend không sẵn sàng sau 30 giây. Hãy kiểm tra cấu hình ứng dụng.');
+}
+
+process.once('SIGINT', () => { void fail('Đã hủy khởi động ứng dụng.'); });
+process.once('SIGTERM', () => { void fail('Đã hủy khởi động ứng dụng.'); });
+void main().catch(error => {
+    return fail(error instanceof LauncherError
+        ? error.message : 'Không thể khởi động ứng dụng. Hãy kiểm tra bộ phát hành.');
+});
+NODE

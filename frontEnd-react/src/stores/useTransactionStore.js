@@ -1,3 +1,4 @@
+import { sessionEpoch, scopedSet, scopedGet } from '../services/sessionRuntime';
 import { create } from 'zustand';
 import { spendingService } from '../services/spendingService';
 import { useSpendingStore } from './useSpendingStore';
@@ -5,59 +6,20 @@ import { useWalletStore } from './useWalletStore';
 import { useToastStore } from './useToastStore';
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
 import { getLocalDateString, getLocalMonthString } from '../utils/formatters';
+import { moneyInteger, MAX_MONEY } from '../utils/moneyPrecision';
 
-const TXN_KEY = 'caltdhy_txns';
-const EXPENSE_CAT_KEY = 'caltdhy_expense_categories';
-const INCOME_CAT_KEY = 'caltdhy_income_categories';
+const getStoredTxns = () => [];
 
-const getStoredTxns = () => {
-  try {
-    const raw = localStorage.getItem(TXN_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
+const saveStoredTxns = () => undefined;
 
-const saveStoredTxns = (txns) => {
-  try {
-    localStorage.setItem(TXN_KEY, JSON.stringify(txns));
-  } catch {}
-};
+const getStoredExpenseCategories = () => DEFAULT_EXPENSE_CATEGORIES;
 
-const getStoredExpenseCategories = () => {
-  try {
-    const raw = localStorage.getItem(EXPENSE_CAT_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-  return DEFAULT_EXPENSE_CATEGORIES;
-};
+const getStoredIncomeCategories = () => DEFAULT_INCOME_CATEGORIES;
 
-const getStoredIncomeCategories = () => {
-  try {
-    const raw = localStorage.getItem(INCOME_CAT_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-  return DEFAULT_INCOME_CATEGORIES;
-};
+const saveStoredExpenseCategories = () => undefined;
 
-const saveStoredExpenseCategories = (cats) => {
-  try {
-    localStorage.setItem(EXPENSE_CAT_KEY, JSON.stringify(cats));
-  } catch {}
-};
-
-const _saveStoredIncomeCategories = (cats) => {
-  try {
-    localStorage.setItem(INCOME_CAT_KEY, JSON.stringify(cats));
-  } catch {}
-};
+const _saveStoredIncomeCategories = () => undefined;
+let latestBudgetRequestId = 0;
 
 const normalizeTxn = (t) => ({
   id: t._id || t.id,
@@ -74,10 +36,14 @@ const normalizeTxn = (t) => ({
   toWalletId: t.toWalletId?._id || t.toWalletId || null,
   fee: Number(t.fee) || 0,
   jarId: t.jarId || null,
-  installmentId: t.installmentId || null
+  installmentId: t.installmentId || null,
+  systemGenerated: Boolean(t.systemGenerated)
 });
 
-export const useTransactionStore = create((set, get) => ({
+export const useTransactionStore = create((storeSet, storeGet) => {
+const set = storeSet;
+const get = storeGet;
+return ({
   transactions: getStoredTxns(),
   budgets: {},
   budgetMonth: null,
@@ -85,6 +51,7 @@ export const useTransactionStore = create((set, get) => ({
   incomeCategories: getStoredIncomeCategories(),
   categories: [],
   isLoading: false,
+  hasLoadedTransactions: false,
   error: null,
   editingTransaction: null,
   filters: {
@@ -93,37 +60,26 @@ export const useTransactionStore = create((set, get) => ({
     search: ''
   },
 
-  setExpenseCategories: (cats) => {
-    saveStoredExpenseCategories(cats);
-    set({ expenseCategories: cats });
-    try {
-      spendingService.updateCategories(cats.map((c) => c.name)).catch(() => {});
-    } catch {}
+  setExpenseCategories: async (cats) => {
+    const epoch = sessionEpoch();
+    await spendingService.updateCategories(cats.map(c => c.name));
+    scopedSet(epoch, storeSet)({ expenseCategories: cats });
   },
 
-  deleteExpenseCategory: (catName) => {
+  deleteExpenseCategory: async (catName) => {
     const updated = get().expenseCategories.filter((c) => c.name !== catName);
-    saveStoredExpenseCategories(updated);
     const updatedBudgets = { ...get().budgets };
     delete updatedBudgets[catName];
-    set({ expenseCategories: updated, budgets: updatedBudgets });
-    try {
-      spendingService.updateBudgets(updatedBudgets);
-      spendingService.updateCategories(updated.map((c) => c.name)).catch(() => {});
-    } catch {}
+    return get().updateBudgetsAndCategories(updatedBudgets, updated);
   },
 
-  addExpenseCategory: (catObj) => {
+  addExpenseCategory: async (catObj) => {
     const exists = get().expenseCategories.some(
       (c) => c.name.toLowerCase() === catObj.name.toLowerCase()
     );
     if (exists) return;
     const updated = [...get().expenseCategories, catObj];
-    saveStoredExpenseCategories(updated);
-    set({ expenseCategories: updated });
-    try {
-      spendingService.updateCategories(updated.map((c) => c.name)).catch(() => {});
-    } catch {}
+    return get().setExpenseCategories(updated);
   },
 
   setFilter: (key, value) => {
@@ -148,13 +104,13 @@ export const useTransactionStore = create((set, get) => ({
     const curMonth = String(now.getMonth() + 1).padStart(2, '0');
     const curPrefix = `${curYear}-${curMonth}`;
 
-    let totalNet = 0;
-    let monthInc = 0;
-    let monthExp = 0;
+    let totalNet = 0n;
+    let monthInc = 0n;
+    let monthExp = 0n;
 
     list.forEach((t) => {
-      const amt = Number(t.amount) || 0;
-      const fee = Number(t.fee) || 0;
+      const amt = moneyInteger(t.amount);
+      const fee = moneyInteger(t.fee ?? 0);
       if (t.type === 'income') {
         totalNet += amt;
         if (t.date && t.date.startsWith(curPrefix)) {
@@ -168,21 +124,25 @@ export const useTransactionStore = create((set, get) => ({
       }
     });
 
+    const displayValue = value => value > MAX_MONEY || value < -MAX_MONEY ? value : Number(value);
     useSpendingStore.getState().setMetrics({
-      balance: totalNet,
-      income: monthInc,
-      expense: monthExp
+      balance: displayValue(totalNet),
+      income: displayValue(monthInc),
+      expense: displayValue(monthExp)
     });
   },
 
   fetchTransactions: async () => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true, error: null });
     try {
       const res = await spendingService.getTransactions();
       if (res.success && Array.isArray(res.data)) {
         const txns = res.data.map(normalizeTxn);
         saveStoredTxns(txns);
-        set({ transactions: txns, isLoading: false });
+        set({ transactions: txns, isLoading: false, hasLoadedTransactions: true });
         get().updateSpendingMetrics(txns);
 
         // Đồng bộ số dư ví
@@ -194,20 +154,14 @@ export const useTransactionStore = create((set, get) => ({
       } else {
         throw new Error(res.message || 'Lỗi lấy dữ liệu giao dịch');
       }
-    } catch (err) {
-      const local = getStoredTxns();
-      set({ transactions: local, isLoading: false, error: err.message });
-      get().updateSpendingMetrics(local);
-
-      const walletStore = useWalletStore.getState();
-      if (walletStore?.syncWalletBalances) {
-        walletStore.syncWalletBalances();
-      }
-      return { success: false, error: err.message, data: local };
-    }
+    } catch (error) { set({ isLoading: false, hasLoadedTransactions: true, error: error.message }); return { success: false, error: error.message }; }
   },
 
   fetchBudgets: async (month = null) => {
+    const requestId = ++latestBudgetRequestId;
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     const targetMonth = (typeof month === 'string' && month.trim())
       ? month.trim()
       : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
@@ -247,17 +201,25 @@ export const useTransactionStore = create((set, get) => ({
           });
         }
 
-        saveStoredExpenseCategories(merged);
-        set({ budgets: budgetMap, budgetMonth: targetMonth, expenseCategories: merged });
+        if (requestId === latestBudgetRequestId && targetMonth === useSpendingStore.getState().selectedMonth) {
+          saveStoredExpenseCategories(merged);
+          set({ budgets: budgetMap, budgetMonth: targetMonth, expenseCategories: merged });
+        }
         return { success: true, data: budgetMap };
       }
-    } catch (err) {
-      console.error('Lỗi tải ngân sách:', err);
+    } catch (error) {
+      if (requestId === latestBudgetRequestId && targetMonth === useSpendingStore.getState().selectedMonth) {
+        set({ isLoading: false, error: error.message });
+      }
+      return { success: false, error: error.message };
     }
     return { success: false };
   },
 
   updateBudgets: async (budgetsObj, month = null) => {
+    latestBudgetRequestId += 1;
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
     const targetMonth = (typeof month === 'string' && month.trim())
       ? month.trim()
       : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
@@ -270,17 +232,13 @@ export const useTransactionStore = create((set, get) => ({
       } else {
         throw new Error(res.message || 'Lỗi cập nhật ngân sách');
       }
-    } catch (err) {
-      set({ isLoading: false });
-      if (err && err.status === 503) {
-        set({ budgets: budgetsObj, budgetMonth: targetMonth });
-        return { success: true, data: budgetsObj, offline: true };
-      }
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   updateBudgetsAndCategories: async (budgetsObj, expenseCats, month = null) => {
+    latestBudgetRequestId += 1;
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
     const targetMonth = (typeof month === 'string' && month.trim())
       ? month.trim()
       : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
@@ -289,10 +247,7 @@ export const useTransactionStore = create((set, get) => ({
       saveStoredExpenseCategories(expenseCats);
     }
     try {
-      await spendingService.updateBudgets(budgetsObj, targetMonth);
-      if (expenseCats && Array.isArray(expenseCats)) {
-        await spendingService.updateCategories(expenseCats.map((c) => c.name));
-      }
+      await spendingService.updateBudgets(budgetsObj, targetMonth, expenseCats?.map(c => c.name));
       set({
         budgets: budgetsObj,
         budgetMonth: targetMonth,
@@ -300,21 +255,13 @@ export const useTransactionStore = create((set, get) => ({
         isLoading: false
       });
       return { success: true, data: budgetsObj };
-    } catch (err) {
-      set({ isLoading: false });
-      if (err && err.status === 503) {
-        set({
-          budgets: budgetsObj,
-          budgetMonth: targetMonth,
-          ...(expenseCats ? { expenseCategories: expenseCats } : {})
-        });
-        return { success: true, data: budgetsObj, offline: true };
-      }
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   addTransaction: async (data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await spendingService.createTransaction(data);
@@ -334,30 +281,13 @@ export const useTransactionStore = create((set, get) => ({
       } else {
         throw new Error(res.message || 'Thêm giao dịch thất bại.');
       }
-    } catch (err) {
-      set({ isLoading: false });
-      // Chỉ offline fallback khi THỰC SỰ mất mạng (status 503 do apiFetch)
-      if (err && err.status === 503) {
-        const newTxn = normalizeTxn({
-          ...data,
-          id: `local_${Date.now()}`
-        });
-        const updated = [newTxn, ...get().transactions];
-        saveStoredTxns(updated);
-        set({ transactions: updated });
-        get().updateSpendingMetrics(updated);
-
-        const walletStore = useWalletStore.getState();
-        if (walletStore?.syncWalletBalances) {
-          walletStore.syncWalletBalances();
-        }
-        return { success: true, data: newTxn, offline: true, error: err.message };
-      }
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   updateTransaction: async (id, data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await spendingService.updateTransaction(id, data);
@@ -376,18 +306,16 @@ export const useTransactionStore = create((set, get) => ({
         walletStore.syncWalletBalances();
       }
       return { success: true, data: updatedTxn };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   deleteTransaction: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
-      if (!String(id).startsWith('local_')) {
-        await spendingService.deleteTransaction(id);
-      }
+      await spendingService.deleteTransaction(id);
       const updated = get().transactions.filter((t) => t.id !== id);
       saveStoredTxns(updated);
       set({ transactions: updated, isLoading: false });
@@ -399,33 +327,12 @@ export const useTransactionStore = create((set, get) => ({
         walletStore.syncWalletBalances();
       }
       return { success: true };
-    } catch (err) {
-      set({ isLoading: false });
-
-      // Chỉ coi là "xóa cục bộ, đồng bộ sau" khi THỰC SỰ mất kết nối (status 503 do
-      // apiFetch gán khi fetch() ném lỗi mạng). Nếu server đã trả lời nhưng từ chối
-      // (400/403/404/500 — ví dụ giao dịch thuộc Hũ/Khoản định kỳ bị chặn ở backend),
-      // TUYỆT ĐỐI không được xóa khỏi state cục bộ rồi báo success — làm vậy sẽ khiến
-      // UI hiển thị "đã xóa" trong khi giao dịch vẫn còn nguyên trong database, gây
-      // lệch dữ liệu ẩn giữa client và server.
-      if (err && err.status === 503) {
-        const updated = get().transactions.filter((t) => t.id !== id);
-        saveStoredTxns(updated);
-        set({ transactions: updated });
-        get().updateSpendingMetrics(updated);
-
-        const walletStore = useWalletStore.getState();
-        if (walletStore?.syncWalletBalances) {
-          walletStore.syncWalletBalances();
-        }
-        return { success: true, offline: true, error: err.message };
-      }
-
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   undoDeleteTransaction: async (txn) => {
+    const epoch = sessionEpoch();
+    const get = scopedGet(epoch, storeGet);
     if (!txn) return;
     const { id: _unusedId, ...dataToRestore } = txn;
     await get().addTransaction(dataToRestore);
@@ -436,6 +343,8 @@ export const useTransactionStore = create((set, get) => ({
   },
 
   undoAddTransaction: async (txnId) => {
+    const epoch = sessionEpoch();
+    const get = scopedGet(epoch, storeGet);
     if (!txnId) return;
     await get().deleteTransaction(txnId);
     useToastStore.getState().addToast({
@@ -445,6 +354,9 @@ export const useTransactionStore = create((set, get) => ({
   },
 
   resetAllFinancialData: async () => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       await spendingService.resetFinancialData();
@@ -461,9 +373,7 @@ export const useTransactionStore = create((set, get) => ({
         walletStore.syncWalletBalances();
       }
       return { success: true };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   }
-}));
+});
+});

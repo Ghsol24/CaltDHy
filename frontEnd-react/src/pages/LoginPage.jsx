@@ -9,8 +9,10 @@ import {
   AlertTriangleOutlineIcon,
   LockOutlineIcon
 } from '../components/ui/AppIcons';
+import { useTranslation } from '../i18n/useTranslation';
 
 export const LoginPage = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const isExpired = searchParams.get('expired') === '1';
 
@@ -30,11 +32,11 @@ export const LoginPage = () => {
     setError('');
 
     if (!isEmailValid) {
-      setError('Vui lòng nhập đúng địa chỉ email (ví dụ: ten@example.com).');
+      setError(t('auth.invalidEmail'));
       return;
     }
     if (!password) {
-      setError('Vui lòng nhập mật khẩu.');
+      setError(t('auth.enterPassword'));
       return;
     }
 
@@ -43,10 +45,10 @@ export const LoginPage = () => {
     try {
       await login(email.trim(), password);
       setTimeout(() => {
-        navigate('/spending');
+        navigate('/spending/home');
       }, 300);
     } catch (err) {
-      setError(err.message || 'Lỗi kết nối server.');
+      setError(err.message || t('auth.connectionError'));
       setIsSubmitting(false);
     }
   };
@@ -60,15 +62,15 @@ export const LoginPage = () => {
       <div className="pg-screw s-bl" aria-hidden="true"></div>
       <div className="pg-screw s-br" aria-hidden="true"></div>
 
-      <StatusBar label="Đăng Nhập An Toàn" />
+      <StatusBar label={t('auth.secureLogin')} />
 
       <main>
-        <IndustrialPanel eyebrow="CaltDHy Account" title="Welcome" titleHighlight="BACK">
+        <IndustrialPanel eyebrow={t('auth.account')} title={t('auth.welcome')} titleHighlight={t('auth.back')}>
           <form id="loginForm" onSubmit={handleSubmit} noValidate>
             <FloatingInput
               id="emailIn"
               type="email"
-              label="Email Address"
+              label={t('auth.email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               isValid={isEmailValid}
@@ -79,7 +81,7 @@ export const LoginPage = () => {
             <FloatingInput
               id="pwIn"
               type="password"
-              label="Password"
+              label={t('auth.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               isValid={isPwValid}
@@ -89,13 +91,13 @@ export const LoginPage = () => {
 
             <div className="forgot-row">
               <Link to="/reset-password" className="forgot-lnk">
-                FORGOT PASSWORD?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
             {isExpired && !error && (
               <div className="form-err show" style={{ background: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.3)', color: '#eab308', display: 'flex', alignItems: 'center', gap: '6px' }} role="status">
-                <ClockOutlineIcon size={14} /> Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.
+                <ClockOutlineIcon size={14} /> {t('error.authExpired')}
               </div>
             )}
 
@@ -107,29 +109,29 @@ export const LoginPage = () => {
 
             <button type="submit" className={`btn-cta ${isSubmitting ? 'loading' : ''}`} disabled={isSubmitting}>
               <span className="spinner" aria-hidden="true"></span>
-              <span className="btn-text">{isSubmitting ? 'Đang đăng nhập...' : 'LOG IN'}</span>
+              <span className="btn-text">{isSubmitting ? t('auth.loggingIn') : t('auth.login')}</span>
             </button>
 
             <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <LockOutlineIcon size={13} /> Thông tin đăng nhập của bạn được mã hoá an toàn.
+              <LockOutlineIcon size={13} /> {t('auth.secureLoginNote')}
             </p>
           </form>
 
           <div className="divider">
-            <span>OR</span>
+            <span>{t('auth.or')}</span>
           </div>
 
           <Link to="/" className="btn-ghost">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            BACK TO HOME
+            {t('auth.backHome')}
           </Link>
 
           <p className="mod-footer">
-            No account yet?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/signup" className="lnk">
-              SIGN UP
+              {t('auth.signup')}
             </Link>
           </p>
         </IndustrialPanel>

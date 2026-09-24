@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000;
   padding: 24px;
   /* Smooth fade using opacity + visibility */
   opacity: 0;
@@ -21,6 +21,23 @@
 .modal-overlay.open {
   opacity: 1;
   visibility: visible;
+}
+
+.archive-wallet-modal {
+  width: min(540px, 100%);
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #E2ECE6);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-lg);
+}
+
+.archive-wallet-modal .modal-body {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .modal-card {
@@ -4225,4 +4242,3 @@ html.green-theme .daily-panel {
   background: rgba(0, 0, 0, .05);
   border-color: rgba(0, 0, 0, .06);
 }
-

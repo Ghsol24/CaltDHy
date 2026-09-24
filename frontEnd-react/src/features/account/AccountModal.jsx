@@ -1,10 +1,20 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useEffectEvent, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useThemeStore } from '../../stores/useThemeStore';
+import { useLangStore } from '../../stores/useLangStore';
+import { useCurrencyStore } from '../../stores/useCurrencyStore';
+import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { formatDate } from '../../utils/formatters';
+import { evaluatePasswordStrength, MIN_PASSWORD_LENGTH } from '../../utils/passwordStrength';
+import { useTranslation } from '../../i18n/useTranslation';
+import { LOCALE_META, SUPPORTED_LOCALES } from '../../i18n/translations';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import {
   CloseOutlineIcon,
   CheckOutlineIcon,
@@ -16,6 +26,56 @@ const AVATAR_PRESETS = [
   '💼', '🚀', '⚡', '🎯', '👑', '💎', '🏆', '☕',
   '🦁', '🦊', '🐱', '🌲', '🍀', '🛸', '🎮', '💻'
 ];
+
+const THEME_OPTIONS = [
+  { id: 'dark', labelKey: 'settings.theme.dark', swatch: 'linear-gradient(135deg, #2563EB 0%, #090A0F 100%)' },
+  { id: 'light', labelKey: 'settings.theme.light', swatch: 'linear-gradient(135deg, #6366F1 0%, #FAFAFB 100%)' },
+  { id: 'cream', labelKey: 'settings.theme.cream', swatch: 'linear-gradient(135deg, #C0531E 0%, #F5EDE0 100%)' },
+  { id: 'green', labelKey: 'settings.theme.green', swatch: 'linear-gradient(135deg, #059669 0%, #EEF8F3 100%)' }
+];
+
+const SETTINGS_GROUPS = [
+  {
+    labelKey: 'settings.account',
+    items: [
+      { id: 'profile', labelKey: 'settings.profile', icon: 'profile' },
+      { id: 'security', labelKey: 'settings.security', icon: 'security' },
+      { id: 'data', labelKey: 'settings.dataPrivacy', icon: 'data' }
+    ]
+  },
+  {
+    labelKey: 'settings.application',
+    items: [
+      { id: 'general', labelKey: 'settings.languageRegion', icon: 'general' },
+      { id: 'appearance', labelKey: 'settings.appearance', icon: 'appearance' }
+    ]
+  },
+  {
+    labelKey: 'settings.support',
+    items: [{ id: 'guide', labelKey: 'settings.guide', icon: 'guide' }]
+  }
+];
+
+const SECTION_TITLE_KEYS = Object.fromEntries(
+  SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => [item.id, item.labelKey]))
+);
+
+function SettingsNavIcon({ type }) {
+  const paths = {
+    profile: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    security: <><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>,
+    data: <><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5v6c0 1.7 4 3 9 3s9-1.3 9-3V5" /><path d="M3 11v6c0 1.7 4 3 9 3s9-1.3 9-3v-6" /></>,
+    general: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" /></>,
+    appearance: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" /></>,
+    guide: <><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z" /><path d="M8 7h8M8 11h8" /></>,
+    logout: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5M21 12H9" /></>
+  };
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {paths[type]}
+    </svg>
+  );
+}
 
 /**
  * Helper nén ảnh client-side qua HTML Canvas
@@ -61,51 +121,53 @@ function compressImage(file) {
 }
 
 /**
- * Đánh giá độ mạnh mật khẩu (Password Strength Meter)
- */
-function evaluatePasswordStrength(pwd) {
-  if (!pwd) return { score: 0, level: 'none', label: '' };
-  let score = 0;
-  if (pwd.length >= 6) score += 1;
-  if (pwd.length >= 10) score += 1;
-  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score += 1;
-  if (/[0-9]/.test(pwd)) score += 1;
-  if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
-
-  if (score <= 2) return { score: 1, level: 'weak', label: 'Yếu' };
-  if (score <= 4) return { score: 2, level: 'fair', label: 'Khá' };
-  return { score: 3, level: 'strong', label: 'Mạnh' };
-}
-
-/**
  * Nhận diện thiết bị và trình duyệt hiện tại
  */
-function detectCurrentDevice() {
+function detectCurrentDevice(t) {
   const ua = navigator.userAgent || '';
-  let os = 'Thiết bị';
+  let os = t('settings.unknownDevice');
   if (ua.includes('Macintosh') || ua.includes('Mac OS')) os = 'macOS';
   else if (ua.includes('Windows')) os = 'Windows';
   else if (ua.includes('Android')) os = 'Android';
   else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
   else if (ua.includes('Linux')) os = 'Linux';
 
-  let browser = 'Trình duyệt';
+  let browser = t('settings.unknownBrowser');
   if (ua.includes('Edg/')) browser = 'Microsoft Edge';
   else if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Google Chrome';
   else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Apple Safari';
   else if (ua.includes('Firefox')) browser = 'Mozilla Firefox';
 
-  return `${browser} trên ${os}`;
+  return t('settings.deviceOn', { browser, os });
 }
 
 export function AccountModal() {
+  const { t, lang } = useTranslation();
   const { user, updateProfile } = useAuthStore();
-  const closeAccountModal = useSpendingStore((s) => s.closeAccountModal);
+  const logout = useAuthStore((state) => state.logout);
+  const settingsSection = useSpendingStore((state) => state.settingsSection);
+  const setSettingsSection = useSpendingStore((state) => state.setSettingsSection);
+  const closeSettingsModal = useSpendingStore((state) => state.closeSettingsModal);
+  const openHelpModal = useSpendingStore((state) => state.openHelpModal);
+  const theme = useThemeStore((state) => state.theme);
+  const setTheme = useThemeStore((state) => state.setTheme);
+  const setLang = useLangStore((state) => state.setLang);
+  const displayCurrency = useCurrencyStore((state) => state.displayCurrency);
+  const setDisplayCurrency = useCurrencyStore((state) => state.setDisplayCurrency);
+  const usdAvailable = useCurrencyStore((state) => state.usdAvailable);
+  const exchangeRate = useCurrencyStore((state) => state.exchangeRate);
+  const confirm = useConfirmStore((state) => state.confirm);
+  const isConfirmOpen = useConfirmStore((state) => state.isOpen);
   const { transactions, budgets, expenseCategories, incomeCategories, resetAllFinancialData } = useTransactionStore();
   const { wallets } = useWalletStore();
   const { jars, installments } = useJarStore();
+  const isMobile = useIsMobile(720);
+  const navigate = useNavigate();
+  const dialogRef = useRef(null);
+  const resetDialogRef = useRef(null);
 
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'security' | 'data'
+  const activeTab = settingsSection || 'general';
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Tab 1: Profile states
   const [name, setName] = useState(user?.name || '');
@@ -132,6 +194,8 @@ export function AccountModal() {
   const [resetConfirmInput, setResetConfirmInput] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState('');
+  useFocusTrap(dialogRef, !isConfirmOpen && !isResetDialogOpen);
+  useFocusTrap(resetDialogRef, isResetDialogOpen);
 
   // Sync state khi user thay đổi từ store
   useEffect(() => {
@@ -142,21 +206,6 @@ export function AccountModal() {
     }
   }, [user]);
 
-  // Đóng modal khi bấm Escape (trừ khi đang mở dialog reset)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (isResetDialogOpen) {
-          setIsResetDialogOpen(false);
-        } else {
-          closeAccountModal();
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isResetDialogOpen, closeAccountModal]);
-
   // Dirty state tracking cho tab Profile
   const isProfileDirty = useMemo(() => {
     const origName = user?.name || '';
@@ -164,6 +213,100 @@ export function AccountModal() {
     const origAvatar = user?.avatar || '';
     return name.trim() !== origName.trim() || email.trim() !== origEmail.trim() || avatar !== origAvatar;
   }, [user, name, email, avatar]);
+
+  const isSecurityDirty = Boolean(currentPassword || newPassword || confirmPassword);
+
+  const discardProfileChanges = () => {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+    setAvatar(user?.avatar || '');
+    setCurrentPassword('');
+    setProfileMsg({ type: '', text: '' });
+    setShowPresetPicker(false);
+  };
+
+  const discardSecurityChanges = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPwdMsg({ type: '', text: '' });
+    setShowCurrentPwd(false);
+    setShowNewPwd(false);
+    setShowConfirmPwd(false);
+  };
+
+  const confirmDiscardChanges = async () => {
+    if (!isProfileDirty && !isSecurityDirty) return true;
+    const shouldDiscard = await confirm({
+      title: 'Bỏ thay đổi chưa lưu?',
+      message: 'Thông tin bạn vừa nhập trong Trung tâm cài đặt chưa được lưu.',
+      confirmText: 'Bỏ thay đổi',
+      cancelText: 'Tiếp tục chỉnh sửa',
+      confirmVariant: 'danger'
+    });
+    if (shouldDiscard) {
+      discardProfileChanges();
+      discardSecurityChanges();
+    }
+    return shouldDiscard;
+  };
+
+  const requestCloseSettings = async () => {
+    if (!(await confirmDiscardChanges())) return;
+    closeSettingsModal();
+  };
+
+  const handleSelectSection = async (section) => {
+    if (section === activeTab) {
+      setShowMobileMenu(false);
+      return;
+    }
+    if (!(await confirmDiscardChanges())) return;
+    setSettingsSection(section);
+    setShowMobileMenu(false);
+  };
+
+  const handleLogout = async () => {
+    if (!(await confirmDiscardChanges())) return;
+    const confirmed = await confirm({
+      title: 'Đăng xuất tài khoản',
+      message: 'Bạn có chắc chắn muốn đăng xuất khỏi phiên làm việc hiện tại không?',
+      confirmText: 'Đăng xuất',
+      cancelText: 'Hủy',
+      confirmVariant: 'danger'
+    });
+    if (!confirmed) return;
+    closeSettingsModal();
+    await logout();
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  // The Effect Event sees current draft/reset state without rebinding the listener.
+  const handleEscape = useEffectEvent(() => {
+    if (useConfirmStore.getState().isOpen) return;
+    if (isResetDialogOpen) setIsResetDialogOpen(false);
+    else void requestCloseSettings();
+  });
+
+  // Escape closes the nested reset dialog first, then the unified Settings Center.
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape') return;
+      if (useConfirmStore.getState().isOpen) return;
+      event.preventDefault();
+      handleEscape();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Password strength
   const pwdStrength = useMemo(() => evaluatePasswordStrength(newPassword), [newPassword]);
@@ -217,8 +360,10 @@ export function AccountModal() {
       await updateProfile({
         name: name.trim(),
         email: email.trim(),
+        ...(email.trim().toLowerCase() !== user?.email ? { currentPassword } : {}),
         avatar: avatar
       });
+      setCurrentPassword('');
       setProfileMsg({ type: 'success', text: 'Hồ sơ đã được lưu thành công!' });
       setTimeout(() => setProfileMsg({ type: '', text: '' }), 4000);
     } catch (err) {
@@ -230,11 +375,7 @@ export function AccountModal() {
 
   // Hủy thay đổi hồ sơ
   const handleCancelProfile = () => {
-    setName(user?.name || '');
-    setEmail(user?.email || '');
-    setAvatar(user?.avatar || '');
-    setProfileMsg({ type: '', text: '' });
-    setShowPresetPicker(false);
+    discardProfileChanges();
   };
 
   // Đổi mật khẩu
@@ -244,8 +385,8 @@ export function AccountModal() {
       setPwdMsg({ type: 'error', text: 'Vui lòng nhập mật khẩu hiện tại.' });
       return;
     }
-    if (newPassword.length < 6) {
-      setPwdMsg({ type: 'error', text: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setPwdMsg({ type: 'error', text: 'Mật khẩu mới phải có ít nhất 12 ký tự.' });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -326,7 +467,7 @@ export function AccountModal() {
       await resetAllFinancialData();
       setIsResetDialogOpen(false);
       setResetConfirmInput('');
-      closeAccountModal();
+      closeSettingsModal();
     } catch (err) {
       setResetError(err.message || 'Không thể đặt lại dữ liệu. Vui lòng thử lại.');
     } finally {
@@ -337,77 +478,106 @@ export function AccountModal() {
   return (
     <>
       <div
-        className="account-modal-overlay"
+        className="account-modal-overlay settings-center-overlay"
         onClick={(e) => {
           if (e.target === e.currentTarget && !isResetDialogOpen) {
-            closeAccountModal();
+            void requestCloseSettings();
           }
         }}
         role="presentation"
       >
         <div
-          className="account-modal-card"
+          ref={dialogRef}
+          className="account-modal-card settings-center-dialog"
           role="dialog"
           aria-modal="true"
-          aria-label="Quản lý tài khoản"
+          aria-labelledby="settings-center-title"
         >
-          {/* ── Fixed Header ── */}
-          <div className="account-modal-header">
+          <header className="account-modal-header settings-center-header">
             <div className="account-header-lead">
+              {isMobile && !showMobileMenu && (
+                <button
+                  type="button"
+                  className="settings-mobile-back"
+                  onClick={() => setShowMobileMenu(true)}
+                  aria-label="Quay lại danh sách cài đặt"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+              )}
               <div className="account-header-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.15.38.4.73.73 1 .3.25.7.4 1.1.4H21v4h-.1a1.7 1.7 0 0 0-1.5.6Z" />
                 </svg>
               </div>
               <div className="account-header-titles">
-                <h2 className="account-header-title">Quản lý tài khoản</h2>
-                <p className="account-header-desc">Quản lý thông tin hiển thị, bảo mật và dữ liệu</p>
+                <h2 id="settings-center-title" className="account-header-title">
+                  {isMobile && !showMobileMenu ? t(SECTION_TITLE_KEYS[activeTab]) : t('settings.title')}
+                </h2>
+                <p className="account-header-desc">
+                  {isMobile && showMobileMenu ? 'Tài khoản và tùy chỉnh ứng dụng' : 'Quản lý tài khoản và trải nghiệm CaltDHy'}
+                </p>
               </div>
             </div>
             <button
               type="button"
               className="account-modal-close-btn"
-              onClick={closeAccountModal}
-              aria-label="Đóng quản lý tài khoản"
+              onClick={() => void requestCloseSettings()}
+              aria-label="Đóng trung tâm cài đặt"
             >
               <CloseOutlineIcon size={18} />
             </button>
-          </div>
+          </header>
 
-          {/* ── Fixed Navigation Tabs ── */}
-          <nav className="account-nav-tabs" role="tablist" aria-label="Các mục tài khoản">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'profile'}
-              className={`account-tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveTab('profile')}
-            >
-              Hồ sơ
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'security'}
-              className={`account-tab-btn ${activeTab === 'security' ? 'active' : ''}`}
-              onClick={() => setActiveTab('security')}
-            >
-              Bảo mật
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'data'}
-              className={`account-tab-btn ${activeTab === 'data' ? 'active' : ''}`}
-              onClick={() => setActiveTab('data')}
-            >
-              Dữ liệu & riêng tư
-            </button>
-          </nav>
+          <div className={`settings-center-layout ${showMobileMenu ? 'show-mobile-menu' : ''}`}>
+            <aside className="settings-center-sidebar" aria-label="Điều hướng cài đặt">
+              <div className="settings-user-summary">
+                <div className="settings-user-avatar" aria-hidden="true">
+                  {user?.avatar ? (
+                    user.avatar.startsWith('data:image') || user.avatar.startsWith('http')
+                      ? <img src={user.avatar} alt="" />
+                      : <span>{user.avatar}</span>
+                  ) : <span>{userInitials}</span>}
+                </div>
+                <div>
+                  <strong>{user?.name || 'Người dùng'}</strong>
+                  <span>{user?.email || ''}</span>
+                </div>
+              </div>
 
-          {/* ── Scrollable Body ── */}
-          <div className="account-modal-body">
+              <nav className="settings-center-nav">
+                {SETTINGS_GROUPS.map((group) => (
+                  <div className="settings-nav-group" key={group.labelKey}>
+                    <p>{t(group.labelKey)}</p>
+                    {group.items.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`settings-nav-item ${activeTab === item.id ? 'active' : ''}`}
+                        aria-current={activeTab === item.id ? 'page' : undefined}
+                        onClick={() => void handleSelectSection(item.id)}
+                      >
+                        <SettingsNavIcon type={item.icon} />
+                        <span>{t(item.labelKey)}</span>
+                        <span className="settings-nav-chevron" aria-hidden="true">›</span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </nav>
+
+              <div className="settings-sidebar-footer">
+                <button type="button" className="settings-nav-item settings-nav-logout" onClick={() => void handleLogout()}>
+                  <SettingsNavIcon type="logout" />
+                  <span>{t('settings.logout')}</span>
+                </button>
+              </div>
+            </aside>
+
+            <main className="account-modal-body settings-center-content" aria-live="polite">
             {/* ── TAB 1: HỒ SƠ ── */}
             {activeTab === 'profile' && (
               <form onSubmit={handleSaveProfile} className="account-tab-pane">
@@ -511,7 +681,7 @@ export function AccountModal() {
                   <label htmlFor="acc-email" className="account-label">
                     <span>Địa chỉ Email</span>
                     <span className="account-verified-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <CheckOutlineIcon size={12} /> Đã xác minh
+                      {user?.emailVerified ? <><CheckOutlineIcon size={12} /> Đã xác minh</> : 'Chưa xác minh'}
                     </span>
                   </label>
                   <div className="account-input-box">
@@ -527,6 +697,16 @@ export function AccountModal() {
                   </div>
                 </div>
 
+                {email.trim().toLowerCase() !== user?.email && (
+                  <div className="account-form-group">
+                    <label htmlFor="acc-email-password" className="account-label">Mật khẩu hiện tại để đổi email</label>
+                    <div className="account-input-box">
+                      <input id="acc-email-password" className="account-input" type="password"
+                        autoComplete="current-password" value={currentPassword}
+                        onChange={event => setCurrentPassword(event.target.value)} required />
+                    </div>
+                  </div>
+                )}
                 {/* Inline Message */}
                 {profileMsg.text && (
                   <div className={`account-feedback-msg ${profileMsg.type}`}>
@@ -570,16 +750,18 @@ export function AccountModal() {
                       Đổi mật khẩu
                     </span>
                     <span style={{ fontSize: '12px', color: 'var(--text-muted, #7E9287)' }}>
-                      Mật khẩu cần ít nhất 6 ký tự để bảo vệ tài khoản an toàn
+                      Mật khẩu cần ít nhất 12 ký tự để bảo vệ tài khoản an toàn
                     </span>
                   </div>
 
                   <div className="account-form-group">
-                    <label className="account-label">Mật khẩu hiện tại</label>
+                    <label htmlFor="acc-current-password" className="account-label">Mật khẩu hiện tại</label>
                     <div className="account-input-box">
                       <input
+                        id="acc-current-password"
                         className="account-input has-toggle"
                         type={showCurrentPwd ? 'text' : 'password'}
+                        autoComplete="current-password"
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="••••••••••••"
@@ -596,11 +778,13 @@ export function AccountModal() {
                   </div>
 
                   <div className="account-form-group">
-                    <label className="account-label">Mật khẩu mới</label>
+                    <label htmlFor="acc-new-password" className="account-label">Mật khẩu mới</label>
                     <div className="account-input-box">
                       <input
+                        id="acc-new-password"
                         className="account-input has-toggle"
                         type={showNewPwd ? 'text' : 'password'}
+                        autoComplete="new-password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••••••"
@@ -624,18 +808,20 @@ export function AccountModal() {
                           <div className={`account-strength-seg ${pwdStrength.score >= 3 ? pwdStrength.level : ''}`} />
                         </div>
                         <span className={`account-strength-text ${pwdStrength.level}`}>
-                          {pwdStrength.label}
+                          {t(`account.passwordStrength.${pwdStrength.level}`)}
                         </span>
                       </div>
                     )}
                   </div>
 
                   <div className="account-form-group">
-                    <label className="account-label">Xác nhận mật khẩu mới</label>
+                    <label htmlFor="acc-confirm-password" className="account-label">Xác nhận mật khẩu mới</label>
                     <div className="account-input-box">
                       <input
+                        id="acc-confirm-password"
                         className="account-input has-toggle"
                         type={showConfirmPwd ? 'text' : 'password'}
+                        autoComplete="new-password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••••••"
@@ -673,7 +859,7 @@ export function AccountModal() {
                   <div className="account-card-panel-row">
                     <div>
                       <div className="account-panel-label">Phiên đăng nhập hiện tại</div>
-                      <div className="account-panel-val" style={{ marginTop: 2 }}>{detectCurrentDevice()}</div>
+                      <div className="account-panel-val" style={{ marginTop: 2 }}>{detectCurrentDevice(t)}</div>
                     </div>
                     <span className="account-session-badge">Đang hoạt động</span>
                   </div>
@@ -771,6 +957,120 @@ export function AccountModal() {
                 </div>
               </div>
             )}
+
+            {activeTab === 'general' && (
+              <div className="account-tab-pane">
+                <div className="account-tab-intro">
+                  <h3 className="account-tab-intro-title">{t('settings.languageRegion')}</h3>
+                  <p className="account-tab-intro-sub">{t('settings.localeIntro')}</p>
+                </div>
+
+                <div className="settings-preference-list">
+                  <div className="settings-preference-row">
+                    <div>
+                      <strong>{t('settings.language')}</strong>
+                      <span>{t('settings.interfaceLanguage')}</span>
+                    </div>
+                    <div className="settings-segmented-control" role="group" aria-label={t('settings.language')}>
+                      {SUPPORTED_LOCALES.map((locale) => (
+                        <button key={locale} type="button" className={lang === locale ? 'active' : ''}
+                          aria-pressed={lang === locale} onClick={() => setLang(locale)}>
+                          {LOCALE_META[locale].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="settings-preference-row">
+                    <div>
+                      <strong>{t('settings.displayCurrency')}</strong>
+                      <span>{t('settings.displayCurrencyHint')}</span>
+                    </div>
+                    <div className="settings-segmented-control" role="group" aria-label={t('settings.displayCurrency')}>
+                      {['VND', 'USD'].map((currency) => (
+                        <button key={currency} type="button" className={displayCurrency === currency ? 'active' : ''}
+                          aria-pressed={displayCurrency === currency} disabled={currency === 'USD' && !usdAvailable}
+                          aria-describedby={currency === 'USD' && !usdAvailable ? 'usd-rate-unavailable' : undefined}
+                          onClick={() => setDisplayCurrency(currency)}>{currency}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="settings-preference-row">
+                    <div>
+                      <strong>{t('settings.timeZone')}</strong>
+                      <span>{t('settings.timeZoneHint')}</span>
+                    </div>
+                    <span className="settings-readonly-value">{Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Ho_Chi_Minh'}</span>
+                  </div>
+                </div>
+
+                {!usdAvailable ? (
+                  <div id="usd-rate-unavailable" className="settings-info-note" role="note">{t('settings.usdUnavailable')}</div>
+                ) : (
+                  <div className="settings-info-note" role="note">
+                    {t('settings.exchangeRate', { rate: exchangeRate.vndPerUsd })}<br />
+                    {t('settings.exchangeRateMeta', { source: exchangeRate.source, asOf: formatDate(exchangeRate.asOf, 'short', { locale: lang }) })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'appearance' && (
+              <div className="account-tab-pane">
+                <div className="account-tab-intro">
+                  <h3 className="account-tab-intro-title">{t('settings.appearance')}</h3>
+                  <p className="account-tab-intro-sub">Chọn chủ đề màu phù hợp; thay đổi được áp dụng ngay lập tức</p>
+                </div>
+                <div className="theme-grid settings-theme-grid" role="group" aria-label="Chọn giao diện">
+                  {THEME_OPTIONS.map((option) => {
+                    const isActive = theme === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className="theme-card"
+                        aria-pressed={isActive}
+                        aria-label={`${t('settings.appearance')} ${t(option.labelKey)}`}
+                        onClick={() => setTheme(option.id)}
+                      >
+                        <span className="theme-card__swatch" style={{ background: option.swatch }} />
+                        <span className="theme-card__name">{t(option.labelKey)}</span>
+                        <svg className="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                          <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'guide' && (
+              <div className="account-tab-pane">
+                <div className="account-tab-intro">
+                  <h3 className="account-tab-intro-title">Hướng dẫn sử dụng</h3>
+                  <p className="account-tab-intro-sub">Xem lại cách sử dụng các khu vực chính của CaltDHy</p>
+                </div>
+                <div className="settings-guide-card">
+                  <SettingsNavIcon type="guide" />
+                  <div>
+                    <strong>Hướng dẫn CaltDHy</strong>
+                    <span>Tổng quan Trang chủ, Kế hoạch, Phân tích và Hũ chi tiêu.</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-account-save"
+                    onClick={() => {
+                      closeSettingsModal();
+                      openHelpModal();
+                    }}
+                  >
+                    Mở hướng dẫn
+                  </button>
+                </div>
+              </div>
+            )}
+            </main>
           </div>
         </div>
       </div>
@@ -779,6 +1079,7 @@ export function AccountModal() {
       {isResetDialogOpen && (
         <div className="account-reset-dialog-overlay" role="presentation">
           <div
+            ref={resetDialogRef}
             className="account-reset-dialog"
             role="alertdialog"
             aria-modal="true"

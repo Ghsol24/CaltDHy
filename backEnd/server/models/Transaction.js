@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
  */
 const transactionSchema = new mongoose.Schema(
     {
+        systemGenerated: { type: Boolean, default: false },
+        period: { type: String, default: undefined },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -92,5 +94,12 @@ const transactionSchema = new mongoose.Schema(
 // Index để tìm nhanh các giao dịch của user
 transactionSchema.index({ userId: 1, date: 1 });
 transactionSchema.index({ userId: 1, walletId: 1 });
+transactionSchema.index({ userId: 1, installmentId: 1, period: 1 }, {
+    unique: true, partialFilterExpression: { period: { $type: 'string' } }
+});
+transactionSchema.pre('validate', function () {
+    if (this.jarId || this.installmentId) this.systemGenerated = true;
+});
+for (const field of ['amount', 'fee']) transactionSchema.path(field).validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
 
 module.exports = mongoose.model('Transaction', transactionSchema);

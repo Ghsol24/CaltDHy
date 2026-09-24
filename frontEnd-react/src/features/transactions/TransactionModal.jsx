@@ -6,17 +6,18 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
 import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
-import { formatCurrency, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, formatInputNumber, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const EMPTY_EXPENSE_CATS = [];
 
 export function TransactionModal() {
+  const { t, label, intlLocale } = useTranslation();
   const isAddTxnOpen = useSpendingStore((s) => s.isAddTxnOpen);
   const addTxnInitialState = useSpendingStore((s) => s.addTxnInitialState);
   const closeAddTxnModal = useSpendingStore((s) => s.closeAddTxnModal);
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
-  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
 
   const addTransaction = useTransactionStore((s) => s.addTransaction);
   const updateTransaction = useTransactionStore((s) => s.updateTransaction);
@@ -105,9 +106,9 @@ export function TransactionModal() {
           }
         }
 
-        let statusLabel = `Còn lại ${percent}%`;
+        let statusLabel = t('transaction.limitLeft', { percent });
         if (remaining <= 0) {
-          statusLabel = 'Hết hạn mức';
+          statusLabel = t('transaction.limitReached');
         }
 
         metrics[cat.name] = {
@@ -129,12 +130,12 @@ export function TransactionModal() {
           rawRemaining: 0,
           percent: 0,
           color: 'rgba(255, 255, 255, 0.15)',
-          statusLabel: 'Chưa đặt hạn mức'
+          statusLabel: t('transaction.limitUnset')
         };
       }
     });
     return metrics;
-  }, [type, date, transactions, budgets, activeExpenseCats]);
+  }, [type, date, transactions, budgets, activeExpenseCats, t]);
 
   // Sắp xếp danh mục: Ưu tiên có hạn mức trước, sau đó là chưa đặt hạn mức (giữ nguyên trật tự cấu hình)
   const sortedCategories = useMemo(() => {
@@ -167,7 +168,7 @@ export function TransactionModal() {
         setType(editingTransaction.type || 'expense');
         setAmount(
           editingTransaction.amount
-            ? Number(editingTransaction.amount).toLocaleString('vi-VN')
+            ? formatInputNumber(editingTransaction.amount)
             : ''
         );
         setCategory(editingTransaction.category || '');
@@ -188,7 +189,7 @@ export function TransactionModal() {
         setType(targetType);
         setAmount(
           addTxnInitialState?.amount
-            ? Number(addTxnInitialState.amount).toLocaleString('vi-VN')
+            ? formatInputNumber(addTxnInitialState.amount)
             : ''
         );
         const initialCats =
@@ -285,7 +286,7 @@ export function TransactionModal() {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setAmount(num ? num.toLocaleString('vi-VN') : '');
+    setAmount(num ? formatInputNumber(num) : '');
     if (num > 0) {
       setAmountError('');
       setErrorMsg('');
@@ -301,13 +302,13 @@ export function TransactionModal() {
     const numAmount = parseInt(cleanAmountStr, 10);
 
     if (!numAmount || numAmount <= 0) {
-      setAmountError('Số tiền phải lớn hơn 0');
+      setAmountError(t('transaction.amountPositive'));
       amountInputRef.current?.focus();
       return;
     }
 
     if (!category) {
-      setErrorMsg('Vui lòng chọn danh mục.');
+      setErrorMsg(t('transaction.chooseCategory'));
       return;
     }
 
@@ -336,7 +337,7 @@ export function TransactionModal() {
           close();
           addToast({
             type: 'success',
-            message: `Đã cập nhật giao dịch ${category} (${formatCurrency(numAmount)}).`,
+            message: t('transaction.updated', { category: label(category), amount: formatCurrency(numAmount) }),
             duration: 4000
           });
         }
@@ -348,10 +349,10 @@ export function TransactionModal() {
           close();
           addToast({
             type: 'success',
-            message: `Đã ghi ${type === 'income' ? 'thu nhập' : 'chi tiêu'} ${formatCurrency(numAmount)} vào ${category}.`,
+            message: t('transaction.saved', { type: t(`type.${type}`).toLocaleLowerCase(intlLocale), amount: formatCurrency(numAmount), category: label(category) }),
             action: createdTxn?.id
               ? {
-                  label: 'Hoàn tác',
+                  label: t('transaction.undo'),
                   onClick: () => {
                     undoAddTransaction(createdTxn.id);
                   }
@@ -363,7 +364,7 @@ export function TransactionModal() {
       }
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Lỗi xử lý giao dịch. Vui lòng thử lại.');
+      setErrorMsg(err.message || t('transaction.error'));
     }
   };
 
@@ -389,18 +390,18 @@ export function TransactionModal() {
         <div className="txn-modal-header">
           <h2 id="txn-modal-title" className="txn-modal-title">
             {isEditing
-              ? 'Chỉnh sửa giao dịch'
+              ? t('transaction.edit')
               : addTxnInitialState?.title && type === addTxnInitialState?.type
                 ? addTxnInitialState.title
                 : type === 'income'
-                  ? 'Nạp tiền / Thêm thu nhập'
-                  : 'Thêm giao dịch mới'}
+                  ? t('transaction.addIncome')
+                  : t('transaction.add')}
           </h2>
           <button
             type="button"
             className="txn-modal-close-btn"
             onClick={close}
-            aria-label="Đóng cửa sổ"
+            aria-label={t('common.closeWindow')}
           >
             <svg
               width="18"
@@ -423,7 +424,7 @@ export function TransactionModal() {
         <form onSubmit={handleSubmit} noValidate>
           <div className="txn-modal-body">
             {/* 1. Type toggle */}
-            <div className="txn-type-toggle" role="group" aria-label="Loại giao dịch">
+            <div className="txn-type-toggle" role="group" aria-label={t('transaction.type')}>
               <button
                 type="button"
                 className={`txn-type-btn txn-type-btn--expense ${type === 'expense' ? 'active' : ''}`}
@@ -431,7 +432,7 @@ export function TransactionModal() {
                 aria-pressed={type === 'expense'}
               >
                 <ArrowUpRightOutlineIcon size={16} />
-                <span>Chi tiêu</span>
+                <span>{t('type.expense')}</span>
               </button>
               <button
                 type="button"
@@ -440,14 +441,14 @@ export function TransactionModal() {
                 aria-pressed={type === 'income'}
               >
                 <ArrowDownLeftOutlineIcon size={16} />
-                <span>Thu nhập</span>
+                <span>{t('type.income')}</span>
               </button>
             </div>
 
             {/* 2. Amount field */}
             <div className="txn-field-group">
               <label htmlFor="txn-amount-input" className="txn-label">
-                <span>Số tiền</span>
+                <span>{t('transaction.amount')}</span>
               </label>
               <div className={`txn-amount-box ${amountError ? 'has-error' : ''}`}>
                 <input
@@ -481,7 +482,7 @@ export function TransactionModal() {
             {/* 3. Smart Category Selection Grid */}
             <div className="txn-field-group">
               <label className="txn-label">
-                <span>Danh mục</span>
+                <span>{t('transaction.category')}</span>
               </label>
 
               {type === 'expense' && sortedCategories.length === 0 ? (
@@ -489,22 +490,21 @@ export function TransactionModal() {
                   <span className="txn-empty-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
                     <FolderOutlineIcon size={24} color="currentColor" />
                   </span>
-                  <h4 className="txn-empty-title">Chưa có danh mục</h4>
-                  <p className="txn-empty-desc">Hãy thiết lập danh mục trước khi thêm giao dịch.</p>
+                  <h4 className="txn-empty-title">{t('transaction.noCategory')}</h4>
+                  <p className="txn-empty-desc">{t('transaction.noCategoryHint')}</p>
                   <button
                     type="button"
                     className="txn-empty-cta-btn"
                     onClick={() => {
                       close();
-                      setActiveView('plan');
-                      setPlanSubTab('budgets');
+                      navigateTo('plan', 'budgets');
                     }}
                   >
-                    Thiết lập danh mục
+                    {t('transaction.setupCategory')}
                   </button>
                 </div>
               ) : (
-                <div className="txn-category-grid" role="radiogroup" aria-label="Chọn danh mục">
+                <div className="txn-category-grid" role="radiogroup" aria-label={t('transaction.chooseCategory')}>
                   {sortedCategories.map((cat) => {
                     const isSelected = category.toLowerCase() === cat.name.toLowerCase();
                     const metric = categoryMetrics[cat.name];
@@ -526,7 +526,7 @@ export function TransactionModal() {
                           <CategoryOutlineIcon name={cat.name} size={18} />
                         </span>
                         <span className="txn-card-name" title={cat.name}>
-                          {cat.name}
+                          {label(cat.name)}
                         </span>
 
                         {type === 'expense' && metric ? (
@@ -559,7 +559,7 @@ export function TransactionModal() {
                           </>
                         ) : (
                           <div className="txn-card-income-tag">
-                            Thu nhập
+                            {t('type.income')}
                           </div>
                         )}
                       </button>
@@ -572,20 +572,20 @@ export function TransactionModal() {
             {/* 4. Wallet Selection (Chi từ / Nhận vào) */}
             <div className="txn-field-group">
               <label htmlFor="txn-wallet-select" className="txn-label">
-                <span>{type === 'expense' ? 'Chi từ ví / tài khoản' : 'Nhận vào ví / tài khoản'}</span>
+                <span>{t(type === 'expense' ? 'transaction.expenseWallet' : 'transaction.incomeWallet')}</span>
               </label>
               <CustomWalletDropdown
                 wallets={wallets}
                 value={walletId}
                 onChange={setWalletId}
-                placeholder="Chọn ví / tài khoản..."
+                placeholder={t('transaction.chooseWallet')}
               />
             </div>
 
             {/* 5. Date Field */}
             <div className="txn-field-group">
               <label htmlFor="txn-date-input" className="txn-label">
-                <span>Ngày giao dịch</span>
+                <span>{t('transaction.date')}</span>
               </label>
               <input
                 id="txn-date-input"
@@ -600,14 +600,14 @@ export function TransactionModal() {
             {/* 6. Description Note */}
             <div className="txn-field-group">
               <label htmlFor="txn-desc-input" className="txn-label">
-                <span>Ghi chú</span>
-                <span className="txn-label-optional">Tùy chọn</span>
+                <span>{t('transaction.note')}</span>
+                <span className="txn-label-optional">{t('transaction.optional')}</span>
               </label>
               <input
                 id="txn-desc-input"
                 type="text"
                 className="txn-input"
-                placeholder="VD: Cà phê sáng, ăn trưa cùng đồng nghiệp..."
+                placeholder={t('transaction.notePlaceholder')}
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
                 maxLength={100}
@@ -645,7 +645,7 @@ export function TransactionModal() {
               onClick={close}
               disabled={isSubmitting}
             >
-              Hủy
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -655,12 +655,12 @@ export function TransactionModal() {
               {isSubmitting ? (
                 <>
                   <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
-                  <span>Đang lưu...</span>
+                  <span>{t('common.saving')}</span>
                 </>
               ) : isEditing ? (
-                'Cập nhật giao dịch'
+                t('transaction.update')
               ) : (
-                'Lưu giao dịch'
+                t('transaction.save')
               )}
             </button>
           </div>

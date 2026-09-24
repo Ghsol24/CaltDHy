@@ -1,3 +1,5 @@
+import { moneyInteger, moneyNumber, sumMoney } from './moneyPrecision.js';
+
 /**
  * CaltDHy v2 — Finance Math Helpers
  * Cung cấp các hàm tính toán số dư ví, tiền khả dụng chi tiêu, thống kê tháng, và trạng thái ngân sách.
@@ -16,34 +18,35 @@ export function calculateWalletBalances(wallets = [], transactions = []) {
   // Khởi tạo số dư ban đầu cho tất cả các ví
   wallets.forEach((w) => {
     if (w && w.id) {
-      balanceMap[w.id] = Number(w.initialBalance ?? w.balance ?? 0);
+      balanceMap[w.id] = moneyInteger(w.initialBalance ?? w.balance ?? 0);
     }
   });
 
   // Duyệt qua từng giao dịch để cộng / trừ số dư
   transactions.forEach((tx) => {
     if (!tx) return;
-    const amount = Number(tx.amount || 0);
-    const fee = Number(tx.fee || 0);
+    const amount = moneyInteger(tx.amount ?? 0);
+    const fee = moneyInteger(tx.fee ?? 0);
 
     if (tx.type === 'income' && tx.walletId) {
-      balanceMap[tx.walletId] = (balanceMap[tx.walletId] || 0) + amount;
+      balanceMap[tx.walletId] = (balanceMap[tx.walletId] ?? 0n) + amount;
     } else if (tx.type === 'expense' && tx.walletId) {
-      balanceMap[tx.walletId] = (balanceMap[tx.walletId] || 0) - (amount + fee);
+      balanceMap[tx.walletId] = (balanceMap[tx.walletId] ?? 0n) - (amount + fee);
     } else if (tx.type === 'transfer') {
       if (tx.walletId) {
-        balanceMap[tx.walletId] = (balanceMap[tx.walletId] || 0) - (amount + fee);
+        balanceMap[tx.walletId] = (balanceMap[tx.walletId] ?? 0n) - (amount + fee);
       }
       if (tx.toWalletId) {
-        balanceMap[tx.toWalletId] = (balanceMap[tx.toWalletId] || 0) + amount;
+        balanceMap[tx.toWalletId] = (balanceMap[tx.toWalletId] ?? 0n) + amount;
       }
     }
   });
 
+  for (const id of Object.keys(balanceMap)) balanceMap[id] = moneyNumber(balanceMap[id]);
   // Gắn currentBalance vào từng wallet
   const calculatedWallets = wallets.map((w) => ({
     ...w,
-    currentBalance: balanceMap[w.id] ?? Number(w.initialBalance ?? w.balance ?? 0),
+    currentBalance: balanceMap[w.id] ?? moneyNumber(w.initialBalance ?? w.balance ?? 0),
   }));
 
   return {
@@ -74,27 +77,20 @@ export function calculateAvailableToSpend({
   const { wallets: calculatedWallets } = calculateWalletBalances(wallets, transactions);
 
   // Tổng tài sản thực tế của tất cả các ví đang hoạt động (không bao gồm ví đã lưu trữ)
-  const totalBalance = calculatedWallets
-    .filter((w) => !w.archived)
-    .reduce(
-      (sum, w) => sum + (Number(w.currentBalance) || 0),
-      0
-    );
+  const totalBalance = moneyNumber(sumMoney(calculatedWallets
+    .filter((w) => !w.archived).map(w => w.currentBalance)));
 
   // Tổng số dư các ví chi tiêu khả dụng: KHÔNG bị exclude, KHÔNG phải thẻ tín dụng (credit) và KHÔNG bị lưu trữ
-  const availableWalletsBalance = calculatedWallets
+  const availableWalletsBalance = moneyNumber(sumMoney(calculatedWallets
     .filter((w) => !w.isExcludedFromTotal && !w.excludeFromTotal && w.type !== 'credit' && !w.archived)
-    .reduce((sum, w) => sum + (Number(w.currentBalance) || 0), 0);
+    .map(w => w.currentBalance)));
 
   // Tổng tiền đang nằm trong các Hũ tiết kiệm / dự phòng
-  const jarMoney = jars.reduce(
-    (sum, j) => sum + (Number(j.current ?? j.currentAmount ?? j.balance ?? 0) || 0),
-    0
-  );
+  const jarMoney = moneyNumber(sumMoney(jars.map(j => j.current ?? j.currentAmount ?? j.balance ?? 0)));
 
   // Thống kê thu / chi trong tháng hiện tại
-  let monthlyIncome = 0;
-  let monthlyExpense = 0;
+  let monthlyIncome = 0n;
+  let monthlyExpense = 0n;
 
   transactions.forEach((tx) => {
     if (!tx) return;
@@ -103,11 +99,11 @@ export function calculateAvailableToSpend({
       return;
     }
 
-    const amount = Number(tx.amount || 0);
+    const amount = moneyInteger(tx.amount ?? 0);
     if (tx.type === 'income') {
       monthlyIncome += amount;
     } else if (tx.type === 'expense') {
-      monthlyExpense += amount + (Number(tx.fee) || 0);
+      monthlyExpense += amount + moneyInteger(tx.fee ?? 0);
     }
   });
 
@@ -119,8 +115,8 @@ export function calculateAvailableToSpend({
   return {
     availableToSpend,
     totalBalance,
-    monthlyIncome,
-    monthlyExpense,
+    monthlyIncome: moneyNumber(monthlyIncome),
+    monthlyExpense: moneyNumber(monthlyExpense),
     inJars: jarMoney,
   };
 }
@@ -133,10 +129,10 @@ export function calculateAvailableToSpend({
  * @returns {{ income: number, expense: number, net: number, count: number, byCategory: Object.<string, number> }}
  */
 export function calculateMonthlyStats(transactions = [], monthPrefix = '') {
-  let income = 0;
-  let expense = 0;
+  let income = 0n;
+  let expense = 0n;
   let count = 0;
-  const byCategory = {};
+  const byCategory = Object.create(null);
 
   transactions.forEach((tx) => {
     if (!tx) return;
@@ -146,8 +142,8 @@ export function calculateMonthlyStats(transactions = [], monthPrefix = '') {
     }
 
     count += 1;
-    const amount = Number(tx.amount || 0);
-    const fee = Number(tx.fee || 0);
+    const amount = moneyInteger(tx.amount ?? 0);
+    const fee = moneyInteger(tx.fee ?? 0);
 
     if (tx.type === 'income') {
       income += amount;
@@ -155,18 +151,19 @@ export function calculateMonthlyStats(transactions = [], monthPrefix = '') {
       const totalExpense = amount + fee;
       expense += totalExpense;
       const cat = tx.category || 'Khác';
-      byCategory[cat] = (byCategory[cat] || 0) + totalExpense;
+      byCategory[cat] = (byCategory[cat] ?? 0n) + totalExpense;
     }
   });
 
   const net = income - expense;
+  for (const category of Object.keys(byCategory)) byCategory[category] = moneyNumber(byCategory[category]);
 
   return {
-    income,
-    expense,
-    totalIncome: income,
-    totalExpense: expense,
-    net,
+    income: moneyNumber(income),
+    expense: moneyNumber(expense),
+    totalIncome: moneyNumber(income),
+    totalExpense: moneyNumber(expense),
+    net: moneyNumber(net),
     count,
     byCategory,
   };

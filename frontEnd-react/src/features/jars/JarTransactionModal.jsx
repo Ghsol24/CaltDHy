@@ -3,7 +3,7 @@ import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { CheckOutlineIcon, TargetOutlineIcon, ArrowUpRightOutlineIcon, BulbOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 
@@ -56,24 +56,24 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
       return;
     }
     const num = parseInt(rawVal, 10);
-    setAmount(num ? num.toLocaleString('vi-VN') : '');
+    setAmount(num ? formatInputNumber(num) : '');
   };
 
   const handleQuickAdd = (val) => {
     const currentNum = amount ? parseInt(String(amount).replace(/\D/g, ''), 10) : 0;
     const nextVal = currentNum + val;
-    setAmount(nextVal.toLocaleString('vi-VN'));
+    setAmount(formatInputNumber(nextVal));
   };
 
   const handleQuickFillRemaining = () => {
     if (remaining > 0) {
-      setAmount(remaining.toLocaleString('vi-VN'));
+      setAmount(formatInputNumber(remaining));
     }
   };
 
   const handleQuickFillAllBalance = () => {
     if (currentBal > 0) {
-      setAmount(currentBal.toLocaleString('vi-VN'));
+      setAmount(formatInputNumber(currentBal));
     }
   };
 

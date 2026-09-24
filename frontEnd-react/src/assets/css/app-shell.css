@@ -10,6 +10,11 @@
   color: var(--text-primary);
 }
 
+.mobile-primary-nav,
+.mobile-section-nav {
+  display: none;
+}
+
 /* ── Topbar (Header) — 72px Sticky ── */
 .topbar {
   position: sticky;
@@ -582,6 +587,106 @@
   .app-sidebar-nav {
     display: none;
   }
+
+  .app-shell {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-main {
+    scroll-padding-top: 126px;
+  }
+
+  .mobile-primary-nav {
+    position: fixed;
+    z-index: 80;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 68px;
+    padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-right, 0px));
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    background: color-mix(in srgb, var(--color-surface, #fff) 96%, transparent);
+    border-top: 1px solid var(--color-border, #E3ECE7);
+    box-shadow: 0 -4px 16px rgba(16, 27, 54, 0.08);
+  }
+
+  .mobile-primary-nav__item {
+    min-width: 0;
+    min-height: 54px;
+    padding: 5px 4px;
+    border: 0;
+    border-radius: var(--radius-sm, 8px);
+    background: transparent;
+    color: var(--color-text-secondary, #607086);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font: 700 11px/1.1 var(--font-sans);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+
+  .mobile-primary-nav__item.is-active {
+    color: var(--color-brand-700, #008B57);
+    background: var(--color-brand-50, #F1FBF6);
+  }
+
+  .mobile-section-nav {
+    position: sticky;
+    top: 72px;
+    z-index: 18;
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    background: var(--color-surface, #fff);
+    border-bottom: 1px solid var(--color-border, #E3ECE7);
+  }
+
+  .mobile-section-nav__scroller {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+
+  .mobile-section-nav__scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-section-nav__item {
+    min-height: 44px;
+    flex: 0 0 auto;
+    padding: 0 14px;
+    border: 1px solid var(--color-border, #E3ECE7);
+    border-radius: var(--radius-full, 999px);
+    background: var(--color-surface-muted, #F7FAF8);
+    color: var(--color-text-secondary, #607086);
+    font: 700 13px/1 var(--font-sans);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+
+  .mobile-section-nav__item.is-active {
+    background: var(--color-brand-50, #F1FBF6);
+    color: var(--color-brand-700, #008B57);
+    border-color: var(--color-brand-700, #008B57);
+  }
+
+  .tb-logo-link,
+  .tb-settings-btn,
+  .user-chip {
+    min-height: 44px;
+  }
+
+  .tb-settings-btn {
+    min-width: 44px;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 768px) {
@@ -600,5 +705,33 @@
 
   .app-container {
     padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 10px 12px;
+  }
+
+  .tb-logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-chip {
+    width: 44px;
+    padding: 4px;
+    justify-content: center;
+  }
+
+  .user-chip-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 }

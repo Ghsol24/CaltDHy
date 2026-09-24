@@ -10,6 +10,81 @@
   width: 100%;
 }
 
+.budget-month-data {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.budget-month-data.is-pending > :not(.budget-pending-overlay) {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.budget-pending-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 22px;
+  color: var(--color-text-secondary, #607086);
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.budget-load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-danger, #E34B45);
+  border-radius: 12px;
+  color: var(--color-danger, #E34B45);
+}
+
+.budget-skeleton-summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+}
+
+.budget-skeleton-card {
+  cursor: default;
+}
+
+.budget-skeleton-card:hover {
+  transform: none;
+}
+
+.budget-skeleton-line {
+  display: block;
+  height: 14px;
+  width: 65%;
+  border-radius: 6px;
+  background: linear-gradient(100deg, var(--color-surface-muted, #F0F2F1) 30%, var(--color-border, #E3ECE7) 50%, var(--color-surface-muted, #F0F2F1) 70%);
+  background-size: 200% 100%;
+  animation: budgetShimmer 900ms ease-in-out infinite;
+}
+
+.budget-skeleton-line.is-value { width: 85%; height: 22px; }
+.budget-skeleton-line.is-heading { width: 75%; height: 18px; }
+
+@keyframes budgetShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .budget-skeleton-line { animation: none; }
+}
+
 /* Page Header: Title, Subtitle, and Primary CTA */
 .budgets-page-header {
   display: flex;
@@ -420,6 +495,62 @@
   border-color: #FCA5A5;
 }
 
+.budget-category-card.is-overdue-danger {
+  border-color: #EF4444;
+  border-inline-start-width: 4px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.075), transparent 58%), var(--color-surface, #FFFFFF);
+  box-shadow: 0 8px 22px rgba(220, 38, 38, 0.1);
+}
+
+html.dark-theme .budget-category-card.is-overdue-danger {
+  border-color: #FB7185;
+  background: linear-gradient(135deg, rgba(251, 113, 133, 0.13), transparent 60%), var(--color-surface, #171A1F);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+}
+
+html.cream-theme .budget-category-card.is-overdue-danger {
+  border-color: #C2410C;
+  background: linear-gradient(135deg, rgba(194, 65, 12, 0.09), transparent 60%), var(--color-surface, #FFFBF5);
+  box-shadow: 0 8px 22px rgba(124, 45, 18, 0.1);
+}
+
+html.green-theme .budget-category-card.is-overdue-danger {
+  border-color: #E05252;
+  background: linear-gradient(135deg, rgba(224, 82, 82, 0.09), transparent 60%), var(--color-surface, #FFFFFF);
+  box-shadow: 0 8px 22px rgba(127, 29, 29, 0.09);
+}
+
+/* A closed month is distinct from overspending; both states can coexist. */
+.budget-category-card.is-period-overdue {
+  --period-overdue-accent: #9A3412;
+  --period-overdue-tint: rgba(194, 65, 12, 0.09);
+  --period-overdue-badge-bg: #FFEDD5;
+}
+
+html.dark-theme .budget-category-card.is-period-overdue {
+  --period-overdue-accent: #FBBF24;
+  --period-overdue-tint: rgba(251, 191, 36, 0.13);
+  --period-overdue-badge-bg: #422006;
+}
+
+html.cream-theme .budget-category-card.is-period-overdue {
+  --period-overdue-accent: #9A3412;
+  --period-overdue-tint: rgba(194, 65, 12, 0.12);
+  --period-overdue-badge-bg: #FDE6CC;
+}
+
+html.green-theme .budget-category-card.is-period-overdue {
+  --period-overdue-accent: #A74416;
+  --period-overdue-tint: rgba(167, 68, 22, 0.1);
+  --period-overdue-badge-bg: #FFE7D5;
+}
+
+.budget-category-card.is-period-overdue:not(.is-overdue-danger) {
+  border-color: var(--period-overdue-accent);
+  border-inline-start-width: 4px;
+  background: linear-gradient(135deg, var(--period-overdue-tint), transparent 62%), var(--color-surface, #FFFFFF);
+}
+
 .budget-category-card.is-warning {
   border-color: #FDE047;
 }
@@ -437,6 +568,23 @@
   gap: 10px;
   min-width: 0;
   flex: 1;
+}
+
+.budget-overdue-indicator {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-danger, #DC2626);
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.budget-overdue-indicator svg {
+  fill: none;
 }
 
 .budget-card-emoji-tile {
@@ -539,6 +687,17 @@
   color: var(--color-danger, #E34B45);
 }
 
+.budget-card-period-overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  background: var(--period-overdue-badge-bg, #FFEDD5);
+  color: var(--period-overdue-accent, #9A3412);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .budget-card-limit-val {
   font-size: 11px;
   color: var(--color-text-secondary, #607086);
@@ -559,6 +718,17 @@
   transition: width 300ms ease;
 }
 
+.budget-card-fill.fill-danger.is-overdue-danger {
+  background-color: var(--color-danger, #DC2626);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.24) 0,
+    rgba(255, 255, 255, 0.24) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
 .fill-unset {
   width: 0% !important;
 }
@@ -567,23 +737,22 @@
 .modal-backdrop-overlay {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
   background: var(--color-overlay, rgba(16, 27, 54, 0.48));
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 1000;
   padding: 24px;
   box-sizing: border-box;
   animation: fadeIn 150ms ease;
 }
 
 .budget-setup-dialog {
-  position: relative !important;
-  margin: auto !important;
-  width: min(840px, 94vw) !important;
-  max-height: calc(100dvh - 64px);
+  position: relative;
+  margin: 0;
+  width: min(840px, 100%);
+  max-height: calc(100dvh - 48px);
   background: var(--color-surface, #FFFFFF);
   border-radius: var(--radius-xl, 20px);
   box-shadow: var(--shadow-dialog);
@@ -592,10 +761,6 @@
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  left: auto !important;
-  right: auto !important;
-  top: auto !important;
-  bottom: auto !important;
 }
 
 /* Dialog Header */
@@ -1781,6 +1946,71 @@
   box-shadow: var(--shadow-sm);
 }
 
+.trend-recurring-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.trend-recurring-toggle {
+  min-inline-size: 164px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border, #E3ECE7);
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-surface, #FFFFFF);
+  color: var(--color-text-secondary, #607086);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.trend-recurring-toggle:hover,
+.trend-recurring-toggle:focus-visible {
+  border-color: var(--color-brand-700, #008B57);
+  color: var(--color-brand-700, #008B57);
+}
+
+.trend-recurring-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-brand-700, #008B57) 34%, transparent);
+  outline-offset: 2px;
+}
+
+.trend-recurring-toggle.is-active {
+  border-color: var(--color-brand-700, #008B57);
+  background: var(--color-brand-50, #F1FBF6);
+  color: var(--color-brand-700, #008B57);
+}
+
+@media (max-width: 900px) {
+  .trend-controls-wrap,
+  .trend-recurring-filter {
+    width: 100%;
+  }
+
+  .trend-segmented-group {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .trend-seg-btn {
+    min-height: 40px;
+    flex: 1 0 auto;
+  }
+
+  .trend-recurring-toggle {
+    min-height: 44px;
+  }
+}
+
 .trend-empty-chart-box {
   height: 260px;
   background: var(--color-surface-muted, #F7FAF8);
@@ -1831,13 +2061,6 @@
 #analytics-cashflow,
 #analytics-reports {
   scroll-margin-top: 96px;
-}
-
-#analytics-spending,
-#analytics-cashflow,
-#analytics-reports {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 550px;
 }
 
 /* ── 5. FINANCIAL REPORT SECTION (BÁO CÁO TÀI CHÍNH CHUYÊN SÂU) ── */
@@ -2316,4 +2539,3 @@
     color: #000000 !important;
   }
 }
-

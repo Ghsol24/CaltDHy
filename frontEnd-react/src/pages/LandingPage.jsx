@@ -1,101 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { useThemeStore } from '../stores/useThemeStore';
+import { useLangStore } from '../stores/useLangStore';
+import { useCurrencyStore } from '../stores/useCurrencyStore';
+import { formatCurrency, formatDate } from '../utils/formatters';
+import { translate } from '../i18n/translations';
 
-const INDEX_I18N = {
-  en: {
-    eyebrow: 'Expense Management System',
-    tagline: 'Command-grade financial tracking. Industrial precision. Every transaction — accounted for.',
-    totalBalance: 'Total Balance',
-    transactions: 'Transactions',
-    vsLastMo: 'vs. Last Mo.',
-    loginBtn: 'LOG IN',
-    signupBtn: 'SIGN UP',
-    previewTitle: 'DASHBOARD',
-    previewLive: 'LIVE',
-    previewIncome: 'Income',
-    previewExpenses: 'Expenses',
-    previewFood: 'FOOD & DINING',
-    previewTransport: 'TRANSPORT',
-    previewSalary: 'SALARY',
-    settingsTitle: 'Settings',
-    langLabel: 'Language / Ngôn ngữ / 语言',
-    themeLabel: 'Theme / Giao diện',
-    themeLight: 'Light',
-    themeDark: 'Dark',
-    doneBtn: 'DONE'
-  },
-  vi: {
-    eyebrow: 'Hệ thống quản lý chi tiêu',
-    tagline: 'Quản lý tài chính cấp độ chuyên nghiệp. Độ chính xác cao. Mọi giao dịch đều được kiểm soát.',
-    totalBalance: 'Tổng Số Dư',
-    transactions: 'Giao Dịch',
-    vsLastMo: 'so với tháng trước',
-    loginBtn: 'ĐĂNG NHẬP',
-    signupBtn: 'ĐĂNG KÝ',
-    previewTitle: 'BẢNG ĐIỀU KHIỂN',
-    previewLive: 'TRỰC TUYẾN',
-    previewIncome: 'Thu nhập',
-    previewExpenses: 'Chi tiêu',
-    previewFood: 'ĂN UỐNG & ẨM THỰC',
-    previewTransport: 'DI CHUYỂN',
-    previewSalary: 'LƯƠNG',
-    settingsTitle: 'Cài Đặt',
-    langLabel: 'Language / Ngôn ngữ / 语言',
-    themeLabel: 'Theme / Giao diện',
-    themeLight: 'Sáng',
-    themeDark: 'Tối',
-    doneBtn: 'XONG'
-  },
-  zh: {
-    eyebrow: '个人记账与财务管理系统',
-    tagline: '专业级财务管理。工业级精度。掌控每一笔收支交易。',
-    totalBalance: '总余额',
-    transactions: '交易数',
-    vsLastMo: '环比上月',
-    loginBtn: '登 录',
-    signupBtn: '注 册',
-    previewTitle: '仪表盘',
-    previewLive: '实时',
-    previewIncome: '收入',
-    previewExpenses: '支出',
-    previewFood: '餐饮与美食',
-    previewTransport: '交通出行',
-    previewSalary: '薪资收入',
-    settingsTitle: '设置',
-    langLabel: 'Language / Ngôn ngữ / 语言',
-    themeLabel: 'Theme / Giao diện',
-    themeLight: '浅色',
-    themeDark: '深色',
-    doneBtn: '完成'
-  }
-};
+const LANDING_KEYS = [
+  'eyebrow', 'tagline', 'totalBalance', 'transactions', 'vsLastMo',
+  'loginBtn', 'signupBtn', 'previewTitle', 'previewLive', 'previewIncome',
+  'previewExpenses', 'previewFood', 'previewTransport', 'previewSalary',
+  'settingsTitle', 'langLabel', 'themeLabel', 'themeLight', 'themeDark', 'doneBtn',
+];
 
 export function LandingPage() {
   const { theme, setTheme } = useThemeStore();
-  const [lang, setLang] = useState(() => {
-    try {
-      const saved = localStorage.getItem('caltdhy_lang');
-      if (saved === 'vi') return 'vi';
-    } catch {
-      // ignore
-    }
-    return 'vi';
-  });
+  const lang = useLangStore((state) => state.lang);
+  const setLang = useLangStore((state) => state.setLang);
+  useCurrencyStore((state) => state.displayCurrency);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const deviceWrapRef = useRef(null);
   const deviceBezelRef = useRef(null);
 
-  const t = INDEX_I18N[lang] || INDEX_I18N.en;
+  const t = Object.fromEntries(LANDING_KEYS.map((key) => [key, translate(lang, `landing.${key}`)]));
 
   // Sync lang change to localStorage and html tag
   const handleSetLang = (newLang) => {
     setLang(newLang);
-    try {
-      localStorage.setItem('caltdhy_lang', newLang);
-      document.documentElement.lang = newLang;
-    } catch {}
   };
 
   // Close modal on Escape
@@ -110,11 +42,9 @@ export function LandingPage() {
   }, [isSettingsOpen]);
 
   // Dynamic month label
-  const MONTHS_EN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-  const MONTHS_VI = ['THÁNG 1', 'THÁNG 2', 'THÁNG 3', 'THÁNG 4', 'THÁNG 5', 'THÁNG 6', 'THÁNG 7', 'THÁNG 8', 'THÁNG 9', 'THÁNG 10', 'THÁNG 11', 'THÁNG 12'];
   const now = new Date();
-  const monthStr = lang === 'vi' ? MONTHS_VI[now.getMonth()] : MONTHS_EN[now.getMonth()];
-  const dateLabelText = `${t.previewTitle} // ${monthStr} ${now.getFullYear()}`;
+  const monthStr = formatDate(now, 'month', { locale: lang }).toLocaleUpperCase(lang);
+  const dateLabelText = `${t.previewTitle} // ${monthStr}`;
 
   // 3D Tilt Effect
   const handleMouseMove = (e) => {
@@ -207,7 +137,7 @@ export function LandingPage() {
           {/* Metric badges */}
           <div className="metric-strip" role="complementary" aria-label="System metrics">
             <div className="metric-badge">
-              <span className="metric-value">$24,811</span>
+              <span className="metric-value">{formatCurrency(24811500)}</span>
               <span className="metric-label">{t.totalBalance}</span>
             </div>
             <div className="metric-badge">
@@ -278,7 +208,7 @@ export function LandingPage() {
               </div>
             </div>
 
-            <div className="device-screen" role="img" aria-label="Dashboard preview">
+            <div className="device-screen" role="img" aria-label={translate(lang, 'landing.previewAria')}>
               <div className="screen-header">
                 <span className="screen-label" id="screenDateLabel">
                   {dateLabelText}
@@ -292,18 +222,18 @@ export function LandingPage() {
               <div className="screen-balance">
                 <span className="balance-label">{t.totalBalance}</span>
                 <span className="balance-amount">
-                  <span className="currency">$</span>24,811.50
+                  {formatCurrency(24811500)}
                 </span>
               </div>
 
               <div className="screen-metrics">
                 <div className="screen-metric">
                   <div className="sm-label">{t.previewIncome}</div>
-                  <div className="sm-value income">+$6,200</div>
+                  <div className="sm-value income">{formatCurrency(6200000, { showSign: true, isIncome: true })}</div>
                 </div>
                 <div className="screen-metric">
                   <div className="sm-label">{t.previewExpenses}</div>
-                  <div className="sm-value expense">-$1,843</div>
+                  <div className="sm-value expense">{formatCurrency(1843000, { showSign: true })}</div>
                 </div>
               </div>
 
@@ -313,21 +243,21 @@ export function LandingPage() {
                   <div className="txn-bar">
                     <div className="txn-bar-fill" style={{ width: '72%', background: '#ff4757' }}></div>
                   </div>
-                  <span className="txn-amount neg">-$340</span>
+                  <span className="txn-amount neg">{formatCurrency(340000, { showSign: true })}</span>
                 </div>
                 <div className="screen-txn">
                   <span className="txn-name">{t.previewTransport}</span>
                   <div className="txn-bar">
                     <div className="txn-bar-fill" style={{ width: '38%', background: '#ff7043' }}></div>
                   </div>
-                  <span className="txn-amount neg">-$180</span>
+                  <span className="txn-amount neg">{formatCurrency(180000, { showSign: true })}</span>
                 </div>
                 <div className="screen-txn">
                   <span className="txn-name">{t.previewSalary}</span>
                   <div className="txn-bar">
                     <div className="txn-bar-fill" style={{ width: '100%', background: '#00e676' }}></div>
                   </div>
-                  <span className="txn-amount pos">+$6,200</span>
+                  <span className="txn-amount pos">{formatCurrency(6200000, { showSign: true, isIncome: true })}</span>
                 </div>
               </div>
             </div>
@@ -370,14 +300,11 @@ export function LandingPage() {
               <div className="idx-lang-wrap">
                 <button
                   type="button"
-                  disabled
-                  className="idx-lang-btn idx-lang-btn--disabled"
-                  title="updating"
-                  aria-disabled="true"
+                  className={`idx-lang-btn ${lang === 'en' ? 'active' : ''}`}
+                  onClick={() => handleSetLang('en')}
                 >
                   EN
                 </button>
-                <span className="lang-btn-tooltip" role="tooltip">updating</span>
               </div>
               <div className="idx-lang-wrap">
                 <button
@@ -391,14 +318,11 @@ export function LandingPage() {
               <div className="idx-lang-wrap">
                 <button
                   type="button"
-                  disabled
-                  className="idx-lang-btn idx-lang-btn--disabled"
-                  title="updating"
-                  aria-disabled="true"
+                  className={`idx-lang-btn ${lang === 'zh-CN' ? 'active' : ''}`}
+                  onClick={() => handleSetLang('zh-CN')}
                 >
                   ZH
                 </button>
-                <span className="lang-btn-tooltip" role="tooltip">updating</span>
               </div>
             </div>
           </div>

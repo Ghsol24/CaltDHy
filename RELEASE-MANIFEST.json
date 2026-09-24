@@ -1,0 +1,634 @@
+[
+  {
+    "path": ".github/workflows/test.yml",
+    "sha256": "dd0132254d99b9cf9adf163ae97c9d579688d3412d79294a629e1b8127089fb3"
+  },
+  {
+    "path": ".gitignore",
+    "sha256": "313b118e7df2cfcd9e2316694da532b9fe13a4a98b5ad9f1ea1a118cde8909cb"
+  },
+  {
+    "path": "CaltDHy.app/Contents/Info.plist",
+    "sha256": "bd92b58855e3b6f2d2094cedf084655833a5cc031e9a4763f24ef844f119bf3b"
+  },
+  {
+    "path": "CaltDHy.app/Contents/MacOS/CaltDHy",
+    "sha256": "9a5bc0ce315c6ed89954ec34830e43c9c19026bd524410e41e96e71dac2359f9"
+  },
+  {
+    "path": "CaltDHy.app/Contents/PkgInfo",
+    "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+  },
+  {
+    "path": "CaltDHy.app/Contents/Resources/AppIcon.icns",
+    "sha256": "a2b3a2f38528714c29eedd9c55575c0b618fb8680f40e972d817d25938967ab9"
+  },
+  {
+    "path": "README.md",
+    "sha256": "31cd22d4871ac3734ae43c8d551efe96665516983d14301c5f777274b4418d12"
+  },
+  {
+    "path": "backEnd/server/.env.example",
+    "sha256": "add4e98c1d41c0326ef88e72f6c8985e6f53c42111c6c9b6c204a74d83348e7c"
+  },
+  {
+    "path": "backEnd/server/middleware/authMiddleware.js",
+    "sha256": "ae25b1b5c3660a0c3daf2aaac275e78e775ca9cec811444bce164fd79f825912"
+  },
+  {
+    "path": "backEnd/server/models/AuthSession.js",
+    "sha256": "6d2d382a2f9a38ec159bc417651444b51361a40dacce0ef9a10947887f48a420"
+  },
+  {
+    "path": "backEnd/server/models/Budget.js",
+    "sha256": "e70d7c95c6c91ce05c22fe6b9558dd07eaf3348048246951412bd427cadf02a0"
+  },
+  {
+    "path": "backEnd/server/models/Category.js",
+    "sha256": "2c2ff54b1177c3fb82e128979afad0c8389c862ab0dde923c04aa71e9a4eda2a"
+  },
+  {
+    "path": "backEnd/server/models/IdempotencyReceipt.js",
+    "sha256": "1835d17ce46ac1119791beaabf92d8ef78c6144c7edb9f2295a53ee50354fff2"
+  },
+  {
+    "path": "backEnd/server/models/Installment.js",
+    "sha256": "622ebd65f14e0b0a6fab5fa6c63a43a2497ad182df75a3664001e866743dd93d"
+  },
+  {
+    "path": "backEnd/server/models/Jar.js",
+    "sha256": "6799882e3c5696b8f5da01e150e61a1766319ee196a05c635bdd137944569144"
+  },
+  {
+    "path": "backEnd/server/models/MoneyLock.js",
+    "sha256": "4ea5820664a926538ebf93afecbe102db98a38df74fdf443e6bf624ae6f5b1d1"
+  },
+  {
+    "path": "backEnd/server/models/Transaction.js",
+    "sha256": "0b54b1a1dc35bed62b327d9721a1863b6dbd4669fca6082179e0494020c1feca"
+  },
+  {
+    "path": "backEnd/server/models/User.js",
+    "sha256": "385efd98fd98b97e6b452443e80a12b5f3ed55aff8b9ad150aafd381f545bdfc"
+  },
+  {
+    "path": "backEnd/server/models/Wallet.js",
+    "sha256": "d260d3d1f18b51d34991b5a4eff400fcb31a8df2f2cc95d7e777db1b34e2b9e3"
+  },
+  {
+    "path": "backEnd/server/package-lock.json",
+    "sha256": "405a7349b1d27cfa3b9736590d8b4e9960b45cf09cad9d1bcc42d06a26e94751"
+  },
+  {
+    "path": "backEnd/server/package.json",
+    "sha256": "42937c76937c804742c38cf252ad6da873d485c26baef75af9b8e7945aabd157"
+  },
+  {
+    "path": "backEnd/server/routes/auth.js",
+    "sha256": "2b8eb6703c48a674a2169bc8ea010df6aa6825910fda0600bb5e03415ef46650"
+  },
+  {
+    "path": "backEnd/server/routes/jars.js",
+    "sha256": "09a02643f649b72016c9b7d3a00655f52cc20531209dc57f9fd712a7c0262d51"
+  },
+  {
+    "path": "backEnd/server/routes/spending.js",
+    "sha256": "6f65deb7cdb7c6ecba6c467ecff9af69754f01859e3457549c9bd1de36ffa92e"
+  },
+  {
+    "path": "backEnd/server/routes/wallets.js",
+    "sha256": "6ed63792cbe4e0345f9683eea34d8252e5adbde2db176c5a467def5021803137"
+  },
+  {
+    "path": "backEnd/server/scripts/cleanup-users.js",
+    "sha256": "81f3c9b7da7f8175d754d4aa82c07e57fb00e86d1ffa654cfb9bcedb4b41ee0d"
+  },
+  {
+    "path": "backEnd/server/scripts/migrate-budget-categories.js",
+    "sha256": "a571ce202bb07c42d993a4b48547b4942099c280c86430d7cdca2f48d2adbf5d"
+  },
+  {
+    "path": "backEnd/server/scripts/migrate-categories-to-collection.js",
+    "sha256": "3b83d0152a1d1ffa62d4a204ac29c7a0568d7474d27d7f0ad117376150fdf44d"
+  },
+  {
+    "path": "backEnd/server/scripts/migrate-email-verified.js",
+    "sha256": "0999a23da488adf35ca7fc3b270d68d8fa2da13bf38bed795e3f43731b2fad8b"
+  },
+  {
+    "path": "backEnd/server/scripts/migrate-jar-transfer-types.js",
+    "sha256": "719f7d4025d47e6500424fcf58fab83801332fd4cef947116e603a37d6d811a0"
+  },
+  {
+    "path": "backEnd/server/scripts/migrate-transaction-dates.js",
+    "sha256": "d367db2ccb159d5f423f980f2bf4fd5de4813ff866937fd08a32565c73bec855"
+  },
+  {
+    "path": "backEnd/server/scripts/seed-admin-data.js",
+    "sha256": "64e67cb043b6d50b7980060a65d2340b8616c7bf60ff2d47ae246db41780c34a"
+  },
+  {
+    "path": "backEnd/server/server.js",
+    "sha256": "cbd9b138b305223acc2f724cd8bd8e28a9759820ca5ee72ef391c60f178f3e27"
+  },
+  {
+    "path": "backEnd/server/tests/auth-security.test.js",
+    "sha256": "b56281f6d7cf00052df2f4da6de41ddd6e3c133849fb1cdab5fdd7153190de78"
+  },
+  {
+    "path": "backEnd/server/tests/integration.test.js",
+    "sha256": "c21410eb1d505ac6b659a694a0891c6bfe9755d29d2884bdd6651218aa1ac9f8"
+  },
+  {
+    "path": "backEnd/server/tests/money-integrity.test.js",
+    "sha256": "f684eff7c558a817acbd9a72474081fa89875f488a7188ec74676eeb8dc8afea"
+  },
+  {
+    "path": "backEnd/server/tests/security.test.js",
+    "sha256": "401c93b70b60eac1ebafa1cc7fcca068c02edd41dfd5ad52179bbf48b81c5377"
+  },
+  {
+    "path": "backEnd/server/utils/financialRequest.js",
+    "sha256": "3bb8721918d853e1524531dd6c155dd4318683ceb23a9840c4eaa6dc38002320"
+  },
+  {
+    "path": "backEnd/server/utils/localDate.js",
+    "sha256": "e35dd9d38951b2cee46afa621f1b78c49ec5a73590bfd78f4acc08cfa96482ef"
+  },
+  {
+    "path": "backEnd/server/utils/money.js",
+    "sha256": "039a0887a575a6975a97062dfc2837b5aaef07a2af930e6e4cdcf622eef94272"
+  },
+  {
+    "path": "backEnd/server/utils/mongoTransaction.js",
+    "sha256": "7ff57529a60fac46109eb0c0b647cbbed9e67cc9631e01d68ce90bad91ad1817"
+  },
+  {
+    "path": "backEnd/server/utils/sessionSecurity.js",
+    "sha256": "8a076faaa4e3d71b5f8926201b44fa715ab16c00415c95e8afbd7c6c3512f2da"
+  },
+  {
+    "path": "backEnd/server/utils/walletBalance.js",
+    "sha256": "915f0f1d7a414fd80219d5f8965f9787c74000477e5f635f7ffdfab148834406"
+  },
+  {
+    "path": "docs/PRODUCTION-RUNBOOK.md",
+    "sha256": "157c50354a5d0219c3cb0fe6b172403a863aa8bf073e4e7f9e3bbca350cb0eb4"
+  },
+  {
+    "path": "docs/REMEDIATION-STATUS.md",
+    "sha256": "e80b2f0c7da829eb0b9ba519893293d8a8d16379bf9c96cad88799d369e38cf7"
+  },
+  {
+    "path": "docs/financial-transaction-rules.md",
+    "sha256": "d6d2e798afee3c7b22ae0162593c002ae1c9324fd85738675d883a74b821b754"
+  },
+  {
+    "path": "frontEnd-react/README.md",
+    "sha256": "1f8fa46483b514305f44e34a47e85e88428c3a667c9494e1583628ef18d7bc79"
+  },
+  {
+    "path": "frontEnd-react/index.html",
+    "sha256": "777c3906767e474474742ae3663f4fbcdaaead0039404bdab9a710235c9f096d"
+  },
+  {
+    "path": "frontEnd-react/package-lock.json",
+    "sha256": "eb310226b7f7ec9067beb0903dd7435ae270db865e4b55a463038fabef326024"
+  },
+  {
+    "path": "frontEnd-react/package.json",
+    "sha256": "3a1ff3962ba16648b206ee1368420c31f3d59a6871edc075304a71fb24bb5d7f"
+  },
+  {
+    "path": "frontEnd-react/public/favicon.svg",
+    "sha256": "61bc9a161de58248288e6905425d7180f0624c2865007b97d763fdac12043a66"
+  },
+  {
+    "path": "frontEnd-react/public/icons.svg",
+    "sha256": "b45fa506195cfcdef406ba9f0c77b36ddc1a7c224040926ec70abc2fdea7b93a"
+  },
+  {
+    "path": "frontEnd-react/public/logo.png",
+    "sha256": "8e988153eeaed187fddc109d365414dc869920a1a9dddb3fc36639fc95f54c13"
+  },
+  {
+    "path": "frontEnd-react/src/App.jsx",
+    "sha256": "37d43632c3d78ca62a2c47f4a637f754d647a3a3d85d08e55b7238010204645b"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/account.css",
+    "sha256": "fef82a5a06bf698e8e361f559ff8fc6721183069b73e937c1a6a008463f3380f"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/app-shell.css",
+    "sha256": "a1d0e75e255858c49767ec6488d979fd7b534ea4bf3787c933372f0e82f5fa01"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/auth.css",
+    "sha256": "d6b5f1a8f14a0ca2132696fc3cdf99de48b6669133668f3f30aeb63bf287c71f"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/base.css",
+    "sha256": "a639fa6bfaaa5a94af73d730b6461da20e57c54262290bf6c1b63d88dc87791d"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/budgets-analytics.css",
+    "sha256": "72f6e4a2277b30e362bcc7596af821c0e43c9e9e744b0f8fc8fa64b89682079c"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/components.css",
+    "sha256": "245f7ba69cff70ff28d3593dacf21ea4ac5ba54035b8f42f89f146ac5d0221bb"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/dialogs.css",
+    "sha256": "5c0efdf8be659d8437910fb4c4323b7f980733330517cb9c2f668d7e25d0b9db"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/jars.css",
+    "sha256": "e6b2f2fed33af10ce8a55f6690114e8b119ca0d77c72e8417461383b18c7ede8"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/landing.css",
+    "sha256": "549cf10db874a930cb6ff18f34eb149ece4de649a5e1909cb341a6ae9027e700"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/layout.css",
+    "sha256": "9f44dd64765e60ed11b6460d16830a39eb1098a3a8b5b743719b5eda02e6455b"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/modals.css",
+    "sha256": "820cf5224cc83008dd60b24c000c2cc2c9b58dd3fde20b637073433513d45bf8"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/responsive.css",
+    "sha256": "accb220ad7f3da196a8efc69ef2381b9bf7c5e701803184953fd0108cd7cf328"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/spa-overrides.css",
+    "sha256": "8dbf90d387267b30481ad30e95e5cf544c38a9e416c76ea512b2c626969cd574"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/themes.css",
+    "sha256": "2ec34b23a4b89c577010f28513c85de4fee9abb75742d56830cc559691c8f251"
+  },
+  {
+    "path": "frontEnd-react/src/assets/css/tokens.css",
+    "sha256": "690fd562c98ba68d2b0371beeeae7886249bdc4b6f0decc2c631507bf7011e7c"
+  },
+  {
+    "path": "frontEnd-react/src/components/auth/ProtectedRoute.jsx",
+    "sha256": "3fe668ab702cdb966b1425e71876a3df1e6a5e8eb5e44b9976d7f4c8ff51cfb0"
+  },
+  {
+    "path": "frontEnd-react/src/components/layout/AppShell.jsx",
+    "sha256": "8528c945eb49eb0f51915014adcb6ebf857bc4fed7d673c3ec543b6043056d38"
+  },
+  {
+    "path": "frontEnd-react/src/components/layout/SidebarNav.jsx",
+    "sha256": "af63657bd630043232d64a0c4d525cb969f4ef0b8408981121e5027a189113f2"
+  },
+  {
+    "path": "frontEnd-react/src/components/layout/Topbar.jsx",
+    "sha256": "1214e6640dfbe0cde757b45fddca32621f70bc0392ddb390b297a22c13416cbd"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/AppIcons.jsx",
+    "sha256": "6f3e26b0e667c7c614c7ef797019f017b5f81f5bac0fe27cdcff9f79dd97d730"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/AppUtilities.jsx",
+    "sha256": "95834a20b4dff42bd3f003d1f70c419353965827a5bdee3c657ee2536145e8c4"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/ConfirmDialog.jsx",
+    "sha256": "1b530bfb2c9ef285416fa37484b671eff78a4acb8ee41ed1b081c50950dc3639"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/CustomWalletDropdown.jsx",
+    "sha256": "427e1b7f09fa0afd5efde529c506f392022a02bbdae87499cf272513a6591699"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/EmptyState.jsx",
+    "sha256": "4aeb2395dda565b0459d27d5cc007ee59452b47593a6572792d7ca8bf91d3510"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/ErrorBoundary.jsx",
+    "sha256": "837db7713d08afc03319b7092b2a24b2e6daad4ec5a204344aa1f946bcfe6ff0"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/FloatingInput.jsx",
+    "sha256": "134ae3cd48771215c37d62ad456e0b90eb20b3ed9d5c989367f450bb2a2345ea"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/IndustrialPanel.jsx",
+    "sha256": "199d1d744c307443ea184dd1f4d572f0a0559c27950fc0f74ccc4d38e35378f9"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/MoneyDisplayGuard.jsx",
+    "sha256": "0e1b6724060893a02dddcd5233e0898b8b3d949c09e50ac6d3302f11d6e847eb"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/StatusBar.jsx",
+    "sha256": "50d45f57f66ff73db3e393ab633b109a8ccab9604a9a04388a176cb818ad2607"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/ToastRegion.jsx",
+    "sha256": "f591ab1acb1616771ccd16d2c149a8fc8ec568cf9a4517e158d5579bec8c5de3"
+  },
+  {
+    "path": "frontEnd-react/src/components/ui/WalletOutlineIcon.jsx",
+    "sha256": "3145b7a091425bc16ce24dea8bac5ce443b75a591ab5c33e11e57550992c0832"
+  },
+  {
+    "path": "frontEnd-react/src/features/account/AccountModal.jsx",
+    "sha256": "488f9172df55243cedd429c3d63597eec51e1aa2ac1469f66d6c5a86d97ebd5f"
+  },
+  {
+    "path": "frontEnd-react/src/features/analytics/AnalyticsView.jsx",
+    "sha256": "e2e0ebe5e629508c1e096d1417757d80fc9d2961d7e26d1c231041723960587f"
+  },
+  {
+    "path": "frontEnd-react/src/features/guide/ContextualSectionGuide.jsx",
+    "sha256": "0906f4c7fadb675eaf4cb241eefa53fc7255cddd89977e80bb8bf09a4d49cb0f"
+  },
+  {
+    "path": "frontEnd-react/src/features/guide/GuideModal.jsx",
+    "sha256": "4d39d3248aee85067f980595efe037f7f1762aab157e42682523a9d702ed6823"
+  },
+  {
+    "path": "frontEnd-react/src/features/home/AttentionPanel.jsx",
+    "sha256": "9dade5fe9fa35936f9c7d65cd1cdc65d7b2d38c1210c6b474f1376a77733ade8"
+  },
+  {
+    "path": "frontEnd-react/src/features/home/AvailableToSpendCard.jsx",
+    "sha256": "9732e5c4ae9cd85b1d7a0cc5b5621c16e00497f8112712caa6453a87ffb8e502"
+  },
+  {
+    "path": "frontEnd-react/src/features/home/HomeView.jsx",
+    "sha256": "a0ef4038acf33365e1a12435644e8fda04b3397f6dc24016b3b2d6aa0a7c8efd"
+  },
+  {
+    "path": "frontEnd-react/src/features/home/RecentTransactions.jsx",
+    "sha256": "ab38ca51935c9d7114389be878809e92a3ef5f184c850655aa6c70d3d755a6b5"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/FinancialTipsModal.jsx",
+    "sha256": "55493075e6cd3421b37ad8c4883356fe179ae848000385d359ddc2d12ec83c7b"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/JarDetailModal.jsx",
+    "sha256": "34ec49c51442133856c661ffb8c62065bf5401d7c681b04e84caaef0bec65748"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/JarGlassGraphic.jsx",
+    "sha256": "8fb6582a64553ec5cda00b324c618e2b3639a958e4da4b83ce42c210c725b2ce"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/JarHistoryModal.jsx",
+    "sha256": "a8b945cbd09f3510bc337d9cf92ab1410606128e9474429ba4328f618b51c270"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/JarModal.jsx",
+    "sha256": "97985219de412a6319f26d2a4b2cfc12ba2c781e6a7497dd2cd1abee1636d974"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/JarTransactionModal.jsx",
+    "sha256": "3347cfc519cf25e2ee0039889929928475dc4a7c25230a52b1bd73969d921250"
+  },
+  {
+    "path": "frontEnd-react/src/features/jars/JarsView.jsx",
+    "sha256": "c40dbef09a965129c2cd9261cf48fafc46e3a494af20d8945479ec4259aab564"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/ArchiveWalletModal.jsx",
+    "sha256": "6a6cd4fa5a16a4c2e4b5e32abcccfa012a800ec2e040e45d86b36fe98dbf286a"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/BudgetEditModal.jsx",
+    "sha256": "2199da1578a94fafe6c3b7bb1c414114f2d546dee412e66dc67bae6f11452c00"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/BudgetsTab.jsx",
+    "sha256": "b7fc7a421c808e83400cd19061923ffcd768f5ba63d9f9e9776b1144eb634d5b"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/PlanOverviewTab.jsx",
+    "sha256": "bebf7d70dcd7cc6e82a7696ef296c9b7d595875208ed9de40d40bb9995296080"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/PlanView.jsx",
+    "sha256": "5e27bbb122a95910d50398a7640bdddbdf45514a68b6608abe6e3bf6a6bc6f68"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/RecurringModal.jsx",
+    "sha256": "0ee6fbae4d3ab2960641c8b846082c7c4b85141ae6760912244e73aa12c9449a"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/RecurringTab.jsx",
+    "sha256": "7a75a16ed94249176198c22889d9fd13bb5b0b2a6200cfcc4ae19f797eb36b6d"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/TransferModal.jsx",
+    "sha256": "648425eaa82d858606826c3ae6cca2d562fb02a27e612b3ddf994057d81af8cd"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/WalletModal.jsx",
+    "sha256": "2a1a6d648840338b850e7f59dd9b43a30b0d62b11982329ee481ce4ba9838dd0"
+  },
+  {
+    "path": "frontEnd-react/src/features/plan/WalletsTab.jsx",
+    "sha256": "6bbf341669748a2307217994ae391ff593a209fede969960f62fac5d8137b30f"
+  },
+  {
+    "path": "frontEnd-react/src/features/transactions/TransactionModal.jsx",
+    "sha256": "31d1e702a168f9df6154d99b5e3663306b25797da88e3615fcc87790a5d21bbb"
+  },
+  {
+    "path": "frontEnd-react/src/hooks/useFocusTrap.js",
+    "sha256": "a3adccd088900d3477b4b07ef2cc8dc2ffb44399d8c5f83c048f2b71f537f553"
+  },
+  {
+    "path": "frontEnd-react/src/i18n/translations.js",
+    "sha256": "6d51c4bda80b6e7fc24e058afcf40fe831db64ec0563ce9608bb64efc62c655d"
+  },
+  {
+    "path": "frontEnd-react/src/i18n/useTranslation.js",
+    "sha256": "e7ac11e58e1b1061e93f74647ebf59c777f6bfe9079d0717998065c31bc7eb30"
+  },
+  {
+    "path": "frontEnd-react/src/main.jsx",
+    "sha256": "6b6f1e071a31b4abec9279450950f7c3a2d98fddc2f9013b677d25af4b43c108"
+  },
+  {
+    "path": "frontEnd-react/src/pages/LandingPage.jsx",
+    "sha256": "367838242b1c4cd1dba689e64db4ca8c0a4b1b901d06a8442de59426dc3b8ae5"
+  },
+  {
+    "path": "frontEnd-react/src/pages/LoginPage.jsx",
+    "sha256": "7b598d47b04a23a405a978062338a3e4aa51958d2f10bbbb971da702a067a536"
+  },
+  {
+    "path": "frontEnd-react/src/pages/ResetPasswordPage.jsx",
+    "sha256": "5119bb5f5e155a834aca77a958e1e37b624c6cf18a195e9f5e04df5ef328e190"
+  },
+  {
+    "path": "frontEnd-react/src/pages/SignupPage.jsx",
+    "sha256": "63ad8836cee2f1223c49aa902daf480420f5294893fa7d7fce5c0c2e6022eed2"
+  },
+  {
+    "path": "frontEnd-react/src/pages/SpendingPage.jsx",
+    "sha256": "693778af10029947b04e8915753ad42f4ba7736ea742b7feb547470a9630a000"
+  },
+  {
+    "path": "frontEnd-react/src/pages/VerifyEmailPage.jsx",
+    "sha256": "243eca23d4740bca1e411b1f3ebaf923ed024c0ad05ee24995564351d1e7147c"
+  },
+  {
+    "path": "frontEnd-react/src/services/api.js",
+    "sha256": "4cc07ccd62d6cb329f4b61d6b8eea368b737ffa7f6158c5d119c332a1ea26003"
+  },
+  {
+    "path": "frontEnd-react/src/services/authService.js",
+    "sha256": "b9a3d25c0cda6675b950f72e72c28ab45be975c0011f76791a2c3eabfa391b29"
+  },
+  {
+    "path": "frontEnd-react/src/services/jarsService.js",
+    "sha256": "82c1b012ce61d5e652e0236afaec2a005f869ec8ae7ec60d3da69108607f98a5"
+  },
+  {
+    "path": "frontEnd-react/src/services/sessionRuntime.js",
+    "sha256": "bc7883bf2504dd78dbf68cbbde6d18b1bb3dbee78f229970ff27fb8ecc8b1055"
+  },
+  {
+    "path": "frontEnd-react/src/services/spendingService.js",
+    "sha256": "4864c9a0c6f273836ce93c39896827011828750a87e3c9ab7780b43b75ca4f0e"
+  },
+  {
+    "path": "frontEnd-react/src/services/walletService.js",
+    "sha256": "304469f17c0597247f69689901c40c99ca6064d1c00f794161057a02ca9fe875"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useAuthStore.js",
+    "sha256": "a585ee926cc90ea5af8ba865809f27995e67e99f2a397a00917073141cd4ff1b"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useConfirmStore.js",
+    "sha256": "2d7fc88c5beddbff00f819319f2c31ac369b931b6621677dbbafe027022f266e"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useJarStore.js",
+    "sha256": "fef9a4eff0d5c870e86f215f32f24b830c19aba624cf926e070557f9c64f58b0"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useLangStore.js",
+    "sha256": "0c9d587d6a93ad1576901eb07b15b9f97dcd0645d6d1b108c102fc58e57873b3"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useSpendingStore.js",
+    "sha256": "99464e1630b9b326c6d518757a61ed4ae7bd29be92bf83076ddcb739fa67b100"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useThemeStore.js",
+    "sha256": "a7d9aed8f30cb637ffaee480970b093854c8d0209729e9d945cca7b60620880e"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useToastStore.js",
+    "sha256": "62bddd4504d92539c55dd82b4c06bbfc865802b1f06cdc56c0ad7df87c02778a"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useTransactionStore.js",
+    "sha256": "ebace871f0e2e8bcaf1f4e541bf53575571a7071dff644cc98f9db64a5df4da0"
+  },
+  {
+    "path": "frontEnd-react/src/stores/useWalletStore.js",
+    "sha256": "226ae90539554fffb6d6468888bd5e7a4ca11e1ffd21ee41bc423e1ce088715e"
+  },
+  {
+    "path": "frontEnd-react/src/utils/brandDetection.js",
+    "sha256": "6de9a7e486eae91db0f2924b2b0c35e0e2bc72fa0456cff2fca5fbd140f3a49c"
+  },
+  {
+    "path": "frontEnd-react/src/utils/brandIcons.jsx",
+    "sha256": "91fbd9fc3a672d5cde027807f617470dd0b1b6dd84aa2b5c928f65f1f348d79c"
+  },
+  {
+    "path": "frontEnd-react/src/utils/categories.js",
+    "sha256": "b5ff7437ddb9d91bc9c06af34b9ff51394f806d8712609ad36f60eab884cb68a"
+  },
+  {
+    "path": "frontEnd-react/src/utils/categoryIcons.jsx",
+    "sha256": "713f3883e74fc8b61a51e39a8de9eca8ccf2d3a70b23ded934f63f4d22955291"
+  },
+  {
+    "path": "frontEnd-react/src/utils/financeMath.js",
+    "sha256": "6b54b00fc3723af7b993492a3f1cbe1100c9a6361575de94de98de8170c2ed61"
+  },
+  {
+    "path": "frontEnd-react/src/utils/formatters.js",
+    "sha256": "74458b7e239cf92ba1a20ee3742664443c1cc031ffaa57b5b64e0c894bfc6a9e"
+  },
+  {
+    "path": "frontEnd-react/src/utils/moneyPrecision.js",
+    "sha256": "1f9d17e791c26a29e5846ac1cc255ea73bd611a1dea0af884a741301bd4d33eb"
+  },
+  {
+    "path": "frontEnd-react/tests/money-precision.test.mjs",
+    "sha256": "8732950b5906f346e2b19accbe4fc99f7acd3e97a815df961b285887c559c840"
+  },
+  {
+    "path": "frontEnd-react/vite.config.js",
+    "sha256": "627dd8235d20963ab51cf12fc21b377e1b75c0d6140260df3fb5309bcdd08260"
+  },
+  {
+    "path": "package-lock.json",
+    "sha256": "c61a433d9f59d6f59c6d8d0770e1794ad3e2b74c9bbdd773beb09b9cf3af0894"
+  },
+  {
+    "path": "package.json",
+    "sha256": "9ef98e7c0b3dddfc02636fcaf00cb6ddd281417df5e220a7d471c69a11f868d9"
+  },
+  {
+    "path": "scripts/release.cjs",
+    "sha256": "ea00aaf2a4243543a79497eeee46d54e67c5279677f0314d3811c77d65273c08"
+  },
+  {
+    "path": "scripts/start-all.js",
+    "sha256": "7b7574e89eb26054f8d25d4e0217ff7ed195fcb88584ce13007082f7b165eb8f"
+  },
+  {
+    "path": "tests/browser-security.cjs",
+    "sha256": "4cedd26e299dcfb3d2a4049a8892c199ae377922d8ffb7395c1dcab2a17342ef"
+  },
+  {
+    "path": "tests/launcher-safety.cjs",
+    "sha256": "1df7d3cc62f188929e00a5c6438ef1465971d63871f791d59b2ae415fb309857"
+  },
+  {
+    "path": "tests/release-guards.cjs",
+    "sha256": "24173eba4f5cf2f1d6a4939ea549e9bd4e37ab133081ae017b357a15afac3529"
+  },
+  {
+    "path": "tests/run-api-contract.js",
+    "sha256": "937dfd94140b5066c0c6e9457ceb93e7da814082eb1306bbd17ce452239a931a"
+  },
+  {
+    "path": "tests/run-e2e.js",
+    "sha256": "cf4863ecfbd314afbf6cfd8f14a33f490f36f0ecd9d7f73676ac7c2df1487456"
+  },
+  {
+    "path": "tests/test-archive-wallet.js",
+    "sha256": "b7b3463d36c96a1f1108af1070b853d8dd9dc7454eadba8bd414879348841cc1"
+  },
+  {
+    "path": "tests/test-category-c.js",
+    "sha256": "5e1e29c0801e6c81be970df89786605420e0dfdc7c8153d1eca79ef944108fed"
+  },
+  {
+    "path": "tests/test-category-h.js",
+    "sha256": "208a30ad3f45f5bd93c5a637a839cf9809b26f7c855e210145d5ddf537f4cbb5"
+  },
+  {
+    "path": "tests/test-category-m.js",
+    "sha256": "344e9c03e1c664ebfcdc897b6a46876c3c7ab89815421ebd0eb4a070acad4612"
+  }
+]

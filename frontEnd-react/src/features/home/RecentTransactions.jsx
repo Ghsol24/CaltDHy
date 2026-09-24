@@ -7,8 +7,10 @@ import { useToastStore } from '../../stores/useToastStore';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CategoryOutlineIcon, ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export const RecentTransactions = React.memo(function RecentTransactions() {
+  const { t, label, intlLocale } = useTranslation();
   const transactions = useTransactionStore((s) => s.transactions);
   const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
   const undoDeleteTransaction = useTransactionStore((s) => s.undoDeleteTransaction);
@@ -18,6 +20,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const confirm = useConfirmStore((s) => s.confirm);
   const addToast = useToastStore((s) => s.addToast);
+  const [deletingTxnId, setDeletingTxnId] = React.useState(null);
 
   // Create a map of walletId -> wallet object
   const walletMap = React.useMemo(() => {
@@ -38,53 +41,46 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
   }, [transactions]);
 
   // Delete transaction with safe confirmation dialog & undo toast
-  const handleDelete = async (e, txn) => {
+  const handleDelete = (e, txn) => {
     e.stopPropagation();
-    if (txn.jarId || txn.installmentId) return; // chặn ở UI, phòng khi nút vẫn lọt qua đâu đó
+    if (txn.systemGenerated || txn.jarId || txn.installmentId) return;
     const isIncome = txn.type === 'income';
-    const typeLabel = isIncome ? 'khoản thu' : 'khoản chi';
-    const confirmed = await confirm({
-      title: 'Xóa giao dịch',
-      message: `Bạn có chắc chắn muốn xóa ${typeLabel} "${txn.desc || txn.category}" trị giá ${formatCurrency(txn.amount)}?`,
-      confirmText: 'Xóa giao dịch',
-      cancelText: 'Giữ lại',
-      confirmVariant: 'danger'
+    const typeLabel = t(isIncome ? 'type.income' : 'type.expense').toLocaleLowerCase(intlLocale);
+    confirm({
+      title: t('home.deleteTitle'),
+      message: t('home.deleteMessage', { type: typeLabel, name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) }),
+      confirmText: t('home.deleteTitle'),
+      cancelText: t('home.keep'),
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        setDeletingTxnId(txn.id);
+        try {
+          await deleteTransaction(txn.id);
+          addToast({
+            type: 'info',
+            message: t('home.deleted', { name: txn.desc || label(txn.category) }),
+            action: { label: t('transaction.undo'), onClick: () => undoDeleteTransaction(txn) },
+            duration: 5000,
+          });
+        } finally {
+          setDeletingTxnId(null);
+        }
+      },
     });
-
-    if (confirmed) {
-      try {
-        await deleteTransaction(txn.id);
-        addToast({
-          type: 'info',
-          message: `Đã xóa giao dịch ${txn.desc || txn.category}.`,
-          action: {
-            label: 'Hoàn tác',
-            onClick: () => undoDeleteTransaction(txn)
-          },
-          duration: 5000
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          message: err?.message || 'Không thể xóa giao dịch này.',
-          duration: 6000
-        });
-      }
-    }
   };
 
   const handleEdit = (e, txn) => {
     e.stopPropagation();
-    if (txn.jarId || txn.installmentId) return;
+    if (txn.systemGenerated || txn.jarId || txn.installmentId) return;
     openEditTransaction(txn);
   };
 
   return (
-    <section className="home-recent-txns-section" aria-label="Giao dịch gần đây">
+    <section className="home-recent-txns-section" aria-label={t('home.recent')}>
       {/* Section Header */}
       <div className="home-txns-header-row">
-        <h2 className="home-txns-title">Giao dịch gần đây</h2>
-        <span className="home-txns-subtitle">Hôm nay</span>
+        <h2 className="home-txns-title">{t('home.recent')}</h2>
+        <span className="home-txns-subtitle">{t('date.today')}</span>
       </div>
 
       {/* Transaction List Card Container */}
@@ -92,9 +88,9 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
         {recentList.length === 0 ? (
           <EmptyState
             icon={<ArrowUpRightOutlineIcon size={32} color="var(--color-text-muted, #94A3B8)" />}
-            title="Chưa có giao dịch gần đây"
-            description="Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn."
-            actionText="+ Thêm giao dịch"
+            title={t('home.noRecent')}
+            description={t('home.noRecentHint')}
+            actionLabel={t('nav.addTransaction')}
             onAction={openAddTxnModal}
           />
         ) : (
@@ -102,26 +98,26 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
             {recentList.map((txn, index) => {
               const isIncome = txn.type === 'income';
               const isTransfer = txn.type === 'transfer';
-              const isLocked = Boolean(txn.jarId || txn.installmentId);
+              const isLocked = Boolean(txn.systemGenerated || txn.jarId || txn.installmentId);
               
               const walletName = txn.walletId && walletMap[txn.walletId]
                 ? walletMap[txn.walletId].name
                 : (txn.toWalletId && walletMap[txn.toWalletId]
                   ? walletMap[txn.toWalletId].name
-                  : (isTransfer ? 'Chuyển tiền' : 'Tiền mặt'));
+                  : (isTransfer ? t('type.transfer') : t('home.cash')));
               
               const relativeDate = formatRelativeDate(txn.date);
-              const metaText = `${txn.category || 'Chi tiêu'} · ${walletName} · ${relativeDate}`;
+              const metaText = `${label(txn.category || 'Other Expense')} · ${walletName} · ${relativeDate}`;
 
               return (
                 <div
                   key={txn.id || index}
-                  className="home-txn-row"
-                  onClick={isLocked ? undefined : () => openEditTransaction(txn)}
+                  className={`home-txn-row ${deletingTxnId === txn.id ? 'is-deleting' : ''}`}
+                  onClick={isLocked || deletingTxnId === txn.id ? undefined : () => openEditTransaction(txn)}
                   role={isLocked ? undefined : 'button'}
-                  tabIndex={isLocked ? undefined : 0}
-                  onKeyDown={isLocked ? undefined : (e) => e.key === 'Enter' && openEditTransaction(txn)}
-                  aria-label={`Giao dịch ${txn.desc || txn.category}, ${formatCurrency(txn.amount)}`}
+                  tabIndex={isLocked || deletingTxnId === txn.id ? undefined : 0}
+                  onKeyDown={isLocked || deletingTxnId === txn.id ? undefined : (e) => e.key === 'Enter' && openEditTransaction(txn)}
+                  aria-label={t('home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
                 >
                   {/* Left Icon */}
                   <div className={`home-txn-icon-box ${isIncome ? 'is-income' : ''} ${isTransfer ? 'is-transfer' : ''}`} aria-hidden="true">
@@ -131,7 +127,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                   {/* Middle Content */}
                   <div className="home-txn-info">
                     <span className="home-txn-name" title={txn.desc || txn.category}>
-                      {txn.desc || txn.category}
+                      {txn.desc || label(txn.category)}
                     </span>
                     <span className="home-txn-meta">
                       {metaText}
@@ -148,13 +144,13 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                     {isLocked ? (
                       <span
                         className="home-txn-locked-hint"
-                        title={txn.jarId ? 'Vào trang Hũ để hoàn tác (nút Rút)' : 'Vào trang Khoản định kỳ để chỉnh sửa'}
+                        title={t(txn.jarId ? 'home.jarLocked' : 'home.recurringLocked')}
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
-                        <span>{txn.jarId ? 'Hũ' : 'Định kỳ'}</span>
+                        <span>{t(txn.jarId ? 'nav.jarShort' : 'nav.recurring')}</span>
                       </span>
                     ) : (
                       <div className="home-txn-actions" onClick={(e) => e.stopPropagation()}>
@@ -162,7 +158,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                           type="button"
                           className="home-txn-btn-action"
                           onClick={(e) => handleEdit(e, txn)}
-                          title="Chỉnh sửa giao dịch"
+                          title={t('transaction.edit')}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -173,7 +169,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                           type="button"
                           className="home-txn-btn-action home-txn-btn-action--delete"
                           onClick={(e) => handleDelete(e, txn)}
-                          title="Xóa giao dịch"
+                          title={t('home.deleteTitle')}
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6" />

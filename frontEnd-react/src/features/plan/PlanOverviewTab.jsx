@@ -21,10 +21,15 @@ const WALLET_TYPE_LABELS = {
 
 export function PlanOverviewTab() {
   const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
-  const { wallets, isLoading: isWalletsLoading } = useWalletStore();
-  const { transactions, budgets, expenseCategories, isLoading: isTxnsLoading } = useTransactionStore();
-  const { installments, isLoading: isJarsLoading } = useJarStore();
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
+  const wallets = useWalletStore((state) => state.wallets);
+  const isWalletsLoading = useWalletStore((state) => state.isLoading);
+  const transactions = useTransactionStore((state) => state.transactions);
+  const budgets = useTransactionStore((state) => state.budgets);
+  const expenseCategories = useTransactionStore((state) => state.expenseCategories);
+  const isTxnsLoading = useTransactionStore((state) => state.isLoading);
+  const installments = useJarStore((state) => state.installments);
+  const isJarsLoading = useJarStore((state) => state.isLoading);
 
   // Quick creation dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -257,6 +262,7 @@ export function PlanOverviewTab() {
     const sorted = [...categoryBudgets].sort((a, b) => b.spent - a.spent);
     return sorted[0]?.spent > 0 ? sorted[0] : null;
   }, [categoryBudgets]);
+  const hasPlanData = hasAnyBudgetLimit || activeInstallments.length > 0;
 
   return (
     <div className="plan-overview-container" role="region" aria-label="Tổng quan kế hoạch tài chính">
@@ -396,7 +402,9 @@ export function PlanOverviewTab() {
             <span className="top-alerts-subtext">
               {activeAlerts.length > 0
                 ? `Bạn có ${activeAlerts.length} việc cần lưu ý`
-                : 'Mọi kế hoạch đang trong tầm kiểm soát tốt!'}
+                : hasPlanData
+                  ? 'Hiện chưa có cảnh báo cần xử lý'
+                  : 'Chưa đủ dữ liệu để đánh giá kế hoạch'}
             </span>
           </div>
         </div>
@@ -444,7 +452,11 @@ export function PlanOverviewTab() {
         ) : (
           <div className="top-alerts-empty-reassurance">
             <SparkleOutlineIcon size={16} className="reassurance-sparkle" />
-            <span>Tất cả ngân sách và khoản định kỳ của bạn đang trong trạng thái kiểm soát tốt!</span>
+            <span>
+              {hasPlanData
+                ? 'Không có ngân sách hoặc khoản định kỳ nào đang chạm ngưỡng cảnh báo.'
+                : 'Hãy tạo ngân sách hoặc khoản định kỳ đầu tiên để bắt đầu theo dõi cảnh báo.'}
+            </span>
           </div>
         )}
 
@@ -615,7 +627,7 @@ export function PlanOverviewTab() {
                           </span>
                         ) : totalAssets > 0 && Number(w.currentBalance) > 0 ? (
                           <span className="wallet-growth-tag" style={{ color: 'var(--text-secondary, #6b7280)' }}>
-                            {((Number(w.currentBalance) / totalAssets) * 100).toFixed(0)}%
+                            {formatPercent((Number(w.currentBalance) / totalAssets) * 100)}
                           </span>
                         ) : null}
                       </div>
@@ -836,7 +848,7 @@ export function PlanOverviewTab() {
             <p className="insight-banner-desc">
               {highestSpendCategory
                 ? `Bạn có thể tiết kiệm thêm ${formatCurrency(Math.round(highestSpendCategory.spent * 0.2))} trong tháng này nếu tối ưu 20% chi tiêu ở danh mục ${highestSpendCategory.category}.`
-                : 'Lập kế hoạch ngân sách và phân bổ dòng tiền hợp lý giúp bạn tối ưu hóa 15% - 25% thu nhập mỗi tháng.'}
+                : 'Chưa đủ dữ liệu chi tiêu để đưa ra gợi ý cá nhân hóa. Hãy ghi nhận giao dịch đầu tiên hoặc thiết lập ngân sách.'}
             </p>
           </div>
         </div>
@@ -844,7 +856,7 @@ export function PlanOverviewTab() {
         <button
           type="button"
           className="insight-banner-btn"
-          onClick={() => setActiveView('analytics')}
+          onClick={() => navigateTo('analytics', 'overview')}
         >
           <span>Xem phân tích chi tiết</span>
         </button>

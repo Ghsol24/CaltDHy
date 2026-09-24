@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency, getLocalDateString } from '../../utils/formatters';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { detectBrandInfo } from '../../utils/brandDetection';
 import { CategoryOutlineIcon } from '../../utils/categoryIcons';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
+import { useTranslation } from '../../i18n/useTranslation';
+import { translateLegacyText } from '../../i18n/legacyTranslations';
 
 const CYCLE_OPTIONS = [
   { value: 'monthly', label: 'Hàng tháng' },
@@ -16,19 +20,8 @@ const CYCLE_OPTIONS = [
   { value: 'yearly', label: 'Hàng năm' }
 ];
 
-const STANDARD_CATEGORY_NAMES_VN = {
-  Entertainment: 'Giải trí',
-  'Food & Dining': 'Ăn uống',
-  'Housing & Bills': 'Nhà & Hóa đơn',
-  Shopping: 'Mua sắm',
-  Transportation: 'Đi lại',
-  'Health & Beauty': 'Sức khỏe & Làm đẹp',
-  Education: 'Học tập & Giáo dục',
-  Travel: 'Du lịch',
-  'Other Expense': 'Chi phí khác'
-};
-
 export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
+  const { label, lang } = useTranslation();
   const { createInstallment, updateInstallment } = useJarStore();
   const { wallets } = useWalletStore();
   const { expenseCategories, budgets, transactions, setExpenseCategories } = useTransactionStore();
@@ -102,6 +95,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const newCatInputRef = useRef(null);
 
   useFocusTrap(modalRef, isOpen);
+  useBodyScrollLock(isOpen);
 
   // Close custom dropdowns on click outside
   useEffect(() => {
@@ -132,7 +126,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       setName(installmentToEdit.name || '');
       setCategory(installmentToEdit.category || defaultCatName);
       setWalletId(installmentToEdit.walletId ? String(installmentToEdit.walletId) : (wallets[0]?.id || ''));
-      setAmount(installmentToEdit.amount ? Number(installmentToEdit.amount).toLocaleString('vi-VN') : '');
+      setAmount(installmentToEdit.amount ? formatInputNumber(installmentToEdit.amount) : '');
       setCycle(installmentToEdit.cycle || 'monthly');
       setNextDueDate(installmentToEdit.nextDueDate ? String(installmentToEdit.nextDueDate).slice(0, 10) : getLocalDateString());
       setNote(installmentToEdit.note || installmentToEdit.desc || '');
@@ -177,14 +171,14 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
           setCategory(brand.categoryDefault);
         }
         if (!note && brand.noteDefault) {
-          setNote(brand.noteDefault);
+          setNote(translateLegacyText(lang, brand.noteDefault));
         }
       }
     }
   };
 
   // Tạo nhanh danh mục mới trực tiếp trong dropdown
-  const handleCreateNewCategory = (e) => {
+  const handleCreateNewCategory = async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
     const trimmed = newCatInputName.trim();
@@ -202,7 +196,11 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
         icon: getCategoryIcon(trimmed, 'expense')
       };
       const updatedList = [...syncedExpenseCategories, newCategoryObj];
-      setExpenseCategories(updatedList);
+      try { await setExpenseCategories(updatedList); }
+      catch (error) {
+        addToast({ type: 'error', message: error.message });
+        return;
+      }
       setCategory(trimmed);
       addToast({
         type: 'success',
@@ -225,7 +223,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setAmount(num ? num.toLocaleString('vi-VN') : '');
+    setAmount(num ? formatInputNumber(num) : '');
   };
 
   const handleSubmit = async (e) => {
@@ -291,13 +289,13 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
 
   const selectedWallet = wallets.find((w) => String(w.id) === String(walletId)) || wallets[0];
   const selectedCycleLabel = CYCLE_OPTIONS.find((c) => c.value === cycle)?.label || 'Hàng tháng';
-  const categoryDisplayName = STANDARD_CATEGORY_NAMES_VN[category] || category || 'Chọn danh mục';
+  const categoryDisplayName = category ? label(category) : translateLegacyText(lang, 'Chọn danh mục');
 
-  return (
+  return createPortal(
     <div
       className="txn-modal-backdrop"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
       <div
@@ -334,6 +332,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             type="button"
             className="txn-modal-close-btn"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng cửa sổ"
           >
             <svg
@@ -415,7 +414,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                         <div className="modal-dropdown-scroll-list">
                           {syncedExpenseCategories.map((c) => {
                             const isSelected = c.name.toLowerCase() === category.toLowerCase();
-                            const labelDisplay = STANDARD_CATEGORY_NAMES_VN[c.name] || c.name;
+                            const labelDisplay = label(c.name);
                             return (
                               <button
                                 key={c.name}
@@ -767,6 +766,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

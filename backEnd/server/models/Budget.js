@@ -48,5 +48,6 @@ const budgetSchema = new mongoose.Schema(
 
 // Ràng buộc unique: Một user chỉ có 1 hạn mức cho mỗi danh mục trong 1 tháng cụ thể (hoặc global)
 budgetSchema.index({ userId: 1, month: 1, category: 1 }, { unique: true });
+budgetSchema.path('limit').validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
 
 module.exports = mongoose.model('Budget', budgetSchema);

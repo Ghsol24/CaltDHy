@@ -8,20 +8,22 @@ import {
   AlertTriangleOutlineIcon,
   LockOutlineIcon
 } from '../components/ui/AppIcons';
+import { useTranslation } from '../i18n/useTranslation';
 
-function getPasswordStrength(pw) {
+function getPasswordStrength(pw, t) {
   if (!pw) return { level: 0, label: '—', cls: '' };
   let score = 0;
   if (pw.length >= 8) score++;
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (score <= 1) return { level: 1, label: 'WEAK', cls: 'pw-weak' };
-  if (score <= 2) return { level: 2, label: 'MEDIUM', cls: 'pw-medium' };
-  return { level: 3, label: 'STRONG', cls: 'pw-strong' };
+  if (score <= 1) return { level: 1, label: t('auth.weak'), cls: 'pw-weak' };
+  if (score <= 2) return { level: 2, label: t('auth.medium'), cls: 'pw-medium' };
+  return { level: 3, label: t('auth.strong'), cls: 'pw-strong' };
 }
 
 export const SignupPage = () => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,23 +35,23 @@ export const SignupPage = () => {
 
   const isNameValid = name.trim().length >= 2;
   const isEmailValid = /\S+@\S+\.\S+/.test(email.trim());
-  const pwStrength = getPasswordStrength(password);
-  const isPwValid = pwStrength.level >= 2 || password.length >= 6;
+  const pwStrength = getPasswordStrength(password, t);
+  const isPwValid = password.length >= 12 && new TextEncoder().encode(password).length <= 72;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!name.trim()) {
-      setError('Vui lòng nhập họ tên.');
+      setError(t('auth.enterName'));
       return;
     }
     if (!isEmailValid) {
-      setError('Vui lòng nhập đúng địa chỉ email (ví dụ: ten@example.com).');
+      setError(t('auth.invalidEmail'));
       return;
     }
-    if (password.length < 6) {
-      setError('Mật khẩu cần ít nhất 6 ký tự.');
+    if (password.length < 12) {
+      setError(t('auth.passwordMin'));
       return;
     }
 
@@ -58,10 +60,10 @@ export const SignupPage = () => {
     try {
       await register(name.trim(), email.trim(), password);
       setTimeout(() => {
-        navigate('/spending');
+        navigate('/spending/home');
       }, 300);
     } catch (err) {
-      setError(err.message || 'Lỗi kết nối server.');
+      setError(err.message || t('auth.connectionError'));
       setIsSubmitting(false);
     }
   };
@@ -75,15 +77,15 @@ export const SignupPage = () => {
       <div className="pg-screw s-bl" aria-hidden="true"></div>
       <div className="pg-screw s-br" aria-hidden="true"></div>
 
-      <StatusBar label="Tạo Tài Khoản Mới" />
+      <StatusBar label={t('auth.newAccount')} />
 
       <main>
-        <IndustrialPanel eyebrow="CaltDHy Account" title="Create" titleHighlight="ACCOUNT">
+        <IndustrialPanel eyebrow={t('auth.account')} title={t('auth.createAccount')} titleHighlight="">
           <form id="signupForm" onSubmit={handleSubmit} noValidate>
             <FloatingInput
               id="fullName"
               type="text"
-              label="Full Name"
+              label={t('auth.fullName')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               isValid={isNameValid}
@@ -94,7 +96,7 @@ export const SignupPage = () => {
             <FloatingInput
               id="emailIn"
               type="email"
-              label="Email Address"
+              label={t('auth.email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               isValid={isEmailValid}
@@ -105,7 +107,7 @@ export const SignupPage = () => {
             <FloatingInput
               id="pwIn"
               type="password"
-              label="Password (min 6 chars)"
+              label={t('auth.password12')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               isValid={isPwValid}
@@ -132,29 +134,29 @@ export const SignupPage = () => {
 
             <button type="submit" className={`btn-cta ${isSubmitting ? 'loading' : ''}`} disabled={isSubmitting}>
               <span className="spinner" aria-hidden="true"></span>
-              <span className="btn-text">{isSubmitting ? 'Đang tạo tài khoản...' : 'CREATE ACCOUNT'}</span>
+              <span className="btn-text">{isSubmitting ? t('auth.creating') : t('auth.createAccount')}</span>
             </button>
 
             <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <LockOutlineIcon size={13} /> Thông tin đăng ký của bạn được mã hoá an toàn.
+              <LockOutlineIcon size={13} /> {t('auth.secureSignupNote')}
             </p>
           </form>
 
           <div className="divider">
-            <span>OR</span>
+            <span>{t('auth.or')}</span>
           </div>
 
           <Link to="/" className="btn-ghost">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            BACK TO HOME
+            {t('auth.backHome')}
           </Link>
 
           <p className="mod-footer">
-            Already have an account?{' '}
+            {t('auth.haveAccount')}{' '}
             <Link to="/login" className="lnk">
-              LOG IN
+              {t('auth.login')}
             </Link>
           </p>
         </IndustrialPanel>

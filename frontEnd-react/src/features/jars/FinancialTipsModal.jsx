@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { TargetOutlineIcon, ChartOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) {
+  const { t } = useTranslation();
   const modalRef = useRef(null);
   useFocusTrap(modalRef, isOpen);
 
@@ -100,7 +102,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                     M - Đo lường được (Measurable)
                   </strong>
                   <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-                    Luôn thiết lập con số mục tiêu chính xác (ví dụ: 15.000.000 đ) để theo dõi tỷ lệ phần trăm dâng lên mỗi ngày.
+                    {t('jars.measurableTip', { amount: formatCurrency(15000000) })}
                   </span>
                 </div>
 
@@ -143,7 +145,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                   </label>
                   <input
                     type="text"
-                    value={numericIncome ? numericIncome.toLocaleString('vi-VN') : ''}
+                    value={numericIncome ? formatInputNumber(numericIncome) : ''}
                     onChange={handleIncomeChange}
                     placeholder="Nhập mức thu nhập..."
                     className="financial-tips-input"

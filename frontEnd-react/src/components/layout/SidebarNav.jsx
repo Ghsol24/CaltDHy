@@ -1,98 +1,21 @@
 import React from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export function SidebarNav() {
+  const { t } = useTranslation();
   const activeView = useSpendingStore((s) => s.activeView);
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const planSubTab = useSpendingStore((s) => s.planSubTab);
-  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
-  const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
   const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
-  const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
   const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
 
   const handleNavClick = (viewId, subTabId) => {
-    setActiveView(viewId);
-    const triggerProgrammaticScroll = (targetId, delay = 0) => {
-      if (typeof window.__caltdhy_cancel_scroll === 'function') {
-        window.__caltdhy_cancel_scroll();
-      }
-
-      window.__caltdhy_programmatic_scroll = true;
-      let timerId = null;
-      let delayTimerId = null;
-
-      const resetFlag = () => {
-        window.__caltdhy_programmatic_scroll = false;
-        window.__caltdhy_cancel_scroll = null;
-        window.removeEventListener('wheel', onUserInterrupt);
-        window.removeEventListener('touchstart', onUserInterrupt);
-        if ('onscrollend' in window) {
-          window.removeEventListener('scrollend', resetFlag);
-        }
-      };
-
-      const onUserInterrupt = () => {
-        if (timerId) clearTimeout(timerId);
-        if (delayTimerId) clearTimeout(delayTimerId);
-        resetFlag();
-      };
-
-      window.__caltdhy_cancel_scroll = () => {
-        if (timerId) clearTimeout(timerId);
-        if (delayTimerId) clearTimeout(delayTimerId);
-        resetFlag();
-      };
-
-      const scrollAction = () => {
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        window.addEventListener('wheel', onUserInterrupt, { passive: true, once: true });
-        window.addEventListener('touchstart', onUserInterrupt, { passive: true, once: true });
-
-        if ('onscrollend' in window) {
-          window.addEventListener('scrollend', resetFlag, { once: true });
-        }
-
-        timerId = setTimeout(resetFlag, 500);
-      };
-
-      if (delay > 0) {
-        delayTimerId = setTimeout(scrollAction, delay);
-      } else {
-        scrollAction();
-      }
-    };
-
-    if (viewId === 'plan' && subTabId) {
-      setPlanSubTab(subTabId);
-    } else if (viewId === 'analytics' && subTabId) {
-      setAnalyticsSubTab(subTabId);
-      const targetMap = {
-        overview: 'analytics-overview',
-        spending: 'analytics-spending',
-        'cash-flow': 'analytics-cashflow',
-        reports: 'analytics-reports'
-      };
-      const targetId = targetMap[subTabId] || 'analytics-overview';
-      triggerProgrammaticScroll(targetId, activeView === 'analytics' ? 0 : 100);
-    } else if (viewId === 'jars' && subTabId) {
-      setJarsSubTab(subTabId);
-      const targetMap = {
-        jars: 'jars-section-list',
-        goals: 'jars-section-goals',
-        history: 'jars-section-history'
-      };
-      const targetId = targetMap[subTabId] || 'jars-section-list';
-      triggerProgrammaticScroll(targetId, activeView === 'jars' ? 0 : 120);
-    }
+    navigateTo(viewId, subTabId);
 
     if (window.innerWidth <= 900) {
       setSidebarCollapsed(true);
@@ -102,12 +25,12 @@ export function SidebarNav() {
   const navGroups = [
     {
       id: 'group_home',
-      groupLabel: 'TRANG CHỦ',
+      groupLabel: t('nav.home').toLocaleUpperCase(),
       items: [
         {
           id: 'home_main',
           viewId: 'home',
-          label: 'Trang chủ',
+          label: t('nav.home'),
           isActive: activeView === 'home',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -120,13 +43,13 @@ export function SidebarNav() {
     },
     {
       id: 'group_plan',
-      groupLabel: 'KẾ HOẠCH',
+      groupLabel: t('nav.plan').toLocaleUpperCase(),
       items: [
         {
           id: 'plan_overview',
           viewId: 'plan',
           subTabId: 'overview',
-          label: 'Tổng quan',
+          label: t('nav.overview'),
           isActive: activeView === 'plan' && (planSubTab === 'overview' || !planSubTab),
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -141,7 +64,7 @@ export function SidebarNav() {
           id: 'plan_wallets',
           viewId: 'plan',
           subTabId: 'wallets',
-          label: 'Ví & Tài khoản',
+          label: t('nav.wallets'),
           isActive: activeView === 'plan' && planSubTab === 'wallets',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -154,7 +77,7 @@ export function SidebarNav() {
           id: 'plan_budgets',
           viewId: 'plan',
           subTabId: 'budgets',
-          label: 'Ngân sách',
+          label: t('nav.budgets'),
           isActive: activeView === 'plan' && planSubTab === 'budgets',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -168,7 +91,7 @@ export function SidebarNav() {
           id: 'plan_recurring',
           viewId: 'plan',
           subTabId: 'recurring',
-          label: 'Khoản định kỳ',
+          label: t('nav.recurring'),
           isActive: activeView === 'plan' && planSubTab === 'recurring',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -183,13 +106,13 @@ export function SidebarNav() {
     },
     {
       id: 'group_analytics',
-      groupLabel: 'PHÂN TÍCH',
+      groupLabel: t('nav.analytics').toLocaleUpperCase(),
       items: [
         {
           id: 'analytics_overview',
           viewId: 'analytics',
           subTabId: 'overview',
-          label: 'Tổng quan',
+          label: t('nav.overview'),
           isActive: activeView === 'analytics' && (analyticsSubTab === 'overview' || !analyticsSubTab),
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -203,7 +126,7 @@ export function SidebarNav() {
           id: 'analytics_spending',
           viewId: 'analytics',
           subTabId: 'spending',
-          label: 'Phân tích chi tiêu',
+          label: t('nav.spending'),
           isActive: activeView === 'analytics' && analyticsSubTab === 'spending',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -216,7 +139,7 @@ export function SidebarNav() {
           id: 'analytics_cashflow',
           viewId: 'analytics',
           subTabId: 'cash-flow',
-          label: 'Xu hướng dòng tiền',
+          label: t('nav.cashFlowTrend'),
           isActive: activeView === 'analytics' && analyticsSubTab === 'cash-flow',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -229,7 +152,7 @@ export function SidebarNav() {
           id: 'analytics_reports',
           viewId: 'analytics',
           subTabId: 'reports',
-          label: 'Báo cáo',
+          label: t('nav.reports'),
           isActive: activeView === 'analytics' && analyticsSubTab === 'reports',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -245,13 +168,13 @@ export function SidebarNav() {
     },
     {
       id: 'group_jars',
-      groupLabel: 'HŨ CHI TIÊU',
+      groupLabel: t('nav.jars').toLocaleUpperCase(),
       items: [
         {
           id: 'jars_goals',
           viewId: 'jars',
           subTabId: 'goals',
-          label: 'Mục tiêu',
+          label: t('nav.goals'),
           isActive: activeView === 'jars' && (jarsSubTab === 'goals' || !jarsSubTab),
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -265,7 +188,7 @@ export function SidebarNav() {
           id: 'jars_list',
           viewId: 'jars',
           subTabId: 'jars',
-          label: 'Danh sách hũ',
+          label: t('nav.jarList'),
           isActive: activeView === 'jars' && jarsSubTab === 'jars',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -279,7 +202,7 @@ export function SidebarNav() {
           id: 'jars_history',
           viewId: 'jars',
           subTabId: 'history',
-          label: 'Lịch sử',
+          label: t('nav.history'),
           isActive: activeView === 'jars' && jarsSubTab === 'history',
           icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -295,7 +218,7 @@ export function SidebarNav() {
   return (
     <aside
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
-      aria-label="Điều hướng chính"
+      aria-label={t('nav.mainNavigation')}
     >
       {/* Collapsed Top Toggle Button */}
       {isSidebarCollapsed && (
@@ -304,8 +227,8 @@ export function SidebarNav() {
             type="button"
             className="sidebar-hamburger-btn"
             onClick={toggleSidebar}
-            aria-label="Mở rộng thanh điều hướng"
-            title="Mở rộng thanh điều hướng"
+            aria-label={t('nav.expand')}
+            title={t('nav.expand')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="4" x2="20" y1="12" y2="12" />
@@ -330,8 +253,8 @@ export function SidebarNav() {
                     type="button"
                     className="sidebar-hamburger-btn"
                     onClick={toggleSidebar}
-                    aria-label="Thu gọn thanh điều hướng"
-                    title="Thu gọn thanh điều hướng"
+                    aria-label={t('nav.collapse')}
+                    title={t('nav.collapse')}
                   >
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="4" x2="20" y1="12" y2="12" />
@@ -375,8 +298,8 @@ export function SidebarNav() {
                 </svg>
               </div>
               <div className="quick-record-text">
-                <strong className="quick-record-title">Ghi chép nhanh</strong>
-                <span className="quick-record-desc">Thêm giao dịch chỉ trong vài giây</span>
+                <strong className="quick-record-title">{t('nav.quickRecord')}</strong>
+                <span className="quick-record-desc">{t('nav.quickRecordHint')}</span>
               </div>
             </div>
             <button
@@ -384,7 +307,7 @@ export function SidebarNav() {
               className="quick-record-btn"
               onClick={openAddTxnModal}
             >
-              <span>+ Thêm giao dịch</span>
+              <span>{t('nav.addTransaction')}</span>
             </button>
           </div>
         )}

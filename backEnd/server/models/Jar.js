@@ -96,5 +96,7 @@ const jarSchema = new mongoose.Schema(
 
 
 jarSchema.index({ userId: 1, createdAt: -1 });
+for (const field of ['target', 'current']) jarSchema.path(field).validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
+jarHistorySchema.path('amount').validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
 
 module.exports = mongoose.model('Jar', jarSchema);

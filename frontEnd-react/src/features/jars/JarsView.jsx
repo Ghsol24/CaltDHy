@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { JarModal } from './JarModal';
 import { JarTransactionModal } from './JarTransactionModal';
 import { JarDetailModal } from './JarDetailModal';
 import { JarHistoryModal } from './JarHistoryModal';
 import { FinancialTipsModal } from './FinancialTipsModal';
 import { JarGlassGraphic } from './JarGlassGraphic';
-import { formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
+import { formatCompactCurrency, formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
+import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
 import {
   FlameOutlineIcon,
@@ -32,6 +35,45 @@ import {
 } from '../../components/ui/AppIcons';
 import '../../assets/css/jars.css';
 
+const JARS_PER_PAGE = 12;
+const JARS_SCROLL_SECTIONS = Object.freeze([
+  ['jars-section-goals', 'goals'],
+  ['jars-section-list', 'jars'],
+  ['jars-section-history', 'history'],
+]);
+
+function DeferredJarGlassGraphic(props) {
+  const hostRef = useRef(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || shouldRender) return undefined;
+    if (!('IntersectionObserver' in window)) {
+      setShouldRender(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      setShouldRender(true);
+      observer.disconnect();
+    }, { rootMargin: '240px 0px' });
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [shouldRender]);
+
+  return (
+    <div ref={hostRef} className="jar-graphic-deferred-host" aria-hidden="true">
+      {shouldRender ? (
+        <JarGlassGraphic {...props} />
+      ) : (
+        <span className="jar-graphic-deferred-placeholder">{Math.max(0, Math.min(100, Number(props.percent) || 0))}%</span>
+      )}
+    </div>
+  );
+}
+
 function renderNoteIcon(iconKey) {
   if (!iconKey) return <TargetOutlineIcon size={18} />;
   if (iconKey === 'sparkle') return <SparkleOutlineIcon size={18} />;
@@ -47,26 +89,24 @@ function renderNoteIcon(iconKey) {
 }
 
 function formatTick(num) {
-  if (num >= 1000000) {
-    const val = num / 1000000;
-    return val % 1 === 0 ? `${val}M` : `${val.toFixed(1)}M`;
-  }
-  if (num >= 1000) {
-    return `${Math.round(num / 1000)}k`;
-  }
-  return String(num);
+  return formatCompactCurrency(num);
 }
 
 export function JarsView() {
+  const { t, lang } = useTranslation();
   const jars = useJarStore((s) => s.jars);
   const isLoading = useJarStore((s) => s.isLoading);
+  const hasLoaded = useJarStore((s) => s.hasLoaded);
   const error = useJarStore((s) => s.error);
   const fetchData = useJarStore((s) => s.fetchData);
   const deleteJar = useJarStore((s) => s.deleteJar);
   const confirm = useConfirmStore((s) => s.confirm);
   const addToast = useToastStore((s) => s.addToast);
+  const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
   const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const theme = useThemeStore((s) => s.theme);
+  const isMobile = useIsMobile(900);
 
   // Modals state
   const [isJarModalOpen, setIsJarModalOpen] = useState(false);
@@ -86,7 +126,9 @@ export function JarsView() {
   // Toolbar & view settings
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'progress_desc' | 'deadline_asc' | 'name_asc'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuJarId, setActiveMenuJarId] = useState(null);
+  const [deletingJarId, setDeletingJarId] = useState(null);
   const [recomIndex, setRecomIndex] = useState(0);
 
   // Financial Chart Settings
@@ -102,15 +144,11 @@ export function JarsView() {
     for (let i = 0; i < 6; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = `Tháng ${d.getMonth() + 1}, ${d.getFullYear()}`;
+      const label = formatDate(d, 'month', { locale: lang });
       months.push({ value: val, label });
     }
     return months;
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  }, [lang]);
 
   // Close card menu on outside click
   useEffect(() => {
@@ -118,46 +156,6 @@ export function JarsView() {
     window.addEventListener('click', handleWindowClick);
     return () => window.removeEventListener('click', handleWindowClick);
   }, []);
-
-  // ── Scroll Spy via IntersectionObserver ──
-  useEffect(() => {
-    const sectionList = [
-      { id: 'jars-section-goals', tab: 'goals' },
-      { id: 'jars-section-list', tab: 'jars' },
-      { id: 'jars-section-history', tab: 'history' }
-    ];
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (window.__caltdhy_programmatic_scroll) return;
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length > 0) {
-          visible.sort((a, b) => {
-            return Math.abs(a.boundingClientRect.top - 88) - Math.abs(b.boundingClientRect.top - 88);
-          });
-          const match = sectionList.find((s) => s.id === visible[0].target.id);
-          if (match) {
-            const currentTab = useSpendingStore.getState().jarsSubTab;
-            if (currentTab !== match.tab) {
-              setJarsSubTab(match.tab);
-            }
-          }
-        }
-      },
-      {
-        root: null,
-        rootMargin: '-88px 0px -50% 0px',
-        threshold: [0.1, 0.25, 0.5]
-      }
-    );
-
-    sectionList.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [setJarsSubTab]);
 
   // ── 1. Aggregate Financial Metrics ──
   const { totalSaved, totalTarget, totalPercent, totalRemaining, activeJarsCount } = useMemo(() => {
@@ -256,7 +254,7 @@ export function JarsView() {
     };
   }, [jars, totalSaved]);
 
-  const { thisMonthSavings, trendPercent, trendIsPositive } = savingTrend;
+  const { trendPercent, trendIsPositive } = savingTrend;
 
   // ── 2b. Comprehensive Financial Chart Calculation (100% Real User Data) ──
   const detailedChartData = useMemo(() => {
@@ -270,9 +268,9 @@ export function JarsView() {
     const currentDay = isCurrentMonth ? Math.min(now.getDate(), daysInMonth) : daysInMonth;
 
     // Track daily net savings, deposits, and withdrawals strictly from user's actual jar history
-    const dailyNet = new Array(daysInMonth + 1).fill(0);
-    const dailyDeposits = new Array(daysInMonth + 1).fill(0);
-    const dailyWithdrawals = new Array(daysInMonth + 1).fill(0);
+    const dailyNet = Array.from({ length: daysInMonth + 1 }, () => 0);
+    const dailyDeposits = Array.from({ length: daysInMonth + 1 }, () => 0);
+    const dailyWithdrawals = Array.from({ length: daysInMonth + 1 }, () => 0);
     const activeDaysSet = new Set();
     let totalMonthNet = 0;
 
@@ -329,7 +327,7 @@ export function JarsView() {
     }
 
     // Compute actual cumulative savings across each day in the month
-    const cumulativeByDay = new Array(daysInMonth + 1).fill(0);
+    const cumulativeByDay = Array.from({ length: daysInMonth + 1 }, () => 0);
     let running = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       running += dailyNet[d];
@@ -580,7 +578,7 @@ export function JarsView() {
         note1Desc: 'Nạp những đồng đầu tiên để kích hoạt thói quen tích lũy.',
         note2Icon: 'bulb',
         note2Label: 'Gợi ý số tiền',
-        note2Desc: 'Thử bắt đầu với 50.000 đ - 100.000 đ để tạo đà nhẹ nhàng.'
+        note2Desc: t('jars.trySmallAmounts', { first: formatCurrency(50000), second: formatCurrency(100000) })
       });
     }
 
@@ -665,7 +663,7 @@ export function JarsView() {
     });
 
     return list;
-  }, [jars]);
+  }, [jars, t]);
 
   const currentSuggestion = smartSuggestions[recomIndex % smartSuggestions.length] || smartSuggestions[0];
 
@@ -755,6 +753,20 @@ export function JarsView() {
         return list;
     }
   }, [jars, sortBy]);
+  const pageCount = Math.max(1, Math.ceil(sortedJars.length / JARS_PER_PAGE));
+  const visibleJars = useMemo(() => {
+    const start = (currentPage - 1) * JARS_PER_PAGE;
+    return sortedJars.slice(start, start + JARS_PER_PAGE);
+  }, [currentPage, sortedJars]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, pageCount));
+  }, [pageCount]);
+
+  const changePage = (page) => {
+    setCurrentPage(Math.min(pageCount, Math.max(1, page)));
+    requestAnimationFrame(() => document.getElementById('jars-section-list')?.scrollIntoView({ behavior: 'auto', block: 'start' }));
+  };
 
   // ── 6. Top 5 Recent Activities Across All Jars ──
   const recentActivities = useMemo(() => {
@@ -786,7 +798,7 @@ export function JarsView() {
     setIsJarModalOpen(true);
   };
 
-  const handleDeposit = (jar, customAmount = null) => {
+  const handleDeposit = (jar) => {
     setActiveJar(jar);
     setTxAction('deposit');
     setIsTxModalOpen(true);
@@ -810,36 +822,101 @@ export function JarsView() {
         ? `Hũ "${jar.name}" hiện đang có ${formatCurrency(jarBalance)}. Nếu xóa hũ, khoản tiền này sẽ không còn được theo dõi trong danh sách hũ tiết kiệm. Bạn có chắc chắn muốn xóa không?`
         : `Bạn có chắc chắn muốn xóa hũ tiết kiệm "${jar.name}" không?`;
 
-    const confirmed = await confirm({
+    confirm({
       title: 'Xóa hũ tiết kiệm',
       message,
       confirmText: 'Xóa hũ',
       cancelText: 'Hủy',
-      confirmVariant: 'danger'
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        setDeletingJarId(jar.id);
+        try {
+          await deleteJar(jar.id);
+          addToast({ type: 'success', message: `Đã xóa hũ "${jar.name}".`, duration: 4000 });
+        } finally {
+          setDeletingJarId(null);
+        }
+      },
     });
-
-    if (confirmed) {
-      try {
-        await deleteJar(jar.id);
-        addToast({
-          type: 'success',
-          message: `Đã xóa hũ "${jar.name}".`,
-          duration: 4000
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          message: err.message || 'Không thể xóa hũ tiết kiệm.',
-          duration: 4000
-        });
-      }
-    }
   };
 
   const handleOpenTips = (topic) => {
     setTipsTopic(topic);
     setIsTipsModalOpen(true);
   };
+
+  useSectionScrollSpy({
+    disabled: isMobile || jars.length === 0,
+    sections: JARS_SCROLL_SECTIONS,
+    onActiveChange: (activeTab) => {
+      if (activeTab && useSpendingStore.getState().jarsSubTab !== activeTab) {
+        setJarsSubTab(activeTab, { syncRoute: false });
+      }
+    },
+  });
+
+  if (!hasLoaded || (isLoading && jars.length === 0)) {
+    return (
+      <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+        <div className="feature-loading" role="status" aria-live="polite">Đang tải dữ liệu hũ…</div>
+      </div>
+    );
+  }
+
+  if (error && jars.length === 0) {
+    return (
+      <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+        <EmptyState
+          icon={<AlertTriangleOutlineIcon size={32} />}
+          title="Chưa thể tải dữ liệu hũ"
+          description={error}
+          actionLabel="Thử lại"
+          onAction={fetchData}
+          className="jars-first-run-state"
+        />
+      </div>
+    );
+  }
+
+  if (jars.length === 0) {
+    const emptySectionId = jarsSubTab === 'jars'
+      ? 'jars-section-list'
+      : jarsSubTab === 'history'
+        ? 'jars-section-history'
+        : 'jars-section-goals';
+    const emptyHeading = jarsSubTab === 'jars'
+      ? 'Danh sách hũ'
+      : jarsSubTab === 'history'
+        ? 'Lịch sử hũ'
+        : 'Mục tiêu';
+    return (
+      <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+        <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card">
+          <div className="jars-hero-top-row">
+            <div className="jars-hero-titles">
+              <h1 className="jars-hero-heading">{emptyHeading}</h1>
+              <p className="jars-hero-subtitle">Biến những khoản tiền nhỏ thành những mục tiêu lớn.</p>
+            </div>
+          </div>
+          <EmptyState
+            icon={<JarOutlineIcon size={36} />}
+            title="Bạn chưa có hũ tiết kiệm"
+            description="Tạo một hũ cho mục tiêu cụ thể; CaltDHy chỉ bắt đầu đánh giá tiến độ sau khi có dữ liệu của bạn."
+            actionLabel="Tạo hũ đầu tiên"
+            onAction={handleCreateNew}
+            className="jars-first-run-state"
+          />
+        </section>
+        {isJarModalOpen && (
+          <JarModal
+            isOpen={isJarModalOpen}
+            onClose={() => setIsJarModalOpen(false)}
+            jarToEdit={editingJar}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
@@ -878,6 +955,8 @@ export function JarsView() {
         </div>
       )}
 
+      {(!isMobile || jarsSubTab === 'goals') && (
+        <>
       {/* ── SECTION 1: HEADER & OVERVIEW (#jars-section-goals) ── */}
       <section id="jars-section-goals" className="jars-hero-overview-card">
         {/* Header Title Row */}
@@ -1352,10 +1431,7 @@ export function JarsView() {
           <button
             type="button"
             className="jars-section-action-link"
-            onClick={() => {
-              const el = document.getElementById('jars-section-list');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => navigateTo('jars', 'jars')}
           >
             <span>Xem chi tiết</span>
             <span>→</span>
@@ -1530,8 +1606,12 @@ export function JarsView() {
           </div>
         </div>
       </section>
+        </>
+      )}
 
       {/* ── SECTION 5: CÁC HŨ CỦA BẠN (#jars-section-list) ── */}
+      {(!isMobile || jarsSubTab === 'jars') && (
+      <>
       <section id="jars-section-list" className="jars-list-section">
         {/* Toolbar Header */}
         <div className="jars-toolbar-row">
@@ -1549,7 +1629,10 @@ export function JarsView() {
               <select
                 className="jars-sort-select"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  setSortBy(e.target.value);
+                  setCurrentPage(1);
+                }}
               >
                 <option value="newest">Mới nhất</option>
                 <option value="oldest">Cũ nhất</option>
@@ -1623,7 +1706,7 @@ export function JarsView() {
         {/* LOADED STATE: GRID VIEW */}
         {!isLoading && jars.length > 0 && viewMode === 'grid' && (
           <div className="jars-grid-container">
-            {sortedJars.map((jar) => {
+            {visibleJars.map((jar) => {
               const currentAmt = Number(jar.current || 0);
               const targetAmt = Number(jar.target || 0);
               const percent = targetAmt > 0 ? Math.min(100, Math.round((currentAmt / targetAmt) * 100)) : 0;
@@ -1651,7 +1734,7 @@ export function JarsView() {
               return (
                 <div
                   key={jar.id}
-                  className="jar-premium-card"
+                  className={`jar-premium-card ${deletingJarId === jar.id ? 'is-deleting' : ''}`}
                   style={{ '--jar-accent-color': accentColor }}
                   onClick={() => handleOpenDetail(jar)}
                 >
@@ -1724,7 +1807,7 @@ export function JarsView() {
 
                   {/* 3D Glass Jar Illustration Graphic */}
                   <div className="jar-graphic-center-box">
-                    <JarGlassGraphic
+                    <DeferredJarGlassGraphic
                       percent={percent}
                       color={accentColor}
                       icon={jar.icon}
@@ -1820,18 +1903,18 @@ export function JarsView() {
             })}
 
             {/* Card "+ Tạo hũ mới" (Dashed Border) */}
-            <div className="jar-card-add-new" onClick={handleCreateNew}>
+            <button type="button" className="jar-card-add-new" onClick={handleCreateNew}>
               <div className="jar-card-add-icon-circle">+</div>
               <h3 className="jar-card-add-title">Tạo hũ mới</h3>
               <p className="jar-card-add-desc">Bắt đầu một mục tiêu mới ngay hôm nay!</p>
-            </div>
+            </button>
           </div>
         )}
 
         {/* LOADED STATE: LIST VIEW */}
         {!isLoading && jars.length > 0 && viewMode === 'list' && (
           <div className="jars-list-mode-container">
-            {sortedJars.map((jar) => {
+            {visibleJars.map((jar) => {
               const currentAmt = Number(jar.current || 0);
               const targetAmt = Number(jar.target || 0);
               const percent = targetAmt > 0 ? Math.min(100, Math.round((currentAmt / targetAmt) * 100)) : 0;
@@ -1933,18 +2016,39 @@ export function JarsView() {
             })}
 
             {/* Row "+ Tạo hũ mới" (Dashed Border) in List Mode */}
-            <div className="jar-list-mode-add-row" onClick={handleCreateNew}>
+            <button type="button" className="jar-list-mode-add-row" onClick={handleCreateNew}>
               <div className="jar-list-mode-add-icon">+</div>
               <div>
                 <span className="jar-list-mode-add-title">Tạo hũ mới</span>
                 <span className="jar-list-mode-add-desc">— Bắt đầu một mục tiêu mới ngay hôm nay</span>
               </div>
-            </div>
+            </button>
           </div>
         )}
+
+        {!isLoading && pageCount > 1 && (
+          <nav className="jars-pagination" aria-label="Phân trang danh sách hũ">
+            <span className="jars-pagination__summary">
+              {Math.min((currentPage - 1) * JARS_PER_PAGE + 1, jars.length)}–{Math.min(currentPage * JARS_PER_PAGE, jars.length)} / {jars.length} hũ
+            </span>
+            <div className="jars-pagination__controls">
+              <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} aria-label="Trang hũ trước">‹</button>
+              {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
+                <button key={page} type="button" className={page === currentPage ? 'is-active' : ''} onClick={() => changePage(page)} aria-current={page === currentPage ? 'page' : undefined} aria-label={`Trang hũ ${page}`}>
+                  {page}
+                </button>
+              ))}
+              <button type="button" onClick={() => changePage(currentPage + 1)} disabled={currentPage === pageCount} aria-label="Trang hũ sau">›</button>
+            </div>
+          </nav>
+        )}
       </section>
+      </>
+      )}
 
       {/* ── SECTION 6: HOẠT ĐỘNG GẦN ĐÂY (#jars-section-history) ── */}
+      {(!isMobile || jarsSubTab === 'history') && (
+      <>
       <section id="jars-section-history" className="jars-recent-activities-section">
         <div className="jars-section-header-row">
           <h2 className="jars-section-title">
@@ -2016,8 +2120,11 @@ export function JarsView() {
           )}
         </div>
       </section>
+      </>
+      )}
 
       {/* ── SECTION 7: THÔNG TIN HỮU ÍCH ── */}
+      {(!isMobile || jarsSubTab === 'goals') && (
       <section className="jars-financial-tips-grid">
         {/* Tip 1 */}
         <div className="jars-tip-card" onClick={() => handleOpenTips('smart')} style={{ cursor: 'pointer' }}>
@@ -2060,6 +2167,7 @@ export function JarsView() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ── MODALS ── */}
       {isJarModalOpen && (

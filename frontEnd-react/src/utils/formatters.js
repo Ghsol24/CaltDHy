@@ -1,390 +1,325 @@
-/**
- * CaltDHy v2 — Formatters
- * Cung cấp các hàm format tiền tệ, ngày tháng, phần trăm chuẩn tiếng Việt (vi-VN).
- */
+import { getIntlLocale, normalizeLocale, translate } from '../i18n/translations.js';
+import { exchangeRateConfig, hasUsableUsdRate } from './exchangeRate.js';
 
-/**
- * Format số tiền sang định dạng tiền tệ vi-VN không có số lẻ (vd: 2.670.000 đ).
- * @param {number|string} val - Giá trị số tiền
- * @param {Object} [options]
- * @param {boolean} [options.showSign=false] - Có hiển thị dấu +/- không
- * @param {boolean} [options.isIncome=false] - Là thu nhập (true) hay chi tiêu (false)
- * @returns {string} Chuỗi tiền tệ đã format
- */
-export function formatCurrency(val, { showSign = false, isIncome = false } = {}) {
-  const num = Number(val);
-  if (isNaN(num)) {
-    return '0 đ';
+const LANG_KEY = 'caltdhy_lang';
+const CURRENCY_KEY = 'caltdhy_curr';
+const BASE_CURRENCY = 'VND';
+const MAX_FORMATTER_CACHE_SIZE = 64;
+const numberFormatterCache = new Map();
+const dateFormatterCache = new Map();
+let activeLocaleCache;
+let activeDisplayCurrencyCache;
+
+function getCachedFormatter(cache, Formatter, locale, options) {
+  const serializedOptions = Object.keys(options)
+    .sort()
+    .map((key) => `${key}:${String(options[key])}`)
+    .join('|');
+  const cacheKey = `${locale}|${serializedOptions}`;
+  let formatter = cache.get(cacheKey);
+  if (!formatter) {
+    formatter = new Formatter(locale, options);
+    if (cache.size >= MAX_FORMATTER_CACHE_SIZE) cache.delete(cache.keys().next().value);
+    cache.set(cacheKey, formatter);
   }
-
-  const absNum = Math.abs(Math.round(num));
-  const formattedAbs = new Intl.NumberFormat('vi-VN', {
-    maximumFractionDigits: 0,
-  }).format(absNum) + ' đ';
-
-  if (!showSign) {
-    if (num < 0) {
-      return `−${formattedAbs}`;
-    }
-    return formattedAbs;
-  }
-
-  // showSign === true
-  if (num === 0) {
-    return formattedAbs;
-  }
-
-  if (num < 0 || (!isIncome && num > 0)) {
-    return `−${formattedAbs}`;
-  }
-
-  return `+${formattedAbs}`;
+  return formatter;
 }
 
-const VI_WEEKDAYS = [
-  'Chủ Nhật',
-  'Thứ Hai',
-  'Thứ Ba',
-  'Thứ Tư',
-  'Thứ Năm',
-  'Thứ Sáu',
-  'Thứ Bảy',
-];
+function getNumberFormatter(locale, options) {
+  return getCachedFormatter(numberFormatterCache, Intl.NumberFormat, locale, options);
+}
+
+function getDateFormatter(locale, options) {
+  return getCachedFormatter(dateFormatterCache, Intl.DateTimeFormat, locale, options);
+}
+
+function configuredRate() {
+  return hasUsableUsdRate() ? exchangeRateConfig.vndPerUsd : null;
+}
+
+export function getActiveLocale() {
+  if (activeLocaleCache) return activeLocaleCache;
+  try { activeLocaleCache = normalizeLocale(localStorage.getItem(LANG_KEY)); } catch { activeLocaleCache = 'vi'; }
+  return activeLocaleCache;
+}
+
+export function setActiveFormattingLocale(locale) {
+  activeLocaleCache = normalizeLocale(locale);
+}
+
+export function getActiveDisplayCurrency() {
+  if (activeDisplayCurrencyCache) return activeDisplayCurrencyCache;
+  try {
+    activeDisplayCurrencyCache = localStorage.getItem(CURRENCY_KEY) === 'USD' && configuredRate() ? 'USD' : BASE_CURRENCY;
+  } catch {
+    activeDisplayCurrencyCache = BASE_CURRENCY;
+  }
+  return activeDisplayCurrencyCache;
+}
+
+export function setActiveFormattingCurrency(currency) {
+  activeDisplayCurrencyCache = currency === 'USD' && configuredRate() ? 'USD' : BASE_CURRENCY;
+}
+
+function resolveLocale(options = {}) {
+  return normalizeLocale(options.locale || getActiveLocale());
+}
+
+function resolveDisplayCurrency(options = {}) {
+  const requested = options.currency || getActiveDisplayCurrency();
+  return requested === 'USD' && (options.vndPerUsd || configuredRate()) ? 'USD' : BASE_CURRENCY;
+}
 
 /**
- * Lấy chuỗi ngày YYYY-MM-DD theo Giờ Địa Phương (Local Time) của người dùng.
- * Tránh hoàn toàn lỗi lệch ngày do toISOString() chuyển sang UTC.
- * @param {Date|string|number} [d=new Date()]
- * @returns {string} Chuỗi định dạng 'YYYY-MM-DD'
+ * Convert a VND base amount for display only. This helper must never be used by
+ * financial calculations, API payloads or persistence code.
  */
-export function getLocalDateString(d = new Date()) {
-  const dateObj = d instanceof Date ? d : parseDate(d) || new Date();
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
+export function convertVndForDisplay(value, { currency, vndPerUsd } = {}) {
+  const displayCurrency = resolveDisplayCurrency({ currency, vndPerUsd });
+  if (displayCurrency === BASE_CURRENCY) return value;
+  const rate = Number(vndPerUsd || configuredRate());
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || !Number.isFinite(rate) || rate <= 0) return null;
+  return amount / rate;
+}
+
+export function formatNumber(value, options = {}) {
+  const locale = getIntlLocale(resolveLocale(options));
+  const number = typeof value === 'bigint' ? value : Number(value);
+  if (typeof number === 'number' && !Number.isFinite(number)) return '';
+  return getNumberFormatter(locale, {
+    maximumFractionDigits: options.maximumFractionDigits ?? 0,
+    minimumFractionDigits: options.minimumFractionDigits,
+    useGrouping: options.useGrouping ?? true,
+  }).format(number);
+}
+
+export function formatInputNumber(value, options = {}) {
+  if (value === '' || value === null || value === undefined) return '';
+  const digits = String(value).replace(/\D/g, '');
+  return digits ? formatNumber(Number(digits), options) : '';
+}
+
+/** Format a VND base amount in the selected display currency. */
+export function formatCurrency(value, options = {}) {
+  const locale = resolveLocale(options);
+  const displayCurrency = resolveDisplayCurrency(options);
+  const original = typeof value === 'bigint' ? value : Number(value);
+  if (typeof original === 'number' && (!Number.isFinite(original) || Math.abs(original) > Number.MAX_SAFE_INTEGER)) {
+    return translate(locale, 'common.outOfRange');
+  }
+
+  const isNegative = original < 0;
+  const absOriginal = typeof original === 'bigint' ? (original < 0n ? -original : original) : Math.abs(original);
+  const converted = convertVndForDisplay(absOriginal, {
+    currency: displayCurrency,
+    vndPerUsd: options.vndPerUsd,
+  });
+  if (converted === null) return translate(locale, 'common.outOfRange');
+
+  const amount = displayCurrency === BASE_CURRENCY
+    ? (typeof converted === 'bigint' ? converted : Math.round(converted))
+    : converted;
+  const formatted = getNumberFormatter(getIntlLocale(locale), {
+    style: 'currency',
+    currency: displayCurrency,
+    currencyDisplay: options.currencyDisplay || 'narrowSymbol',
+    minimumFractionDigits: displayCurrency === 'USD' ? 2 : 0,
+    maximumFractionDigits: displayCurrency === 'USD' ? 2 : 0,
+  }).format(amount);
+
+  if (!options.showSign) return isNegative ? `−${formatted}` : formatted;
+  if (original === 0 || original === 0n) return formatted;
+  if (isNegative || (!options.isIncome && original > 0)) return `−${formatted}`;
+  return `+${formatted}`;
+}
+
+/** Compact axis labels; only the returned label is converted, never the plotted VND value. */
+export function formatCompactCurrency(value, options = {}) {
+  const locale = resolveLocale(options);
+  const currency = resolveDisplayCurrency(options);
+  const amount = convertVndForDisplay(value, { currency, vndPerUsd: options.vndPerUsd });
+  if (amount === null || !Number.isFinite(Number(amount))) return translate(locale, 'common.outOfRange');
+  return getNumberFormatter(getIntlLocale(locale), {
+    style: 'currency', currency, currencyDisplay: 'narrowSymbol', notation: 'compact',
+    maximumFractionDigits: currency === 'USD' ? 2 : 1,
+  }).format(amount);
+}
+
+export function getLocalDateString(value = new Date()) {
+  const date = value instanceof Date ? value : parseDate(value) || new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
-/**
- * Lấy chuỗi tháng YYYY-MM theo Giờ Địa Phương (Local Time) của người dùng.
- * Tránh lỗi đầu tháng bị thụt lùi về tháng cũ do UTC.
- * @param {Date|string|number} [d=new Date()]
- * @returns {string} Chuỗi định dạng 'YYYY-MM'
- */
-export function getLocalMonthString(d = new Date()) {
-  const dateObj = d instanceof Date ? d : parseDate(d) || new Date();
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
+export function getLocalMonthString(value = new Date()) {
+  const date = value instanceof Date ? value : parseDate(value) || new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
-/**
- * Parse input date to Date object theo đúng giờ địa phương nếu chuỗi là YYYY-MM-DD.
- * @param {Date|string|number} dateInput
- * @returns {Date|null}
- */
-export function parseDate(dateInput) {
-  if (!dateInput) return null;
-  if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
-    return dateInput;
+export function parseDate(value) {
+  if (!value) return null;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    return Number.isNaN(localDate.getTime()) ? null : localDate;
   }
-  if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-    const [y, m, d] = dateInput.split('-').map(Number);
-    const localD = new Date(y, m - 1, d);
-    return isNaN(localD.getTime()) ? null : localD;
-  }
-  const parsed = new Date(dateInput);
-  return isNaN(parsed.getTime()) ? null : parsed;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-/**
- * Format ngày tháng theo các kiểu chuẩn CaltDHy v2:
- * - 'full': Thứ Hai, 24 tháng 8, 2026
- * - 'short': 24 thg 8, 2026
- * - 'compact': 24/08/2026
- * - 'month': Tháng 8, 2026
- *
- * @param {Date|string|number} date - Đối tượng Date hoặc chuỗi ngày
- * @param {'full'|'short'|'compact'|'month'} [format='full'] - Kiểu format
- * @returns {string}
- */
-export function formatDate(date, format = 'full') {
-  const d = parseDate(date);
-  if (!d) return '';
+const DATE_OPTIONS = {
+  full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+  short: { year: 'numeric', month: 'short', day: 'numeric' },
+  compact: { year: 'numeric', month: '2-digit', day: '2-digit' },
+  'day-date': { year: 'numeric', month: '2-digit', day: '2-digit' },
+  month: { year: 'numeric', month: 'long' },
+};
 
-  const day = d.getDate();
-  const month = d.getMonth() + 1;
-  const year = d.getFullYear();
-  const weekday = VI_WEEKDAYS[d.getDay()];
-
-  switch (format) {
-    case 'full':
-      return `${weekday}, ${day} tháng ${month}, ${year}`;
-    case 'short':
-      return `${day} thg ${month}, ${year}`;
-    case 'compact':
-    case 'day-date': {
-      const dd = String(day).padStart(2, '0');
-      const mm = String(month).padStart(2, '0');
-      return `${dd}/${mm}/${year}`;
-    }
-    case 'month':
-      return `Tháng ${month}, ${year}`;
-    default:
-      return `${day} thg ${month}, ${year}`;
-  }
+export function formatDate(value, format = 'full', options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  const locale = getIntlLocale(resolveLocale(options));
+  return getDateFormatter(locale, DATE_OPTIONS[format] || DATE_OPTIONS.short).format(date);
 }
 
-/**
- * Format ngày tương đối: 'Hôm nay', 'Hôm qua' hoặc format short.
- * @param {Date|string|number} dateStr
- * @returns {string}
- */
-export function formatRelativeDate(dateStr) {
-  const d = parseDate(dateStr);
-  if (!d) return '';
+export function formatDateTime(value, options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  return getDateFormatter(getIntlLocale(resolveLocale(options)), {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(date);
+}
 
+export function formatMonthShort(value, options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  return getDateFormatter(getIntlLocale(resolveLocale(options)), {
+    month: 'short', year: '2-digit',
+  }).format(date);
+}
+
+export function formatTime(value = new Date(), options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  return getDateFormatter(getIntlLocale(resolveLocale(options)), {
+    hour: '2-digit', minute: '2-digit',
+  }).format(date);
+}
+
+export function formatRelativeDate(value, options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  const locale = resolveLocale(options);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-  const diffDays = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    return 'Hôm nay';
-  }
-  if (diffDays === 1) {
-    return 'Hôm qua';
-  }
-
-  return formatDate(d, 'short');
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
+  if (diffDays === 0) return translate(locale, 'date.today');
+  if (diffDays === 1) return translate(locale, 'date.yesterday');
+  return formatDate(date, 'short', { locale });
 }
 
-/**
- * Format phần trăm làm tròn (vd: 75%).
- * @param {number|string} val
- * @returns {string}
- */
-export function formatPercent(val) {
-  const num = Number(val);
-  if (isNaN(num)) return '0%';
-  return `${Math.round(num)}%`;
-}
-
-/**
- * Tính số ngày còn lại đến hạn thanh toán từ chuỗi ngày (YYYY-MM-DD hoặc ISO).
- * Trả về object: { diffDays: number|null, text: string, isOverdue: boolean, isToday: boolean, isSoon: boolean }
- *
- * @param {Date|string|number} dateInput
- * @returns {{ diffDays: number|null, text: string, isOverdue: boolean, isToday: boolean, isSoon: boolean }}
- */
-export function getDueStatus(dateInput) {
-  const d = parseDate(dateInput);
-  if (!d) {
-    return {
-      diffDays: null,
-      text: 'Chưa định ngày',
-      isOverdue: false,
-      isToday: false,
-      isSoon: false
-    };
-  }
-
+export function formatRelativeDateTime(value, options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  const locale = resolveLocale(options);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-  const diffMs = target.getTime() - today.getTime();
-  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    const abs = Math.abs(diffDays);
-    return {
-      diffDays,
-      text: `Quá hạn ${abs} ngày`,
-      isOverdue: true,
-      isToday: false,
-      isSoon: true
-    };
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
+  if (diffDays === 0 || diffDays === 1) {
+    return `${translate(locale, diffDays === 0 ? 'date.today' : 'date.yesterday')}, ${formatTime(date, { locale })}`;
   }
+  return formatDateTime(date, { locale });
+}
 
-  if (diffDays === 0) {
-    return {
-      diffDays: 0,
-      text: 'Đến hạn hôm nay',
-      isOverdue: false,
-      isToday: true,
-      isSoon: true
-    };
-  }
+export function formatPercent(value, options = {}) {
+  const number = Number(value);
+  const fractionDigits = Number.isInteger(options.fractionDigits)
+    ? Math.min(2, Math.max(0, options.fractionDigits))
+    : 0;
+  return getNumberFormatter(getIntlLocale(resolveLocale(options)), {
+    style: 'percent', minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits,
+  }).format(Number.isFinite(number) ? number / 100 : 0);
+}
 
-  if (diffDays === 1) {
-    return {
-      diffDays: 1,
-      text: 'Còn 1 ngày',
-      isOverdue: false,
-      isToday: false,
-      isSoon: true
-    };
-  }
-
+export function getDueStatus(value, options = {}) {
+  const locale = resolveLocale(options);
+  const date = parseDate(value);
+  if (!date) return {
+    diffDays: null, text: translate(locale, 'date.noDate'), isOverdue: false, isToday: false, isSoon: false,
+  };
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (diffDays < 0) return {
+    diffDays, text: translate(locale, 'date.overdueDays', { count: Math.abs(diffDays) }),
+    isOverdue: true, isToday: false, isSoon: true,
+  };
+  if (diffDays === 0) return {
+    diffDays: 0, text: translate(locale, 'date.dueToday'), isOverdue: false, isToday: true, isSoon: true,
+  };
   return {
-    diffDays,
-    text: `Còn ${diffDays} ngày`,
-    isOverdue: false,
-    isToday: false,
-    isSoon: diffDays <= 7
+    diffDays, text: translate(locale, 'date.daysLeft', { count: diffDays }),
+    isOverdue: false, isToday: false, isSoon: diffDays <= 7,
   };
 }
 
-/**
- * Phân tích ngày tháng thành các phần: Thứ viết hoa ngắn (THỨ 2, THỨ 6, CN...) và Ngày 2 chữ số (29, 31).
- * Phục vụ cho component Calendar Date Block trên thẻ khoản định kỳ.
- *
- * @param {Date|string|number} dateInput
- * @returns {{ weekdayShort: string, day: string, month: string }}
- */
-export function getCalendarDateParts(dateInput) {
-  const d = parseDate(dateInput);
-  if (!d) {
-    return { weekdayShort: 'THỨ', day: '--', month: '--' };
-  }
-  const weekdays = ['CN', 'THỨ 2', 'THỨ 3', 'THỨ 4', 'THỨ 5', 'THỨ 6', 'THỨ 7'];
+export function getCalendarDateParts(value, options = {}) {
+  const date = parseDate(value);
+  if (!date) return { weekdayShort: '--', day: '--', month: '--' };
+  const locale = getIntlLocale(resolveLocale(options));
   return {
-    weekdayShort: weekdays[d.getDay()],
-    day: String(d.getDate()).padStart(2, '0'),
-    month: String(d.getMonth() + 1)
+    weekdayShort: getDateFormatter(locale, { weekday: 'short' }).format(date).toLocaleUpperCase(locale),
+    day: getDateFormatter(locale, { day: '2-digit' }).format(date),
+    month: getDateFormatter(locale, { month: 'short' }).format(date),
   };
 }
 
-/**
- * Phân tầng trạng thái hạn thanh toán khoản định kỳ theo quy chuẩn CaltDHy:
- * - isPaidThisMonth: 'paid' (Xanh lá - Bất kể còn bao nhiêu ngày đến kỳ tháng sau)
- * - Quá hạn / Hôm nay / diffDays <= 3: 'danger' (Đỏ)
- * - 3 < diffDays <= 10: 'warning' (Vàng)
- * - diffDays > 10: 'normal' (Xám / Trung tính)
- *
- * @param {Object} item - Đối tượng khoản định kỳ
- * @param {string} [currentMonthStr] - Chuỗi tháng định dạng YYYY-MM
- * @returns {{ tier: 'paid'|'danger'|'warning'|'normal', isPaidThisMonth: boolean, isOverdue: boolean, isToday: boolean, text: string, shortText: string, diffDays: number|null }}
- */
-export function getRecurringTier(item, currentMonthStr = getLocalMonthString()) {
-  if (!item) {
-    return {
-      tier: 'normal',
-      isPaidThisMonth: false,
-      isOverdue: false,
-      isToday: false,
-      text: 'Chưa định ngày',
-      shortText: 'Chưa định ngày',
-      diffDays: null
-    };
-  }
-
+export function getRecurringTier(item, currentMonthStr = getLocalMonthString(), options = {}) {
+  const locale = resolveLocale(options);
+  if (!item) return {
+    tier: 'normal', isPaidThisMonth: false, isOverdue: false, isToday: false,
+    text: translate(locale, 'date.noDate'), shortText: translate(locale, 'date.noDate'), diffDays: null,
+  };
   const isPaidThisMonth = Array.isArray(item.history) && item.history.some(
-    (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthStr)
+    (entry) => entry && typeof entry.paidDate === 'string' && entry.paidDate.startsWith(currentMonthStr),
   );
-
-  if (isPaidThisMonth) {
-    return {
-      tier: 'paid',
-      isPaidThisMonth: true,
-      isOverdue: false,
-      isToday: false,
-      text: 'Đã trả tháng này',
-      shortText: 'Đã trả',
-      diffDays: null
-    };
-  }
-
-  const due = getDueStatus(item.nextDueDate);
-  if (due.diffDays === null) {
-    return {
-      tier: 'normal',
-      isPaidThisMonth: false,
-      isOverdue: false,
-      isToday: false,
-      text: due.text,
-      shortText: due.text,
-      diffDays: null
-    };
-  }
-
-  // Dưới hoặc bằng 3 ngày (hoặc hôm nay, hoặc quá hạn) -> Đỏ (danger)
-  if (due.isOverdue || due.isToday || due.diffDays <= 3) {
-    return {
-      tier: 'danger',
-      isPaidThisMonth: false,
-      isOverdue: due.isOverdue,
-      isToday: due.isToday,
-      text: due.text,
-      shortText: due.text,
-      diffDays: due.diffDays
-    };
-  }
-
-  // Dưới hoặc bằng 10 ngày -> Vàng (warning)
-  if (due.diffDays <= 10) {
-    return {
-      tier: 'warning',
-      isPaidThisMonth: false,
-      isOverdue: false,
-      isToday: false,
-      text: due.text,
-      shortText: due.text,
-      diffDays: due.diffDays
-    };
-  }
-
-  // Còn lại (> 10 ngày) -> Bình thường (normal)
-  return {
-    tier: 'normal',
-    isPaidThisMonth: false,
-    isOverdue: false,
-    isToday: false,
-    text: due.text,
-    shortText: due.text,
-    diffDays: due.diffDays
+  if (isPaidThisMonth) return {
+    tier: 'paid', isPaidThisMonth: true, isOverdue: false, isToday: false,
+    text: translate(locale, 'date.paidThisMonth'), shortText: translate(locale, 'date.paid'), diffDays: null,
   };
+  const due = getDueStatus(item.nextDueDate, { locale });
+  const tier = due.isOverdue || due.isToday || due.diffDays <= 3
+    ? 'danger' : due.diffDays <= 10 ? 'warning' : 'normal';
+  return { tier, isPaidThisMonth: false, ...due, shortText: due.text };
 }
 
-/**
- * Tịnh tiến ngày đến hạn kế tiếp dựa theo chu kỳ (monthly, quarterly, yearly).
- * Đảm bảo ngày cuối tháng được căn chỉnh chính xác (vd: 31/01 -> 28/02).
- *
- * @param {string} dateStr - Định dạng YYYY-MM-DD
- * @param {string} cycle - 'monthly' | 'quarterly' | 'yearly'
- * @returns {string} Ngày kế tiếp định dạng YYYY-MM-DD
- */
 export function advanceNextDueDate(dateStr, cycle = 'monthly') {
   if (!dateStr || typeof dateStr !== 'string') return dateStr;
   const parts = dateStr.split('-');
   if (parts.length !== 3) return dateStr;
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const day = parseInt(parts[2], 10);
-
+  const year = Number.parseInt(parts[0], 10);
+  const month = Number.parseInt(parts[1], 10) - 1;
+  const day = Number.parseInt(parts[2], 10);
   let targetYear = year;
   let targetMonth = month;
-  if (cycle === 'monthly') {
-    targetMonth = month + 1;
+  if (cycle === 'monthly' || cycle === 'quarterly') {
+    targetMonth += cycle === 'quarterly' ? 3 : 1;
     if (targetMonth > 11) {
       targetYear += Math.floor(targetMonth / 12);
-      targetMonth = targetMonth % 12;
-    }
-  } else if (cycle === 'quarterly') {
-    targetMonth = month + 3;
-    if (targetMonth > 11) {
-      targetYear += Math.floor(targetMonth / 12);
-      targetMonth = targetMonth % 12;
+      targetMonth %= 12;
     }
   } else if (cycle === 'yearly') {
     targetYear += 1;
   }
-
   const daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
   const targetDay = Math.min(day, daysInTargetMonth);
-
-  const pad = (n) => String(n).padStart(2, '0');
+  const pad = (number) => String(number).padStart(2, '0');
   return `${targetYear}-${pad(targetMonth + 1)}-${pad(targetDay)}`;
 }

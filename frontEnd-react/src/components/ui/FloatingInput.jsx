@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export const FloatingInput = ({
   id,
@@ -11,6 +12,7 @@ export const FloatingInput = ({
   autoComplete,
   required = false
 }) => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
@@ -37,7 +39,7 @@ export const FloatingInput = ({
             type="button"
             className="eye-btn"
             onClick={() => setShowPassword(!showPassword)}
-            aria-label="Toggle password visibility"
+            aria-label={t('auth.togglePassword')}
           >
             <svg
               width="16"

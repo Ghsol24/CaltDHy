@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { walletService } from '../../services/walletService';
 import { formatCurrency } from '../../utils/formatters';
 import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess = null }) {
+  const { t } = useTranslation();
   const { wallets, archiveWallet } = useWalletStore();
   const { addToast } = useToastStore();
 
@@ -19,6 +23,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
   const modalRef = useRef(null);
   useFocusTrap(modalRef, isOpen);
+  useBodyScrollLock(isOpen && Boolean(wallet));
 
   // Lọc các ví khả dụng khác (không phải ví đang đóng)
   const availableTargetWallets = useMemo(() => {
@@ -113,9 +118,9 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="modal-overlay"
+      className="modal-overlay open"
       role="dialog"
       aria-modal="true"
       aria-labelledby="archive-modal-title"
@@ -303,7 +308,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span>Số dư ví đã sạch (0 đ). Sẵn sàng để lưu trữ.</span>
+                    <span>{t('wallet.readyToArchive', { amount: formatCurrency(0) })}</span>
                   </div>
                 )}
 
@@ -503,6 +508,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,0 +1,956 @@
+{
+  "generatedAt": "2026-09-22T12:17:52.153Z",
+  "consoleErrors": [],
+  "results": [
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": {
+        "role": "complementary",
+        "ariaLabel": "Hướng dẫn nhanh",
+        "rect": {
+          "x": 1036,
+          "y": 595.5625,
+          "width": 380,
+          "height": 280.4375,
+          "bottom": 876
+        }
+      },
+      "controlCount": 24,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 387.9,
+          "height": 15
+        },
+        {
+          "tag": "button",
+          "name": "Đóng hướng dẫn",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "Sổ tay đầy đủ ↗",
+          "width": 105.4,
+          "height": 26
+        },
+        {
+          "tag": "button",
+          "name": "Đã hiểu",
+          "width": 73.3,
+          "height": 28
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0 TRANG CHỦ Nắm bắt Dòng tiền & Sức khỏe Theo dõi tiền khả dụng và các cảnh báo chi tiêu tự động. Tiền có thể chi còn lại: Số tiền được tiêu tự do sau khi trừ chi phí thiết yếu & hũ mục tiêu. Cảnh báo thông minh: Tự động báo khi danh mục chạm mức 75% hoặc vượt 100% ngân sách. Ghi nhanh thu chi: Bấm nút \"+ Thêm giao dịch\" ở góc phải để ghi nhận phát sinh tức thì. Sổ tay đầy đủ ↗ Đã hiểu",
+      "label": "desktop-home-first-run"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 21,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 387.9,
+          "height": 15
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0",
+      "label": "desktop-home-dark"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 21,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 387.9,
+          "height": 15
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0",
+      "label": "desktop-home-light"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 21,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 387.9,
+          "height": 15
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0",
+      "label": "desktop-home-cream"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 21,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 387.9,
+          "height": 15
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0",
+      "label": "desktop-home-green"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 25,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Lập kế hoạch tài chính",
+          "width": 162.3,
+          "height": 36
+        },
+        {
+          "tag": "button",
+          "name": "Xem tất cả →",
+          "width": 76,
+          "height": 14
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm ví / tài khoản",
+          "width": 318,
+          "height": 35
+        },
+        {
+          "tag": "button",
+          "name": "Xem tất cả →",
+          "width": 76,
+          "height": 14
+        },
+        {
+          "tag": "button",
+          "name": "+ Thiết lập ngân sách",
+          "width": 318,
+          "height": 35
+        },
+        {
+          "tag": "button",
+          "name": "Xem tất cả →",
+          "width": 76,
+          "height": 14
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm khoản định kỳ",
+          "width": 318,
+          "height": 35
+        },
+        {
+          "tag": "button",
+          "name": "Xem phân tích chi tiết",
+          "width": 172.4,
+          "height": 35
+        }
+      ],
+      "mainText": "Tổng quan kế hoạch Theo dõi và quản lý toàn bộ kế hoạch tài chính của bạn Lập kế hoạch Cảnh báo / Sắp đến hạn Mọi kế hoạch đang trong tầm kiểm soát tốt! Tất cả ngân sách và khoản định kỳ của bạn đang trong trạng thái kiểm soát tốt! TỔNG TÀI SẢN 0 đ 1 tài khoản 1 đang hoạt động NGÂN SÁCH CÒN LẠI 6.300.000 đ Trong tháng 9 0% đã dùng CHI PHÍ ĐỊNH KỲ (ƯỚC TÍNH) ~0 đ / tháng 0 khoản đang theo dõi Ước tính tháng Ví & Tài khoản Xem tất cả → Tiền mặt Tiền mặt 0 đ Mặc định + Thêm ví / tài khoản Ngân sách tháng 9 Xem tất cả → Food & Dining 0 đ / 3.000.000 đ 0% Transportation 0 đ / 1.000.000 đ 0% Housing & Bills 0 đ / 1.500.000 đ 0% Entertainment 0 đ / 800.000 đ 0% + Thiết lập ngân sách Khoản định kỳ Xem tất cả → Bạn chưa theo dõi khoản định kỳ nào. + Thêm khoản định kỳ Gợi ý dành cho bạn Lập kế hoạch ngân sách và phân bổ dòng tiền hợp lý giúp bạn tối ưu hóa 15% - 25% thu nhập mỗi tháng. Xem phân tích chi tiết",
+      "label": "desktop-plan-empty"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 29,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Tháng này",
+          "width": 93,
+          "height": 27
+        },
+        {
+          "tag": "button",
+          "name": "Tháng trước",
+          "width": 105.9,
+          "height": 27
+        },
+        {
+          "tag": "button",
+          "name": "Xem tháng trước",
+          "width": 30,
+          "height": 36
+        },
+        {
+          "tag": "button",
+          "name": "Xem tháng sau",
+          "width": 30,
+          "height": 36
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch ngay",
+          "width": 185.9,
+          "height": 35
+        },
+        {
+          "tag": "button",
+          "name": "Theo ngày trong tháng",
+          "width": 154,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "3 tháng gần đây",
+          "width": 115.4,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "6 tháng gần đây",
+          "width": 115.4,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "Theo Tháng",
+          "width": 101.7,
+          "height": 27
+        },
+        {
+          "tag": "button",
+          "name": "Theo Quý",
+          "width": 88,
+          "height": 27
+        },
+        {
+          "tag": "button",
+          "name": "In báo cáo",
+          "width": 115.3,
+          "height": 31
+        },
+        {
+          "tag": "button",
+          "name": "Xuất CSV",
+          "width": 109.5,
+          "height": 31
+        }
+      ],
+      "mainText": "Phân tích tài chính Cơ cấu thu chi, dòng tiền thuần và xu hướng tài chính của bạn Tháng này Tháng trước Tháng 9, 2026 Tổng thu nhập 0 đ 0 giao dịch thu nhập Tổng chi tiêu 0 đ 0 giao dịch chi tiêu Dòng tiền thuần (Net) 0 đ Cân bằng thu chi Tỷ lệ tiết kiệm 0% Chưa có dữ liệu Chi tiêu theo danh mục Chưa có khoản chi nào trong tháng CHƯA CÓ DỮ LIỆU CHI TIÊU TRONG THÁNG 9, 2026 Thêm các giao dịch chi tiêu mới để hệ thống tự động phân loại và trực quan hóa tỷ trọng từng nhóm chi phí. + Thêm giao dịch ngay Xu hướng dòng tiền So sánh tương quan giữa Tổng thu nhập và Tổng chi tiêu Thu nhập Chi tiêu Theo ngày trong tháng 3 tháng gần đây 6 tháng gần đây Chưa có dữ liệu để hiển thị biểu đồ Báo cáo tổng hợp tài chính Đối chiếu chi tiết chỉ số tài chính, nhóm chi phí và tình trạng ngân sách giữa các kỳ Theo Tháng Theo Quý In báo cáo Xuất CSV Kỳ báo cáo: Tháng 9, 2026 (Đối chiếu với kỳ liền kề: Tháng 8, 2026) TỔNG THU NHẬP ~ 0.0% 0 đ Kỳ trước: 0 đ 0 GD TỔNG CHI TIÊU ~ 0.0% 0 đ Kỳ trước: 0 đ 0 GD DÒNG TIỀN THUẦN (NET) Cân bằng 0 đ Kỳ trước: 0 đ +0 đ TỶ LỆ TIẾT KIỆM — 0% Kỳ trước: 0% Mục tiêu: ≥ 20% Nhận định & Khuyến nghị tài chính kỳ này Tất cả các nhóm có thiết lập ngân sách đều nằm trong vùng k",
+      "label": "desktop-analytics-empty"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": null,
+      "controlCount": 28,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Tạo hũ mới",
+          "width": 133.4,
+          "height": 36
+        },
+        {
+          "tag": "select",
+          "name": "Chọn tháng hiển thị biểu đồ",
+          "width": 150,
+          "height": 29
+        },
+        {
+          "tag": "button",
+          "name": "Tạo hũ ngay",
+          "width": 112.6,
+          "height": 31
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết →",
+          "width": 106,
+          "height": 23
+        },
+        {
+          "tag": "select",
+          "name": "Mới nhất Cũ nhất Tiến độ cao nhất Đến hạn sớm nhất Tên A-Z",
+          "width": 130,
+          "height": 16
+        },
+        {
+          "tag": "button",
+          "name": "Chế độ lưới",
+          "width": 30,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Chế độ danh sách",
+          "width": 30,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "+ Tạo hũ tiết kiệm đầu tiên",
+          "width": 200.5,
+          "height": 34
+        },
+        {
+          "tag": "button",
+          "name": "Xem tất cả →",
+          "width": 98,
+          "height": 23
+        },
+        {
+          "tag": "button",
+          "name": "Tìm hiểu thêm →",
+          "width": 97.3,
+          "height": 14
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết & Tính toán →",
+          "width": 152.7,
+          "height": 14
+        }
+      ],
+      "mainText": "Mục tiêu Biến những khoản tiền nhỏ thành những mục tiêu lớn. Tạo hũ mới Đã tích lũy 0 đ ↑ 0% so với tháng trước Tổng mục tiêu 0 đ Mục tiêu cả năm Đang thực hiện 0 hũ Hoạt động ổn định Tỷ lệ hoàn thành 0% Bạn đã hoàn thành 0% mục tiêu Còn thiếu: 0 đ Tháng này bạn đã tiết kiệm +0 đ ↑ 0% so với tháng trước Tháng 9, 2026 Tháng 9, 2026 Tháng 8, 2026 Tháng 7, 2026 Tháng 6, 2026 Tháng 5, 2026 Tháng 4, 2026 500k 400k 300k 200k 100k 0 01 05 10 15 20 25 30 Hôm nay (22/09) 0 đ Trung bình mỗi ngày: 0 đ Ngày cao nhất: 22/09 (0 đ) Chuỗi tiết kiệm: 0 ngày Khởi đầu tài chính Bắt đầu hành trình tự do tài chính Tạo hũ tiết kiệm đầu tiên để bắt đầu tích lũy cho những ước mơ và mục tiêu tương lai của bạn. Tạo hũ ngay Mục tiêu rõ ràng Xác định số tiền cụ thể giúp tăng 70% khả năng hoàn thành. Khởi đầu nhẹ nhàng Bắt đầu từ số tiền nhỏ để hình thành thói quen tài chính vững vàng. Tổng quan tiến độ Xem chi tiết → Gần đạt nhất Chưa có mục tiêu nào được tạo. Đang đúng tiến độ Đang theo dõi Hãy nạp tiền vào các hũ để ghi nhận đà tăng trưởng! Cần chú ý 100% An toàn Tuyệt vời! Tất cả các hũ đều đang tiến triển tốt, không có hũ nào trễ hạn. Các hũ của bạn (0) Sắp xếp: Mới nhất Cũ nhất Tiến độ cao nhất Đến hạn s",
+      "label": "desktop-jars-empty"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "scrollWidth": 1024,
+      "horizontalOverflow": false,
+      "sidebarVisible": true,
+      "guide": {
+        "role": "complementary",
+        "ariaLabel": "Hướng dẫn nhanh",
+        "rect": {
+          "x": 620,
+          "y": 464.5625,
+          "width": 380,
+          "height": 279.4375,
+          "bottom": 744
+        }
+      },
+      "controlCount": 24,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 97.8,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thu gọn thanh điều hướng",
+          "width": 28,
+          "height": 28
+        },
+        {
+          "tag": "button",
+          "name": "+ Thêm giao dịch",
+          "width": 181,
+          "height": 30
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 654,
+          "height": 15
+        },
+        {
+          "tag": "button",
+          "name": "Đóng hướng dẫn",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "Sổ tay đầy đủ ↗",
+          "width": 105.4,
+          "height": 26
+        },
+        {
+          "tag": "button",
+          "name": "Đã hiểu",
+          "width": 73.3,
+          "height": 28
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0 TRANG CHỦ Nắm bắt Dòng tiền & Sức khỏe Theo dõi tiền khả dụng và các cảnh báo chi tiêu tự động. Tiền có thể chi còn lại: Số tiền được tiêu tự do sau khi trừ chi phí thiết yếu & hũ mục tiêu. Cảnh báo thông minh: Tự động báo khi danh mục chạm mức 75% hoặc vượt 100% ngân sách. Ghi nhanh thu chi: Bấm nút \"+ Thêm giao dịch\" ở góc phải để ghi nhận phát sinh tức thì. Sổ tay đầy đủ ↗ Đã hiểu",
+      "label": "1024x768-home"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "scrollWidth": 768,
+      "horizontalOverflow": false,
+      "sidebarVisible": false,
+      "guide": {
+        "role": "complementary",
+        "ariaLabel": "Hướng dẫn nhanh",
+        "rect": {
+          "x": 364,
+          "y": 720.5625,
+          "width": 380,
+          "height": 279.4375,
+          "bottom": 1000
+        }
+      },
+      "controlCount": 10,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 38,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 690,
+          "height": 15
+        },
+        {
+          "tag": "button",
+          "name": "Đóng hướng dẫn",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "Sổ tay đầy đủ ↗",
+          "width": 105.4,
+          "height": 26
+        },
+        {
+          "tag": "button",
+          "name": "Đã hiểu",
+          "width": 73.3,
+          "height": 28
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0 TRANG CHỦ Nắm bắt Dòng tiền & Sức khỏe Theo dõi tiền khả dụng và các cảnh báo chi tiêu tự động. Tiền có thể chi còn lại: Số tiền được tiêu tự do sau khi trừ chi phí thiết yếu & hũ mục tiêu. Cảnh báo thông minh: Tự động báo khi danh mục chạm mức 75% hoặc vượt 100% ngân sách. Ghi nhanh thu chi: Bấm nút \"+ Thêm giao dịch\" ở góc phải để ghi nhận phát sinh tức thì. Sổ tay đầy đủ ↗ Đã hiểu",
+      "label": "768x1024-home"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scrollWidth": 390,
+      "horizontalOverflow": false,
+      "sidebarVisible": false,
+      "guide": {
+        "role": "complementary",
+        "ariaLabel": "Hướng dẫn nhanh",
+        "rect": {
+          "x": 24,
+          "y": 524.46875,
+          "width": 342,
+          "height": 295.53125,
+          "bottom": 820
+        }
+      },
+      "controlCount": 10,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 38,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 312,
+          "height": 15
+        },
+        {
+          "tag": "button",
+          "name": "Đóng hướng dẫn",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "Sổ tay đầy đủ ↗",
+          "width": 105.4,
+          "height": 26
+        },
+        {
+          "tag": "button",
+          "name": "Đã hiểu",
+          "width": 73.3,
+          "height": 28
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0 TRANG CHỦ Nắm bắt Dòng tiền & Sức khỏe Theo dõi tiền khả dụng và các cảnh báo chi tiêu tự động. Tiền có thể chi còn lại: Số tiền được tiêu tự do sau khi trừ chi phí thiết yếu & hũ mục tiêu. Cảnh báo thông minh: Tự động báo khi danh mục chạm mức 75% hoặc vượt 100% ngân sách. Ghi nhanh thu chi: Bấm nút \"+ Thêm giao dịch\" ở góc phải để ghi nhận phát sinh tức thì. Sổ tay đầy đủ ↗ Đã hiểu",
+      "label": "390x844-home"
+    },
+    {
+      "url": "/spending",
+      "viewport": {
+        "width": 720,
+        "height": 450
+      },
+      "scrollWidth": 720,
+      "horizontalOverflow": false,
+      "sidebarVisible": false,
+      "guide": {
+        "role": "complementary",
+        "ariaLabel": "Hướng dẫn nhanh",
+        "rect": {
+          "x": 316,
+          "y": 146.5625,
+          "width": 380,
+          "height": 279.4375,
+          "bottom": 426
+        }
+      },
+      "controlCount": 10,
+      "controlsBelow44": [
+        {
+          "tag": "a",
+          "name": "CaltDHy - Về trang chủ",
+          "width": 118.3,
+          "height": 32
+        },
+        {
+          "tag": "button",
+          "name": "Cài đặt giao diện và hệ thống",
+          "width": 38,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Quản lý tài khoản",
+          "width": 173.7,
+          "height": 38
+        },
+        {
+          "tag": "button",
+          "name": "Thêm giao dịch mới",
+          "width": 166.1,
+          "height": 41
+        },
+        {
+          "tag": "button",
+          "name": "Xem chi tiết ngân sách →",
+          "width": 642,
+          "height": 15
+        },
+        {
+          "tag": "button",
+          "name": "Đóng hướng dẫn",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "tag": "button",
+          "name": "Sổ tay đầy đủ ↗",
+          "width": 105.4,
+          "height": 26
+        },
+        {
+          "tag": "button",
+          "name": "Đã hiểu",
+          "width": 73.3,
+          "height": 28
+        }
+      ],
+      "mainText": "Tháng 9 đã sẵn sàng cho kế hoạch chi tiêu Cập nhật lần cuối hôm nay, 19:17 + Thêm giao dịch TIỀN CÓ THỂ CHI CÒN LẠI 0 đ Sau chi tiêu thiết yếu và tiền đã dành cho mục tiêu. Đã chi tháng này −0 đ Thu nhập tháng này +0 đ Giao dịch gần đây Hôm nay CHƯA CÓ GIAO DỊCH GẦN ĐÂY Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn. Kế hoạch tháng này Entertainment 0 / 800.000 đ Food & Dining 0 / 3.000.000 đ Kế hoạch tháng đã sẵn sàng Bạn đã phân bổ 6.300.000 đ ngân sách cho 4 danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé! Xem chi tiết ngân sách → Hóa đơn sắp tới 0 Hũ tiết kiệm 0 TRANG CHỦ Nắm bắt Dòng tiền & Sức khỏe Theo dõi tiền khả dụng và các cảnh báo chi tiêu tự động. Tiền có thể chi còn lại: Số tiền được tiêu tự do sau khi trừ chi phí thiết yếu & hũ mục tiêu. Cảnh báo thông minh: Tự động báo khi danh mục chạm mức 75% hoặc vượt 100% ngân sách. Ghi nhanh thu chi: Bấm nút \"+ Thêm giao dịch\" ở góc phải để ghi nhận phát sinh tức thì. Sổ tay đầy đủ ↗ Đã hiểu",
+      "label": "equivalent-200-percent-home"
+    }
+  ]
+}

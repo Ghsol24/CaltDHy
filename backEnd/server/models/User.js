@@ -38,9 +38,10 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: undefined
         },
+        authVersion: { type: Number, default: 0, select: false },
         emailVerified: {
             type: Boolean,
-            default: true
+            default: false
         },
         emailVerificationToken: {
             type: String,
@@ -72,6 +73,7 @@ const userSchema = new mongoose.Schema(
                 delete ret._id;
                 delete ret.__v;
                 delete ret.password;
+                delete ret.authVersion;
                 delete ret.resetPasswordToken;
                 delete ret.resetPasswordExpiry;
                 delete ret.emailVerificationToken;

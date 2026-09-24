@@ -1,77 +1,71 @@
 import { create } from 'zustand';
 
-/**
- * Confirm Dialog Store cho CaltDHy v2.
- * Cung cấp API imperative xác nhận hành động nguy hiểm hoặc quan trọng.
- */
-export const useConfirmStore = create((set) => ({
+/** An imperative confirmation that keeps async work inside the dialog. */
+export const useConfirmStore = create((set, get) => ({
   isOpen: false,
-  title: 'Xác nhận thao tác',
+  isConfirming: false,
+  error: null,
+  title: '',
   message: '',
-  confirmText: 'Xác nhận',
-  cancelText: 'Hủy',
-  confirmVariant: 'danger', // 'danger' | 'primary'
+  confirmText: '',
+  cancelText: '',
+  confirmVariant: 'danger',
   _resolver: null,
+  _onConfirm: null,
+  _onCancel: null,
 
-  /**
-   * Mở dialog xác nhận, trả về Promise<boolean>
-   * @param {Object} options
-   * @param {string} [options.title='Xác nhận thao tác']
-   * @param {string} [options.message='']
-   * @param {string} [options.confirmText='Xác nhận']
-   * @param {string} [options.cancelText='Hủy']
-   * @param {'danger'|'primary'} [options.confirmVariant='danger']
-   * @param {Function} [options.onConfirm]
-   * @param {Function} [options.onCancel]
-   * @returns {Promise<boolean>}
-   */
   confirm: ({
-    title = 'Xác nhận thao tác',
+    title = '',
     message = '',
-    confirmText = 'Xác nhận',
-    cancelText = 'Hủy',
+    confirmText = '',
+    cancelText = '',
     confirmVariant = 'danger',
     onConfirm,
     onCancel,
   } = {}) => {
+    // Do not replace an unresolved confirmation or orphan its caller.
+    if (get().isOpen) return Promise.resolve(false);
     return new Promise((resolve) => {
       set({
         isOpen: true,
+        isConfirming: false,
+        error: null,
         title,
         message,
         confirmText,
         cancelText,
         confirmVariant,
-        _resolver: (result) => {
-          if (result && typeof onConfirm === 'function') {
-            onConfirm();
-          } else if (!result && typeof onCancel === 'function') {
-            onCancel();
-          }
-          resolve(result);
-        },
+        _resolver: resolve,
+        _onConfirm: onConfirm || null,
+        _onCancel: onCancel || null,
       });
     });
   },
 
-  handleConfirm: () => {
-    set((state) => {
-      if (state._resolver) state._resolver(true);
-      return { isOpen: false, _resolver: null };
-    });
+  handleConfirm: async () => {
+    const request = get();
+    if (!request.isOpen || request.isConfirming) return false;
+    set({ isConfirming: true, error: null });
+    try {
+      if (request._onConfirm) await request._onConfirm();
+      if (get()._resolver !== request._resolver) return false;
+      set({ isOpen: false, isConfirming: false, error: null, _resolver: null, _onConfirm: null, _onCancel: null });
+      request._resolver?.(true);
+      return true;
+    } catch (error) {
+      if (get()._resolver === request._resolver) {
+        set({ isConfirming: false, error: error?.message || true });
+      }
+      return false;
+    }
   },
 
   handleCancel: () => {
-    set((state) => {
-      if (state._resolver) state._resolver(false);
-      return { isOpen: false, _resolver: null };
-    });
+    const request = get();
+    if (!request.isOpen || request.isConfirming) return;
+    set({ isOpen: false, isConfirming: false, error: null, _resolver: null, _onConfirm: null, _onCancel: null });
+    try { request._onCancel?.(); } finally { request._resolver?.(false); }
   },
 
-  closeConfirm: () => {
-    set((state) => {
-      if (state._resolver) state._resolver(false);
-      return { isOpen: false, _resolver: null };
-    });
-  },
+  closeConfirm: () => get().handleCancel(),
 }));

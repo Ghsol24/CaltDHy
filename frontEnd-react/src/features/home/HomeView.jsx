@@ -2,12 +2,14 @@ import React from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { calculateMonthlyStats } from '../../utils/financeMath';
-import { getLocalMonthString } from '../../utils/formatters';
+import { formatDate, formatTime, getLocalMonthString } from '../../utils/formatters';
 import { AvailableToSpendCard } from './AvailableToSpendCard';
 import { RecentTransactions } from './RecentTransactions';
 import { AttentionPanel } from './AttentionPanel';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export function HomeView() {
+  const { t } = useTranslation();
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
@@ -17,8 +19,7 @@ export function HomeView() {
   const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
 
   const currentMonthStr = getLocalMonthString();
-  const [, mStr] = currentMonthStr.split('-');
-  const monthNum = parseInt(mStr, 10) || (new Date().getMonth() + 1);
+  const monthLabel = formatDate(`${currentMonthStr}-01`, 'month');
 
   // Tự động kiểm tra và đồng bộ dữ liệu ngân sách chuẩn của tháng hiện tại khi mở Trang chủ
   React.useEffect(() => {
@@ -57,30 +58,28 @@ export function HomeView() {
     }
 
     // Dynamic context-aware greeting
-    let gr = `Tháng ${monthNum} của bạn đang ổn`;
+    let greetingKey = 'home.greetingOkay';
     if (!hasTransactions && !hasAnyBudget) {
-      gr = `Chào bạn, hãy bắt đầu quản lý tài chính tháng ${monthNum}`;
+      greetingKey = 'home.greetingStart';
     } else if (!hasTransactions && hasAnyBudget) {
-      gr = `Tháng ${monthNum} đã sẵn sàng cho kế hoạch chi tiêu`;
+      greetingKey = 'home.greetingReady';
     } else if (hasCriticalBudget) {
-      gr = `Tháng ${monthNum} có khoản đã vượt hạn mức!`;
+      greetingKey = 'home.greetingOver';
     } else if (hasWarningBudget) {
-      gr = `Tháng ${monthNum} cần chú ý chi tiêu`;
+      greetingKey = 'home.greetingWarning';
     } else if (!hasAnyBudget && monthlyStats.expense > 0) {
-      gr = `Tổng quan chi tiêu tháng ${monthNum}`;
+      greetingKey = 'home.greetingSummary';
     } else if (monthlyStats.income > 0 && monthlyStats.income > monthlyStats.expense * 1.5) {
-      gr = `Dòng tiền tháng ${monthNum} đang tăng trưởng tích cực`;
+      greetingKey = 'home.greetingGrowing';
     } else if (hasAnyBudget) {
-      gr = `Chi tiêu tháng ${monthNum} trong tầm kiểm soát`;
+      greetingKey = 'home.greetingControlled';
     }
 
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const updatedText = `Cập nhật lần cuối hôm nay, ${hours}:${minutes}`;
+    const updatedText = t('home.lastUpdated', { time: formatTime(now) });
 
-    return { greeting: gr, lastUpdatedText: updatedText };
-  }, [transactions, budgets, currentMonthStr, monthNum]);
+    return { greeting: t(greetingKey, { month: monthLabel }), lastUpdatedText: updatedText };
+  }, [transactions, budgets, currentMonthStr, monthLabel, t]);
 
   return (
     <div className="home-dashboard-v2-container">
@@ -95,10 +94,10 @@ export function HomeView() {
           type="button"
           className="home-btn-add-txn"
           onClick={openAddTxnModal}
-          aria-label="Thêm giao dịch mới"
+          aria-label={t('home.addTransaction')}
         >
           <span className="home-btn-add-plus" aria-hidden="true">+</span>
-          <span>Thêm giao dịch</span>
+          <span>{t('home.addTransaction')}</span>
         </button>
       </div>
 

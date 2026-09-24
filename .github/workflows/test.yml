@@ -1,4 +1,4 @@
-name: Test
+name: Security and release
 
 on:
   push:
@@ -7,15 +7,79 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MONGOMS_VERSION: 8.2.6
+  MONGOMS_DISABLE_POSTINSTALL: '1'
+
 jobs:
-  test:
+  backend-security:
+    name: Backend security and money integrity
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm ci --prefix backEnd/server
+          cache-dependency-path: |
+            package-lock.json
+            backEnd/server/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts --prefix backEnd/server
+      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=high --prefix backEnd/server
       - run: npm test
+
+  browser-security:
+    name: Browser session and failure safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backEnd/server/package-lock.json
+            frontEnd-react/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts --prefix backEnd/server
+      - run: npm ci --ignore-scripts --prefix frontEnd-react
+      - run: npm audit --audit-level=high --prefix frontEnd-react
+      - run: npx --no-install playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  release-source:
+    name: Verified source release
+    needs: [backend-security, browser-security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run check:release
+      - run: npm run prepare:release
+      - run: npm run package:source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: caltdhy-verified-source
+          path: |
+            release/CaltDHy-hardened-*.zip
+            release/CaltDHy-hardened-*.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

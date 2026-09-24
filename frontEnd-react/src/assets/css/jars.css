@@ -11,17 +11,23 @@
   padding-bottom: 60px;
 }
 
+.jars-first-run-card {
+  min-height: min(560px, calc(100dvh - 210px));
+}
+
+.jars-first-run-state {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ── Section Scroll Margin for Fixed Topbar Offset ── */
 #jars-section-goals,
 #jars-section-list,
 #jars-section-history {
   scroll-margin-top: 88px;
-}
-
-#jars-section-list,
-#jars-section-history {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 450px;
 }
 
 /* ── Generic Section Headers ── */
@@ -351,6 +357,8 @@ html.dark-theme .jars-global-progress-track {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
 }
 
 /* Section 2: Tháng này bạn đã tiết kiệm (Financial Analytics Card) */
@@ -1415,6 +1423,8 @@ html.green-theme .jars-status-track {
 .jars-list-section {
   display: flex;
   flex-direction: column;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 
 .jars-toolbar-row {
@@ -1682,6 +1692,27 @@ html.dark-theme .jars-view-btn.active {
   position: relative;
 }
 
+.jar-graphic-deferred-host {
+  width: 80px;
+  height: 96px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jar-graphic-deferred-placeholder {
+  min-width: 46px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--jar-accent-color, #5356F1) 28%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--jar-accent-color, #5356F1) 8%, transparent);
+  color: var(--jar-accent-color, #5356F1);
+  font: 800 11px/1 var(--font-mono, monospace);
+}
+
 /* Jar Info & Amounts */
 .jar-info-section {
   display: flex;
@@ -1914,7 +1945,9 @@ html.dark-theme .jar-btn-detail-icon:hover {
   gap: 12px;
   cursor: pointer;
   min-height: 280px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  font: inherit;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .jar-card-add-new:hover {
@@ -2100,7 +2133,9 @@ html.green-theme .jar-card-add-desc {
   justify-content: center;
   gap: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  width: 100%;
+  font: inherit;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   color: var(--color-text-secondary, #64748B);
 }
 
@@ -2207,6 +2242,62 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
   font-size: 12px;
   color: var(--color-text-muted, #94A3B8);
   margin-left: 6px;
+}
+
+.jars-pagination {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jars-pagination__summary {
+  color: var(--color-text-secondary, #64748B);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.jars-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jars-pagination__controls button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 9px;
+  background: var(--color-surface, #FFFFFF);
+  color: var(--color-text, #0F172A);
+  font: 700 13px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.jars-pagination__controls button.is-active {
+  background: var(--color-brand-700, #5356F1);
+  border-color: var(--color-brand-700, #5356F1);
+  color: #FFFFFF;
+}
+
+.jars-pagination__controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 600px) {
+  .jars-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .jars-pagination__controls {
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
 }
 
 /* ============================================================

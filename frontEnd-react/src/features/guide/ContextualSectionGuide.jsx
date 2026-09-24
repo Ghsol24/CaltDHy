@@ -11,6 +11,7 @@ import {
   CloseOutlineIcon
 } from '../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const renderPointIcon = (iconKey) => {
   switch (iconKey) {
@@ -96,16 +97,19 @@ const SECTION_GUIDE_DATA = {
 };
 
 export function ContextualSectionGuide() {
+  const { intlLocale } = useTranslation();
   const activeView = useSpendingStore((s) => s.activeView);
   const openHelpModal = useSpendingStore((s) => s.openHelpModal);
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
   const [currentGuide, setCurrentGuide] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const userId = user?.id || user?.email || 'guest';
 
   useEffect(() => {
     if (!activeView || !SECTION_GUIDE_DATA[activeView]) {
       setCurrentGuide(null);
+      setIsExpanded(false);
       return;
     }
 
@@ -114,8 +118,10 @@ export function ContextualSectionGuide() {
 
     if (!hasSeen) {
       setCurrentGuide(SECTION_GUIDE_DATA[activeView]);
+      setIsExpanded(false);
     } else {
       setCurrentGuide(null);
+      setIsExpanded(false);
     }
   }, [activeView, userId]);
 
@@ -138,9 +144,26 @@ export function ContextualSectionGuide() {
 
   if (!currentGuide) return null;
 
+  if (!isExpanded) {
+    return (
+      <div className="floating-guide-widget is-collapsed">
+        <button
+          type="button"
+          className="floating-guide-disclosure-btn"
+          aria-expanded="false"
+          aria-controls="contextual-section-guide"
+          onClick={() => setIsExpanded(true)}
+        >
+          <SparkleOutlineIcon size={16} />
+          <span>Gợi ý cho {currentGuide.badge.toLocaleLowerCase(intlLocale)}</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="floating-guide-widget" role="complementary" aria-label="Hướng dẫn nhanh">
-      <div className="floating-guide-card">
+    <div className="floating-guide-widget">
+      <aside id="contextual-section-guide" className="floating-guide-card" aria-label="Hướng dẫn nhanh">
         {/* Header */}
         <div className="floating-guide-header">
           <div className="floating-guide-title-box">
@@ -189,7 +212,7 @@ export function ContextualSectionGuide() {
             Đã hiểu
           </button>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

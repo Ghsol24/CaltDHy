@@ -1,41 +1,15 @@
+import { sessionEpoch, scopedSet, scopedGet } from '../services/sessionRuntime';
 import { create } from 'zustand';
 import { jarsService } from '../services/jarsService';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
-import { advanceNextDueDate, getLocalDateString } from '../utils/formatters';
+const getStoredJars = () => [];
 
-const JARS_KEY = 'caltdhy_jars';
-const INSTALLMENTS_KEY = 'caltdhy_installments';
+const saveStoredJars = () => undefined;
 
-const getStoredJars = () => {
-  try {
-    const raw = localStorage.getItem(JARS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
+const getStoredInstallments = () => [];
 
-const saveStoredJars = (jars) => {
-  try {
-    localStorage.setItem(JARS_KEY, JSON.stringify(jars));
-  } catch {}
-};
-
-const getStoredInstallments = () => {
-  try {
-    const raw = localStorage.getItem(INSTALLMENTS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveStoredInstallments = (items) => {
-  try {
-    localStorage.setItem(INSTALLMENTS_KEY, JSON.stringify(items));
-  } catch {}
-};
+const saveStoredInstallments = () => undefined;
 
 const normalizeJar = (j) => ({
   id: j._id || j.id,
@@ -80,13 +54,17 @@ const normalizeInstallment = (i) => ({
   isActive: i.active !== undefined ? i.active : (i.isActive !== undefined ? i.isActive : true)
 });
 
-export const useJarStore = create((set, get) => ({
+export const useJarStore = create((storeSet, storeGet) => {
+return ({
   jars: getStoredJars(),
   installments: getStoredInstallments(),
   isLoading: false,
+  hasLoaded: false,
   error: null,
 
   fetchData: async () => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
     set({ isLoading: true, error: null });
     try {
       const [jarsResponse, installmentsResponse] = await Promise.all([
@@ -102,21 +80,16 @@ export const useJarStore = create((set, get) => ({
       set({
         jars: jarsData,
         installments: instData,
-        isLoading: false
-      });
-    } catch (error) {
-      const localJars = getStoredJars();
-      const localInst = getStoredInstallments();
-      set({
-        jars: localJars,
-        installments: localInst,
         isLoading: false,
-        error: error.message || 'Không thể tải dữ liệu hũ.'
+        hasLoaded: true
       });
-    }
+    } catch (error) { set({ isLoading: false, hasLoaded: true, error: error.message }); return { success: false, error: error.message }; }
   },
 
   createJar: async (data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
       const response = await jarsService.createJar(data);
       const newJar = normalizeJar(response.data);
@@ -124,29 +97,13 @@ export const useJarStore = create((set, get) => ({
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: newJar };
-    } catch {
-      const numInit = Number(data.current) || 0;
-      const initialHist = numInit > 0 ? [{
-        id: `hist_init_${Date.now()}`,
-        type: 'deposit',
-        amount: numInit,
-        reason: 'Số dư ban đầu khi tạo hũ',
-        date: new Date().toISOString()
-      }] : [];
-      const fallbackJar = normalizeJar({
-        ...data,
-        id: `local_jar_${Date.now()}`,
-        history: initialHist,
-        createdAt: new Date().toISOString()
-      });
-      const updated = [fallbackJar, ...get().jars];
-      saveStoredJars(updated);
-      set({ jars: updated });
-      return { success: true, data: fallbackJar, offline: true };
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   updateJar: async (id, data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
       const response = await jarsService.updateJar(id, data);
       const updatedJar = normalizeJar(response.data);
@@ -154,15 +111,13 @@ export const useJarStore = create((set, get) => ({
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: updatedJar };
-    } catch {
-      const updated = get().jars.map((jar) => (jar.id === id ? { ...jar, ...data } : jar));
-      saveStoredJars(updated);
-      set({ jars: updated });
-      return { success: true, data: { id, ...data }, offline: true };
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   updateJarBalance: async (id, action, amount, reason, walletId = null) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
       const response = action === 'deposit'
         ? await jarsService.deposit(id, amount, reason, walletId)
@@ -175,72 +130,38 @@ export const useJarStore = create((set, get) => ({
       useTransactionStore.getState()?.fetchTransactions?.();
       useWalletStore.getState()?.fetchWallets?.();
       return { success: true, data: updatedJar };
-    } catch (err) {
-      // Chỉ áp dụng fallback lưu-cục-bộ khi THỰC SỰ mất kết nối (api.js gán status 503
-      // riêng cho trường hợp "Failed to fetch"). Nếu server đã phản hồi và từ chối hợp lệ
-      // (400 không đủ số dư, ví không hợp lệ...) thì phải ném lỗi ra ngoài để UI báo đúng,
-      // tuyệt đối không được âm thầm coi là "thành công offline".
-      if (err.status && err.status !== 503) {
-        throw err;
-      }
-      const targetJar = get().jars.find((j) => j.id === id);
-      const numAmt = Number(amount) || 0;
-      const newBalance = targetJar
-        ? action === 'deposit'
-          ? (targetJar.current || 0) + numAmt
-          : Math.max(0, (targetJar.current || 0) - numAmt)
-        : 0;
-      const newEntry = {
-        id: `local_hist_${Date.now()}`,
-        type: action,
-        amount: numAmt,
-        reason: reason || '',
-        date: new Date().toISOString()
-      };
-      const updated = get().jars.map((jar) => {
-        if (jar.id !== id) return jar;
-        const currentHist = Array.isArray(jar.history) ? jar.history : [];
-        return { ...jar, current: newBalance, history: [newEntry, ...currentHist] };
-      });
-      saveStoredJars(updated);
-      set({ jars: updated });
-      return { success: true, data: { id, current: newBalance }, offline: true };
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   deleteJar: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
-      if (!String(id).startsWith('local_')) {
-        await jarsService.deleteJar(id);
-      }
+      await jarsService.deleteJar(id);
       const updated = get().jars.filter((jar) => jar.id !== id);
       saveStoredJars(updated);
       set({ jars: updated });
-    } catch (err) {
-      console.error('Lỗi khi xóa hũ từ server:', err);
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   createInstallment: async (data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
       const response = await jarsService.createInstallment(data);
       const newInst = normalizeInstallment(response.data);
       const updated = [...get().installments, newInst];
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch {
-      const fallbackInst = normalizeInstallment({
-        ...data,
-        id: `local_inst_${Date.now()}`
-      });
-      const updated = [...get().installments, fallbackInst];
-      saveStoredInstallments(updated);
-      set({ installments: updated });
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   updateInstallment: async (id, data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
       const response = await jarsService.updateInstallment(id, data);
       const updatedInst = normalizeInstallment(response.data);
@@ -255,22 +176,15 @@ export const useJarStore = create((set, get) => ({
       }
 
       return { success: true, data: updatedInst };
-    } catch (err) {
-      if (err && err.status === 503) {
-        const updated = get().installments.map((item) =>
-          item.id === id ? normalizeInstallment({ ...item, ...data }) : item
-        );
-        saveStoredInstallments(updated);
-        set({ installments: updated });
-        return { success: true, data: { id, ...data }, offline: true };
-      }
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   payInstallment: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
-      const response = await jarsService.payInstallment(id);
+      const response = await jarsService.payInstallment(id, get().installments.find(item => item.id === id)?.nextDueDate);
       const updatedInst = normalizeInstallment(response.data);
       const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
       saveStoredInstallments(updated);
@@ -278,61 +192,32 @@ export const useJarStore = create((set, get) => ({
       // Tự động đồng bộ giao dịch chi tiêu mới và số dư ví sau khi thanh toán định kỳ
       useTransactionStore.getState()?.fetchTransactions?.();
       useWalletStore.getState()?.fetchWallets?.();
-    } catch {
-      const updated = get().installments.map((item) => {
-        if (item.id !== id) return item;
-        const prevDueDate = item.nextDueDate;
-        const nextDate = advanceNextDueDate(item.nextDueDate, item.cycle);
-        const todayDate = getLocalDateString();
-        const historyEntry = {
-          id: `hist_${Date.now()}`,
-          amount: item.amount,
-          paidDate: todayDate,
-          cycleDate: prevDueDate,
-          createdAt: new Date().toISOString()
-        };
-        const newHistory = [historyEntry, ...(Array.isArray(item.history) ? item.history : [])];
-        const newPaid = (item.paidMonths || 0) + 1;
-        const newTotalPaid = (item.totalPaid || 0) + item.amount;
-        return {
-          ...item,
-          nextDueDate: nextDate,
-          dueDate: nextDate,
-          history: newHistory,
-          paidMonths: newPaid,
-          totalPaid: newTotalPaid
-        };
-      });
-      saveStoredInstallments(updated);
-      set({ installments: updated });
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   toggleInstallment: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
       const response = await jarsService.toggleInstallment(id);
       const updatedInst = normalizeInstallment(response.data);
       const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch {
-      const updated = get().installments.map((item) => (item.id === id ? { ...item, isActive: !item.isActive } : item));
-      saveStoredInstallments(updated);
-      set({ installments: updated });
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   deleteInstallment: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     try {
-      if (!String(id).startsWith('local_')) {
-        await jarsService.deleteInstallment(id);
-      }
+      await jarsService.deleteInstallment(id);
       const updated = get().installments.filter((item) => item.id !== id);
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch (err) {
-      console.error('Lỗi khi xóa khoản định kỳ từ server:', err);
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   }
-}));
+});
+});

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -15,10 +15,17 @@ import {
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useToastStore } from '../../stores/useToastStore';
 import { useThemeStore } from '../../stores/useThemeStore';
-import { formatCurrency, formatPercent, getLocalMonthString } from '../../utils/formatters';
+import { formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatMonthShort, formatPercent, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { getBudgetStatus } from '../../utils/financeMath';
+import { filterTrendTransactions, summarizeRecurringExpenses } from '../../utils/analyticsFilters';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
+import { ClockOutlineIcon } from '../../components/ui/AppIcons';
+import { useTranslation } from '../../i18n/useTranslation';
+import { translateLegacyText } from '../../i18n/legacyTranslations';
 import {
   CategoryOutlineIcon,
   ChartOutlineIcon,
@@ -59,17 +66,47 @@ const CATEGORY_COLORS = [
   '#64748B'  // Slate
 ];
 
+const ANALYTICS_SCROLL_SECTIONS = Object.freeze([
+  ['analytics-overview', 'overview'],
+  ['analytics-spending', 'spending'],
+  ['analytics-cashflow', 'cash-flow'],
+  ['analytics-reports', 'reports'],
+]);
+
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ));
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncPreference = () => setPrefersReducedMotion(media.matches);
+    media.addEventListener?.('change', syncPreference);
+    return () => media.removeEventListener?.('change', syncPreference);
+  }, []);
+
+  return prefersReducedMotion;
+}
+
 export function AnalyticsView() {
+  const { t, label, lang } = useTranslation();
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
+  const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
+  const excludeRecurring = useSpendingStore((s) => s.analyticsExcludeRecurring);
+  const setAnalyticsExcludeRecurring = useSpendingStore((s) => s.setAnalyticsExcludeRecurring);
+  const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile(900);
 
   const [trendMode, setTrendMode] = useState('daily'); // 'daily' | '3months' | '6months'
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
+  const barChartRef = useRef(null);
 
   // Current active month in 'YYYY-MM' format
   const activeMonth = selectedMonth || getLocalMonthString();
@@ -112,19 +149,19 @@ export function AnalyticsView() {
     return {
       currentYear: year,
       currentMonthNum: month,
-      monthLabel: `Tháng ${month}, ${year}`,
+      monthLabel: formatDate(new Date(year, month - 1, 1), 'month', { locale: lang }),
       prevMonthStr: `${prevYear}-${prevM}`,
       nextMonthStr: `${nextYear}-${nextM}`,
       isCurrentMonth: activeMonth === nowMonthStr,
       currentQuarter: cQuarter,
       prevQuarter: pQuarter,
       prevQuarterYear: pQuarterYear,
-      quarterLabel: `Quý ${cQuarter}/${year} (T${(cQuarter - 1) * 3 + 1} - T${cQuarter * 3})`,
-      prevQuarterLabel: `Quý ${pQuarter}/${pQuarterYear} (T${(pQuarter - 1) * 3 + 1} - T${pQuarter * 3})`,
+      quarterLabel: t('date.quarterRange', { quarter: cQuarter, year, start: (cQuarter - 1) * 3 + 1, end: cQuarter * 3 }),
+      prevQuarterLabel: t('date.quarterRange', { quarter: pQuarter, year: pQuarterYear, start: (pQuarter - 1) * 3 + 1, end: pQuarter * 3 }),
       curQuarterMonths: curQMonths,
       prevQuarterMonths: prevQMonths
     };
-  }, [activeMonth]);
+  }, [activeMonth, lang, t]);
 
   const handlePrevMonth = () => setSelectedMonth(prevMonthStr);
   const handleNextMonth = () => setSelectedMonth(nextMonthStr);
@@ -187,6 +224,11 @@ export function AnalyticsView() {
     };
   }, [transactions, activeMonth]);
 
+  const trendTransactions = useMemo(
+    () => filterTrendTransactions(transactions, excludeRecurring),
+    [transactions, excludeRecurring]
+  );
+
   // 2. Multi-Month Trend calculation helper (Last N months based on activeMonth)
   const getMultiMonthTrend = useCallback(
     (numMonths) => {
@@ -198,11 +240,11 @@ export function AnalyticsView() {
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
         const prefix = `${y}-${m}`;
-        const label = `T${d.getMonth() + 1}/${String(y).slice(2)}`;
+        const label = formatMonthShort(d, { locale: lang });
 
         let inc = 0;
         let exp = 0;
-        transactions.forEach((t) => {
+        trendTransactions.forEach((t) => {
           if (t.date && t.date.startsWith(prefix)) {
             const amt = Number(t.amount) || 0;
             const fee = Number(t.fee) || 0;
@@ -216,7 +258,7 @@ export function AnalyticsView() {
       }
       return { months, hasAnyData };
     },
-    [transactions, currentYear, currentMonthNum]
+    [trendTransactions, currentYear, currentMonthNum, lang]
   );
 
   const trend3Months = useMemo(() => getMultiMonthTrend(3), [getMultiMonthTrend]);
@@ -233,7 +275,7 @@ export function AnalyticsView() {
       let inc = 0;
       let exp = 0;
 
-      transactions.forEach((t) => {
+      trendTransactions.forEach((t) => {
         if (t.date === dayStr) {
           const amt = Number(t.amount) || 0;
           const fee = Number(t.fee) || 0;
@@ -252,7 +294,32 @@ export function AnalyticsView() {
     }
 
     return { days, hasAnyData };
-  }, [transactions, currentYear, currentMonthNum, activeMonth]);
+  }, [trendTransactions, currentYear, currentMonthNum, activeMonth]);
+
+  const recurringFilterSummary = useMemo(() => {
+    const prefixes = trendMode === 'daily'
+      ? [activeMonth]
+      : (trendMode === '3months' ? trend3Months.months : trend6Months.months).map((month) => month.prefix);
+    return summarizeRecurringExpenses(transactions, prefixes);
+  }, [transactions, trendMode, activeMonth, trend3Months.months, trend6Months.months]);
+
+  const handleToggleRecurring = useCallback(() => {
+    const nextExcludeRecurring = !useSpendingStore.getState().analyticsExcludeRecurring;
+    barChartRef.current?.stop();
+    setAnalyticsExcludeRecurring(nextExcludeRecurring);
+    const { count, amount } = recurringFilterSummary;
+    addToast({
+      dedupeKey: 'analytics-recurring-filter',
+      type: 'info',
+      duration: 3000,
+      message: count === 0
+        ? t('analytics.recurringEmptyToast')
+        : t(nextExcludeRecurring ? 'analytics.recurringExcludedToast' : 'analytics.recurringIncludedToast', {
+            count,
+            amount: formatCurrency(amount, { locale: lang }),
+          }),
+    });
+  }, [addToast, lang, recurringFilterSummary, setAnalyticsExcludeRecurring, t]);
 
   const hasTrendData = useMemo(() => {
     if (trendMode === 'daily') return dailyTrend.hasAnyData;
@@ -313,7 +380,7 @@ export function AnalyticsView() {
     if (monthData.categories.length === 0) return null;
 
     return {
-      labels: monthData.categories.map((c) => c.name),
+      labels: monthData.categories.map((c) => label(c.name)),
       datasets: [
         {
           data: monthData.categories.map((c) => c.amount),
@@ -324,12 +391,17 @@ export function AnalyticsView() {
         }
       ]
     };
-  }, [monthData.categories, chartThemeTokens]);
+  }, [monthData.categories, chartThemeTokens, label]);
 
   const doughnutOptions = useMemo(() => {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      animation: prefersReducedMotion ? false : {
+        duration: 850,
+        easing: 'easeOutQuart'
+      },
+      resizeDelay: 150,
       cutout: '72%',
       plugins: {
         legend: { display: false },
@@ -349,7 +421,7 @@ export function AnalyticsView() {
         }
       }
     };
-  }, [monthData.expense, chartThemeTokens]);
+  }, [monthData.expense, chartThemeTokens, prefersReducedMotion]);
 
   // Bar Chart Configuration
   const barChartData = useMemo(() => {
@@ -358,7 +430,7 @@ export function AnalyticsView() {
         labels: dailyTrend.days.map((d) => d.label),
         datasets: [
           {
-            label: 'Thu nhập',
+            label: t('type.income'),
             data: dailyTrend.days.map((d) => d.income),
             backgroundColor: chartThemeTokens.income,
             borderRadius: 4,
@@ -366,7 +438,7 @@ export function AnalyticsView() {
             categoryPercentage: 0.8
           },
           {
-            label: 'Chi tiêu',
+            label: t('type.expense'),
             data: dailyTrend.days.map((d) => d.expense),
             backgroundColor: chartThemeTokens.expense,
             borderRadius: 4,
@@ -385,7 +457,7 @@ export function AnalyticsView() {
       labels: currentMultiTrend.months.map((m) => m.label),
       datasets: [
         {
-          label: 'Thu nhập',
+          label: t('type.income'),
           data: currentMultiTrend.months.map((m) => m.income),
           backgroundColor: chartThemeTokens.income,
           borderRadius: 6,
@@ -393,7 +465,7 @@ export function AnalyticsView() {
           categoryPercentage
         },
         {
-          label: 'Chi tiêu',
+          label: t('type.expense'),
           data: currentMultiTrend.months.map((m) => m.expense),
           backgroundColor: chartThemeTokens.expense,
           borderRadius: 6,
@@ -402,12 +474,17 @@ export function AnalyticsView() {
         }
       ]
     };
-  }, [trendMode, dailyTrend, trend3Months, trend6Months, chartThemeTokens]);
+  }, [trendMode, dailyTrend, trend3Months, trend6Months, chartThemeTokens, t]);
 
   const barOptions = useMemo(() => {
     return {
       responsive: true,
       maintainAspectRatio: false,
+      animation: prefersReducedMotion ? false : {
+        duration: 250,
+        easing: 'easeOutQuart'
+      },
+      resizeDelay: 150,
       plugins: {
         legend: {
           position: 'top',
@@ -432,7 +509,7 @@ export function AnalyticsView() {
               if (!items.length) return '';
               const item = items[0];
               if (trendMode === 'daily') {
-                return `Ngày ${item.label}/${currentMonthNum}/${currentYear}`;
+                return formatDate(new Date(currentYear, currentMonthNum - 1, Number(item.label)), 'compact', { locale: lang });
               }
               return item.label;
             },
@@ -459,21 +536,19 @@ export function AnalyticsView() {
             color: chartThemeTokens.tick,
             font: { family: 'Inter, sans-serif', size: 11 },
             callback: (value) => {
-              if (value >= 1000000) return `${(value / 1000000).toFixed(0)}tr`;
-              if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-              return value;
+              return formatCompactCurrency(value);
             }
           }
         }
       }
     };
-  }, [trendMode, currentMonthNum, currentYear, chartThemeTokens]);
+  }, [trendMode, currentMonthNum, currentYear, chartThemeTokens, prefersReducedMotion, lang]);
 
   // ── Financial Report Statistics & Comparison ──
   const reportData = useMemo(() => {
     const isQuarter = reportPeriodType === 'quarterly';
     const curLabel = isQuarter ? quarterLabel : monthLabel;
-    const prevLabel = isQuarter ? prevQuarterLabel : `Tháng ${parseInt(prevMonthStr.split('-')[1], 10)}, ${prevMonthStr.split('-')[0]}`;
+    const prevLabel = isQuarter ? prevQuarterLabel : formatDate(`${prevMonthStr}-01`, 'month', { locale: lang });
 
     const matchesCurrent = (txDate) => {
       if (!txDate) return false;
@@ -577,7 +652,7 @@ export function AnalyticsView() {
 
       if (spentCur === 0 && spentPrev === 0) {
         deltaBadgeType = 'neutral';
-        deltaBadgeText = '0 đ';
+        deltaBadgeText = formatCurrency(0);
       } else if (isNewInPeriod) {
         if (limit && budgetStatus.isOver) {
           deltaBadgeType = 'bad';
@@ -594,18 +669,18 @@ export function AnalyticsView() {
         deltaBadgeText = '↓ -100%';
       } else if (deltaAmt < 0) {
         deltaBadgeType = 'good';
-        deltaBadgeText = `↓ -${Math.abs(deltaPct).toFixed(1)}%`;
+        deltaBadgeText = `↓ -${formatPercent(Math.abs(deltaPct), { fractionDigits: 1 })}`;
       } else if (deltaAmt === 0 || Math.abs(deltaPct) < 0.5) {
         deltaBadgeType = 'neutral';
-        deltaBadgeText = '~ 0.0%';
+        deltaBadgeText = `~ ${formatPercent(0, { fractionDigits: 1 })}`;
       } else {
         // deltaAmt > 0 (Chi tiêu tăng so với kỳ trước)
         if (limit && budgetStatus.isOver) {
           deltaBadgeType = 'bad';
-          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
         } else if (limit && (budgetStatus.status === 'warning' || budgetStatus.percent >= 100)) {
           deltaBadgeType = 'warn';
-          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
         } else if (limit && spentCur <= limit * 0.75) {
           // Tăng nhưng an toàn dưới 75% hạn mức
           if (deltaPct > 30) {
@@ -613,7 +688,7 @@ export function AnalyticsView() {
           } else {
             deltaBadgeType = 'neutral';
           }
-          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
         } else {
           // Chưa đặt hạn mức
           if (deltaPct > 50) {
@@ -623,7 +698,7 @@ export function AnalyticsView() {
           } else {
             deltaBadgeType = 'neutral';
           }
-          deltaBadgeText = `↑ +${deltaPct.toFixed(1)}%`;
+          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
         }
       }
 
@@ -690,8 +765,14 @@ export function AnalyticsView() {
     const insights = [];
     const overList = categoryRows.filter((r) => r.limit && r.budgetStatus.isOver);
     const warnList = categoryRows.filter((r) => r.limit && r.budgetStatus.status === 'warning');
+    const hasCurrentData = curTxns.length > 0;
 
-    if (curStats.net > 0 && curStats.savingsRate >= 20) {
+    if (!hasCurrentData) {
+      insights.push({
+        type: 'info',
+        text: 'Chưa đủ dữ liệu trong kỳ này để đưa ra nhận định tài chính. Hãy ghi nhận giao dịch trước khi đánh giá xu hướng.'
+      });
+    } else if (curStats.net > 0 && curStats.savingsRate >= 20) {
       insights.push({
         type: 'accolade',
         text: `Quản lý tài chính xuất sắc! Dòng tiền thặng dư ${formatCurrency(curStats.net)} và bạn đã tiết kiệm được ${formatPercent(curStats.savingsRate)} tổng thu nhập trong kỳ này.`
@@ -718,14 +799,14 @@ export function AnalyticsView() {
         type: 'info',
         text: `Có ${warnList.length} nhóm chi phí đang tiệm cận trần ngân sách (${warnList.map(w => w.name).join(', ')}). Chú ý thắt chặt trong các ngày còn lại.`
       });
-    } else if (categoryRows.some(r => r.limit)) {
+    } else if (hasCurrentData && curStats.expense > 0 && categoryRows.some(r => r.limit)) {
       insights.push({
         type: 'accolade',
         text: `Tất cả các nhóm có thiết lập ngân sách đều nằm trong vùng kiểm soát an toàn! Tiếp tục phát huy kỷ luật tài chính.`
       });
     }
 
-    if (curStats.expense < prevStats.expense && prevStats.expense > 0) {
+    if (hasCurrentData && curStats.expense < prevStats.expense && prevStats.expense > 0) {
       insights.push({
         type: 'accolade',
         text: `Tổng chi tiêu giảm ${formatCurrency(prevStats.expense - curStats.expense)} (${formatPercent(Math.abs(expenseDeltaPct))}) so với kỳ trước. Bạn đang tối ưu ngân sách rất hiệu quả!`
@@ -748,42 +829,43 @@ export function AnalyticsView() {
       categoryRows,
       insights
     };
-  }, [reportPeriodType, quarterLabel, prevQuarterLabel, monthLabel, prevMonthStr, activeMonth, curQuarterMonths, prevQuarterMonths, transactions, budgets]);
+  }, [reportPeriodType, quarterLabel, prevQuarterLabel, monthLabel, prevMonthStr, activeMonth, curQuarterMonths, prevQuarterMonths, transactions, budgets, lang]);
 
   // Handle CSV Export with UTF-8 BOM
   const handleExportCSV = () => {
     const { curLabel, prevLabel, curStats, prevStats, categoryRows, curTxns, incomeDelta, incomeDeltaPct, expenseDelta, expenseDeltaPct, netDelta, savingsRateDelta } = reportData;
     
     let csv = '\uFEFF'; // UTF-8 BOM for Excel Vietnamese compatibility
-    csv += `BÁO CÁO TÀI CHÍNH CHI TIẾT - CALTDHY\n`;
-    csv += `Kỳ báo cáo:,"${curLabel}"\n`;
-    csv += `Kỳ so sánh đối chiếu:,"${prevLabel}"\n`;
-    csv += `Thời gian xuất báo cáo:,"${new Date().toLocaleString('vi-VN')}"\n\n`;
+    csv += `${t('analytics.csvTitle')}\n`;
+    csv += `${t('analytics.csvPeriod')}:,"${translateLegacyText(lang, curLabel)}"\n`;
+    csv += `${t('analytics.csvComparison')}:,"${translateLegacyText(lang, prevLabel)}"\n`;
+    csv += `${t('analytics.csvExportedAt')}:,"${formatDateTime(new Date())}"\n\n`;
 
     // 1. Chỉ số tài chính
-    csv += `1. TỔNG KẾT CHỈ SỐ TÀI CHÍNH\n`;
-    csv += `Chỉ số,Kỳ này,Kỳ trước,Chênh lệch (VND),% Thay đổi\n`;
-    csv += `Tổng thu nhập,"${curStats.income}","${prevStats.income}","${incomeDelta}","${incomeDeltaPct.toFixed(1)}%"\n`;
-    csv += `Tổng chi tiêu,"${curStats.expense}","${prevStats.expense}","${expenseDelta}","${expenseDeltaPct.toFixed(1)}%"\n`;
-    csv += `Dòng tiền thuần (Net),"${curStats.net}","${prevStats.net}","${netDelta}",""\n`;
-    csv += `Tỷ lệ tiết kiệm,"${curStats.savingsRate.toFixed(1)}%","${prevStats.savingsRate.toFixed(1)}%","${savingsRateDelta.toFixed(1)}%",""\n\n`;
+    csv += `${t('analytics.csvSummary')}\n`;
+    csv += `${t('analytics.csvSummaryHeaders')}\n`;
+    csv += `${t('analytics.totalIncome')},"${curStats.income}","${prevStats.income}","${incomeDelta}","${incomeDeltaPct.toFixed(1)}%"\n`;
+    csv += `${t('analytics.totalExpense')},"${curStats.expense}","${prevStats.expense}","${expenseDelta}","${expenseDeltaPct.toFixed(1)}%"\n`;
+    csv += `${t('analytics.net')},"${curStats.net}","${prevStats.net}","${netDelta}",""\n`;
+    csv += `${t('analytics.savingsRate')},"${curStats.savingsRate.toFixed(1)}%","${prevStats.savingsRate.toFixed(1)}%","${savingsRateDelta.toFixed(1)}%",""\n\n`;
 
     // 2. Phân tích chi tiết danh mục
-    csv += `2. PHÂN TÍCH CHI TIẾT THEO NHÓM CHI PHÍ\n`;
-    csv += `Danh mục,Chi tiêu kỳ này,Chi tiêu kỳ trước,Chênh lệch (VND),% Biến động,Tỷ trọng chi tiêu,Số giao dịch,Hạn mức ngân sách,Trạng thái ngân sách,Đánh giá & Khuyến nghị\n`;
+    csv += `${t('analytics.csvCategorySection')}\n`;
+    csv += `${t('analytics.csvCategoryHeaders')}\n`;
     categoryRows.forEach((r) => {
       const statusText = r.limit 
-        ? (r.budgetStatus.isOver ? `Vượt ngân sách (${r.budgetStatus.percent}%)` : (r.budgetStatus.status === 'warning' ? `Chạm ngưỡng (${r.budgetStatus.percent}%)` : `An toàn (${r.budgetStatus.percent}%)`))
-        : 'Chưa đặt hạn mức';
-      csv += `"${r.name}","${r.spentCur}","${r.spentPrev}","${r.deltaAmt}","${r.deltaPct.toFixed(1)}%","${r.pctOfTotal.toFixed(1)}%","${r.countCur}","${r.limit || 0}","${statusText}","${r.adviceText.replace(/"/g, '""')}"\n`;
+        ? t(r.budgetStatus.isOver ? 'analytics.overBudget' : r.budgetStatus.status === 'warning' ? 'analytics.warningBudget' : 'analytics.safeBudget', { percent: r.budgetStatus.percent })
+        : t('transaction.limitUnset');
+      const advice = translateLegacyText(lang, r.adviceText).replace(/"/g, '""');
+      csv += `"${label(r.name)}","${r.spentCur}","${r.spentPrev}","${r.deltaAmt}","${r.deltaPct.toFixed(1)}%","${r.pctOfTotal.toFixed(1)}%","${r.countCur}","${r.limit || 0}","${statusText}","${advice}"\n`;
     });
     csv += '\n';
 
     // 3. Danh sách giao dịch trong kỳ
-    csv += `3. DANH SÁCH GIAO DỊCH PHÁT SINH TRONG KỲ\n`;
-    csv += `Ngày,Loại,Danh mục,Số tiền,Phí,Ghi chú\n`;
+    csv += `${t('analytics.csvTransactions')}\n`;
+    csv += `${t('analytics.csvTransactionHeaders')}\n`;
     curTxns.forEach((tx) => {
-      csv += `"${tx.date || ''}","${tx.type === 'income' ? 'Thu nhập' : 'Chi tiêu'}","${tx.category || ''}","${tx.amount || 0}","${tx.fee || 0}","${(tx.note || '').replace(/"/g, '""')}"\n`;
+      csv += `"${tx.date || ''}","${t(`type.${tx.type === 'income' ? 'income' : 'expense'}`)}","${label(tx.category || '')}","${tx.amount || 0}","${tx.fee || 0}","${(tx.note || '').replace(/"/g, '""')}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -803,78 +885,22 @@ export function AnalyticsView() {
     window.print();
   };
 
-  // ── ScrollSpy (IntersectionObserver) to sync active sidebar item ──
-  useEffect(() => {
-    const sectionIds = [
-      'analytics-overview',
-      'analytics-spending',
-      'analytics-cashflow',
-      'analytics-reports'
-    ];
-
-    const subTabMap = {
-      'analytics-overview': 'overview',
-      'analytics-spending': 'spending',
-      'analytics-cashflow': 'cash-flow',
-      'analytics-reports': 'reports'
-    };
-
-    const elements = sectionIds.map((id) => document.getElementById(id)).filter(Boolean);
-    if (elements.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (window.__caltdhy_programmatic_scroll) return;
-
-        const visibleEntries = entries.filter((entry) => entry.isIntersecting);
-        if (visibleEntries.length > 0) {
-          visibleEntries.sort((a, b) => {
-            const rectA = a.boundingClientRect;
-            const rectB = b.boundingClientRect;
-            return Math.abs(rectA.top - 80) - Math.abs(rectB.top - 80);
-          });
-          const activeEntry = visibleEntries[0];
-          const subTab = subTabMap[activeEntry.target.id];
-          const currentTab = useSpendingStore.getState().analyticsSubTab;
-          if (subTab && subTab !== currentTab) {
-            setAnalyticsSubTab(subTab);
-          }
-        }
-      },
-      {
-        root: null,
-        rootMargin: '-80px 0px -40% 0px',
-        threshold: [0.1, 0.3, 0.6]
-      }
-    );
-
-    elements.forEach((el) => observer.observe(el));
-
-    return () => {
-      observer.disconnect();
-    };
+  const handleActiveAnalyticsSection = useCallback((activeTab) => {
+    if (activeTab && useSpendingStore.getState().analyticsSubTab !== activeTab) {
+      setAnalyticsSubTab(activeTab, { syncRoute: false });
+    }
   }, [setAnalyticsSubTab]);
 
-  // Initial scroll if subTab was clicked from outside (runs once on mount)
-  useEffect(() => {
-    const initialTab = useSpendingStore.getState().analyticsSubTab;
-    if (initialTab && initialTab !== 'overview') {
-      const targetMap = {
-        spending: 'analytics-spending',
-        'cash-flow': 'analytics-cashflow',
-        reports: 'analytics-reports'
-      };
-      const targetId = targetMap[initialTab];
-      if (targetId) {
-        setTimeout(() => {
-          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 150);
-      }
-    }
-  }, []);
+  useSectionScrollSpy({
+    disabled: isMobile,
+    sections: ANALYTICS_SCROLL_SECTIONS,
+    onActiveChange: handleActiveAnalyticsSection,
+  });
 
   return (
     <div className="analytics-feature-view" role="region" aria-label="Báo cáo phân tích thu chi">
+      {(!isMobile || analyticsSubTab === 'overview') && (
+        <>
       {/* ── 1. Page Header & Comparison Segmented / Month Selector ── */}
       <div className="analytics-header-bar" id="analytics-overview">
         <div className="analytics-title-group">
@@ -1051,7 +1077,12 @@ export function AnalyticsView() {
         </div>
       </div>
 
+        </>
+      )}
+
       {/* ── 3. Spending By Category Section ── */}
+      {(!isMobile || analyticsSubTab === 'spending') && (
+      <>
       <div className="analytics-section-panel" id="analytics-spending">
         <div className="panel-header">
           <div className="panel-titles">
@@ -1134,8 +1165,12 @@ export function AnalyticsView() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* ── 4. Cash-flow Trend Section ── */}
+      {(!isMobile || analyticsSubTab === 'cash-flow') && (
+      <>
       <div className="analytics-section-panel" id="analytics-cashflow">
         <div className="panel-header">
           <div className="panel-titles">
@@ -1182,6 +1217,19 @@ export function AnalyticsView() {
                 6 tháng gần đây
               </button>
             </div>
+
+            <div className="trend-recurring-filter">
+              <button
+                type="button"
+                className={`trend-recurring-toggle ${excludeRecurring ? 'is-active' : ''}`}
+                aria-pressed={excludeRecurring}
+                onClick={handleToggleRecurring}
+                title={t('analytics.recurringHint')}
+              >
+                <ClockOutlineIcon size={15} />
+                <span>{t(excludeRecurring ? 'analytics.recurringExcluded' : 'analytics.recurringIncluded')}</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1200,12 +1248,16 @@ export function AnalyticsView() {
         ) : (
           /* Data state: Bar Chart */
           <div className="trend-chart-box">
-            <Bar data={barChartData} options={barOptions} />
+            <Bar ref={barChartRef} data={barChartData} options={barOptions} />
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* ── 5. Detailed Financial Report Section (Báo cáo tài chính chuyên sâu) ── */}
+      {(!isMobile || analyticsSubTab === 'reports') && (
+      <>
       <div className="analytics-section-panel analytics-report-section" id="analytics-reports">
         {/* Header & Controls */}
         <div className="panel-header">
@@ -1304,12 +1356,12 @@ export function AnalyticsView() {
                   : 'delta-badge--neutral'
               }`}>
                 {reportData.prevStats.income === 0 && reportData.curStats.income > 0
-                  ? '↑ +100.0%'
+                  ? `↑ +${formatPercent(100, { fractionDigits: 1 })}`
                   : reportData.incomeDelta > 0
-                  ? `↑ +${Math.abs(reportData.incomeDeltaPct).toFixed(1)}%`
+                  ? `↑ +${formatPercent(Math.abs(reportData.incomeDeltaPct), { fractionDigits: 1 })}`
                   : reportData.incomeDelta < 0
-                  ? `↓ -${Math.abs(reportData.incomeDeltaPct).toFixed(1)}%`
-                  : '~ 0.0%'}
+                  ? `↓ -${formatPercent(Math.abs(reportData.incomeDeltaPct), { fractionDigits: 1 })}`
+                  : `~ ${formatPercent(0, { fractionDigits: 1 })}`}
               </span>
             </div>
             <strong className="report-summary-card__amount text-success">
@@ -1341,12 +1393,12 @@ export function AnalyticsView() {
                 {reportData.prevStats.expense === 0 && reportData.curStats.expense > 0
                   ? 'Mới ghi nhận'
                   : reportData.prevStats.expense > 0 && reportData.curStats.expense === 0
-                  ? '↓ -100.0%'
+                  ? `↓ -${formatPercent(100, { fractionDigits: 1 })}`
                   : reportData.expenseDelta > 0
-                  ? `↑ +${Math.abs(reportData.expenseDeltaPct).toFixed(1)}%`
+                  ? `↑ +${formatPercent(Math.abs(reportData.expenseDeltaPct), { fractionDigits: 1 })}`
                   : reportData.expenseDelta < 0
-                  ? `↓ -${Math.abs(reportData.expenseDeltaPct).toFixed(1)}%`
-                  : '~ 0.0%'}
+                  ? `↓ -${formatPercent(Math.abs(reportData.expenseDeltaPct), { fractionDigits: 1 })}`
+                  : `~ ${formatPercent(0, { fractionDigits: 1 })}`}
               </span>
             </div>
             <strong className={`report-summary-card__amount ${reportData.curStats.expense > 0 ? 'text-danger' : 'text-muted'}`}>
@@ -1399,8 +1451,8 @@ export function AnalyticsView() {
                 {reportData.curStats.income <= 0
                   ? '—'
                   : reportData.savingsRateDelta >= 0
-                  ? `↑ +${reportData.savingsRateDelta.toFixed(1)}%`
-                  : `↓ ${reportData.savingsRateDelta.toFixed(1)}%`}
+                  ? `↑ +${formatPercent(reportData.savingsRateDelta, { fractionDigits: 1 })}`
+                  : `↓ ${formatPercent(reportData.savingsRateDelta, { fractionDigits: 1 })}`}
               </span>
             </div>
             <strong className={`report-summary-card__amount ${
@@ -1533,7 +1585,7 @@ export function AnalyticsView() {
                               }}
                             />
                           </div>
-                          <span className="table-pct-val">{cat.pctOfTotal.toFixed(0)}%</span>
+                          <span className="table-pct-val">{formatPercent(cat.pctOfTotal)}</span>
                         </div>
                       </td>
 
@@ -1596,6 +1648,8 @@ export function AnalyticsView() {
           </table>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

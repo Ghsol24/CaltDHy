@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
+const { financialRequest } = require('../utils/financialRequest');
 const { protect } = require('../middleware/authMiddleware');
 const Wallet = require('../models/Wallet');
 const Transaction = require('../models/Transaction');
@@ -8,11 +9,12 @@ const Installment = require('../models/Installment');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { getWalletBalance, getAllWalletBalances } = require('../utils/walletBalance');
 const { isValidVNDAmount, isFiniteInteger } = require('../utils/money');
+const { normalizeLocale, formatBaseCurrency } = require('../utils/i18n');
 
 // Tất cả routes wallets đều cần xác thực JWT
 router.use(protect);
 
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const isValidObjectId = (id) => (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) || id instanceof mongoose.Types.ObjectId;
 
 /**
  * Helper: Tự động khởi tạo ví mặc định "Tiền mặt" nếu user chưa có ví nào
@@ -39,7 +41,7 @@ async function ensureDefaultWallet(userId) {
 // GET /api/wallets — Lấy danh sách ví của user
 // Hỗ trợ query ?includeArchived=true để lấy cả các ví đã đóng / lưu trữ
 // =============================================
-router.get('/', async (req, res) => {
+router.get('/', financialRequest(async (req, res) => {
     try {
         await ensureDefaultWallet(req.user.id);
         const includeArchived = req.query?.includeArchived === 'true';
@@ -53,15 +55,16 @@ router.get('/', async (req, res) => {
             data: wallets.map(w => w.toJSON())
         });
     } catch (error) {
-        console.error('GET /api/wallets error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách ví.' });
     }
-});
+}));
 
 // =============================================
 // GET /api/wallets/:id/pre-archive — Kiểm tra nhanh trạng thái ví trước khi đóng/lưu trữ
 // =============================================
-router.get('/:id/pre-archive', async (req, res) => {
+router.get('/:id/pre-archive', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -107,15 +110,16 @@ router.get('/:id/pre-archive', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('GET /api/wallets/:id/pre-archive error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi kiểm tra thông tin ví.' });
     }
-});
+}));
 
 // =============================================
 // POST /api/wallets/:id/archive — Đóng và lưu trữ ví (Soft-delete theo chuẩn FinTech)
 // =============================================
-router.post('/:id/archive', async (req, res) => {
+router.post('/:id/archive', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         const { transferToWalletId, replacementWalletId } = req.body || {};
@@ -153,7 +157,7 @@ router.post('/:id/archive', async (req, res) => {
             return res.status(400).json({
                 success: false,
                 code: 'SETTLE_DEBT_FIRST',
-                message: `Ví hiện đang có dư nợ (${Math.abs(currentBalance).toLocaleString('vi-VN')} đ). Vui lòng thanh toán hết dư nợ trước khi đóng ví.`,
+                message: `Ví hiện đang có dư nợ (${formatBaseCurrency(normalizeLocale(req.get('Accept-Language')), Math.abs(currentBalance))}). Vui lòng thanh toán hết dư nợ trước khi đóng ví.`,
                 balance: currentBalance
             });
         }
@@ -164,7 +168,7 @@ router.post('/:id/archive', async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     code: 'WALLET_BALANCE_NOT_ZERO',
-                    message: `Ví vẫn còn số dư (${currentBalance.toLocaleString('vi-VN')} đ). Vui lòng chọn ví nhận số dư trước khi đóng ví.`,
+                    message: `Ví vẫn còn số dư (${formatBaseCurrency(normalizeLocale(req.get('Accept-Language')), currentBalance)}). Vui lòng chọn ví nhận số dư trước khi đóng ví.`,
                     balance: currentBalance
                 });
             }
@@ -218,6 +222,7 @@ router.post('/:id/archive', async (req, res) => {
                         toWalletId: transferToWalletId,
                         category: 'Chuyển tiền',
                         desc: `Tất toán số dư đóng ví "${wallet.name}"`,
+                        systemGenerated: true,
                         fee: 0
                     }
                 ], opts);
@@ -245,15 +250,16 @@ router.post('/:id/archive', async (req, res) => {
             data: wallet.toJSON()
         });
     } catch (error) {
-        console.error('POST /api/wallets/:id/archive error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi đóng ví.' });
     }
-});
+}));
 
 // =============================================
 // POST /api/wallets/:id/unarchive — Mở lại ví đã lưu trữ
 // =============================================
-router.post('/:id/unarchive', async (req, res) => {
+router.post('/:id/unarchive', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -275,16 +281,17 @@ router.post('/:id/unarchive', async (req, res) => {
             data: wallet.toJSON()
         });
     } catch (error) {
-        console.error('POST /api/wallets/:id/unarchive error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi mở lại ví.' });
     }
-});
+}));
 
 // =============================================
 // GET /api/wallets/balances — Lấy số dư thực tế tính on-the-fly của các ví
 // Hỗ trợ query ?walletId=<id> để lấy 1 ví hoặc không truyền để lấy tất cả
 // =============================================
-router.get('/balances', async (req, res) => {
+router.get('/balances', financialRequest(async (req, res) => {
     try {
         const { walletId } = req.query;
         if (walletId) {
@@ -306,15 +313,16 @@ router.get('/balances', async (req, res) => {
             data: balances
         });
     } catch (error) {
-        console.error('GET /api/wallets/balances error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tính số dư ví.' });
     }
-});
+}));
 
 // =============================================
 // POST /api/wallets — Tạo ví mới
 // =============================================
-router.post('/', async (req, res) => {
+router.post('/', financialRequest(async (req, res) => {
     try {
         const { name, type, icon, color, initialBalance, creditLimit, isExcludedFromTotal, isDefault } = req.body;
 
@@ -347,15 +355,16 @@ router.post('/', async (req, res) => {
             data: newWallet.toJSON()
         });
     } catch (error) {
-        console.error('POST /api/wallets error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tạo ví mới.' });
     }
-});
+}));
 
 // =============================================
 // PUT /api/wallets/:id — Cập nhật ví
 // =============================================
-router.put('/:id', async (req, res) => {
+router.put('/:id', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -390,15 +399,16 @@ router.put('/:id', async (req, res) => {
             data: wallet.toJSON()
         });
     } catch (error) {
-        console.error('PUT /api/wallets/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi cập nhật ví.' });
     }
-});
+}));
 
 // =============================================
 // DELETE /api/wallets/:id — Xóa ví (Bảo toàn initialBalance và chuyển giao dịch về ví mặc định)
 // =============================================
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -443,6 +453,10 @@ router.delete('/:id', async (req, res) => {
             }
 
             // 2. EFFECTS
+            if (walletToDelete.isDefault) {
+                walletToDelete.isDefault = false;
+                await walletToDelete.save({ session });
+            }
             // A. Chuyển toàn bộ giao dịch từ ví bị xóa sang ví mặc định
             const updateOpts = session ? { session } : {};
             await Transaction.updateMany(
@@ -525,15 +539,16 @@ router.delete('/:id', async (req, res) => {
             fallbackWalletId: result.fallbackWalletId
         });
     } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
         if (error.message === 'WALLET_NOT_FOUND') {
             return res.status(404).json({ success: false, message: 'Không tìm thấy ví cần xóa.' });
         }
         if (error.message === 'NO_FALLBACK_WALLET') {
             return res.status(400).json({ success: false, message: 'Không tìm thấy ví thay thế hợp lệ.' });
         }
-        console.error('DELETE /api/wallets/:id error:', error);
-        res.status(error.status || 500).json({ success: false, message: error.message || 'Lỗi khi xóa ví.' });
+        console.error('[finance] route_failed');
+        res.status(error.status || 500).json({ success: false, message: 'Lỗi khi xóa ví.' });
     }
-});
+}));
 
 module.exports = router;

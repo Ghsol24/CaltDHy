@@ -1,97 +1,31 @@
-const jwt = require('jsonwebtoken');
+'use strict';
 const User = require('../models/User');
+const AuthSession = require('../models/AuthSession');
+const { hash, sessionToken, clearSession } = require('../utils/sessionSecurity');
 
-/**
- * Middleware xác thực JWT – Tối ưu hiệu năng và bảo mật
- *
- * Chiến lược:
- * 1. Verify chữ ký số và hạn dùng của token JWT (stateless check).
- * 2. Sử dụng truy vấn .lean() chỉ lấy các trường cần thiết ('name email +passwordChangedAt')
- *    để kiểm tra xem tài khoản còn tồn tại không và token có bị thu hồi do đổi mật khẩu không.
- *    Việc dùng .lean() giúp loại bỏ hoàn toàn chi phí hydrate Mongoose Document, giảm đáng kể RAM/CPU.
- */
-const protect = async (req, res, next) => {
+async function protect(req, res, next) {
     try {
-        let token;
-
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-            token = req.headers.authorization.split(' ')[1];
-        }
-
-        if (!token) {
+        const token = sessionToken(req);
+        const session = token && await AuthSession.findOne({
+            tokenHash: hash(token), expiresAt: { $gt: new Date() }
+        }).lean();
+        const user = session && await User.findById(session.userId)
+            .select('name email avatar emailVerified +authVersion').lean();
+        if (!user || session.authVersion !== (user.authVersion || 0)) {
+            clearSession(res);
             return res.status(401).json({
-                success: false,
-                message: 'Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.'
+                success: false, code: 'SESSION_EXPIRED',
+                message: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
             });
         }
-
-        // Xác minh chữ ký + hạn token — tách riêng để phân biệt 2 loại lỗi khác hẳn nhau về bản chất:
-        // hết hạn (bình thường, chỉ cần đăng nhập lại) và chữ ký/định dạng sai (có thể là token giả mạo).
-        let decoded;
-        try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET);
-        } catch (jwtError) {
-            if (jwtError.name === 'TokenExpiredError') {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
-                    code: 'TOKEN_EXPIRED'
-                });
-            }
-            return res.status(401).json({
-                success: false,
-                message: 'Token không hợp lệ. Vui lòng đăng nhập lại.',
-                code: 'TOKEN_INVALID'
-            });
-        }
-
-        // Truy vấn nhẹ nhàng (lean) để kiểm tra tồn tại và thu hồi token nếu đổi mật khẩu
-        let user;
-        try {
-            user = await User.findById(decoded.id).select('name email +passwordChangedAt').lean();
-        } catch (dbError) {
-            console.error('Lỗi kết nối cơ sở dữ liệu trong authMiddleware:', dbError);
-            return res.status(503).json({
-                success: false,
-                message: 'Máy chủ cơ sở dữ liệu tạm thời gián đoạn. Vui lòng thử lại sau giây lát.',
-                code: 'DATABASE_ERROR'
-            });
-        }
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Tài khoản không tồn tại hoặc đã bị xóa.'
-            });
-        }
-
-        // Kiểm tra token có được tạo TRƯỚC khi mật khẩu bị thay đổi không
-        if (user.passwordChangedAt) {
-            const tokenIssuedAt = decoded.iat * 1000; // iat là giây → đổi sang ms
-            const pwdChangedTime = new Date(user.passwordChangedAt).getTime();
-            if (tokenIssuedAt < pwdChangedTime) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Mật khẩu vừa được thay đổi. Vui lòng đăng nhập lại.'
-                });
-            }
-        }
-
-        // Gắn user vào request (không kèm password)
-        req.user = {
-            id: user._id.toString(),
-            name: user.name,
-            email: user.email
-        };
-
-        next();
-    } catch (error) {
-        console.error('Lỗi không xác định trong authMiddleware:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Đã xảy ra lỗi máy chủ trong quá trình xác thực.'
-        });
+        req.user = { id: user._id.toString(), name: user.name, email: user.email,
+            avatar: user.avatar, emailVerified: user.emailVerified === true };
+        req.authSession = session;
+        return next();
+    } catch {
+        console.error('[auth] session_lookup_failed');
+        return res.status(503).json({ success: false,
+            message: 'Dịch vụ xác thực chưa sẵn sàng. Vui lòng thử lại.' });
     }
-};
-
+}
 module.exports = { protect };

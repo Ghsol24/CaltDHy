@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency } from '../../utils/formatters';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 
 const PRESET_COLORS = [
@@ -42,6 +44,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
   const nameInputRef = useRef(null);
 
   useFocusTrap(modalRef, isOpen);
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -51,12 +54,12 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
       setType(walletToEdit.type || 'cash');
       setInitialBalance(
         walletToEdit.initialBalance !== undefined
-          ? Number(walletToEdit.initialBalance).toLocaleString('vi-VN')
+          ? formatInputNumber(walletToEdit.initialBalance)
           : ''
       );
       setCreditLimit(
         walletToEdit.creditLimit !== undefined && walletToEdit.creditLimit > 0
-          ? Number(walletToEdit.creditLimit).toLocaleString('vi-VN')
+          ? formatInputNumber(walletToEdit.creditLimit)
           : ''
       );
       setColor(walletToEdit.color || '#078A59');
@@ -95,7 +98,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setInitialBalance(num ? num.toLocaleString('vi-VN') : '');
+    setInitialBalance(num ? formatInputNumber(num) : '');
   };
 
   const handleLimitChange = (e) => {
@@ -105,7 +108,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setCreditLimit(num ? num.toLocaleString('vi-VN') : '');
+    setCreditLimit(num ? formatInputNumber(num) : '');
   };
 
   const handleSubmit = async (e) => {
@@ -159,11 +162,11 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
     }
   };
 
-  return (
+  return createPortal(
     <div
       className="txn-modal-backdrop"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
       <div
@@ -197,6 +200,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
             type="button"
             className="txn-modal-close-btn"
             onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Đóng cửa sổ"
           >
             <svg
@@ -525,6 +529,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useToastStore } from '../../stores/useToastStore';
+import { useTranslation } from '../../i18n/useTranslation';
 
 function ToastIcon({ type }) {
   switch (type) {
@@ -82,6 +83,7 @@ function ToastIcon({ type }) {
 }
 
 export function ToastRegion() {
+  const { t } = useTranslation();
   const { toasts, removeToast } = useToastStore();
 
   if (!toasts || toasts.length === 0) {
@@ -91,7 +93,7 @@ export function ToastRegion() {
   return (
     <div
       className="toast-region"
-      aria-label="Thông báo"
+      aria-label={t('toast.region')}
       tabIndex={-1}
     >
       {toasts.map((toast) => {
@@ -122,14 +124,14 @@ export function ToastRegion() {
                     removeToast(toast.id);
                   }}
                 >
-                  {toast.action.label || 'Thao tác'}
+                  {toast.action.label || t('toast.action')}
                 </button>
               )}
               <button
                 type="button"
                 className="toast-item__close-btn"
                 onClick={() => removeToast(toast.id)}
-                aria-label="Đóng thông báo"
+                aria-label={t('toast.close')}
               >
                 <svg
                   width="14"

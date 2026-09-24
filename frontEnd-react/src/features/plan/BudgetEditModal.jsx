@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { CategoryOutlineIcon, SparkleOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { calculateAvailableToSpend } from '../../utils/financeMath';
-import { formatCurrency, formatDate, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, formatDate, formatInputNumber, getLocalMonthString } from '../../utils/formatters';
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
-  const { budgets, expenseCategories, transactions, updateBudgetsAndCategories, setExpenseCategories } = useTransactionStore();
+  const { budgets, expenseCategories, transactions, updateBudgetsAndCategories } = useTransactionStore();
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const { addToast } = useToastStore();
   const { wallets } = useWalletStore();
@@ -39,6 +41,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const prevIsOpenRef = useRef(false);
 
   useFocusTrap(modalRef, isOpen);
+  useBodyScrollLock(isOpen);
 
   // Active month display label
   const activeMonthStr = selectedMonth || getLocalMonthString();
@@ -46,8 +49,8 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const monthDisplay = formatDate(monthDateObj, 'month');
 
   const handleRequestClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+    if (!isSubmitting) onClose();
+  }, [isSubmitting, onClose]);
 
   // Initialize draft data ONLY when modal transitions from closed to open
   useEffect(() => {
@@ -118,7 +121,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       // Populate row inputs
       const inputsMap = {};
       initialList.forEach((c) => {
-        inputsMap[c.name] = c.limit ? c.limit.toLocaleString('vi-VN') : '';
+        inputsMap[c.name] = c.limit ? formatInputNumber(c.limit) : '';
       });
       setRowAmountInputs(inputsMap);
 
@@ -223,7 +226,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   // Format currency on typing
   const handleRowInputChange = (catName, value) => {
     const rawDigits = value.replace(/\D/g, '');
-    const formatted = rawDigits ? parseInt(rawDigits, 10).toLocaleString('vi-VN') : '';
+    const formatted = rawDigits ? formatInputNumber(rawDigits) : '';
     setRowAmountInputs((prev) => ({ ...prev, [catName]: formatted }));
     setIsDirty(true);
   };
@@ -242,13 +245,11 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     setDeletingCat(null);
     setIsDirty(true);
 
-    // Sync categories directly to store so BudgetsTab & TransactionModal update immediately
-    const newCategories = updatedDraft.map((c) => ({ name: c.name, icon: c.icon }));
-    setExpenseCategories(newCategories);
+    // Categories remain a draft until the atomic save succeeds.
 
     addToast({
       type: 'info',
-      message: `Đã xóa danh mục "${cat.name}".`,
+      message: `Đã bỏ "${cat.name}" khỏi bản nháp. Nhấn Lưu để xác nhận.`,
       action: {
         label: 'Hoàn tác',
         onClick: () => {
@@ -256,10 +257,9 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
           setCategoriesDraft(restoredDraft);
           setRowAmountInputs((prev) => ({
             ...prev,
-            [deletedItem.name]: deletedItem.limit ? deletedItem.limit.toLocaleString('vi-VN') : ''
+            [deletedItem.name]: deletedItem.limit ? formatInputNumber(deletedItem.limit) : ''
           }));
           setIsDirty(true);
-          setExpenseCategories(restoredDraft.map((c) => ({ name: c.name, icon: c.icon })));
           addToast({
             type: 'success',
             message: `Đã khôi phục danh mục "${deletedItem.name}".`
@@ -310,7 +310,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     setCategoriesDraft(updatedDraft);
     setRowAmountInputs((prev) => ({
       ...prev,
-      [trimmedName]: parsedLimit ? parsedLimit.toLocaleString('vi-VN') : ''
+      [trimmedName]: parsedLimit ? formatInputNumber(parsedLimit) : ''
     }));
 
     setNewCatName('');
@@ -319,7 +319,6 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     setIsDirty(true);
 
     // Sync categories directly to store
-    setExpenseCategories(updatedDraft.map((c) => ({ name: c.name, icon: c.icon })));
 
     setTimeout(() => {
       if (listContainerRef.current) {
@@ -365,7 +364,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       className="modal-backdrop-overlay"
       role="presentation"
@@ -373,10 +372,9 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
         if (e.target === e.currentTarget) handleRequestClose();
       }}
     >
-      <dialog
+      <div
         ref={modalRef}
         className="budget-setup-dialog"
-        open
         role="dialog"
         aria-modal="true"
         aria-labelledby="budget-dialog-title"
@@ -406,6 +404,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
             type="button"
             className="budget-dialog-close-btn"
             onClick={handleRequestClose}
+            disabled={isSubmitting}
             aria-label="Đóng hộp thoại"
             title="Đóng"
           >
@@ -639,7 +638,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                       value={newCatAmount}
                       onChange={(e) => {
                         const raw = e.target.value.replace(/\D/g, '');
-                        setNewCatAmount(raw ? parseInt(raw, 10).toLocaleString('vi-VN') : '');
+                        setNewCatAmount(raw ? formatInputNumber(raw) : '');
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -704,7 +703,8 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
             </button>
           </div>
         </form>
-      </dialog>
-    </div>
+      </div>
+    </div>,
+    document.body
   );
 }

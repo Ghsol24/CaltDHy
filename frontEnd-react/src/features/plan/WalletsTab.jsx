@@ -7,8 +7,9 @@ import { useToastStore } from '../../stores/useToastStore';
 import { WalletModal } from './WalletModal';
 import { TransferModal } from './TransferModal';
 import { ArchiveWalletModal } from './ArchiveWalletModal';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatPercent, formatRelativeDateTime } from '../../utils/formatters';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const WALLET_TYPE_LABELS = {
   cash: 'Ví tiền mặt',
@@ -20,33 +21,6 @@ const WALLET_TYPE_LABELS = {
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { BulbOutlineIcon, StarOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 export { WalletOutlineIcon };
-
-/**
- * Format relative date/time for recent wallet transfers
- */
-function formatDateActivity(dateVal) {
-  if (!dateVal) return '';
-  const d = new Date(dateVal);
-  if (isNaN(d.getTime())) return String(dateVal);
-
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const isYesterday = d.toDateString() === yesterday.toDateString();
-
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const timeStr = `${hours}:${minutes}`;
-
-  if (isToday) return `Hôm nay, ${timeStr}`;
-  if (isYesterday) return `Hôm qua, ${timeStr}`;
-
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}, ${timeStr}`;
-}
 
 /**
  * Custom Dropdown Filter Component (Theme-aware & accessible)
@@ -185,7 +159,7 @@ function WalletDonutChart({
         </svg>
         <div className="wallet-donut-center-overlay">
           <span className="donut-center-label">{centerLabel}</span>
-          <strong className="donut-center-val">0 đ</strong>
+          <strong className="donut-center-val">{formatCurrency(0)}</strong>
         </div>
       </div>
     );
@@ -257,7 +231,7 @@ function WalletDonutChart({
         {hoveredSlice ? (
           <>
             <span className="donut-center-label">
-              {hoveredSlice.name} • {hoveredSlice.percent.toFixed(1)}%
+              {hoveredSlice.name} • {formatPercent(hoveredSlice.percent, { fractionDigits: 1 })}
             </span>
             <strong className="donut-center-val" style={{ color: hoveredSlice.color }}>
               {isCountMode ? `${hoveredSlice.balance} GD` : formatCurrency(hoveredSlice.balance)}
@@ -277,12 +251,17 @@ function WalletDonutChart({
 }
 
 export function WalletsTab() {
-  const { wallets, archivedWallets, deleteWallet, unarchiveWallet, isLoading } = useWalletStore();
-  const { transactions } = useTransactionStore();
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const { t } = useTranslation();
+  const wallets = useWalletStore((state) => state.wallets);
+  const archivedWallets = useWalletStore((state) => state.archivedWallets);
+  const deleteWallet = useWalletStore((state) => state.deleteWallet);
+  const unarchiveWallet = useWalletStore((state) => state.unarchiveWallet);
+  const isLoading = useWalletStore((state) => state.isLoading);
+  const transactions = useTransactionStore((state) => state.transactions);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
-  const { confirm } = useConfirmStore();
-  const { addToast } = useToastStore();
+  const confirm = useConfirmStore((state) => state.confirm);
+  const addToast = useToastStore((state) => state.addToast);
 
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState(null);
@@ -293,6 +272,9 @@ export function WalletsTab() {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [walletToArchive, setWalletToArchive] = useState(null);
   const [isArchivedSectionExpanded, setIsArchivedSectionExpanded] = useState(false);
+  const [deletingWalletId, setDeletingWalletId] = useState(null);
+  const [unarchivingId, setUnarchivingId] = useState(null);
+  const unarchivingRef = useRef(null);
 
   const [viewMode, setViewMode] = useState('grid'); // 'grid' (Thẻ) | 'list' (Danh sách)
   const [showTip, setShowTip] = useState(true);
@@ -487,32 +469,24 @@ export function WalletsTab() {
     setIsTransferModalOpen(true);
   };
 
-  const handleDelete = async (wallet) => {
+  const handleDelete = (wallet) => {
     setOpenMenuWalletId(null);
-    const confirmed = await confirm({
+    confirm({
       title: 'Xóa ví / tài khoản',
       message: `Bạn có chắc chắn muốn xóa ví "${wallet.name}"? Các giao dịch liên quan sẽ được tự động chuyển sang ví mặc định.`,
       confirmText: 'Xóa ví',
       cancelText: 'Hủy',
-      confirmVariant: 'danger'
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        setDeletingWalletId(wallet.id);
+        try {
+          await deleteWallet(wallet.id);
+          addToast({ type: 'success', message: `Đã xóa ví "${wallet.name}".`, duration: 4000 });
+        } finally {
+          setDeletingWalletId(null);
+        }
+      },
     });
-
-    if (confirmed) {
-      try {
-        await deleteWallet(wallet.id);
-        addToast({
-          type: 'success',
-          message: `Đã xóa ví "${wallet.name}".`,
-          duration: 4000
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          message: err.message || 'Không thể xóa ví.',
-          duration: 4000
-        });
-      }
-    }
   };
 
   const handleArchive = (wallet) => {
@@ -522,6 +496,9 @@ export function WalletsTab() {
   };
 
   const handleUnarchive = async (wallet) => {
+    if (unarchivingRef.current) return;
+    unarchivingRef.current = wallet.id;
+    setUnarchivingId(wallet.id);
     try {
       await unarchiveWallet(wallet.id);
       addToast({
@@ -535,12 +512,15 @@ export function WalletsTab() {
         message: err.message || 'Không thể mở lại ví.',
         duration: 4000
       });
+    } finally {
+      unarchivingRef.current = null;
+      setUnarchivingId(null);
     }
   };
 
   // Điều hướng tới Lịch sử giao dịch TOÀN BỘ của User
   const handleGoToFullHistory = () => {
-    setActiveView('home');
+    navigateTo('home');
     setTimeout(() => {
       const el =
         document.querySelector('.home-recent-txns-card') ||
@@ -784,7 +764,7 @@ export function WalletsTab() {
             )}
 
             {/* ── CARD VIEW (Dạng thẻ lưới chuẩn Ảnh 1 & Ảnh 2) ── */}
-            {!isLoading && filteredWallets.length > 0 && viewMode === 'grid' && (
+            {filteredWallets.length > 0 && viewMode === 'grid' && (
               <div className="wallets-cards-grid">
                 {filteredWallets.map((w) => {
                   const isNegative = Number(w.currentBalance) < 0;
@@ -797,7 +777,7 @@ export function WalletsTab() {
                   return (
                     <div
                       key={w.id}
-                      className="wallet-grid-card"
+                      className={`wallet-grid-card ${deletingWalletId === w.id ? 'is-deleting' : ''}`}
                       style={{ borderTopColor: accentColor }}
                     >
                       {/* Card Header: Icon + Title + Default Badge + 3-dots */}
@@ -997,7 +977,7 @@ export function WalletsTab() {
             )}
 
             {/* ── LIST VIEW (Dạng thẻ ngang khi chọn Danh sách) ── */}
-            {!isLoading && filteredWallets.length > 0 && viewMode === 'list' && (
+            {filteredWallets.length > 0 && viewMode === 'list' && (
               <div className="wallets-horizontal-list">
                 {filteredWallets.map((w) => {
                   const isNegative = Number(w.currentBalance) < 0;
@@ -1008,7 +988,7 @@ export function WalletsTab() {
                   return (
                     <div
                       key={w.id}
-                      className="wallet-h-card"
+                      className={`wallet-h-card ${deletingWalletId === w.id ? 'is-deleting' : ''}`}
                       style={{ borderLeftColor: accentColor }}
                     >
                       {/* Icon Pastel Container with OUTLINE SVG */}
@@ -1438,7 +1418,7 @@ export function WalletsTab() {
                           onMouseLeave={() => setHoveredSliceId(null)}
                           tabIndex={0}
                           role="button"
-                          aria-label={`${slice.name}: ${slice.percent.toFixed(1)}%, ${distributionMode === 'balance' ? formatCurrency(slice.balance) : `${slice.balance} giao dịch`}`}
+                          aria-label={`${slice.name}: ${formatPercent(slice.percent, { fractionDigits: 1 })}, ${distributionMode === 'balance' ? formatCurrency(slice.balance) : `${slice.balance} giao dịch`}`}
                         >
                           <div className="donut-row-cat">
                             <span
@@ -1452,7 +1432,7 @@ export function WalletsTab() {
                           </div>
 
                           <div className="donut-row-pct">
-                            {slice.percent.toFixed(1)}%
+                            {formatPercent(slice.percent, { fractionDigits: 1 })}
                           </div>
 
                           <div className="donut-row-val">
@@ -1557,7 +1537,7 @@ export function WalletsTab() {
                           <strong>{fromName}</strong> → <strong>{toName}</strong>
                         </span>
                         <span className="activity-time-text">
-                          {formatDateActivity(tx.date)}
+                          {formatRelativeDateTime(tx.date)}
                         </span>
                       </div>
 
@@ -1717,7 +1697,7 @@ export function WalletsTab() {
                         </span>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted, #9ca3af)', marginTop: '2px' }}>
-                        Loại: {aw.type} • Số dư lúc đóng: 0 đ
+                        {t('wallet.archivedBalance', { type: WALLET_TYPE_LABELS[aw.type] || aw.type, amount: formatCurrency(0) })}
                       </div>
                     </div>
                   </div>
@@ -1726,14 +1706,16 @@ export function WalletsTab() {
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={() => handleUnarchive(aw)}
+                    disabled={Boolean(unarchivingId)}
+                    aria-busy={unarchivingId === aw.id}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', padding: '6px 12px' }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {unarchivingId === aw.id ? <span className="btn-spinner" aria-hidden="true" /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                       <path d="M21 3v5h-5" />
                       <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
                       <path d="M8 21H3v-5" />
-                    </svg>
+                    </svg>}
                     <span>Mở lại ví</span>
                   </button>
                 </div>

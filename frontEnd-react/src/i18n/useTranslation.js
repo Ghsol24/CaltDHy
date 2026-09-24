@@ -1,8 +1,15 @@
+import { useCallback, useEffect } from 'react';
 import { useLangStore } from '../stores/useLangStore';
-import { translations } from './translations';
+import { getIntlLocale, translate, translateDataLabel } from './translations';
 
 export function useTranslation() {
-  const lang = useLangStore((s) => s.lang);
-  const t = (key) => translations[lang]?.[key] ?? translations.vi?.[key] ?? translations.en?.[key] ?? key;
-  return { t, lang };
+  const lang = useLangStore((state) => state.lang);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  const t = useCallback((key, values) => translate(lang, key, values), [lang]);
+  const label = useCallback((value) => translateDataLabel(lang, value), [lang]);
+  return { t, label, lang, intlLocale: getIntlLocale(lang) };
 }

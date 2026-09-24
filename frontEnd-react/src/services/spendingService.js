@@ -24,9 +24,9 @@ export const spendingService = {
     return await api.get(url);
   },
 
-  updateBudgets: async (budgetsObj, month = null) => {
+  updateBudgets: async (budgetsObj, month = null, categories) => {
     const url = month ? `/api/spending/budget?month=${encodeURIComponent(month)}` : '/api/spending/budget';
-    return await api.put(url, budgetsObj);
+    return await api.put(url, categories ? { budgets: budgetsObj, categories } : budgetsObj);
   },
 
   getCategories: async () => {

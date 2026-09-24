@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
+const { financialRequest } = require('../utils/financialRequest');
 const { protect } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const Budget = require('../models/Budget');
@@ -15,7 +16,7 @@ const { getVietnamTodayString } = require('../utils/localDate');
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
 
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const isValidObjectId = (id) => (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) || id instanceof mongoose.Types.ObjectId;
 
 function parseTransactionDate(date) {
     if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
@@ -98,7 +99,7 @@ async function validateTransactionOwnership({ jarId, installmentId, userId }) {
 // =============================================
 // GET /api/spending/categories – Lấy danh mục tự định nghĩa của user
 // =============================================
-router.get('/categories', async (req, res) => {
+router.get('/categories', financialRequest(async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('customCategories').lean();
         if (!user) {
@@ -125,16 +126,17 @@ router.get('/categories', async (req, res) => {
             data: finalCategories
         });
     } catch (error) {
-        console.error('GET /api/spending/categories error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tải danh mục.' });
     }
-});
+}));
 
 // =============================================
 // PUT /api/spending/categories – Cập nhật danh mục tự định nghĩa
 // Hỗ trợ cả 2 dạng payload: { categories: [...] } hoặc direct array [...]
 // =============================================
-router.put('/categories', async (req, res) => {
+router.put('/categories', financialRequest(async (req, res) => {
     try {
         const rawCategories = Array.isArray(req.body)
             ? req.body
@@ -159,7 +161,7 @@ router.put('/categories', async (req, res) => {
         }
 
         // Tự động đảm bảo danh mục có trong collection Category (best-effort, không chặn response)
-        await Promise.all(cleanCategories.map(cat => Category.ensureCategorySafe(req.user.id, cat)));
+        for (const cat of cleanCategories) await Category.ensureCategorySafe(req.user.id, cat);
 
         // Dọn dẹp các Category documents bị xoá khỏi danh mục nếu không còn giao dịch nào sử dụng
         try {
@@ -183,7 +185,7 @@ router.put('/categories', async (req, res) => {
                 }
             }
         } catch (cleanupErr) {
-            // Best-effort cleanup, không chặn phản hồi
+            throw cleanupErr;
         }
 
         res.json({
@@ -192,15 +194,16 @@ router.put('/categories', async (req, res) => {
             data: updatedUser.customCategories
         });
     } catch (error) {
-        console.error('PUT /api/spending/categories error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi lưu danh mục.' });
     }
-});
+}));
 
 // =============================================
 // GET /api/spending/budget – Lấy ngân sách của user (Hỗ trợ Scoped Month + Per-Category Auto-Carryover)
 // =============================================
-router.get('/budget', async (req, res) => {
+router.get('/budget', financialRequest(async (req, res) => {
     try {
         const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
         const budgetMap = {};
@@ -261,20 +264,24 @@ router.get('/budget', async (req, res) => {
             data: budgetMap
         });
     } catch (error) {
-        console.error('GET /api/spending/budget error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tải ngân sách.' });
     }
-});
+}));
 
 // =============================================
 // PUT /api/spending/budget – Cập nhật hạn mức ngân sách
 // Dùng bulkWrite upsert theo targetMonth và khóa sửa tháng quá khứ
 // =============================================
-router.put('/budget', async (req, res) => {
+router.put('/budget', financialRequest(async (req, res) => {
     try {
         const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
         const bodyMonth = typeof req.body?.month === 'string' ? req.body.month.trim() : '';
-        const targetMonth = monthQuery || bodyMonth || '';
+        const targetMonth = monthQuery || bodyMonth || 'global';
+        if (targetMonth !== 'global' && !/^\d{4}-(0[1-9]|1[0-2])$/.test(targetMonth)) {
+            return res.status(400).json({ success: false, message: 'Tháng ngân sách không hợp lệ.' });
+        }
 
         // Khóa chỉnh sửa ngân sách của tháng trước!
         if (targetMonth && /^\d{4}-\d{2}$/.test(targetMonth)) {
@@ -304,7 +311,7 @@ router.put('/budget', async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Tên danh mục không hợp lệ.' });
             }
             const numLimit = Number(limit);
-            if (!Number.isFinite(numLimit)) {
+            if (typeof limit !== 'number' || !Number.isSafeInteger(numLimit)) {
                 return res.status(400).json({ success: false, message: `Hạn mức cho danh mục "${cat}" không hợp lệ.` });
             }
             if (!Number.isInteger(numLimit)) {
@@ -327,9 +334,16 @@ router.put('/budget', async (req, res) => {
             .filter(([_, limit]) => limit > 0);
 
         const validCategories = validEntries.map(([cat]) => cat);
+        if (req.body.categories !== undefined) {
+            if (!Array.isArray(req.body.categories) || req.body.categories.length > 100 ||
+                req.body.categories.some(cat => typeof cat !== 'string' || !cat.trim() || cat.length > 50)) {
+                return res.status(400).json({ success: false, message: 'Danh mục không hợp lệ.' });
+            }
+            await User.updateOne({ _id: req.user.id }, { $set: { customCategories: req.body.categories.map(cat => cat.trim()) } });
+        }
 
         // Tự động đảm bảo category tồn tại trong collection Category của user (best-effort)
-        await Promise.all(validCategories.map(cat => Category.ensureCategorySafe(req.user.id, cat)));
+        for (const cat of validCategories) await Category.ensureCategorySafe(req.user.id, cat);
 
         // Bước 1: Upsert tất cả budget hợp lệ (atomic từng item)
         if (validEntries.length > 0) {
@@ -378,15 +392,16 @@ router.put('/budget', async (req, res) => {
             data: budgetMap
         });
     } catch (error) {
-        console.error('PUT /api/spending/budget error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi lưu hạn mức chi tiêu.' });
     }
-});
+}));
 
 // =============================================
 // GET /api/spending – Lấy danh sách giao dịch
 // =============================================
-router.get('/', async (req, res) => {
+router.get('/', financialRequest(async (req, res) => {
     try {
         const filter = { userId: req.user.id };
 
@@ -433,10 +448,8 @@ router.get('/', async (req, res) => {
 
         if (Number.isInteger(page) && page > 0 && Number.isInteger(limit) && limit > 0) {
             const skip = (page - 1) * limit;
-            const [transactions, total] = await Promise.all([
-                Transaction.find(filter).sort({ date: -1, createdAt: -1 }).skip(skip).limit(limit),
-                Transaction.countDocuments(filter)
-            ]);
+            const transactions = await Transaction.find(filter).sort({ date: -1, createdAt: -1 }).skip(skip).limit(Math.min(limit, 500));
+            const total = await Transaction.countDocuments(filter);
 
             return res.json({
                 success: true,
@@ -466,15 +479,16 @@ router.get('/', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('GET /api/spending error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tải danh sách giao dịch.' });
     }
-});
+}));
 
 // =============================================
 // POST /api/spending – Tạo giao dịch mới
 // =============================================
-router.post('/', async (req, res) => {
+router.post('/', financialRequest(async (req, res) => {
     try {
         const { type, desc, amount, category, date, walletId, toWalletId, fee, jarId, installmentId } = req.body;
 
@@ -516,15 +530,16 @@ router.post('/', async (req, res) => {
             data: newRecord.toJSON()
         });
     } catch (error) {
-        console.error('POST /api/spending error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tạo giao dịch.' });
     }
-});
+}));
 
 // =============================================
 // PUT /api/spending/:id - Chỉnh sửa một giao dịch
 // =============================================
-router.put('/:id', async (req, res) => {
+router.put('/:id', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -541,7 +556,7 @@ router.put('/:id', async (req, res) => {
         // mà route chung này không biết để đồng bộ lại. Sửa thẳng ở đây sẽ làm lệch số
         // tiền thật giữa Transaction và Jar/Installment. Chặn tại đây, hướng user quay về
         // đúng trang quản lý (rút hũ để hoàn tác nạp/rút, sửa trực tiếp ở trang Khoản định kỳ).
-        if (currentTx.jarId) {
+        if (currentTx.jarId || currentTx.systemGenerated) {
             return res.status(400).json({
                 success: false,
                 message: 'Giao dịch này thuộc về một Hũ tiết kiệm. Vào trang Hũ và dùng nút "Rút" để hoàn tác thay vì sửa trực tiếp ở đây.'
@@ -613,15 +628,16 @@ router.put('/:id', async (req, res) => {
 
         res.json({ success: true, message: 'Đã cập nhật giao dịch!', data: updated.toJSON() });
     } catch (error) {
-        console.error('PUT /api/spending/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi cập nhật giao dịch.' });
     }
-});
+}));
 
 // =============================================
 // DELETE /api/spending/:id - Xóa giao dịch theo ID
 // =============================================
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', financialRequest(async (req, res) => {
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
@@ -638,7 +654,7 @@ router.delete('/:id', async (req, res) => {
 
         // Xem chú thích ở PUT /:id — cùng lý do, chặn xóa trực tiếp giao dịch
         // do Hũ/Khoản định kỳ sinh ra để tránh lệch số dư "ma".
-        if (existing.jarId) {
+        if (existing.jarId || existing.systemGenerated) {
             return res.status(400).json({
                 success: false,
                 message: 'Giao dịch này thuộc về một Hũ tiết kiệm. Vào trang Hũ và dùng nút "Rút" để hoàn tác thay vì xóa trực tiếp ở đây.'
@@ -658,15 +674,16 @@ router.delete('/:id', async (req, res) => {
             message: 'Đã xóa giao dịch thành công!'
         });
     } catch (error) {
-        console.error('DELETE /api/spending/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi xóa giao dịch.' });
     }
-});
+}));
 
 // =============================================
 // POST /api/spending/reset-data – Xóa toàn bộ giao dịch & ngân sách và đặt lại số dư Hũ, Trả góp
 // =============================================
-router.post('/reset-data', async (req, res) => {
+router.post('/reset-data', financialRequest(async (req, res) => {
     try {
         const userId = req.user.id;
 
@@ -686,9 +703,10 @@ router.post('/reset-data', async (req, res) => {
             message: 'Đã xóa toàn bộ giao dịch, ngân sách, và đặt lại số dư hũ tiết kiệm, tiến độ khoản định kỳ về 0.'
         });
     } catch (error) {
-        console.error('POST /api/spending/reset-data error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi server khi đặt lại dữ liệu chi tiêu.' });
     }
-});
+}));
 
 module.exports = router;

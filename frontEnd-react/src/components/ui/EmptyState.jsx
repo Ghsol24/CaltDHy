@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * EmptyState Primitive Component
@@ -14,12 +15,13 @@ import React from 'react';
  */
 export function EmptyState({
   icon,
-  title = 'Chưa có dữ liệu',
+  title,
   description,
   actionLabel,
   onAction,
   className = '',
 }) {
+  const { t } = useTranslation();
   return (
     <div className={`empty-state ${className}`}>
       <div className="empty-state__icon-wrapper" aria-hidden="true">
@@ -41,7 +43,7 @@ export function EmptyState({
         )}
       </div>
 
-      <h4 className="empty-state__title">{title}</h4>
+      <h4 className="empty-state__title">{title || t('empty.title')}</h4>
 
       {description && <p className="empty-state__desc">{description}</p>}
 

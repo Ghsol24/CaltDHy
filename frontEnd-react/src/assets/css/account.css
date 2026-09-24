@@ -759,6 +759,470 @@
   }
 }
 
+/* ============================================================
+   UNIFIED SETTINGS CENTER
+   Reuses the existing account forms and theme controls while
+   consolidating Settings and Account Management into one dialog.
+   ============================================================ */
+
+.settings-center-overlay {
+  background: var(--color-overlay, rgba(16, 27, 54, 0.48));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.settings-center-dialog {
+  width: min(920px, calc(100vw - 32px));
+  max-width: 920px;
+  height: min(720px, calc(100dvh - 40px));
+  max-height: none;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-dialog, 0 24px 60px rgba(16, 27, 54, 0.24));
+}
+
+.settings-center-header {
+  min-height: 72px;
+  padding: 14px 20px;
+}
+
+.settings-center-header .account-header-icon {
+  background: var(--color-brand-100, var(--primary-light));
+  color: var(--color-brand-700, var(--primary));
+}
+
+.settings-center-layout {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.settings-center-sidebar {
+  min-width: 0;
+  padding: 18px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--color-surface-muted, var(--surface-subtle));
+  border-right: 1px solid var(--color-border, var(--border));
+}
+
+.settings-user-summary {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 4px 16px;
+  padding: 10px;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-surface, var(--surface));
+}
+
+.settings-user-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-brand-700, var(--primary));
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.settings-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-user-summary > div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-user-summary strong,
+.settings-user-summary span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-user-summary strong {
+  color: var(--color-text, var(--text-primary));
+  font-size: 13px;
+}
+
+.settings-user-summary span {
+  color: var(--color-text-muted, var(--text-muted));
+  font-size: 11px;
+}
+
+.settings-center-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-nav-group > p {
+  margin: 0 10px 5px;
+  color: var(--color-text-muted, var(--text-muted));
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+}
+
+.settings-nav-item {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--color-text-secondary, var(--text-secondary));
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast, 150ms) ease, border-color var(--dur-fast, 150ms) ease, color var(--dur-fast, 150ms) ease;
+}
+
+.settings-nav-item:hover {
+  background: var(--color-surface, var(--surface));
+  color: var(--color-text, var(--text-primary));
+}
+
+.settings-nav-item:focus-visible,
+.settings-mobile-back:focus-visible,
+.account-modal-close-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.settings-nav-item.active {
+  border-color: var(--color-border-strong, var(--primary-border));
+  background: var(--color-brand-100, var(--primary-light));
+  color: var(--color-brand-700, var(--primary));
+}
+
+.settings-nav-chevron {
+  margin-left: auto;
+  color: var(--color-text-muted, var(--text-muted));
+  font-size: 18px;
+  line-height: 1;
+}
+
+.settings-sidebar-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border, var(--border));
+}
+
+.settings-nav-logout {
+  color: var(--color-danger, var(--danger));
+}
+
+.settings-nav-logout:hover {
+  border-color: var(--color-danger-border, rgba(239, 68, 68, 0.3));
+  background: var(--color-danger-bg, rgba(239, 68, 68, 0.08));
+  color: var(--color-danger, var(--danger));
+}
+
+.settings-center-content {
+  min-width: 0;
+  padding: 28px 32px;
+  background: var(--color-surface, var(--surface));
+}
+
+.settings-center-dialog .account-avatar-preview-box {
+  background: var(--color-brand-700, var(--primary));
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-center-dialog .account-input {
+  min-height: 44px;
+}
+
+.settings-center-dialog .account-modal-close-btn,
+.settings-mobile-back {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--color-text-secondary, var(--text-secondary));
+  cursor: pointer;
+}
+
+.settings-mobile-back {
+  display: none;
+}
+
+.settings-preference-list {
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+}
+
+.settings-preference-row {
+  min-height: 68px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: var(--color-surface, var(--surface));
+}
+
+.settings-preference-row + .settings-preference-row {
+  border-top: 1px solid var(--color-border, var(--border));
+}
+
+.settings-preference-row > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-preference-row strong {
+  color: var(--color-text, var(--text-primary));
+  font-size: 13px;
+}
+
+.settings-preference-row > div span {
+  color: var(--color-text-muted, var(--text-muted));
+  font-size: 12px;
+}
+
+.settings-readonly-value {
+  max-width: 240px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: 12px;
+  font-weight: 650;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.settings-preference-row > .settings-segmented-control {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-muted, var(--surface-subtle));
+}
+
+.settings-segmented-control button {
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary, var(--text-secondary));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.settings-segmented-control button.active {
+  background: var(--color-surface, var(--surface));
+  color: var(--color-primary, var(--brand));
+  box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+}
+
+.settings-segmented-control button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.settings-info-note {
+  padding: 12px 14px;
+  border: 1px solid var(--color-info-border, var(--color-border));
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-info-bg, var(--color-surface-muted));
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-theme-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-theme-grid .theme-card {
+  min-height: 116px;
+}
+
+.settings-guide-card {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-brand-700, var(--primary));
+}
+
+.settings-guide-card > svg {
+  width: 24px;
+  height: 24px;
+  justify-self: center;
+}
+
+.settings-guide-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-guide-card strong {
+  color: var(--color-text, var(--text-primary));
+  font-size: 13px;
+}
+
+.settings-guide-card span {
+  color: var(--color-text-muted, var(--text-muted));
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .settings-center-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .settings-center-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    animation: none;
+  }
+
+  .settings-center-header {
+    min-height: 68px;
+    padding: max(8px, env(safe-area-inset-top, 0px)) 12px 8px;
+  }
+
+  .settings-center-header .account-header-icon {
+    display: none;
+  }
+
+  .settings-mobile-back {
+    display: inline-flex;
+  }
+
+  .settings-center-layout {
+    display: flex;
+  }
+
+  .settings-center-sidebar,
+  .settings-center-content {
+    width: 100%;
+    border: 0;
+  }
+
+  .settings-center-layout:not(.show-mobile-menu) .settings-center-sidebar {
+    display: none;
+  }
+
+  .settings-center-layout.show-mobile-menu .settings-center-content {
+    display: none;
+  }
+
+  .settings-center-sidebar {
+    padding: 16px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .settings-center-content {
+    padding: 20px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .settings-user-summary {
+    margin-bottom: 20px;
+  }
+
+  .settings-nav-item {
+    min-height: 48px;
+  }
+
+  .settings-nav-chevron {
+    display: inline;
+  }
+
+  .settings-preference-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .settings-readonly-value {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .settings-preference-row > .settings-segmented-control {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .settings-guide-card {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .settings-guide-card .btn-account-save {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .settings-theme-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-card-panel-row {
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
 /* ── Topbar user chip avatar image & emoji ── */
 .user-chip-avatar-img {
   width: 28px;

@@ -5,25 +5,63 @@ import { BudgetEditModal } from './BudgetEditModal';
 import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
-import { CategoryOutlineIcon, BulbOutlineIcon } from '../../utils/categoryIcons';
+import { isBudgetMonthOverdue } from '../../utils/budgetPeriod';
+import { CategoryOutlineIcon, BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export function BudgetsTab() {
+  const { t } = useTranslation();
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
-  const { transactions, budgets, expenseCategories, fetchBudgets } = useTransactionStore();
+  const { transactions, budgets, budgetMonth, expenseCategories, fetchBudgets } = useTransactionStore();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState(null);
+  const [loadState, setLoadState] = useState({ month: null, skeleton: false, error: null });
+  const [retryCount, setRetryCount] = useState(0);
 
   // Month navigation
   const currentMonthStr = selectedMonth || getLocalMonthString();
   const localCurrentMonth = getLocalMonthString();
-  const isPastMonth = currentMonthStr < localCurrentMonth;
+  const isPastMonth = isBudgetMonthOverdue(currentMonthStr, localCurrentMonth);
 
-  // Tự động tải hạn mức chuẩn của tháng được chọn
+  // Delay the shimmer for fast responses, but keep it visible long enough if shown.
   useEffect(() => {
-    fetchBudgets(currentMonthStr);
-  }, [currentMonthStr, fetchBudgets]);
+    if (useTransactionStore.getState().budgetMonth === currentMonthStr) {
+      fetchBudgets(currentMonthStr);
+      return undefined;
+    }
+    let active = true;
+    let shimmerAt = 0;
+    let holdTimer;
+    setLoadState({ month: currentMonthStr, skeleton: false, error: null });
+    const delayTimer = setTimeout(() => {
+      if (!active) return;
+      shimmerAt = Date.now();
+      setLoadState({ month: currentMonthStr, skeleton: true, error: null });
+    }, 150);
+
+    fetchBudgets(currentMonthStr).then((result) => {
+      if (!active) return;
+      clearTimeout(delayTimer);
+      const finish = () => {
+        if (active) setLoadState({ month: null, skeleton: false, error: result?.success ? null : currentMonthStr });
+      };
+      const remaining = shimmerAt && result?.success ? Math.max(0, 325 - (Date.now() - shimmerAt)) : 0;
+      if (remaining) holdTimer = setTimeout(finish, remaining);
+      else finish();
+    });
+
+    return () => {
+      active = false;
+      clearTimeout(delayTimer);
+      clearTimeout(holdTimer);
+    };
+  }, [currentMonthStr, fetchBudgets, retryCount]);
+
+  const loadError = loadState.error === currentMonthStr;
+  const isMonthPending = !loadError && (loadState.month === currentMonthStr || budgetMonth !== currentMonthStr);
+  const showSkeleton = loadState.month === currentMonthStr && loadState.skeleton;
 
   const handlePrevMonth = () => {
     const [y, m] = currentMonthStr.split('-').map(Number);
@@ -113,7 +151,7 @@ export function BudgetsTab() {
   const unbudgetedTotal = unbudgetedCategories.reduce((sum, item) => sum + item.spent, 0);
 
   const handleOpenEdit = (category = null) => {
-    if (isPastMonth) return;
+    if (isPastMonth || isMonthPending || loadError) return;
     setSelectedCategoryToEdit(category);
     setIsEditModalOpen(true);
   };
@@ -175,6 +213,7 @@ export function BudgetsTab() {
             type="button"
             className="btn-setup-budget-primary"
             onClick={() => handleOpenEdit(null)}
+            disabled={isMonthPending || loadError}
             aria-label="Thiết lập hạn mức ngân sách"
           >
             <svg
@@ -248,9 +287,23 @@ export function BudgetsTab() {
         </div>
       </div>
 
+      {loadError ? (
+        <div className="budget-load-error" role="alert">
+          <span>{t('budgets.loadFailed')}</span>
+          <button type="button" className="btn btn--secondary" onClick={() => setRetryCount((count) => count + 1)}>{t('common.tryAgain')}</button>
+        </div>
+      ) : (
+      <div className={`budget-month-data ${isMonthPending && !showSkeleton ? 'is-pending' : ''}`} aria-busy={isMonthPending}>
+      {isMonthPending && !showSkeleton && <div className="budget-pending-overlay" role="status">{t('common.loading')}</div>}
       {/* ── 4 Equal Cells Summary Card ── */}
       <div className="budget-overview-card">
         <div className="budget-overview-grid">
+          {showSkeleton ? Array.from({ length: 4 }, (_, index) => (
+            <div className="budget-skeleton-summary" key={index} aria-hidden="true">
+              <span className="budget-skeleton-line is-label" />
+              <span className="budget-skeleton-line is-value" />
+            </div>
+          )) : <>
           {/* Cell 1: Tổng hạn mức */}
           <div className="budget-ov-item">
             <span className="budget-ov-label">Tổng hạn mức</span>
@@ -317,10 +370,11 @@ export function BudgetsTab() {
               {hasAnyLimit && overallPercent !== null ? formatPercent(overallPercent) : '—'}
             </strong>
           </div>
+          </>}
         </div>
 
         {/* Global Progress Bar */}
-        {hasAnyLimit && overallPercent !== null && (
+        {!showSkeleton && hasAnyLimit && overallPercent !== null && (
           <div className="budget-global-progress-bar-bg" aria-hidden="true">
             <div
               className={`budget-global-progress-bar-fill ${
@@ -337,7 +391,7 @@ export function BudgetsTab() {
       </div>
 
       {/* ── Disclosure: chi tiêu ở các danh mục CHƯA đặt hạn mức ── */}
-      {unbudgetedTotal > 0 && (
+      {!showSkeleton && unbudgetedTotal > 0 && (
         <div className="budget-unbudgeted-note" role="status">
           <span className="budget-unbudgeted-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -361,13 +415,14 @@ export function BudgetsTab() {
       <div className="budget-categories-list-section">
         <div className="budget-section-header-row">
           <h3 className="budget-section-heading">
-            Chi tiết ngân sách từng danh mục ({monthDisplayLabel})
+            {t('budgets.categoryDetailTitle', { month: monthDisplayLabel })}
           </h3>
           {!isPastMonth && (
             <button
               type="button"
               className="btn-edit-all-budgets"
               onClick={() => handleOpenEdit(null)}
+              disabled={isMonthPending}
               aria-label="Chỉnh sửa toàn bộ hạn mức ngân sách"
               title="Chỉnh sửa toàn bộ hạn mức"
             >
@@ -391,7 +446,7 @@ export function BudgetsTab() {
         </div>
 
         {/* First-use informational alert (When zero visible categories exist in the active month) */}
-        {visibleCategories.length === 0 && (
+        {!showSkeleton && visibleCategories.length === 0 && (
           <div className="budget-empty-alert" role="status">
             <div className="alert-bulb-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
               <BulbOutlineIcon size={20} color="currentColor" />
@@ -404,11 +459,20 @@ export function BudgetsTab() {
 
         {/* 4 Columns Category Cards Grid */}
         <div className="budget-categories-grid">
-          {visibleCategories.map((item) => {
+          {showSkeleton ? Array.from({ length: Math.max(4, Math.min(8, visibleCategories.length)) }, (_, index) => (
+            <div className="budget-category-card budget-skeleton-card" key={index} aria-hidden="true">
+              <span className="budget-skeleton-line is-heading" />
+              <span className="budget-skeleton-line is-label" />
+              <span className="budget-skeleton-line is-value" />
+            </div>
+          )) : visibleCategories.map((item) => {
             const hasLimit = item.hasLimit;
             const isDanger = item.status === 'danger' || (hasLimit && item.percent >= 100);
+            const isOverLimit = hasLimit && item.isOver;
+            const isPeriodOverdue = hasLimit && isPastMonth;
             const isWarning = item.status === 'warning' || (hasLimit && item.percent >= 80 && item.percent < 100);
             const barWidth = hasLimit ? Math.min(100, item.percent) : 0;
+            const overAmount = isOverLimit ? item.spent - item.limit : 0;
 
             // Semantic status label per spec:
             // unset: Chưa đặt hạn mức
@@ -420,7 +484,9 @@ export function BudgetsTab() {
 
             if (hasLimit) {
               if (item.percent >= 100) {
-                statusBadgeText = `Vượt hạn mức: ${formatCurrency(Math.abs(item.remaining || 0))}`;
+                statusBadgeText = isOverLimit
+                  ? `Vượt hạn mức +${formatCurrency(overAmount)}`
+                  : `Đã chạm hạn mức (${formatPercent(item.percent)})`;
                 statusBadgeCls = 'badge-danger';
               } else if (item.percent >= 80) {
                 statusBadgeText = `Sắp chạm hạn mức (${formatPercent(item.percent)})`;
@@ -435,8 +501,8 @@ export function BudgetsTab() {
               <div
                 key={item.category}
                 className={`budget-category-card ${
-                  isDanger ? 'is-danger' : isWarning ? 'is-warning' : hasLimit ? 'is-limited' : 'is-unset'
-                }`}
+                  isDanger ? `is-danger${isOverLimit ? ' is-overdue-danger' : ''}` : isWarning ? 'is-warning' : hasLimit ? 'is-limited' : 'is-unset'
+                }${isPeriodOverdue ? ' is-period-overdue' : ''}`}
                 role="button"
                 tabIndex={isPastMonth ? -1 : 0}
                 style={{ cursor: isPastMonth ? 'default' : 'pointer' }}
@@ -466,6 +532,15 @@ export function BudgetsTab() {
                       </span>
                     </div>
                   </div>
+                  {isOverLimit && (
+                    <span
+                      className="budget-overdue-indicator"
+                      aria-label={`Cảnh báo vượt hạn mức ${formatCurrency(overAmount)}`}
+                      title={`Vượt hạn mức ${formatCurrency(overAmount)}`}
+                    >
+                      <AlertTriangleOutlineIcon size={17} color="currentColor" />
+                    </span>
+                  )}
                 </div>
 
                 {/* Body: Semantic status label */}
@@ -473,6 +548,11 @@ export function BudgetsTab() {
                   <span className={`budget-card-status-badge ${statusBadgeCls}`}>
                     {statusBadgeText}
                   </span>
+                  {isPeriodOverdue && (
+                    <span className="budget-card-period-overdue-badge">
+                      {t('budgets.periodOverdue')}
+                    </span>
+                  )}
                   {hasLimit && (
                     <span className="budget-card-limit-val">
                       Hạn mức: {formatCurrency(item.limit)}
@@ -487,7 +567,7 @@ export function BudgetsTab() {
                       !hasLimit
                         ? 'fill-unset'
                         : isDanger
-                        ? 'fill-danger'
+                        ? `fill-danger${isOverLimit ? ' is-overdue-danger' : ''}`
                         : isWarning
                         ? 'fill-warning'
                         : 'fill-brand'
@@ -500,6 +580,8 @@ export function BudgetsTab() {
           })}
         </div>
       </div>
+      </div>
+      )}
 
       {/* ── Modal Setup / Edit Budgets ── */}
       {isEditModalOpen && (

@@ -1,5 +1,7 @@
 import React from 'react';
 import { AlertTriangleOutlineIcon } from './AppIcons';
+import { getActiveLocale } from '../../utils/formatters';
+import { translate } from '../../i18n/translations';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -20,6 +22,7 @@ export class ErrorBoundary extends React.Component {
   };
 
   render() {
+    const t = (key) => translate(getActiveLocale(), key);
     if (this.state.hasError) {
       return (
         <div
@@ -50,10 +53,10 @@ export class ErrorBoundary extends React.Component {
             <AlertTriangleOutlineIcon size={24} />
           </div>
           <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px' }}>
-            Đã xảy ra lỗi hiển thị
+            {t('error.displayTitle')}
           </h2>
           <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 20px', lineHeight: 1.5 }}>
-            {this.state.error?.message || 'Có một lỗi không mong muốn đã xảy ra khi tải giao diện.'}
+            {this.state.error?.message || t('error.displayBody')}
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
             <button
@@ -70,7 +73,7 @@ export class ErrorBoundary extends React.Component {
                 cursor: 'pointer'
               }}
             >
-              Tải lại trang
+              {t('error.reload')}
             </button>
             <button
               type="button"
@@ -86,7 +89,7 @@ export class ErrorBoundary extends React.Component {
                 cursor: 'pointer'
               }}
             >
-              Thử lại
+              {t('common.tryAgain')}
             </button>
           </div>
         </div>

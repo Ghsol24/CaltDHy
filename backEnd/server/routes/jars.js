@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
+const { financialRequest } = require('../utils/financialRequest');
 const { protect } = require('../middleware/authMiddleware');
 const Jar = require('../models/Jar');
 const Installment = require('../models/Installment');
@@ -16,25 +17,26 @@ const { getVietnamTodayString, nowAsVietnamDateAnchor } = require('../utils/loca
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
 
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const isValidObjectId = (id) => (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) || id instanceof mongoose.Types.ObjectId;
 
 /* =============================================
    JARS (HŨ TIẾT KIỆM)
    ============================================= */
 
 // GET /api/jars — Lấy tất cả hũ của user
-router.get('/', async (req, res) => {
+router.get('/', financialRequest(async (req, res) => {
     try {
         const jars = await Jar.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.json({ success: true, data: jars.map(j => j.toJSON()) });
     } catch (error) {
-        console.error('GET /api/jars error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách hũ.' });
     }
-});
+}));
 
 // POST /api/jars — Tạo hũ mới (3.2: Khởi tạo history giải trình nếu current > 0)
-router.post('/', async (req, res) => {
+router.post('/', financialRequest(async (req, res) => {
     try {
         const { name, category, icon, target, current, targetDate, color } = req.body;
 
@@ -67,13 +69,14 @@ router.post('/', async (req, res) => {
 
         res.status(201).json({ success: true, message: 'Đã tạo hũ mới!', data: jar.toJSON() });
     } catch (error) {
-        console.error('POST /api/jars error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tạo hũ.' });
     }
-});
+}));
 
 // PUT /api/jars/:id — Cập nhật thông tin hũ
-router.put('/:id', async (req, res) => {
+router.put('/:id', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
@@ -100,13 +103,14 @@ router.put('/:id', async (req, res) => {
         }
         res.json({ success: true, message: 'Đã cập nhật hũ!', data: jar.toJSON() });
     } catch (error) {
-        console.error('PUT /api/jars/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi cập nhật hũ.' });
     }
-});
+}));
 
 // PATCH /api/jars/:id/deposit — Nạp tiền vào hũ (Bọc transaction, Checks-Effects)
-router.patch('/:id/deposit', async (req, res) => {
+router.patch('/:id/deposit', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
@@ -193,19 +197,20 @@ router.patch('/:id/deposit', async (req, res) => {
 
         res.json({ success: true, message: 'Đã nạp tiền vào hũ!', data: updatedJar.toJSON() });
     } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
         if (error.message === 'JAR_NOT_FOUND') {
             return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
         }
         if (error.message === 'INVALID_WALLET_ID' || error.message === 'WALLET_NOT_FOUND') {
             return res.status(400).json({ success: false, message: 'Ví đã chọn không tồn tại hoặc không hợp lệ.' });
         }
-        console.error('PATCH /api/jars/:id/deposit error:', error);
-        res.status(error.status || 500).json({ success: false, message: error.message || 'Lỗi khi nạp tiền.' });
+        console.error('[finance] route_failed');
+        res.status(error.status || 500).json({ success: false, message: 'Lỗi khi nạp tiền.' });
     }
-});
+}));
 
 // PATCH /api/jars/:id/withdraw — Rút tiền từ hũ (Bọc transaction, Checks-Effects)
-router.patch('/:id/withdraw', async (req, res) => {
+router.patch('/:id/withdraw', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
@@ -301,6 +306,7 @@ router.patch('/:id/withdraw', async (req, res) => {
 
         res.json({ success: true, message: 'Đã rút tiền từ hũ!', data: updatedJar.toJSON() });
     } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
         if (error.message === 'JAR_NOT_FOUND') {
             return res.status(404).json({ success: false, message: 'Không tìm thấy hũ.' });
         }
@@ -310,16 +316,20 @@ router.patch('/:id/withdraw', async (req, res) => {
         if (error.message === 'INVALID_WALLET_ID' || error.message === 'WALLET_NOT_FOUND') {
             return res.status(400).json({ success: false, message: 'Ví đã chọn không tồn tại hoặc không hợp lệ.' });
         }
-        console.error('PATCH /api/jars/:id/withdraw error:', error);
-        res.status(error.status || 500).json({ success: false, message: error.message || 'Lỗi khi rút tiền.' });
+        console.error('[finance] route_failed');
+        res.status(error.status || 500).json({ success: false, message: 'Lỗi khi rút tiền.' });
     }
-});
+}));
 
 // DELETE /api/jars/:id — Xóa hũ và dọn dẹp các giao dịch liên quan
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
+        }
+        const currentJar = await Jar.findOne({ _id: req.params.id, userId: req.user.id });
+        if (currentJar && currentJar.current !== 0) {
+            return res.status(409).json({ success: false, message: 'Hãy rút hết tiền về ví trước khi xóa hũ.' });
         }
         const deleted = await Jar.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
         if (!deleted) {
@@ -327,32 +337,36 @@ router.delete('/:id', async (req, res) => {
         }
 
         // Gỡ liên kết jarId khỏi các giao dịch để tránh mồ côi mà vẫn bảo toàn lịch sử dòng tiền thật
-        await Transaction.updateMany({ jarId: req.params.id, userId: req.user.id }, { $unset: { jarId: 1 } });
+        await Transaction.updateMany({ jarId: req.params.id, userId: req.user.id }, {
+            $unset: { jarId: 1 }, $set: { systemGenerated: true }
+        });
 
         res.json({ success: true, message: 'Đã xóa hũ và bảo toàn lịch sử giao dịch liên quan!' });
     } catch (error) {
-        console.error('DELETE /api/jars/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi xóa hũ.' });
     }
-});
+}));
 
 /* =============================================
    INSTALLMENTS (TRẢ GÓP & HÓA ĐƠN ĐỊNH KỲ)
    ============================================= */
 
 // GET /api/jars/installments — Lấy tất cả khoản định kỳ của user
-router.get('/installments', async (req, res) => {
+router.get('/installments', financialRequest(async (req, res) => {
     try {
         const items = await Installment.find({ userId: req.user.id }).sort({ nextDueDate: 1 });
         res.json({ success: true, data: items.map(i => i.toJSON()) });
     } catch (error) {
-        console.error('GET /api/jars/installments error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi lấy danh sách trả góp.' });
     }
-});
+}));
 
 // POST /api/jars/installments — Tạo khoản định kỳ mới (Điểm 7: bắt buộc category)
-router.post('/installments', async (req, res) => {
+router.post('/installments', financialRequest(async (req, res) => {
     try {
         const { name, icon, amount, cycle, nextDueDate, category, walletId } = req.body;
 
@@ -394,13 +408,14 @@ router.post('/installments', async (req, res) => {
 
         res.status(201).json({ success: true, message: 'Đã thêm khoản định kỳ!', data: item.toJSON() });
     } catch (error) {
-        console.error('POST /api/jars/installments error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi tạo khoản định kỳ.' });
     }
-});
+}));
 
 // PUT /api/jars/installments/:id — Sửa khoản định kỳ (Điểm 6: cho phép cập nhật category)
-router.put('/installments/:id', async (req, res) => {
+router.put('/installments/:id', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
@@ -468,7 +483,7 @@ router.put('/installments/:id', async (req, res) => {
                     );
                 }
             } catch (cleanupErr) {
-                console.warn('Category cleanup warning:', cleanupErr.message);
+                throw cleanupErr;
             }
         }
 
@@ -483,10 +498,11 @@ router.put('/installments/:id', async (req, res) => {
 
         res.json({ success: true, message: 'Đã cập nhật khoản định kỳ!', data: item.toJSON() });
     } catch (error) {
-        console.error('PUT /api/jars/installments/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi cập nhật khoản định kỳ.' });
     }
-});
+}));
 
 function advanceNextDueDate(dateStr, cycle) {
     if (!dateStr || typeof dateStr !== 'string') return dateStr;
@@ -522,13 +538,13 @@ function advanceNextDueDate(dateStr, cycle) {
 }
 
 // PATCH /api/jars/installments/:id/pay — Đánh dấu "Đã trả kỳ này" (Bọc transaction, tự động sinh Transaction Expense)
-router.patch('/installments/:id/pay', async (req, res) => {
+router.patch('/installments/:id/pay', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
         }
 
-        const { walletId } = req.body || {};
+        const { walletId, period } = req.body || {};
 
         const updatedItem = await runWithTransaction(async (session) => {
             // 1. CHECKS
@@ -540,6 +556,16 @@ router.patch('/installments/:id/pay', async (req, res) => {
                 const err = new Error('INSTALLMENT_NOT_FOUND');
                 err.status = 404;
                 throw err;
+            }
+
+            if (!item.active || typeof period !== 'string' || period !== item.nextDueDate) {
+                const err = new Error('Kỳ thanh toán đã thay đổi hoặc khoản định kỳ đã tắt.');
+                err.status = 409;
+                throw err;
+            }
+            // Editing the due date backwards must not charge an already paid period.
+            if (await Transaction.exists({ userId: req.user.id, installmentId: item._id, period })) {
+                const err = new Error('PERIOD_ALREADY_PAID'); err.status = 409; throw err;
             }
 
             let payWallet = null;
@@ -563,6 +589,10 @@ router.patch('/installments/:id/pay', async (req, res) => {
                 const queryItemW = Wallet.findOne({ _id: item.walletId, userId: req.user.id, archived: false });
                 if (session) queryItemW.session(session);
                 payWallet = await queryItemW;
+                // A stale, archived or foreign stored link must never charge another wallet.
+                if (!payWallet) {
+                    const err = new Error('WALLET_NOT_FOUND'); err.status = 400; throw err;
+                }
             }
 
             if (!payWallet) {
@@ -579,6 +609,9 @@ router.patch('/installments/:id/pay', async (req, res) => {
             }
 
             // 2. EFFECTS
+            if (!payWallet) {
+                const err = new Error('WALLET_NOT_FOUND'); err.status = 400; throw err;
+            }
             const prevDueDate = item.nextDueDate;
             const nextDate = advanceNextDueDate(item.nextDueDate, item.cycle);
 
@@ -607,7 +640,9 @@ router.patch('/installments/:id/pay', async (req, res) => {
                 category: item.category || 'Housing & Bills',
                 date: nowAsVietnamDateAnchor(),
                 walletId: payWallet ? payWallet._id : null,
-                installmentId: item._id
+                installmentId: item._id,
+                period: prevDueDate,
+                systemGenerated: true
             };
             if (session) {
                 await Transaction.create([txPayload], { session });
@@ -620,19 +655,20 @@ router.patch('/installments/:id/pay', async (req, res) => {
 
         res.json({ success: true, message: 'Đã đánh dấu thanh toán và ghi nhận chi tiêu!', data: updatedItem.toJSON() });
     } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
         if (error.message === 'INSTALLMENT_NOT_FOUND') {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
         if (error.message === 'INVALID_WALLET_ID' || error.message === 'WALLET_NOT_FOUND') {
             return res.status(400).json({ success: false, message: 'Ví thanh toán đã chọn không tồn tại hoặc không hợp lệ.' });
         }
-        console.error('PATCH /api/jars/installments/:id/pay error:', error);
-        res.status(error.status || 500).json({ success: false, message: error.message || 'Lỗi khi cập nhật kỳ thanh toán.' });
+        console.error('[finance] route_failed');
+        res.status(error.status || 500).json({ success: false, message: 'Lỗi khi cập nhật kỳ thanh toán.' });
     }
-});
+}));
 
 // PATCH /api/jars/installments/:id/toggle — Bật/tắt theo dõi khoản định kỳ
-router.patch('/installments/:id/toggle', async (req, res) => {
+router.patch('/installments/:id/toggle', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
@@ -645,13 +681,14 @@ router.patch('/installments/:id/toggle', async (req, res) => {
         await item.save();
         res.json({ success: true, data: item.toJSON() });
     } catch (error) {
-        console.error('PATCH /api/jars/installments/:id/toggle error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi cập nhật trạng thái.' });
     }
-});
+}));
 
 // DELETE /api/jars/installments/:id — Xóa khoản định kỳ và dọn dẹp các giao dịch liên quan
-router.delete('/installments/:id', async (req, res) => {
+router.delete('/installments/:id', financialRequest(async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
             return res.status(400).json({ success: false, message: 'ID khoản định kỳ không hợp lệ.' });
@@ -661,14 +698,18 @@ router.delete('/installments/:id', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy khoản định kỳ.' });
         }
 
-        // Gỡ liên kết installmentId khỏi các giao dịch chi tiêu để bảo toàn lịch sử chi tiêu thật của người dùng
-        await Transaction.updateMany({ installmentId: req.params.id, userId: req.user.id }, { $unset: { installmentId: 1 } });
+        // Retain historical identity and the unique (user, installment, period) key.
+        // Removing installmentId would collapse different plans onto (user, null, period).
+        await Transaction.updateMany({ installmentId: req.params.id, userId: req.user.id }, {
+            $set: { systemGenerated: true }
+        });
 
         res.json({ success: true, message: 'Đã xóa khoản định kỳ và bảo toàn lịch sử chi tiêu liên quan!' });
     } catch (error) {
-        console.error('DELETE /api/jars/installments/:id error:', error);
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi xóa khoản định kỳ.' });
     }
-});
+}));
 
 module.exports = router;

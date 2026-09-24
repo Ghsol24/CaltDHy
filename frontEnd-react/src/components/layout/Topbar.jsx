@@ -3,15 +3,16 @@ import { Link } from 'react-router';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { formatDate } from '../../utils/formatters';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export function Topbar() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const openSettingsModal = useSpendingStore((s) => s.openSettingsModal);
-  const openAccountModal = useSpendingStore((s) => s.openAccountModal);
 
   // Format initials and display name
-  const userName = user?.name || user?.email?.split('@')[0] || 'Người dùng';
+  const userName = user?.name || user?.email?.split('@')[0] || t('common.user');
   const userInitials = userName
     .split(' ')
     .filter(Boolean)
@@ -27,10 +28,10 @@ export function Topbar() {
       {/* ── Brand Logo ── */}
       <div className="tb-brand">
         <Link
-          to="/spending"
+          to="/spending/home"
           className="tb-logo-link"
-          aria-label="CaltDHy - Về trang chủ"
-          onClick={() => setActiveView('home')}
+          aria-label={t('topbar.home')}
+          onClick={() => navigateTo('home')}
         >
           <div className="tb-logo-icon">C</div>
           <span className="tb-logo">
@@ -67,9 +68,9 @@ export function Topbar() {
         <button
           type="button"
           className="tb-settings-btn"
-          onClick={openSettingsModal}
-          title="Cài đặt giao diện & hệ thống"
-          aria-label="Cài đặt giao diện và hệ thống"
+          onClick={() => openSettingsModal('general')}
+          title={t('topbar.openSettings')}
+          aria-label={t('topbar.openSettings')}
         >
           <svg
             width="16"
@@ -85,18 +86,18 @@ export function Topbar() {
             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
             <circle cx="12" cy="12" r="3" />
           </svg>
-          <span className="tb-settings-label">Cài đặt</span>
+          <span className="tb-settings-label">{t('settings.title')}</span>
         </button>
 
 
-        {/* User Account Trigger Button (1-Click Opens Account Modal) */}
+        {/* User Account Trigger Button (opens the unified Settings Center at Profile) */}
         <div className="user-menu-wrapper">
           <button
             type="button"
             className="user-chip"
-            onClick={openAccountModal}
-            title="Quản lý tài khoản"
-            aria-label="Quản lý tài khoản"
+            onClick={() => openSettingsModal('profile')}
+            title={t('topbar.openProfile')}
+            aria-label={t('topbar.openProfile')}
           >
             {user?.avatar ? (
               user.avatar.startsWith('data:image') || user.avatar.startsWith('http') ? (

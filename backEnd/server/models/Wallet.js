@@ -9,8 +9,7 @@ const walletSchema = new mongoose.Schema(
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: [true, 'userId không được để trống.'],
-            index: true
+            required: [true, 'userId không được để trống.']
         },
         name: {
             type: String,
@@ -76,5 +75,7 @@ const walletSchema = new mongoose.Schema(
 );
 
 walletSchema.index({ userId: 1, createdAt: 1 });
+walletSchema.index({ userId: 1 }, { name: 'active_default_wallet_unique', unique: true, partialFilterExpression: { isDefault: true, archived: false } });
+for (const field of ['initialBalance', 'creditLimit']) walletSchema.path(field).validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
 
 module.exports = mongoose.model('Wallet', walletSchema);

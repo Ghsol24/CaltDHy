@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency, getLocalDateString } from '../../utils/formatters';
+import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
@@ -68,7 +68,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setAmount(num ? num.toLocaleString('vi-VN') : '');
+    setAmount(num ? formatInputNumber(num) : '');
   };
 
   const handleFeeChange = (e) => {
@@ -78,7 +78,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setFee(num ? num.toLocaleString('vi-VN') : '');
+    setFee(num ? formatInputNumber(num) : '');
   };
 
   const handleSubmit = async (e) => {

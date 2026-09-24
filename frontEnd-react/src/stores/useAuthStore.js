@@ -1,144 +1,136 @@
 import { create } from 'zustand';
 import { authService } from '../services/authService';
+import { apiFetch, clearApiSession } from '../services/api';
+import { invalidateSession, sessionEpoch, assertSession } from '../services/sessionRuntime';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
 import { useJarStore } from './useJarStore';
+import { useSpendingStore } from './useSpendingStore';
+import { useToastStore } from './useToastStore';
+import { useConfirmStore } from './useConfirmStore';
 
-const TOKEN_KEY = 'caltdhy_token';
-const USER_KEY = 'caltdhy_user';
-
-const getStoredToken = () => {
-  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+const EVENT_KEY = 'caltdhy_session_event';
+const LOGOUT_KEY = 'caltdhy_logout_pending';
+const storage = {
+  get: key => { try { return localStorage.getItem(key); } catch { return null; } },
+  set: (key, value) => { try { localStorage.setItem(key, value); } catch {} },
+  remove: key => { try { localStorage.removeItem(key); } catch {} }
 };
-
-const getStoredUser = () => {
+function clearPrivateState() {
+  invalidateSession(); clearApiSession();
   try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-};
-
-export const useAuthStore = create((set, get) => ({
-  user: getStoredUser(),
-  token: getStoredToken(),
-  isAuthenticated: !!getStoredToken(),
-  isLoading: false,
-
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('caltdhy_') && !['caltdhy_theme', 'caltdhy_lang', 'caltdhy_curr', EVENT_KEY, LOGOUT_KEY].includes(key)) {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {}
+  useConfirmStore.getState().closeConfirm();
+  for (const store of [useTransactionStore, useWalletStore, useJarStore, useSpendingStore, useToastStore, useConfirmStore]) {
+    store.setState(store.getInitialState(), true);
+  }
+}
+const broadcast = () => storage.set(EVENT_KEY, crypto.randomUUID());
+let initialization;
+export const useAuthStore = create((set) => ({
+  user: null, isAuthenticated: false, isLoading: false, status: 'checking', error: null,
+  initialize: async () => {
+    const epoch = sessionEpoch();
+    if (initialization?.epoch === epoch) return initialization.promise;
+    const current = { epoch };
+    current.promise = (async () => {
+      try {
+        if (storage.get(LOGOUT_KEY)) {
+          await apiFetch('/api/auth/logout', { method: 'POST' });
+          assertSession(epoch);
+          set({ status: 'anonymous', user: null, isAuthenticated: false });
+          return;
+        }
+        const data = await apiFetch('/api/auth/session');
+        assertSession(epoch);
+        set({ user: data.user, isAuthenticated: true, status: 'authenticated', error: null });
+      } catch (error) {
+        if (sessionEpoch() !== epoch) return;
+        set({ user: null, isAuthenticated: false, status: 'anonymous',
+          error: error.status === 401 ? null : error.message });
+      } finally { if (initialization === current) initialization = null; }
+    })();
+    initialization = current;
+    return current.promise;
+  },
   login: async (email, password) => {
-    set({ isLoading: true });
+    clearPrivateState();
+    const epoch = sessionEpoch();
+    set({ user: null, isAuthenticated: false, status: 'checking', isLoading: true, error: null });
     try {
       const data = await authService.login({ email, password });
-      if (data.success && data.token) {
-        localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-        set({
-          token: data.token,
-          user: data.user,
-          isAuthenticated: true,
-          isLoading: false
-        });
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Đăng nhập thất bại.');
-      }
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
+      assertSession(epoch);
+      storage.remove(LOGOUT_KEY);
+      set({ user: data.user, isAuthenticated: true, status: 'authenticated', isLoading: false });
+      broadcast();
+      return { success: true, user: data.user };
+    } catch (error) {
+      if (epoch === sessionEpoch()) set({ status: 'anonymous', isLoading: false, error: error.message });
+      throw error;
     }
   },
-
   register: async (name, email, password) => {
-    set({ isLoading: true });
+    clearPrivateState();
+    const epoch = sessionEpoch();
+    set({ user: null, isAuthenticated: false, status: 'checking', isLoading: true });
     try {
       const data = await authService.register({ name, email, password });
-      if (!data.success) {
-        throw new Error(data.message || 'Đăng ký thất bại.');
-      }
-      if (data.token && data.user) {
-        localStorage.setItem(TOKEN_KEY, data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-        set({
-          token: data.token,
-          user: data.user,
-          isAuthenticated: true,
-          isLoading: false
-        });
-      } else {
-        set({ isLoading: false });
-      }
-      return { success: true, user: data.user, token: data.token, message: data.message };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
+      assertSession(epoch);
+      storage.remove(LOGOUT_KEY);
+      set({ user: data.user, isAuthenticated: true, status: 'authenticated', isLoading: false });
+      broadcast();
+      return { success: true, user: data.user };
+    } catch (error) {
+      if (epoch === sessionEpoch()) set({ status: 'anonymous', isLoading: false, error: error.message });
+      throw error;
     }
   },
-
-  logout: () => {
-    // 1. Dọn sạch toàn bộ dữ liệu tài chính của user trong localStorage (giữ lại theme, lang, curr)
-    const keysToRemove = [
-      TOKEN_KEY,
-      USER_KEY,
-      'caltdhy_wallets',
-      'caltdhy_jars',
-      'caltdhy_installments',
-      'caltdhy_txns',
-      'caltdhy_budgets',
-      'caltdhy_expense_categories',
-      'caltdhy_income_categories',
-      'caltdhy_custom_cats',
-      'caltdhy_hidden_cats',
-      'caltdhy_last_reported_month',
-      'caltdhy_is_new_user'
-    ];
-    keysToRemove.forEach((k) => {
-      try {
-        localStorage.removeItem(k);
-      } catch {}
-    });
-
-    // 2. Reset triệt để state trong RAM của các store tài chính
-    try {
-      useTransactionStore.setState({
-        transactions: [],
-        budgets: {},
-        expenseCategories: [],
-        incomeCategories: []
-      });
-      useWalletStore.setState({ wallets: [] });
-      useJarStore.setState({ jars: [], installments: [] });
-    } catch {}
-
-    // 3. Reset trạng thái xác thực
-    set({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false
-    });
+  logout: async () => {
+    storage.set(LOGOUT_KEY, '1');
+    clearPrivateState();
+    initialization = null;
+    const epoch = sessionEpoch();
+    set({ user: null, isAuthenticated: false, status: 'anonymous', isLoading: false, error: null });
+    broadcast();
+    try { await apiFetch('/api/auth/logout', { method: 'POST' }); }
+    catch {
+      if (sessionEpoch() === epoch) {
+        set({ error: 'Đã khóa dữ liệu trên thiết bị. Cần kết nối mạng để thu hồi phiên trên server.' });
+      }
+    }
+    // Keep the local logout barrier until a deliberate, successful login.
   },
-
-  updateProfile: async (profileData) => {
+  expire: () => {
+    clearPrivateState();
+    initialization = null;
+    set({ user: null, isAuthenticated: false, status: 'anonymous', isLoading: false });
+  },
+  updateProfile: async profileData => {
+    const epoch = sessionEpoch();
     set({ isLoading: true });
     try {
       const data = await authService.updateProfile(profileData);
-      if (data.success) {
-        const updatedUser = data.user || { ...get().user, name: profileData.name };
-        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
-        if (data.token) {
-          localStorage.setItem(TOKEN_KEY, data.token);
-        }
-        set({
-          user: updatedUser,
-          token: data.token || get().token,
-          isLoading: false
-        });
-        return { success: true, user: updatedUser };
-      } else {
-        throw new Error(data.message || 'Cập nhật tài khoản thất bại.');
-      }
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
+      assertSession(epoch);
+      set({ user: data.user, isLoading: false });
+      broadcast();
+      return { success: true, user: data.user };
+    } catch (error) {
+      if (epoch === sessionEpoch()) set({ isLoading: false });
+      throw error;
     }
   }
 }));
+clearPrivateState();
+window.addEventListener('storage', event => {
+  if (![EVENT_KEY, LOGOUT_KEY].includes(event.key)) return;
+  useAuthStore.getState().expire();
+  if (!storage.get(LOGOUT_KEY)) {
+    useAuthStore.setState({ status: 'checking' });
+    void useAuthStore.getState().initialize();
+  }
+});

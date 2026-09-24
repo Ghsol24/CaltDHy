@@ -1,10 +1,15 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useTranslation } from '../../i18n/useTranslation';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 export function ConfirmDialog() {
+  const { t } = useTranslation();
   const {
     isOpen,
+    isConfirming,
+    error,
     title,
     message,
     confirmText,
@@ -16,28 +21,25 @@ export function ConfirmDialog() {
 
   const dialogRef = useRef(null);
   useFocusTrap(dialogRef, isOpen);
+  useBodyScrollLock(isOpen);
 
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key === 'Escape' && isOpen) {
         e.preventDefault();
-        handleCancel();
+        if (!isConfirming) handleCancel();
       }
     },
-    [isOpen, handleCancel]
+    [isOpen, isConfirming, handleCancel]
   );
 
   useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return undefined;
+
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
     };
   }, [isOpen, handleKeyDown]);
 
@@ -47,7 +49,7 @@ export function ConfirmDialog() {
     <div
       className="confirm-dialog-backdrop"
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !isConfirming) {
           handleCancel();
         }
       }}
@@ -98,7 +100,7 @@ export function ConfirmDialog() {
             )}
           </div>
           <h3 id="confirm-dialog-title" className="confirm-dialog-title">
-            {title}
+            {title || t('dialog.defaultTitle')}
           </h3>
         </div>
 
@@ -108,13 +110,16 @@ export function ConfirmDialog() {
           </p>
         )}
 
+        {error && <p className="confirm-dialog-error" role="alert">{typeof error === 'string' ? error : t('dialog.actionFailed')}</p>}
+
         <div className="confirm-dialog-actions">
           <button
             type="button"
             className="btn btn--secondary confirm-dialog-btn"
             onClick={handleCancel}
+            disabled={isConfirming}
           >
-            {cancelText}
+            {cancelText || t('common.cancel')}
           </button>
           <button
             type="button"
@@ -122,8 +127,11 @@ export function ConfirmDialog() {
               confirmVariant === 'danger' ? 'btn--danger' : 'btn--primary'
             } confirm-dialog-btn`}
             onClick={handleConfirm}
+            disabled={isConfirming}
+            aria-busy={isConfirming}
           >
-            {confirmText}
+            {isConfirming && <span className="btn-spinner" aria-hidden="true" />}
+            {isConfirming ? t('common.processing') : (confirmText || t('common.confirm'))}
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 
 const PRESET_COLORS = [
   '#059669', // Emerald Green
@@ -40,8 +40,8 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
 
     if (jarToEdit) {
       setName(jarToEdit.name || '');
-      setTarget(jarToEdit.target ? Number(jarToEdit.target).toLocaleString('vi-VN') : '');
-      setInitialAmount(jarToEdit.current ? Number(jarToEdit.current).toLocaleString('vi-VN') : '');
+      setTarget(jarToEdit.target ? formatInputNumber(jarToEdit.target) : '');
+      setInitialAmount(jarToEdit.current ? formatInputNumber(jarToEdit.current) : '');
       setTargetDate(jarToEdit.targetDate ? jarToEdit.targetDate.slice(0, 10) : '');
       setColor(jarToEdit.color || '#3B82F6');
       setErrorMsg('');
@@ -102,7 +102,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setTarget(num.toLocaleString('vi-VN'));
+    setTarget(formatInputNumber(num));
   };
 
   const handleInitialAmountChange = (e) => {
@@ -112,7 +112,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       return;
     }
     const num = parseInt(rawVal, 10);
-    setInitialAmount(num.toLocaleString('vi-VN'));
+    setInitialAmount(formatInputNumber(num));
   };
 
   const handleSubmit = async (e) => {
@@ -387,7 +387,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                     $
                   </div>
                   <strong className="jar-summary-card__amount">
-                    {remainingAmount.toLocaleString('vi-VN')} VND
+                    {formatCurrency(remainingAmount)}
                   </strong>
                 </div>
                 <strong className="jar-summary-card__pct">
@@ -408,7 +408,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
 
               <div className="jar-summary-card__footer">
                 <span>Đã đạt {progress}% mục tiêu</span>
-                <span>Cần thêm {remainingAmount.toLocaleString('vi-VN')} VND</span>
+                <span>Cần thêm {formatCurrency(remainingAmount)}</span>
               </div>
             </div>
 

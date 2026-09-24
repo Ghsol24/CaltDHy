@@ -10,7 +10,7 @@ export const jarsService = {
   getInstallments: () => api.get('/api/jars/installments'),
   createInstallment: (data) => api.post('/api/jars/installments', data),
   updateInstallment: (id, data) => api.put(`/api/jars/installments/${id}`, data),
-  payInstallment: (id, walletId = null) => api.patch(`/api/jars/installments/${id}/pay`, walletId ? { walletId } : {}),
+  payInstallment: (id, period, walletId = null) => api.patch(`/api/jars/installments/${id}/pay`, { period, walletId }),
   toggleInstallment: (id) => api.patch(`/api/jars/installments/${id}/toggle`, {}),
   deleteInstallment: (id) => api.delete(`/api/jars/installments/${id}`)
 };

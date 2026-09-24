@@ -101,5 +101,7 @@ const installmentSchema = new mongoose.Schema(
 );
 
 installmentSchema.index({ userId: 1, nextDueDate: 1 });
+for (const field of ['amount', 'totalPaid']) installmentSchema.path(field).validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
+installmentHistorySchema.path('amount').validate(Number.isSafeInteger, 'Tiền phải là số nguyên chính xác.');
 
 module.exports = mongoose.model('Installment', installmentSchema);

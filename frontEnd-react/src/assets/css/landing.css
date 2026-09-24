@@ -117,7 +117,7 @@
   bottom: -150px;
   left: -100px;
   background: radial-gradient(circle, rgba(0,230,118,.05) 0%, transparent 65%);
-  animation: orbFloat 13s ease-in-out infinite reverse;
+  animation: none;
 }
 
 body.dark-theme .bg-orb--1 {
@@ -424,7 +424,7 @@ body.dark-theme .bg-orb--2 {
   flex-direction: column;
   gap: 14px;
   position: relative;
-  animation: deviceFloat 5s ease-in-out infinite;
+  animation: none;
   /* Subtle 3D tilt */
   transform: rotateX(2deg) rotateY(-4deg);
   transition: transform 400ms ease;

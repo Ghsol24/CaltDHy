@@ -13,20 +13,14 @@ import {
 export function GuideModal() {
   const isHelpOpen = useSpendingStore((s) => s.isHelpOpen);
   const closeHelpModal = useSpendingStore((s) => s.closeHelpModal);
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
-  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
-  const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
-  const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
+  const navigateApp = useSpendingStore((s) => s.navigateTo);
   const [activeTab, setActiveTab] = useState('quickstart'); // 'quickstart' | 'home' | 'plan' | 'analytics' | 'jars'
 
   if (!isHelpOpen) return null;
 
   const navigateTo = (view, subTab) => {
     closeHelpModal();
-    setActiveView(view);
-    if (view === 'plan' && subTab) setPlanSubTab(subTab);
-    if (view === 'analytics' && subTab) setAnalyticsSubTab(subTab);
-    if (view === 'jars' && subTab) setJarsSubTab(subTab);
+    navigateApp(view, subTab);
   };
 
   return (

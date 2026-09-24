@@ -1,3 +1,4 @@
+import { sessionEpoch, scopedSet, scopedGet } from '../services/sessionRuntime';
 import { create } from 'zustand';
 import { walletService } from '../services/walletService';
 import { spendingService } from '../services/spendingService';
@@ -5,22 +6,9 @@ import { useTransactionStore } from './useTransactionStore';
 import { calculateWalletBalances } from '../utils/financeMath';
 import { getLocalDateString } from '../utils/formatters';
 
-const WALLET_KEY = 'caltdhy_wallets';
+const getStoredWallets = () => [];
 
-const getStoredWallets = () => {
-  try {
-    const raw = localStorage.getItem(WALLET_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveStoredWallets = (wallets) => {
-  try {
-    localStorage.setItem(WALLET_KEY, JSON.stringify(wallets));
-  } catch {}
-};
+const saveStoredWallets = () => undefined;
 
 const normalizeWallet = (w) => ({
   id: w._id || w.id,
@@ -35,7 +23,10 @@ const normalizeWallet = (w) => ({
   archived: Boolean(w.archived)
 });
 
-export const useWalletStore = create((set, get) => ({
+export const useWalletStore = create((storeSet, storeGet) => {
+const set = storeSet;
+const get = storeGet;
+return ({
   wallets: getStoredWallets(),
   archivedWallets: [],
   selectedWalletId: null,
@@ -54,6 +45,8 @@ export const useWalletStore = create((set, get) => ({
   },
 
   fetchWallets: async () => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
     set({ isLoading: true, error: null });
     try {
       const res = await walletService.getWallets(true);
@@ -76,16 +69,13 @@ export const useWalletStore = create((set, get) => ({
       } else {
         throw new Error(res.message || 'Lỗi tải danh sách ví');
       }
-    } catch (err) {
-      const local = getStoredWallets().map(normalizeWallet);
-      const txns = useTransactionStore.getState()?.transactions || [];
-      const { wallets: calculated } = calculateWalletBalances(local, txns);
-      set({ wallets: calculated, isLoading: false, error: err.message });
-      return { success: false, error: err.message, data: calculated };
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); return { success: false, error: error.message }; }
   },
 
   createWallet: async (data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await walletService.createWallet(data);
@@ -103,25 +93,13 @@ export const useWalletStore = create((set, get) => ({
       } else {
         throw new Error(res.message || 'Tạo ví mới thất bại.');
       }
-    } catch (err) {
-      // Offline fallback
-      const newWallet = normalizeWallet({
-        ...data,
-        id: `local_wallet_${Date.now()}`
-      });
-      const prevWallets = get().wallets.map((w) =>
-        data.isDefault ? { ...w, isDefault: false } : w
-      );
-      const updated = [...prevWallets, newWallet];
-      saveStoredWallets(updated);
-      const txns = useTransactionStore.getState()?.transactions || [];
-      const { wallets: calculated } = calculateWalletBalances(updated, txns);
-      set({ wallets: calculated, isLoading: false });
-      return { success: true, data: newWallet, offline: true, error: err.message };
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   updateWallet: async (id, data) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await walletService.updateWallet(id, data);
@@ -139,13 +117,13 @@ export const useWalletStore = create((set, get) => ({
       const { wallets: calculated } = calculateWalletBalances(updated, txns);
       set({ wallets: calculated, isLoading: false });
       return { success: true, data: updatedWallet };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   deleteWallet: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await walletService.deleteWallet(id);
@@ -161,13 +139,13 @@ export const useWalletStore = create((set, get) => ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   archiveWallet: async (id, options = {}) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await walletService.archiveWallet(id, options);
@@ -184,13 +162,13 @@ export const useWalletStore = create((set, get) => ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true, data: res.data };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   unarchiveWallet: async (id) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await walletService.unarchiveWallet(id);
@@ -200,13 +178,13 @@ export const useWalletStore = create((set, get) => ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true, data: res.data };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   },
 
   transferMoney: async ({ fromWalletId, toWalletId, amount, date, desc, fee }) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
     set({ isLoading: true });
     try {
       const res = await spendingService.createTransaction({
@@ -228,9 +206,7 @@ export const useWalletStore = create((set, get) => ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true, data: res.data };
-    } catch (err) {
-      set({ isLoading: false });
-      throw err;
-    }
+    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
   }
-}));
+});
+});

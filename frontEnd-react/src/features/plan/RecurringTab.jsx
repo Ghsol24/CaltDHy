@@ -10,23 +10,13 @@ import { detectBrandInfo } from '../../utils/brandDetection';
 import { BrandLogoIcon } from '../../utils/brandIcons';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
+import { useTranslation } from '../../i18n/useTranslation';
+import { translateLegacyText } from '../../i18n/legacyTranslations';
 
 const CYCLE_SUFFIXES = {
   monthly: '/ tháng',
   quarterly: '/ quý',
   yearly: '/ năm'
-};
-
-const CATEGORY_TAG_LABELS = {
-  Entertainment: 'Giải trí',
-  'Food & Dining': 'Ăn uống',
-  'Housing & Bills': 'Nhà & Hóa đơn',
-  Shopping: 'Mua sắm',
-  Transportation: 'Đi lại',
-  'Health & Beauty': 'Sức khỏe',
-  Education: 'Học tập',
-  Travel: 'Du lịch',
-  'Other Expense': 'Chi phí khác'
 };
 
 const SORT_OPTIONS = [
@@ -36,6 +26,7 @@ const SORT_OPTIONS = [
 ];
 
 export function RecurringTab() {
+  const { t, label, lang } = useTranslation();
   const { installments, payInstallment, toggleInstallment, deleteInstallment, updateInstallment, isLoading } = useJarStore();
   const { wallets } = useWalletStore();
   const { confirm } = useConfirmStore();
@@ -60,6 +51,24 @@ export function RecurringTab() {
   // Wallet inline selector popover state
   const [openWalletSelectorId, setOpenWalletSelectorId] = useState(null);
   const walletRef = useRef(null);
+  const [pendingActions, setPendingActions] = useState({});
+  const pendingIdsRef = useRef(new Set());
+
+  const beginAction = (id, action) => {
+    if (pendingIdsRef.current.has(id)) return false;
+    pendingIdsRef.current.add(id);
+    setPendingActions((current) => ({ ...current, [id]: action }));
+    return true;
+  };
+
+  const finishAction = (id) => {
+    pendingIdsRef.current.delete(id);
+    setPendingActions((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  };
 
   // Close menus on click outside
   useEffect(() => {
@@ -246,6 +255,7 @@ export function RecurringTab() {
 
   const handlePay = async (item) => {
     setOpenActionMenuId(null);
+    if (!beginAction(item.id, 'pay')) return;
     try {
       await payInstallment(item.id);
       addToast({
@@ -259,11 +269,14 @@ export function RecurringTab() {
         message: err.message || 'Không thể ghi nhận thanh toán.',
         duration: 4000
       });
+    } finally {
+      finishAction(item.id);
     }
   };
 
   const handleToggle = async (item) => {
     setOpenActionMenuId(null);
+    if (!beginAction(item.id, 'toggle')) return;
     try {
       await toggleInstallment(item.id);
       const isNowActive = item.active === false;
@@ -280,40 +293,35 @@ export function RecurringTab() {
         message: err.message || 'Không thể đổi trạng thái.',
         duration: 4000
       });
+    } finally {
+      finishAction(item.id);
     }
   };
 
-  const handleDelete = async (item) => {
+  const handleDelete = (item) => {
     setOpenActionMenuId(null);
-    const confirmed = await confirm({
+    confirm({
       title: 'Xóa khoản định kỳ',
       message: `Bạn có chắc chắn muốn xóa khoản định kỳ "${item.name}" (${formatCurrency(item.amount)}) khỏi hệ thống?`,
       confirmText: 'Xóa khoản',
       cancelText: 'Hủy',
-      confirmVariant: 'danger'
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        if (!beginAction(item.id, 'delete')) return;
+        try {
+          await deleteInstallment(item.id);
+          addToast({ type: 'success', message: `Đã xóa khoản định kỳ "${item.name}".`, duration: 4000 });
+        } finally {
+          finishAction(item.id);
+        }
+      },
     });
-
-    if (confirmed) {
-      try {
-        await deleteInstallment(item.id);
-        addToast({
-          type: 'success',
-          message: `Đã xóa khoản định kỳ "${item.name}".`,
-          duration: 4000
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          message: err.message || 'Không thể xóa khoản định kỳ.',
-          duration: 4000
-        });
-      }
-    }
   };
 
   // Switch wallet directly from custom inline selector
   const handleAssignWallet = async (item, newWalletId) => {
     setOpenWalletSelectorId(null);
+    if (String(item.walletId) === String(newWalletId) || !beginAction(item.id, 'wallet')) return;
     try {
       await updateInstallment(item.id, { walletId: newWalletId });
       addToast({
@@ -327,6 +335,8 @@ export function RecurringTab() {
         message: err.message || 'Không thể cập nhật ví.',
         duration: 3000
       });
+    } finally {
+      finishAction(item.id);
     }
   };
 
@@ -334,6 +344,7 @@ export function RecurringTab() {
 
   return (
     <div className="recurring-view-v2-container" role="region" aria-label="Khoản chi định kỳ và trả góp">
+      <h2 className="u-sr-only recurring-route-heading">Khoản định kỳ</h2>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
       <div className="recurring-top-bar-card">
         <div className="recurring-bar-stats-group">
@@ -530,17 +541,20 @@ export function RecurringTab() {
 
             // Assigned wallet
             const assignedWallet = wallets.find((w) => String(w.id) === String(item.walletId)) || wallets[0];
-            const categoryLabel = CATEGORY_TAG_LABELS[item.category] || item.category || brandInfo.categoryDefault;
+            const categoryLabel = label(item.category || brandInfo.categoryDefault);
+            const noteLabel = translateLegacyText(lang, item.note || item.desc || brandInfo.noteDefault || '');
 
             const isPaidThisMonth = tierInfo.isPaidThisMonth;
 
             const isMenuOpen = openActionMenuId === item.id;
             const isWalletMenuOpen = openWalletSelectorId === item.id;
+            const pendingAction = pendingActions[item.id];
 
             return (
               <div
                 key={item.id}
-                className={`recurring-row-card ${!isActive ? 'is-paused' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''}`}
+                className={`recurring-row-card ${!isActive ? 'is-paused' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''} ${pendingAction ? 'is-processing' : ''}`}
+                aria-busy={Boolean(pendingAction)}
               >
                 {/* 1. Brand Logo Tile */}
                 <div className="recurring-row-logo-col">
@@ -569,13 +583,13 @@ export function RecurringTab() {
                       <span>Ngày thanh toán: <strong>{dayOfMonth} hàng tháng</strong></span>
                     </span>
 
-                    {(item.note || item.desc || brandInfo.noteDefault) && (
+                    {noteLabel && (
                       <span className="recurring-meta-item recurring-meta-note">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
                           <line x1="7" y1="7" x2="7.01" y2="7" />
                         </svg>
-                        <span>{item.note || item.desc || brandInfo.noteDefault}</span>
+                        <span>{noteLabel}</span>
                       </span>
                     )}
                   </div>
@@ -589,11 +603,12 @@ export function RecurringTab() {
                       type="button"
                       className="recurring-wallet-chip-btn"
                       onClick={() => setOpenWalletSelectorId(isWalletMenuOpen ? null : item.id)}
+                      disabled={Boolean(pendingAction)}
                       aria-expanded={isWalletMenuOpen}
                       title={assignedWallet?.name ? `Ví trừ tiền: ${assignedWallet.name}` : 'Chọn ví trừ tiền'}
                     >
                       <span className="wallet-chip-icon" aria-hidden="true">
-                        <WalletOutlineIcon type={assignedWallet?.type} size={16} color="currentColor" />
+                        {pendingAction === 'wallet' ? <span className="btn-spinner" /> : <WalletOutlineIcon type={assignedWallet?.type} size={16} color="currentColor" />}
                       </span>
                       <span className="wallet-chip-name">{assignedWallet?.name || 'Chọn ví'}</span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -642,6 +657,7 @@ export function RecurringTab() {
                 {/* 4. Due Status Countdown Pill */}
                 <div className="recurring-row-due-col">
                   <div className={`recurring-due-pill-box due-${tierInfo.tier}`}>
+                    {(pendingAction === 'pay' || pendingAction === 'toggle') && <span className="btn-spinner" role="status" aria-label={t('common.processing')} />}
                     {tierInfo.tier === 'paid' ? (
                       <>
                         <div className="due-pill-top">
@@ -694,6 +710,7 @@ export function RecurringTab() {
                       type="button"
                       className="recurring-dots-action-btn"
                       onClick={() => setOpenActionMenuId(isMenuOpen ? null : item.id)}
+                      disabled={Boolean(pendingAction)}
                       aria-expanded={isMenuOpen}
                       aria-haspopup="true"
                       aria-label={`Tùy chọn cho khoản ${item.name}`}

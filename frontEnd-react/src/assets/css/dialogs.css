@@ -144,6 +144,16 @@
   color: var(--text-primary);
 }
 
+@media (max-width: 900px) {
+  .toast-region {
+    left: 16px;
+    right: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-width: none;
+  }
+}
+
 /* ── Confirm Dialog ── */
 .confirm-dialog-backdrop {
   position: fixed;
@@ -151,7 +161,8 @@
   background: rgba(23, 49, 38, 0.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: var(--z-modal, 200);
+  /* Confirmation may be opened from another modal (for example Settings). */
+  z-index: 1200;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -215,6 +226,13 @@
   line-height: 1.5;
 }
 
+.confirm-dialog-error {
+  margin: 0;
+  color: var(--danger, #d43d3d);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .confirm-dialog-actions {
   display: flex;
   align-items: center;
@@ -230,6 +248,22 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--dur-fast) ease;
+}
+
+.confirm-dialog-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.is-deleting {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.recurring-row-card.is-processing {
+  opacity: 0.75;
+  transition: opacity 200ms ease;
 }
 
 /* Button variants */
@@ -466,7 +500,7 @@
   background: rgba(23, 49, 38, 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  z-index: var(--z-modal, 200);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2232,5 +2266,3 @@
     grid-template-columns: 1fr;
   }
 }
-
-

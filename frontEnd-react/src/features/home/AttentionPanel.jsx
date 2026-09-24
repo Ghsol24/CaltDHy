@@ -8,8 +8,7 @@ import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/f
 import { TargetOutlineIcon } from '../../components/ui/AppIcons';
 
 export const AttentionPanel = React.memo(function AttentionPanel() {
-  const setActiveView = useSpendingStore((s) => s.setActiveView);
-  const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
   const jars = useJarStore((s) => s.jars);
@@ -33,7 +32,6 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     warningCategory,
     daysLeft,
     upcomingBillsCount,
-    activeInstallmentsCount,
     jarsCount
   } = React.useMemo(() => {
     const stats = calculateMonthlyStats(transactions, currentMonthPrefix);
@@ -122,23 +120,20 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
       warningCategory: warningCat,
       daysLeft: dLeft,
       upcomingBillsCount: upcomingCount,
-      activeInstallmentsCount: upcomingCount,
       jarsCount: jCount
     };
   }, [transactions, budgets, jars, installments, wallets, currentMonthPrefix]);
 
   const handleGoToBudgets = () => {
-    setActiveView('plan');
-    setPlanSubTab('budgets');
+    navigateTo('plan', 'budgets');
   };
 
   const handleGoToRecurring = () => {
-    setActiveView('plan');
-    setPlanSubTab('recurring');
+    navigateTo('plan', 'recurring');
   };
 
   const handleGoToJars = () => {
-    setActiveView('jars');
+    navigateTo('jars', 'goals');
   };
 
   // Dynamic context-aware Callout Card configuration
@@ -251,7 +246,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
                 <div className="home-plan-item-header">
                   <span className="home-plan-item-name">{item.category}</span>
                   <span className="home-plan-item-amounts">
-                    {formatCurrency(item.spent).replace(' đ', '')} / {formatCurrency(item.limit)}
+                    {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
                   </span>
                 </div>
                 <div className="home-plan-progress-track">
@@ -270,7 +265,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
               <div className="home-plan-item-header">
                 <span className="home-plan-item-name">{topJar.name}</span>
                 <span className="home-plan-item-amounts">
-                  {formatCurrency(topJar.current).replace(' đ', '')} / {formatCurrency(topJar.target)}
+                  {formatCurrency(topJar.current)} / {formatCurrency(topJar.target)}
                 </span>
               </div>
               <div className="home-plan-progress-track">

@@ -1,13 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from './stores/useAuthStore';
-import { LandingPage } from './pages/LandingPage';
-import { LoginPage } from './pages/LoginPage';
-import { SignupPage } from './pages/SignupPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { VerifyEmailPage } from './pages/VerifyEmailPage';
-import { SpendingPage } from './pages/SpendingPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { AppShellSkeleton } from './components/layout/AppShellSkeleton';
+import { useTranslation } from './i18n/useTranslation';
+import { LocalizationObserver } from './i18n/LocalizationObserver';
+
+const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
+const LandingPage = lazyNamed(() => import('./pages/LandingPage'), 'LandingPage');
+const LoginPage = lazyNamed(() => import('./pages/LoginPage'), 'LoginPage');
+const SignupPage = lazyNamed(() => import('./pages/SignupPage'), 'SignupPage');
+const ResetPasswordPage = lazyNamed(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
+const VerifyEmailPage = lazyNamed(() => import('./pages/VerifyEmailPage'), 'VerifyEmailPage');
+const SpendingPage = lazyNamed(() => import('./pages/SpendingPage'), 'SpendingPage');
 
 function RedirectWithQuery({ to }) {
   const location = useLocation();
@@ -20,7 +25,7 @@ function AuthExpirationListener() {
 
   useEffect(() => {
     const handleAuthExpired = () => {
-      useAuthStore.getState().logout();
+      useAuthStore.getState().expire();
       if (location.pathname.startsWith('/spending')) {
         navigate('/login?expired=1', { replace: true });
       }
@@ -33,10 +38,22 @@ function AuthExpirationListener() {
   return null;
 }
 
+function RouteLoadingFallback() {
+  const { t } = useTranslation();
+  const location = useLocation();
+  if (location.pathname.startsWith('/spending')) {
+    return <AppShellSkeleton />;
+  }
+  return <div className="route-loading" role="status" aria-live="polite">{t('common.loading')}</div>;
+}
+
 export default function App() {
+  useEffect(() => { void useAuthStore.getState().initialize(); }, []);
   return (
     <BrowserRouter>
+      <LocalizationObserver />
       <AuthExpirationListener />
+      <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/index.html" element={<RedirectWithQuery to="/" />} />
@@ -54,7 +71,7 @@ export default function App() {
         <Route path="/verify-email.html" element={<RedirectWithQuery to="/verify-email" />} />
         
         <Route
-          path="/spending"
+          path="/spending/*"
           element={
             <ProtectedRoute>
               <SpendingPage />
@@ -65,13 +82,14 @@ export default function App() {
           path="/spending.html"
           element={
             <ProtectedRoute>
-              <RedirectWithQuery to="/spending" />
+              <RedirectWithQuery to="/spending/home" />
             </ProtectedRoute>
           }
         />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

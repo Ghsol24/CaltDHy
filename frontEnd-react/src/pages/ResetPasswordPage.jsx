@@ -8,8 +8,10 @@ import {
   AlertTriangleOutlineIcon,
   CheckOutlineIcon
 } from '../components/ui/AppIcons';
+import { useTranslation } from '../i18n/useTranslation';
 
 export const ResetPasswordPage = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email');
@@ -38,7 +40,7 @@ export const ResetPasswordPage = () => {
     setForgotSuccess('');
 
     if (!isForgotEmailValid) {
-      setForgotError('Email không hợp lệ.');
+      setForgotError(t('auth.invalidEmail'));
       return;
     }
 
@@ -47,12 +49,12 @@ export const ResetPasswordPage = () => {
     try {
       const data = await authService.forgotPassword({ email: forgotEmail.trim() });
       if (data.success) {
-        setForgotSuccess(data.message || 'Đã gửi liên kết khôi phục mật khẩu tới email của bạn.');
+        setForgotSuccess(data.message || t('auth.resetEmailSent'));
       } else {
-        setForgotError(data.message || 'Lỗi gửi yêu cầu.');
+        setForgotError(data.message || t('auth.requestError'));
       }
     } catch (err) {
-      setForgotError(err.message || 'Không thể kết nối với máy chủ.');
+      setForgotError(err.message || t('auth.connectionError'));
     } finally {
       setIsForgotSubmitting(false);
     }
@@ -63,12 +65,12 @@ export const ResetPasswordPage = () => {
     setResetError('');
     setResetSuccess('');
 
-    if (newPassword.length < 6) {
-      setResetError('Mật khẩu phải có ít nhất 6 ký tự.');
+    if (newPassword.length < 12) {
+      setResetError(t('auth.passwordMin'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setResetError('Mật khẩu xác nhận không khớp.');
+      setResetError(t('auth.passwordMismatch'));
       return;
     }
 
@@ -82,16 +84,16 @@ export const ResetPasswordPage = () => {
       });
 
       if (data.success) {
-        setResetSuccess(data.message || 'Mật khẩu đã đặt lại thành công!');
+        setResetSuccess(data.message || t('auth.resetSuccess'));
         setTimeout(() => {
           navigate('/login');
         }, 2000);
       } else {
-        setResetError(data.message || 'Có lỗi xảy ra.');
+        setResetError(data.message || t('error.generic'));
         setIsResetSubmitting(false);
       }
     } catch (err) {
-      setResetError(err.message || 'Không thể kết nối với máy chủ.');
+      setResetError(err.message || t('auth.connectionError'));
       setIsResetSubmitting(false);
     }
   };
@@ -105,18 +107,18 @@ export const ResetPasswordPage = () => {
       <div className="pg-screw s-bl" aria-hidden="true"></div>
       <div className="pg-screw s-br" aria-hidden="true"></div>
 
-      <StatusBar label={isResetMode ? 'Đặt Lại Mật Khẩu' : 'Quên Mật Khẩu'} />
+      <StatusBar label={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')} />
 
       <main>
         <IndustrialPanel
-          eyebrow="CaltDHy Account"
-          title={isResetMode ? 'Đặt Lại' : 'Quên'}
-          titleHighlight="MẬT KHẨU"
+          eyebrow={t('auth.account')}
+          title={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')}
+          titleHighlight=""
         >
           <p id="modHint" style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginBottom: '20px' }}>
             {isResetMode
-              ? 'Nhập mật khẩu mới cho tài khoản của bạn. Mật khẩu tối thiểu 6 ký tự.'
-              : 'Nhập địa chỉ email đăng ký để nhận liên kết đặt lại mật khẩu.'}
+              ? t('auth.resetHint')
+              : t('auth.forgotHint')}
           </p>
 
           {!isResetMode ? (
@@ -124,7 +126,7 @@ export const ResetPasswordPage = () => {
               <FloatingInput
                 id="emailForgot"
                 type="email"
-                label="Email Address"
+                label={t('auth.email')}
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 isValid={isForgotEmailValid}
@@ -146,7 +148,7 @@ export const ResetPasswordPage = () => {
 
               <button type="submit" className={`btn-cta ${isForgotSubmitting ? 'loading' : ''}`} disabled={isForgotSubmitting}>
                 <span className="spinner" aria-hidden="true"></span>
-                <span className="btn-text">{isForgotSubmitting ? 'ĐANG GỬI YÊU CẦU...' : 'GỬI YÊU CẦU'}</span>
+                <span className="btn-text">{isForgotSubmitting ? t('auth.sendingRequest') : t('auth.sendRequest')}</span>
               </button>
             </form>
           ) : (
@@ -154,7 +156,7 @@ export const ResetPasswordPage = () => {
               <FloatingInput
                 id="newPass"
                 type="password"
-                label="Mật khẩu mới (ít nhất 6 ký tự)"
+                label={t('auth.newPassword')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 isValid={newPassword.length >= 6}
@@ -165,7 +167,7 @@ export const ResetPasswordPage = () => {
               <FloatingInput
                 id="confirmPass"
                 type="password"
-                label="Xác nhận mật khẩu mới"
+                label={t('auth.confirmPassword')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 isValid={confirmPassword.length >= 6 && confirmPassword === newPassword}
@@ -187,20 +189,20 @@ export const ResetPasswordPage = () => {
 
               <button type="submit" className={`btn-cta ${isResetSubmitting ? 'loading' : ''}`} disabled={isResetSubmitting}>
                 <span className="spinner" aria-hidden="true"></span>
-                <span className="btn-text">{isResetSubmitting ? 'ĐANG THIẾT LẬP...' : 'ĐẶT LẠI MẬT KHẨU'}</span>
+                <span className="btn-text">{isResetSubmitting ? t('auth.resetting') : t('auth.resetPassword')}</span>
               </button>
             </form>
           )}
 
           <div className="divider">
-            <span>OR</span>
+            <span>{t('auth.or')}</span>
           </div>
 
           <Link to="/login" className="btn-ghost">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            BACK TO LOGIN
+            {t('auth.backLogin')}
           </Link>
         </IndustrialPanel>
       </main>
