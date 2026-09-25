@@ -54,7 +54,7 @@ try {
     if (process.env.COOKIE_SECURE && !['true', 'false'].includes(process.env.COOKIE_SECURE)) {
         throw new Error('Invalid cookie configuration.');
     }
-    const registrationMode = process.env.REGISTRATION_MODE || (mode === 'production' ? 'invite' : 'open');
+    const registrationMode = process.env.REGISTRATION_MODE || 'open';
     if (!['open', 'invite'].includes(registrationMode)) throw new Error('Invalid registration configuration.');
     const onRender = process.env.RENDER === 'true';
     const port = integerSetting('PORT', onRender ? 10000 : 24127, 65535);

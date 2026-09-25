@@ -21,7 +21,7 @@ services:
       - key: COOKIE_SECURE
         value: "true"
       - key: REGISTRATION_MODE
-        value: invite
+        value: open
       - key: TRUST_PROXY_HOPS
         value: "1"
       - key: CLIENT_URL
