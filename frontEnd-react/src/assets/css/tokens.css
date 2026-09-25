@@ -4,8 +4,13 @@
 :root {
   /* ── Core Color Tokens (v2 Mint Clean Theme Spec) ── */
   --color-brand-700: #008B57;
-  --color-action-contrast-bg: #007547;
+  --color-action-bg: #007547;
+  --color-action-hover-bg: #00663E;
+  --color-action-contrast-bg: var(--color-action-bg);
   --color-on-action: #FFFFFF;
+  --color-link: #007547;
+  --color-active-text: var(--color-link);
+  --color-icon: #607086;
   --color-brand-600: #009A5D;
   --color-brand-100: #E6F7EF;
   --color-brand-50: #F1FBF6;
@@ -16,15 +21,17 @@
   --color-border-strong: #C9DED3;
   --color-text: #101B36;
   --color-text-secondary: #607086;
-  --color-text-muted: #8A98A9;
-  --color-danger: #E34B45;
+  --color-text-muted: #64748B;
+  --color-danger: #C53030;
   --color-danger-50: #FFF0EF;
-  --color-warning: #D9921E;
+  --color-warning: #A34706;
   --color-info-50: #ECF8F1;
   --color-overlay: rgba(16, 27, 54, 0.48);
+  --color-overlay-nested: rgba(16, 27, 54, 0.28);
+  --dialog-overlay-blur: blur(6px);
 
   /* ── Dedicated Semantic Financial Indicators (Default Mint) ── */
-  --color-success: #008B57;
+  --color-success: #007547;
   --color-success-bg: #E6F7EF;
   --color-success-border: #C9DED3;
   --color-danger-bg: #FFF0EF;
@@ -50,15 +57,15 @@
   --text-muted: var(--color-text-muted);
 
   /* ── Primary Mint / Emerald Brand Tokens ── */
-  --primary: var(--color-brand-700);
-  --primary-hover: var(--color-brand-600);
+  --primary: var(--color-action-bg);
+  --primary-hover: var(--color-action-hover-bg);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --color-brand-on-dark: var(--primary);
 
   /* ── Status Tokens: Warning ── */
   --warning: var(--color-warning);
-  --warning-bg: #FEF3C7;
+  --warning-bg: var(--color-warning-bg);
   --warning-text: #92400E;
 
   /* ── Status Tokens: Danger ── */
@@ -142,6 +149,8 @@
   --z-fab: 90;
   --z-header: 100;
   --z-modal: 200;
+  --z-dialog: 1000;
+  --z-dialog-nested: 1200;
   --z-dropdown: 300;
   --z-toast: 400;
 
@@ -180,23 +189,31 @@
 /* ── 1. DARK THEME (CaltDHy Dark Technical Panel — Obsidian & Cobalt Accent) ── */
 html.dark-theme {
   --color-brand-700: #2563EB;
-  --color-action-contrast-bg: #2563EB;
+  --color-action-bg: #2563EB;
+  --color-action-hover-bg: #1D4ED8;
+  --color-action-contrast-bg: var(--color-action-bg);
+  --color-link: #60A5FA;
+  --color-active-text: var(--color-link);
+  --color-icon: #94A3B8;
   --color-brand-600: #1D4ED8;
   --color-brand-100: rgba(96, 165, 250, 0.18);
   --color-brand-50: rgba(96, 165, 250, 0.09);
-  --color-brand-on-dark: #60A5FA;
+  --color-brand-on-dark: var(--color-link);
   --color-canvas: #090A0F;
   --color-surface: #12131C;
   --color-surface-muted: #1A1C29;
   --color-border: #26293A;
   --color-border-strong: #3D425A;
   --color-text: #F3F4F6;
-  --color-text-secondary: #8F9CAE;
-  --color-text-muted: #64748B;
+  --color-text-secondary: #B4C0CF;
+  --color-text-muted: #94A3B8;
   --color-danger: #FF4757;
   --color-danger-50: rgba(255, 71, 87, 0.14);
   --color-warning: #F59E0B;
-  --color-overlay: rgba(0, 0, 0, 0.78);
+  --warning-text: #FBBF24;
+  --danger-text: #FF6B7A;
+  --color-overlay: rgba(3, 5, 12, 0.52);
+  --color-overlay-nested: rgba(3, 5, 12, 0.32);
 
   /* ── Dedicated Semantic Financial Indicators (Dark Obsidian) ── */
   --color-success: #10B981;
@@ -220,8 +237,8 @@ html.dark-theme {
   --text-primary: var(--color-text);
   --text-secondary: var(--color-text-secondary);
   --text-muted: var(--color-text-muted);
-  --primary: var(--color-brand-700);
-  --primary-hover: var(--color-brand-600);
+  --primary: var(--color-action-bg);
+  --primary-hover: var(--color-action-hover-bg);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --accent: #2563EB;
@@ -259,7 +276,12 @@ html.dark-theme {
 /* ── 2. LIGHT THEME (Minimalist Modern SaaS — Clean Slate & Indigo / Mint Accent) ── */
 html.light-theme {
   --color-brand-700: #4F46E5;
-  --color-action-contrast-bg: #4F46E5;
+  --color-action-bg: #4F46E5;
+  --color-action-hover-bg: #4338CA;
+  --color-action-contrast-bg: var(--color-action-bg);
+  --color-link: #4F46E5;
+  --color-active-text: var(--color-link);
+  --color-icon: #5B6B7E;
   --color-brand-600: #6366F1;
   --color-brand-100: rgba(79, 70, 229, 0.12);
   --color-brand-50: rgba(79, 70, 229, 0.05);
@@ -270,14 +292,15 @@ html.light-theme {
   --color-border-strong: #CBD5E1;
   --color-text: #0F172A;
   --color-text-secondary: #475569;
-  --color-text-muted: #64748B;
-  --color-danger: #DC2626;
+  --color-text-muted: #5B6B7E;
+  --color-danger: #C53030;
   --color-danger-50: #FEF2F2;
-  --color-warning: #D97706;
+  --color-warning: #A34706;
   --color-overlay: rgba(15, 23, 42, 0.48);
+  --color-overlay-nested: rgba(15, 23, 42, 0.28);
 
   /* ── Dedicated Semantic Financial Indicators (Light Minimalist SaaS) ── */
-  --color-success: #059669;
+  --color-success: #047857;
   --color-success-bg: #ECFDF5;
   --color-success-border: #A7F3D0;
   --color-danger-bg: #FEF2F2;
@@ -298,8 +321,8 @@ html.light-theme {
   --text-primary: var(--color-text);
   --text-secondary: var(--color-text-secondary);
   --text-muted: var(--color-text-muted);
-  --primary: var(--color-brand-700);
-  --primary-hover: var(--color-brand-600);
+  --primary: var(--color-action-bg);
+  --primary-hover: var(--color-action-hover-bg);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --border: var(--color-border);
@@ -320,7 +343,12 @@ html.light-theme {
 /* ── 3. CREAM THEME (Warm Parchment / Cozy Paper) ── */
 html.cream-theme {
   --color-brand-700: #C0531E;
-  --color-action-contrast-bg: #C0531E;
+  --color-action-bg: #C0531E;
+  --color-action-hover-bg: #A64517;
+  --color-action-contrast-bg: var(--color-action-bg);
+  --color-link: #A64517;
+  --color-active-text: var(--color-link);
+  --color-icon: #755B46;
   --color-brand-600: #D96024;
   --color-brand-100: #F6E2D5;
   --color-brand-50: #FBF2EB;
@@ -331,14 +359,15 @@ html.cream-theme {
   --color-border-strong: #C8B8A4;
   --color-text: #2C1D10;
   --color-text-secondary: #584133;
-  --color-text-muted: #8C7564;
-  --color-danger: #D63E3E;
+  --color-text-muted: #755B46;
+  --color-danger: #B91C1C;
   --color-danger-50: #FDF0F0;
-  --color-warning: #B57D1A;
+  --color-warning: #84560F;
   --color-overlay: rgba(44, 29, 16, 0.5);
+  --color-overlay-nested: rgba(44, 29, 16, 0.28);
 
   /* ── Dedicated Semantic Financial Indicators (Cream Warm Paper - Distinct from terracotta) ── */
-  --color-success: #1E7E34;
+  --color-success: #17642B;
   --color-success-bg: rgba(30, 126, 52, 0.12);
   --color-success-border: rgba(30, 126, 52, 0.26);
   --color-danger-bg: rgba(214, 62, 62, 0.10);
@@ -359,8 +388,8 @@ html.cream-theme {
   --text-primary: var(--color-text);
   --text-secondary: var(--color-text-secondary);
   --text-muted: var(--color-text-muted);
-  --primary: var(--color-brand-700);
-  --primary-hover: var(--color-brand-600);
+  --primary: var(--color-action-bg);
+  --primary-hover: var(--color-action-hover-bg);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --border: var(--color-border);
@@ -381,22 +410,28 @@ html.cream-theme {
 /* ── 3. GREEN THEME (Forest Emerald / Eco Mint) ── */
 html.green-theme {
   --color-brand-700: #059669;
-  --color-action-contrast-bg: #047857;
+  --color-action-bg: #047857;
+  --color-action-hover-bg: #065F46;
+  --color-action-contrast-bg: var(--color-action-bg);
+  --color-link: #047857;
+  --color-active-text: var(--color-link);
+  --color-icon: #4C745F;
   --color-brand-600: #10B981;
   --color-brand-100: #D1FAE5;
   --color-brand-50: #ECFDF5;
-  --color-canvas: #EEF8F3;
+  --color-canvas: #F0F9F4;
   --color-surface: #FFFFFF;
   --color-surface-muted: #E2F2E9;
   --color-border: #B2DFC8;
   --color-border-strong: #84C7A3;
   --color-text: #0E2E1E;
   --color-text-secondary: #3D6A56;
-  --color-text-muted: #6B9582;
-  --color-danger: #DC2626;
+  --color-text-muted: #4C745F;
+  --color-danger: #C53030;
   --color-danger-50: #FEF2F2;
-  --color-warning: #D97706;
+  --color-warning: #A34706;
   --color-overlay: rgba(14, 46, 30, 0.5);
+  --color-overlay-nested: rgba(14, 46, 30, 0.28);
 
   /* ── Dedicated Semantic Financial Indicators (Green Forest Emerald) ── */
   --color-success: #047857;
@@ -420,8 +455,8 @@ html.green-theme {
   --text-primary: var(--color-text);
   --text-secondary: var(--color-text-secondary);
   --text-muted: var(--color-text-muted);
-  --primary: var(--color-brand-700);
-  --primary-hover: var(--color-brand-600);
+  --primary: var(--color-action-bg);
+  --primary-hover: var(--color-action-hover-bg);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --border: var(--color-border);

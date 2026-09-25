@@ -26,7 +26,7 @@ html.dark-theme .guide-vent {
    LIGHT THEME — Minimalist Modern SaaS
    ============================================================ */
 html.light-theme {
-  --bg: #FAFAFB;
+  --bg: var(--color-canvas);
   --surface: #FFFFFF;
   --surface2: #F4F4F5;
   --recessed: #F8F8FA;
@@ -260,7 +260,7 @@ html.light-theme .budget-card__pct {
 
 /* Modals */
 html.light-theme .modal-overlay {
-  background: rgba(15,23,42,.4);
+  background: var(--color-overlay);
 }
 
 html.light-theme .modal-card {
@@ -618,7 +618,7 @@ html.light-theme .user-chip {
 }
 
 .theme-card[aria-pressed="true"] .theme-card__name {
-  color: var(--accent);
+  color: var(--color-active-text);
 }
 
 /* SVG check icon — shown only when active */
@@ -628,7 +628,7 @@ html.light-theme .user-chip {
   right: 8px;
   width: 14px;
   height: 14px;
-  color: var(--accent);
+  color: var(--color-active-text);
   opacity: 0;
   transition: opacity 200ms, transform 200ms cubic-bezier(.34,1.56,.64,1);
   transform: scale(.6);
@@ -645,7 +645,7 @@ html.light-theme .user-chip {
    CREAM THEME — Warm Parchment
    ============================================================ */
 html.cream-theme {
-  --bg:       #F5EDE0;
+  --bg:       var(--color-canvas);
   --surface:  #FDF8F2;
   --surface2: #EDE4D8;
   --recessed: #FAF3EA;
@@ -837,7 +837,7 @@ html.cream-theme .budget-bar__fill--warn { background: #B57D1A; box-shadow: none
 html.cream-theme .budget-bar__fill--over { background: #C0531E; box-shadow: none; }
 html.cream-theme .budget-card__pct { background: #EDE4D8; color: var(--muted); }
 
-html.cream-theme .modal-overlay { background: rgba(44,29,16,.42); }
+html.cream-theme .modal-overlay { background: var(--color-overlay); }
 html.cream-theme .modal-card {
   background: #FDF8F2;
   border: 1px solid #E0D4C4;
@@ -974,7 +974,7 @@ html.cream-theme .nk--submit { background: #2D7A3E; color: #fff; box-shadow: 0 4
    GREEN (MINT / SAGE) THEME — Fresh Emerald
    ============================================================ */
 html.green-theme {
-  --bg:       #F0F9F4;
+  --bg:       var(--color-canvas);
   --surface:  #FFFFFF;
   --surface2: #E3F2E9;
   --recessed: #F7FCFA;
@@ -1168,7 +1168,7 @@ html.green-theme .budget-bar__fill--warn { background: #C07800; box-shadow: none
 html.green-theme .budget-bar__fill--over { background: #D63E3E; box-shadow: none; }
 html.green-theme .budget-card__pct { background: #E3F2E9; color: #4D7A68; }
 
-html.green-theme .modal-overlay { background: rgba(14,46,30,.38); }
+html.green-theme .modal-overlay { background: var(--color-overlay); }
 html.green-theme .modal-card {
   background: #FFFFFF;
   border: 1px solid #B2DFC8;
@@ -2730,5 +2730,3 @@ html.dark-theme .custom-wallet-badge {
   background: rgba(37, 99, 235, 0.25) !important;
   color: #60A5FA !important;
 }
-
-

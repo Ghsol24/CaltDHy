@@ -4,38 +4,29 @@
    ============================================================ */
 
 /* ============================================================
-   DESIGN TOKEN SYSTEM — Industrial Skeuomorphism
+   Landing-only decorative tokens
    ============================================================ */
-:root {
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'IBM Plex Mono', SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+.landing-page {
   --btn-radius: var(--r-md, 8px);
   --btn-font: var(--font-sans);
   --btn-weight: 600;
-  --chassis: #FAFAFB;
-  --panel: #FFFFFF;
-  --recessed: #F8F8FA;
-  --text-primary: #0F172A;
-  --text-muted: #64748B;
-  --accent: #FF4B72;
-  --accent-dark: #E63660;
-  --accent-glow: rgba(255, 75, 114, 0.35);
+  --chassis: var(--bg);
+  --panel: var(--surface);
+  --recessed: var(--surface-subtle);
+  --accent: var(--color-action-bg);
+  --accent-dark: var(--primary-hover);
+  --accent-glow: color-mix(in srgb, var(--color-link) 35%, transparent);
   --border-shadow: rgba(0, 0, 0, 0.04);
   --border-light: rgba(255, 255, 255, 0.8);
-  --led-green: #10B981;
-  --led-glow: rgba(16, 185, 129, 0.5);
+  --led-green: var(--color-success);
+  --led-glow: color-mix(in srgb, var(--color-success) 50%, transparent);
 
   /* Neumorphic shadow recipes */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   --shadow-pressed: inset 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.02);
   --shadow-accent: 0 4px 12px rgba(255, 75, 114, 0.25);
 
   /* Radii */
-  --r-md: 8px;
-  --r-lg: 16px;
-  --r-xl: 24px;
-  --r-full: 9999px;
 }
 
 /* ============================================================
@@ -55,17 +46,6 @@
 @keyframes heroFadeUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ============================================================
-   RESET & BASE
-   ============================================================ */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 .landing-page {
@@ -217,7 +197,7 @@ body.dark-theme .bg-orb--2 {
 }
 
 .brand-name span {
-  color: var(--accent);
+  color: var(--color-link);
   text-shadow: 0 0 30px rgba(255, 75, 114, .35), 0 0 60px rgba(255, 75, 114, .15);
   display: inline-block;
   transition: text-shadow 300ms ease;
@@ -281,7 +261,7 @@ body.dark-theme .bg-orb--2 {
 
 /* Accent color modifier — replaces inline style="color:var(--accent)" */
 .metric-value--accent {
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 
@@ -392,7 +372,7 @@ body.dark-theme .bg-orb--2 {
 }
 
 .btn-signup:hover {
-  color: var(--accent);
+  color: var(--color-link);
   transform: translateY(-2px);
 }
 
@@ -638,7 +618,7 @@ body.dark-theme .bg-orb--2 {
 }
 
 .sm-value.expense {
-  color: var(--accent);
+  color: var(--color-danger);
 }
 
 /* Mini transaction bars */
@@ -718,7 +698,7 @@ body.dark-theme .bg-orb--2 {
 }
 
 .txn-amount.neg {
-  color: var(--accent);
+  color: var(--color-danger);
 }
 
 .txn-amount.pos {
@@ -763,20 +743,11 @@ body.dark-theme .bg-orb--2 {
 /* ============================================================
    DARK THEME OVERRIDE
    ============================================================ */
-body.dark-theme {
-  --chassis: #090A0F;
-  --panel: #12131C;
-  --recessed: #05060A;
-  --text-primary: #F3F4F6;
-  --text-muted: #8F9CAE;
+body.dark-theme .landing-page {
   --border-shadow: rgba(0, 0, 0, .60);
   --border-light: rgba(255, 255, 255, .04);
-  --shadow-card: 0 8px 30px rgba(0, 0, 0, .60);
   --shadow-float: 0 20px 48px rgba(0, 0, 0, .80);
   --shadow-pressed: inset 0 2px 8px rgba(0, 0, 0, .70);
-  --accent: #2563EB;
-  --accent-dark: #1D4ED8;
-  --accent-glow: rgba(96, 165, 250, 0.35);
   --shadow-accent: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
@@ -831,7 +802,7 @@ body.dark-theme .metric-label {
   color: #8896a8;
 }
 
-body.dark-theme .status-bar {
+body.dark-theme .landing-page .status-bar {
   background: #353b3c;
   background-image: linear-gradient(180deg, rgba(255,255,255,.04) 0%, transparent 100%);
 }
@@ -883,7 +854,7 @@ body.dark-theme .vent-slot {
 }
 
 .idx-settings-btn:hover {
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 .idx-settings-btn:active {
@@ -1049,8 +1020,8 @@ body.dark-theme .idx-screw {
 }
 
 .idx-lang-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-action-bg);
+  color: var(--color-link);
 }
 
 .idx-lang-wrap {
@@ -1115,8 +1086,8 @@ body.dark-theme .idx-screw {
 }
 
 .idx-theme-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-action-bg);
+  color: var(--color-link);
 }
 
 /* Done button */

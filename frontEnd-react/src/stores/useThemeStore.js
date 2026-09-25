@@ -1,7 +1,18 @@
 import { create } from 'zustand';
 
 const KEY = 'caltdhy_theme';
-const ALL_CLASSES = ['dark-theme', 'light-theme', 'cream-theme', 'green-theme'];
+const THEMES = ['dark', 'light', 'cream', 'green'];
+const ALL_CLASSES = THEMES.map((theme) => `${theme}-theme`);
+
+const normalizeTheme = (theme) => THEMES.includes(theme) ? theme : 'dark';
+
+const updateThemeColor = () => {
+  const root = document.documentElement;
+  const styles = getComputedStyle(root);
+  const color = styles.getPropertyValue('--bg').trim()
+    || styles.getPropertyValue('--theme-bootstrap-background').trim();
+  if (color) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
+};
 
 const applyThemeToDOM = (theme) => {
   const root = document.documentElement;
@@ -9,17 +20,16 @@ const applyThemeToDOM = (theme) => {
     root.classList.remove(c);
     if (document.body) document.body.classList.remove(c);
   });
-  if (theme) {
-    const themeClass = `${theme}-theme`;
-    root.classList.add(themeClass);
-    if (document.body) document.body.classList.add(themeClass);
-  }
+  const themeClass = `${normalizeTheme(theme)}-theme`;
+  root.classList.add(themeClass);
+  if (document.body) document.body.classList.add(themeClass);
+  updateThemeColor();
 };
 
 const getInitialTheme = () => {
   try {
     const saved = localStorage.getItem(KEY);
-    if (saved && ['dark', 'light', 'cream', 'green'].includes(saved)) {
+    if (THEMES.includes(saved)) {
       applyThemeToDOM(saved);
       return saved;
     }
@@ -32,11 +42,12 @@ export const useThemeStore = create((set, get) => ({
   theme: getInitialTheme(),
 
   setTheme: (theme) => {
+    const next = normalizeTheme(theme);
     try {
-      localStorage.setItem(KEY, theme);
+      localStorage.setItem(KEY, next);
     } catch {}
-    applyThemeToDOM(theme);
-    set({ theme });
+    applyThemeToDOM(next);
+    set({ theme: next });
   },
 
   toggleTheme: () => {

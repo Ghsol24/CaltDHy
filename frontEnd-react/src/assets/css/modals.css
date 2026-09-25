@@ -4,13 +4,13 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, .8);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-dialog);
   padding: 24px;
   /* Smooth fade using opacity + visibility */
   opacity: 0;
@@ -38,6 +38,16 @@
 .archive-wallet-modal .modal-body {
   min-height: 0;
   overflow-y: auto;
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .archive-wallet-modal {
+    max-height: calc(100dvh - 16px);
+  }
 }
 
 .modal-card {
@@ -134,8 +144,8 @@
 }
 
 .type-btn--active-expense {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-action-bg);
+  color: var(--color-link);
   box-shadow: var(--sh-press), 0 0 10px rgba(255,71,87,.2);
 }
 
@@ -177,7 +187,7 @@
 }
 
 .form-group:focus-within .form-label {
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 .form-input,
@@ -408,8 +418,8 @@
   letter-spacing: .1em;
 }
 
-.nk--clear:hover { color: var(--accent); }
-.nk--clear:active { color: var(--accent); }
+.nk--clear:hover { color: var(--color-link); }
+.nk--clear:active { color: var(--color-link); }
 
 .nk--submit {
   background: var(--green);
@@ -519,7 +529,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--color-link);
   letter-spacing: .08em;
   margin-bottom: 8px;
 }
@@ -691,7 +701,7 @@
 }
 
 .btn-set-budgets:hover {
-  color: var(--accent);
+  color: var(--color-link);
   border-color: rgba(255, 71, 87, .4);
 }
 
@@ -730,7 +740,7 @@
 }
 
 .btn-settings-action--guide {
-  color: var(--primary, #078A59);
+  color: var(--color-link);
   background: var(--surface-subtle, rgba(7, 138, 89, 0.08));
   border-color: var(--primary, #078A59);
 }
@@ -800,7 +810,7 @@
 .budget-card--ok   { border-left-color: var(--green); }
 .budget-card--warn { border-left-color: var(--warn); }
 .budget-card--over {
-  border-left-color: var(--accent);
+  border-left-color: var(--color-action-bg);
   animation: pulseRing 2s ease-in-out infinite;
 }
 
@@ -972,7 +982,7 @@
   flex: 1;
 }
 
-.budget-card__remaining.over { color: var(--accent); }
+.budget-card__remaining.over { color: var(--color-danger); }
 
 .budget-card__limit {
   font-family: var(--font-mono);
@@ -1047,7 +1057,7 @@
 }
 
 .budget-group-header--expense {
-  border-left-color: var(--accent);
+  border-left-color: var(--color-action-bg);
   background: rgba(255, 71, 87, 0.04);
 }
 
@@ -1120,7 +1130,7 @@ html.light-theme .budget-group-header--income {
 }
 
 .budget-form-input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   background: var(--surface);
   box-shadow: 0 0 0 3px var(--recessed);
 }
@@ -1182,13 +1192,13 @@ html:not(.light-theme):not(.cream-theme):not(.green-theme) .budget-form-input:fo
 
 /* Nút X cho danh mục TÙY CHỈNH – đỏ, tooltip "Xóa" */
 .btn-delete-cat--custom {
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 .btn-delete-cat--custom:hover {
   background: rgba(255, 71, 87, 0.15);
   border-color: rgba(255, 71, 87, 0.4);
-  color: var(--accent);
+  color: var(--color-link);
   box-shadow: 0 0 8px rgba(255, 71, 87, 0.2);
 }
 
@@ -1241,7 +1251,7 @@ html.green-theme .budget-add-cat {
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--color-link);
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -1682,7 +1692,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .trend-select:focus {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   box-shadow: var(--sh-accent);
 }
 
@@ -1714,7 +1724,7 @@ html.green-theme .month-grid-cell--active {
 
 .trend-type-btn.active {
   background: var(--surface2);
-  color: var(--accent);
+  color: var(--color-link);
   box-shadow: var(--sh-raise);
 }
 
@@ -1773,7 +1783,7 @@ html.green-theme .month-grid-cell--active {
   transition: transform var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
 .btn-chart-toggle:hover {
-  color: var(--accent);
+  color: var(--color-link);
   transform: scale(1.1);
 }
 .btn-chart-toggle:active {
@@ -1811,7 +1821,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .btn-help:hover {
-  color: var(--accent);
+  color: var(--color-link);
   border-color: rgba(var(--accent-rgb), .35);
   box-shadow: 0 0 14px rgba(var(--accent-rgb), .2), var(--sh-raise);
   transform: translateY(-1px);
@@ -1947,7 +1957,7 @@ html.green-theme .month-grid-cell--active {
   font-size: 9px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--color-link);
   background: rgba(var(--accent-rgb), .12);
   border: 1px solid rgba(var(--accent-rgb), .25);
   padding: 4px 10px;
@@ -1970,7 +1980,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-title__accent {
-  color: var(--accent);
+  color: var(--color-link);
   text-shadow: 0 0 12px rgba(var(--accent-rgb), .5);
 }
 
@@ -1999,7 +2009,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-close:hover {
-  color: var(--accent);
+  color: var(--color-link);
   background: rgba(var(--accent-rgb), .1);
 }
 
@@ -2069,9 +2079,9 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-tab.active {
-  color: var(--accent);
+  color: var(--color-link);
   background: rgba(var(--accent-rgb), .08);
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   border-width: 2px;
   box-shadow: 0 0 12px rgba(var(--accent-rgb), .15);
 }
@@ -2133,7 +2143,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-hero__icon {
-  color: var(--accent);
+  color: var(--color-link);
   opacity: .7;
   flex-shrink: 0;
 }
@@ -2165,7 +2175,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-card:hover {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,.25);
 }
@@ -2217,7 +2227,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-step:hover {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   box-shadow: 0 4px 16px rgba(0,0,0,.2);
 }
 
@@ -2225,7 +2235,7 @@ html.green-theme .month-grid-cell--active {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--color-link);
   background: rgba(var(--accent-rgb),.08);
   border: 2px solid rgba(var(--accent-rgb),.25);
   width: 36px;
@@ -2360,7 +2370,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-tip-card:hover {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,.25);
 }
@@ -2529,7 +2539,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .guide-footer__close:hover {
-  color: var(--accent);
+  color: var(--color-link);
   border-color: rgba(var(--accent-rgb), .3);
 }
 
@@ -2577,7 +2587,7 @@ html.green-theme .month-grid-cell--active {
 }
 
 .report-tab.active {
-  color: var(--accent);
+  color: var(--color-link);
   background: rgba(var(--accent-rgb), .08);
   border-color: rgba(var(--accent-rgb), .5);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), .18), var(--sh-press);
@@ -2663,7 +2673,7 @@ html.green-theme .report-tab:hover {
 
 .custom-dropdown-trigger:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
 }
 
 .custom-dropdown-arrow {
@@ -2831,7 +2841,7 @@ html.green-theme .custom-dropdown-item.active {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: .15em;
-  color: var(--accent);
+  color: var(--color-link);
   margin-bottom: 4px;
   text-shadow: 0 0 16px rgba(var(--accent-rgb), 0.4);
 }
@@ -2896,11 +2906,11 @@ html.green-theme .custom-dropdown-item.active {
   border-radius: 99px;
   background: rgba(var(--accent-rgb), 0.15);
   border: 1px solid rgba(var(--accent-rgb), 0.3);
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 .report-col--current .report-col__header {
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 /* ── Individual Stat Row ── */
@@ -3023,7 +3033,7 @@ html.green-theme .custom-dropdown-item.active {
 }
 
 .segmented-btn.active.reset {
-  color: var(--accent);
+  color: var(--color-link);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(var(--accent-rgb), 0.15);
 }
 
@@ -3193,7 +3203,7 @@ html.green-theme .report-message { background: #E3F2E9; color: #0E2E1E; }
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--color-link);
   flex-shrink: 0;
 }
 
@@ -3272,7 +3282,7 @@ html.green-theme .report-extreme-row {
 }
 
 .report-extreme-value--positive { color: var(--green); }
-.report-extreme-value--accent   { color: var(--accent); }
+.report-extreme-value--accent   { color: var(--color-link); }
 
 /* Period Filter */
 .feed-period-group {
@@ -3317,7 +3327,7 @@ html.light-theme .period-btn--active { background: #fff; color: #111827; box-sha
 .btn-compare-add:hover {
   background: var(--accent);
   color: #fff;
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   transform: scale(1.1);
 }
 .btn-compare-clear {
@@ -3327,7 +3337,7 @@ html.light-theme .period-btn--active { background: #fff; color: #111827; box-sha
   width: 28px; height: 28px;
   border-radius: 50%;
   background: rgba(var(--accent-rgb), 0.1);
-  color: var(--accent);
+  color: var(--color-link);
   border: 1px solid rgba(var(--accent-rgb), 0.3);
   cursor: pointer;
   transition: all 0.2s;
@@ -3370,7 +3380,7 @@ html.light-theme .period-btn--active { background: #fff; color: #111827; box-sha
   border: 1px dashed var(--accent);
   background: rgba(var(--accent-rgb), 0.03);
 }
-.analytics-grid--compare .metric-card__label { color: var(--accent); font-weight: 700; opacity: 0.8; }
+.analytics-grid--compare .metric-card__label { color: var(--color-link); font-weight: 700; opacity: 1; }
 
 html.light-theme .btn-compare-add { background: #f3f4f6; border-color: #e5e7eb; color: #6b7280; }
 html.light-theme .btn-compare-add:hover { background: #4F46E5; color: #fff; border-color: #4F46E5; }
@@ -3431,7 +3441,7 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
 
 .month-slider-trigger__caret {
   font-size: 15px;
-  color: var(--accent);
+  color: var(--color-link);
   line-height: 1;
   transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms;
   display: inline-block;
@@ -3440,7 +3450,7 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
 /* Hover state on the whole slider row */
 .report-month-slider:hover .month-slider-trigger,
 .report-month-slider:focus-within .month-slider-trigger {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18), 0 4px 14px rgba(0,0,0,0.4);
   background: rgba(var(--accent-rgb), 0.06);
 }
@@ -3448,7 +3458,7 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
 .report-month-slider:hover .month-slider-trigger__caret,
 .report-month-slider:focus-within .month-slider-trigger__caret {
   transform: rotate(90deg);
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 /* ── Sliding chip track ── */
@@ -3519,7 +3529,7 @@ html.light-theme .analytics-grid--compare .metric-card__label { color: #4F46E5; 
 /* Active / selected chip */
 .month-chip.active {
   background: var(--accent);
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   color: #fff;
   font-weight: 700;
   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4), 0 2px 6px rgba(0,0,0,0.3);
@@ -3617,8 +3627,8 @@ html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.1
   transition: border-color 180ms ease, color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 .q-year-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-action-bg);
+  color: var(--color-link);
   box-shadow: 0 0 8px rgba(var(--accent-rgb),0.3);
   background: rgba(var(--accent-rgb),0.06);
 }
@@ -3665,13 +3675,13 @@ html.green-theme .month-chip:not(.active):hover { background: rgba(22,163,74,0.1
 
 .quarter-btn:hover:not(.no-data) {
   transform: translateY(-3px) scale(1.04);
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   box-shadow: 0 6px 20px rgba(var(--accent-rgb),0.25), 0 0 0 2px rgba(var(--accent-rgb),0.15);
   background: rgba(var(--accent-rgb),0.07);
 }
 
 .quarter-btn.active {
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   background: rgba(var(--accent-rgb),0.12);
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.3), 0 6px 20px rgba(var(--accent-rgb),0.2);
 }
@@ -3852,7 +3862,7 @@ html.green-theme .q-btn-months { color: #475569; }
 }
 .jar-form-input:focus {
   background: var(--recessed);
-  border-color: var(--accent);
+  border-color: var(--color-action-bg);
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
 }
 .jar-form-input::placeholder {
@@ -4016,7 +4026,7 @@ input[type="date"].jar-form-input::-webkit-calendar-picker-indicator {
   align-items: center;
 }
 .btn-toggle-optional:hover {
-  color: var(--accent, #3498db);
+  color: var(--color-link);
 }
 
 /* ── Prevent overflow on smaller screens ── */
@@ -4111,7 +4121,7 @@ input[type="date"].jar-form-input::-webkit-calendar-picker-indicator {
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--color-link);
   background: rgba(var(--accent-rgb), .1);
   border: 1px solid rgba(var(--accent-rgb), .2);
   border-radius: 99px;

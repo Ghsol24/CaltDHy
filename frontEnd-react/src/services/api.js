@@ -13,12 +13,12 @@ const pendingWrites = new Map();
 export function clearApiSession() {
   csrfToken = null; csrfEpoch = -1; csrfRequest = null; pendingWrites.clear();
 }
-function ensureCsrf(epoch, refresh = false) {
+function ensureCsrf(epoch, refresh = false, signal) {
   assertSession(epoch);
   if (!refresh && csrfToken && csrfEpoch === epoch) return Promise.resolve();
   if (csrfRequest?.epoch === epoch) return csrfRequest.promise;
   const current = { epoch };
-  current.promise = request('/api/auth/csrf', {}, epoch).finally(() => {
+  current.promise = request('/api/auth/csrf', { signal }, epoch).finally(() => {
     if (csrfRequest === current) csrfRequest = null;
   });
   csrfRequest = current;
@@ -82,7 +82,7 @@ export async function apiFetch(endpoint, options = {}) {
   const execute = async () => {
     try {
       if (write && (!csrfToken || csrfEpoch !== epoch)) {
-        await ensureCsrf(epoch);
+        await ensureCsrf(epoch, false, options.signal);
       }
       assertSession(epoch);
       let locale = 'vi';
@@ -94,7 +94,7 @@ export async function apiFetch(endpoint, options = {}) {
       try { result = await request(endpoint, { ...options, method, headers }, epoch); }
       catch (error) {
         if (error.code !== 'CSRF_INVALID') throw error;
-        await ensureCsrf(epoch, true);
+        await ensureCsrf(epoch, true, options.signal);
         headers['X-CSRF-Token'] = csrfToken;
         result = await request(endpoint, { ...options, method, headers }, epoch);
       }

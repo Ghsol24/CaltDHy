@@ -1,0 +1,281 @@
+.signature-login {
+  --signature-bg: #090A0F;
+  --signature-text: #F5F8FF;
+  --signature-muted: #A8B5CE;
+  --signature-bar-start: #2563EB;
+  --signature-bar-end: #00F2FE;
+  --signature-bar-side: #1646B5;
+  --signature-logo-start: #2563EB;
+  --signature-logo-end: #2EC7FF;
+  --signature-particle: #D8F9FF;
+  --signature-track: rgba(190, 216, 255, .18);
+  --signature-glow: rgba(0, 242, 254, .24);
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  align-items: safe center;
+  justify-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px 16px;
+  overflow: auto;
+  background: radial-gradient(ellipse at 50% 55%, var(--signature-glow), transparent 64%), var(--signature-bg);
+  color: var(--signature-text);
+  font-family: var(--font-sans);
+  opacity: 1;
+  transition: opacity 180ms ease;
+  isolation: isolate;
+}
+
+html.light-theme .signature-login {
+  --signature-bg: #FAFAFB;
+  --signature-text: #101B36;
+  --signature-muted: #64748B;
+  --signature-bar-start: #10B981;
+  --signature-bar-end: #6366F1;
+  --signature-bar-side: #8386D6;
+  --signature-logo-start: #293CB6;
+  --signature-logo-end: #6366F1;
+  --signature-particle: #2563EB;
+  --signature-track: rgba(70, 89, 147, .17);
+  --signature-glow: rgba(99, 102, 241, .10);
+}
+
+html.cream-theme .signature-login {
+  --signature-bg: #F5EDE0;
+  --signature-text: #382415;
+  --signature-muted: #806953;
+  --signature-bar-start: #C0531E;
+  --signature-bar-end: #D97706;
+  --signature-bar-side: #A34018;
+  --signature-logo-start: #B74719;
+  --signature-logo-end: #D97706;
+  --signature-particle: #E8AB29;
+  --signature-track: rgba(140, 77, 37, .2);
+  --signature-glow: rgba(217, 119, 6, .15);
+}
+
+html.green-theme .signature-login {
+  --signature-bg: #F0F9F4;
+  --signature-text: #103528;
+  --signature-muted: #607F71;
+  --signature-bar-start: #047857;
+  --signature-bar-end: #10B981;
+  --signature-bar-side: #035D45;
+  --signature-logo-start: #047857;
+  --signature-logo-end: #10B981;
+  --signature-particle: #11DDA1;
+  --signature-track: rgba(4, 120, 87, .19);
+  --signature-glow: rgba(16, 185, 129, .16);
+}
+
+.signature-login:focus { outline: none; }
+.signature-login.is-exiting { opacity: 0; pointer-events: none; }
+
+.signature-login__content {
+  width: min(100%, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(22px, 4vh, 34px);
+}
+
+.signature-login__header { text-align: center; }
+.signature-login__header h1 {
+  margin: 0;
+  font-size: clamp(25px, 5.4vw, 46px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.signature-login__header p {
+  margin: 10px 0 0;
+  color: var(--signature-muted);
+  font-size: clamp(13px, 2.3vw, 17px);
+  line-height: 1.5;
+}
+.signature-login__beats { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+.signature-login__beats span {
+  width: 28px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--signature-track);
+}
+.signature-login__beats span:nth-child(3) { background: var(--signature-bar-end); }
+
+.signature-login__scene {
+  position: relative;
+  width: min(100%, 680px);
+  aspect-ratio: 640 / 300;
+  flex: none;
+  overflow: visible;
+}
+.signature-login__svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.signature-login__gradient-start { stop-color: var(--signature-bar-start); }
+.signature-login__gradient-end { stop-color: var(--signature-bar-end); }
+.signature-login__side-start { stop-color: var(--signature-bar-side); }
+.signature-login__side-end { stop-color: var(--signature-bar-start); }
+.signature-login__floor { fill: none; stroke: var(--signature-track); stroke-width: 2; }
+.signature-login__bar {
+  transform-box: view-box;
+  transform-origin: 320px 250px;
+  animation: signature-bar-run 7.2s linear infinite;
+}
+.signature-login__bar-top { fill: var(--signature-bar-end); opacity: .68; }
+.signature-login__landing-glow {
+  fill: var(--signature-particle);
+  opacity: .15;
+  transform-box: view-box;
+  transform-origin: 320px 125px;
+  animation: signature-landing-glow .8s ease-out infinite;
+}
+.signature-login__particle {
+  fill: var(--signature-particle);
+  transform-box: view-box;
+  transform-origin: 320px 124px;
+  animation: signature-particle-splash .8s ease-out infinite;
+}
+
+.signature-login__cube,
+.signature-login__ghost {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  width: 10%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 20%;
+  background: linear-gradient(145deg, var(--signature-logo-start), var(--signature-logo-end));
+  color: #FFF;
+  font-size: clamp(18px, 4vw, 38px);
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 7px 22px var(--signature-glow), inset 0 1px 0 rgba(255,255,255,.42);
+  backface-visibility: hidden;
+}
+.signature-login__cube {
+  z-index: 2;
+  transform: translate3d(-50%, 0, 0);
+  animation: signature-cube-bounce .8s cubic-bezier(.32,.02,.62,.98) infinite;
+}
+.signature-login__ghost {
+  z-index: 1;
+  box-shadow: none;
+  opacity: 0;
+  pointer-events: none;
+}
+.signature-login__ghost--first { animation: signature-ghost-one .8s ease-out infinite; }
+.signature-login__ghost--second { animation: signature-ghost-two .8s ease-out infinite; }
+.signature-login.is-arriving .signature-login__cube {
+  animation: signature-cube-arrival 420ms cubic-bezier(.2,.7,.2,1) forwards;
+}
+
+.signature-login__progress-wrap { width: min(100%, 570px); }
+.signature-login__progress-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 28px;
+  margin-bottom: 9px;
+  font-size: clamp(13px, 2.3vw, 17px);
+  font-weight: 650;
+}
+.signature-login__progress-caption strong {
+  flex: none;
+  color: var(--signature-bar-start);
+  font-size: clamp(16px, 2.8vw, 22px);
+  font-variant-numeric: tabular-nums;
+}
+.signature-login__progress-track {
+  height: 11px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--signature-track);
+}
+.signature-login__progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--signature-bar-start), var(--signature-bar-end));
+  transform: scaleX(var(--signature-progress));
+  transform-origin: left center;
+  transition: transform 80ms linear;
+}
+.signature-login.is-success .signature-login__progress-fill { transition-duration: 0ms; }
+.signature-login.is-arriving .signature-login__header,
+.signature-login.is-arriving .signature-login__svg,
+.signature-login.is-arriving .signature-login__ghost,
+.signature-login.is-arriving .signature-login__progress-wrap {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+@keyframes signature-bar-run {
+  0% { transform: translate3d(300px, 0, 0) scaleY(.17); opacity: 0; }
+  11% { opacity: .72; }
+  50% { transform: translate3d(0, 0, 0) scaleY(1); opacity: 1; }
+  89% { opacity: .72; }
+  100% { transform: translate3d(-300px, 0, 0) scaleY(.17); opacity: 0; }
+}
+@keyframes signature-cube-bounce {
+  0%, 100% { transform: translate3d(-50%, 0, 0) scale(1.08, .92); }
+  16% { transform: translate3d(-50%, -13px, 0) scale(.95, 1.06); }
+  51% { transform: translate3d(-50%, -38px, 0) scale(1); }
+  84% { transform: translate3d(-50%, -10px, 0) scale(.98, 1.02); }
+}
+@keyframes signature-landing-glow {
+  0%, 100% { transform: scale(1.25); opacity: .55; }
+  45%, 78% { transform: scale(.7); opacity: .1; }
+}
+@keyframes signature-particle-splash {
+  0% { transform: translate3d(0, 0, 0) scale(.5); opacity: .85; }
+  55% { transform: translate3d(var(--particle-x), var(--particle-y), 0) scale(1); opacity: .45; }
+  100% { transform: translate3d(calc(var(--particle-x) * 1.3), calc(var(--particle-y) * 1.3), 0) scale(.3); opacity: 0; }
+}
+@keyframes signature-ghost-one {
+  0%, 100% { transform: translate3d(calc(-50% - 7px), -5px, 0) scale(.96); opacity: .16; }
+  50% { transform: translate3d(calc(-50% - 11px), -31px, 0) scale(.93); opacity: .09; }
+}
+@keyframes signature-ghost-two {
+  0%, 100% { transform: translate3d(calc(-50% - 14px), -10px, 0) scale(.9); opacity: .09; }
+  50% { transform: translate3d(calc(-50% - 19px), -24px, 0) scale(.88); opacity: .04; }
+}
+@keyframes signature-cube-arrival {
+  0% { transform: var(--signature-start-transform); }
+  18% { transform: translate3d(-50%, -10px, 0) scale(1.18); }
+  100% {
+    transform: translate3d(calc(-50% + var(--signature-arrival-x)), var(--signature-arrival-y), 0)
+      scale(var(--signature-arrival-scale));
+  }
+}
+
+@media (max-width: 480px) {
+  .signature-login__content { gap: 18px; }
+  .signature-login__beats { margin-top: 14px; }
+  .signature-login__beats span { width: 20px; }
+  .signature-login__progress-wrap { width: min(100%, 330px); }
+  .signature-login__progress-caption { min-height: 40px; align-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signature-login,
+  .signature-login__progress-fill { transition-duration: 0ms; }
+  .signature-login__bar,
+  .signature-login__cube,
+  .signature-login__ghost,
+  .signature-login__particle,
+  .signature-login__landing-glow,
+  .signature-login.is-arriving .signature-login__cube { animation: none; }
+  .signature-login__bar {
+    transform: translate3d(var(--static-x), 0, 0) scaleY(var(--static-height));
+    opacity: .88;
+  }
+  .signature-login__cube { transform: translate3d(-50%, 0, 0); }
+  .signature-login__ghost,
+  .signature-login__particle { display: none; }
+}

@@ -58,7 +58,7 @@
 }
 
 .toast-icon--success {
-  color: var(--primary);
+  color: var(--color-success);
 }
 
 .toast-icon--danger {
@@ -70,7 +70,7 @@
 }
 
 .toast-icon--info {
-  color: var(--primary);
+  color: var(--color-link);
 }
 
 .toast-item--success {
@@ -112,7 +112,7 @@
 
 .toast-item__action-btn {
   background: var(--primary-light);
-  color: var(--primary);
+  color: var(--color-link);
   border: 1px solid var(--primary-border);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
@@ -158,16 +158,23 @@
 .confirm-dialog-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(23, 49, 38, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
   /* Confirmation may be opened from another modal (for example Settings). */
-  z-index: 1200;
+  z-index: var(--z-dialog-nested);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   animation: overlayFadeIn 150ms ease;
+}
+
+/* A second dialog should dim its parent without stacking two full backdrops. */
+body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .modal-overlay.open, .day-drawer-backdrop) .confirm-dialog-backdrop {
+  background: var(--color-overlay-nested);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .confirm-dialog-card {
@@ -177,10 +184,12 @@
   box-shadow: var(--shadow-lg);
   max-width: 440px;
   width: 100%;
+  max-height: calc(100dvh - 32px);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
   animation: modalIn 180ms var(--ease-smooth);
 }
 
@@ -207,7 +216,7 @@
 
 .confirm-dialog-icon--primary {
   background: var(--primary-light);
-  color: var(--primary);
+  color: var(--color-link);
 }
 
 .confirm-dialog-title {
@@ -368,7 +377,7 @@
 }
 
 .money-amount--income {
-  color: var(--primary);
+  color: var(--color-success);
 }
 
 .money-amount--expense {
@@ -497,16 +506,17 @@
 .txn-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(23, 49, 38, 0.45);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 1000;
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
+  z-index: var(--z-dialog);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
   animation: overlayFadeIn 150ms ease;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .txn-modal-card {
@@ -516,10 +526,18 @@
   box-shadow: var(--shadow-lg, 0 10px 25px -5px rgba(23, 49, 38, 0.1));
   width: 100%;
   max-width: 500px;
-  max-height: calc(100vh - 32px);
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   animation: modalIn 200ms var(--ease-smooth);
+  overflow: hidden;
+}
+
+.txn-modal-card > form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -529,6 +547,7 @@
   justify-content: space-between;
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border, #E2ECE6);
+  flex-shrink: 0;
 }
 
 .txn-modal-title {
@@ -559,7 +578,10 @@
 
 .txn-modal-body {
   padding: 20px 24px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -606,7 +628,7 @@
 
 .txn-type-btn--income.active {
   background: var(--surface, #FFFFFF);
-  color: var(--primary, #078A59);
+  color: var(--color-success);
   border-color: var(--border, #E2ECE6);
   box-shadow: var(--shadow-sm);
 }
@@ -715,6 +737,7 @@
   background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
   border: 1.5px solid var(--border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md, 12px);
+  color: var(--color-icon, var(--text-secondary));
   cursor: pointer;
   transition: all var(--dur-fast) ease;
   text-align: center;
@@ -730,13 +753,15 @@
 /* Selected state */
 .txn-category-card.active {
   background: rgba(var(--accent-rgb, 79, 70, 229), 0.1);
-  border-color: var(--primary);
+  border-color: var(--color-action-bg);
+  color: var(--color-active-text, var(--text-primary));
   box-shadow: 0 0 0 1px var(--primary), 0 4px 12px rgba(var(--accent-rgb, 79, 70, 229), 0.15);
 }
 
 .txn-category-card.active--income {
   background: rgba(16, 185, 129, 0.1) !important;
   border-color: #10B981 !important;
+  color: var(--color-success);
   box-shadow: 0 0 0 1px #10B981, 0 4px 12px rgba(16, 185, 129, 0.18) !important;
 }
 
@@ -767,6 +792,7 @@
   font-size: 20px;
   line-height: 1;
   margin-bottom: 5px;
+  color: inherit;
 }
 
 /* Category Name */
@@ -935,7 +961,7 @@
 .txn-input:focus,
 .txn-select:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--color-action-bg);
   box-shadow: var(--focus-ring, 0 0 0 3px rgba(79, 70, 229, 0.15));
 }
 
@@ -961,6 +987,35 @@
   padding: 16px 24px 20px;
   border-top: 1px solid var(--border);
   background: var(--surface);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .txn-modal-backdrop {
+    padding: 8px;
+  }
+
+  .txn-modal-card {
+    max-height: 100%;
+  }
+
+  .txn-modal-header {
+    padding: 14px 16px;
+  }
+
+  .txn-modal-body {
+    padding: 16px;
+  }
+
+  .txn-modal-footer {
+    flex-wrap: wrap;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .txn-modal-footer > button {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
 }
 
 .txn-btn-cancel {
@@ -1069,12 +1124,12 @@
 }
 
 .custom-wallet-trigger:hover {
-  border-color: var(--primary);
+  border-color: var(--color-action-bg);
   background: var(--surface-subtle);
 }
 
 .custom-wallet-dropdown.is-open .custom-wallet-trigger {
-  border-color: var(--primary);
+  border-color: var(--color-action-bg);
   box-shadow: var(--focus-ring, 0 0 0 3px rgba(79, 70, 229, 0.15));
 }
 
@@ -1093,7 +1148,7 @@
   font-size: 18px;
   line-height: 1;
   flex-shrink: 0;
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-link);
 }
 
 .custom-wallet-text-group {
@@ -1122,7 +1177,7 @@
   padding: 1px 6px;
   border-radius: 4px;
   background: rgba(var(--accent-rgb, 79, 70, 229), 0.12);
-  color: var(--primary);
+  color: var(--color-link);
 }
 
 .custom-wallet-balance {
@@ -1220,7 +1275,7 @@
   font-size: 18px;
   line-height: 1;
   flex-shrink: 0;
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-link);
 }
 
 .custom-wallet-item-details {
@@ -1263,7 +1318,7 @@
 }
 
 .custom-wallet-check {
-  color: var(--primary);
+  color: var(--color-link);
   flex-shrink: 0;
 }
 
@@ -1443,7 +1498,7 @@
 
 .jar-history-tab-btn.active {
   background: var(--surface);
-  color: var(--primary);
+  color: var(--color-link);
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
@@ -1491,7 +1546,7 @@
 .financial-tips-tab-btn.active {
   background: var(--primary);
   color: #FFFFFF;
-  border-color: var(--primary);
+  border-color: var(--color-action-bg);
 }
 
 /* ============================================================
@@ -1501,9 +1556,9 @@
 .jar-modal-card {
   max-width: 580px;
   border-radius: 18px;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-dialog);
   overflow: hidden;
 }
 
@@ -1512,8 +1567,8 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 24px 28px 18px;
-  border-bottom: 1px solid #F1F5F9;
-  background: #FFFFFF;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .jar-modal-title-group {
@@ -1526,14 +1581,14 @@
   margin: 0;
   font-size: 20px;
   font-weight: 800;
-  color: #0F172A;
+  color: var(--color-text);
   letter-spacing: -0.02em;
 }
 
 .jar-modal-subtitle {
   margin: 0;
   font-size: 13px;
-  color: #64748B;
+  color: var(--color-text-muted);
   line-height: 1.4;
 }
 
@@ -1544,7 +1599,7 @@
   gap: 18px;
   overflow-y: auto;
   max-height: calc(88vh - 150px);
-  background: #FFFFFF;
+  background: var(--color-surface);
 }
 
 .jar-field-group {
@@ -1556,7 +1611,7 @@
 .jar-field-label {
   font-size: 13px;
   font-weight: 600;
-  color: #1E293B;
+  color: var(--color-text);
 }
 
 /* Name input with 0/40 counter */
@@ -1568,25 +1623,25 @@
 .jar-text-input {
   width: 100%;
   height: 48px;
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 0 54px 0 16px;
   font-family: var(--font-sans);
   font-size: 14px;
-  color: #0F172A;
+  color: var(--color-text);
   box-sizing: border-box;
   outline: none;
   transition: all 0.15s ease;
 }
 
 .jar-text-input:focus {
-  border-color: #6366F1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--color-action-bg);
+  box-shadow: var(--focus-ring);
 }
 
 .jar-text-input::placeholder {
-  color: #94A3B8;
+  color: var(--color-text-muted);
 }
 
 .jar-char-counter {
@@ -1596,7 +1651,7 @@
   transform: translateY(-50%);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: #94A3B8;
+  color: var(--color-text-muted);
   pointer-events: none;
   user-select: none;
 }
@@ -1606,8 +1661,8 @@
   display: flex;
   align-items: center;
   height: 48px;
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 0 14px;
   gap: 10px;
@@ -1616,8 +1671,8 @@
 }
 
 .jar-adornment-input-box:focus-within {
-  border-color: #6366F1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--color-action-bg);
+  box-shadow: var(--focus-ring);
 }
 
 .jar-input-leading-icon {
@@ -1636,12 +1691,12 @@
   font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
 
 .jar-number-input::placeholder {
-  color: #94A3B8;
+  color: var(--color-text-muted);
 }
 
 .jar-date-input {
@@ -1652,9 +1707,10 @@
   outline: none;
   font-family: var(--font-sans);
   font-size: 14px;
-  color: #0F172A;
+  color: var(--color-text);
   color-scheme: light;
 }
+html.dark-theme .jar-date-input { color-scheme: dark; }
 
 .jar-currency-badge {
   display: inline-flex;
@@ -1664,13 +1720,13 @@
   background: transparent;
   font-size: 12.5px;
   font-weight: 600;
-  color: #334155;
+  color: var(--color-text-secondary);
   user-select: none;
   flex-shrink: 0;
 }
 
 .jar-currency-badge svg {
-  color: #64748B;
+  color: var(--color-icon);
 }
 
 /* 2-Column Grid for Target and Date */
@@ -1688,8 +1744,8 @@
 
 /* Realtime Summary Card: "Bạn còn cần tiết kiệm" */
 .jar-summary-card {
-  background: #F8F9FE;
-  border: 1px solid #EEF2FF;
+  background: var(--color-brand-50);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 18px 22px;
   display: flex;
@@ -1707,7 +1763,7 @@
 .jar-summary-card__title {
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
 
 .jar-summary-card__days-pill {
@@ -1715,8 +1771,8 @@
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 9999px;
-  background: #EDE9FE;
-  color: #6366F1;
+  background: var(--color-brand-100);
+  color: var(--color-link);
 }
 
 .jar-summary-card__metrics {
@@ -1736,8 +1792,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #4361EE;
-  color: #FFFFFF;
+  background: var(--color-action-bg);
+  color: var(--color-on-action);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1749,7 +1805,7 @@
 .jar-summary-card__amount {
   font-size: 22px;
   font-weight: 800;
-  color: #1E293B;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
   margin: 0;
   letter-spacing: -0.01em;
@@ -1759,7 +1815,7 @@
 .jar-summary-card__pct {
   font-size: 22px;
   font-weight: 800;
-  color: #4361EE;
+  color: var(--color-link);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono, monospace);
 }
@@ -1767,7 +1823,7 @@
 .jar-summary-card__track {
   height: 6px;
   width: 100%;
-  background: #EEF2F6;
+  background: var(--color-surface-muted);
   border-radius: 9999px;
   overflow: hidden;
   margin: 4px 0 2px;
@@ -1776,7 +1832,7 @@
 .jar-summary-card__fill {
   height: 100%;
   border-radius: 9999px;
-  background-color: #4361EE;
+  background-color: var(--color-action-bg);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
 }
 
@@ -1785,7 +1841,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  color: #64748B;
+  color: var(--color-text-muted);
 }
 
 /* Color Presets Picker */
@@ -1817,7 +1873,7 @@
 }
 
 .jar-color-circle.is-selected {
-  box-shadow: 0 0 0 2.5px #FFFFFF, 0 0 0 4.5px currentColor;
+  box-shadow: 0 0 0 2.5px var(--color-surface), 0 0 0 4.5px currentColor;
 }
 
 /* Tip / Guidance Banner */
@@ -1825,8 +1881,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #F8F9FE;
-  border: 1px solid #E0E7FF;
+  background: var(--color-brand-50);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 12px 18px;
 }
@@ -1835,8 +1891,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #EDE9FE;
-  color: #4F46E5;
+  background: var(--color-brand-100);
+  color: var(--color-link);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1852,13 +1908,13 @@
 .jar-tip-title {
   font-size: 12.5px;
   font-weight: 700;
-  color: #4361EE;
+  color: var(--color-link);
   margin: 0;
 }
 
 .jar-tip-text {
   font-size: 12px;
-  color: #64748B;
+  color: var(--color-text-muted);
   line-height: 1.4;
   margin: 0;
 }
@@ -1870,8 +1926,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 28px;
-  background: #FFFFFF;
-  border-top: 1px solid #F1F5F9;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
 }
 
 .jar-btn-cancel {
@@ -1879,18 +1935,18 @@
   font-family: var(--font-sans);
   font-size: 13.5px;
   font-weight: 600;
-  color: #334155;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .jar-btn-cancel:hover:not(:disabled) {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
-  color: #0F172A;
+  background: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
 }
 
 .jar-btn-submit {
@@ -1898,12 +1954,12 @@
   font-family: var(--font-sans);
   font-size: 13.5px;
   font-weight: 700;
-  color: #FFFFFF;
-  background: #3B5AFB;
+  color: var(--color-on-action);
+  background: var(--color-action-bg);
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(59, 90, 251, 0.25);
+  box-shadow: var(--shadow-sm);
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
@@ -1911,13 +1967,8 @@
 }
 
 .jar-btn-submit:hover:not(:disabled) {
-  background: #2546E8;
-  box-shadow: 0 6px 16px rgba(59, 90, 251, 0.35);
-}
-
-.jar-btn-submit:hover:not(:disabled) {
-  background: #1D4ED8;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
+  background: var(--color-action-hover-bg);
+  box-shadow: var(--shadow-card);
   transform: translateY(-1px);
 }
 
@@ -1943,7 +1994,7 @@
   height: 36px;
   border-radius: 10px;
   background: rgba(99, 102, 241, 0.12);
-  color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1989,7 +2040,7 @@
 }
 
 .dropdown-outline-icon {
-  color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
   flex-shrink: 0;
 }
 
@@ -2051,7 +2102,7 @@
 
 .modal-dropdown-item.is-selected {
   background: var(--color-brand-50, rgba(99, 102, 241, 0.1));
-  color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
   font-weight: 700;
 }
 
@@ -2081,7 +2132,7 @@
 }
 
 .dropdown-item-check {
-  color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
   flex-shrink: 0;
 }
 
@@ -2096,7 +2147,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
   pointer-events: none;
 }
 
@@ -2138,7 +2189,7 @@
   background: transparent;
   border: 1px dashed var(--color-border, #CBD5E1);
   border-radius: var(--radius-sm, 6px);
-  color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
@@ -2231,7 +2282,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-link);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -2242,11 +2293,11 @@
 
 .section-header-icon {
   flex-shrink: 0;
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-link);
 }
 
 .section-header-title {
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-link);
 }
 
 .recurring-section-content {

@@ -6,6 +6,7 @@ import { AppShellSkeleton } from './components/layout/AppShellSkeleton';
 import { useTranslation } from './i18n/useTranslation';
 import { LocalizationObserver } from './i18n/LocalizationObserver';
 import { PwaUpdateNotice } from './components/layout/PwaUpdateNotice';
+import { SignatureLoginOverlay } from './components/ui/SignatureLoginOverlay';
 
 const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
 const LandingPage = lazyNamed(() => import('./pages/LandingPage'), 'LandingPage');
@@ -52,6 +53,7 @@ export default function App() {
   useEffect(() => { void useAuthStore.getState().initialize(); }, []);
   return (
     <BrowserRouter>
+      <SignatureLoginOverlay />
       <LocalizationObserver />
       <PwaUpdateNotice />
       <AuthExpirationListener />

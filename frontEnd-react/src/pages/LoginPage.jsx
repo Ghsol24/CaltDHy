@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
 import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
@@ -22,13 +23,26 @@ export const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const login = useAuthStore((state) => state.login);
-  const navigate = useNavigate();
+  const beginSignature = useSignatureLoginStore((state) => state.begin);
+  const succeedSignature = useSignatureLoginStore((state) => state.succeed);
+  const failSignature = useSignatureLoginStore((state) => state.fail);
+  const attemptRef = useRef(null);
+
+  useEffect(() => () => {
+    const attempt = attemptRef.current;
+    if (!attempt) return;
+    attemptRef.current = null;
+    window.clearTimeout(attempt.timeout);
+    attempt.controller.abort();
+    failSignature(attempt.id);
+  }, [failSignature]);
 
   const isEmailValid = /\S+@\S+\.\S+/.test(email.trim());
   const isPwValid = password.length >= 1;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
 
     if (!isEmailValid) {
@@ -41,27 +55,35 @@ export const LoginPage = () => {
     }
 
     setIsSubmitting(true);
+    const id = beginSignature();
+    const controller = new AbortController();
+    const attempt = { id, controller, timedOut: false, timeout: null };
+    attemptRef.current = attempt;
+    attempt.timeout = window.setTimeout(() => {
+      attempt.timedOut = true;
+      controller.abort();
+    }, 25000);
+    // Start fetching the authenticated shell while the server verifies the account.
+    void import('./SpendingPage').catch(() => {});
 
     try {
-      await login(email.trim(), password);
-      setTimeout(() => {
-        navigate('/spending/home');
-      }, 300);
+      await login(email.trim(), password, { signal: controller.signal });
+      if (attemptRef.current !== attempt) return;
+      window.clearTimeout(attempt.timeout);
+      attemptRef.current = null;
+      succeedSignature(id);
     } catch (err) {
-      setError(err.message || t('auth.connectionError'));
+      if (attemptRef.current !== attempt) return;
+      window.clearTimeout(attempt.timeout);
+      attemptRef.current = null;
+      failSignature(id);
+      setError(attempt.timedOut ? t('auth.loginTimeout') : err.message || t('auth.connectionError'));
       setIsSubmitting(false);
     }
   };
 
   return (
     <div className="auth-page">
-      <div className="orb2" aria-hidden="true"></div>
-
-      <div className="pg-screw s-tl" aria-hidden="true"></div>
-      <div className="pg-screw s-tr" aria-hidden="true"></div>
-      <div className="pg-screw s-bl" aria-hidden="true"></div>
-      <div className="pg-screw s-br" aria-hidden="true"></div>
-
       <StatusBar label={t('auth.secureLogin')} />
 
       <main>

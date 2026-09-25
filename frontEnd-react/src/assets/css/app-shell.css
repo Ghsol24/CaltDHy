@@ -147,7 +147,7 @@
 
 .sidebar-hamburger-btn:hover {
   background: var(--color-surface-muted, var(--surface-subtle));
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-active-text);
   border-color: var(--color-border, var(--border));
 }
 
@@ -168,7 +168,7 @@
 
 .sidebar-collapsed-header .sidebar-hamburger-btn:hover {
   background: var(--color-brand-100, var(--primary-light));
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-active-text);
   border-color: var(--color-border-strong, var(--primary-border));
 }
 
@@ -211,7 +211,7 @@
 
 .sidebar-nav-item.active {
   background: var(--color-brand-50, #F1FBF6);
-  color: var(--color-brand-700, #008B57);
+  color: var(--color-active-text);
   font-weight: 600;
 }
 
@@ -259,7 +259,7 @@
   width: 32px;
   height: 32px;
   background: var(--primary-light);
-  color: var(--primary);
+  color: var(--color-link);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -277,7 +277,7 @@
 }
 
 .tb-logo-accent {
-  color: var(--primary);
+  color: var(--color-link);
 }
 
 .tb-badge {
@@ -285,7 +285,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: var(--primary);
+  color: var(--color-link);
   background: var(--primary-light);
   padding: 3px 8px;
   border-radius: var(--radius-full);
@@ -330,7 +330,7 @@
 
 .tb-nav-btn.active {
   background: var(--color-brand-100, var(--primary-light));
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-active-text);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
@@ -357,21 +357,21 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--color-action-bg);
+  color: var(--color-on-action);
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--primary-hover);
+  border: 1px solid var(--color-action-hover-bg);
   box-shadow: 0 1px 3px rgba(7, 138, 89, 0.2);
   cursor: pointer;
   transition: all var(--dur-fast) ease;
 }
 
 .btn-add-txn-topbar:hover {
-  background: var(--primary-hover);
+  background: var(--color-action-hover-bg);
   box-shadow: 0 4px 10px rgba(7, 138, 89, 0.3);
   transform: translateY(-1px);
 }
@@ -412,8 +412,8 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--color-action-bg);
+  color: var(--color-on-action);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -530,14 +530,14 @@
 
 .tb-settings-btn:hover {
   background: var(--color-brand-50, #F1FBF6);
-  border-color: var(--color-brand-700, #008B57);
-  color: var(--color-brand-700, #008B57);
+  border-color: var(--color-action-bg);
+  color: var(--color-link);
   box-shadow: var(--shadow-card);
   transform: translateY(-1px);
 }
 
 .tb-settings-btn:hover svg {
-  color: var(--color-brand-700, #008B57);
+  color: var(--color-link);
   transform: rotate(60deg);
 }
 
@@ -631,7 +631,7 @@
   }
 
   .mobile-primary-nav__item.is-active {
-    color: var(--color-brand-700, #008B57);
+    color: var(--color-active-text);
     background: var(--color-brand-50, #F1FBF6);
   }
 
@@ -644,6 +644,30 @@
     padding: 8px 16px;
     background: var(--color-surface, #fff);
     border-bottom: 1px solid var(--color-border, #E3ECE7);
+  }
+
+  .mobile-section-nav__hint {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    z-index: 1;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    color: var(--color-text-secondary);
+    pointer-events: none;
+  }
+
+  .mobile-section-nav__hint--left {
+    left: 16px;
+    justify-content: flex-start;
+    background: linear-gradient(90deg, var(--color-surface) 35%, transparent);
+  }
+
+  .mobile-section-nav__hint--right {
+    right: 16px;
+    justify-content: flex-end;
+    background: linear-gradient(270deg, var(--color-surface) 35%, transparent);
   }
 
   .mobile-section-nav__scroller {
@@ -673,8 +697,8 @@
 
   .mobile-section-nav__item.is-active {
     background: var(--color-brand-50, #F1FBF6);
-    color: var(--color-brand-700, #008B57);
-    border-color: var(--color-brand-700, #008B57);
+    color: var(--color-active-text);
+    border-color: var(--color-action-bg);
   }
 
   .tb-logo-link,
@@ -690,6 +714,14 @@
 }
 
 @media (max-width: 768px) {
+  .mobile-section-nav {
+    top: 0;
+  }
+
+  .app-main {
+    scroll-padding-top: 72px;
+  }
+
   .topbar {
     height: auto;
     padding: 12px 16px;

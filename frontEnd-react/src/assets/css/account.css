@@ -6,14 +6,14 @@
 .account-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 15, 29, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  z-index: 1000;
+  z-index: var(--z-dialog);
   animation: accountFadeIn 0.18s ease-out;
 }
 
@@ -63,7 +63,7 @@
   height: 38px;
   border-radius: 10px;
   background: rgba(7, 138, 89, 0.1);
-  color: var(--primary, #078A59);
+  color: var(--color-link);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,11 +140,11 @@
 }
 
 .account-tab-btn:hover {
-  color: var(--primary, #078A59);
+  color: var(--color-link);
 }
 
 .account-tab-btn.active {
-  color: var(--primary, #078A59);
+  color: var(--color-link);
   font-weight: 700;
 }
 
@@ -275,7 +275,7 @@
 
 .btn-avatar-preset:hover {
   border-color: var(--primary, #078A59);
-  color: var(--primary, #078A59);
+  color: var(--color-link);
 }
 
 .btn-avatar-remove {
@@ -364,8 +364,8 @@
   gap: 4px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--primary, #078A59);
-  background: rgba(7, 138, 89, 0.1);
+  color: var(--color-success);
+  background: var(--color-success-bg);
   padding: 2px 8px;
   border-radius: 99px;
 }
@@ -502,8 +502,8 @@
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--primary, #078A59);
-  background: rgba(7, 138, 89, 0.1);
+  color: var(--color-success);
+  background: var(--color-success-bg);
   padding: 3px 9px;
   border-radius: 99px;
 }
@@ -513,7 +513,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--primary, #078A59);
+  background: var(--color-success);
 }
 
 /* ── Danger Zone ── */
@@ -573,9 +573,9 @@
 }
 
 .account-feedback-msg.success {
-  background: rgba(7, 138, 89, 0.1);
-  color: var(--primary, #078A59);
-  border: 1px solid rgba(7, 138, 89, 0.25);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
 }
 
 .account-feedback-msg.error {
@@ -638,18 +638,19 @@
 .account-reset-dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 15, 29, 0.75);
+  background: var(--color-overlay-nested);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  z-index: 1100;
+  z-index: var(--z-dialog-nested);
   animation: accountFadeIn 0.15s ease-out;
 }
 
 .account-reset-dialog {
   width: 100%;
   max-width: 440px;
+  max-height: calc(100dvh - 32px);
   background: var(--surface, #FFFFFF);
   border: 1.5px solid rgba(239, 68, 68, 0.35);
   border-radius: var(--radius-lg, 16px);
@@ -658,6 +659,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
 }
 
 .account-reset-title {
@@ -766,9 +768,7 @@
    ============================================================ */
 
 .settings-center-overlay {
-  background: var(--color-overlay, rgba(16, 27, 54, 0.48));
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: var(--color-overlay);
 }
 
 .settings-center-dialog {
@@ -788,7 +788,7 @@
 
 .settings-center-header .account-header-icon {
   background: var(--color-brand-100, var(--primary-light));
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-active-text);
 }
 
 .settings-center-layout {
@@ -920,7 +920,7 @@
 .settings-nav-item.active {
   border-color: var(--color-border-strong, var(--primary-border));
   background: var(--color-brand-100, var(--primary-light));
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-active-text);
 }
 
 .settings-nav-chevron {
@@ -1094,7 +1094,7 @@
   border: 1px solid var(--color-border, var(--border));
   border-radius: var(--radius-md, 12px);
   background: var(--color-surface-muted, var(--surface-subtle));
-  color: var(--color-brand-700, var(--primary));
+  color: var(--color-active-text);
 }
 
 .settings-guide-card > svg {

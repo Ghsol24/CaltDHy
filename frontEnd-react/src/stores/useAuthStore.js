@@ -58,13 +58,14 @@ export const useAuthStore = create((set) => ({
     initialization = current;
     return current.promise;
   },
-  login: async (email, password) => {
+  login: async (email, password, { signal } = {}) => {
     clearPrivateState();
     const epoch = sessionEpoch();
     set({ user: null, isAuthenticated: false, status: 'checking', isLoading: true, error: null });
     try {
-      const data = await authService.login({ email, password });
+      const data = await authService.login({ email, password }, { signal });
       assertSession(epoch);
+      if (signal?.aborted) throw new DOMException('Login cancelled', 'AbortError');
       storage.remove(LOGOUT_KEY);
       set({ user: data.user, isAuthenticated: true, status: 'authenticated', isLoading: false });
       broadcast();

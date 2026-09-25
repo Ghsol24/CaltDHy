@@ -110,9 +110,11 @@ export function AnalyticsView() {
   const theme = useThemeStore((s) => s.theme);
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile(900);
+  const isCompactChart = useIsMobile(599);
   const navigate = useNavigate();
 
   const [trendMode, setTrendMode] = useState('daily'); // 'daily' | '3months' | '6months'
+  const [mobileWeek, setMobileWeek] = useState({ month: null, index: null });
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
   const [selectedDay, setSelectedDay] = useState(null);
   const [expectedDays, setExpectedDays] = useState([]);
@@ -332,6 +334,22 @@ export function AnalyticsView() {
     return { days, hasAnyData };
   }, [trendTransactions, currentYear, currentMonthNum, activeMonth]);
 
+  const weekCount = Math.ceil(dailyTrend.days.length / 7);
+  const defaultWeekIndex = useMemo(() => {
+    const lastActiveDay = dailyTrend.days.reduce((last, day, index) =>
+      day.income > 0 || day.expense > 0 ? index : last, -1);
+    return lastActiveDay < 0 ? 0 : Math.floor(lastActiveDay / 7);
+  }, [dailyTrend.days]);
+  const selectedWeekIndex = mobileWeek.month === activeMonth && mobileWeek.index !== null
+    ? Math.min(mobileWeek.index, weekCount - 1) : defaultWeekIndex;
+  const visibleDailyDays = useMemo(() =>
+    isCompactChart
+      ? dailyTrend.days.slice(selectedWeekIndex * 7, (selectedWeekIndex + 1) * 7)
+      : dailyTrend.days,
+  [dailyTrend.days, isCompactChart, selectedWeekIndex]);
+  const weekStart = visibleDailyDays[0]?.day;
+  const weekEnd = visibleDailyDays[visibleDailyDays.length - 1]?.day;
+
   const highestSpendingDays = useMemo(() => dailyTrend.days
     .filter((day) => day.expense > 0)
     .sort((a, b) => b.expense - a.expense)
@@ -393,53 +411,54 @@ export function AnalyticsView() {
   }, [addToast, lang, recurringFilterSummary, setAnalyticsExcludeRecurring, t]);
 
   const hasTrendData = useMemo(() => {
-    if (trendMode === 'daily') return dailyTrend.hasAnyData;
+    if (trendMode === 'daily') return isCompactChart
+      ? visibleDailyDays.some((day) => day.income > 0 || day.expense > 0)
+      : dailyTrend.hasAnyData;
     if (trendMode === '3months') return trend3Months.hasAnyData;
     if (trendMode === '6months') return trend6Months.hasAnyData;
     return false;
-  }, [trendMode, dailyTrend, trend3Months, trend6Months]);
+  }, [trendMode, isCompactChart, visibleDailyDays, dailyTrend, trend3Months, trend6Months]);
 
   // Dynamic Chart Theme Tokens tailored for dark, cream, green, and light themes
   const chartThemeTokens = useMemo(() => {
+    const styles = getComputedStyle(document.documentElement);
+    const income = styles.getPropertyValue('--color-success').trim();
+    const expense = styles.getPropertyValue('--color-danger').trim();
     switch (theme) {
       case 'dark':
         return {
-          income: '#10B981',
-          expense: '#FF5B69',
+          income,
+          expense,
           tick: '#8B949E',
           grid: 'rgba(255, 255, 255, 0.08)',
-          legend: '#C9D1D9',
           tooltipBg: '#1F242C',
           sliceBorder: '#12131C'
         };
       case 'cream':
         return {
-          income: '#1E7E34',
-          expense: '#C53030',
+          income,
+          expense,
           tick: '#8C7564',
           grid: 'rgba(140, 117, 100, 0.16)',
-          legend: '#584133',
           tooltipBg: '#2C1D10',
           sliceBorder: '#FDF8F2'
         };
       case 'green':
         return {
-          income: '#047857',
-          expense: '#DC2626',
+          income,
+          expense,
           tick: '#6B9582',
           grid: 'rgba(75, 114, 96, 0.16)',
-          legend: '#3D6A56',
           tooltipBg: '#0E2E1E',
           sliceBorder: '#FFFFFF'
         };
       case 'light':
       default:
         return {
-          income: '#059669',
-          expense: '#DC2626',
+          income,
+          expense,
           tick: '#64748B',
           grid: 'rgba(100, 116, 139, 0.12)',
-          legend: '#475569',
           tooltipBg: '#0F172A',
           sliceBorder: '#FFFFFF'
         };
@@ -505,11 +524,11 @@ export function AnalyticsView() {
   const barChartData = useMemo(() => {
     if (trendMode === 'daily') {
       return {
-        labels: dailyTrend.days.map((d) => d.label),
+        labels: visibleDailyDays.map((d) => d.label),
         datasets: [
           {
             label: t('type.income'),
-            data: dailyTrend.days.map((d) => d.income),
+            data: visibleDailyDays.map((d) => d.income),
             backgroundColor: chartThemeTokens.income,
             borderRadius: 4,
             barPercentage: 0.7,
@@ -517,7 +536,7 @@ export function AnalyticsView() {
           },
           {
             label: t('type.expense'),
-            data: dailyTrend.days.map((d) => d.expense),
+            data: visibleDailyDays.map((d) => d.expense),
             backgroundColor: chartThemeTokens.expense,
             borderRadius: 4,
             barPercentage: 0.7,
@@ -552,7 +571,7 @@ export function AnalyticsView() {
         }
       ]
     };
-  }, [trendMode, dailyTrend, trend3Months, trend6Months, chartThemeTokens, t]);
+  }, [trendMode, visibleDailyDays, trend3Months, trend6Months, chartThemeTokens, t]);
 
   const barOptions = useMemo(() => {
     return {
@@ -562,7 +581,7 @@ export function AnalyticsView() {
         if (!elements.length) return;
         const { index, datasetIndex } = elements[0];
         if (trendMode === 'daily') {
-          const day = dailyTrend.days[index];
+          const day = visibleDailyDays[index];
           if (day) openDay(`${activeMonth}-${String(day.day).padStart(2, '0')}`,
             datasetIndex === 0 ? 'income' : 'expense');
         } else {
@@ -581,19 +600,9 @@ export function AnalyticsView() {
         easing: 'easeOutQuart'
       },
       resizeDelay: 150,
+      interaction: isCompactChart ? { mode: 'nearest', intersect: false, axis: 'x' } : undefined,
       plugins: {
-        legend: {
-          position: 'top',
-          align: 'end',
-          labels: {
-            boxWidth: 10,
-            boxHeight: 10,
-            usePointStyle: true,
-            pointStyle: 'circle',
-            font: { family: 'Inter, sans-serif', size: 12, weight: '500' },
-            color: chartThemeTokens.legend
-          }
-        },
+        legend: { display: false },
         tooltip: {
           backgroundColor: chartThemeTokens.tooltipBg,
           titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
@@ -622,7 +631,11 @@ export function AnalyticsView() {
           grid: { display: false },
           ticks: {
             color: chartThemeTokens.tick,
-            font: { family: 'Inter, sans-serif', size: 11 }
+            font: { family: 'Inter, sans-serif', size: isCompactChart ? 12 : 11 },
+            minRotation: 0,
+            maxRotation: isCompactChart ? 0 : 50,
+            maxTicksLimit: isCompactChart ? 7 : 11,
+            autoSkip: !(isCompactChart && trendMode === 'daily')
           }
         },
         y: {
@@ -631,6 +644,7 @@ export function AnalyticsView() {
           ticks: {
             color: chartThemeTokens.tick,
             font: { family: 'Inter, sans-serif', size: 11 },
+            maxTicksLimit: isCompactChart ? 5 : 11,
             callback: (value) => {
               return formatCompactCurrency(value);
             }
@@ -639,7 +653,7 @@ export function AnalyticsView() {
       }
     };
   }, [trendMode, currentMonthNum, currentYear, chartThemeTokens, prefersReducedMotion, lang,
-    dailyTrend.days, activeMonth, trend3Months, trend6Months, openDay, setSelectedMonth]);
+    visibleDailyDays, isCompactChart, activeMonth, trend3Months, trend6Months, openDay, setSelectedMonth]);
 
   // ── Financial Report Statistics & Comparison ──
   const reportData = useMemo(() => {
@@ -1292,28 +1306,34 @@ export function AnalyticsView() {
                 type="button"
                 role="radio"
                 aria-checked={trendMode === 'daily'}
+                aria-label={t('analytics.trendDaily')}
                 className={`trend-seg-btn ${trendMode === 'daily' ? 'active' : ''}`}
                 onClick={() => setTrendMode('daily')}
               >
-                Theo ngày trong tháng
+                <span className="trend-seg-label-full">{t('analytics.trendDaily')}</span>
+                <span className="trend-seg-label-short">{t('analytics.trendDailyShort')}</span>
               </button>
               <button
                 type="button"
                 role="radio"
                 aria-checked={trendMode === '3months'}
+                aria-label={t('analytics.trendThreeMonths')}
                 className={`trend-seg-btn ${trendMode === '3months' ? 'active' : ''}`}
                 onClick={() => setTrendMode('3months')}
               >
-                3 tháng gần đây
+                <span className="trend-seg-label-full">{t('analytics.trendThreeMonths')}</span>
+                <span className="trend-seg-label-short">{t('analytics.trendThreeMonthsShort')}</span>
               </button>
               <button
                 type="button"
                 role="radio"
                 aria-checked={trendMode === '6months'}
+                aria-label={t('analytics.trendSixMonths')}
                 className={`trend-seg-btn ${trendMode === '6months' ? 'active' : ''}`}
                 onClick={() => setTrendMode('6months')}
               >
-                6 tháng gần đây
+                <span className="trend-seg-label-full">{t('analytics.trendSixMonths')}</span>
+                <span className="trend-seg-label-short">{t('analytics.trendSixMonthsShort')}</span>
               </button>
             </div>
 
@@ -1332,6 +1352,22 @@ export function AnalyticsView() {
           </div>
         </div>
 
+        {isCompactChart && trendMode === 'daily' && <div className="trend-week-nav" role="group" aria-label={t('analytics.weekNavigation')}>
+          <button type="button" className="trend-week-nav__button" disabled={selectedWeekIndex === 0}
+            aria-label={t('analytics.previousWeek')}
+            onClick={() => setMobileWeek({ month: activeMonth, index: selectedWeekIndex - 1 })}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
+          <span className="trend-week-nav__range" aria-live="polite">
+            {t('analytics.weekRange', { start: weekStart, end: weekEnd, month: currentMonthNum })}
+          </span>
+          <button type="button" className="trend-week-nav__button" disabled={selectedWeekIndex >= weekCount - 1}
+            aria-label={t('analytics.nextWeek')}
+            onClick={() => setMobileWeek({ month: activeMonth, index: selectedWeekIndex + 1 })}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
+        </div>}
+
         {!hasTrendData ? (
           /* Empty state: Low-emphasis grid + clean central message (NO fake axis) */
           <div className="trend-empty-chart-box">
@@ -1341,13 +1377,16 @@ export function AnalyticsView() {
               <div className="grid-line" />
             </div>
             <span className="trend-empty-center-text">
-              Chưa có dữ liệu để hiển thị biểu đồ
+              {isCompactChart && trendMode === 'daily' && dailyTrend.hasAnyData
+                ? t('analytics.noDataForRange')
+                : t('analytics.noChartData')}
             </span>
           </div>
         ) : (
           /* Data state: Bar Chart */
           <div className="trend-chart-box">
-            <Bar ref={barChartRef} data={barChartData} options={barOptions} />
+            <Bar ref={barChartRef} data={barChartData} options={barOptions}
+              role="img" aria-label={t('analytics.cashFlowChartAria')} />
           </div>
         )}
         {trendMode === 'daily' && <div className="analytics-day-inspection">

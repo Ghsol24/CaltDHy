@@ -100,13 +100,6 @@ export const ResetPasswordPage = () => {
 
   return (
     <div className="auth-page">
-      <div className="orb2" aria-hidden="true"></div>
-
-      <div className="pg-screw s-tl" aria-hidden="true"></div>
-      <div className="pg-screw s-tr" aria-hidden="true"></div>
-      <div className="pg-screw s-bl" aria-hidden="true"></div>
-      <div className="pg-screw s-br" aria-hidden="true"></div>
-
       <StatusBar label={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')} />
 
       <main>

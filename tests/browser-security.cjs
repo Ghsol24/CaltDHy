@@ -12,6 +12,28 @@ let server, db, browser;
 let passed = 0;
 async function check(name, work) { await work(); passed += 1; console.log('PASS ' + name); }
 const password = 'Browser-test-1234';
+function contrastHex(first, second) {
+  const luminance = (hex) => {
+    const value = hex.replace('#', '');
+    const channels = value.length === 3 ? [...value].map(channel => channel + channel) : value.match(/.{2}/g);
+    return channels.slice(0, 3)
+      .map(channel => parseInt(channel, 16) / 255)
+      .map(channel => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  };
+  const a = luminance(first), b = luminance(second);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+function blendCssColor(color, background) {
+  const rgba = color.match(/[\d.]+/g)?.map(Number);
+  assert.ok(rgba && rgba.length >= 3, `Màu CSS không hợp lệ: ${color}`);
+  const hex = background.replace('#', '');
+  const base = (hex.length === 3 ? [...hex].map(channel => channel + channel) : hex.match(/.{2}/g))
+    .map(channel => parseInt(channel, 16));
+  const alpha = rgba[3] ?? 1;
+  return '#' + rgba.slice(0, 3).map((channel, index) =>
+    Math.round(channel * alpha + base[index] * (1 - alpha)).toString(16).padStart(2, '0')).join('');
+}
 
 (async () => {
   Object.assign(process.env, { NODE_ENV: 'test', JWT_SECRET: crypto.randomBytes(32).toString('hex'),
@@ -54,6 +76,8 @@ const password = 'Browser-test-1234';
   await check('PWA manifest and service worker install without caching private API responses', async () => {
     const manifest = await (await context.request.get('/manifest.json')).json();
     assert.equal(manifest.display, 'standalone');
+    assert.equal(manifest.background_color, '#090A0F');
+    assert.equal(manifest.theme_color, '#090A0F');
     assert.ok(manifest.icons.some(icon => icon.sizes === '192x192'));
     assert.ok(manifest.icons.some(icon => icon.sizes === '512x512'));
     const sw = await context.request.get('/sw.js');
@@ -69,6 +93,30 @@ const password = 'Browser-test-1234';
     });
     assert.ok(!cachedPaths.some(path => path.startsWith('/api/')));
   });
+  await check('saved theme colors the first frame before the React bundle loads', async () => {
+    const bootContext = await browser.newContext({ baseURL, serviceWorkers: 'block' });
+    try {
+      const bootPage = await bootContext.newPage();
+      await bootPage.goto('/login');
+      await bootPage.evaluate(() => localStorage.setItem('caltdhy_theme', 'cream'));
+      await bootPage.route('**/assets/*.js', route => route.abort());
+      await bootPage.reload();
+      const colors = await bootPage.evaluate(() => ({
+        theme: document.documentElement.className,
+        canvas: getComputedStyle(document.documentElement).backgroundColor,
+        meta: document.querySelector('meta[name="theme-color"]').content
+      }));
+      assert.ok(colors.theme.includes('cream-theme'));
+      assert.equal(colors.canvas, 'rgb(245, 237, 224)');
+      assert.equal(colors.meta.toLowerCase(), '#f5ede0');
+      await bootPage.evaluate(() => localStorage.setItem('caltdhy_theme', 'invalid'));
+      await bootPage.reload();
+      assert.equal(await bootPage.locator('html').getAttribute('class'), 'dark-theme');
+      assert.equal(await bootPage.locator('meta[name="theme-color"]').getAttribute('content'), '#090A0F');
+    } finally {
+      await bootContext.close();
+    }
+  });
   await check('invite-only signup explains access and accepts only a private link', async () => {
     app.locals.registrationMode = 'invite';
     try {
@@ -82,6 +130,7 @@ const password = 'Browser-test-1234';
         const notice = page.locator('.signup-invite-message');
         await expect(notice).toBeVisible();
         backgrounds.add(await notice.evaluate(element => getComputedStyle(element).backgroundColor));
+        await expect(page.locator('body')).toHaveCSS('font-family', /Inter/);
       }
       assert.equal(backgrounds.size, 4, 'Invitation notice must follow every theme');
       const invitedEmail = crypto.randomUUID() + '@example.test';
@@ -116,6 +165,119 @@ const password = 'Browser-test-1234';
       await page.reload();
       await expect(page.locator('.user-chip-name')).toBeVisible();
       await expect(page.locator('.tb-settings-btn')).toBeVisible();
+      const palette = await page.evaluate(() => {
+        const root = getComputedStyle(document.documentElement);
+        const value = name => root.getPropertyValue(name).trim();
+        return {
+          muted: value('--color-text-muted'), surface: value('--color-surface-muted'),
+          card: value('--color-surface'),
+          link: value('--color-link'), active: value('--color-active-text'),
+          action: value('--color-action-bg'), hover: value('--color-action-hover-bg'),
+          onAction: value('--color-on-action'),
+          success: value('--color-success'), danger: value('--color-danger'),
+          warning: value('--color-warning'),
+          meta: document.querySelector('meta[name="theme-color"]').content,
+          canvas: value('--color-canvas')
+        };
+      });
+      assert.equal(palette.meta.toLowerCase(), palette.canvas.toLowerCase(), `${theme}: browser chrome phải theo theme`);
+      for (const [name, foreground, background] of [
+        ['muted', palette.muted, palette.surface],
+        ['link', palette.link, palette.surface],
+        ['active', palette.active, palette.surface],
+        ['action', palette.onAction, palette.action],
+        ['action hover', palette.onAction, palette.hover],
+        ...['success', 'danger', 'warning'].flatMap(name => [
+          [name + ' on card', palette[name], palette.card],
+          [name + ' on subtle surface', palette[name], palette.surface]
+        ])
+      ]) {
+        assert.ok(contrastHex(foreground, background) >= 4.5,
+          `${theme}: ${name} ${foreground}/${background} = ${contrastHex(foreground, background).toFixed(2)} cần tương phản chữ ≥4.5:1`);
+      }
+      const badges = await page.evaluate(() => {
+        const element = document.createElement('span');
+        document.body.appendChild(element);
+        const read = (background, foreground) => {
+          element.style.background = `var(${background})`;
+          element.style.color = `var(${foreground})`;
+          const style = getComputedStyle(element);
+          return { background: style.backgroundColor, foreground: style.color };
+        };
+        const result = {
+          warning: read('--warning-bg', '--warning-text'),
+          danger: read('--danger-bg', '--danger-text')
+        };
+        element.remove();
+        return result;
+      });
+      for (const [name, colors] of Object.entries(badges)) {
+        const background = blendCssColor(colors.background, palette.card);
+        const foreground = blendCssColor(colors.foreground, background);
+        assert.ok(contrastHex(foreground, background) >= 4.5,
+          `${theme}: nhãn ${name} chỉ đạt ${contrastHex(foreground, background).toFixed(2)}:1`);
+      }
+    }
+  });
+  await check('dark dialog icons and mobile actions remain visible', async () => {
+    await page.evaluate(() => localStorage.setItem('caltdhy_theme', 'dark'));
+    const auditPage = await context.newPage();
+    try {
+      await auditPage.setViewportSize({ width: 390, height: 844 });
+      await auditPage.goto('/spending/home');
+      await auditPage.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().click();
+      const dialog = auditPage.getByRole('dialog', { name: 'Thêm giao dịch mới' });
+      await expect(dialog).toBeVisible();
+      const icon = dialog.locator('.txn-card-icon svg').first();
+      await expect(icon).toHaveCSS('stroke', /rgb\((?!0, 0, 0)/);
+      const footer = await dialog.locator('.txn-modal-footer').boundingBox();
+      assert.ok(footer && footer.y >= 0 && footer.y + footer.height <= 844,
+        'Các nút lưu/hủy phải nằm trong viewport mobile');
+      await expect(dialog.locator('.txn-btn-submit')).toBeVisible();
+      await auditPage.setViewportSize({ width: 390, height: 430 });
+      await dialog.locator('.txn-input').first().focus();
+      const compactFooter = await dialog.locator('.txn-modal-footer').boundingBox();
+      assert.ok(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430,
+        'Các nút giao dịch phải còn truy cập được khi bàn phím thu hẹp viewport');
+    } finally {
+      await auditPage.close();
+    }
+  });
+  await check('jar creation dialog uses the surface of each theme', async () => {
+    const jarPage = await context.newPage();
+    try {
+      const expectedSurface = {
+        dark: 'rgb(18, 19, 28)', light: 'rgb(255, 255, 255)',
+        cream: 'rgb(253, 248, 242)', green: 'rgb(255, 255, 255)'
+      };
+      for (const theme of ['dark', 'light', 'cream', 'green']) {
+        await jarPage.goto('/spending/jars/list');
+        await jarPage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+        await jarPage.reload();
+        await jarPage.getByRole('button', { name: 'Tạo hũ đầu tiên' }).click();
+        const modal = jarPage.getByRole('dialog', { name: 'Tạo hũ tiết kiệm mới' });
+        await expect(modal).toBeVisible();
+        const colors = await modal.evaluate(element => {
+          const style = selector => getComputedStyle(element.querySelector(selector));
+          return {
+            body: style('.jar-modal-body').backgroundColor,
+            input: style('.jar-text-input').backgroundColor,
+            subtitle: style('.jar-modal-subtitle').color
+          };
+        });
+        assert.equal(colors.body, expectedSurface[theme], `${theme}: phần thân modal phải theo bề mặt theme`);
+        if (theme === 'dark') {
+          assert.equal(colors.input, 'rgb(26, 28, 41)');
+          assert.equal(colors.subtitle, 'rgb(148, 163, 184)');
+        }
+      }
+      await jarPage.setViewportSize({ width: 390, height: 430 });
+      await jarPage.locator('.jar-text-input').focus();
+      const compactFooter = await jarPage.locator('.jar-modal-footer').boundingBox();
+      assert.ok(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430,
+        'Các nút tạo Hũ phải còn truy cập được khi bàn phím thu hẹp viewport');
+    } finally {
+      await jarPage.close();
     }
   });
   await check('settings and account entry points share one accessible Settings Center', async () => {
@@ -164,6 +326,15 @@ const password = 'Browser-test-1234';
     await displayName.fill('Tên chưa lưu');
     await profileDialog.getByRole('button', { name: 'Đóng trung tâm cài đặt' }).click();
     await expect(page.getByRole('dialog', { name: 'Bỏ thay đổi chưa lưu?' })).toBeVisible();
+    const overlayOpacity = await page.evaluate(() => {
+      const alpha = selector => Number(getComputedStyle(document.querySelector(selector)).backgroundColor.match(/,\s*([\d.]+)\)$/)?.[1]);
+      return {
+        parent: alpha('.settings-center-overlay'),
+        nested: alpha('.confirm-dialog-backdrop')
+      };
+    });
+    assert.ok(overlayOpacity.nested < overlayOpacity.parent,
+      'Lớp phủ xác nhận lồng nhau phải nhẹ hơn lớp phủ của Settings');
     await page.getByRole('button', { name: 'Tiếp tục chỉnh sửa' }).click();
     await expect(profileDialog).toBeVisible();
     await profileDialog.getByRole('button', { name: 'Đóng trung tâm cài đặt' }).click();
@@ -274,6 +445,57 @@ const password = 'Browser-test-1234';
     await page.reload(); await page.waitForURL('**/login');
     await expect(page.locator('.user-chip-name')).toHaveCount(0);
   });
+  await check('signature login keeps moving during a slow request and returns errors to the form', async () => {
+    let heldLogin;
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.route('**/api/auth/login', route => { heldLogin = route; });
+    try {
+      await page.locator('#emailIn').fill(emailA);
+      await page.locator('#pwIn').fill(password);
+      await page.locator('#loginForm button[type=submit]').click();
+      const overlay = page.locator('.signature-login');
+      await expect(overlay).toBeVisible();
+      await expect(overlay.locator('.signature-login__particle')).toHaveCount(6);
+      await expect(overlay.locator('.signature-login__bar')).toHaveCount(9);
+      await expect(overlay.locator('.signature-login__cube')).toHaveCSS('animation-name', 'none');
+      await page.waitForTimeout(2700);
+      const readProgress = async () => Number((await overlay.locator('.signature-login__progress-caption strong')
+        .textContent()).replace('%', ''));
+      const first = await readProgress();
+      await page.waitForTimeout(450);
+      const second = await readProgress();
+      assert.ok(first >= 70 && second > first, `Tiến độ chờ phải tăng: ${first}% → ${second}%`);
+      await heldLogin.fulfill({ status: 401, contentType: 'application/json',
+        body: '{"message":"Sai thông tin đăng nhập"}' });
+      await expect(page.locator('#formErr')).toContainText('Sai thông tin đăng nhập');
+      await expect(overlay).toHaveCount(0);
+      assert.ok(page.url().endsWith('/login'));
+    } finally {
+      if (heldLogin) await heldLogin.abort().catch(() => {});
+      await page.unroute('**/api/auth/login');
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+    }
+  });
+  await check('signature login times out safely after 25 seconds', async () => {
+    const timeoutPage = await context.newPage();
+    let heldLogin;
+    try {
+      await timeoutPage.clock.install();
+      await timeoutPage.route('**/api/auth/login', route => { heldLogin = route; });
+      await timeoutPage.goto('/login');
+      await timeoutPage.locator('#emailIn').fill(emailA);
+      await timeoutPage.locator('#pwIn').fill(password);
+      await timeoutPage.locator('#loginForm button[type=submit]').click();
+      await expect(timeoutPage.locator('.signature-login')).toBeVisible();
+      await timeoutPage.clock.fastForward(25010);
+      await expect(timeoutPage.locator('#formErr')).toContainText('25 giây');
+      await expect(timeoutPage.locator('.signature-login')).toHaveCount(0);
+      assert.ok(timeoutPage.url().endsWith('/login'));
+    } finally {
+      if (heldLogin) await heldLogin.abort().catch(() => {});
+      await timeoutPage.close();
+    }
+  });
   await check('network failure cannot create a local authenticated session', async () => {
     await page.route('**/api/auth/login', route => route.abort('failed'));
     await page.locator('#emailIn').fill(emailA);
@@ -294,8 +516,18 @@ const password = 'Browser-test-1234';
     await page.unroute('**/api/auth/login');
   });
   await check('offline logout locks both tabs and remains locked after reload until deliberate login', async () => {
+    await page.evaluate(() => {
+      window.__signatureArrivalAnimations = 0;
+      document.addEventListener('animationstart', event => {
+        if (event.animationName === 'signature-cube-arrival') window.__signatureArrivalAnimations += 1;
+      }, { once: false });
+    });
     await page.locator('#loginForm button[type=submit]').click();
+    await expect(page.locator('.signature-login')).toBeVisible();
     await page.waitForURL('**/spending/home');
+    await expect(page.locator('.signature-login')).toHaveCount(0);
+    assert.ok(await page.evaluate(() => window.__signatureArrivalAnimations > 0),
+      'Logo C phải chạy chuyển động keyframe đến Topbar trước khi overlay đóng');
     await expect(page.locator('.user-chip-name')).toHaveText('Account Alpha');
     await second.goto('/spending');
     await expect(second.locator('.user-chip-name')).toHaveText('Account Alpha');
@@ -408,6 +640,19 @@ const password = 'Browser-test-1234';
     await mobilePage.waitForURL('**/spending/plan/overview');
     const planNav = mobilePage.getByRole('navigation', { name: 'Điều hướng Kế hoạch' });
     await expect(planNav).toBeVisible();
+    await mobilePage.evaluate(() => window.scrollTo(0, 80));
+    const planCreateIsTouchable = await mobilePage.locator('.plan-btn-create-primary').evaluate((button) => {
+      const box = button.getBoundingClientRect();
+      return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)?.closest('button') === button;
+    });
+    assert.equal(planCreateIsTouchable, true, 'Tab con không được đè lên nút tạo kế hoạch');
+    await mobilePage.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
+    const planBottomIsReachable = await mobilePage.evaluate(() => {
+      const last = document.querySelector('.plan-overview-container')?.lastElementChild?.getBoundingClientRect();
+      const nav = document.querySelector('.mobile-primary-nav')?.getBoundingClientRect();
+      return Boolean(last && nav && last.bottom <= nav.top);
+    });
+    assert.equal(planBottomIsReachable, true, 'Nội dung cuối kế hoạch phải ở trên thanh điều hướng đáy');
     await planNav.getByRole('button', { name: 'Ngân sách' }).click();
     await mobilePage.waitForURL('**/spending/plan/budgets');
     await expect(mobilePage.getByRole('heading', { name: 'Ngân sách', exact: true })).toBeVisible();
@@ -485,6 +730,37 @@ const password = 'Browser-test-1234';
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();
     await mobilePage.waitForURL('**/spending/analytics/cash-flow');
+    const cashFlowPanel = mobilePage.locator('#analytics-cashflow');
+    await expect(cashFlowPanel.locator('.trend-week-nav__range')).toHaveText(/Ngày 1–7\//);
+    await expect(cashFlowPanel.locator('.trend-legend .legend-item')).toHaveCount(2);
+    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toHaveAttribute('aria-label', 'Biểu đồ cột thu nhập và chi tiêu');
+    const chartLayout = await cashFlowPanel.evaluate((panel) => {
+      const modes = panel.querySelector('.trend-segmented-group');
+      const buttons = [...modes.querySelectorAll('button')];
+      return {
+        pageOverflows: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        modesOverflow: modes.scrollWidth > modes.clientWidth + 1,
+        modesFit: buttons.every((button) => button.getBoundingClientRect().right <= panel.getBoundingClientRect().right),
+        weekButtonWidths: [...panel.querySelectorAll('.trend-week-nav__button')]
+          .map((button) => button.getBoundingClientRect().width),
+      };
+    });
+    assert.equal(chartLayout.pageOverflows, false, 'Biểu đồ không được gây tràn ngang trang mobile');
+    assert.equal(chartLayout.modesOverflow, false, 'Cả ba chế độ biểu đồ phải nằm trong vùng hiển thị');
+    assert.equal(chartLayout.modesFit, true, 'Nút chế độ cuối phải hiện đầy đủ');
+    assert.ok(chartLayout.weekButtonWidths.every((width) => width >= 44),
+      'Nút đổi khoảng ngày phải có vùng chạm tối thiểu 44px');
+    await cashFlowPanel.getByRole('button', { name: 'Khoảng ngày sau' }).click();
+    await expect(cashFlowPanel.locator('.trend-week-nav__range')).toHaveText(/Ngày 8–14\//);
+    await expect(cashFlowPanel.locator('.trend-empty-chart-box')).toBeVisible();
+    await cashFlowPanel.getByRole('button', { name: 'Khoảng ngày trước' }).click();
+    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toBeVisible();
+    await cashFlowPanel.getByRole('radio', { name: '3 tháng gần đây' }).click();
+    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toBeVisible();
+    await cashFlowPanel.getByRole('radio', { name: '6 tháng gần đây' }).click();
+    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toBeVisible();
+    await cashFlowPanel.getByRole('radio', { name: 'Theo ngày trong tháng' }).click();
+    await expect(cashFlowPanel.locator('.trend-week-nav__range')).toHaveText(/Ngày 1–7\//);
     const recurringToggle = mobilePage.getByRole('button', { name: 'Gồm định kỳ' });
     await expect(recurringToggle).toHaveAttribute('aria-pressed', 'false');
     const includedToggleBox = await recurringToggle.boundingBox();
@@ -518,6 +794,12 @@ const password = 'Browser-test-1234';
     await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?date=/);
     await expect(mobilePage.getByRole('heading', { name: 'Lịch sử giao dịch' })).toBeVisible();
     await expect(analyticsNav.locator('button[aria-current="page"]').filter({ hasText: 'Lịch sử' })).toHaveCount(1);
+    const historyTabVisible = await analyticsNav.evaluate((nav) => {
+      const scroller = nav.querySelector('.mobile-section-nav__scroller').getBoundingClientRect();
+      const active = nav.querySelector('[aria-current="page"]').getBoundingClientRect();
+      return active.left >= scroller.left - 1 && active.right <= scroller.right + 1;
+    });
+    assert.equal(historyTabVisible, true, 'Tab Lịch sử đang chọn phải tự hiện trong thanh tab con');
     await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(2);
     const recurringHistoryFilter = mobilePage.getByRole('checkbox', { name: 'Ẩn khoản định kỳ' });
     await recurringHistoryFilter.check();

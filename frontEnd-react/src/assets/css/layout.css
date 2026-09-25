@@ -42,7 +42,7 @@
 }
 
 .tb-logo-accent {
-  color: var(--accent);
+  color: var(--color-link);
   text-shadow: 0 0 12px rgba(var(--accent-rgb), .5);
 }
 
@@ -350,7 +350,7 @@ html.light-theme .form-divider-label {
 }
 
 .btn-logout:hover {
-  color: var(--accent);
+  color: var(--color-link);
 }
 
 .btn-logout:active {
@@ -551,7 +551,7 @@ html.light-theme .form-divider-label {
 
 .metric-card__value--balance { color: var(--txt); }
 .metric-card__value--income  { color: var(--green); }
-.metric-card__value--expense { color: var(--accent); }
+.metric-card__value--expense { color: var(--color-danger); }
 
 .metric-card__sub {
   font-family: var(--font-mono);
@@ -890,7 +890,7 @@ html.light-theme .form-divider-label {
 
 .tb-nav-btn.active {
   background: var(--surface2);
-  color: var(--accent);
+  color: var(--color-link);
   box-shadow: var(--sh-raise);
 }
 
@@ -1385,13 +1385,13 @@ html.green-theme .analytics-control-card .month-picker-dropdown {
 
 #trendRange_custom .custom-select-option:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: var(--accent);
+  color: var(--color-link);
   transform: translateX(1px);
 }
 
 #trendRange_custom .custom-select-option.selected {
   background: rgba(var(--accent-rgb), 0.12);
-  color: var(--accent);
+  color: var(--color-link);
   border-left: 2px solid var(--accent);
   padding-left: 8px;
 }

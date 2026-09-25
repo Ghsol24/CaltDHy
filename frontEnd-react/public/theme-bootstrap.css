@@ -1,0 +1,27 @@
+/* This tiny stylesheet sets the canvas before the application CSS is available. */
+html {
+  --theme-bootstrap-background: #090A0F;
+  min-height: 100%;
+  background-color: var(--theme-bootstrap-background);
+  color-scheme: dark;
+}
+
+html.light-theme {
+  --theme-bootstrap-background: #FAFAFB;
+  color-scheme: light;
+}
+
+html.cream-theme {
+  --theme-bootstrap-background: #F5EDE0;
+  color-scheme: light;
+}
+
+html.green-theme {
+  --theme-bootstrap-background: #F0F9F4;
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--theme-bootstrap-background);
+}
