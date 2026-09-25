@@ -881,12 +881,14 @@ body.dark-theme .vent-slot {
 
 /* Modal card */
 .idx-modal-card {
-  background: var(--panel);
+  background: var(--surface);
   border-radius: 20px;
   box-shadow: var(--shadow-float);
   width: 100%;
-  max-width: 340px;
-  padding: 32px 36px;
+  max-width: 380px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 32px clamp(20px, 5vw, 36px);
   position: relative;
   animation: idxModalIn .22s ease both;
 }
@@ -1056,12 +1058,13 @@ body.dark-theme .idx-screw {
 
 /* Theme toggle */
 .idx-theme-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .idx-theme-btn {
-  flex: 1;
+  min-height: 44px;
   padding: 10px 0;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1088,6 +1091,19 @@ body.dark-theme .idx-screw {
 .idx-theme-btn.active {
   border-color: var(--color-action-bg);
   color: var(--color-link);
+}
+
+.idx-theme-btn:focus-visible,
+.idx-lang-btn:focus-visible,
+.idx-done-btn:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 3px;
+}
+
+.idx-theme-hint {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font: 400 12px/1.6 var(--font-sans);
 }
 
 /* Done button */

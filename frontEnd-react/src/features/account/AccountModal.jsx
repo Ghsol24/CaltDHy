@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { THEME_OPTIONS } from '../../utils/themes';
 import { useLangStore } from '../../stores/useLangStore';
 import { useCurrencyStore } from '../../stores/useCurrencyStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
@@ -27,12 +28,7 @@ const AVATAR_PRESETS = [
   '🦁', '🦊', '🐱', '🌲', '🍀', '🛸', '🎮', '💻'
 ];
 
-const THEME_OPTIONS = [
-  { id: 'dark', labelKey: 'settings.theme.dark', swatch: 'linear-gradient(135deg, #2563EB 0%, #090A0F 100%)' },
-  { id: 'light', labelKey: 'settings.theme.light', swatch: 'linear-gradient(135deg, #6366F1 0%, #FAFAFB 100%)' },
-  { id: 'cream', labelKey: 'settings.theme.cream', swatch: 'linear-gradient(135deg, #C0531E 0%, #F5EDE0 100%)' },
-  { id: 'green', labelKey: 'settings.theme.green', swatch: 'linear-gradient(135deg, #059669 0%, #EEF8F3 100%)' }
-];
+
 
 const SETTINGS_GROUPS = [
   {

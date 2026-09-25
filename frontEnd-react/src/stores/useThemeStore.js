@@ -1,7 +1,8 @@
 import { create } from 'zustand';
+import { THEME_OPTIONS } from '../utils/themes';
 
 const KEY = 'caltdhy_theme';
-const THEMES = ['dark', 'light', 'cream', 'green'];
+const THEMES = THEME_OPTIONS.map(({ id }) => id);
 const ALL_CLASSES = THEMES.map((theme) => `${theme}-theme`);
 
 const normalizeTheme = (theme) => THEMES.includes(theme) ? theme : 'dark';
@@ -56,3 +57,19 @@ export const useThemeStore = create((set, get) => ({
     get().setTheme(next);
   }
 }));
+
+// Theme is a device preference: logout keeps it, and other tabs should pick up
+// the most recent choice without writing it back and causing a storage loop.
+const restoreSavedTheme = () => {
+  try {
+    const theme = normalizeTheme(localStorage.getItem(KEY));
+    if (theme === useThemeStore.getState().theme) return;
+    applyThemeToDOM(theme);
+    useThemeStore.setState({ theme });
+  } catch {}
+};
+window.addEventListener('storage', (event) => {
+  if (event.key === KEY || event.key === null) restoreSavedTheme();
+});
+window.addEventListener('pageshow', restoreSavedTheme);
+window.addEventListener('focus', restoreSavedTheme);

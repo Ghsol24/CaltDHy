@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { useThemeStore } from '../stores/useThemeStore';
+import { THEME_OPTIONS } from '../utils/themes';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useLangStore } from '../stores/useLangStore';
 import { useCurrencyStore } from '../stores/useCurrencyStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -10,7 +13,7 @@ const LANDING_KEYS = [
   'eyebrow', 'tagline', 'totalBalance', 'transactions', 'vsLastMo',
   'loginBtn', 'signupBtn', 'previewTitle', 'previewLive', 'previewIncome',
   'previewExpenses', 'previewFood', 'previewTransport', 'previewSalary',
-  'settingsTitle', 'langLabel', 'themeLabel', 'themeLight', 'themeDark', 'doneBtn',
+  'settingsTitle', 'langLabel', 'themeLabel', 'themeSavedHint', 'doneBtn',
 ];
 
 export function LandingPage() {
@@ -20,6 +23,9 @@ export function LandingPage() {
   useCurrencyStore((state) => state.displayCurrency);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+  useFocusTrap(settingsRef, isSettingsOpen);
+  useBodyScrollLock(isSettingsOpen);
   const deviceWrapRef = useRef(null);
   const deviceBezelRef = useRef(null);
 
@@ -103,7 +109,7 @@ export function LandingPage() {
         className="idx-settings-btn"
         id="idxSettingsBtn"
         onClick={() => setIsSettingsOpen(true)}
-        aria-label="Settings"
+        aria-label={t.settingsTitle}
         aria-haspopup="dialog"
       >
         <svg
@@ -276,7 +282,7 @@ export function LandingPage() {
           if (e.target.id === 'idxSettingsModal') setIsSettingsOpen(false);
         }}
       >
-        <div className="idx-modal-card">
+        <div ref={settingsRef} className="idx-modal-card">
           <div className="idx-screw idx-sc-tl" aria-hidden="true"></div>
           <div className="idx-screw idx-sc-tr" aria-hidden="true"></div>
           <div className="idx-screw idx-sc-bl" aria-hidden="true"></div>
@@ -296,11 +302,12 @@ export function LandingPage() {
           {/* Language Selection */}
           <div className="idx-group">
             <p className="idx-group-label">{t.langLabel}</p>
-            <div className="idx-lang-row" role="group" aria-label="Language selection">
+            <div className="idx-lang-row" role="group" aria-label={t.langLabel}>
               <div className="idx-lang-wrap">
                 <button
                   type="button"
                   className={`idx-lang-btn ${lang === 'en' ? 'active' : ''}`}
+                  aria-pressed={lang === 'en'}
                   onClick={() => handleSetLang('en')}
                 >
                   EN
@@ -310,6 +317,7 @@ export function LandingPage() {
                 <button
                   type="button"
                   className={`idx-lang-btn ${lang === 'vi' ? 'active' : ''}`}
+                  aria-pressed={lang === 'vi'}
                   onClick={() => handleSetLang('vi')}
                 >
                   VI
@@ -319,6 +327,7 @@ export function LandingPage() {
                 <button
                   type="button"
                   className={`idx-lang-btn ${lang === 'zh-CN' ? 'active' : ''}`}
+                  aria-pressed={lang === 'zh-CN'}
                   onClick={() => handleSetLang('zh-CN')}
                 >
                   ZH
@@ -330,52 +339,24 @@ export function LandingPage() {
           {/* Theme Selection */}
           <div className="idx-group">
             <p className="idx-group-label">{t.themeLabel}</p>
-            <div className="idx-theme-row" role="group" aria-label="Theme selection">
-              <button
-                className={`idx-theme-btn ${theme === 'light' ? 'active' : ''}`}
-                onClick={() => setTheme('light')}
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-                <span>{t.themeLight}</span>
-              </button>
-              <button
-                className={`idx-theme-btn ${theme === 'dark' ? 'active' : ''}`}
-                onClick={() => setTheme('dark')}
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-                <span>{t.themeDark}</span>
-              </button>
+            <div className="idx-theme-row" role="group" aria-label={t.themeLabel}>
+              {THEME_OPTIONS.map((option) => (
+                <button key={option.id} type="button"
+                  className={`idx-theme-btn ${theme === option.id ? 'active' : ''}`}
+                  aria-pressed={theme === option.id}
+                  onClick={() => setTheme(option.id)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {option.id === 'light' && <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>}
+                    {option.id === 'dark' && <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />}
+                    {option.id === 'cream' && <><path d="M5 4h14v16H5zM8 8h8M8 12h6M8 16h4" /></>}
+                    {option.id === 'green' && <><path d="M20 4C10 2 3 8 6 15c6 5 15-1 14-11ZM4 21 15 10" /></>}
+                  </svg>
+                  <span>{translate(lang, option.labelKey)}</span>
+                </button>
+              ))}
             </div>
+            <p className="idx-theme-hint">{t.themeSavedHint}</p>
           </div>
 
           <button className="idx-done-btn" onClick={() => setIsSettingsOpen(false)}>

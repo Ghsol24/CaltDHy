@@ -93,22 +93,46 @@ function blendCssColor(color, background) {
     });
     assert.ok(!cachedPaths.some(path => path.startsWith('/api/')));
   });
+  await check('returning to a laptop tab checks for an updated application without reloading the form', async () => {
+    const updatePage = await context.newPage();
+    try {
+      await updatePage.addInitScript(() => {
+        window.__updateChecks = 0;
+        const update = ServiceWorkerRegistration.prototype.update;
+        ServiceWorkerRegistration.prototype.update = function (...args) {
+          window.__updateChecks += 1;
+          return update.apply(this, args);
+        };
+      });
+      await updatePage.clock.install();
+      await updatePage.goto('/login');
+      await expect.poll(() => updatePage.evaluate(() => window.__updateChecks)).toBeGreaterThan(0);
+      await updatePage.locator('#emailIn').fill('keep-form@example.test');
+      const checks = await updatePage.evaluate(() => window.__updateChecks);
+      await updatePage.clock.fastForward(61000);
+      await updatePage.evaluate(() => window.dispatchEvent(new Event('focus')));
+      await expect.poll(() => updatePage.evaluate(() => window.__updateChecks)).toBeGreaterThan(checks);
+      await expect(updatePage.locator('#emailIn')).toHaveValue('keep-form@example.test');
+    } finally { await updatePage.close(); }
+  });
   await check('saved theme colors the first frame before the React bundle loads', async () => {
     const bootContext = await browser.newContext({ baseURL, serviceWorkers: 'block' });
     try {
       const bootPage = await bootContext.newPage();
       await bootPage.goto('/login');
-      await bootPage.evaluate(() => localStorage.setItem('caltdhy_theme', 'cream'));
       await bootPage.route('**/assets/*.js', route => route.abort());
-      await bootPage.reload();
-      const colors = await bootPage.evaluate(() => ({
-        theme: document.documentElement.className,
-        canvas: getComputedStyle(document.documentElement).backgroundColor,
-        meta: document.querySelector('meta[name="theme-color"]').content
-      }));
-      assert.ok(colors.theme.includes('cream-theme'));
-      assert.equal(colors.canvas, 'rgb(245, 237, 224)');
-      assert.equal(colors.meta.toLowerCase(), '#f5ede0');
+      for (const [theme, expected] of [['dark', '#090a0f'], ['light', '#fafafb'], ['cream', '#f5ede0'], ['green', '#f0f9f4']]) {
+        await bootPage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+        await bootPage.reload();
+        const colors = await bootPage.evaluate(() => ({
+          theme: document.documentElement.className,
+          canvas: getComputedStyle(document.documentElement).getPropertyValue('--theme-bootstrap-background').trim(),
+          meta: document.querySelector('meta[name="theme-color"]').content
+        }));
+        assert.ok(colors.theme.includes(`${theme}-theme`));
+        assert.equal(colors.canvas.toLowerCase(), expected);
+        assert.equal(colors.meta.toLowerCase(), expected);
+      }
       await bootPage.evaluate(() => localStorage.setItem('caltdhy_theme', 'invalid'));
       await bootPage.reload();
       assert.equal(await bootPage.locator('html').getAttribute('class'), 'dark-theme');
@@ -116,6 +140,79 @@ function blendCssColor(color, background) {
     } finally {
       await bootContext.close();
     }
+  });
+  await check('public settings preserve all four themes across tabs, reopening and desktop login', async () => {
+    const publicContext = await browser.newContext({ baseURL, serviceWorkers: 'block',
+      viewport: { width: 1536, height: 960 } });
+    const publicPage = await publicContext.newPage();
+    const sibling = await publicContext.newPage();
+    publicPage.on('pageerror', error => errors.push(error.message));
+    try {
+      await publicPage.goto('/');
+      await sibling.goto('/login');
+      for (const [theme, label] of [['dark', 'Tối'], ['light', 'Sáng'], ['cream', 'Kem'], ['green', 'Xanh']]) {
+        await publicPage.locator('#idxSettingsBtn').click();
+        const dialog = publicPage.locator('#idxSettingsModal');
+        await expect(dialog.locator('.idx-theme-btn')).toHaveCount(4);
+        const choice = dialog.getByRole('button', { name: label, exact: true });
+        await choice.click();
+        await expect(choice).toHaveAttribute('aria-pressed', 'true');
+        await expect(sibling.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+        assert.equal(await publicPage.evaluate(() => localStorage.getItem('caltdhy_theme')), theme);
+        assert.equal(await dialog.locator('[aria-pressed=true].idx-theme-btn').count(), 1);
+        if (process.env.LOADING_QA_DIR) {
+          fs.mkdirSync(process.env.LOADING_QA_DIR, { recursive: true });
+          await publicPage.screenshot({ path: `${process.env.LOADING_QA_DIR}/settings-${theme}.png`, animations: 'disabled' });
+        }
+        await publicPage.keyboard.press('Escape');
+        await expect(publicPage.locator('#idxSettingsBtn')).toBeFocused();
+        await publicPage.reload();
+        await expect(publicPage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+
+        const loginPage = await publicContext.newPage();
+        loginPage.on('pageerror', error => errors.push(error.message));
+        let heldLogin;
+        try {
+          await loginPage.route('**/api/auth/login', route => { heldLogin = route; });
+          await loginPage.goto('/login');
+          await expect(loginPage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+          await loginPage.locator('#emailIn').fill('motion@example.test');
+          await loginPage.locator('#pwIn').fill(password);
+          await loginPage.locator('#loginForm button[type=submit]').click();
+          const overlay = loginPage.locator('.signature-login');
+          await expect(overlay).toBeVisible();
+          await expect(overlay.locator('.signature-login__cube')).toHaveCSS('animation-name', 'signature-cube-bounce');
+          const geometry = await overlay.evaluate(node => {
+            const rect = node.getBoundingClientRect();
+            return { width: rect.width, height: rect.height, top: rect.top, left: rect.left,
+              coversCenter: node.contains(document.elementFromPoint(innerWidth / 2, innerHeight / 2)),
+              portal: node.parentElement === document.body };
+          });
+          assert.deepEqual(geometry, { width: 1536, height: 960, top: 0, left: 0, coversCenter: true, portal: true });
+          await expect.poll(() => Boolean(heldLogin)).toBe(true);
+          if (process.env.LOADING_QA_DIR) {
+            await loginPage.screenshot({ path: `${process.env.LOADING_QA_DIR}/loading-${theme}.png` });
+          }
+          await heldLogin.fulfill({ status: 401, contentType: 'application/json',
+            body: '{"message":"Test login rejected"}' });
+          heldLogin = null;
+          await expect(overlay).toHaveCount(0);
+          await expect(loginPage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+        } finally {
+          if (heldLogin) await heldLogin.abort().catch(() => {});
+          await loginPage.close();
+        }
+      }
+      await publicPage.setViewportSize({ width: 390, height: 844 });
+      await publicPage.locator('#idxSettingsBtn').click();
+      const dialog = publicPage.locator('#idxSettingsModal');
+      await expect(dialog.locator('.idx-theme-btn')).toHaveCount(4);
+      await expect.poll(() => dialog.locator('.idx-theme-btn').evaluateAll(buttons => buttons.every(button => {
+        const rect = button.getBoundingClientRect();
+        return rect.width >= 44 && rect.height >= 44 && rect.left >= 0 && rect.right <= innerWidth;
+      })), { message: 'All four theme choices must fit and remain touch-friendly on mobile' }).toBe(true);
+      if (process.env.LOADING_QA_DIR) await publicPage.screenshot({ path: `${process.env.LOADING_QA_DIR}/settings-mobile.png` });
+    } finally { await publicContext.close(); }
   });
   await check('invite-only signup explains access and accepts only a private link', async () => {
     app.locals.registrationMode = 'invite';
@@ -382,6 +479,7 @@ function blendCssColor(color, background) {
     await expect(dialog).toHaveCount(0);
   });
   await check('logout synchronizes tabs and a late financial response cannot restore private data', async () => {
+    const savedTheme = await page.evaluate(() => localStorage.getItem('caltdhy_theme'));
     let release;
     let intercepted;
     const waiting = new Promise(resolve => { intercepted = resolve; });
@@ -393,6 +491,8 @@ function blendCssColor(color, background) {
     });
     await page.reload(); await waiting;
     await logout(page);
+    assert.equal(await page.evaluate(() => localStorage.getItem('caltdhy_theme')), savedTheme);
+    await expect(page.locator('html')).toHaveClass(new RegExp(`${savedTheme}-theme`));
     await second.waitForURL('**/login');
     release(); await page.unroute('**/api/spending');
     await page.goto('/spending'); await page.waitForURL('**/login');
@@ -518,8 +618,14 @@ function blendCssColor(color, background) {
   await check('offline logout locks both tabs and remains locked after reload until deliberate login', async () => {
     await page.evaluate(() => {
       window.__signatureArrivalAnimations = 0;
+      window.__signatureBounceStarted = null;
+      window.__signatureArrivalStarted = null;
       document.addEventListener('animationstart', event => {
-        if (event.animationName === 'signature-cube-arrival') window.__signatureArrivalAnimations += 1;
+        if (event.animationName === 'signature-cube-bounce') window.__signatureBounceStarted = performance.now();
+        if (event.animationName === 'signature-cube-arrival') {
+          window.__signatureArrivalAnimations += 1;
+          window.__signatureArrivalStarted = performance.now();
+        }
       }, { once: false });
     });
     await page.locator('#loginForm button[type=submit]').click();
@@ -528,6 +634,8 @@ function blendCssColor(color, background) {
     await expect(page.locator('.signature-login')).toHaveCount(0);
     assert.ok(await page.evaluate(() => window.__signatureArrivalAnimations > 0),
       'Logo C phải chạy chuyển động keyframe đến Topbar trước khi overlay đóng');
+    assert.ok(await page.evaluate(() => window.__signatureArrivalStarted - window.__signatureBounceStarted >= 880),
+      'Even a fast desktop login must show approximately one complete bounce before arrival');
     await expect(page.locator('.user-chip-name')).toHaveText('Account Alpha');
     await second.goto('/spending');
     await expect(second.locator('.user-chip-name')).toHaveText('Account Alpha');

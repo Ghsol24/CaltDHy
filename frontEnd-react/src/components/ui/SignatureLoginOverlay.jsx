@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useSignatureLoginStore } from '../../stores/useSignatureLoginStore';
@@ -8,8 +9,9 @@ const CONNECT_MS = 1000;
 const VERIFY_MS = 1400;
 const ASYMPTOTE_TAU_MS = 12000;
 const SNAP_MS = 250;
-const FLIGHT_MS = 420;
+const FLIGHT_MS = 560;
 const BAR_COUNT = 9;
+const BOUNCE_MS = 960;
 
 function progressAt(elapsed) {
   if (elapsed < CONNECT_MS) return 33 * elapsed / CONNECT_MS;
@@ -20,9 +22,11 @@ function progressAt(elapsed) {
   return Math.min(99, 70 + 29.9 * (1 - Math.exp(-waiting / ASYMPTOTE_TAU_MS)));
 }
 
-function RunnerScene({ cubeRef }) {
+const RunnerScene = React.memo(function RunnerScene({ cubeRef }) {
   return (
-    <div className="signature-login__scene" aria-hidden="true">
+    <div className="signature-login__scene" aria-hidden="true"
+      style={{ '--signature-cycle': `${BOUNCE_MS}ms`, '--signature-run': `${BOUNCE_MS * BAR_COUNT}ms`,
+        '--signature-flight': `${FLIGHT_MS}ms` }}>
       <svg className="signature-login__svg" viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="signature-bar-gradient" x1="0" y1="1" x2="0" y2="0">
@@ -37,29 +41,30 @@ function RunnerScene({ cubeRef }) {
         <path className="signature-login__floor" d="M26 251H614" />
         {Array.from({ length: BAR_COUNT }, (_, index) => (
           <g className="signature-login__bar" key={index}
-            style={{ animationDelay: `${-0.4 - index * 0.8}s`,
+            style={{ animationDelay: `${-(index + 0.5) * BOUNCE_MS}ms`,
               '--static-x': `${(index - 4) * 62}px`,
               '--static-height': 1 - Math.abs(index - 4) * 0.18 }}>
-            <rect x="298" y="125" width="39" height="125" rx="7" fill="url(#signature-bar-gradient)" />
-            <path d="M337 132Q337 125 330 125L344 131Q350 134 350 140V241Q350 249 343 250H337Z"
-              fill="url(#signature-bar-side)" />
-            <path d="M302 125H331Q337 125 337 132H298Q298 125 302 125Z"
-              className="signature-login__bar-top" />
+            <g className="signature-login__bar-body">
+              <rect x="298" y="125" width="39" height="125" rx="7" fill="url(#signature-bar-gradient)" />
+              <path d="M337 132Q337 125 330 125L344 131Q350 134 350 140V241Q350 249 343 250H337Z"
+                fill="url(#signature-bar-side)" />
+              <path d="M302 125H331Q337 125 337 132H298Q298 125 302 125Z"
+                className="signature-login__bar-top" />
+            </g>
           </g>
         ))}
-        <ellipse className="signature-login__landing-glow" cx="320" cy="125" rx="35" ry="8" />
+        <ellipse className="signature-login__landing-glow" cx="320" cy="125" rx="24" ry="4" />
+        <ellipse className="signature-login__impact-ring" cx="327" cy="125" rx="22" ry="5" />
         {Array.from({ length: 6 }, (_, index) => (
           <circle className="signature-login__particle" key={index} cx="320" cy="124" r="2.3"
-            style={{ '--particle-x': `${Math.round(Math.cos(index * Math.PI / 3) * 48)}px`,
-              '--particle-y': `${Math.round(Math.sin(index * Math.PI / 3) * 28 - 15)}px` }} />
+            style={{ '--particle-x': `${(index - 2.5) * 15}px`,
+              '--particle-y': `${-18 - (index % 3) * 10}px` }} />
         ))}
       </svg>
-      <div className="signature-login__ghost signature-login__ghost--first">C</div>
-      <div className="signature-login__ghost signature-login__ghost--second">C</div>
       <div ref={cubeRef} className="signature-login__cube">C</div>
     </div>
   );
-}
+});
 
 function SignatureLoginAttempt({ attemptId, state, startedAt }) {
   const { t } = useTranslation();
@@ -111,7 +116,12 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
     const from = progressRef.current;
     let frame = null;
     let completed = false;
-    const started = performance.now();
+    // Let fast desktop logins show one complete bounce, without adding a
+    // second wait to requests that already took longer than a cycle.
+    const skipMotion = document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const delay = Math.max(0, BOUNCE_MS - SNAP_MS - (performance.now() - startedAt));
+    const started = performance.now() + delay;
+    let timer = null;
     const step = (now) => {
       const fraction = Math.min(1, (now - started) / SNAP_MS);
       const eased = 1 - (1 - fraction) ** 3;
@@ -125,22 +135,23 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
         navigate('/spending/home', { replace: true });
       }
     };
-    if (document.hidden) {
+    if (skipMotion) {
       progressRef.current = 100;
       setProgress(100);
       completed = true;
       snapPhaseRef.current = 'done';
       navigate('/spending/home', { replace: true });
     } else {
-      frame = requestAnimationFrame(step);
+      timer = window.setTimeout(() => { frame = requestAnimationFrame(step); }, delay);
     }
     return () => {
+      window.clearTimeout(timer);
       if (!completed) {
         if (frame !== null) cancelAnimationFrame(frame);
         snapPhaseRef.current = 'idle';
       }
     };
-  }, [state, navigate]);
+  }, [state, startedAt, navigate]);
 
   useEffect(() => {
     if (state !== 'success' || !location.pathname.startsWith('/spending')) return undefined;
@@ -176,7 +187,8 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
       const scene = cube.parentElement.getBoundingClientRect();
       const destination = icon.getBoundingClientRect();
       const dx = destination.left + destination.width / 2 - scene.left - scene.width / 2;
-      const dy = destination.top + destination.height / 2 - scene.top - scene.height * .2 - cube.offsetHeight / 2;
+      // The bounce pivots at the feet; use the same anchor for the handoff.
+      const dy = destination.bottom - scene.top - cube.offsetTop - cube.offsetHeight;
       const scale = destination.width / cube.offsetWidth;
       target.style.opacity = '0';
       cube.style.setProperty('--signature-start-transform', getComputedStyle(cube).transform);
@@ -248,6 +260,7 @@ export function SignatureLoginOverlay() {
   const state = useSignatureLoginStore((store) => store.state);
   const startedAt = useSignatureLoginStore((store) => store.startedAt);
   if (state === 'idle') return null;
-  return <SignatureLoginAttempt key={attemptId} attemptId={attemptId}
-    state={state} startedAt={startedAt} />;
+  // Keep the full-screen layer independent of route layout and stacking contexts.
+  return createPortal(<SignatureLoginAttempt key={attemptId} attemptId={attemptId}
+    state={state} startedAt={startedAt} />, document.body);
 }
