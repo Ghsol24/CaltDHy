@@ -8,8 +8,7 @@ import { useLangStore } from '../../stores/useLangStore';
 import { useCurrencyStore } from '../../stores/useCurrencyStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
-import { useWalletStore } from '../../stores/useWalletStore';
-import { useJarStore } from '../../stores/useJarStore';
+import { spendingService } from '../../services/spendingService';
 import { formatDate } from '../../utils/formatters';
 import { evaluatePasswordStrength, MIN_PASSWORD_LENGTH } from '../../utils/passwordStrength';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -33,6 +32,7 @@ const AVATAR_PRESETS = [
 const SETTINGS_GROUPS = [
   {
     labelKey: 'settings.account',
+    headingKey: 'settings.accountManagementTitle',
     items: [
       { id: 'profile', labelKey: 'settings.profile', icon: 'profile' },
       { id: 'security', labelKey: 'settings.security', icon: 'security' },
@@ -41,6 +41,7 @@ const SETTINGS_GROUPS = [
   },
   {
     labelKey: 'settings.application',
+    headingKey: 'settings.appearanceLanguageTitle',
     items: [
       { id: 'general', labelKey: 'settings.languageRegion', icon: 'general' },
       { id: 'appearance', labelKey: 'settings.appearance', icon: 'appearance' }
@@ -48,12 +49,16 @@ const SETTINGS_GROUPS = [
   },
   {
     labelKey: 'settings.support',
+    headingKey: 'settings.supportTitle',
     items: [{ id: 'guide', labelKey: 'settings.guide', icon: 'guide' }]
   }
 ];
 
 const SECTION_TITLE_KEYS = Object.fromEntries(
   SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => [item.id, item.labelKey]))
+);
+const SECTION_GROUP_TITLE_KEYS = Object.fromEntries(
+  SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => [item.id, group.headingKey]))
 );
 
 function SettingsNavIcon({ type }) {
@@ -154,9 +159,7 @@ export function AccountModal() {
   const exchangeRate = useCurrencyStore((state) => state.exchangeRate);
   const confirm = useConfirmStore((state) => state.confirm);
   const isConfirmOpen = useConfirmStore((state) => state.isOpen);
-  const { transactions, budgets, expenseCategories, incomeCategories, resetAllFinancialData } = useTransactionStore();
-  const { wallets } = useWalletStore();
-  const { jars, installments } = useJarStore();
+  const { transactions, budgets, resetAllFinancialData } = useTransactionStore();
   const isMobile = useIsMobile(720);
   const navigate = useNavigate();
   const dialogRef = useRef(null);
@@ -186,6 +189,8 @@ export function AccountModal() {
 
   // Tab 3: Data & Danger Zone states
   const [copySuccess, setCopySuccess] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [resetConfirmInput, setResetConfirmInput] = useState('');
   const [isResetting, setIsResetting] = useState(false);
@@ -422,34 +427,29 @@ export function AccountModal() {
     setTimeout(() => setCopySuccess(false), 2500);
   };
 
-  // Xuất dữ liệu JSON (Sao lưu toàn diện 100% tài sản và danh mục)
-  const handleExportData = () => {
-    const exportPayload = {
-      version: '2.2.0',
-      exportDate: new Date().toISOString(),
-      user: {
-        id: user?.id,
-        name: user?.name,
-        email: user?.email
-      },
-      wallets: wallets || [],
-      jars: jars || [],
-      installments: installments || [],
-      transactions: transactions || [],
-      budgets: budgets || {},
-      categories: {
-        expense: expenseCategories || [],
-        income: incomeCategories || []
+  const handleExportData = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    setExportError('');
+    try {
+      const response = await spendingService.exportFinancialData();
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error(t('settings.exportFailed'));
       }
-    };
-
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `caltdhy_backup_${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+      const json = JSON.stringify(response.data, null, 2);
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `caltdhy_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setExportError(error.message || t('settings.exportFailed'));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Xác nhận Reset dữ liệu chi tiêu
@@ -514,7 +514,7 @@ export function AccountModal() {
                   {isMobile && !showMobileMenu ? t(SECTION_TITLE_KEYS[activeTab]) : t('settings.title')}
                 </h2>
                 <p className="account-header-desc">
-                  {isMobile && showMobileMenu ? 'Tài khoản và tùy chỉnh ứng dụng' : 'Quản lý tài khoản và trải nghiệm CaltDHy'}
+                  {t(SECTION_GROUP_TITLE_KEYS[activeTab] || 'settings.appearanceLanguageTitle')}
                 </p>
               </div>
             </div>
@@ -579,7 +579,6 @@ export function AccountModal() {
               <form onSubmit={handleSaveProfile} className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">Hồ sơ cá nhân</h3>
-                  <p className="account-tab-intro-sub">Quản lý thông tin hiển thị và ảnh đại diện trên tài khoản</p>
                 </div>
 
                 {/* Avatar Section */}
@@ -736,7 +735,6 @@ export function AccountModal() {
               <div className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">Bảo mật tài khoản</h3>
-                  <p className="account-tab-intro-sub">Bảo vệ tài khoản và quản lý thông tin phiên đăng nhập</p>
                 </div>
 
                 {/* Change Password Form */}
@@ -871,7 +869,6 @@ export function AccountModal() {
               <div className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">Dữ liệu & riêng tư</h3>
-                  <p className="account-tab-intro-sub">Xem tóm tắt thông số và quản lý dữ liệu chi tiêu</p>
                 </div>
 
                 {/* Account Metadata */}
@@ -919,17 +916,19 @@ export function AccountModal() {
                     <div>
                       <div className="account-panel-label">Xuất dữ liệu tài chính</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted, #7E9287)', marginTop: 2 }}>
-                        Tải xuống file JSON sao lưu đầy đủ giao dịch và ngân sách.
+                        Tải xuống bản sao lưu đầy đủ dữ liệu tài chính.
                       </div>
                     </div>
                     <button
                       type="button"
                       className="btn-avatar-action btn-avatar-preset"
                       onClick={handleExportData}
+                      disabled={isExporting}
                     >
-                      Xuất JSON
+                      {isExporting ? t('settings.exportPreparing') : 'Xuất JSON'}
                     </button>
                   </div>
+                  {exportError && <div className="account-feedback-msg error" role="alert">{exportError}</div>}
                 </div>
 
                 {/* Danger Zone */}
@@ -958,14 +957,12 @@ export function AccountModal() {
               <div className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">{t('settings.languageRegion')}</h3>
-                  <p className="account-tab-intro-sub">{t('settings.localeIntro')}</p>
                 </div>
 
                 <div className="settings-preference-list">
                   <div className="settings-preference-row">
                     <div>
                       <strong>{t('settings.language')}</strong>
-                      <span>{t('settings.interfaceLanguage')}</span>
                     </div>
                     <div className="settings-segmented-control" role="group" aria-label={t('settings.language')}>
                       {SUPPORTED_LOCALES.map((locale) => (
@@ -1014,7 +1011,6 @@ export function AccountModal() {
               <div className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">{t('settings.appearance')}</h3>
-                  <p className="account-tab-intro-sub">Chọn chủ đề màu phù hợp; thay đổi được áp dụng ngay lập tức</p>
                 </div>
                 <div className="theme-grid settings-theme-grid" role="group" aria-label="Chọn giao diện">
                   {THEME_OPTIONS.map((option) => {
@@ -1045,13 +1041,11 @@ export function AccountModal() {
               <div className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">Hướng dẫn sử dụng</h3>
-                  <p className="account-tab-intro-sub">Xem lại cách sử dụng các khu vực chính của CaltDHy</p>
                 </div>
                 <div className="settings-guide-card">
                   <SettingsNavIcon type="guide" />
                   <div>
                     <strong>Hướng dẫn CaltDHy</strong>
-                    <span>Tổng quan Trang chủ, Kế hoạch, Phân tích và Hũ chi tiêu.</span>
                   </div>
                   <button
                     type="button"

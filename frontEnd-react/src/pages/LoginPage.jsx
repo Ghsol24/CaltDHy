@@ -2,13 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
-import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import {
   ClockOutlineIcon,
-  AlertTriangleOutlineIcon,
-  LockOutlineIcon
+  AlertTriangleOutlineIcon
 } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -84,10 +82,8 @@ export const LoginPage = () => {
 
   return (
     <div className="auth-page">
-      <StatusBar label={t('auth.secureLogin')} />
-
       <main>
-        <IndustrialPanel eyebrow={t('auth.account')} title={t('auth.welcome')} titleHighlight={t('auth.back')}>
+        <IndustrialPanel title={t('auth.welcome')} titleHighlight={t('auth.back')}>
           <form id="loginForm" onSubmit={handleSubmit} noValidate>
             <FloatingInput
               id="emailIn"
@@ -134,9 +130,6 @@ export const LoginPage = () => {
               <span className="btn-text">{isSubmitting ? t('auth.loggingIn') : t('auth.login')}</span>
             </button>
 
-            <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <LockOutlineIcon size={13} /> {t('auth.secureLoginNote')}
-            </p>
           </form>
 
           <div className="divider">

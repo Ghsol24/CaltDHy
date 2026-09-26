@@ -32,7 +32,7 @@ export function HomeView() {
   }, [budgetMonth, currentMonthStr, fetchBudgets, selectedMonth, setSelectedMonth]);
 
   // Check finance health & context
-  const { greeting, lastUpdatedText } = React.useMemo(() => {
+  const { greeting, displayTimeText } = React.useMemo(() => {
     const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
     const hasTransactions = (transactions || []).some(
       (t) => (t.date || '').slice(0, 7) === currentMonthStr
@@ -76,9 +76,9 @@ export function HomeView() {
     }
 
     const now = new Date();
-    const updatedText = t('home.lastUpdated', { time: formatTime(now) });
+    const displayTimeText = t('home.lastUpdated', { time: formatTime(now) });
 
-    return { greeting: t(greetingKey, { month: monthLabel }), lastUpdatedText: updatedText };
+    return { greeting: t(greetingKey, { month: monthLabel }), displayTimeText };
   }, [transactions, budgets, currentMonthStr, monthLabel, t]);
 
   return (
@@ -87,7 +87,7 @@ export function HomeView() {
       <div className="home-dashboard-header">
         <div className="home-dashboard-title-box">
           <h1 className="home-dashboard-greeting">{greeting}</h1>
-          <p className="home-dashboard-updated">{lastUpdatedText}</p>
+          <p className="home-dashboard-updated">{displayTimeText}</p>
         </div>
 
         <button

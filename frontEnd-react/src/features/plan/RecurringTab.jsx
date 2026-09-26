@@ -518,7 +518,7 @@ export function RecurringTab() {
             </svg>
           }
           title="Chưa có khoản định kỳ nào"
-          description="Thiết lập các khoản thanh toán cố định (Netflix, Spotify, tiền nhà, Internet, trả góp...) để hệ thống tự động nhắc nhở và quản lý dòng tiền."
+          description="Thêm khoản chi đều đặn như tiền nhà hoặc dịch vụ thuê bao để theo dõi hạn thanh toán."
           actionLabel="Thêm khoản đầu tiên"
           onAction={handleOpenCreate}
         />

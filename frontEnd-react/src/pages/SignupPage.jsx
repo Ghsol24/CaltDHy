@@ -2,12 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { authService } from '../services/authService';
-import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import {
-  AlertTriangleOutlineIcon,
-  LockOutlineIcon
+  AlertTriangleOutlineIcon
 } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -88,10 +86,8 @@ export const SignupPage = () => {
 
   return (
     <div className="auth-page">
-      <StatusBar label={t('auth.newAccount')} />
-
       <main>
-        <IndustrialPanel eyebrow={t('auth.account')} title={t('auth.createAccount')} titleHighlight="">
+        <IndustrialPanel title={t('auth.createAccount')} titleHighlight="">
           {registrationStatus === 'checking' && (
             <p className="signup-invite-message" role="status">{t('auth.registrationChecking')}</p>
           )}
@@ -162,9 +158,6 @@ export const SignupPage = () => {
               <span className="btn-text">{isSubmitting ? t('auth.creating') : t('auth.createAccount')}</span>
             </button>
 
-            <p className="security-note" style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '12px', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <LockOutlineIcon size={13} /> {t('auth.secureSignupNote')}
-            </p>
           </form>
           )}
 

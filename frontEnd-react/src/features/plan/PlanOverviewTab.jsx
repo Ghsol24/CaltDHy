@@ -270,9 +270,6 @@ export function PlanOverviewTab() {
       <div className="plan-overview-header">
         <div className="plan-header-titles">
           <h2 className="plan-overview-title">Tổng quan kế hoạch</h2>
-          <p className="plan-overview-subtitle">
-            Theo dõi và quản lý toàn bộ kế hoạch tài chính của bạn
-          </p>
         </div>
 
         {/* Action Button with Dropdown */}

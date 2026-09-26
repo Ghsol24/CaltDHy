@@ -195,8 +195,8 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
             </h2>
             <p className="jar-modal-subtitle">
               {isEditing
-                ? 'Cập nhật mục tiêu và hành trình tích lũy của bạn'
-                : 'Thiết lập mục tiêu và bắt đầu hành trình tích lũy của bạn'}
+                ? 'Điều chỉnh số tiền hoặc thời hạn'
+                : 'Chọn số tiền và thời hạn phù hợp'}
             </p>
           </div>
           <button

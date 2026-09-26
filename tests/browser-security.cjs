@@ -154,6 +154,7 @@ function blendCssColor(color, background) {
         await publicPage.locator('#idxSettingsBtn').click();
         const dialog = publicPage.locator('#idxSettingsModal');
         await expect(dialog.locator('.idx-theme-btn')).toHaveCount(4);
+        await expect(dialog.locator('.idx-theme-hint')).toHaveCount(0);
         const choice = dialog.getByRole('button', { name: label, exact: true });
         await choice.click();
         await expect(choice).toHaveAttribute('aria-pressed', 'true');
@@ -176,6 +177,7 @@ function blendCssColor(color, background) {
           await loginPage.route('**/api/auth/login', route => { heldLogin = route; });
           await loginPage.goto('/login');
           await expect(loginPage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+          await expect(loginPage.locator('.mod-eyebrow, .security-note, .status-bar')).toHaveCount(0);
           await loginPage.locator('#emailIn').fill('motion@example.test');
           await loginPage.locator('#pwIn').fill(password);
           await loginPage.locator('#loginForm button[type=submit]').click();
@@ -382,6 +384,8 @@ function blendCssColor(color, background) {
     await settingsButton.click();
     const settingsDialog = page.getByRole('dialog', { name: 'Cài đặt' });
     await expect(settingsDialog).toBeVisible();
+    await expect(settingsDialog.locator('.account-header-desc')).toHaveText('Giao diện và ngôn ngữ');
+    await expect(settingsDialog.locator('.settings-nav-group').nth(1).locator('p')).toHaveText('GIAO DIỆN VÀ NGÔN NGỮ');
     await expect(settingsDialog.getByRole('button', { name: 'Ngôn ngữ & khu vực' })).toHaveAttribute('aria-current', 'page');
     for (const label of ['Hồ sơ', 'Bảo mật', 'Dữ liệu & quyền riêng tư', 'Giao diện', 'Hướng dẫn sử dụng', 'Đăng xuất']) {
       await expect(settingsDialog.getByRole('button', { name: label, exact: true })).toBeVisible();
@@ -391,21 +395,37 @@ function blendCssColor(color, background) {
     await expect(languageGroup.getByRole('button')).toHaveCount(3);
     await expect(currencyGroup.getByRole('button', { name: 'VND' })).toHaveAttribute('aria-pressed', 'true');
     await expect(currencyGroup.getByRole('button', { name: 'USD' })).toBeDisabled();
-    for (const [buttonName, locale] of [['English', 'en'], ['简体中文', 'zh-CN'], ['Tiếng Việt', 'vi']]) {
+    for (const [buttonName, locale, groupTitle] of [
+      ['English', 'en', 'Appearance and language'],
+      ['简体中文', 'zh-CN', '界面与语言'],
+      ['Tiếng Việt', 'vi', 'Giao diện và ngôn ngữ']
+    ]) {
       await page.locator('.settings-center-dialog').getByRole('button', { name: buttonName, exact: true }).click();
       await expect(page.locator('html')).toHaveAttribute('lang', locale);
       await expect(page.locator('.settings-center-dialog')).toHaveAccessibleName({ en: 'Settings', 'zh-CN': '设置', vi: 'Cài đặt' }[locale]);
+      await expect(page.locator('.settings-center-dialog .account-header-desc')).toHaveText(groupTitle);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), true,
         `${locale}: Settings không được tràn ngang`);
     }
     await settingsDialog.getByRole('button', { name: 'Giao diện', exact: true }).click();
+    await expect(settingsDialog.locator('.account-header-desc')).toHaveText('Giao diện và ngôn ngữ');
     const themeGroup = settingsDialog.getByRole('group', { name: 'Chọn giao diện' });
     await expect(themeGroup.getByRole('button')).toHaveCount(4);
     await themeGroup.getByRole('button', { name: 'Giao diện Tối' }).click();
     await expect(page.locator('html')).toHaveClass(/dark-theme/);
     await themeGroup.getByRole('button', { name: 'Giao diện Sáng' }).click();
     await expect(page.locator('html')).toHaveClass(/light-theme/);
+    await settingsDialog.getByRole('button', { name: 'Dữ liệu & quyền riêng tư' }).click();
+    await expect(settingsDialog.locator('.account-header-desc')).toHaveText('Quản lý Tài khoản');
+    const downloadPromise = page.waitForEvent('download');
+    await settingsDialog.getByRole('button', { name: 'Xuất JSON' }).click();
+    const backupDownload = await downloadPromise;
+    assert.match(backupDownload.suggestedFilename(), /^caltdhy_backup_\d{4}-\d{2}-\d{2}\.json$/);
+    const backup = JSON.parse(fs.readFileSync(await backupDownload.path(), 'utf8'));
+    assert.equal(backup.user.email, emailA);
+    assert.ok(Array.isArray(backup.wallets) && Array.isArray(backup.budgets));
     await settingsDialog.getByRole('button', { name: 'Hướng dẫn sử dụng', exact: true }).click();
+    await expect(settingsDialog.locator('.account-header-desc')).toHaveText('Hỗ trợ');
     await settingsDialog.getByRole('button', { name: 'Mở hướng dẫn' }).click();
     const guideDialog = page.getByRole('dialog', { name: 'Sổ tay hướng dẫn CaltDHy' });
     await expect(guideDialog).toBeVisible();
@@ -419,6 +439,7 @@ function blendCssColor(color, background) {
     await page.locator('.user-chip').click();
     const profileDialog = page.getByRole('dialog', { name: 'Cài đặt' });
     await expect(profileDialog.getByRole('button', { name: 'Hồ sơ', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(profileDialog.locator('.account-header-desc')).toHaveText('Quản lý Tài khoản');
     const displayName = profileDialog.locator('#acc-display-name');
     await displayName.fill('Tên chưa lưu');
     await profileDialog.getByRole('button', { name: 'Đóng trung tâm cài đặt' }).click();
@@ -748,7 +769,7 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL('**/spending/plan/overview');
     const planNav = mobilePage.getByRole('navigation', { name: 'Điều hướng Kế hoạch' });
     await expect(planNav).toBeVisible();
-    await mobilePage.evaluate(() => window.scrollTo(0, 80));
+    await mobilePage.locator('.plan-btn-create-primary').evaluate((button) => button.scrollIntoView({ block: 'center' }));
     const planCreateIsTouchable = await mobilePage.locator('.plan-btn-create-primary').evaluate((button) => {
       const box = button.getBoundingClientRect();
       return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)?.closest('button') === button;

@@ -546,7 +546,6 @@ export function WalletsTab() {
             </div>
             <div>
               <h2 className="wallets-v2-heading">Ví &amp; Tài khoản</h2>
-              <p className="wallets-v2-subheading">Quản lý và theo dõi tất cả ví, tài khoản của bạn</p>
             </div>
           </div>
         </div>
@@ -740,7 +739,7 @@ export function WalletsTab() {
               <EmptyState
                 icon={<WalletOutlineIcon type="cash" size={44} color="#10B981" />}
                 title="Chưa có ví hoặc tài khoản nào"
-                description="Tạo các ví tiền mặt, tài khoản ngân hàng hoặc thẻ tín dụng để bắt đầu theo dõi dòng tiền chính xác."
+                description="Tạo ví tiền mặt, tài khoản ngân hàng hoặc thẻ tín dụng để ghi nhận số dư và giao dịch."
                 actionLabel="+ Tạo ví đầu tiên"
                 onAction={handleCreateNew}
               />
@@ -1182,7 +1181,7 @@ export function WalletsTab() {
               </div>
               <div className="add-dashed-text-group">
                 <strong className="add-dashed-title">Thêm ví / tài khoản mới</strong>
-                <span className="add-dashed-subtitle">Tạo hoặc liên kết tài khoản ngân hàng</span>
+                <span className="add-dashed-subtitle">Tạo Ví/Tài khoản mới</span>
               </div>
               <svg className="add-dashed-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
@@ -1210,7 +1209,6 @@ export function WalletsTab() {
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Chuyển tiền</strong>
-                  <span className="quick-action-subtitle">Giữa các ví</span>
                 </div>
               </button>
 
@@ -1234,7 +1232,6 @@ export function WalletsTab() {
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Nạp tiền</strong>
-                  <span className="quick-action-subtitle">Vào ví</span>
                 </div>
               </button>
 
@@ -1258,7 +1255,6 @@ export function WalletsTab() {
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Rút tiền</strong>
-                  <span className="quick-action-subtitle">Từ ví</span>
                 </div>
               </button>
 
@@ -1276,25 +1272,10 @@ export function WalletsTab() {
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Lịch sử giao dịch</strong>
-                  <span className="quick-action-subtitle">Xem toàn bộ giao dịch</span>
                 </div>
               </button>
             </div>
 
-            {/* Banner: Lịch sử giao dịch sẽ mở trang tổng hợp toàn bộ giao dịch */}
-            <button
-              type="button"
-              className="wallet-history-redirect-banner"
-              onClick={handleGoToFullHistory}
-            >
-              <span className="banner-bulb-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                <BulbOutlineIcon size={16} color="currentColor" />
-              </span>
-              <span className="banner-text">
-                Lịch sử giao dịch sẽ mở trang tổng hợp toàn bộ giao dịch của bạn (chi tiêu, thu nhập, nạp/rút, chuyển tiền, ...)
-              </span>
-              <span className="banner-arrow">→</span>
-            </button>
           </div>
         </div>
 

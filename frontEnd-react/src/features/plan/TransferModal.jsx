@@ -168,9 +168,6 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
               <h2 id="transfer-modal-title" className="txn-modal-title modal-pro-title">
                 Chuyển tiền giữa các ví
               </h2>
-              <p className="modal-pro-subtitle">
-                Chuyển tiền nhanh chóng và an toàn giữa các ví của bạn
-              </p>
             </div>
           </div>
           <button

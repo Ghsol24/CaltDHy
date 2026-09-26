@@ -13,7 +13,7 @@ const LANDING_KEYS = [
   'eyebrow', 'tagline', 'totalBalance', 'transactions', 'vsLastMo',
   'loginBtn', 'signupBtn', 'previewTitle', 'previewLive', 'previewIncome',
   'previewExpenses', 'previewFood', 'previewTransport', 'previewSalary',
-  'settingsTitle', 'langLabel', 'themeLabel', 'themeSavedHint', 'doneBtn',
+  'settingsTitle', 'langLabel', 'themeLabel', 'doneBtn',
 ];
 
 export function LandingPage() {
@@ -356,7 +356,6 @@ export function LandingPage() {
                 </button>
               ))}
             </div>
-            <p className="idx-theme-hint">{t.themeSavedHint}</p>
           </div>
 
           <button className="idx-done-btn" onClick={() => setIsSettingsOpen(false)}>

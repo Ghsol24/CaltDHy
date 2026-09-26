@@ -312,7 +312,6 @@ export function SidebarNav() {
               </div>
               <div className="quick-record-text">
                 <strong className="quick-record-title">{t('nav.quickRecord')}</strong>
-                <span className="quick-record-desc">{t('nav.quickRecordHint')}</span>
               </div>
             </div>
             <button

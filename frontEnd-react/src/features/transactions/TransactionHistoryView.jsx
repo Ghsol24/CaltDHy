@@ -80,7 +80,6 @@ export function TransactionHistoryView() {
     <header className="transaction-history-header">
       <div>
         <h2 id="transaction-history-title">{t('history.title')}</h2>
-        <p>{t('history.subtitle')}</p>
       </div>
     </header>
 

@@ -231,7 +231,6 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
       <div className="signature-login__content">
         <header className="signature-login__header">
           <h1>{t('auth.signatureTitle')}</h1>
-          <p>{t('auth.signatureSubtitle')}</p>
           <div className="signature-login__beats" aria-hidden="true">
             {Array.from({ length: 5 }, (_, index) => <span key={index} />)}
           </div>

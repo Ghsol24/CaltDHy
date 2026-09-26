@@ -189,11 +189,6 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
               <h2 id="wallet-modal-title" className="txn-modal-title modal-pro-title">
                 {isEditing ? 'Chỉnh sửa ví / tài khoản' : 'Thêm ví / tài khoản mới'}
               </h2>
-              <p className="modal-pro-subtitle">
-                {isEditing
-                  ? 'Cập nhật thông tin ví hoặc tài khoản của bạn'
-                  : 'Tạo mới một ví hoặc liên kết tài khoản ngân hàng'}
-              </p>
             </div>
           </div>
           <button

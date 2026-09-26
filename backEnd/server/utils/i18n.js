@@ -133,6 +133,8 @@ const remainingApiMessages = {
     'Lỗi khi cập nhật trạng thái.': ['Unable to update the status.', '无法更新状态。'],
     'Đã xóa khoản định kỳ và bảo toàn lịch sử chi tiêu liên quan!': ['Recurring item deleted; related expense history was preserved.', '已删除周期项目，相关支出记录已保留。'],
     'Không tìm thấy user.': ['User not found.', '未找到用户。'],
+    'Không tìm thấy tài khoản.': ['Account not found.', '未找到账户。'],
+    'Không thể sao lưu dữ liệu.': ['Unable to back up data.', '无法备份数据。'],
     'Lỗi khi tải danh mục.': ['Unable to load categories.', '无法加载分类。'],
     'Dữ liệu danh mục không hợp lệ.': ['Invalid category data.', '分类数据无效。'],
     'Đã cập nhật danh mục thành công!': ['Categories updated.', '分类已更新！'],

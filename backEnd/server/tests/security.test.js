@@ -21,6 +21,9 @@ const Wallet = require('../models/Wallet');
 const Jar = require('../models/Jar');
 const Transaction = require('../models/Transaction');
 const Installment = require('../models/Installment');
+const Budget = require('../models/Budget');
+const Category = require('../models/Category');
+const ExpectedHighSpendDay = require('../models/ExpectedHighSpendDay');
 const AuthSession = require('../models/AuthSession');
 const Receipt = require('../models/IdempotencyReceipt');
 const { getAllWalletBalances } = require('../utils/walletBalance');
@@ -131,6 +134,46 @@ describe('Security and financial invariants on a real replica set', { concurrenc
         assert.equal((await owner.send('post', '/api/spending/reset-data', {})).status, 200);
         assert.deepEqual((await owner.agent.get('/api/spending/expected-days?month=2026-09')).body.data, []);
         assert.deepEqual((await other.agent.get('/api/spending/expected-days?month=2026-09')).body.data, ['2026-09-03']);
+    });
+    it('exports complete financial records for the current account only', async () => {
+        const owner = await client('export-owner'), other = await client('export-other');
+        assert.equal((await request(app).get('/api/spending/export')).status, 401);
+
+        await User.updateOne({ _id: owner.user.id }, { $set: { customCategories: ['Owner custom'] } });
+        await User.updateOne({ _id: other.user.id }, { $set: { customCategories: ['Other custom'] } });
+        const records = [
+            [Transaction, { type: 'expense', amount: 8, category: 'Owner category', date: new Date('2025-12-01T00:00:00Z') }, 'transactions'],
+            [Budget, { category: 'Owner category', limit: 100, month: '2025-12' }, 'budgets'],
+            [Wallet, { name: 'Archived wallet', archived: true, archivedAt: new Date('2025-12-01T00:00:00Z') }, 'wallets'],
+            [Category, { name: 'Owner category', nameLower: 'owner category' }, 'categories'],
+            [Jar, { name: 'Owner jar', target: 100 }, 'jars'],
+            [Installment, { name: 'Owner recurring', amount: 10, cycle: 'monthly', nextDueDate: '2026-10-01' }, 'installments'],
+            [ExpectedHighSpendDay, { date: '2025-12-20' }, 'expectedHighSpendDays']
+        ];
+        for (const record of records) {
+            const [Model, fields] = record;
+            const own = await Model.create({ userId: owner.user.id, ...fields });
+            const foreign = await Model.create({ userId: other.user.id, ...fields });
+            record.push(own._id.toString(), foreign._id.toString());
+        }
+        const currentBudget = await Budget.create({ userId: owner.user.id, category: 'Owner category', limit: 200, month: '2026-09' });
+        const response = await owner.agent.get('/api/spending/export');
+        assert.equal(response.status, 200, JSON.stringify(response.body));
+        assert.match(response.headers['cache-control'], /no-store/);
+        assert.equal(response.body.success, true);
+        assert.equal(response.body.data.version, 1);
+        assert.ok(!Number.isNaN(Date.parse(response.body.data.exportedAt)));
+        assert.deepEqual(response.body.data.user, { id: owner.user.id, name: 'export-owner', email: owner.email });
+        assert.deepEqual(response.body.data.customCategories, ['Owner custom']);
+        assert.ok(!response.text.includes('Other custom'));
+        assert.ok(!response.text.includes('password'));
+        for (const [, , key, ownId, foreignId] of records) {
+            const ids = response.body.data[key].map(record => record._id);
+            assert.ok(ids.includes(ownId), `${key} missing own record`);
+            assert.ok(!ids.includes(foreignId), `${key} includes foreign record`);
+        }
+        assert.ok(response.body.data.budgets.some(budget => budget._id === currentBudget._id.toString()));
+        assert.ok(response.body.data.wallets.some(walletRecord => walletRecord.name === 'Archived wallet' && walletRecord.archived));
     });
     it('rejects decimal, coercible and unsafe money without persisting a write', async () => {
         const c = await client('money'); const id = await wallet(c);

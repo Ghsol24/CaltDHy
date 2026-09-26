@@ -552,7 +552,7 @@ export function JarsView() {
           jar: null,
           note1Icon: 'sparkle',
           note1Label: 'Mục tiêu rõ ràng',
-          note1Desc: 'Xác định số tiền cụ thể giúp tăng 70% khả năng hoàn thành.',
+          note1Desc: 'Đặt số tiền cụ thể để dễ theo dõi tiến độ.',
           note2Icon: 'leaf',
           note2Label: 'Khởi đầu nhẹ nhàng',
           note2Desc: 'Bắt đầu từ số tiền nhỏ để hình thành thói quen tài chính vững vàng.'
@@ -613,7 +613,7 @@ export function JarsView() {
           : `Cần thêm ${formatCurrency(amtToMilestone)} để chạm mốc ${nextMilestone}%.`,
         note2Icon: 'zap',
         note2Label: 'Chiến lược giữ nhịp',
-        note2Desc: 'Chia nhỏ nạp đều đặn theo tuần giúp giảm 50% áp lực tài chính.'
+        note2Desc: 'Thử góp đều mỗi tuần để khoản nạp nhẹ hơn.'
       });
     }
 
@@ -631,8 +631,8 @@ export function JarsView() {
 
       list.push({
         title: 'Kế hoạch định kỳ',
-        highlight: `Mục tiêu "${datedJar.name}" cần ~${formatCurrency(suggested)}/tháng`,
-        text: `Duy trì đều đặn mức nạp này trong ${monthsRemaining} tháng tới sẽ giúp bạn về đích đúng hẹn mà không bị áp lực.`,
+        highlight: `Gợi ý cho "${datedJar.name}": ~${formatCurrency(suggested)}/tháng`,
+        text: `Thử nạp đều trong ${monthsRemaining} tháng còn lại và điều chỉnh theo khả năng của bạn.`,
         actionText: `Nạp ${formatCurrency(suggested)}`,
         actionType: 'deposit',
         jar: datedJar,
@@ -642,7 +642,7 @@ export function JarsView() {
         note1Desc: `Còn ${monthsRemaining} tháng (${diffDays} ngày) tới ngày hẹn (${formatDate(datedJar.targetDate)}).`,
         note2Icon: 'trend',
         note2Label: 'Kỷ luật tài chính',
-        note2Desc: `Nạp đúng ${formatCurrency(suggested)}/tháng để đảm bảo 100% về đích đúng hạn.`
+        note2Desc: `Có thể nạp khoảng ${formatCurrency(suggested)}/tháng để theo kịp mục tiêu.`
       });
     }
 
@@ -895,13 +895,12 @@ export function JarsView() {
           <div className="jars-hero-top-row">
             <div className="jars-hero-titles">
               <h1 className="jars-hero-heading">{emptyHeading}</h1>
-              <p className="jars-hero-subtitle">Biến những khoản tiền nhỏ thành những mục tiêu lớn.</p>
             </div>
           </div>
           <EmptyState
             icon={<JarOutlineIcon size={36} />}
             title="Bạn chưa có hũ tiết kiệm"
-            description="Tạo một hũ cho mục tiêu cụ thể; CaltDHy chỉ bắt đầu đánh giá tiến độ sau khi có dữ liệu của bạn."
+            description="Tạo hũ đầu tiên và nhập số tiền mục tiêu để theo dõi tiến độ."
             actionLabel="Tạo hũ đầu tiên"
             onAction={handleCreateNew}
             className="jars-first-run-state"
@@ -963,9 +962,6 @@ export function JarsView() {
         <div className="jars-hero-top-row">
           <div className="jars-hero-titles">
             <h1 className="jars-hero-heading">Mục tiêu</h1>
-            <p className="jars-hero-subtitle">
-              Biến những khoản tiền nhỏ thành những mục tiêu lớn.
-            </p>
           </div>
 
           <button
@@ -1595,10 +1591,7 @@ export function JarsView() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span className="jars-status-tag jars-status-tag--safe" style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <CheckOutlineIcon size={12} />
-                    <span>100% An toàn</span>
-                  </span>
-                  <span className="jars-status-empty-text" style={{ color: '#059669' }}>
-                    Tuyệt vời! Tất cả các hũ đều đang tiến triển tốt, không có hũ nào trễ hạn.
+                    <span>Chưa có cảnh báo tiến độ</span>
                   </span>
                 </div>
               )}
@@ -1697,7 +1690,7 @@ export function JarsView() {
               </svg>
             }
             title="Chưa có hũ chi tiêu nào"
-            description="Tạo các hũ tiết kiệm như Sức khoẻ, Học tập, Mua xe, Du lịch để phân bổ tài chính thông minh và hoàn thành mục tiêu nhanh hơn."
+            description="Tạo hũ đầu tiên và nhập số tiền mục tiêu để theo dõi tiến độ."
             actionLabel="+ Tạo hũ tiết kiệm đầu tiên"
             onAction={handleCreateNew}
           />

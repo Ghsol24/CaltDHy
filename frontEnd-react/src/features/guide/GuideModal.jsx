@@ -45,7 +45,6 @@ export function GuideModal() {
             </div>
             <div className="budget-dialog-titles">
               <h2 className="budget-dialog-title">Hướng dẫn sử dụng CaltDHy</h2>
-              <p className="budget-dialog-desc">Làm chủ tài chính cá nhân với phương pháp quản lý dòng tiền chuẩn mực.</p>
             </div>
           </div>
           <button
@@ -104,7 +103,6 @@ export function GuideModal() {
             <div className="guide-tab-pane">
               <div className="guide-hero-banner">
                 <h4>Quy trình 4 bước làm chủ tài chính hàng tháng</h4>
-                <p>Thực hiện lần lượt 4 bước sau để CaltDHy tự động hóa việc theo dõi và bảo vệ ví tiền của bạn.</p>
               </div>
 
               <div className="guide-steps-grid">

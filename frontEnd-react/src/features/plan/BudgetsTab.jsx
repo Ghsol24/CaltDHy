@@ -167,7 +167,7 @@ export function BudgetsTab() {
         <div className="budgets-header-titles">
           <h2 className="budgets-view-title">Ngân sách</h2>
           <p className="budgets-view-subtitle">
-            Lập kế hoạch chi tiêu thông minh và kiểm soát tài chính hiệu quả
+            Đặt hạn mức cho từng danh mục
           </p>
         </div>
 

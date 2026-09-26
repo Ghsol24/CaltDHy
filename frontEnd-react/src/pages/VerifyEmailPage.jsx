@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { authService } from '../services/authService';
-import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -45,9 +44,8 @@ export function VerifyEmailPage() {
 
   return (
     <div className="auth-page">
-      <StatusBar label={t('auth.verifyEmail')} />
       <main>
-        <IndustrialPanel eyebrow={t('auth.account')} title={t('auth.verifyEmail')} titleHighlight="">
+        <IndustrialPanel title={t('auth.verifyEmail')} titleHighlight="">
           <p style={{ color: 'var(--muted)', lineHeight: 1.6, textAlign: 'center', margin: '0 0 20px' }}>{message}</p>
           {canResend && <button className="btn-cta" type="button" onClick={resend} disabled={isSending}>
             {isSending ? t('auth.sending') : t('auth.resend')}

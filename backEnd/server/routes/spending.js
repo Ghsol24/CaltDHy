@@ -17,6 +17,48 @@ const { getVietnamTodayString } = require('../utils/localDate');
 // Tất cả các routes chi tiêu đều cần đăng nhập để xác thực
 router.use(protect);
 
+// Export every persisted financial record for the signed-in account, including
+// archived wallets and budgets outside the month currently shown in the UI.
+router.get('/export', async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays] = await Promise.all([
+            User.findById(userId).select('_id name email customCategories').lean(),
+            Transaction.find({ userId }).lean(),
+            Budget.find({ userId }).lean(),
+            Wallet.find({ userId }).lean(),
+            Category.find({ userId }).lean(),
+            Jar.find({ userId }).lean(),
+            Installment.find({ userId }).lean(),
+            ExpectedHighSpendDay.find({ userId }).lean()
+        ]);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
+        }
+
+        res.set('Cache-Control', 'no-store');
+        return res.json({
+            success: true,
+            data: {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                user: { id: user._id.toString(), name: user.name, email: user.email },
+                customCategories: user.customCategories || [],
+                transactions,
+                budgets,
+                wallets,
+                categories,
+                jars,
+                installments,
+                expectedHighSpendDays
+            }
+        });
+    } catch {
+        console.error('[finance] export_failed');
+        return res.status(500).json({ success: false, message: 'Không thể sao lưu dữ liệu.' });
+    }
+});
+
 // Acknowledged high-spend dates belong to the signed-in user and never affect balances.
 router.get('/expected-days', async (req, res) => {
     try {

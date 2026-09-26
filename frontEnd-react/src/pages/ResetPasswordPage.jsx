@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router';
 import { authService } from '../services/authService';
-import { StatusBar } from '../components/ui/StatusBar';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import {
@@ -100,11 +99,8 @@ export const ResetPasswordPage = () => {
 
   return (
     <div className="auth-page">
-      <StatusBar label={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')} />
-
       <main>
         <IndustrialPanel
-          eyebrow={t('auth.account')}
           title={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')}
           titleHighlight=""
         >

@@ -1017,7 +1017,7 @@ export function AnalyticsView() {
         <div className="analytics-title-group">
           <h2 className="analytics-view-title">Phân tích tài chính</h2>
           <p className="analytics-view-subtitle">
-            Cơ cấu thu chi, dòng tiền thuần và xu hướng tài chính của bạn
+            Nhìn rõ dòng tiền theo thời gian
           </p>
         </div>
 
@@ -1290,9 +1290,6 @@ export function AnalyticsView() {
             <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               <TrendOutlineIcon size={18} /> Xu hướng dòng tiền
             </h3>
-            <p className="panel-subtitle">
-              So sánh tương quan giữa Tổng thu nhập và Tổng chi tiêu · {monthLabel}
-            </p>
           </div>
 
           <div className="trend-controls-wrap">
@@ -1439,9 +1436,6 @@ export function AnalyticsView() {
             <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               <ClipboardOutlineIcon size={18} /> Báo cáo tổng hợp tài chính
             </h3>
-            <p className="panel-subtitle">
-              Đối chiếu chi tiết chỉ số tài chính, nhóm chi phí và tình trạng ngân sách giữa các kỳ
-            </p>
           </div>
 
           <div className="report-action-bar">

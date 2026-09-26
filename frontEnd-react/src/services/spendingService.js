@@ -1,6 +1,8 @@
 import { api } from './api';
 
 export const spendingService = {
+  exportFinancialData: async () => api.get('/api/spending/export'),
+
   getTransactions: async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     const url = query ? `/api/spending?${query}` : '/api/spending';
