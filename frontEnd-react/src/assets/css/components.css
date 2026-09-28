@@ -11642,5 +11642,315 @@ html.green-theme .cal-weekday.cal-danger {
   transform: translateY(-1px);
 }
 
+/* ============================================================
+   CALTDHY UNIVERSAL CUSTOM SELECT COMPONENT
+   Accessible, multi-theme, high-performance dropdown control
+   ============================================================ */
+.calt-custom-select {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.calt-custom-select.w-full,
+.calt-custom-select--full {
+  width: 100%;
+  display: block;
+}
+
+.calt-custom-select.is-open {
+  z-index: 60;
+}
+
+.calt-custom-select.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ── Trigger Button ── */
+.calt-custom-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  color: var(--text-primary);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--dur-fast, 0.15s) ease,
+              background-color var(--dur-fast, 0.15s) ease,
+              box-shadow var(--dur-fast, 0.15s) ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.calt-custom-select-trigger:hover:not(:disabled) {
+  border-color: var(--border-focus, var(--color-action-bg, var(--primary)));
+  background: var(--surface-subtle);
+}
+
+.calt-custom-select-trigger:focus-visible,
+.calt-custom-select.is-open .calt-custom-select-trigger {
+  border-color: var(--border-focus, var(--color-action-bg, var(--primary)));
+  box-shadow: var(--focus-ring, 0 0 0 3px rgba(var(--accent-rgb, 7, 138, 89), 0.2));
+}
+
+/* ── Trigger Sizes ── */
+.calt-custom-select--sm .calt-custom-select-trigger {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: var(--radius-sm, 8px);
+  gap: 6px;
+}
+
+.calt-custom-select--md .calt-custom-select-trigger {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 13.5px;
+  border-radius: var(--radius-md, 10px);
+  gap: 8px;
+}
+
+.calt-custom-select--lg .calt-custom-select-trigger {
+  min-height: 48px;
+  padding: 10px 16px;
+  font-size: 14.5px;
+  border-radius: var(--radius-lg, 12px);
+  gap: 10px;
+}
+
+/* ── Trigger Variants ── */
+.calt-custom-select--subtle .calt-custom-select-trigger {
+  border-width: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.calt-custom-select--pill .calt-custom-select-trigger {
+  border-radius: 9999px;
+}
+
+.calt-custom-select--ghost .calt-custom-select-trigger {
+  background: transparent;
+  border-color: transparent;
+}
+.calt-custom-select--ghost .calt-custom-select-trigger:hover:not(:disabled) {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+
+/* ── Trigger Content ── */
+.calt-custom-select-trigger-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calt-custom-select-prefix-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-link, var(--primary));
+  font-size: 14px;
+}
+
+.calt-custom-select-prefix-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.calt-custom-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calt-custom-select-placeholder {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.calt-custom-select-chevron {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: transform var(--dur-fast, 0.15s) ease;
+}
+
+.calt-custom-select-chevron.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* ── Popover Menu ── */
+.calt-custom-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 1050;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(340px, 90vw);
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: caltDropdownFade 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes caltDropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.calt-custom-select-menu--align-left {
+  left: 0;
+  right: auto;
+}
+
+.calt-custom-select-menu--align-right {
+  right: 0;
+  left: auto;
+}
+
+/* ── Menu Option Items ── */
+.calt-custom-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--dur-fast, 0.12s) ease,
+              color var(--dur-fast, 0.12s) ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.calt-custom-select--sm + .calt-custom-select-menu .calt-custom-select-item {
+  padding: 6px 9px;
+  font-size: 12px;
+}
+
+.calt-custom-select-item:hover,
+.calt-custom-select-item.is-highlighted {
+  background: var(--surface-subtle);
+}
+
+.calt-custom-select-item.is-selected {
+  background: rgba(var(--accent-rgb, 7, 138, 89), 0.12);
+  color: var(--color-link, var(--primary));
+  font-weight: 600;
+}
+
+.calt-custom-select-item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.calt-custom-select-item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calt-custom-select-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-link, var(--primary));
+}
+
+.calt-custom-select-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calt-custom-select-item-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(var(--accent-rgb, 7, 138, 89), 0.14);
+  color: var(--color-link, var(--primary));
+  flex-shrink: 0;
+}
+
+.calt-custom-select-check {
+  color: var(--color-link, var(--primary));
+  flex-shrink: 0;
+}
+
+/* ── Dark Theme Refinements ── */
+.dark-theme .calt-custom-select-menu {
+  background: var(--surface, #161722);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .calt-custom-select-item:hover,
+.dark-theme .calt-custom-select-item.is-highlighted {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dark-theme .calt-custom-select-item.is-selected {
+  background: rgba(var(--accent-rgb, 79, 70, 229), 0.22);
+  color: #818CF8;
+}
+
+/* ── Cream Theme Refinements ── */
+.cream-theme .calt-custom-select-menu {
+  background: #FFFDF9;
+  border-color: #E2D9C8;
+  box-shadow: 0 14px 34px rgba(60, 40, 20, 0.12);
+}
+
+/* ── Green Theme Refinements ── */
+.green-theme .calt-custom-select-menu {
+  background: #0D221A;
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+
 
 

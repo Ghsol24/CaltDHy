@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useId } from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletOutlineIcon';
 
@@ -8,55 +8,128 @@ export function CustomWalletDropdown({
   onChange,
   allowNone = false,
   noneLabel = '-- Không đồng bộ ví (chỉ ghi nhận hũ độc lập) --',
-  placeholder = 'Chọn ví / tài khoản...'
+  placeholder = 'Chọn ví / tài khoản...',
+  disabled = false,
+  id: explicitId,
+  name,
+  ariaLabel,
+  className = '',
 }) {
+  const generatedId = useId();
+  const triggerId = explicitId || generatedId;
+  const listboxId = `${triggerId}-listbox`;
+
   const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  const itemRefs = useRef([]);
+
+  // Compute all available items (including none option if allowed)
+  const items = [];
+  if (allowNone) {
+    items.push({ id: '', isNone: true, name: noneLabel });
+  }
+  wallets.forEach((w) => items.push(w));
+
+  const selectedIndex = items.findIndex((item) => (item.id === '' ? value === '' : item.id === value));
+  const selectedWallet = wallets.find((w) => w.id === value);
 
   // Close dropdown on click outside
   useEffect(() => {
+    if (!isOpen) return;
     const handleOutsideClick = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);
       }
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-      document.addEventListener('touchstart', handleOutsideClick);
-    }
+    document.addEventListener('pointerdown', handleOutsideClick);
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('touchstart', handleOutsideClick);
+      document.removeEventListener('pointerdown', handleOutsideClick);
     };
   }, [isOpen]);
 
-  // Close dropdown on Escape key
+  // Scroll highlighted item into view
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+    if (isOpen && highlightedIndex >= 0 && itemRefs.current[highlightedIndex]) {
+      itemRefs.current[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [isOpen, highlightedIndex]);
 
-  const selectedWallet = wallets.find((w) => w.id === value);
+  const openDropdown = () => {
+    if (disabled) return;
+    setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    setIsOpen(true);
+  };
+
+  const closeDropdown = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
 
   const handleSelect = (walletId) => {
-    onChange(walletId);
+    onChange?.(walletId);
     setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (disabled) return;
+
+    if (!isOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openDropdown();
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeDropdown();
+    } else if (e.key === 'Tab') {
+      setIsOpen(false);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1) % items.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev - 1 + items.length) % items.length);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setHighlightedIndex(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setHighlightedIndex(items.length - 1);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+        handleSelect(items[highlightedIndex].id);
+      }
+    }
   };
 
   return (
-    <div className={`custom-wallet-dropdown ${isOpen ? 'is-open' : ''}`} ref={containerRef}>
+    <div
+      className={`custom-wallet-dropdown ${isOpen ? 'is-open' : ''} ${disabled ? 'is-disabled' : ''} ${className}`}
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+    >
       {/* Trigger Button */}
       <button
+        ref={triggerRef}
+        id={triggerId}
+        name={name}
         type="button"
         className="custom-wallet-trigger"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => (isOpen ? closeDropdown() : openDropdown())}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={isOpen ? listboxId : undefined}
+        aria-label={ariaLabel || (selectedWallet ? selectedWallet.name : placeholder)}
       >
         <div className="custom-wallet-selected-info">
           {selectedWallet ? (
@@ -74,7 +147,7 @@ export function CustomWalletDropdown({
                 </span>
               </div>
             </>
-          ) : allowNone ? (
+          ) : allowNone && value === '' ? (
             <span className="custom-wallet-none-text">{noneLabel}</span>
           ) : (
             <span className="custom-wallet-placeholder">{placeholder}</span>
@@ -100,46 +173,77 @@ export function CustomWalletDropdown({
 
       {/* Dropdown Menu Popover */}
       {isOpen && (
-        <div className="custom-wallet-menu" role="listbox">
-          {allowNone && (
-            <div
-              className={`custom-wallet-item custom-wallet-item--none ${value === '' ? 'is-active' : ''}`}
-              role="option"
-              aria-selected={value === ''}
-              onClick={() => handleSelect('')}
-            >
-              <div className="custom-wallet-item-content">
-                <span className="custom-wallet-item-none-title">
-                  {noneLabel}
-                </span>
-              </div>
-              {value === '' && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="custom-wallet-check">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              )}
-            </div>
-          )}
+        <div
+          ref={menuRef}
+          id={listboxId}
+          className="custom-wallet-menu"
+          role="listbox"
+          tabIndex={-1}
+          aria-activedescendant={highlightedIndex >= 0 ? `${triggerId}-opt-${highlightedIndex}` : undefined}
+        >
+          {items.map((item, idx) => {
+            const isSelected = item.id === '' ? value === '' : item.id === value;
+            const isHighlighted = idx === highlightedIndex;
 
-          {wallets.map((wallet) => {
-            const isSelected = wallet.id === value;
-            const balance = wallet.currentBalance ?? wallet.initialBalance ?? 0;
+            if (item.isNone) {
+              return (
+                <div
+                  key="__none__"
+                  id={`${triggerId}-opt-${idx}`}
+                  ref={(el) => (itemRefs.current[idx] = el)}
+                  className={`custom-wallet-item custom-wallet-item--none ${isSelected ? 'is-active' : ''} ${
+                    isHighlighted ? 'is-highlighted' : ''
+                  }`}
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => handleSelect('')}
+                  onMouseEnter={() => setHighlightedIndex(idx)}
+                >
+                  <div className="custom-wallet-item-content">
+                    <span className="custom-wallet-item-none-title">{noneLabel}</span>
+                  </div>
+                  {isSelected && (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="custom-wallet-check"
+                      aria-hidden="true"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              );
+            }
+
+            const balance = item.currentBalance ?? item.initialBalance ?? 0;
             return (
               <div
-                key={wallet.id}
-                className={`custom-wallet-item ${isSelected ? 'is-active' : ''}`}
+                key={item.id}
+                id={`${triggerId}-opt-${idx}`}
+                ref={(el) => (itemRefs.current[idx] = el)}
+                className={`custom-wallet-item ${isSelected ? 'is-active' : ''} ${
+                  isHighlighted ? 'is-highlighted' : ''
+                }`}
                 role="option"
                 aria-selected={isSelected}
-                onClick={() => handleSelect(wallet.id)}
+                onClick={() => handleSelect(item.id)}
+                onMouseEnter={() => setHighlightedIndex(idx)}
               >
                 <div className="custom-wallet-item-left">
                   <span className="custom-wallet-item-icon" aria-hidden="true">
-                    <WalletOutlineIcon type={wallet.type} size={18} color="currentColor" />
+                    <WalletOutlineIcon type={item.type} size={18} color="currentColor" />
                   </span>
                   <div className="custom-wallet-item-details">
                     <div className="custom-wallet-item-name-row">
-                      <strong className="custom-wallet-item-name">{wallet.name}</strong>
-                      {wallet.isDefault && <span className="custom-wallet-badge">Mặc định</span>}
+                      <strong className="custom-wallet-item-name">{item.name}</strong>
+                      {item.isDefault && <span className="custom-wallet-badge">Mặc định</span>}
                     </div>
                     <span className="custom-wallet-item-balance">
                       Số dư: <strong>{formatCurrency(balance)}</strong>
@@ -148,7 +252,18 @@ export function CustomWalletDropdown({
                 </div>
 
                 {isSelected && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="custom-wallet-check">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="custom-wallet-check"
+                    aria-hidden="true"
+                  >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}

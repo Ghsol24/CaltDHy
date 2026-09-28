@@ -15,6 +15,7 @@ import { JarGlassGraphic } from './JarGlassGraphic';
 import { formatCompactCurrency, formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import {
   FlameOutlineIcon,
   BulbOutlineIcon,
@@ -1098,34 +1099,22 @@ export function JarsView() {
             </div>
 
             {/* Month Filter Selector */}
-            <div className="jars-chart-month-dropdown">
-              <div className="jars-chart-month-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5356F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <CustomSelect
+              options={availableMonths}
+              value={selectedMonthVal}
+              onChange={setSelectedMonthVal}
+              size="sm"
+              variant="subtle"
+              prefixIcon={
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                   <line x1="16" x2="16" y1="2" y2="6" />
                   <line x1="8" x2="8" y1="2" y2="6" />
                   <line x1="3" x2="21" y1="10" y2="10" />
                 </svg>
-                <span>
-                  {availableMonths.find((m) => m.value === selectedMonthVal)?.label || 'Tháng này'}
-                </span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </div>
-              <select
-                className="jars-chart-month-native-select"
-                value={selectedMonthVal}
-                onChange={(e) => setSelectedMonthVal(e.target.value)}
-                aria-label="Chọn tháng hiển thị biểu đồ"
-              >
-                {availableMonths.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              }
+              ariaLabel="Chọn tháng hiển thị biểu đồ"
+            />
           </div>
 
           {/* SVG Chart Canvas with Y-Axis, Gridlines, Curve, Points, Glow & Tooltip */}
@@ -1617,23 +1606,25 @@ export function JarsView() {
 
           <div className="jars-toolbar-right">
             {/* Sort Dropdown */}
-            <div className="jars-sort-select-wrap">
-              <span>Sắp xếp:</span>
-              <select
-                className="jars-sort-select"
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="newest">Mới nhất</option>
-                <option value="oldest">Cũ nhất</option>
-                <option value="progress_desc">Tiến độ cao nhất</option>
-                <option value="deadline_asc">Đến hạn sớm nhất</option>
-                <option value="name_asc">Tên A-Z</option>
-              </select>
-            </div>
+            <CustomSelect
+              prefixLabel="Sắp xếp:"
+              options={[
+                { value: 'newest', label: 'Mới nhất' },
+                { value: 'oldest', label: 'Cũ nhất' },
+                { value: 'progress_desc', label: 'Tiến độ cao nhất' },
+                { value: 'deadline_asc', label: 'Đến hạn sớm nhất' },
+                { value: 'name_asc', label: 'Tên A-Z' },
+              ]}
+              value={sortBy}
+              onChange={(val) => {
+                setSortBy(val);
+                setCurrentPage(1);
+              }}
+              size="sm"
+              variant="subtle"
+              align="right"
+              ariaLabel="Sắp xếp danh sách hũ"
+            />
 
             {/* View Mode Grid/List */}
             <div className="jars-view-toggle">

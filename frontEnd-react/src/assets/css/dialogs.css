@@ -1106,6 +1106,16 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   width: 100%;
 }
 
+.custom-wallet-dropdown.is-open {
+  z-index: 60;
+}
+
+.custom-wallet-dropdown.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 .custom-wallet-trigger {
   width: 100%;
   display: flex;
@@ -1123,7 +1133,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   outline: none;
 }
 
-.custom-wallet-trigger:hover {
+.custom-wallet-trigger:hover:not(:disabled) {
   border-color: var(--color-action-bg);
   background: var(--surface-subtle);
 }
@@ -1252,7 +1262,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   user-select: none;
 }
 
-.custom-wallet-item:hover {
+.custom-wallet-item:hover,
+.custom-wallet-item.is-highlighted {
   background: var(--surface-subtle);
 }
 

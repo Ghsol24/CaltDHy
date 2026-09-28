@@ -7,6 +7,7 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { walletService } from '../../services/walletService';
 import { formatCurrency } from '../../utils/formatters';
 import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
+import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess = null }) {
@@ -339,20 +340,14 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     >
                       Chuyển toàn bộ số dư sang ví nhận:
                     </label>
-                    <select
+                    <CustomWalletDropdown
                       id="transfer-target-select"
-                      className="form-input"
+                      wallets={availableTargetWallets}
                       value={transferToWalletId}
-                      onChange={(e) => setTransferToWalletId(e.target.value)}
+                      onChange={setTransferToWalletId}
                       disabled={isSubmitting}
-                      style={{ width: '100%', fontSize: '0.9rem' }}
-                    >
-                      {availableTargetWallets.map((w) => (
-                        <option key={w.id} value={w.id}>
-                          {w.name} {w.isDefault ? '(Mặc định)' : ''}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Chọn ví nhận số dư..."
+                    />
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #9ca3af)', marginTop: '4px' }}>
                       * Hệ thống sẽ tự động tạo 1 giao dịch chuyển tiền hợp lệ để tất toán sạch số dư ví.
                     </div>
@@ -435,20 +430,14 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     >
                       Chuyển sang ví thanh toán thay thế:
                     </label>
-                    <select
+                    <CustomWalletDropdown
                       id="installment-target-select"
-                      className="form-input"
+                      wallets={availableTargetWallets}
                       value={replacementWalletId}
-                      onChange={(e) => setReplacementWalletId(e.target.value)}
+                      onChange={setReplacementWalletId}
                       disabled={isSubmitting}
-                      style={{ width: '100%', fontSize: '0.9rem' }}
-                    >
-                      {availableTargetWallets.map((w) => (
-                        <option key={w.id} value={w.id}>
-                          {w.name} {w.isDefault ? '(Mặc định)' : ''}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Chọn ví thay thế..."
+                    />
                   </div>
                 )}
               </div>

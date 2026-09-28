@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { HistoryOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 
 export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
   const modalRef = useRef(null);
@@ -132,18 +133,16 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
             </div>
 
             {/* Jar select */}
-            <select
+            <CustomSelect
+              options={[
+                { value: 'all', label: 'Tất cả các hũ' },
+                ...jars.map((j) => ({ value: j.id, label: j.name })),
+              ]}
               value={selectedJarId}
-              onChange={(e) => setSelectedJarId(e.target.value)}
-              className="jar-history-select"
-            >
-              <option value="all">Tất cả các hũ</option>
-              {jars.map((j) => (
-                <option key={j.id} value={j.id}>
-                  {j.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedJarId}
+              size="sm"
+              ariaLabel="Lọc theo hũ"
+            />
           </div>
 
           {/* Search input */}

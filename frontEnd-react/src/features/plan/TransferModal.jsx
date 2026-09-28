@@ -4,6 +4,7 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
+import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const { wallets, transferMoney, fetchWallets } = useWalletStore();
@@ -233,60 +234,32 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 <label htmlFor="from-wallet-select" className="modal-section-label">
                   <span>Từ ví nguồn</span>
                 </label>
-                <div className="modal-select-wrapper">
-                  <span className="modal-select-prefix-icon" aria-hidden="true">
-                    <WalletOutlineIcon type={fromWallet?.type} size={18} color="currentColor" />
-                  </span>
-                  <select
-                    id="from-wallet-select"
-                    className="modal-pro-select with-prefix"
-                    value={fromWalletId}
-                    onChange={(e) => setFromWalletId(e.target.value)}
-                    required
-                  >
-                    {wallets.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.name} ({formatCurrency(w.currentBalance ?? 0)})
-                      </option>
-                    ))}
-                  </select>
-                  <span className="modal-select-chevron" aria-hidden="true">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </span>
-                </div>
+                <CustomWalletDropdown
+                  id="from-wallet-select"
+                  wallets={wallets}
+                  value={fromWalletId}
+                  onChange={(val) => {
+                    setFromWalletId(val);
+                    if (toWalletId === val) {
+                      const nextTo = wallets.find((w) => w.id !== val);
+                      if (nextTo) setToWalletId(nextTo.id);
+                    }
+                  }}
+                  placeholder="Chọn ví nguồn..."
+                />
               </div>
 
               <div className="txn-field-group">
                 <label htmlFor="to-wallet-select" className="modal-section-label">
                   <span>Đến ví nhận</span>
                 </label>
-                <div className="modal-select-wrapper">
-                  <span className="modal-select-prefix-icon" aria-hidden="true">
-                    <WalletOutlineIcon type={toWallet?.type} size={18} color="currentColor" />
-                  </span>
-                  <select
-                    id="to-wallet-select"
-                    className="modal-pro-select with-prefix"
-                    value={toWalletId}
-                    onChange={(e) => setToWalletId(e.target.value)}
-                    required
-                  >
-                    {wallets
-                      .filter((w) => w.id !== fromWalletId)
-                      .map((w) => (
-                        <option key={w.id} value={w.id}>
-                          {w.name} ({formatCurrency(w.currentBalance ?? 0)})
-                        </option>
-                      ))}
-                  </select>
-                  <span className="modal-select-chevron" aria-hidden="true">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </span>
-                </div>
+                <CustomWalletDropdown
+                  id="to-wallet-select"
+                  wallets={wallets.filter((w) => w.id !== fromWalletId)}
+                  value={toWalletId}
+                  onChange={setToWalletId}
+                  placeholder="Chọn ví nhận..."
+                />
               </div>
             </div>
 
