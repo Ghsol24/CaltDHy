@@ -37,6 +37,7 @@ async function account() {
     const response = await c.send('post', 'register', { name: 'Synthetic <name>', email: c.email, password });
     assert.equal(response.status, 201);
     c.userId = response.body.user.id;
+    c.response = response;
     return c;
 }
 
@@ -75,6 +76,77 @@ describe('Account security regressions', { concurrency: false }, () => {
         const fresh = await anonymous();
         assert.equal((await fresh.send('post', 'login', { email, password })).status, 401);
         assert.equal((await fresh.send('post', 'login', { email, password: password + '-new' })).status, 200);
+    });
+
+    it('returns normalized default preferences in every public user response', async () => {
+        const c = await account();
+        const expected = { analyticsExcludeRecurring: false };
+        assert.deepEqual((await c.agent.get('/api/auth/session')).body.user.preferences, expected);
+        assert.deepEqual((await c.agent.get('/api/auth/profile')).body.user.preferences, expected);
+        const updated = await c.send('put', 'profile', { name: 'Preference response test' });
+        assert.equal(updated.status, 200);
+        assert.deepEqual(updated.body.user.preferences, expected);
+
+        // Legacy accounts without the field still get the complete public contract.
+        await User.updateOne({ _id: c.userId }, { $unset: { preferences: '' } });
+        assert.deepEqual((await c.agent.get('/api/auth/session')).body.user.preferences, expected);
+        const fresh = await anonymous();
+        const login = await fresh.send('post', 'login', { email: c.email, password });
+        assert.equal(login.status, 200);
+        assert.deepEqual(login.body.user.preferences, expected);
+    });
+
+    it('persists analytics preferences across logout/login and isolates accounts', async () => {
+        const owner = await account();
+        assert.deepEqual(owner.response.body.user.preferences, { analyticsExcludeRecurring: false });
+        const changed = await owner.send('put', 'preferences', { analyticsExcludeRecurring: true });
+        assert.equal(changed.status, 200);
+        assert.deepEqual(changed.body, {
+            success: true,
+            preferences: { analyticsExcludeRecurring: true }
+        });
+        assert.equal((await User.findById(owner.userId)).preferences.analyticsExcludeRecurring, true);
+        assert.equal((await owner.send('post', 'logout', {})).status, 200);
+
+        const signedInAgain = await anonymous();
+        const login = await signedInAgain.send('post', 'login', { email: owner.email, password });
+        assert.equal(login.status, 200);
+        assert.deepEqual(login.body.user.preferences, { analyticsExcludeRecurring: true });
+        const session = await signedInAgain.agent.get('/api/auth/session');
+        assert.equal(session.status, 200);
+        assert.deepEqual(session.body.user.preferences, { analyticsExcludeRecurring: true });
+
+        const other = await account();
+        assert.deepEqual(other.response.body.user.preferences, { analyticsExcludeRecurring: false });
+        assert.equal((await User.findById(other.userId)).preferences.analyticsExcludeRecurring, false);
+        assert.equal((await User.findById(owner.userId)).preferences.analyticsExcludeRecurring, true);
+    });
+
+    it('protects preference updates and rejects non-boolean or extra fields without mutation', async () => {
+        const c = await account();
+        assert.equal((await c.agent.put('/api/auth/preferences')
+            .send({ analyticsExcludeRecurring: true })).status, 403);
+        const unauthenticated = await anonymous();
+        assert.equal((await unauthenticated.send('put', 'preferences', {
+            analyticsExcludeRecurring: true
+        })).status, 401);
+        assert.equal((await c.send('put', 'preferences', { analyticsExcludeRecurring: true })).status, 200);
+
+        for (const payload of [
+            {},
+            { analyticsExcludeRecurring: 'true' },
+            { analyticsExcludeRecurring: 1 },
+            { analyticsExcludeRecurring: null },
+            { analyticsExcludeRecurring: false, extra: true },
+            [],
+            null
+        ]) {
+            const response = await c.send('put', 'preferences', payload);
+            assert.equal(response.status, 400, JSON.stringify(payload));
+        }
+        assert.equal((await User.findById(c.userId)).preferences.analyticsExcludeRecurring, true);
+        assert.deepEqual((await c.agent.get('/api/auth/session')).body.user.preferences,
+            { analyticsExcludeRecurring: true });
     });
 
     it('allows harmless avatar presets but refuses SVG and script URLs', async () => {

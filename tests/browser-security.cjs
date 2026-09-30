@@ -69,6 +69,8 @@ function blendCssColor(color, background) {
   }
   async function logout(page) {
     await page.locator('.tb-settings-btn').click();
+    const mobileSettingsMenu = page.getByRole('button', { name: 'Quay lại danh sách cài đặt' });
+    if (await mobileSettingsMenu.isVisible()) await mobileSettingsMenu.click();
     await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
     await page.locator('.confirm-dialog-card button').filter({ hasText: /Đăng xuất/i }).click();
     await page.waitForURL('**/login');
@@ -906,12 +908,34 @@ function blendCssColor(color, background) {
     const [toastBox, mobileNavBox] = await Promise.all([recurringToast.boundingBox(), primaryNav.boundingBox()]);
     assert.ok(toastBox && mobileNavBox && toastBox.y + toastBox.height <= mobileNavBox.y,
       'Toast mobile phải nằm phía trên thanh điều hướng');
-    await excludedToggle.click();
+    await mobilePage.reload();
+    await expect(mobilePage.getByRole('button', { name: 'Đã trừ định kỳ' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    await logout(mobilePage);
+    await mobilePage.locator('#emailIn').fill(mobileEmail);
+    await mobilePage.locator('#pwIn').fill(password);
+    await mobilePage.locator('#loginForm button[type=submit]').click();
+    await mobilePage.waitForURL('**/spending/home');
+    await mobilePage.goto('/spending/analytics/cash-flow');
+    const persistedExcludedToggle = mobilePage.getByRole('button', { name: 'Đã trừ định kỳ' });
+    await expect(persistedExcludedToggle).toHaveAttribute('aria-pressed', 'true');
+    await persistedExcludedToggle.click();
     const restoredToggle = mobilePage.getByRole('button', { name: 'Gồm định kỳ' });
     await expect(restoredToggle).toHaveAttribute('aria-pressed', 'false');
     await expect(restoredToggle).toBeEnabled();
     await expect(mobilePage.locator('.toast-item')).toHaveCount(1);
     await expect(mobilePage.locator('.toast-item')).toContainText(/Đã đưa 1 khoản định kỳ trở lại biểu đồ/);
+    await mobilePage.route('**/api/auth/preferences', route => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: false, message: 'Temporary preference failure' })
+    }), { times: 1 });
+    await restoredToggle.click();
+    await expect(mobilePage.getByRole('button', { name: 'Gồm định kỳ' }))
+      .toHaveAttribute('aria-pressed', 'false');
+    await expect(mobilePage.getByRole('button', { name: 'Gồm định kỳ' })).toBeEnabled();
+    await expect(mobilePage.locator('.toast-item')).toContainText('Không thể lưu lựa chọn khoản định kỳ');
+    await mobilePage.unroute('**/api/auth/preferences');
     await mobilePage.locator('.analytics-top-days button').first().click();
     const dayDrawer = mobilePage.getByRole('dialog', { name: /Giao dịch ngày/ });
     await expect(dayDrawer).toBeVisible();

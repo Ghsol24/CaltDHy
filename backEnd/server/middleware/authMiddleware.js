@@ -2,6 +2,7 @@
 const User = require('../models/User');
 const AuthSession = require('../models/AuthSession');
 const { hash, sessionToken, clearSession } = require('../utils/sessionSecurity');
+const { publicUser } = require('../utils/publicUser');
 
 async function protect(req, res, next) {
     try {
@@ -10,7 +11,7 @@ async function protect(req, res, next) {
             tokenHash: hash(token), expiresAt: { $gt: new Date() }
         }).lean();
         const user = session && await User.findById(session.userId)
-            .select('name email avatar emailVerified +authVersion').lean();
+            .select('name email avatar emailVerified preferences +authVersion').lean();
         if (!user || session.authVersion !== (user.authVersion || 0)) {
             clearSession(res);
             return res.status(401).json({
@@ -18,8 +19,7 @@ async function protect(req, res, next) {
                 message: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
             });
         }
-        req.user = { id: user._id.toString(), name: user.name, email: user.email,
-            avatar: user.avatar, emailVerified: user.emailVerified === true };
+        req.user = publicUser(user);
         req.authSession = session;
         return next();
     } catch {

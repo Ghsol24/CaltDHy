@@ -16,6 +16,7 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { useNavigate } from 'react-router';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatMonthShort, formatPercent, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
@@ -106,6 +107,7 @@ export function AnalyticsView() {
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const excludeRecurring = useSpendingStore((s) => s.analyticsExcludeRecurring);
   const setAnalyticsExcludeRecurring = useSpendingStore((s) => s.setAnalyticsExcludeRecurring);
+  const updatePreferences = useAuthStore((s) => s.updatePreferences);
   const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -119,6 +121,8 @@ export function AnalyticsView() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [expectedDays, setExpectedDays] = useState([]);
   const [savingExpectedDay, setSavingExpectedDay] = useState('');
+  const [savingRecurringPreference, setSavingRecurringPreference] = useState(false);
+  const savingRecurringPreferenceRef = useRef(false);
   const barChartRef = useRef(null);
 
   // Current active month in 'YYYY-MM' format
@@ -392,23 +396,42 @@ export function AnalyticsView() {
     return summarizeRecurringExpenses(transactions, prefixes);
   }, [transactions, trendMode, activeMonth, trend3Months.months, trend6Months.months]);
 
-  const handleToggleRecurring = useCallback(() => {
-    const nextExcludeRecurring = !useSpendingStore.getState().analyticsExcludeRecurring;
+  const handleToggleRecurring = useCallback(async () => {
+    if (savingRecurringPreferenceRef.current) return;
+    savingRecurringPreferenceRef.current = true;
+    setSavingRecurringPreference(true);
+    const previousExcludeRecurring = useSpendingStore.getState().analyticsExcludeRecurring;
+    const nextExcludeRecurring = !previousExcludeRecurring;
     barChartRef.current?.stop();
     setAnalyticsExcludeRecurring(nextExcludeRecurring);
-    const { count, amount } = recurringFilterSummary;
-    addToast({
-      dedupeKey: 'analytics-recurring-filter',
-      type: 'info',
-      duration: 3000,
-      message: count === 0
-        ? t('analytics.recurringEmptyToast')
-        : t(nextExcludeRecurring ? 'analytics.recurringExcludedToast' : 'analytics.recurringIncludedToast', {
-            count,
-            amount: formatCurrency(amount, { locale: lang }),
-          }),
-    });
-  }, [addToast, lang, recurringFilterSummary, setAnalyticsExcludeRecurring, t]);
+    try {
+      await updatePreferences({ analyticsExcludeRecurring: nextExcludeRecurring });
+      const { count, amount } = recurringFilterSummary;
+      addToast({
+        dedupeKey: 'analytics-recurring-filter',
+        type: 'info',
+        duration: 3000,
+        message: count === 0
+          ? t('analytics.recurringEmptyToast')
+          : t(nextExcludeRecurring ? 'analytics.recurringExcludedToast' : 'analytics.recurringIncludedToast', {
+              count,
+              amount: formatCurrency(amount, { locale: lang }),
+            }),
+      });
+    } catch (error) {
+      if (error.code !== 'SESSION_CHANGED') {
+        setAnalyticsExcludeRecurring(previousExcludeRecurring);
+        addToast({
+          dedupeKey: 'analytics-recurring-filter',
+          type: 'error',
+          message: t('analytics.recurringSaveFailed'),
+        });
+      }
+    } finally {
+      savingRecurringPreferenceRef.current = false;
+      setSavingRecurringPreference(false);
+    }
+  }, [addToast, lang, recurringFilterSummary, setAnalyticsExcludeRecurring, t, updatePreferences]);
 
   const hasTrendData = useMemo(() => {
     if (trendMode === 'daily') return isCompactChart
@@ -1339,6 +1362,8 @@ export function AnalyticsView() {
                 type="button"
                 className={`trend-recurring-toggle ${excludeRecurring ? 'is-active' : ''}`}
                 aria-pressed={excludeRecurring}
+                aria-busy={savingRecurringPreference}
+                disabled={savingRecurringPreference}
                 onClick={handleToggleRecurring}
                 title={t('analytics.recurringHint')}
               >

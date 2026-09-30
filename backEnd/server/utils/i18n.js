@@ -57,6 +57,7 @@ const auth = {
     'Thông tin không hợp lệ. Mật khẩu cần 12 ký tự, tối đa 72 byte.': ['Invalid information. The password must be at least 12 characters and at most 72 bytes.', '信息无效。密码至少 12 个字符且不超过 72 字节。'],
     'Đã đặt lại mật khẩu. Vui lòng đăng nhập lại.': ['Password reset. Please sign in again.', '密码已重置，请重新登录。'],
     'Thông tin tài khoản không hợp lệ.': ['Invalid account information.', '账户信息无效。'],
+    'Tùy chọn tài khoản không hợp lệ.': ['Invalid account preference.', '账户偏好设置无效。'],
     'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 1MB.': ['The image is too large. Choose an image under 1 MB.', '图片过大，请选择小于 1 MB 的图片。'],
     'Cập nhật tài khoản thành công!': ['Account updated successfully.', '账户更新成功！'],
 };

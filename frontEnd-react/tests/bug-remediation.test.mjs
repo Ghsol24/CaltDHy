@@ -40,6 +40,7 @@ test('new budget and recurring-filter feedback labels exist in all three locales
     assert.match(translate(locale, 'budgets.categoryDetailTitle', { month: '2026-09' }), /2026-09/);
     assert.match(translate(locale, 'analytics.recurringExcludedToast', { count: 3, amount: '100' }), /3/);
     assert.match(translate(locale, 'analytics.recurringIncludedToast', { count: 3, amount: '100' }), /100/);
+    assert.notEqual(translate(locale, 'analytics.recurringSaveFailed'), 'analytics.recurringSaveFailed');
   }
 });
 

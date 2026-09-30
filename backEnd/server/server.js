@@ -160,7 +160,8 @@ const authLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     message: limitMessage,
-    skip: req => ['GET', 'HEAD'].includes(req.method) || req.path === '/logout'
+    skip: req => ['GET', 'HEAD'].includes(req.method) ||
+        ['/logout', '/preferences'].includes(req.path)
 });
 
 app.use('/api', csrfProtection);

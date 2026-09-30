@@ -11,6 +11,7 @@ const { runWithTransaction } = require('../utils/mongoTransaction');
 const { issueCsrf, createSession, setSession, revokeSession, clearSession } = require('../utils/sessionSecurity');
 const { validEmail, normalizeEmail } = require('../utils/emailAddress');
 const { configuredProvider, sendAccountEmail } = require('../utils/accountEmail');
+const { publicPreferences, publicUser } = require('../utils/publicUser');
 const router = express.Router();
 
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
@@ -18,10 +19,6 @@ const validPassword = value => typeof value === 'string' && value.length >= 12 &
 const validToken = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const avatarPresets = new Set(['💼', '🚀', '⚡', '🎯', '👑', '💎', '🏆', '☕', '🦁', '🦊', '🐱', '🌲', '🍀', '🛸', '🎮', '💻']);
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
-const publicUser = user => ({
-    id: user._id.toString(), name: user.name, email: user.email,
-    avatar: user.avatar || '', emailVerified: user.emailVerified === true
-});
 const escapeHtml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
@@ -198,6 +195,28 @@ router.post('/reset-password', async (req, res) => {
         if (!user) return res.status(400).json({ success: false, message: 'Liên kết không hợp lệ hoặc đã hết hạn.' });
         return res.json({ success: true, message: 'Đã đặt lại mật khẩu. Vui lòng đăng nhập lại.' });
     } catch (error) { return failure(res, 'reset_password_failed', error); }
+});
+
+router.put('/preferences', protect, async (req, res) => {
+    const body = req.body;
+    if (!body || Array.isArray(body) || typeof body !== 'object' ||
+        Object.keys(body).length !== 1 ||
+        !Object.prototype.hasOwnProperty.call(body, 'analyticsExcludeRecurring') ||
+        typeof body.analyticsExcludeRecurring !== 'boolean') {
+        return res.status(400).json({ success: false, message: 'Tùy chọn tài khoản không hợp lệ.' });
+    }
+    try {
+        const user = await User.findOneAndUpdate(
+            { _id: req.user.id },
+            { $set: { 'preferences.analyticsExcludeRecurring': body.analyticsExcludeRecurring } },
+            { new: true, runValidators: true, projection: { preferences: 1 } }
+        ).lean();
+        if (!user) {
+            return res.status(401).json({ success: false, code: 'SESSION_EXPIRED',
+                message: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.' });
+        }
+        return res.json({ success: true, preferences: publicPreferences(user.preferences) });
+    } catch (error) { return failure(res, 'preferences_update_failed', error); }
 });
 
 router.put('/profile', protect, async (req, res) => {

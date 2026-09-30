@@ -16,6 +16,11 @@ const storage = {
   set: (key, value) => { try { localStorage.setItem(key, value); } catch {} },
   remove: key => { try { localStorage.removeItem(key); } catch {} }
 };
+function hydrateUserPreferences(user) {
+  useSpendingStore.getState().hydrateAnalyticsExcludeRecurring(
+    user?.preferences?.analyticsExcludeRecurring
+  );
+}
 function clearPrivateState() {
   invalidateSession(); clearApiSession();
   try {
@@ -32,7 +37,7 @@ function clearPrivateState() {
 }
 const broadcast = () => storage.set(EVENT_KEY, crypto.randomUUID());
 let initialization;
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   user: null, isAuthenticated: false, isLoading: false, status: 'checking', error: null,
   initialize: async () => {
     const epoch = sessionEpoch();
@@ -48,9 +53,11 @@ export const useAuthStore = create((set) => ({
         }
         const data = await apiFetch('/api/auth/session');
         assertSession(epoch);
+        hydrateUserPreferences(data.user);
         set({ user: data.user, isAuthenticated: true, status: 'authenticated', error: null });
       } catch (error) {
         if (sessionEpoch() !== epoch) return;
+        hydrateUserPreferences(null);
         set({ user: null, isAuthenticated: false, status: 'anonymous',
           error: error.status === 401 ? null : error.message });
       } finally { if (initialization === current) initialization = null; }
@@ -67,6 +74,7 @@ export const useAuthStore = create((set) => ({
       assertSession(epoch);
       if (signal?.aborted) throw new DOMException('Login cancelled', 'AbortError');
       storage.remove(LOGOUT_KEY);
+      hydrateUserPreferences(data.user);
       set({ user: data.user, isAuthenticated: true, status: 'authenticated', isLoading: false });
       broadcast();
       return { success: true, user: data.user };
@@ -83,6 +91,7 @@ export const useAuthStore = create((set) => ({
       const data = await authService.register({ name, email, password, inviteToken });
       assertSession(epoch);
       storage.remove(LOGOUT_KEY);
+      hydrateUserPreferences(data.user);
       set({ user: data.user, isAuthenticated: true, status: 'authenticated', isLoading: false });
       broadcast();
       return { success: true, user: data.user };
@@ -124,6 +133,19 @@ export const useAuthStore = create((set) => ({
       if (epoch === sessionEpoch()) set({ isLoading: false });
       throw error;
     }
+  },
+  updatePreferences: async preferencesUpdate => {
+    const epoch = sessionEpoch();
+    const data = await authService.updatePreferences(preferencesUpdate);
+    assertSession(epoch);
+    const analyticsExcludeRecurring = data.preferences?.analyticsExcludeRecurring;
+    if (typeof analyticsExcludeRecurring !== 'boolean') {
+      throw new Error('Invalid preferences response.');
+    }
+    const preferences = { ...(get().user?.preferences || {}), ...data.preferences };
+    set((state) => state.user ? { user: { ...state.user, preferences } } : state);
+    hydrateUserPreferences({ preferences });
+    return { success: true, preferences };
   }
 }));
 clearPrivateState();

@@ -56,5 +56,12 @@ export const authService = {
       method: 'PUT',
       body: JSON.stringify(profileData)
     });
+  },
+
+  updatePreferences: async (preferences) => {
+    return await apiFetch('/api/auth/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(preferences)
+    });
   }
 };

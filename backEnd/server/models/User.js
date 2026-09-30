@@ -61,6 +61,12 @@ const userSchema = new mongoose.Schema(
         avatar: {
             type: String,
             default: ''
+        },
+        preferences: {
+            analyticsExcludeRecurring: {
+                type: Boolean,
+                default: false
+            }
         }
     },
     {

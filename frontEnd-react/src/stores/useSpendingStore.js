@@ -52,6 +52,13 @@ export const useSpendingStore = create((set) => ({
     set((state) => (state.analyticsExcludeRecurring === Boolean(excludeRecurring) ? state : {
       analyticsExcludeRecurring: Boolean(excludeRecurring),
     })),
+  hydrateAnalyticsExcludeRecurring: (excludeRecurring) =>
+    set((state) => {
+      const nextValue = typeof excludeRecurring === 'boolean' ? excludeRecurring : false;
+      return state.analyticsExcludeRecurring === nextValue ? state : {
+        analyticsExcludeRecurring: nextValue,
+      };
+    }),
   setJarsSubTab: (subTab, options = {}) =>
     set((state) => (state.jarsSubTab === subTab ? state : {
       jarsSubTab: subTab,
