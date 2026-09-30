@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluatePasswordStrength, MIN_PASSWORD_LENGTH } from '../src/utils/passwordStrength.js';
 import { isBudgetMonthOverdue } from '../src/utils/budgetPeriod.js';
+import { isInstallmentEnded, isValidInstallmentEndDate } from '../src/utils/installmentTerm.js';
 import { translate } from '../src/i18n/translations.js';
 import { useToastStore } from '../src/stores/useToastStore.js';
 import { useConfirmStore } from '../src/stores/useConfirmStore.js';
@@ -21,6 +22,18 @@ test('a monthly budget expires after its month ends, independently of spending',
   assert.equal(isBudgetMonthOverdue('2026-09', '2026-09'), false);
   assert.equal(isBudgetMonthOverdue('2026-10', '2026-09'), false);
   assert.equal(isBudgetMonthOverdue('2026-13', '2027-01'), false);
+});
+
+test('recurring term includes its final due day and ends only after the next period advances', () => {
+  assert.equal(isInstallmentEnded({ nextDueDate: '2026-10-01' }), false);
+  assert.equal(isInstallmentEnded({ nextDueDate: '2026-10-31', endDate: '2026-10-31' }), false);
+  assert.equal(isInstallmentEnded({ nextDueDate: '2026-11-30', endDate: '2026-10-31' }), true);
+  assert.equal(isInstallmentEnded({ nextDueDate: '2027-01-01', endDate: '2026-12-31' }), true);
+  assert.equal(isInstallmentEnded({ nextDueDate: '10000-01-01', endDate: '9999-12-31' }), true);
+  assert.equal(isInstallmentEnded({ endDate: '2026-10-31' }), true);
+  assert.equal(isInstallmentEnded({ nextDueDate: '2026-11-01', endDate: '2026-02-30' }), false);
+  assert.equal(isValidInstallmentEndDate('2028-02-29'), true);
+  assert.equal(isValidInstallmentEndDate('2027-02-29'), false);
 });
 
 test('deduplicated feedback replaces the previous recurring-filter toast', () => {

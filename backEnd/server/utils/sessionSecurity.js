@@ -3,9 +3,11 @@ const crypto = require('node:crypto');
 const AuthSession = require('../models/AuthSession');
 
 function secureCookies() {
+    // Keep this fallback aligned with the listener configuration in server.js.
+    const host = process.env.HOST || (process.env.RENDER === 'true' ? '0.0.0.0' : '127.0.0.1');
     return process.env.COOKIE_SECURE === 'true' ||
         /^https:\/\//.test(process.env.CLIENT_URL || '') ||
-        !['127.0.0.1', '::1'].includes(process.env.HOST || '127.0.0.1');
+        !['127.0.0.1', '::1'].includes(host);
 }
 function names() {
     const prefix = secureCookies() ? '__Host-' : '';

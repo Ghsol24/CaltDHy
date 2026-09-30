@@ -41,6 +41,7 @@ const normalizeInstallment = (i) => ({
   amount: Number(i.amount) || 0,
   cycle: i.cycle || 'monthly',
   nextDueDate: i.nextDueDate || null,
+  endDate: i.endDate || null,
   active: i.active !== undefined ? i.active : (i.isActive !== undefined ? i.isActive : true),
   totalPaid: Number(i.totalPaid) || 0,
   history: Array.isArray(i.history) ? i.history : [],

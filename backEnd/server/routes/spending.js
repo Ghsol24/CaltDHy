@@ -287,7 +287,7 @@ router.put('/categories', financialRequest(async (req, res) => {
 router.get('/budget', financialRequest(async (req, res) => {
     try {
         const monthQuery = typeof req.query?.month === 'string' ? req.query.month.trim() : '';
-        const budgetMap = {};
+        const budgetMap = Object.create(null);
 
         // Nếu client không chỉ định month hoặc query rỗng, mặc định lấy ngân sách của tháng hiện tại theo giờ Việt Nam.
         // Chỉ truy vấn riêng 'global' nếu client truyền chính xác month=global.
@@ -462,7 +462,7 @@ router.put('/budget', financialRequest(async (req, res) => {
             findQuery.month = targetMonth;
         }
         const persistedBudgets = await Budget.find(findQuery);
-        const budgetMap = {};
+        const budgetMap = Object.create(null);
         persistedBudgets.forEach(b => {
             budgetMap[b.category] = b.limit;
         });

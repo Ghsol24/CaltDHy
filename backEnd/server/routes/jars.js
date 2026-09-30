@@ -12,7 +12,7 @@ const User = require('../models/User');
 const Budget = require('../models/Budget');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { isValidVNDAmount } = require('../utils/money');
-const { getVietnamTodayString, nowAsVietnamDateAnchor } = require('../utils/localDate');
+const { getVietnamTodayString, nowAsVietnamDateAnchor, isValidDateString } = require('../utils/localDate');
 
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
@@ -116,6 +116,11 @@ router.patch('/:id/deposit', financialRequest(async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
         }
         const { amount, reason, walletId } = req.body;
+        // Enforce this on the matched route: Express also accepts mixed case and
+        // a trailing slash, so inspecting the raw URL can bypass the invariant.
+        if (!walletId) {
+            return res.status(400).json({ success: false, message: 'Cần chọn ví liên kết khi nạp/rút hũ.' });
+        }
         if (!isValidVNDAmount(amount)) {
             return res.status(400).json({ success: false, message: 'Số tiền nạp phải là số nguyên lớn hơn 0.' });
         }
@@ -216,6 +221,9 @@ router.patch('/:id/withdraw', financialRequest(async (req, res) => {
             return res.status(400).json({ success: false, message: 'ID hũ không hợp lệ.' });
         }
         const { amount, reason, walletId } = req.body;
+        if (!walletId) {
+            return res.status(400).json({ success: false, message: 'Cần chọn ví liên kết khi nạp/rút hũ.' });
+        }
         if (!isValidVNDAmount(amount)) {
             return res.status(400).json({ success: false, message: 'Số tiền rút phải là số nguyên lớn hơn 0.' });
         }
@@ -368,7 +376,7 @@ router.get('/installments', financialRequest(async (req, res) => {
 // POST /api/jars/installments — Tạo khoản định kỳ mới (Điểm 7: bắt buộc category)
 router.post('/installments', financialRequest(async (req, res) => {
     try {
-        const { name, icon, amount, cycle, nextDueDate, category, walletId } = req.body;
+        const { name, icon, amount, cycle, nextDueDate, endDate, category, walletId } = req.body;
 
         if (!name || !amount || !cycle || !nextDueDate) {
             return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc.' });
@@ -382,8 +390,14 @@ router.post('/installments', financialRequest(async (req, res) => {
         if (!isValidVNDAmount(amount)) {
             return res.status(400).json({ success: false, message: 'Số tiền phải là số nguyên lớn hơn 0.' });
         }
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDueDate)) {
+        if (!isValidDateString(nextDueDate)) {
             return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ (YYYY-MM-DD).' });
+        }
+        if (endDate !== undefined && endDate !== null && !isValidDateString(endDate)) {
+            return res.status(400).json({ success: false, message: 'Ngày kết thúc không hợp lệ.' });
+        }
+        if (endDate && endDate < nextDueDate) {
+            return res.status(400).json({ success: false, message: 'Ngày kết thúc phải từ ngày đến hạn đầu tiên trở đi.' });
         }
 
         const itemPayload = {
@@ -394,6 +408,7 @@ router.post('/installments', financialRequest(async (req, res) => {
             amount: Number(amount),
             cycle,
             nextDueDate,
+            endDate: endDate ?? null,
             active: true,
             totalPaid: 0
         };
@@ -428,8 +443,25 @@ router.put('/installments/:id', financialRequest(async (req, res) => {
 
         const oldCategory = item.category;
         const oldName = item.name;
+        const oldWalletId = item.walletId;
 
-        const { name, icon, amount, cycle, nextDueDate, category, walletId } = req.body;
+        const { name, icon, amount, cycle, nextDueDate, endDate, category, walletId } = req.body;
+        if (endDate !== undefined) {
+            if (endDate !== null && !isValidDateString(endDate)) {
+                return res.status(400).json({ success: false, message: 'Ngày kết thúc không hợp lệ.' });
+            }
+            if (endDate) {
+                // A shorter term can end before the next due date, but never erase
+                // a period that has already been paid and recorded in the ledger.
+                const latestPaid = await Transaction.findOne({
+                    userId: req.user.id, installmentId: item._id, period: { $type: 'string' }
+                }).sort({ period: -1 }).select('period').lean();
+                if (latestPaid?.period && endDate < latestPaid.period) {
+                    return res.status(400).json({ success: false, message: 'Ngày kết thúc không được trước kỳ đã thanh toán.' });
+                }
+            }
+            item.endDate = endDate;
+        }
         if (name !== undefined) {
             if (!name.trim()) return res.status(400).json({ success: false, message: 'Tên không được để trống.' });
             item.name = name.trim();
@@ -446,7 +478,7 @@ router.put('/installments/:id', financialRequest(async (req, res) => {
             item.cycle = cycle;
         }
         if (nextDueDate !== undefined) {
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDueDate)) {
+            if (!isValidDateString(nextDueDate)) {
                 return res.status(400).json({ success: false, message: 'Định dạng ngày không hợp lệ (YYYY-MM-DD).' });
             }
             item.nextDueDate = nextDueDate;
@@ -458,6 +490,21 @@ router.put('/installments/:id', financialRequest(async (req, res) => {
         }
         if (walletId !== undefined) {
             item.walletId = isValidObjectId(walletId) ? walletId : null;
+        }
+
+        const scheduleChanged = endDate !== undefined || nextDueDate !== undefined;
+        const hasPayablePeriod = isValidDateString(item.nextDueDate) &&
+            (!item.endDate || item.nextDueDate <= item.endDate);
+        if (scheduleChanged && hasPayablePeriod && oldWalletId) {
+            const archivedWallet = await Wallet.exists({
+                _id: oldWalletId, userId: req.user.id, archived: true
+            });
+            if (archivedWallet && (!item.walletId || String(item.walletId) === String(oldWalletId))) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cần chọn ví đang hoạt động khi mở lại khoản định kỳ.'
+                });
+            }
         }
 
         await item.save();
@@ -563,6 +610,11 @@ router.patch('/installments/:id/pay', financialRequest(async (req, res) => {
                 err.status = 409;
                 throw err;
             }
+            if (!isValidDateString(period) || (item.endDate && period > item.endDate)) {
+                const err = new Error('INSTALLMENT_TERM_ENDED');
+                err.status = 409;
+                throw err;
+            }
             // Editing the due date backwards must not charge an already paid period.
             if (await Transaction.exists({ userId: req.user.id, installmentId: item._id, period })) {
                 const err = new Error('PERIOD_ALREADY_PAID'); err.status = 409; throw err;
@@ -661,6 +713,9 @@ router.patch('/installments/:id/pay', financialRequest(async (req, res) => {
         }
         if (error.message === 'INVALID_WALLET_ID' || error.message === 'WALLET_NOT_FOUND') {
             return res.status(400).json({ success: false, message: 'Ví thanh toán đã chọn không tồn tại hoặc không hợp lệ.' });
+        }
+        if (error.message === 'INSTALLMENT_TERM_ENDED') {
+            return res.status(409).json({ success: false, message: 'Khoản định kỳ đã hết hạn.' });
         }
         console.error('[finance] route_failed');
         res.status(error.status || 500).json({ success: false, message: 'Lỗi khi cập nhật kỳ thanh toán.' });

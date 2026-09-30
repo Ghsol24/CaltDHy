@@ -257,6 +257,142 @@ function blendCssColor(color, background) {
     const stored = await page.evaluate(() => Object.keys(localStorage));
     assert.ok(!stored.some(key => /token|wallets|txns|jars|budgets|caltdhy_user/.test(key)));
   });
+  await check('recurring terms can be set, cleared and finish after their final payable period', async () => {
+    const termContext = await browser.newContext({ baseURL, serviceWorkers: 'block', viewport: { width: 1440, height: 960 } });
+    const termPage = await termContext.newPage();
+    termPage.on('pageerror', error => errors.push(error.message));
+    try {
+      await signup(termPage, 'Recurring Term Audit', 'term-' + crypto.randomUUID() + '@example.test');
+      const { csrfToken } = await (await termContext.request.get('/api/auth/csrf')).json();
+      const walletResponse = await (await termContext.request.get('/api/wallets')).json();
+      const walletId = walletResponse.data[0]?.id || walletResponse.data[0]?._id;
+      assert.ok(walletId);
+      const funding = await termContext.request.post('/api/spending', {
+        headers: { 'X-CSRF-Token': csrfToken, 'Idempotency-Key': crypto.randomUUID() },
+        data: { type: 'income', category: 'Test funding', amount: 10000,
+          date: new Date().toISOString().slice(0, 10), walletId }
+      });
+      assert.equal(funding.status(), 201, await funding.text());
+
+      for (const theme of ['dark', 'cream', 'green', 'light']) {
+        await termPage.goto('/spending/plan/recurring');
+        await termPage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+        await termPage.reload();
+        await termPage.locator('.recurring-btn-create-primary').click();
+        const modal = termPage.locator('.recurring-modal-dialog');
+        const termSwitch = modal.getByRole('switch', { name: /Có kỳ hạn/ });
+        await expect(termSwitch).not.toBeChecked();
+        await expect(modal.locator('#rec-end-date')).toHaveCount(0);
+        await modal.locator('.recurring-term-toggle').click();
+        await expect(termSwitch).toBeChecked();
+        await expect(modal.locator('#rec-end-date')).toBeVisible();
+        const colors = await modal.evaluate(element => {
+          const toggle = getComputedStyle(element.querySelector('.recurring-term-toggle'));
+          const copy = getComputedStyle(element.querySelector('.recurring-term-copy strong'));
+          const card = getComputedStyle(element);
+          return { toggle: toggle.backgroundColor, card: card.backgroundColor, text: copy.color };
+        });
+        assert.equal(colors.toggle, colors.card, `${theme}: công tắc kỳ hạn phải dùng màu nền của theme`);
+        assert.notEqual(colors.text, colors.toggle, `${theme}: chữ trên công tắc phải đọc được`);
+        await termPage.setViewportSize({ width: 390, height: 844 });
+        await modal.locator('#rec-end-date').scrollIntoViewIfNeeded();
+        const dateBox = await modal.locator('#rec-end-date').boundingBox();
+        const footerBox = await modal.locator('.txn-modal-footer').boundingBox();
+        assert.ok(dateBox && dateBox.x >= 0 && dateBox.x + dateBox.width <= 390,
+          `${theme}: ô ngày kết thúc phải vừa màn hình mobile`);
+        assert.ok(footerBox && footerBox.y >= 0 && footerBox.y + footerBox.height <= 844,
+          `${theme}: nút lưu phải truy cập được trên mobile`);
+        await termPage.setViewportSize({ width: 1440, height: 960 });
+      }
+
+      const modal = termPage.locator('.recurring-modal-dialog');
+      await modal.locator('#rec-name').fill('Finite term browser audit');
+      await modal.locator('#rec-amount').fill('1000');
+      await modal.locator('#rec-date').fill('2030-01-15');
+      await modal.locator('#rec-end-date').fill('2030-01-15');
+      await modal.getByRole('button', { name: 'Tạo khoản định kỳ', exact: true }).click();
+      await expect(modal).toHaveCount(0);
+      const row = termPage.locator('.recurring-row-card').filter({ hasText: 'Finite term browser audit' });
+      await expect(row).toContainText('Kết thúc:');
+      await expect(row).toContainText('15/01/2030');
+
+      await row.locator('.recurring-dots-action-btn').click();
+      await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
+      await expect(modal.getByRole('switch', { name: /Có kỳ hạn/ })).toBeChecked();
+      await expect(modal.locator('#rec-end-date')).toHaveValue('2030-01-15');
+      await modal.locator('.recurring-term-toggle').click();
+      await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
+      await expect(modal).toHaveCount(0);
+      await expect(row).not.toContainText('Kết thúc:');
+
+      await row.locator('.recurring-dots-action-btn').click();
+      await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
+      await expect(modal.getByRole('switch', { name: /Có kỳ hạn/ })).not.toBeChecked();
+      await modal.locator('.recurring-term-toggle').click();
+      await modal.locator('#rec-end-date').fill('2030-01-15');
+      await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
+      await expect(modal).toHaveCount(0);
+
+      await row.locator('.recurring-dots-action-btn').click();
+      await row.getByRole('menuitem', { name: 'Đánh dấu đã trả kỳ này' }).click();
+      await expect(row.locator('.recurring-due-pill-box')).toContainText('Đã kết thúc');
+      await expect(row).toHaveClass(/is-ended/);
+      await expect(row).toContainText('Kỳ hạn: 15/01/2030');
+      await row.locator('.recurring-dots-action-btn').click();
+      await expect(row.getByRole('menuitem', { name: /Đánh dấu đã trả/ })).toBeDisabled();
+      await expect(row.getByRole('menuitem', { name: /Tiếp tục theo dõi|Tạm dừng theo dõi/ })).toBeDisabled();
+
+      await termPage.reload();
+      await expect(row.locator('.recurring-due-pill-box')).toContainText('Đã kết thúc');
+      await row.locator('.recurring-dots-action-btn').click();
+      await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
+      await expect(modal.locator('#rec-end-date')).toHaveValue('2030-01-15');
+      await modal.locator('.recurring-term-toggle').click();
+      await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
+      await expect(row).not.toHaveClass(/is-ended/);
+      await expect(row).not.toContainText('Kết thúc:');
+    } finally { await termContext.close(); }
+  });
+  await check('category analytics avoid prototype pollution and CSV downloads contain untrusted text', async () => {
+    const csvContext = await browser.newContext({ baseURL, serviceWorkers: 'block' });
+    const csvPage = await csvContext.newPage();
+    try {
+      await signup(csvPage, 'CSV Export Audit', 'csv-' + crypto.randomUUID() + '@example.test');
+      const { csrfToken } = await (await csvContext.request.get('/api/auth/csrf')).json();
+      const categories = ['=1+1', 'CSV audit",=1+1,"next', '__proto__', 'constructor', 'toString'];
+      const date = await csvPage.evaluate(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      });
+      const funding = await csvContext.request.post('/api/spending', {
+        headers: { 'X-CSRF-Token': csrfToken, 'Idempotency-Key': crypto.randomUUID() },
+        data: { type: 'income', category: 'CSV audit funding', amount: 1000, date }
+      });
+      assert.equal(funding.status(), 201, await funding.text());
+      for (const category of categories) {
+        const created = await csvContext.request.post('/api/spending', {
+          headers: { 'X-CSRF-Token': csrfToken, 'Idempotency-Key': crypto.randomUUID() },
+          data: { type: 'expense', category, amount: 123, date }
+        });
+        assert.equal(created.status(), 201, await created.text());
+      }
+      await csvPage.goto('/spending/analytics/reports');
+      await expect(csvPage.locator('.table-cat-name').filter({ hasText: /^=1\+1$/ })).toBeVisible();
+      const polluted = await csvPage.evaluate(() => [Object.prototype, Object, Object.prototype.toString]
+        .some(value => Object.hasOwn(value, 'amount') || Object.hasOwn(value, 'count')));
+      assert.equal(polluted, false, 'Category names must not modify built-in prototypes or functions');
+      await expect(csvPage.locator('.table-cat-name')).toHaveCount(categories.length);
+      const downloadPromise = csvPage.waitForEvent('download');
+      await csvPage.getByRole('button', { name: 'Xuất CSV', exact: true }).click();
+      const download = await downloadPromise;
+      const csv = fs.readFileSync(await download.path(), 'utf8');
+      assert.match(download.suggestedFilename(), /\.csv$/);
+      assert.equal(csv.charCodeAt(0), 0xFEFF);
+      assert.ok(csv.includes('"\'=1+1"'), 'Formula category must be exported as literal text');
+      assert.ok(csv.includes('"CSV audit"",=1+1,""next"'), 'Category delimiters must remain inside one quoted field');
+      assert.ok(!csv.includes('"=1+1"'), 'No unescaped formula category may remain in any report section');
+    } finally { await csvContext.close(); }
+  });
   const second = await context.newPage();
   await second.goto('/spending');
   await expect(second.locator('.user-chip-name')).toHaveText('Account Alpha');

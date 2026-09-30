@@ -20,6 +20,13 @@
 
 const VN_TIMEZONE = 'Asia/Ho_Chi_Minh';
 
+/** Validate a real calendar date without accepting JavaScript's date rollover. */
+function isValidDateString(value) {
+    if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 /**
  * Trả về chuỗi 'YYYY-MM-DD' của "hôm nay" theo giờ Việt Nam.
  * @returns {string}
@@ -41,4 +48,4 @@ function nowAsVietnamDateAnchor() {
     return new Date(`${getVietnamTodayString()}T00:00:00.000Z`);
 }
 
-module.exports = { getVietnamTodayString, nowAsVietnamDateAnchor };
+module.exports = { getVietnamTodayString, nowAsVietnamDateAnchor, isValidDateString };

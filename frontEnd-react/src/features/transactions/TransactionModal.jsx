@@ -72,14 +72,14 @@ export function TransactionModal() {
   const categoryMetrics = useMemo(() => {
     if (type !== 'expense') return {};
     const curPrefix = date ? date.slice(0, 7) : getLocalMonthString();
-    const spentMap = {};
+    const spentMap = Object.create(null);
     transactions.forEach((t) => {
       if (t.type === 'expense' && t.date && t.date.startsWith(curPrefix)) {
         spentMap[t.category] = (spentMap[t.category] || 0) + (Number(t.amount) || 0) + (Number(t.fee) || 0);
       }
     });
 
-    const metrics = {};
+    const metrics = Object.create(null);
     activeExpenseCats.forEach((cat) => {
       const rawLimit = budgets && budgets[cat.name] !== undefined ? Number(budgets[cat.name]) : null;
       const limit = rawLimit && rawLimit > 0 ? rawLimit : null;

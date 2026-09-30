@@ -22,7 +22,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   // Local draft state
   const [categoriesDraft, setCategoriesDraft] = useState([]);
   const [expandedCat, setExpandedCat] = useState(null);
-  const [rowAmountInputs, setRowAmountInputs] = useState({});
+  const [rowAmountInputs, setRowAmountInputs] = useState(() => Object.create(null));
   const [isDirty, setIsDirty] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -119,7 +119,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       setCategoriesDraft(initialList);
 
       // Populate row inputs
-      const inputsMap = {};
+      const inputsMap = Object.create(null);
       initialList.forEach((c) => {
         inputsMap[c.name] = c.limit ? formatInputNumber(c.limit) : '';
       });
@@ -332,7 +332,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     e.preventDefault();
     setErrorMsg('');
 
-    const payload = {};
+    const payload = Object.create(null);
     categoriesDraft.forEach((c) => {
       if (typeof c.limit === 'number' && c.limit > 0) {
         payload[c.name] = c.limit;

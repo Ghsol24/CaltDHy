@@ -53,7 +53,7 @@ Nâng cấp chính dịch vụ cũ sẽ giữ URL và biến môi trường hi�
    | Start Command | `node backEnd/server/server.js` |
    | Health Check Path | `/api/health` |
    | Node | `.node-version` chọn Node 24; Render tự đặt `NODE_ENV=production`; trên Render, ứng dụng mặc định lắng nghe `0.0.0.0:10000` |
-   | Phiên và đăng ký | Trên Render, mặc định đăng ký bằng lời mời, cookie Secure khi `CLIENT_URL` là HTTPS và tin một proxy; có thể đặt rõ `COOKIE_SECURE=true`, `REGISTRATION_MODE=invite`, `TRUST_PROXY_HOPS=1` |
+   | Phiên và đăng ký | Code và blueprint Render mặc định đăng ký mở; đặt `REGISTRATION_MODE=invite` nếu chỉ muốn nhận người có lời mời. Đặt rõ `COOKIE_SECURE=true`, `TRUST_PROXY_HOPS=1` và `CLIENT_URL` HTTPS; Render dùng HOST mặc định công khai luôn buộc cookie Secure |
    | URL | `CLIENT_URL=https://caltdhy.onrender.com` |
    | Dữ liệu | `MONGODB_URI` tới **cùng database Atlas**, dùng DB user riêng chỉ có quyền `readWrite` trên `CaltDHy` |
 
@@ -128,7 +128,7 @@ nhật ký giao dịch trong Brevo; server không ghi token hoặc key vào log.
 
 ## Bước 3 — Tạo và gửi lời mời
 
-Production mặc định `REGISTRATION_MODE=invite`; chỉ người có token hợp lệ mới
+Đặt rõ `REGISTRATION_MODE=invite` để chỉ người có token hợp lệ mới
 tạo được tài khoản. Token ngẫu nhiên được lưu dưới dạng SHA-256, gắn với email,
 hết hạn mặc định sau 7 ngày, và được đánh dấu đã dùng trong cùng transaction tạo
 tài khoản. Trang `/signup` không có token sẽ giải thích rằng cần lời mời.

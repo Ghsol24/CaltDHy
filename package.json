@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "node scripts/start-all.js",
     "start": "node backEnd/server/server.js",
-    "test": "node --test tests/release-guards.cjs tests/launcher-safety.cjs frontEnd-react/tests/money-precision.test.mjs frontEnd-react/tests/analytics-filters.test.mjs frontEnd-react/tests/i18n-formatters.test.mjs frontEnd-react/tests/bug-remediation.test.mjs && npm test --prefix backEnd/server",
+    "test": "node --test tests/release-guards.cjs tests/launcher-safety.cjs frontEnd-react/tests/money-precision.test.mjs frontEnd-react/tests/analytics-filters.test.mjs frontEnd-react/tests/i18n-formatters.test.mjs frontEnd-react/tests/bug-remediation.test.mjs frontEnd-react/tests/csv-security.test.mjs && npm test --prefix backEnd/server",
     "test:browser": "node tests/browser-security.cjs",
     "test:ux-budget": "node tests/ux-performance-budget.cjs",
     "test:e2e": "npm run build --prefix frontEnd-react && npm run test:ux-budget && npm run test:browser",

@@ -150,14 +150,16 @@ const limitMessage = {
 app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
     max: config.apiLimit,
-    standardHeaders: true,
+    ipv6Subnet: 56,
+    standardHeaders: 'draft-6',
     legacyHeaders: false,
     message: limitMessage
 }));
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: config.authLimit,
-    standardHeaders: true,
+    ipv6Subnet: 56,
+    standardHeaders: 'draft-6',
     legacyHeaders: false,
     message: limitMessage,
     skip: req => ['GET', 'HEAD'].includes(req.method) ||

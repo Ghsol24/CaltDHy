@@ -30,6 +30,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { spendingService } from '../../services/spendingService';
 import { unusualSpendingDays } from '../../utils/transactionInsights';
+import { csvRow } from '../../utils/csv';
 import { DailyTransactionsDrawer } from './DailyTransactionsDrawer';
 import {
   CategoryOutlineIcon,
@@ -223,7 +224,7 @@ export function AnalyticsView() {
     let expense = 0;
     let incomeCount = 0;
     let expenseCount = 0;
-    const catMap = {};
+    const catMap = Object.create(null);
 
     filtered.forEach((t) => {
       const amt = Number(t.amount) || 0;
@@ -708,7 +709,7 @@ export function AnalyticsView() {
       let expense = 0;
       let incomeCount = 0;
       let expenseCount = 0;
-      const catMap = {};
+      const catMap = Object.create(null);
 
       txList.forEach((t) => {
         const amt = Number(t.amount) || 0;
@@ -990,8 +991,10 @@ export function AnalyticsView() {
       const statusText = r.limit 
         ? t(r.budgetStatus.isOver ? 'analytics.overBudget' : r.budgetStatus.status === 'warning' ? 'analytics.warningBudget' : 'analytics.safeBudget', { percent: r.budgetStatus.percent })
         : t('transaction.limitUnset');
-      const advice = translateLegacyText(lang, r.adviceText).replace(/"/g, '""');
-      csv += `"${label(r.name)}","${r.spentCur}","${r.spentPrev}","${r.deltaAmt}","${r.deltaPct.toFixed(1)}%","${r.pctOfTotal.toFixed(1)}%","${r.countCur}","${r.limit || 0}","${statusText}","${advice}"\n`;
+      const advice = translateLegacyText(lang, r.adviceText);
+      csv += csvRow([label(r.name), r.spentCur, r.spentPrev, r.deltaAmt,
+        `${r.deltaPct.toFixed(1)}%`, `${r.pctOfTotal.toFixed(1)}%`, r.countCur,
+        r.limit || 0, statusText, advice]);
     });
     csv += '\n';
 
@@ -999,7 +1002,8 @@ export function AnalyticsView() {
     csv += `${t('analytics.csvTransactions')}\n`;
     csv += `${t('analytics.csvTransactionHeaders')}\n`;
     curTxns.forEach((tx) => {
-      csv += `"${tx.date || ''}","${t(`type.${tx.type === 'income' ? 'income' : 'expense'}`)}","${label(tx.category || '')}","${tx.amount || 0}","${tx.fee || 0}","${(tx.note || '').replace(/"/g, '""')}"\n`;
+      csv += csvRow([tx.date || '', t(`type.${tx.type === 'income' ? 'income' : 'expense'}`),
+        label(tx.category || ''), tx.amount || 0, tx.fee || 0, tx.note || '']);
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

@@ -9618,6 +9618,16 @@ input[type="date"].modal-pro-input::-webkit-calendar-picker-indicator:hover {
   color: var(--color-text-secondary, var(--muted));
 }
 
+.due-ended {
+  background: var(--color-neutral-bg);
+  border: 1px solid var(--color-neutral-border);
+  color: var(--color-neutral-text);
+}
+
+.due-ended .due-pill-sub {
+  color: var(--color-neutral-text);
+}
+
 .due-paid .due-pill-sub {
   color: var(--color-success, #047857);
   opacity: 0.85;
@@ -11950,7 +11960,6 @@ html.green-theme .cal-weekday.cal-danger {
   border-color: rgba(16, 185, 129, 0.2);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
 }
-
 
 
 

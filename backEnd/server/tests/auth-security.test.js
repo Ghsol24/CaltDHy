@@ -78,6 +78,116 @@ describe('Account security regressions', { concurrency: false }, () => {
         assert.equal((await fresh.send('post', 'login', { email, password: password + '-new' })).status, 200);
     });
 
+    it('rotates the active cookie on password/email changes so a copied cookie cannot survive recovery', async () => {
+        for (const field of ['password', 'email']) {
+            const c = await account();
+            const copiedCookie = c.response.headers['set-cookie']
+                .map(cookie => cookie.split(';')[0]).join('; ');
+            assert.equal((await request(app).get('/api/auth/session').set('Cookie', copiedCookie)).status, 200);
+            const changed = await c.send('put', 'profile', {
+                currentPassword: password,
+                ...(field === 'password' ? { newPassword: password + '-new' }
+                    : { email: crypto.randomUUID() + '@example.test' })
+            });
+            assert.equal(changed.status, 200);
+            assert.equal((await request(app).get('/api/auth/session').set('Cookie', copiedCookie)).status, 401);
+            assert.equal((await c.agent.get('/api/auth/session')).status, 200);
+            assert.equal((await c.send('put', 'preferences', { analyticsExcludeRecurring: true })).status, 200);
+        }
+    });
+
+    it('rolls back the password change and cookie revocation if issuing the replacement session fails', async () => {
+        const c = await account();
+        const originalCreate = AuthSession.create;
+        const originalLog = console.error;
+        AuthSession.create = async () => { throw new Error('Synthetic session store failure'); };
+        console.error = () => {};
+        try {
+            const response = await c.send('put', 'profile', {
+                currentPassword: password, newPassword: password + '-new'
+            });
+            assert.equal(response.status, 500);
+        } finally {
+            AuthSession.create = originalCreate;
+            console.error = originalLog;
+        }
+        assert.equal((await c.agent.get('/api/auth/session')).status, 200);
+        const fresh = await anonymous();
+        assert.equal((await fresh.send('post', 'login', { email: c.email, password })).status, 200);
+        assert.equal((await fresh.send('post', 'login', { email: c.email, password: password + '-new' })).status, 401);
+    });
+
+    it('does not issue recovery/verification tokens from a stale account snapshot after credentials change', async () => {
+        const originalUpdate = User.updateOne;
+        const originalTransport = nodemailer.createTransport;
+        process.env.CLIENT_URL = 'http://127.0.0.1:24127';
+        process.env.GMAIL_USER = 'sender@example.test';
+        process.env.GMAIL_PASS = 'synthetic-mail-secret';
+        try {
+            for (const verification of [false, true]) {
+                for (const change of ['email', 'password']) {
+                    const c = await account();
+                    const tokenField = verification ? 'emailVerificationToken' : 'resetPasswordToken';
+                    let interleaved = false;
+                    let changeResponse;
+                    const delivered = [];
+                    nodemailer.createTransport = () => ({ async sendMail(mail) { delivered.push(mail); } });
+                    // Deterministically commit the profile change between the token request's
+                    // account read and its token write. All persistence still uses real MongoDB.
+                    User.updateOne = async function (filter, update, ...options) {
+                        if (!interleaved && update.$set?.[tokenField]) {
+                            interleaved = true;
+                            changeResponse = await c.send('put', 'profile', {
+                                currentPassword: password,
+                                ...(change === 'email' ? { email: crypto.randomUUID() + '@example.test' }
+                                    : { newPassword: password + '-new' })
+                            });
+                        }
+                        return originalUpdate.call(this, filter, update, ...options);
+                    };
+                    const anonymousClient = await anonymous();
+                    const result = await anonymousClient.send('post', verification ? 'resend-verification' : 'forgot-password', {
+                        email: c.email
+                    });
+                    User.updateOne = originalUpdate;
+                    assert.equal(result.status, 200);
+                    assert.equal(interleaved, true);
+                    assert.equal(changeResponse?.status, 200);
+                    assert.equal(delivered.length, 0, 'a stale token request must not send a link');
+                    const stored = await User.findById(c.userId).select('+' + tokenField);
+                    assert.equal(stored[tokenField], undefined);
+                }
+            }
+        } finally {
+            User.updateOne = originalUpdate;
+            nodemailer.createTransport = originalTransport;
+            for (const key of ['CLIENT_URL', 'GMAIL_USER', 'GMAIL_PASS']) delete process.env[key];
+        }
+    });
+
+    it('still issues a usable recovery link for a legacy account without authVersion', async () => {
+        const c = await account();
+        await User.collection.updateOne({ _id: new mongoose.Types.ObjectId(c.userId) }, { $unset: { authVersion: '' } });
+        const originalTransport = nodemailer.createTransport;
+        let delivered;
+        process.env.CLIENT_URL = 'http://127.0.0.1:24127';
+        process.env.GMAIL_USER = 'sender@example.test';
+        process.env.GMAIL_PASS = 'synthetic-mail-secret';
+        nodemailer.createTransport = () => ({ async sendMail(mail) { delivered = mail; } });
+        try {
+            assert.equal((await c.send('post', 'forgot-password', { email: c.email })).status, 200);
+            assert.ok(delivered);
+            const link = new URL(/href="([^"]+)"/.exec(delivered.html)[1].replaceAll('&amp;', '&'));
+            assert.equal((await c.send('post', 'reset-password', {
+                email: c.email, token: link.searchParams.get('token'), newPassword: password + '-new'
+            })).status, 200);
+            assert.equal((await c.agent.get('/api/auth/session')).status, 401);
+        } finally {
+            nodemailer.createTransport = originalTransport;
+            for (const key of ['CLIENT_URL', 'GMAIL_USER', 'GMAIL_PASS']) delete process.env[key];
+        }
+    });
+
     it('returns normalized default preferences in every public user response', async () => {
         const c = await account();
         const expected = { analyticsExcludeRecurring: false };

@@ -12,6 +12,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
+import { isInstallmentEnded } from '../../utils/installmentTerm';
 
 const CYCLE_SUFFIXES = {
   monthly: '/ tháng',
@@ -93,7 +94,7 @@ export function RecurringTab() {
 
   // Active items
   const activeItems = useMemo(() => {
-    return (installments || []).filter((item) => item.active !== false);
+    return (installments || []).filter((item) => item.active !== false && !isInstallmentEnded(item));
   }, [installments]);
 
   // Total monthly estimated cost
@@ -137,18 +138,21 @@ export function RecurringTab() {
     // Filter
     if (filterTab === 'soon') {
       list = list.filter((item) => {
+        if (isInstallmentEnded(item)) return false;
         const tierInfo = getRecurringTier(item, currentMonthStr);
         if (tierInfo.isPaidThisMonth) return false;
         return tierInfo.tier === 'danger' || tierInfo.tier === 'warning';
       });
     } else if (filterTab === 'today') {
       list = list.filter((item) => {
+        if (isInstallmentEnded(item)) return false;
         const tierInfo = getRecurringTier(item, currentMonthStr);
         if (tierInfo.isPaidThisMonth) return false;
         return tierInfo.isToday;
       });
     } else if (filterTab === 'overdue') {
       list = list.filter((item) => {
+        if (isInstallmentEnded(item)) return false;
         const tierInfo = getRecurringTier(item, currentMonthStr);
         if (tierInfo.isPaidThisMonth) return false;
         return tierInfo.isOverdue;
@@ -157,6 +161,9 @@ export function RecurringTab() {
 
     // Sort
     list.sort((a, b) => {
+      if (sortBy === 'due-asc' && isInstallmentEnded(a) !== isInstallmentEnded(b)) {
+        return isInstallmentEnded(a) ? 1 : -1;
+      }
       if (sortBy === 'due-asc') {
         const tierA = getRecurringTier(a, currentMonthStr);
         const tierB = getRecurringTier(b, currentMonthStr);
@@ -255,6 +262,7 @@ export function RecurringTab() {
 
   const handlePay = async (item) => {
     setOpenActionMenuId(null);
+    if (isInstallmentEnded(item)) return;
     if (!beginAction(item.id, 'pay')) return;
     try {
       await payInstallment(item.id);
@@ -276,6 +284,7 @@ export function RecurringTab() {
 
   const handleToggle = async (item) => {
     setOpenActionMenuId(null);
+    if (isInstallmentEnded(item)) return;
     if (!beginAction(item.id, 'toggle')) return;
     try {
       await toggleInstallment(item.id);
@@ -529,6 +538,7 @@ export function RecurringTab() {
         <div className="recurring-rows-list">
           {displayItems.map((item) => {
             const isActive = item.active !== false;
+            const isEnded = isInstallmentEnded(item);
             const tierInfo = getRecurringTier(item, currentMonthStr);
             const cycleSuffix = CYCLE_SUFFIXES[item.cycle] || '/ tháng';
             const brandInfo = detectBrandInfo(item.name);
@@ -537,10 +547,13 @@ export function RecurringTab() {
             // Formatted due date
             const parsedDueDate = item.nextDueDate ? parseDate(item.nextDueDate) : null;
             const formattedDueDate = parsedDueDate ? formatDate(parsedDueDate, 'day-date') : item.nextDueDate || 'Chưa định ngày';
+            const formattedEndDate = item.endDate ? formatDate(item.endDate, 'day-date') : '';
             const dayOfMonth = parsedDueDate ? String(parsedDueDate.getDate()).padStart(2, '0') : '01';
 
             // Assigned wallet
-            const assignedWallet = wallets.find((w) => String(w.id) === String(item.walletId)) || wallets[0];
+            const assignedWallet = wallets.find((w) => String(w.id) === String(item.walletId))
+              || (item.walletId ? null : wallets[0]);
+            const walletLabel = assignedWallet?.name || (item.walletId ? 'Ví đã lưu trữ' : 'Chọn ví');
             const categoryLabel = label(item.category || brandInfo.categoryDefault);
             const noteLabel = translateLegacyText(lang, item.note || item.desc || brandInfo.noteDefault || '');
 
@@ -553,7 +566,7 @@ export function RecurringTab() {
             return (
               <div
                 key={item.id}
-                className={`recurring-row-card ${!isActive ? 'is-paused' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''} ${pendingAction ? 'is-processing' : ''}`}
+                className={`recurring-row-card ${!isActive ? 'is-paused' : ''} ${isEnded ? 'is-ended' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''} ${pendingAction ? 'is-processing' : ''}`}
                 aria-busy={Boolean(pendingAction)}
               >
                 {/* 1. Brand Logo Tile */}
@@ -583,6 +596,19 @@ export function RecurringTab() {
                       <span>Ngày thanh toán: <strong>{dayOfMonth} hàng tháng</strong></span>
                     </span>
 
+                    {formattedEndDate && (
+                      <span className="recurring-meta-item recurring-term-meta">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect width="18" height="18" x="3" y="4" rx="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                          <line x1="7" y1="16" x2="17" y2="16" />
+                        </svg>
+                        <span>Kết thúc: <strong>{formattedEndDate}</strong></span>
+                      </span>
+                    )}
+
                     {noteLabel && (
                       <span className="recurring-meta-item recurring-meta-note">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -605,12 +631,12 @@ export function RecurringTab() {
                       onClick={() => setOpenWalletSelectorId(isWalletMenuOpen ? null : item.id)}
                       disabled={Boolean(pendingAction)}
                       aria-expanded={isWalletMenuOpen}
-                      title={assignedWallet?.name ? `Ví trừ tiền: ${assignedWallet.name}` : 'Chọn ví trừ tiền'}
+                      title={assignedWallet?.name ? `Ví trừ tiền: ${assignedWallet.name}` : walletLabel}
                     >
                       <span className="wallet-chip-icon" aria-hidden="true">
                         {pendingAction === 'wallet' ? <span className="btn-spinner" /> : <WalletOutlineIcon type={assignedWallet?.type} size={16} color="currentColor" />}
                       </span>
-                      <span className="wallet-chip-name">{assignedWallet?.name || 'Chọn ví'}</span>
+                      <span className="wallet-chip-name">{walletLabel}</span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="6 9 12 15 18 9" />
                       </svg>
@@ -656,9 +682,20 @@ export function RecurringTab() {
 
                 {/* 4. Due Status Countdown Pill */}
                 <div className="recurring-row-due-col">
-                  <div className={`recurring-due-pill-box due-${tierInfo.tier}`}>
+                  <div className={`recurring-due-pill-box due-${isEnded ? 'ended' : tierInfo.tier}`}>
                     {(pendingAction === 'pay' || pendingAction === 'toggle') && <span className="btn-spinner" role="status" aria-label={t('common.processing')} />}
-                    {tierInfo.tier === 'paid' ? (
+                    {isEnded ? (
+                      <>
+                        <div className="due-pill-top">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 12h8" />
+                          </svg>
+                          <strong>Đã kết thúc</strong>
+                        </div>
+                        <span className="due-pill-sub">Kỳ hạn: {formattedEndDate}</span>
+                      </>
+                    ) : tierInfo.tier === 'paid' ? (
                       <>
                         <div className="due-pill-top">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -730,6 +767,8 @@ export function RecurringTab() {
                           className="actions-dropdown-item"
                           role="menuitem"
                           onClick={() => handlePay(item)}
+                          disabled={isEnded}
+                          title={isEnded ? 'Gia hạn ngày kết thúc để tiếp tục thanh toán' : undefined}
                         >
                           <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12" />
@@ -753,6 +792,8 @@ export function RecurringTab() {
                           className="actions-dropdown-item"
                           role="menuitem"
                           onClick={() => handleToggle(item)}
+                          disabled={isEnded}
+                          title={isEnded ? 'Gia hạn ngày kết thúc để tiếp tục theo dõi' : undefined}
                         >
                           <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             {isActive ? (

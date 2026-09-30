@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { isValidDateString } = require('../utils/localDate');
 
 const installmentHistorySchema = new mongoose.Schema(
     {
@@ -56,6 +57,14 @@ const installmentSchema = new mongoose.Schema(
         nextDueDate: {
             type: String, // ISO date string: 'YYYY-MM-DD'
             required: [true, 'Ngày đến hạn tiếp theo không được để trống.']
+        },
+        endDate: {
+            type: String, // Inclusive final due date; null means no fixed term.
+            default: null,
+            validate: {
+                validator: value => value == null || isValidDateString(value),
+                message: 'Ngày kết thúc không hợp lệ.'
+            }
         },
         walletId: {
             type: mongoose.Schema.Types.ObjectId,

@@ -16,6 +16,20 @@ router.use(protect);
 
 const isValidObjectId = (id) => (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) || id instanceof mongoose.Types.ObjectId;
 
+// An installment past its finite term is no longer a future payment obligation.
+// Missing/null endDate preserves the behavior of existing unlimited plans.
+const linkedActiveInstallmentFilter = (userId, walletId) => ({
+    userId,
+    walletId,
+    $and: [
+        { $or: [{ active: true }, { isActive: true }] },
+        { $or: [
+            { endDate: null },
+            { nextDueDate: /^\d{4}-\d{2}-\d{2}$/, $expr: { $lte: ['$nextDueDate', '$endDate'] } }
+        ] }
+    ]
+});
+
 /**
  * Helper: Tự động khởi tạo ví mặc định "Tiền mặt" nếu user chưa có ví nào
  */
@@ -78,11 +92,9 @@ router.get('/:id/pre-archive', financialRequest(async (req, res) => {
 
         const balance = await getWalletBalance(req.user.id, id);
 
-        const activeInstallments = await Installment.find({
-            userId: req.user.id,
-            walletId: id,
-            $or: [{ active: true }, { isActive: true }]
-        }).select('name amount monthlyAmount totalAmount cycle nextDueDate dueDate');
+        const activeInstallments = await Installment.find(
+            linkedActiveInstallmentFilter(req.user.id, id)
+        ).select('name amount monthlyAmount totalAmount cycle nextDueDate dueDate');
 
         const transactionsCount = await Transaction.countDocuments({
             userId: req.user.id,
@@ -182,11 +194,9 @@ router.post('/:id/archive', financialRequest(async (req, res) => {
         }
 
         // 3. Kiểm tra các khoản chi trả góp / định kỳ
-        const activeInstallments = await Installment.find({
-            userId: req.user.id,
-            walletId: id,
-            $or: [{ active: true }, { isActive: true }]
-        });
+        const activeInstallments = await Installment.find(
+            linkedActiveInstallmentFilter(req.user.id, id)
+        );
 
         if (activeInstallments.length > 0) {
             if (!replacementWalletId) {
@@ -231,7 +241,7 @@ router.post('/:id/archive', financialRequest(async (req, res) => {
             // B. Cập nhật các khoản trả góp sang ví thay thế
             if (activeInstallments.length > 0 && replacementWalletId) {
                 await Installment.updateMany(
-                    { userId: req.user.id, walletId: id },
+                    linkedActiveInstallmentFilter(req.user.id, id),
                     { $set: { walletId: replacementWalletId } },
                     opts
                 );

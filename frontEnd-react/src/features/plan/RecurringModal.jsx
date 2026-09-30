@@ -13,6 +13,7 @@ import { CategoryOutlineIcon } from '../../utils/categoryIcons';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
+import { isInstallmentEnded, isValidInstallmentEndDate } from '../../utils/installmentTerm';
 
 const CYCLE_OPTIONS = [
   { value: 'monthly', label: 'Hàng tháng' },
@@ -74,6 +75,8 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const [amount, setAmount] = useState('');
   const [cycle, setCycle] = useState('monthly');
   const [nextDueDate, setNextDueDate] = useState(() => getLocalDateString());
+  const [hasEndDate, setHasEndDate] = useState(false);
+  const [endDate, setEndDate] = useState('');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -125,10 +128,14 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     if (installmentToEdit) {
       setName(installmentToEdit.name || '');
       setCategory(installmentToEdit.category || defaultCatName);
-      setWalletId(installmentToEdit.walletId ? String(installmentToEdit.walletId) : (wallets[0]?.id || ''));
+      const savedWalletId = installmentToEdit.walletId ? String(installmentToEdit.walletId) : '';
+      setWalletId(wallets.some((wallet) => String(wallet.id) === savedWalletId)
+        ? savedWalletId : '');
       setAmount(installmentToEdit.amount ? formatInputNumber(installmentToEdit.amount) : '');
       setCycle(installmentToEdit.cycle || 'monthly');
       setNextDueDate(installmentToEdit.nextDueDate ? String(installmentToEdit.nextDueDate).slice(0, 10) : getLocalDateString());
+      setHasEndDate(Boolean(installmentToEdit.endDate));
+      setEndDate(installmentToEdit.endDate ? String(installmentToEdit.endDate).slice(0, 10) : '');
       setNote(installmentToEdit.note || installmentToEdit.desc || '');
     } else {
       setName('');
@@ -137,6 +144,8 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       setAmount('');
       setCycle('monthly');
       setNextDueDate(getLocalDateString());
+      setHasEndDate(false);
+      setEndDate('');
       setNote('');
     }
 
@@ -247,16 +256,35 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       return;
     }
 
+    if (hasEndDate && !isValidInstallmentEndDate(endDate)) {
+      setErrorMsg('Vui lòng chọn ngày kết thúc hợp lệ.');
+      return;
+    }
+
+    if (!installmentToEdit && hasEndDate && endDate < nextDueDate) {
+      setErrorMsg('Ngày kết thúc không được trước ngày đến hạn đầu tiên.');
+      return;
+    }
+
+    const savedWalletUnavailable = Boolean(installmentToEdit?.walletId)
+      && !wallets.some((wallet) => String(wallet.id) === String(installmentToEdit.walletId));
+    const willBeEnded = isInstallmentEnded({ nextDueDate, endDate: hasEndDate ? endDate : null });
+    if (savedWalletUnavailable && !walletId && !willBeEnded) {
+      setErrorMsg('Vui lòng chọn ví đang hoạt động trước khi tiếp tục khoản định kỳ.');
+      return;
+    }
+
     const brand = detectBrandInfo(name.trim());
     const finalCategory = category || brand.categoryDefault || syncedExpenseCategories[0]?.name || 'Housing & Bills';
 
     const payload = {
       name: name.trim(),
       category: finalCategory,
-      walletId: walletId || wallets[0]?.id || null,
+      ...((savedWalletUnavailable && !walletId) ? {} : { walletId: walletId || wallets[0]?.id || null }),
       amount: cleanAmount,
       cycle,
       nextDueDate,
+      endDate: hasEndDate ? endDate : null,
       note: note.trim(),
       brandKey: brand.brandKey
     };
@@ -287,7 +315,11 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     }
   };
 
-  const selectedWallet = wallets.find((w) => String(w.id) === String(walletId)) || wallets[0];
+  const selectedWallet = wallets.find((w) => String(w.id) === String(walletId))
+    || (installmentToEdit ? null : wallets[0]);
+  const hasArchivedWallet = Boolean(installmentToEdit?.walletId)
+    && !wallets.some((wallet) => String(wallet.id) === String(installmentToEdit.walletId))
+    && !walletId;
   const selectedCycleLabel = CYCLE_OPTIONS.find((c) => c.value === cycle)?.label || 'Hàng tháng';
   const categoryDisplayName = category ? label(category) : translateLegacyText(lang, 'Chọn danh mục');
 
@@ -501,6 +533,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                     )}
                   </div>
                 </div>
+
               </div>
             </div>
 
@@ -595,6 +628,11 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                         </div>
                       )}
                     </div>
+                    {hasArchivedWallet && (
+                      <span className="recurring-term-hint" role="note">
+                        Ví trước đây đã lưu trữ. Hãy chọn ví mới trước khi gia hạn khoản này.
+                      </span>
+                    )}
                   </div>
 
                   {/* Chu kỳ thanh toán */}
@@ -679,6 +717,48 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                       />
                     </div>
                   </div>
+                </div>
+                <div className="recurring-term-control">
+                  <label className="recurring-term-toggle" htmlFor="rec-has-end-date">
+                    <span className="recurring-term-copy">
+                      <strong>Có kỳ hạn</strong>
+                      <span>Đặt ngày kết thúc cho khoản định kỳ này</span>
+                    </span>
+                    <input
+                      id="rec-has-end-date"
+                      type="checkbox"
+                      role="switch"
+                      checked={hasEndDate}
+                      onChange={(e) => setHasEndDate(e.target.checked)}
+                      aria-controls="rec-term-date"
+                    />
+                    <span className="recurring-term-switch" aria-hidden="true" />
+                  </label>
+                  {hasEndDate && (
+                    <div className="txn-field-group recurring-term-date-field" id="rec-term-date">
+                      <label htmlFor="rec-end-date" className="txn-label">
+                        <span>Ngày kết thúc</span>
+                      </label>
+                      <div className="modal-date-input-wrap">
+                        <svg className="date-input-prefix-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect width="18" height="18" x="3" y="4" rx="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <input
+                          id="rec-end-date"
+                          type="date"
+                          className="txn-input modal-themed-date-input"
+                          value={endDate}
+                          min={installmentToEdit ? undefined : nextDueDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <span className="recurring-term-hint">Kỳ đến hạn đúng ngày này vẫn được tính.</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

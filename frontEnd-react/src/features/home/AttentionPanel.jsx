@@ -6,6 +6,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
 import { TargetOutlineIcon } from '../../components/ui/AppIcons';
+import { isInstallmentEnded } from '../../utils/installmentTerm';
 
 export const AttentionPanel = React.memo(function AttentionPanel() {
   const navigateTo = useSpendingStore((s) => s.navigateTo);
@@ -88,7 +89,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     // Hóa đơn sắp tới (Hướng 1): Chỉ đếm các khoản định kỳ đang active,
     // chưa thanh toán trong tháng hiện tại, và đến hạn trong tháng này (hoặc quá hạn / sắp tới hạn trong 7 ngày tới)
     const upcomingCount = (installments || []).filter((item) => {
-      if (item.active === false) return false;
+      if (item.active === false || isInstallmentEnded(item)) return false;
 
       // 1. Đã thanh toán trong tháng hiện tại chưa
       const isPaidInMonth = Array.isArray(item.history) && item.history.some(

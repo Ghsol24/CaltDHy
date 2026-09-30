@@ -2323,8 +2323,109 @@ html.dark-theme .jar-date-input { color-scheme: dark; }
   gap: 12px;
 }
 
+.recurring-term-control {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recurring-term-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+}
+
+.recurring-term-toggle:hover,
+.recurring-term-toggle:focus-within {
+  border-color: var(--color-link);
+}
+
+.recurring-term-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.recurring-term-copy strong {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.recurring-term-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.recurring-term-switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex: 0 0 42px;
+  border-radius: 99px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-neutral-bg);
+  transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.recurring-term-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-fast) ease;
+}
+
+.recurring-term-toggle input:checked + .recurring-term-switch {
+  background: var(--color-brand-700);
+  border-color: var(--color-brand-700);
+}
+
+.recurring-term-toggle input:checked + .recurring-term-switch::after {
+  transform: translateX(18px);
+}
+
+.recurring-term-toggle input:focus-visible + .recurring-term-switch {
+  outline: 2px solid var(--color-link);
+  outline-offset: 3px;
+}
+
+.recurring-term-date-field {
+  max-width: calc(50% - 6px);
+}
+
+.recurring-term-hint {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
 @media (max-width: 520px) {
   .recurring-form-grid-2col {
     grid-template-columns: 1fr;
+  }
+
+  .recurring-term-date-field {
+    max-width: none;
   }
 }

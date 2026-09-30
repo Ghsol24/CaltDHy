@@ -74,6 +74,83 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
         assert.equal(await Transaction.countDocuments({ userId: c.userId }), 1);
     });
 
+    it('jar deposits and withdrawals require a wallet for every accepted URL spelling', async () => {
+        const c = await client(), w = await wallet(c, 100), j = await jar(c, 100);
+        for (const action of ['deposit', 'withdraw', 'DEPOSIT', 'WITHDRAW', 'deposit/', 'withdraw/', 'DePoSiT/', 'WiThDrAw/']) {
+            const key = crypto.randomUUID();
+            const response = await c.send('patch', '/api/jars/' + j + '/' + action, { amount: 10 }, key);
+            assert.equal(response.status, 400, action + ': ' + JSON.stringify(response.body));
+            assert.equal((await Jar.findById(j)).current, 100, action);
+            assert.equal((await getAllWalletBalances(c.userId))[w], 100, action);
+            assert.equal(await Transaction.countDocuments({ userId: c.userId }), 0, action);
+            assert.equal(await Receipt.countDocuments({ userId: c.userId, key }), 0, action);
+        }
+    });
+
+    it('mixed-case jar URLs retain ownership checks, conserve funds and replay only once', async () => {
+        const c = await client(), other = await client();
+        const w = await wallet(c, 100), foreign = await wallet(other, 100), j = await jar(c);
+        const url = '/api/jars/' + j + '/DePoSiT/';
+        const rejected = await c.send('patch', url, { amount: 10, walletId: foreign });
+        assert.equal(rejected.status, 400);
+        const key = crypto.randomUUID(), body = { amount: 10, walletId: w };
+        const first = await c.send('patch', url, body, key);
+        assert.equal(first.status, 200, JSON.stringify(first.body));
+        const repeated = await c.send('patch', url, body, key);
+        assert.deepEqual(repeated.body, first.body);
+        assert.equal((await Jar.findById(j)).current, 10);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 90);
+        assert.equal((await getAllWalletBalances(other.userId))[foreign], 100);
+        assert.equal(await Transaction.countDocuments({ userId: c.userId }), 1);
+        assert.equal(await Receipt.countDocuments({ userId: c.userId, key }), 1);
+
+        assert.equal((await c.send('patch', '/api/jars/' + j + '/WiThDrAw/', body)).status, 200);
+        assert.equal((await Jar.findById(j)).current, 0);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 100);
+        assert.equal(await Transaction.countDocuments({ userId: c.userId }), 2);
+    });
+
+    it('budget category keys round-trip even when they match Object prototype properties', async () => {
+        const c = await client();
+        const budgets = Object.fromEntries([
+            ['__proto__', 100], ['constructor', 200], ['prototype', 250],
+            ['toString', 300], ['hasOwnProperty', 400], ['Food', 500]
+        ]);
+        const key = crypto.randomUUID();
+        const saved = await c.send('put', '/api/spending/budget', { budgets }, key);
+        assert.equal(saved.status, 200, JSON.stringify(saved.body));
+        assert.deepEqual(saved.body.data, budgets);
+        for (const url of ['/api/spending/budget?month=global', '/api/spending/budget']) {
+            const loaded = await c.agent.get(url);
+            assert.equal(loaded.status, 200, JSON.stringify(loaded.body));
+            assert.deepEqual(loaded.body.data, budgets, url);
+        }
+        const replay = await c.send('put', '/api/spending/budget', { budgets }, key);
+        assert.equal(replay.status, 200, JSON.stringify(replay.body));
+        assert.deepEqual(replay.body.data, budgets);
+        assert.equal(replay.body.bodyJson, undefined);
+        const stored = await Receipt.findOne({ userId: c.userId, key }).lean();
+        assert.equal(typeof stored.bodyJson, 'string');
+        assert.equal(stored.body.success, true);
+        assert.equal(stored.body.data.Food, 500);
+    });
+
+    it('legacy object receipts replay without migration or a second ledger write', async () => {
+        const c = await client(), w = await wallet(c), key = crypto.randomUUID();
+        const body = spending(w, 100);
+        const first = await c.send('post', '/api/spending', body, key);
+        assert.equal(first.status, 201, JSON.stringify(first.body));
+        const stored = await Receipt.findOne({ userId: c.userId, key }).lean();
+        assert.equal(stored.body.success, true);
+        assert.equal(stored.body.data.id, first.body.data.id);
+        assert.equal(stored.bodyJson, undefined, 'ordinary receipts retain their legacy storage shape');
+        const replay = await c.send('post', '/api/spending', body, key);
+        assert.equal(replay.status, 201, JSON.stringify(replay.body));
+        assert.deepEqual(replay.body, first.body);
+        assert.equal(await Transaction.countDocuments({ userId: c.userId }), 1);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 900);
+    });
+
     it('concurrent default selection leaves exactly one default wallet', async () => {
         const c = await client(), a = await wallet(c), b = await wallet(c);
         const results = await Promise.all([a, b].map(id => c.send('put', '/api/wallets/' + id, { isDefault: true })));
@@ -147,6 +224,141 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
         assert.equal((await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date })).status, 409);
         assert.equal(await Transaction.countDocuments({ installmentId: id }), 1);
         assert.equal((await Installment.findById(id)).totalPaid, 100);
+    });
+
+    it('a finite recurring term includes its final due date and never charges a later period', async () => {
+        const c = await client(), w = await wallet(c, 300);
+        const created = await c.send('post', '/api/jars/installments', {
+            name: 'Finite plan', amount: 100, category: 'Bills', cycle: 'monthly',
+            nextDueDate: date, endDate: date, walletId: w
+        });
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const id = created.body.data.id;
+        assert.equal(created.body.data.endDate, date);
+        const finalPayment = await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date });
+        assert.equal(finalPayment.status, 200, JSON.stringify(finalPayment.body));
+        assert.equal(finalPayment.body.data.nextDueDate, '2026-10-21');
+        assert.equal(finalPayment.body.data.active, true, 'term expiry must not rewrite the manual pause state');
+        const afterTerm = await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: '2026-10-21' });
+        assert.equal(afterTerm.status, 409);
+        assert.equal(await Transaction.countDocuments({ installmentId: id }), 1);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 200);
+        assert.equal((await Installment.findById(id)).totalPaid, 100);
+
+        const extended = await c.send('put', '/api/jars/installments/' + id, { endDate: null });
+        assert.equal(extended.status, 200, JSON.stringify(extended.body));
+        assert.equal(extended.body.data.endDate, null);
+        assert.equal((await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: '2026-10-21' })).status, 200);
+        assert.equal(await Transaction.countDocuments({ installmentId: id }), 2);
+    });
+
+    it('recurring end dates validate the real calendar and preserve already paid periods', async () => {
+        const c = await client(), w = await wallet(c);
+        const body = { name: 'Term plan', amount: 100, category: 'Bills', cycle: 'monthly',
+            nextDueDate: date, walletId: w };
+        for (const endDate of ['', '2026-02-30', '2025-02-29', '2026-09-20', 20260921, {}]) {
+            const response = await c.send('post', '/api/jars/installments', { ...body, endDate });
+            assert.equal(response.status, 400, String(endDate) + ': ' + JSON.stringify(response.body));
+        }
+        assert.equal(await Installment.countDocuments({ userId: c.userId }), 0);
+        const created = await c.send('post', '/api/jars/installments', body);
+        assert.equal(created.status, 201);
+        assert.equal(created.body.data.endDate, null, 'omitted term means unlimited');
+        const id = created.body.data.id;
+        assert.equal((await c.send('put', '/api/jars/installments/' + id, { endDate: '2026-02-30' })).status, 400);
+        assert.equal((await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date })).status, 200);
+        const invalidShortening = await c.send('put', '/api/jars/installments/' + id, { endDate: '2026-09-20' });
+        assert.equal(invalidShortening.status, 400);
+        assert.equal((await Installment.findById(id)).endDate, null);
+        const endEarly = await c.send('put', '/api/jars/installments/' + id, { endDate: date });
+        assert.equal(endEarly.status, 200);
+        assert.equal((await c.send('put', '/api/jars/installments/' + id, { name: 'Renamed after term' })).status, 200);
+        assert.equal((await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: '2026-10-21' })).status, 409);
+
+        const leap = await c.send('post', '/api/jars/installments', {
+            ...body, name: 'Leap plan', nextDueDate: '2028-02-29', endDate: '2028-02-29'
+        });
+        assert.equal(leap.status, 201, JSON.stringify(leap.body));
+    });
+
+    it('an ended recurring link does not block archiving a settled wallet', async () => {
+        const c = await client(), defaultWallet = await wallet(c, 0, { isDefault: true });
+        const source = await wallet(c, 100);
+        const created = await c.send('post', '/api/jars/installments', {
+            name: 'Finished plan', amount: 100, category: 'Bills', cycle: 'monthly',
+            nextDueDate: date, endDate: date, walletId: source
+        });
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const id = created.body.data.id;
+        assert.equal((await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date })).status, 200);
+        assert.equal((await getAllWalletBalances(c.userId))[source], 0);
+        const preflight = await c.agent.get('/api/wallets/' + source + '/pre-archive');
+        assert.equal(preflight.status, 200, JSON.stringify(preflight.body));
+        assert.deepEqual(preflight.body.data.activeInstallments, []);
+        assert.equal(preflight.body.data.canArchiveDirectly, true);
+        const archived = await c.send('post', '/api/wallets/' + source + '/archive', {});
+        assert.equal(archived.status, 200, JSON.stringify(archived.body));
+        assert.equal((await Wallet.findById(source)).archived, true);
+        assert.equal((await Installment.findById(id)).walletId.toString(), source,
+            'preserve the stored wallet link so extending the term cannot silently charge another wallet');
+        assert.equal((await Wallet.findById(defaultWallet)).archived, false);
+        const unsafeResume = await c.send('put', '/api/jars/installments/' + id, { endDate: null });
+        assert.equal(unsafeResume.status, 400);
+        assert.equal((await Installment.findById(id)).endDate, date);
+        const safeResume = await c.send('put', '/api/jars/installments/' + id, {
+            endDate: null, walletId: defaultWallet
+        });
+        assert.equal(safeResume.status, 200, JSON.stringify(safeResume.body));
+        assert.equal(safeResume.body.data.walletId, defaultWallet);
+        assert.equal(await Transaction.countDocuments({ installmentId: id }), 1);
+    });
+
+    it('a finite term stays ended when the next cycle crosses year 9999', async () => {
+        const c = await client(), defaultWallet = await wallet(c, 0, { isDefault: true });
+        const source = await wallet(c, 100);
+        const finalDate = '9999-12-31';
+        const created = await c.send('post', '/api/jars/installments', {
+            name: 'Boundary plan', amount: 100, category: 'Bills', cycle: 'monthly',
+            nextDueDate: finalDate, endDate: finalDate, walletId: source
+        });
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const id = created.body.data.id;
+        const paid = await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: finalDate });
+        assert.equal(paid.status, 200, JSON.stringify(paid.body));
+        assert.match(paid.body.data.nextDueDate, /^10000-/);
+        const future = await c.send('patch', '/api/jars/installments/' + id + '/pay', {
+            period: paid.body.data.nextDueDate
+        });
+        assert.equal(future.status, 409);
+        assert.equal(await Transaction.countDocuments({ installmentId: id }), 1);
+        assert.equal((await getAllWalletBalances(c.userId))[source], 0);
+        const preflight = await c.agent.get('/api/wallets/' + source + '/pre-archive');
+        assert.equal(preflight.status, 200);
+        assert.equal(preflight.body.data.canArchiveDirectly, true);
+        assert.deepEqual(preflight.body.data.activeInstallments, []);
+        assert.equal((await Wallet.findById(defaultWallet)).archived, false);
+    });
+
+    it('archiving a mixed wallet reassigns only running recurring items', async () => {
+        const c = await client(), replacement = await wallet(c, 0, { isDefault: true });
+        const source = await wallet(c, 100);
+        const ended = await c.send('post', '/api/jars/installments', {
+            name: 'Finished plan', amount: 100, category: 'Bills', cycle: 'monthly',
+            nextDueDate: date, endDate: date, walletId: source
+        });
+        assert.equal(ended.status, 201, JSON.stringify(ended.body));
+        assert.equal((await c.send('patch', '/api/jars/installments/' + ended.body.data.id + '/pay', { period: date })).status, 200);
+        const running = await c.send('post', '/api/jars/installments', {
+            name: 'Running plan', amount: 10, category: 'Bills', cycle: 'monthly',
+            nextDueDate: date, walletId: source
+        });
+        assert.equal(running.status, 201, JSON.stringify(running.body));
+        const preflight = await c.agent.get('/api/wallets/' + source + '/pre-archive');
+        assert.deepEqual(preflight.body.data.activeInstallments.map(item => item.id), [running.body.data.id]);
+        const archived = await c.send('post', '/api/wallets/' + source + '/archive', { replacementWalletId: replacement });
+        assert.equal(archived.status, 200, JSON.stringify(archived.body));
+        assert.equal((await Installment.findById(ended.body.data.id)).walletId.toString(), source);
+        assert.equal((await Installment.findById(running.body.data.id)).walletId.toString(), replacement);
     });
 
     it('a foreign legacy installment wallet link is refused rather than charging a fallback wallet', async () => {

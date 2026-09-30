@@ -11,6 +11,7 @@ import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, 
 import { getCategoryIcon } from '../../utils/categories';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { CategoryOutlineIcon, SparkleOutlineIcon, ChartOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
+import { isInstallmentEnded } from '../../utils/installmentTerm';
 
 const WALLET_TYPE_LABELS = {
   cash: 'Tiền mặt',
@@ -116,7 +117,7 @@ export function PlanOverviewTab() {
   const totalBudgetRemaining = hasAnyBudgetLimit ? totalBudgetLimit - totalBudgetSpent : null;
 
   // 3. Recurring calculation
-  const activeInstallments = (installments || []).filter((item) => item.active !== false);
+  const activeInstallments = (installments || []).filter((item) => item.active !== false && !isInstallmentEnded(item));
   const monthlyEstimatedCost = activeInstallments.reduce((sum, item) => {
     const amt = Number(item.amount) || 0;
     if (item.cycle === 'yearly') return sum + amt / 12;

@@ -10,9 +10,11 @@ Object.assign(process.env, {
     HOST: '127.0.0.1',
     PORT: '24128',
     JWT_SECRET: crypto.randomBytes(32).toString('hex'),
+    TRUST_PROXY_HOPS: '1',
     API_RATE_LIMIT_MAX: '100',
     AUTH_RATE_LIMIT_MAX: '1'
 });
+
 for (const name of ['CLIENT_URL', 'CORS_WHITELIST', 'COOKIE_SECURE']) delete process.env[name];
 
 const { issueCsrf } = require('../utils/sessionSecurity');
@@ -50,4 +52,20 @@ test('preference saves use the global limit without consuming the login limit', 
         .set('X-CSRF-Token', token)
         .send({ email: 'person@example.test', password: 'Password-1234' });
     assert.equal(blockedLogin.status, 429);
+});
+
+test('login attempts share the auth limit across IPv6 rotation and URL aliases', async () => {
+    const { cookie, token } = anonymousCsrf();
+    const login = (ip, path) => request(app).post(path)
+        .set('X-Forwarded-For', ip)
+        .set('Cookie', cookie)
+        .set('X-CSRF-Token', token)
+        .send({ email: 'person@example.test', password: 'Password-1234' });
+
+    assert.equal((await login('2001:db8:9876:1200::1', '/api/AUTH/LOGIN')).status, 503);
+    const blocked = await login('2001:db8:9876:12ff::2', '/api/auth/login/');
+    assert.equal(blocked.status, 429);
+    assert.equal(blocked.headers['ratelimit-limit'], '1');
+    assert.match(blocked.headers['cache-control'], /no-store/);
+    assert.equal((await login('2001:db8:9876:1300::1', '/api/auth/login')).status, 503);
 });

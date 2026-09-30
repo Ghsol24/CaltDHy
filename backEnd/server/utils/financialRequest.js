@@ -8,6 +8,7 @@ const Installment = require('../models/Installment');
 const { runWithTransaction } = require('./mongoTransaction');
 const { getAllWalletBalances } = require('./walletBalance');
 const { isFiniteInteger } = require('./money');
+const { isValidDateString } = require('./localDate');
 
 class Rejected extends Error {
     constructor(status, body) { super('Financial request rejected.'); this.status = status; this.body = body; }
@@ -22,11 +23,11 @@ function canonical(value, depth = 0) {
 }
 async function validateInput(req) {
     const body = req.body || {};
-    for (const key of ['nextDueDate', 'targetDate']) {
+    for (const key of ['nextDueDate', 'targetDate', 'endDate']) {
         const value = body[key];
-        if (value === undefined || value === null || value === '') continue;
-        const parsed = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && new Date(value + 'T00:00:00.000Z');
-        if (!parsed || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) reject('Ngày không hợp lệ.');
+        if (value === undefined || value === null) continue;
+        if (value === '' && key !== 'endDate') continue;
+        if (!isValidDateString(value)) reject('Ngày không hợp lệ.');
     }
     for (const key of ['amount', 'fee', 'initialBalance', 'creditLimit', 'target', 'current']) {
         if (body[key] !== undefined && (!isFiniteInteger(body[key]) ||
@@ -45,7 +46,6 @@ async function validateInput(req) {
     if (req.baseUrl.toLowerCase() === '/api/spending' && (body.jarId || body.installmentId)) {
         reject('Giao dịch hũ/khoản định kỳ phải được tạo từ API chuyên biệt.');
     }
-    if (/\/(?:deposit|withdraw)$/.test(req.path) && !body.walletId) reject('Cần chọn ví liên kết khi nạp/rút hũ.');
 }
 async function verifyBalances(userId) {
     const balances = await getAllWalletBalances(userId);
@@ -95,7 +95,8 @@ function financialRequest(handler) {
                     const saved = await Receipt.findOne({ userId: req.user.id, key }).lean();
                     if (saved) {
                         if (saved.fingerprint !== fingerprint) reject('Idempotency-Key đã dùng với nội dung khác.', 409);
-                        return { status: saved.status, body: saved.body };
+                        return { status: saved.status,
+                            body: saved.bodyJson === undefined ? saved.body : JSON.parse(saved.bodyJson) };
                     }
                 }
                 await validateInput(req);
@@ -110,7 +111,14 @@ function financialRequest(handler) {
                 if (result.status >= 400) throw new Rejected(result.status, result.body);
                 if (write) {
                     await verifyBalances(req.user.id);
-                    await Receipt.create({ userId: req.user.id, key, fingerprint, ...result });
+                    let needsExactJson = false;
+                    const bodyJson = JSON.stringify(result.body, (property, value) => {
+                        if (['__proto__', 'constructor', 'prototype'].includes(property)) needsExactJson = true;
+                        return value;
+                    });
+                    await Receipt.create({ userId: req.user.id, key, fingerprint,
+                        status: result.status, body: result.body,
+                        ...(needsExactJson ? { bodyJson } : {}) });
                 }
                 return result;
             });

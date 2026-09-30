@@ -157,15 +157,22 @@ async function requestEmail(req, res, verification) {
     try {
         const email = req.body?.email;
         if (!validEmail(email)) return res.json(generic);
-        const user = await User.findOne({ email: normalizeEmail(email) });
+        const user = await User.findOne({ email: normalizeEmail(email) }).select('+authVersion').lean();
         if (!user || (verification && user.emailVerified)) return res.json(generic);
         const token = crypto.randomBytes(32).toString('hex');
         const link = buildAccountLink(verification ? 'verify-email' : 'reset-password', token, user.email);
         const tokenField = verification ? 'emailVerificationToken' : 'resetPasswordToken';
         const expiryField = verification ? 'emailVerificationExpiry' : 'resetPasswordExpiry';
-        await User.updateOne({ _id: user._id }, { $set: {
+        // Do not install a token for a stale email/credential snapshot. A profile
+        // change or reset may have committed after the lookup above.
+        // Matching null also supports legacy accounts without authVersion.
+        const updated = await User.updateOne({
+            _id: user._id, email: user.email, authVersion: user.authVersion ?? null,
+            ...(verification ? { emailVerified: { $ne: true } } : {})
+        }, { $set: {
             [tokenField]: hash(token), [expiryField]: new Date(Date.now() + (verification ? 86400000 : 900000))
         } });
+        if (!updated.matchedCount) return res.json(generic);
         try { await sendLink(user, link, verification); } catch {
             console.error('[auth] email_delivery_failed');
             await User.updateOne({ _id: user._id, [tokenField]: hash(token) },
@@ -259,12 +266,17 @@ router.put('/profile', protect, async (req, res) => {
             if (name !== undefined) user.name = name.trim();
             if (avatar !== undefined) user.avatar = avatar;
             await user.save({ session });
-            currentSession.authVersion = user.authVersion || 0;
-            await currentSession.save({ session });
+            if (newPassword || changedEmail) {
+                // Rotate the credential itself: upgrading the old session's
+                // authVersion would also preserve every stolen copy of it.
+                await AuthSession.deleteOne({ _id: currentSession._id }, { session });
+                return { user, issued: await createSession(user, session) };
+            }
             return { user };
         });
         return res.json({ success: true, message: 'Cập nhật tài khoản thành công!',
-            user: publicUser(result.user), csrfToken: issueCsrf(req, res) });
+            user: publicUser(result.user),
+            csrfToken: result.issued ? setSession(req, res, result.issued) : issueCsrf(req, res) });
     } catch (error) {
         if ([400, 401].includes(error.status)) return res.status(error.status).json({ success: false,
             message: error.status === 400 ? 'Cần mật khẩu hiện tại chính xác để đổi email/mật khẩu.' : 'Phiên đăng nhập đã thay đổi.' });
