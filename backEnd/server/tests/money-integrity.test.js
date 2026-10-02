@@ -453,7 +453,7 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
             for (const name of ['users', 'moneylocks']) {
                 await connection.db.collection(name).insertMany([{ _id: selected }, { _id: untouched }]);
             }
-            for (const name of ['authsessions', 'idempotencyreceipts', 'expectedhighspenddays']) {
+            for (const name of ['authsessions', 'idempotencyreceipts', 'expectedhighspenddays', 'transactionrevisions']) {
                 await connection.db.collection(name).insertMany([{ userId: selected }, { userId: untouched }]);
             }
             const { cleanup } = require('../scripts/cleanup-users');
@@ -461,11 +461,13 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
             const preview = await cleanup(options);
             assert.equal(preview.counts.moneylocks, 1); assert.equal(preview.counts.authsessions, 1);
             assert.equal(preview.counts.expectedhighspenddays, 1);
+            assert.equal(preview.counts.transactionrevisions, 1);
             assert.equal(await connection.db.collection('users').countDocuments(), 2);
             const result = await cleanup({ ...options, apply: true, confirm: preview.confirmation });
             assert.equal(result.deleted.idempotencyreceipts, 1);
             assert.equal(result.deleted.expectedhighspenddays, 1);
-            for (const name of ['users', 'moneylocks', 'authsessions', 'idempotencyreceipts', 'expectedhighspenddays']) {
+            assert.equal(result.deleted.transactionrevisions, 1);
+            for (const name of ['users', 'moneylocks', 'authsessions', 'idempotencyreceipts', 'expectedhighspenddays', 'transactionrevisions']) {
                 const filter = ['users', 'moneylocks'].includes(name) ? { _id: untouched } : { userId: untouched };
                 assert.equal(await connection.db.collection(name).countDocuments(), 1);
                 assert.equal(await connection.db.collection(name).countDocuments(filter), 1);

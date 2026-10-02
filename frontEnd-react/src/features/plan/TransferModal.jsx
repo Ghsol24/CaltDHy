@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
+import { sortWalletsByBalance } from '../../utils/walletSort';
 
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const { wallets, transferMoney, fetchWallets } = useWalletStore();
   const { addToast } = useToastStore();
+  const sortedWallets = useMemo(() => sortWalletsByBalance(wallets), [wallets]);
 
   const [fromWalletId, setFromWalletId] = useState('');
   const [toWalletId, setToWalletId] = useState('');
@@ -236,7 +238,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 </label>
                 <CustomWalletDropdown
                   id="from-wallet-select"
-                  wallets={wallets}
+                  wallets={sortedWallets}
                   value={fromWalletId}
                   onChange={(val) => {
                     setFromWalletId(val);
@@ -255,7 +257,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 </label>
                 <CustomWalletDropdown
                   id="to-wallet-select"
-                  wallets={wallets.filter((w) => w.id !== fromWalletId)}
+                  wallets={sortedWallets.filter((w) => w.id !== fromWalletId)}
                   value={toWalletId}
                   onChange={setToWalletId}
                   placeholder="Chọn ví nhận..."

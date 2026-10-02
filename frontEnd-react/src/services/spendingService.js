@@ -11,6 +11,8 @@ export const spendingService = {
 
   getExpectedDays: async (month) => api.get(`/api/spending/expected-days?month=${encodeURIComponent(month)}`),
 
+  getTransactionHistory: async (id, page = 1) => api.get(`/api/spending/${encodeURIComponent(id)}/history?page=${page}`),
+
   setExpectedDay: async (date, expected) => api.put(`/api/spending/expected-days/${encodeURIComponent(date)}`, { expected }),
 
   createTransaction: async (data) => {

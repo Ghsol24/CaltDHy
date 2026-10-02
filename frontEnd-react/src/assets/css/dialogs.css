@@ -233,7 +233,82 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.5;
+  white-space: pre-line;
 }
+
+.txn-period-notice {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.txn-budget-period {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.txn-budget-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.txn-budget-error button,
+.txn-revisions-content button {
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+  color: var(--color-link);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.txn-revisions {
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  overflow: hidden;
+}
+
+.txn-revisions-toggle {
+  width: 100%;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.txn-revisions-toggle > span { margin-left: auto; }
+.txn-revisions-content { padding: 0 12px 12px; font-size: 12px; color: var(--color-text-secondary); }
+.txn-revisions-content p { margin: 8px 0 0; line-height: 1.5; }
+.txn-revision-entry + .txn-revision-entry { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.txn-revision-entry header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; line-height: 1.5; }
+.txn-revision-entry strong { color: var(--color-text); overflow-wrap: anywhere; }
+.txn-revision-entry ul { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.txn-revision-entry li { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(0, 2fr); gap: 8px; line-height: 1.5; }
+.txn-revision-entry li > span:last-child { color: var(--color-text); overflow-wrap: anywhere; }
+.txn-revisions-toggle:focus-visible,
+.txn-budget-error button:focus-visible,
+.txn-revisions-content button:focus-visible { outline: 2px solid var(--color-link); outline-offset: -2px; }
 
 .confirm-dialog-error {
   margin: 0;

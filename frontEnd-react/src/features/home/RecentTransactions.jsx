@@ -6,11 +6,13 @@ import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CategoryOutlineIcon, ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
-import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
+import { formatCurrency, formatRelativeDate, getLocalMonthString } from '../../utils/formatters';
+import { requiresHistoricalConfirmation } from '../../utils/transactionEditing';
+import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export const RecentTransactions = React.memo(function RecentTransactions() {
-  const { t, label, intlLocale } = useTranslation();
+  const { t, label, lang, intlLocale } = useTranslation();
   const transactions = useTransactionStore((s) => s.transactions);
   const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
   const undoDeleteTransaction = useTransactionStore((s) => s.undoDeleteTransaction);
@@ -49,7 +51,9 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
     const typeLabel = t(isIncome ? 'type.income' : 'type.expense').toLocaleLowerCase(intlLocale);
     confirm({
       title: t('home.deleteTitle'),
-      message: t('home.deleteMessage', { type: typeLabel, name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) }),
+      message: t('home.deleteMessage', { type: typeLabel, name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })
+        + (requiresHistoricalConfirmation(txn, null, getLocalMonthString())
+          ? '\n\n' + historicalImpactMessage(txn, null, { t, wallets, locale: lang }) : ''),
       confirmText: t('home.deleteTitle'),
       cancelText: t('home.keep'),
       confirmVariant: 'danger',

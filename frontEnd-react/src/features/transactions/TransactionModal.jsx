@@ -2,18 +2,23 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
+import { useConfirmStore } from '../../stores/useConfirmStore';
+import { spendingService } from '../../services/spendingService';
+import { TransactionRevisionHistory } from './TransactionRevisionHistory';
+import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMonth } from '../../utils/transactionEditing';
+import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
 import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
-import { formatCurrency, formatInputNumber, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const EMPTY_EXPENSE_CATS = [];
 
 export function TransactionModal() {
-  const { t, label, intlLocale } = useTranslation();
+  const { t, label, lang, intlLocale } = useTranslation();
   const isAddTxnOpen = useSpendingStore((s) => s.isAddTxnOpen);
   const addTxnInitialState = useSpendingStore((s) => s.addTxnInitialState);
   const closeAddTxnModal = useSpendingStore((s) => s.closeAddTxnModal);
@@ -27,10 +32,14 @@ export function TransactionModal() {
   const expenseCategories = useTransactionStore((s) => s.expenseCategories);
   const incomeCategories = useTransactionStore((s) => s.incomeCategories);
   const budgets = useTransactionStore((s) => s.budgets);
+  const budgetMonth = useTransactionStore((s) => s.budgetMonth);
   const transactions = useTransactionStore((s) => s.transactions);
 
   const wallets = useWalletStore((s) => s.wallets);
+  const archivedWallets = useWalletStore((s) => s.archivedWallets);
   const fetchWallets = useWalletStore((s) => s.fetchWallets);
+  const confirm = useConfirmStore((s) => s.confirm);
+  const confirmationOpen = useConfirmStore((s) => s.isOpen);
   const addToast = useToastStore((s) => s.addToast);
 
   const isOpen = Boolean(isAddTxnOpen || editingTransaction);
@@ -45,13 +54,15 @@ export function TransactionModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [amountError, setAmountError] = useState('');
+  const [periodBudgets, setPeriodBudgets] = useState({ month: '', data: {}, error: false });
+  const [budgetRetry, setBudgetRetry] = useState(0);
 
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
   const prevOpenRef = useRef(false);
   const prevEditIdRef = useRef(null);
 
-  useFocusTrap(modalRef, isOpen);
+  useFocusTrap(modalRef, isOpen && !confirmationOpen);
 
   // Fetch wallets if list is empty
   useEffect(() => {
@@ -61,81 +72,53 @@ export function TransactionModal() {
   }, [isOpen, wallets.length, fetchWallets]);
 
   // Categories list based on selected transaction type
-  const activeExpenseCats = expenseCategories || EMPTY_EXPENSE_CATS;
+  const activeExpenseCats = useMemo(() => {
+    const list = expenseCategories || EMPTY_EXPENSE_CATS;
+    if (editingTransaction?.type !== 'expense' || !editingTransaction.category ||
+        list.some((cat) => cat.name === editingTransaction.category)) return list;
+    return [...list, { name: editingTransaction.category }];
+  }, [expenseCategories, editingTransaction]);
   const activeIncomeCats = incomeCategories && incomeCategories.length > 0
     ? incomeCategories
     : DEFAULT_INCOME_CATEGORIES;
 
   const categories = type === 'expense' ? activeExpenseCats : activeIncomeCats;
 
-  // Tính toán ngân sách thời gian thực cho từng danh mục chi tiêu trong tháng được chọn
+  const selectedPeriod = transactionMonth({ date });
+  const originalPeriod = transactionMonth(editingTransaction);
+  const historicalPeriod = [originalPeriod, selectedPeriod].filter((month) => month && month < getLocalMonthString());
+  const budgetReady = selectedPeriod && (budgetMonth === selectedPeriod || periodBudgets.month === selectedPeriod);
+  const applicableBudgets = budgetMonth === selectedPeriod ? budgets : periodBudgets.data;
+  const budgetError = budgetMonth !== selectedPeriod && periodBudgets.error && periodBudgets.month === selectedPeriod;
+
+  // The modal owns its period data so editing a past entry never changes the dashboard month.
+  useEffect(() => {
+    if (!isOpen || type !== 'expense' || !selectedPeriod || budgetMonth === selectedPeriod) return undefined;
+    let active = true;
+    setPeriodBudgets({ month: '', data: {}, error: false });
+    spendingService.getBudgets(selectedPeriod).then((response) => {
+      if (!response.success) throw new Error('budget');
+      if (active) setPeriodBudgets({ month: selectedPeriod, data: response.data || {}, error: false });
+    }).catch(() => {
+      if (active) setPeriodBudgets({ month: selectedPeriod, data: {}, error: true });
+    });
+    return () => { active = false; };
+  }, [isOpen, type, selectedPeriod, budgetMonth, budgetRetry]);
+
   const categoryMetrics = useMemo(() => {
-    if (type !== 'expense') return {};
-    const curPrefix = date ? date.slice(0, 7) : getLocalMonthString();
-    const spentMap = Object.create(null);
-    transactions.forEach((t) => {
-      if (t.type === 'expense' && t.date && t.date.startsWith(curPrefix)) {
-        spentMap[t.category] = (spentMap[t.category] || 0) + (Number(t.amount) || 0) + (Number(t.fee) || 0);
-      }
-    });
-
-    const metrics = Object.create(null);
-    activeExpenseCats.forEach((cat) => {
-      const rawLimit = budgets && budgets[cat.name] !== undefined ? Number(budgets[cat.name]) : null;
-      const limit = rawLimit && rawLimit > 0 ? rawLimit : null;
-      const spent = spentMap[cat.name] || 0;
-
-      if (limit !== null) {
-        const remaining = limit - spent;
-        const percent = limit > 0 ? Math.round((remaining / limit) * 100) : 0;
-
-        // Quy tắc dải màu theo tiêu chuẩn UX:
-        // > 60% : Xanh lá an toàn
-        // 15% - 60% : Vàng sang cam theo % giảm dần
-        // < 15% hoặc hết hạn mức : Đỏ cảnh báo
-        let color = '#10B981'; // Green
-        if (remaining <= 0 || percent < 15) {
-          color = '#EF4444'; // Red
-        } else if (percent <= 60) {
-          if (percent > 40) {
-            color = '#F59E0B'; // Vàng tươi
-          } else if (percent > 25) {
-            color = '#F97316'; // Vàng cam
-          } else {
-            color = '#EA580C'; // Cam đậm
-          }
-        }
-
-        let statusLabel = t('transaction.limitLeft', { percent });
-        if (remaining <= 0) {
-          statusLabel = t('transaction.limitReached');
-        }
-
-        metrics[cat.name] = {
-          hasLimit: true,
-          limit,
-          spent,
-          remaining: Math.max(0, remaining),
-          rawRemaining: remaining,
-          percent: Math.max(0, Math.min(100, percent)),
-          color,
-          statusLabel
-        };
-      } else {
-        metrics[cat.name] = {
-          hasLimit: false,
-          limit: null,
-          spent,
-          remaining: 0,
-          rawRemaining: 0,
-          percent: 0,
-          color: 'rgba(255, 255, 255, 0.15)',
-          statusLabel: t('transaction.limitUnset')
-        };
-      }
-    });
+    if (type !== 'expense' || !budgetReady || budgetError) return {};
+    const draftAmount = Number(String(amount).replace(/\D/g, ''));
+    const metrics = previewCategoryBudgets({ transactions, budgets: applicableBudgets,
+      categories: activeExpenseCats, month: selectedPeriod, editingId: editingTransaction?.id,
+      draft: { type, amount: draftAmount, category, date, fee: editingTransaction?.fee || 0 } });
+    for (const metric of Object.values(metrics)) {
+      metric.color = metric.hasLimit ? `var(--color-${metric.status})` : 'var(--color-neutral-bg)';
+      metric.statusLabel = !metric.hasLimit ? t('transaction.limitUnset') : metric.rawRemaining <= 0n
+        ? t('transaction.limitReached') : t('transaction.limitLeft', { percent: metric.percent });
+    }
     return metrics;
-  }, [type, date, transactions, budgets, activeExpenseCats, t]);
+  }, [type, amount, category, date, selectedPeriod, transactions, applicableBudgets,
+      activeExpenseCats, editingTransaction, budgetReady, budgetError, t]);
 
   // Sắp xếp danh mục: Ưu tiên có hạn mức trước, sau đó là chưa đặt hạn mức (giữ nguyên trật tự cấu hình)
   const sortedCategories = useMemo(() => {
@@ -227,7 +210,7 @@ export function TransactionModal() {
 
   // Preselect wallet if walletId is empty when wallets load
   useEffect(() => {
-    if (isOpen && !walletId && wallets.length > 0) {
+    if (isOpen && !isEditing && !walletId && wallets.length > 0) {
       const targetWalletId = addTxnInitialState?.walletId;
       const targetWallet = targetWalletId ? wallets.find((w) => w.id === targetWalletId) : null;
       const defWallet = targetWallet || wallets.find((w) => w.isDefault) || wallets[0];
@@ -235,7 +218,7 @@ export function TransactionModal() {
         setWalletId(defWallet.id);
       }
     }
-  }, [isOpen, walletId, wallets, addTxnInitialState]);
+  }, [isOpen, isEditing, walletId, wallets, addTxnInitialState]);
 
   // Auto focus amount input when opened
   useEffect(() => {
@@ -256,7 +239,7 @@ export function TransactionModal() {
 
   // Keyboard shortcut: Escape to close modal
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || confirmationOpen || isSubmitting) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -265,7 +248,7 @@ export function TransactionModal() {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, close]);
+  }, [isOpen, close, confirmationOpen, isSubmitting]);
 
   // Switch type (expense <-> income) & preserve or reset category
   const handleTypeChange = (newType) => {
@@ -295,6 +278,7 @@ export function TransactionModal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting || confirmationOpen) return;
     setErrorMsg('');
     setAmountError('');
 
@@ -307,6 +291,15 @@ export function TransactionModal() {
       return;
     }
 
+    if (!Number.isSafeInteger(numAmount)) {
+      setAmountError(t('transaction.amountRange'));
+      return;
+    }
+    if (!selectedPeriod || !date) {
+      setErrorMsg(t('transaction.dateRequired'));
+      return;
+    }
+
     if (!category) {
       setErrorMsg(t('transaction.chooseCategory'));
       return;
@@ -314,25 +307,21 @@ export function TransactionModal() {
 
     // Fallback wallet if none selected
     let targetWalletId = walletId;
-    if (!targetWalletId && wallets.length > 0) {
+    if (!isEditing && !targetWalletId && wallets.length > 0) {
       const defWallet = wallets.find((w) => w.isDefault) || wallets[0];
       targetWalletId = defWallet ? defWallet.id : null;
     }
 
-    setIsSubmitting(true);
-    try {
-      const transactionData = {
-        type,
-        amount: numAmount,
-        category,
-        walletId: targetWalletId || null,
-        date,
-        desc: desc.trim()
-      };
-
+    const transactionData = {
+      type, amount: numAmount, category, walletId: targetWalletId || null, date, desc: desc.trim()
+    };
+    // Legacy entries can have no wallet. A note edit must not silently assign a default wallet.
+    if (isEditing && (walletId || null) === (editingTransaction.walletId || null)) {
+      delete transactionData.walletId;
+    }
+    const persist = async () => {
       if (isEditing) {
         const res = await updateTransaction(editingTransaction.id, transactionData);
-        setIsSubmitting(false);
         if (res?.success) {
           close();
           addToast({
@@ -343,7 +332,6 @@ export function TransactionModal() {
         }
       } else {
         const res = await addTransaction(transactionData);
-        setIsSubmitting(false);
         if (res?.success) {
           const createdTxn = res.data;
           close();
@@ -362,9 +350,26 @@ export function TransactionModal() {
           });
         }
       }
+    };
+    setIsSubmitting(true);
+    try {
+      const preview = { ...editingTransaction, ...transactionData };
+      if (preview.type !== 'transfer') preview.toWalletId = null;
+      if (requiresHistoricalConfirmation(editingTransaction, preview, getLocalMonthString())) {
+        await confirm({
+          title: t('transaction.confirmHistorical'),
+          message: historicalImpactMessage(editingTransaction, preview,
+            { t, wallets: [...wallets, ...archivedWallets], locale: lang }),
+          confirmText: t('transaction.confirmSave'), cancelText: t('common.cancel'),
+          confirmVariant: 'primary', onConfirm: persist
+        });
+      } else {
+        await persist();
+      }
     } catch (err) {
-      setIsSubmitting(false);
       setErrorMsg(err.message || t('transaction.error'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -374,7 +379,7 @@ export function TransactionModal() {
     <div
       className="txn-modal-backdrop"
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (e.target === e.currentTarget && !isSubmitting && !confirmationOpen) {
           close();
         }
       }}
@@ -401,6 +406,7 @@ export function TransactionModal() {
             type="button"
             className="txn-modal-close-btn"
             onClick={close}
+            disabled={isSubmitting || confirmationOpen}
             aria-label={t('common.closeWindow')}
           >
             <svg
@@ -423,6 +429,10 @@ export function TransactionModal() {
         {/* Form Body */}
         <form onSubmit={handleSubmit} noValidate>
           <div className="txn-modal-body">
+            {historicalPeriod.length > 0 && <div className="txn-period-notice" role="status">
+              <strong>{t('transaction.historicalPeriod', { month: formatDate(`${historicalPeriod[0]}-01`, 'month', { locale: lang }) })}</strong>
+              <span>{t('transaction.historicalHint')}</span>
+            </div>}
             {/* 1. Type toggle */}
             <div className="txn-type-toggle" role="group" aria-label={t('transaction.type')}>
               <button
@@ -485,6 +495,13 @@ export function TransactionModal() {
                 <span>{t('transaction.category')}</span>
               </label>
 
+              {type === 'expense' && selectedPeriod && <p className="txn-budget-period">
+                {t('transaction.budgetForPeriod', { month: formatDate(`${selectedPeriod}-01`, 'month', { locale: lang }) })}
+                {' · '}{t('transaction.budgetPreview')}
+              </p>}
+              {type === 'expense' && !budgetReady && <p role="status" className="txn-budget-period">{t('transaction.budgetLoading')}</p>}
+              {type === 'expense' && budgetError && <p role="alert" className="txn-budget-error">{t('transaction.budgetFailed')}
+                {' '}<button type="button" onClick={() => setBudgetRetry((value) => value + 1)}>{t('common.tryAgain')}</button></p>}
               {type === 'expense' && sortedCategories.length === 0 ? (
                 <div className="txn-empty-categories" role="status">
                   <span className="txn-empty-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -541,7 +558,7 @@ export function TransactionModal() {
                               style={{
                                 color:
                                   metric.hasLimit && (metric.percent < 15 || metric.rawRemaining <= 0)
-                                    ? '#EF4444'
+                                    ? 'var(--color-danger)'
                                     : undefined
                               }}
                             >
@@ -559,7 +576,7 @@ export function TransactionModal() {
                           </>
                         ) : (
                           <div className="txn-card-income-tag">
-                            {t('type.income')}
+                            {type === 'expense' ? t(budgetError ? 'transaction.budgetUnavailable' : 'transaction.budgetLoading') : t('type.income')}
                           </div>
                         )}
                       </button>
@@ -613,6 +630,9 @@ export function TransactionModal() {
                 maxLength={100}
               />
             </div>
+
+            {isEditing && <TransactionRevisionHistory key={editingTransaction.id}
+              transactionId={editingTransaction.id} wallets={[...wallets, ...archivedWallets]} />}
 
             {/* Error Message */}
             {errorMsg && (

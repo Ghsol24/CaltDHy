@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { moneyInteger, moneyNumber, sumMoney, inspectMoneyDisplay } from '../src/utils/moneyPrecision.js';
 import { calculateWalletBalances, calculateMonthlyStats, calculateAvailableToSpend } from '../src/utils/financeMath.js';
 import { formatCurrency } from '../src/utils/formatters.js';
+import { sortWalletsByBalance } from '../src/utils/walletSort.js';
 
 const max = Number.MAX_SAFE_INTEGER;
 
@@ -55,4 +56,33 @@ test('currency formatting preserves every digit of oversized exact aggregates', 
   assert.match(formatCurrency(-9007199254740993n, { locale: 'vi', currency: 'VND' }), /^−9\.007\.199\.254\.740\.993\s*₫$/);
   assert.match(formatCurrency(0n, { showSign: true, locale: 'vi', currency: 'VND' }), /^0\s*₫$/);
   assert.equal(formatCurrency(max + 1), 'Ngoài giới hạn hiển thị');
+});
+
+test('transfer wallet order follows current balance without mutating default order', () => {
+  const wallets = Object.freeze([
+    Object.freeze({ id: 'default', isDefault: true, currentBalance: 24_000, initialBalance: 9_000_000 }),
+    Object.freeze({ id: 'zalo', currentBalance: 3_180_957 }),
+    Object.freeze({ id: 'momo', currentBalance: 1_165_556 }),
+    Object.freeze({ id: 'bank', currentBalance: 1_725_888 }),
+    Object.freeze({ id: 'tie', currentBalance: 1_165_556 }),
+    Object.freeze({ id: 'credit', type: 'credit', currentBalance: -200_000, creditLimit: 10_000_000 }),
+    Object.freeze({ id: 'zero', currentBalance: 0, initialBalance: 8_000_000 }),
+  ]);
+  const sorted = sortWalletsByBalance(wallets);
+  assert.deepEqual(sorted.map(w => w.id), ['zalo', 'bank', 'momo', 'tie', 'default', 'zero', 'credit']);
+  assert.equal(wallets[0].id, 'default');
+  assert.equal(sorted[4], wallets[0]);
+  assert.deepEqual(sorted.filter(w => w.id !== 'zalo').map(w => w.id), ['bank', 'momo', 'tie', 'default', 'zero', 'credit']);
+});
+
+test('transfer wallet ordering handles empty lists, missing current balances and precise extremes', () => {
+  assert.deepEqual(sortWalletsByBalance(), []);
+  const sorted = sortWalletsByBalance([
+    { id: 'negative', currentBalance: -max },
+    { id: 'near-max', currentBalance: max - 1 },
+    { id: 'max', currentBalance: max },
+    { id: 'missing' },
+    { id: 'initial', initialBalance: 50 },
+  ]);
+  assert.deepEqual(sorted.map(w => w.id), ['max', 'near-max', 'initial', 'missing', 'negative']);
 });

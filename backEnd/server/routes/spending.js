@@ -4,6 +4,7 @@ const router = express.Router();
 const { financialRequest } = require('../utils/financialRequest');
 const { protect } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
+const TransactionRevision = require('../models/TransactionRevision');
 const Budget = require('../models/Budget');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
@@ -22,7 +23,7 @@ router.use(protect);
 router.get('/export', async (req, res) => {
     try {
         const userId = req.user.id;
-        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays] = await Promise.all([
+        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays, transactionRevisions] = await Promise.all([
             User.findById(userId).select('_id name email customCategories').lean(),
             Transaction.find({ userId }).lean(),
             Budget.find({ userId }).lean(),
@@ -30,7 +31,8 @@ router.get('/export', async (req, res) => {
             Category.find({ userId }).lean(),
             Jar.find({ userId }).lean(),
             Installment.find({ userId }).lean(),
-            ExpectedHighSpendDay.find({ userId }).lean()
+            ExpectedHighSpendDay.find({ userId }).lean(),
+            TransactionRevision.find({ userId }).lean()
         ]);
         if (!user) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
@@ -50,7 +52,8 @@ router.get('/export', async (req, res) => {
                 categories,
                 jars,
                 installments,
-                expectedHighSpendDays
+                expectedHighSpendDays,
+                transactionRevisions
             }
         });
     } catch {
@@ -103,6 +106,43 @@ function parseTransactionDate(date) {
     if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
     const parsed = new Date(`${date}T00:00:00.000Z`);
     return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date ? null : parsed;
+}
+
+function transactionSnapshot(transaction) {
+    const json = transaction.toJSON();
+    return {
+        id: json.id,
+        type: json.type,
+        desc: json.desc || '',
+        amount: json.amount,
+        category: json.category,
+        date: json.date,
+        walletId: json.walletId || null,
+        toWalletId: json.toWalletId || null,
+        fee: json.fee || 0,
+        jarId: json.jarId || null,
+        installmentId: json.installmentId || null,
+        systemGenerated: Boolean(json.systemGenerated),
+        period: json.period || null
+    };
+}
+
+async function recordTransactionRevision(req, before, after) {
+    const changedFields = Object.keys(before).filter(field => field !== 'id' &&
+        (!after || before[field] !== after[field]));
+    if (!changedFields.length) return;
+    // Mongoose's transactionAsyncLocalStorage joins the financialRequest session.
+    // A failed balance check or retry rolls back both this audit and the ledger edit.
+    await TransactionRevision.create({
+        userId: req.user.id,
+        transactionId: before.id,
+        action: after ? 'update' : 'delete',
+        actorId: req.user.id,
+        actorName: req.user.name,
+        changedFields,
+        before,
+        after
+    });
 }
 
 function validateTransactionPayload({ type, amount, category, date }) {
@@ -618,6 +658,44 @@ router.post('/', financialRequest(async (req, res) => {
 }));
 
 // =============================================
+// GET /api/spending/:id/history - Lịch sử sửa/xóa, kể cả giao dịch đã xóa
+// =============================================
+router.get('/:id/history', financialRequest(async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
+        }
+        const rawPage = req.query.page === undefined ? '1' : req.query.page;
+        const rawLimit = req.query.limit === undefined ? '20' : req.query.limit;
+        if (typeof rawPage !== 'string' || !/^[1-9]\d*$/.test(rawPage) ||
+            typeof rawLimit !== 'string' || !/^[1-9]\d*$/.test(rawLimit) ||
+            !Number.isSafeInteger(Number(rawPage)) || !Number.isSafeInteger(Number(rawLimit))) {
+            return res.status(400).json({ success: false, message: 'Tham số phân trang không hợp lệ.' });
+        }
+        const page = Number(rawPage), limit = Math.min(Number(rawLimit), 100);
+        const skip = (page - 1) * limit;
+        if (!Number.isSafeInteger(skip)) {
+            return res.status(400).json({ success: false, message: 'Tham số phân trang không hợp lệ.' });
+        }
+        const filter = { userId: req.user.id, transactionId: id };
+        const transaction = await Transaction.exists({ _id: id, userId: req.user.id });
+        const total = await TransactionRevision.countDocuments(filter);
+        const revisions = await TransactionRevision.find(filter)
+            .sort({ occurredAt: -1, _id: -1 }).skip(skip).limit(limit);
+        if (!transaction && !total) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch hoặc lịch sử thay đổi.' });
+        }
+        return res.json({ success: true, data: revisions.map(revision => revision.toJSON()),
+            pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+    } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] history_failed');
+        return res.status(500).json({ success: false, message: 'Không thể tải lịch sử thay đổi giao dịch.' });
+    }
+}));
+
+// =============================================
 // PUT /api/spending/:id - Chỉnh sửa một giao dịch
 // =============================================
 router.put('/:id', financialRequest(async (req, res) => {
@@ -701,11 +779,14 @@ router.put('/:id', financialRequest(async (req, res) => {
             updatePayload.installmentId = isValidObjectId(installmentId) ? installmentId : null;
         }
 
+        const before = transactionSnapshot(currentTx);
         const updated = await Transaction.findOneAndUpdate(
             { _id: id, userId: req.user.id },
             updatePayload,
             { new: true, runValidators: true }
         );
+
+        await recordTransactionRevision(req, before, transactionSnapshot(updated));
 
         res.json({ success: true, message: 'Đã cập nhật giao dịch!', data: updated.toJSON() });
     } catch (error) {
@@ -748,6 +829,7 @@ router.delete('/:id', financialRequest(async (req, res) => {
             });
         }
 
+        await recordTransactionRevision(req, transactionSnapshot(existing), null);
         await Transaction.deleteOne({ _id: id, userId: req.user.id });
 
         res.json({
@@ -770,6 +852,7 @@ router.post('/reset-data', financialRequest(async (req, res) => {
 
         // 1. Xóa sạch giao dịch, ngân sách và ngày chi tiêu được đánh dấu của user hiện tại
         await Transaction.deleteMany({ userId });
+        await TransactionRevision.deleteMany({ userId });
         await Budget.deleteMany({ userId });
         await ExpectedHighSpendDay.deleteMany({ userId });
 
