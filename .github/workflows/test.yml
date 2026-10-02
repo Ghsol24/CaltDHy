@@ -31,8 +31,10 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             backEnd/server/package-lock.json
+            frontEnd-react/package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm ci --ignore-scripts --prefix backEnd/server
+      - run: npm ci --ignore-scripts --prefix frontEnd-react
       - run: npm audit --audit-level=high
       - run: npm audit --audit-level=high --prefix backEnd/server
       - run: npm test
