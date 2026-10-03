@@ -4,6 +4,7 @@
 // Run after building the frontend: node tests/transaction-period-browser.cjs
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const http = require('node:http');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
@@ -14,7 +15,7 @@ const mongoose = backend('mongoose');
 const { MongoMemoryReplSet } = backend('mongodb-memory-server');
 let server, db, browser;
 let passed = 0;
-const evidenceDir = process.env.TRANSACTION_QA_DIR || '/private/tmp/caltdhy-transaction-period-evidence';
+const evidenceDir = process.env.TRANSACTION_QA_DIR || path.join(os.tmpdir(), 'caltdhy-transaction-period-evidence');
 async function check(name, work) {
   await work();
   passed += 1;
