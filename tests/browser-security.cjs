@@ -52,7 +52,9 @@ function blendCssColor(color, background) {
   browser = await chromium.launch({ headless: true,
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } :
       process.platform === 'darwin' && fs.existsSync(localChrome) ? { executablePath: localChrome } : {}) });
-  const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } });
+  // Vietnamese selectors must not depend on the host/browser language in CI.
+  // Explicit language-switch scenarios still update the application's preference.
+  const context = await browser.newContext({ baseURL, locale: 'vi-VN', viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -118,7 +120,7 @@ function blendCssColor(color, background) {
     } finally { await updatePage.close(); }
   });
   await check('saved theme colors the first frame before the React bundle loads', async () => {
-    const bootContext = await browser.newContext({ baseURL, serviceWorkers: 'block' });
+    const bootContext = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block' });
     try {
       const bootPage = await bootContext.newPage();
       await bootPage.goto('/login');
@@ -144,7 +146,7 @@ function blendCssColor(color, background) {
     }
   });
   await check('public settings preserve all four themes across tabs, reopening and desktop login', async () => {
-    const publicContext = await browser.newContext({ baseURL, serviceWorkers: 'block',
+    const publicContext = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block',
       viewport: { width: 1536, height: 960 } });
     const publicPage = await publicContext.newPage();
     const sibling = await publicContext.newPage();
@@ -152,6 +154,8 @@ function blendCssColor(color, background) {
     try {
       await publicPage.goto('/');
       await sibling.goto('/login');
+      await expect(publicPage.locator('html')).toHaveAttribute('lang', 'vi');
+      await expect(sibling.locator('html')).toHaveAttribute('lang', 'vi');
       for (const [theme, label] of [['dark', 'Tối'], ['light', 'Sáng'], ['cream', 'Kem'], ['green', 'Xanh']]) {
         await publicPage.locator('#idxSettingsBtn').click();
         const dialog = publicPage.locator('#idxSettingsModal');
@@ -258,7 +262,7 @@ function blendCssColor(color, background) {
     assert.ok(!stored.some(key => /token|wallets|txns|jars|budgets|caltdhy_user/.test(key)));
   });
   await check('recurring terms can be set, cleared and finish after their final payable period', async () => {
-    const termContext = await browser.newContext({ baseURL, serviceWorkers: 'block', viewport: { width: 1440, height: 960 } });
+    const termContext = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block', viewport: { width: 1440, height: 960 } });
     const termPage = await termContext.newPage();
     termPage.on('pageerror', error => errors.push(error.message));
     try {
@@ -354,7 +358,7 @@ function blendCssColor(color, background) {
     } finally { await termContext.close(); }
   });
   await check('category analytics avoid prototype pollution and CSV downloads contain untrusted text', async () => {
-    const csvContext = await browser.newContext({ baseURL, serviceWorkers: 'block' });
+    const csvContext = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block' });
     const csvPage = await csvContext.newPage();
     try {
       await signup(csvPage, 'CSV Export Audit', 'csv-' + crypto.randomUUID() + '@example.test');
@@ -836,7 +840,7 @@ function blendCssColor(color, background) {
     }
   });
   await check('mobile navigation remains reachable, touch-friendly, and free of fake currencies', async () => {
-    const mobileContext = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } });
+    const mobileContext = await browser.newContext({ baseURL, locale: 'vi-VN', viewport: { width: 390, height: 844 } });
     const mobilePage = await mobileContext.newPage();
     const mobileErrors = [];
     const mobileScriptRequests = [];

@@ -47,7 +47,7 @@ async function check(name, work) {
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } :
       process.platform === 'darwin' && fs.existsSync(localChrome) ? { executablePath: localChrome } : {})
   });
-  const context = await browser.newContext({ baseURL, serviceWorkers: 'block',
+  const context = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block',
     timezoneId: 'Asia/Ho_Chi_Minh', viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
   const errors = [];
