@@ -662,6 +662,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   gap: 18px;
 }
 
+/* Keep the form's content at its natural height; the body owns vertical scrolling. */
+.txn-modal-body--transaction > * {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
 /* Type Toggle Switcher */
 .txn-type-toggle {
   display: flex;
@@ -793,10 +799,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Category Grid */
 .txn-category-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  flex-shrink: 0;
   gap: 10px;
-  max-height: 240px;
-  overflow-y: auto;
   padding: 2px 2px 6px 2px;
 }
 
@@ -808,6 +814,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   align-items: center;
   justify-content: flex-start;
   padding: 12px 8px 10px 8px;
+  min-width: 0;
   min-height: 98px;
   background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
   border: 1.5px solid var(--border, rgba(255, 255, 255, 0.08));
@@ -817,6 +824,16 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   transition: all var(--dur-fast) ease;
   text-align: center;
   user-select: none;
+}
+
+.txn-category-card > * {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.txn-category-card:focus-visible {
+  outline: 2px solid var(--color-action-bg);
+  outline-offset: 2px;
 }
 
 .txn-category-card:hover {
@@ -873,12 +890,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Category Name */
 .txn-card-name {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.4;
   color: var(--text-secondary, #A0AEC0);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
   max-width: 100%;
   margin-bottom: 2px;
 }
@@ -893,6 +910,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-mono, monospace);
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-width: 100%;
   color: var(--text-primary, #FFFFFF);
   letter-spacing: -0.01em;
   margin-bottom: 3px;
@@ -901,8 +921,11 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Subtitle: "Còn lại 88%", "Hết hạn mức", "Chưa đặt hạn mức" */
 .txn-card-subtitle {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-width: 100%;
   color: var(--text-muted, #718096);
   margin-bottom: 6px;
 }
@@ -921,7 +944,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-card-progress-track {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-neutral-border);
   border-radius: 2px;
   overflow: hidden;
   margin-top: auto;
@@ -938,10 +961,81 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   margin-top: auto;
   font-size: 10px;
   font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-width: 100%;
   color: #10B981;
   background: rgba(16, 185, 129, 0.12);
   padding: 2px 8px;
   border-radius: 6px;
+}
+
+@media (max-width: 599px) {
+  .txn-category-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .txn-category-card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 6px;
+    min-height: 0;
+    padding: 14px;
+    text-align: start;
+  }
+
+  .txn-category-card > * {
+    margin: 0;
+  }
+
+  .txn-card-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    min-height: 40px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+  }
+
+  .txn-card-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .txn-card-name {
+    grid-column: 2;
+    grid-row: 1;
+    padding-inline-end: 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .txn-card-amount,
+  .txn-card-income-tag {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .txn-card-amount {
+    font-size: 14px;
+  }
+
+  .txn-card-subtitle {
+    grid-column: 1 / -1;
+    font-size: 12px;
+  }
+
+  .txn-card-progress-track {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
 }
 
 /* Empty Categories State */

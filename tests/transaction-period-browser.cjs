@@ -1,6 +1,6 @@
 'use strict';
 
-// Focused integration coverage for historical edits and transfer wallet order.
+// Focused integration coverage for historical edits, category layout and transfer wallet order.
 // Run after building the frontend: node tests/transaction-period-browser.cjs
 const fs = require('node:fs');
 const path = require('node:path');
@@ -367,6 +367,202 @@ async function check(name, work) {
       .toHaveText(['Ví chính', 'MoMo', 'Ví bằng số dư', 'Tiền mặt rỗng', 'Thẻ dư nợ']);
     await page.keyboard.press('Escape');
     await transfer.locator('.txn-modal-close-btn').click();
+  });
+
+  // Real saved categories exercise the production modal, including budget amounts/statuses.
+  // Keep this fixture after the historical audit checks so their revision counts remain stable.
+  const layoutCategories = ['Ăn uống', 'Sức khỏe và chăm sóc cá nhân dài hạn',
+    'Học tập và phát triển kỹ năng chuyên môn', 'Chi phí gia đình và hỗ trợ người thân',
+    'Mua sắm thiết bị phục vụ công việc',
+    ...Array.from({ length: 13 }, (_, index) =>
+      `Danh mục ${String(index + 1).padStart(2, '0')} — chi tiêu chăm sóc gia đình dài hạn`)];
+  assert.ok(layoutCategories.every(name => name.length <= 50), 'Category fixture respects the API name limit');
+  await mutate('put', '/api/spending/categories', { categories: layoutCategories });
+  await backend('./models/Budget').insertMany(layoutCategories.slice(1).map(category => ({
+    userId: user._id, category, month: '2026-10', limit: 987654321
+  })));
+
+  async function openCategoryLayout(theme, viewport) {
+    await page.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+    await page.setViewportSize(viewport);
+    await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
+    await expect(page.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+    await expect(modal.locator('.txn-category-card')).toHaveCount(layoutCategories.length);
+    await expect(modal.locator('.txn-card-amount')).toHaveCount(layoutCategories.length);
+  }
+
+  async function assertCategoryLayout(name, columns) {
+    const layout = await modal.evaluate(element => {
+      const bounds = node => {
+        const { left, right, top, bottom, width, height } = node.getBoundingClientRect();
+        return { left, right, top, bottom, width, height };
+      };
+      const body = element.querySelector('.txn-modal-body');
+      const grid = element.querySelector('.txn-category-grid');
+      const cards = [...grid.querySelectorAll('.txn-category-card')].map(card => {
+        const name = card.querySelector('.txn-card-name');
+        const range = document.createRange();
+        range.selectNodeContents(name);
+        return { box: bounds(card), name: bounds(name), text: name.textContent,
+          textRects: [...range.getClientRects()].map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
+          children: [...card.querySelectorAll('.txn-card-icon, .txn-card-name, .txn-card-amount, .txn-card-subtitle, .txn-card-progress-track, .txn-card-income-tag')]
+            .map(child => ({ selector: child.className, box: bounds(child) })) };
+      });
+      const originalBodyScroll = body.scrollTop;
+      body.scrollTop = 32;
+      const bodyCanScroll = body.scrollTop > 0;
+      body.scrollTop = originalBodyScroll;
+      // Probe actual scroll behavior, including overflow:hidden containers that can
+      // still scroll programmatically. This detects nested clipping without copying CSS.
+      const nestedScrollers = [...element.querySelectorAll('*')].filter(node => {
+        if (node === body || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
+        const previous = node.scrollTop;
+        node.scrollTop = 1;
+        const scrolls = node.scrollTop > 0;
+        node.scrollTop = previous;
+        return scrolls;
+      }).map(node => node.className);
+      return { cards, grid: bounds(grid), bodyCanScroll, nestedScrollers,
+        bodyOverflow: body.scrollWidth - body.clientWidth,
+        documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        modal: bounds(element), footer: bounds(element.querySelector('.txn-modal-footer')),
+        viewport: { width: innerWidth, height: innerHeight } };
+    });
+    const firstRow = layout.cards.filter(card => Math.abs(card.box.top - layout.cards[0].box.top) <= 1);
+    assert.equal(firstRow.length, columns, `${name}: expected ${columns} cards in the first row`);
+    assert.ok(layout.bodyCanScroll, `${name}: many categories remain reachable through the modal body`);
+    assert.deepEqual(layout.nestedScrollers, [], `${name}: the body is the only vertical scroll region`);
+    assert.ok(layout.bodyOverflow <= 1 && layout.documentOverflow <= 1, `${name}: no horizontal page/body overflow`);
+    assert.ok(layout.modal.left >= -1 && layout.modal.right <= layout.viewport.width + 1,
+      `${name}: modal fits the viewport width`);
+    assert.ok(layout.footer.top >= 0 && layout.footer.bottom <= layout.viewport.height + 1,
+      `${name}: save actions stay visible on short screens`);
+    for (const card of layout.cards) {
+      assert.ok(card.name.height > 0 && card.textRects.length > 0, `${name}: ${card.text} has visible text`);
+      for (const text of card.textRects) {
+        assert.ok(text.left >= card.name.left - 1 && text.right <= card.name.right + 1
+          && text.top >= card.name.top - 1 && text.bottom <= card.name.bottom + 1,
+        `${name}: the full name wraps inside its box: ${card.text}`);
+      }
+      for (const child of card.children) {
+        assert.ok(child.box.left >= card.box.left - 1 && child.box.right <= card.box.right + 1
+          && child.box.top >= card.box.top - 1 && child.box.bottom <= card.box.bottom + 1,
+        `${name}: ${child.selector} stays inside ${card.text}`);
+      }
+    }
+    return layout;
+  }
+
+  await check('many long category names fit desktop/mobile across all four themes with one modal scroll region', async () => {
+    fs.mkdirSync(evidenceDir, { recursive: true });
+    for (const theme of ['dark', 'cream', 'green', 'light']) {
+      for (const [device, viewport, columns] of [
+        ['compact-desktop', { width: 1024, height: 640 }, 3],
+        ['mobile-boundary', { width: 599, height: 600 }, 1]
+      ]) {
+        await openCategoryLayout(theme, viewport);
+        const layout = await assertCategoryLayout(`${theme}/${device}`, columns);
+        if (columns === 3) assert.ok(layout.cards.some(card => card.textRects.length > 1),
+          `${theme}/${device}: long-name fixture must exercise multiline wrapping`);
+        await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-categories.png`), animations: 'disabled' });
+        await modal.locator('.txn-modal-close-btn').click();
+      }
+    }
+  });
+
+  await check('category layout survives the 599/600 breakpoint and simulated larger text on short screens', async () => {
+    await openCategoryLayout('light', { width: 600, height: 600 });
+    await assertCategoryLayout('light/600px desktop boundary', 3);
+    await modal.locator('.txn-modal-close-btn').click();
+    await openCategoryLayout('cream', { width: 390, height: 568 });
+    await assertCategoryLayout('cream/390px short mobile', 1);
+    // Capture the natural opening position before scrolling to the final category.
+    await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-opening.png'), animations: 'disabled' });
+    // CSS font pressure is deliberate fixture emulation, not a claim that Chrome's
+    // minimum-font-size preference or an old Windows installation was exercised.
+    const largeText = await page.addStyleTag({ content:
+      '.txn-card-name, .txn-card-amount, .txn-card-subtitle { font-size: 20px !important; }' });
+    try {
+      await assertCategoryLayout('cream/390px simulated 20px text', 1);
+      await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-large-text.png'), animations: 'disabled' });
+      await page.setViewportSize({ width: 800, height: 480 });
+      await assertCategoryLayout('cream/800px short desktop simulated 20px text', 3);
+    } finally { await largeText.evaluate(element => element.remove()); }
+    await page.setViewportSize({ width: 320, height: 480 });
+    await assertCategoryLayout('cream/320px narrow mobile', 1);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories.png'), animations: 'disabled' });
+    await modal.locator('.txn-modal-close-btn').click();
+  });
+
+  await check('the final category is selectable by body scrolling and its saved value persists', async () => {
+    await openCategoryLayout('cream', { width: 390, height: 568 });
+    const lastName = layoutCategories.at(-1);
+    const lastCard = modal.locator('.txn-category-card').last();
+    await expect(lastCard.locator('.txn-card-name')).toHaveText(lastName);
+    await lastCard.click();
+    await expect(lastCard).toHaveAttribute('aria-checked', 'true');
+    assert.ok(await modal.locator('.txn-modal-body').evaluate(element => element.scrollTop > 0),
+      'Selecting the final category scrolls the sole modal body');
+    await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-last-category-selected.png'), animations: 'disabled' });
+    await modal.locator('.txn-btn-submit').click();
+    await expect(modal).toHaveCount(0);
+    await expect(confirmation).toHaveCount(0);
+    const saved = (await ledger()).find(tx => (tx.id || tx._id) === pastId);
+    assert.equal(saved.category, lastName);
+    assert.equal(saved.amount, 40000);
+    assert.equal(saved.date, '2026-10-01');
+    assert.equal(saved.walletId, primary.id);
+    await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
+    await expect(modal.locator('.txn-category-card[aria-checked="true"] .txn-card-name')).toHaveText(lastName);
+    await modal.locator('.txn-modal-close-btn').click();
+  });
+
+  await check('unset budgets and the wallet menu remain usable after scrolling a long category list', async () => {
+    const octoberBudget = url => url.pathname === '/api/spending/budget' && url.searchParams.get('month') === '2026-10';
+    await page.route(octoberBudget, route => route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, data: {} })
+    }));
+    try {
+      await openCategoryLayout('light', { width: 320, height: 480 });
+      await expect(modal.locator('.txn-category-card.is-unset')).toHaveCount(layoutCategories.length);
+      await assertCategoryLayout('light/320px unset budgets', 1);
+      const wallet = modal.locator('.custom-wallet-trigger');
+      await wallet.click();
+      const lastOption = modal.locator('.custom-wallet-item').last();
+      const lastWalletName = await lastOption.locator('.custom-wallet-item-name').innerText();
+      await page.keyboard.press('End');
+      await expect(lastOption).toHaveClass(/is-highlighted/);
+      const visible = await lastOption.evaluate(element => {
+        const box = element.getBoundingClientRect();
+        const footer = element.closest('.txn-modal-card').querySelector('.txn-modal-footer').getBoundingClientRect();
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return box.top >= 0 && box.bottom <= footer.top + 1 && !!hit && element.contains(hit);
+      });
+      assert.ok(visible, 'The final wallet option is visible above the fixed footer');
+      await page.keyboard.press('Enter');
+      await expect(modal.locator('.custom-wallet-menu')).toHaveCount(0);
+      await expect(wallet).toContainText(lastWalletName);
+      await modal.locator('.txn-modal-close-btn').click();
+    } finally { await page.unroute(octoberBudget); }
+  });
+
+  await check('budget failure and income cards keep their labels readable on mobile', async () => {
+    await openCategoryLayout('light', { width: 390, height: 568 });
+    await page.route(septemberBudget, route => route.fulfill({
+      status: 503, contentType: 'application/json', body: '{"success":false,"message":"Budget fixture unavailable"}'
+    }));
+    try {
+      await modal.locator('#txn-date-input').fill('2026-09-28');
+      await expect(modal.locator('.txn-budget-error')).toBeVisible();
+      await expect(modal.locator('.txn-card-income-tag')).toHaveCount(layoutCategories.length);
+      await assertCategoryLayout('mobile/failed budget labels', 1);
+      await modal.locator('.txn-type-btn--income').click();
+      await expect(modal.locator('.txn-category-card')).not.toHaveCount(0);
+      await expect(modal.locator('.txn-card-amount')).toHaveCount(0);
+      await assertCategoryLayout('mobile/income labels', 1);
+      await modal.locator('.txn-modal-close-btn').click();
+    } finally { await page.unroute(septemberBudget); }
   });
   assert.deepEqual(errors, []);
   console.log(`PASS ${passed} transaction period/browser scenarios; screenshots: ${evidenceDir}`);

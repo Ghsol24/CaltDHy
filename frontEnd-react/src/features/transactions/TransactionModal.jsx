@@ -428,7 +428,7 @@ export function TransactionModal() {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body">
+          <div className="txn-modal-body txn-modal-body--transaction">
             {historicalPeriod.length > 0 && <div className="txn-period-notice" role="status">
               <strong>{t('transaction.historicalPeriod', { month: formatDate(`${historicalPeriod[0]}-01`, 'month', { locale: lang }) })}</strong>
               <span>{t('transaction.historicalHint')}</span>
