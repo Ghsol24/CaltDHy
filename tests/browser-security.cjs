@@ -1003,80 +1003,77 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL('**/spending/analytics/cash-flow');
     const cashFlowPanel = mobilePage.locator('#analytics-cashflow');
     await expect(cashFlowPanel.locator('.trend-week-nav__range')).toHaveText(/Ngày 1–7\//);
-    await expect(cashFlowPanel.locator('.trend-legend .legend-item')).toHaveCount(2);
-    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toHaveAttribute('aria-label', 'Biểu đồ cột thu nhập và chi tiêu');
+    await expect(cashFlowPanel.getByTestId('cashflow-chart')).toHaveAttribute('data-series', 'expense');
     const chartLayout = await cashFlowPanel.evaluate((panel) => {
-      const modes = panel.querySelector('.trend-segmented-group');
-      const buttons = [...modes.querySelectorAll('button')];
+      const buttons = [...panel.querySelectorAll('[data-testid="cashflow-period-trigger"], [data-testid="cashflow-display-trigger"]')];
       return {
         pageOverflows: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-        modesOverflow: modes.scrollWidth > modes.clientWidth + 1,
         modesFit: buttons.every((button) => button.getBoundingClientRect().right <= panel.getBoundingClientRect().right),
         weekButtonWidths: [...panel.querySelectorAll('.trend-week-nav__button')]
           .map((button) => button.getBoundingClientRect().width),
       };
     });
     assert.equal(chartLayout.pageOverflows, false, 'Biểu đồ không được gây tràn ngang trang mobile');
-    assert.equal(chartLayout.modesOverflow, false, 'Cả ba chế độ biểu đồ phải nằm trong vùng hiển thị');
-    assert.equal(chartLayout.modesFit, true, 'Nút chế độ cuối phải hiện đầy đủ');
+    assert.equal(chartLayout.modesFit, true, 'Hai nút điều khiển phải hiện đầy đủ');
     assert.ok(chartLayout.weekButtonWidths.every((width) => width >= 44),
       'Nút đổi khoảng ngày phải có vùng chạm tối thiểu 44px');
     await cashFlowPanel.getByRole('button', { name: 'Khoảng ngày sau' }).click();
     await expect(cashFlowPanel.locator('.trend-week-nav__range')).toHaveText(/Ngày 8–14\//);
-    await expect(cashFlowPanel.locator('.trend-empty-chart-box')).toBeVisible();
+    await expect(cashFlowPanel.locator('.cashflow-chart--empty')).toBeVisible();
     await cashFlowPanel.getByRole('button', { name: 'Khoảng ngày trước' }).click();
-    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toBeVisible();
-    await cashFlowPanel.getByRole('radio', { name: '3 tháng gần đây' }).click();
-    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toBeVisible();
-    await cashFlowPanel.getByRole('radio', { name: '6 tháng gần đây' }).click();
-    await expect(cashFlowPanel.locator('.trend-chart-box canvas')).toBeVisible();
-    await cashFlowPanel.getByRole('radio', { name: 'Theo ngày trong tháng' }).click();
+    await expect(cashFlowPanel.getByTestId('cashflow-chart')).toBeVisible();
+    const periodTrigger = cashFlowPanel.getByTestId('cashflow-period-trigger');
+    await periodTrigger.click();
+    await mobilePage.getByTestId('cashflow-popover').locator('input[type=radio][value="3months"]').locator('..').click();
+    await mobilePage.keyboard.press('Escape');
+    await expect(cashFlowPanel.getByTestId('cashflow-chart')).toBeVisible();
+    await periodTrigger.click();
+    await mobilePage.getByTestId('cashflow-popover').locator('input[type=radio][value="6months"]').locator('..').click();
+    await mobilePage.keyboard.press('Escape');
+    await expect(cashFlowPanel.getByTestId('cashflow-chart')).toBeVisible();
+    await periodTrigger.click();
+    await mobilePage.getByTestId('cashflow-popover').locator('input[type=radio][value="daily"]').locator('..').click();
+    await mobilePage.keyboard.press('Escape');
     await expect(cashFlowPanel.locator('.trend-week-nav__range')).toHaveText(/Ngày 1–7\//);
-    const recurringToggle = mobilePage.getByRole('button', { name: 'Gồm định kỳ' });
-    await expect(recurringToggle).toHaveAttribute('aria-pressed', 'false');
-    const includedToggleBox = await recurringToggle.boundingBox();
-    await recurringToggle.click();
-    const excludedToggle = mobilePage.getByRole('button', { name: 'Đã trừ định kỳ' });
-    await expect(excludedToggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(excludedToggle).toBeEnabled();
-    const excludedToggleBox = await excludedToggle.boundingBox();
-    assert.equal(Math.round(excludedToggleBox.width), Math.round(includedToggleBox.width),
-      'Nhãn trạng thái không được làm thay đổi chiều rộng nút định kỳ');
-    await expect(mobilePage.locator('.trend-recurring-cooldown, .trend-recurring-summary')).toHaveCount(0);
-    const recurringToast = mobilePage.locator('.toast-item').filter({ hasText: /Đã ẩn 1 khoản định kỳ/ });
-    await expect(recurringToast).toContainText(/−260\.000\s*₫/);
-    const [toastBox, mobileNavBox] = await Promise.all([recurringToast.boundingBox(), primaryNav.boundingBox()]);
-    assert.ok(toastBox && mobileNavBox && toastBox.y + toastBox.height <= mobileNavBox.y,
-      'Toast mobile phải nằm phía trên thanh điều hướng');
+    const displayTrigger = cashFlowPanel.getByTestId('cashflow-display-trigger');
+    await displayTrigger.click();
+    const recurringToggle = mobilePage.getByTestId('cashflow-recurring-input');
+    await expect(recurringToggle).toBeChecked();
+    await recurringToggle.uncheck();
+    await expect.poll(async () => (await (await mobileContext.request.get('/api/auth/session')).json())
+      .user.preferences.cashFlow?.lastUsed?.excludeRecurring).toBe(true);
+    await mobilePage.keyboard.press('Escape');
     await mobilePage.reload();
-    await expect(mobilePage.getByRole('button', { name: 'Đã trừ định kỳ' }))
-      .toHaveAttribute('aria-pressed', 'true');
+    await displayTrigger.click();
+    await expect(recurringToggle).not.toBeChecked();
+    await mobilePage.keyboard.press('Escape');
     await logout(mobilePage);
     await mobilePage.locator('#emailIn').fill(mobileEmail);
     await mobilePage.locator('#pwIn').fill(password);
     await mobilePage.locator('#loginForm button[type=submit]').click();
     await mobilePage.waitForURL('**/spending/home');
     await mobilePage.goto('/spending/analytics/cash-flow');
-    const persistedExcludedToggle = mobilePage.getByRole('button', { name: 'Đã trừ định kỳ' });
-    await expect(persistedExcludedToggle).toHaveAttribute('aria-pressed', 'true');
-    await persistedExcludedToggle.click();
-    const restoredToggle = mobilePage.getByRole('button', { name: 'Gồm định kỳ' });
-    await expect(restoredToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(restoredToggle).toBeEnabled();
-    await expect(mobilePage.locator('.toast-item')).toHaveCount(1);
-    await expect(mobilePage.locator('.toast-item')).toContainText(/Đã đưa 1 khoản định kỳ trở lại biểu đồ/);
+    await displayTrigger.click();
+    await expect(recurringToggle).not.toBeChecked();
+    await recurringToggle.check();
+    await expect.poll(async () => (await (await mobileContext.request.get('/api/auth/session')).json())
+      .user.preferences.cashFlow?.lastUsed?.excludeRecurring).toBe(false);
     await mobilePage.route('**/api/auth/preferences', route => route.fulfill({
       status: 500,
       contentType: 'application/json',
       body: JSON.stringify({ success: false, message: 'Temporary preference failure' })
     }), { times: 1 });
-    await restoredToggle.click();
-    await expect(mobilePage.getByRole('button', { name: 'Gồm định kỳ' }))
-      .toHaveAttribute('aria-pressed', 'false');
-    await expect(mobilePage.getByRole('button', { name: 'Gồm định kỳ' })).toBeEnabled();
-    await expect(mobilePage.locator('.toast-item')).toContainText('Không thể lưu lựa chọn khoản định kỳ');
+    await recurringToggle.uncheck();
+    await expect(recurringToggle).toBeChecked();
+    await expect(recurringToggle).toBeEnabled();
+    const recurringErrorToast = mobilePage.locator('.toast-item--error');
+    await expect(recurringErrorToast).toContainText(/Không thể lưu/);
+    const [toastBox, mobileNavBox] = await Promise.all([recurringErrorToast.boundingBox(), primaryNav.boundingBox()]);
+    assert.ok(toastBox && mobileNavBox && toastBox.y + toastBox.height <= mobileNavBox.y,
+      'Toast mobile phải nằm phía trên thanh điều hướng');
     await mobilePage.unroute('**/api/auth/preferences');
-    await mobilePage.locator('.analytics-top-days button').first().click();
+    await mobilePage.keyboard.press('Escape');
+    await mobilePage.getByTestId('cashflow-top-day').first().click();
     const dayDrawer = mobilePage.getByRole('dialog', { name: /Giao dịch ngày/ });
     await expect(dayDrawer).toBeVisible();
     await expect(dayDrawer.locator('.day-drawer-summary strong')).toContainText(/410\.000/);
@@ -1155,7 +1152,7 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();
     await mobilePage.waitForURL('**/spending/analytics/cash-flow');
-    await expect(mobilePage.getByRole('button', { name: 'Gồm định kỳ' })).toBeEnabled();
+    await expect(mobilePage.getByTestId('cashflow-display-trigger')).toBeEnabled();
     await analyticsNav.getByRole('button', { name: 'Chi tiêu' }).click();
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await primaryNav.getByRole('button', { name: 'Hũ' }).click();
@@ -1293,9 +1290,10 @@ function blendCssColor(color, background) {
     await expect(mobilePage).toHaveURL(/\/spending\/analytics\/reports$/);
     await mobilePage.locator('#analytics-reports').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
     await expect(desktopReportsNav).toHaveAttribute('aria-current', 'page');
-    const desktopRecurringToggle = mobilePage.getByRole('button', { name: 'Gồm định kỳ' });
-    await desktopRecurringToggle.click();
-    await expect(mobilePage.getByRole('button', { name: 'Đã trừ định kỳ' })).toHaveAttribute('aria-pressed', 'true');
+    await mobilePage.getByTestId('cashflow-display-trigger').click();
+    await mobilePage.getByTestId('cashflow-recurring-input').uncheck();
+    await expect(mobilePage.getByTestId('cashflow-recurring-input')).not.toBeChecked();
+    await mobilePage.keyboard.press('Escape');
 
     await mobilePage.goto('/spending/jars/list');
     for (const sectionId of ['jars-section-goals', 'jars-section-list', 'jars-section-history']) {

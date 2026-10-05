@@ -1,8 +1,10 @@
 'use strict';
+const { publicCashFlowPreferences } = require('./cashFlowPreferences');
 
 function publicPreferences(preferences) {
     return {
-        analyticsExcludeRecurring: preferences?.analyticsExcludeRecurring === true
+        analyticsExcludeRecurring: preferences?.analyticsExcludeRecurring === true,
+        cashFlow: publicCashFlowPreferences(preferences?.cashFlow)
     };
 }
 

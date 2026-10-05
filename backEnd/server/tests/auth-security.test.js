@@ -18,6 +18,9 @@ const User = require('../models/User');
 const AuthSession = require('../models/AuthSession');
 const security = require('../utils/sessionSecurity');
 const password = 'Synthetic-password-1234';
+const defaultPreferences = analyticsExcludeRecurring => ({
+    analyticsExcludeRecurring, cashFlow: { lastUsed: null, pinnedDefault: null }
+});
 
 async function anonymous() {
     const agent = request.agent(app);
@@ -190,7 +193,7 @@ describe('Account security regressions', { concurrency: false }, () => {
 
     it('returns normalized default preferences in every public user response', async () => {
         const c = await account();
-        const expected = { analyticsExcludeRecurring: false };
+        const expected = defaultPreferences(false);
         assert.deepEqual((await c.agent.get('/api/auth/session')).body.user.preferences, expected);
         assert.deepEqual((await c.agent.get('/api/auth/profile')).body.user.preferences, expected);
         const updated = await c.send('put', 'profile', { name: 'Preference response test' });
@@ -208,12 +211,12 @@ describe('Account security regressions', { concurrency: false }, () => {
 
     it('persists analytics preferences across logout/login and isolates accounts', async () => {
         const owner = await account();
-        assert.deepEqual(owner.response.body.user.preferences, { analyticsExcludeRecurring: false });
+        assert.deepEqual(owner.response.body.user.preferences, defaultPreferences(false));
         const changed = await owner.send('put', 'preferences', { analyticsExcludeRecurring: true });
         assert.equal(changed.status, 200);
         assert.deepEqual(changed.body, {
             success: true,
-            preferences: { analyticsExcludeRecurring: true }
+            preferences: defaultPreferences(true)
         });
         assert.equal((await User.findById(owner.userId)).preferences.analyticsExcludeRecurring, true);
         assert.equal((await owner.send('post', 'logout', {})).status, 200);
@@ -221,13 +224,13 @@ describe('Account security regressions', { concurrency: false }, () => {
         const signedInAgain = await anonymous();
         const login = await signedInAgain.send('post', 'login', { email: owner.email, password });
         assert.equal(login.status, 200);
-        assert.deepEqual(login.body.user.preferences, { analyticsExcludeRecurring: true });
+        assert.deepEqual(login.body.user.preferences, defaultPreferences(true));
         const session = await signedInAgain.agent.get('/api/auth/session');
         assert.equal(session.status, 200);
-        assert.deepEqual(session.body.user.preferences, { analyticsExcludeRecurring: true });
+        assert.deepEqual(session.body.user.preferences, defaultPreferences(true));
 
         const other = await account();
-        assert.deepEqual(other.response.body.user.preferences, { analyticsExcludeRecurring: false });
+        assert.deepEqual(other.response.body.user.preferences, defaultPreferences(false));
         assert.equal((await User.findById(other.userId)).preferences.analyticsExcludeRecurring, false);
         assert.equal((await User.findById(owner.userId)).preferences.analyticsExcludeRecurring, true);
     });
@@ -256,7 +259,64 @@ describe('Account security regressions', { concurrency: false }, () => {
         }
         assert.equal((await User.findById(c.userId)).preferences.analyticsExcludeRecurring, true);
         assert.deepEqual((await c.agent.get('/api/auth/session')).body.user.preferences,
-            { analyticsExcludeRecurring: true });
+            defaultPreferences(true));
+    });
+
+    it('remembers view choices separately from a pinned default across sessions and accounts', async () => {
+        const owner = await account();
+        const pinned = { mode: 'daily', series: 'expense', excludeRecurring: true };
+        const remembered = { mode: '6months', series: 'both', excludeRecurring: false };
+        assert.equal((await owner.send('put', 'preferences', {
+            cashFlow: { lastUsed: pinned, pinnedDefault: pinned }
+        })).status, 200);
+        const changed = await owner.send('put', 'preferences', { cashFlow: { lastUsed: remembered } });
+        assert.equal(changed.status, 200);
+        const expected = { analyticsExcludeRecurring: false,
+            cashFlow: { lastUsed: remembered, pinnedDefault: pinned } };
+        assert.deepEqual(changed.body.preferences, expected);
+        assert.deepEqual((await owner.agent.get('/api/auth/profile')).body.user.preferences, expected);
+
+        const fresh = await anonymous();
+        assert.deepEqual((await fresh.send('post', 'login', {
+            email: owner.email, password
+        })).body.user.preferences, expected);
+        const other = await account();
+        assert.deepEqual(other.response.body.user.preferences, defaultPreferences(false));
+        const cleared = await fresh.send('put', 'preferences', { cashFlow: { pinnedDefault: null } });
+        assert.equal(cleared.status, 200);
+        assert.deepEqual(cleared.body.preferences.cashFlow, { lastUsed: remembered, pinnedDefault: null });
+        assert.deepEqual((await other.agent.get('/api/auth/session')).body.user.preferences, defaultPreferences(false));
+    });
+
+    it('keeps legacy analytics settings compatible without overwriting the pin', async () => {
+        const c = await account();
+        const view = { mode: '3months', series: 'expense', excludeRecurring: false };
+        assert.equal((await c.send('put', 'preferences', {
+            cashFlow: { lastUsed: view, pinnedDefault: view }
+        })).status, 200);
+        const changed = await c.send('put', 'preferences', { analyticsExcludeRecurring: true });
+        assert.equal(changed.status, 200);
+        assert.deepEqual(changed.body.preferences, { analyticsExcludeRecurring: true,
+            cashFlow: { lastUsed: { ...view, excludeRecurring: true }, pinnedDefault: view } });
+    });
+
+    it('rejects malformed cash-flow preferences and inconsistent recurring flags atomically', async () => {
+        const c = await account();
+        const view = { mode: 'daily', series: 'expense', excludeRecurring: false };
+        assert.equal((await c.send('put', 'preferences', { cashFlow: { lastUsed: view } })).status, 200);
+        const expected = { analyticsExcludeRecurring: false,
+            cashFlow: { lastUsed: view, pinnedDefault: null } };
+        for (const cashFlow of [null, [], {}, { unknown: view }, { lastUsed: null }, { lastUsed: [] },
+            { pinnedDefault: [] }, { lastUsed: { ...view, mode: 'monthly' } },
+            { lastUsed: { ...view, series: 'all' } }, { lastUsed: { ...view, excludeRecurring: 'false' } },
+            { lastUsed: { ...view, month: '2026-10' } }, { pinnedDefault: { ...view, extra: true } }]) {
+            const response = await c.send('put', 'preferences', { cashFlow });
+            assert.equal(response.status, 400, JSON.stringify(cashFlow));
+        }
+        assert.equal((await c.send('put', 'preferences', {
+            analyticsExcludeRecurring: true, cashFlow: { lastUsed: view }
+        })).status, 400);
+        assert.deepEqual((await c.agent.get('/api/auth/session')).body.user.preferences, expected);
     });
 
     it('allows harmless avatar presets but refuses SVG and script URLs', async () => {

@@ -16,7 +16,6 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { useNavigate } from 'react-router';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
-import { useAuthStore } from '../../stores/useAuthStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { formatCompactCurrency, formatCurrency, formatDate, formatDateTime, formatMonthShort, formatPercent, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
@@ -25,17 +24,20 @@ import { getBudgetStatus } from '../../utils/financeMath';
 import { filterTrendTransactions, summarizeRecurringExpenses } from '../../utils/analyticsFilters';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
-import { ClockOutlineIcon } from '../../components/ui/AppIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { spendingService } from '../../services/spendingService';
 import { unusualSpendingDays } from '../../utils/transactionInsights';
 import { csvRow } from '../../utils/csv';
 import { DailyTransactionsDrawer } from './DailyTransactionsDrawer';
+import { CashFlowPanel } from './CashFlowPanel';
+import { cashFlowChartContext } from './cashFlowChartContext';
+import { useCashFlowPreferences } from '../../hooks/useCashFlowPreferences';
+import { cashFlowDays, cashFlowMonths, cashFlowMonthTotals, cashFlowSummary,
+  cashFlowTopDays, cashFlowSeriesTypes, hasCashFlowData } from '../../utils/cashFlowData';
 import {
   CategoryOutlineIcon,
   ChartOutlineIcon,
-  TrendOutlineIcon,
   ClipboardOutlineIcon,
   BulbOutlineIcon,
   StarOutlineIcon,
@@ -106,9 +108,6 @@ export function AnalyticsView() {
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
-  const excludeRecurring = useSpendingStore((s) => s.analyticsExcludeRecurring);
-  const setAnalyticsExcludeRecurring = useSpendingStore((s) => s.setAnalyticsExcludeRecurring);
-  const updatePreferences = useAuthStore((s) => s.updatePreferences);
   const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -116,18 +115,30 @@ export function AnalyticsView() {
   const isCompactChart = useIsMobile(599);
   const navigate = useNavigate();
 
-  const [trendMode, setTrendMode] = useState('daily'); // 'daily' | '3months' | '6months'
+  const cashFlowActive = !isMobile || analyticsSubTab === 'cash-flow';
+  const { view: cashFlowView, setView: setCashFlowView, pinnedDefault,
+    pinDefault, clearDefault, saving: savingCashFlowPreferences } = useCashFlowPreferences({ active: cashFlowActive });
+  const [drilldown, setDrilldown] = useState(null);
+  const drilldownRevision = useRef(0);
+  const trendMode = drilldown ? 'daily' : cashFlowView.mode;
+  const trendSeries = cashFlowView.series;
+  const excludeRecurring = cashFlowView.excludeRecurring;
   const [mobileWeek, setMobileWeek] = useState({ month: null, index: null });
   const [reportPeriodType, setReportPeriodType] = useState('monthly'); // 'monthly' | 'quarterly'
   const [selectedDay, setSelectedDay] = useState(null);
   const [expectedDays, setExpectedDays] = useState([]);
   const [savingExpectedDay, setSavingExpectedDay] = useState('');
-  const [savingRecurringPreference, setSavingRecurringPreference] = useState(false);
-  const savingRecurringPreferenceRef = useRef(false);
   const barChartRef = useRef(null);
 
   // Current active month in 'YYYY-MM' format
   const activeMonth = selectedMonth || getLocalMonthString();
+
+  useEffect(() => {
+    if (!cashFlowActive) {
+      drilldownRevision.current += 1;
+      setDrilldown(null);
+    }
+  }, [cashFlowActive]);
 
   useEffect(() => { setSelectedDay(null); }, [activeMonth]);
 
@@ -156,7 +167,6 @@ export function AnalyticsView() {
 
   // Month & Quarter navigation helpers
   const {
-    currentYear,
     currentMonthNum,
     monthLabel,
     prevMonthStr,
@@ -192,7 +202,7 @@ export function AnalyticsView() {
     return {
       currentYear: year,
       currentMonthNum: month,
-      monthLabel: formatDate(new Date(year, month - 1, 1), 'month', { locale: lang }),
+      monthLabel: formatDate(`${activeMonth}-01`, 'month', { locale: lang }),
       prevMonthStr: `${prevYear}-${prevM}`,
       nextMonthStr: `${nextYear}-${nextM}`,
       isCurrentMonth: activeMonth === nowMonthStr,
@@ -206,15 +216,15 @@ export function AnalyticsView() {
     };
   }, [activeMonth, lang, t]);
 
-  const handlePrevMonth = () => setSelectedMonth(prevMonthStr);
-  const handleNextMonth = () => setSelectedMonth(nextMonthStr);
+  const handlePrevMonth = () => changeCashFlowMonth(prevMonthStr);
+  const handleNextMonth = () => changeCashFlowMonth(nextMonthStr);
   const handleSetThisMonth = () => {
-    setSelectedMonth(getLocalMonthString());
+    changeCashFlowMonth(getLocalMonthString());
   };
   const handleSetLastMonth = () => {
     const now = new Date();
     const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    setSelectedMonth(getLocalMonthString(lastMonthDate));
+    changeCashFlowMonth(getLocalMonthString(lastMonthDate));
   };
 
   // 1. Current Month Stats & Breakdown
@@ -272,105 +282,51 @@ export function AnalyticsView() {
     [transactions, excludeRecurring]
   );
 
-  // 2. Multi-Month Trend calculation helper (Last N months based on activeMonth)
-  const getMultiMonthTrend = useCallback(
-    (numMonths) => {
-      const months = [];
-      let hasAnyData = false;
-
-      for (let i = numMonths - 1; i >= 0; i--) {
-        const d = new Date(currentYear, currentMonthNum - 1 - i, 1);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const prefix = `${y}-${m}`;
-        const label = formatMonthShort(d, { locale: lang });
-
-        let inc = 0;
-        let exp = 0;
-        trendTransactions.forEach((t) => {
-          if (t.date && t.date.startsWith(prefix)) {
-            const amt = Number(t.amount) || 0;
-            const fee = Number(t.fee) || 0;
-            if (t.type === 'income') inc += amt;
-            else if (t.type === 'expense') exp += amt + fee;
-          }
-        });
-
-        if (inc > 0 || exp > 0) hasAnyData = true;
-        months.push({ prefix, label, income: inc, expense: exp });
-      }
-      return { months, hasAnyData };
-    },
-    [trendTransactions, currentYear, currentMonthNum, lang]
-  );
-
-  const trend3Months = useMemo(() => getMultiMonthTrend(3), [getMultiMonthTrend]);
-  const trend6Months = useMemo(() => getMultiMonthTrend(6), [getMultiMonthTrend]);
-
-  // 3. Daily Trend in current activeMonth
+  // All chart, summary and ranked-day values share the selected period and filter.
+  const trendMonths = useMemo(() => cashFlowMonths(activeMonth, trendMode), [activeMonth, trendMode]);
+  const periodRows = useMemo(() => cashFlowMonthTotals(trendTransactions, trendMonths),
+    [trendTransactions, trendMonths]);
+  const monthlyTrend = useMemo(() => periodRows.map((row) => ({ ...row,
+    label: formatMonthShort(new Date(`${row.prefix}-01T12:00:00`), { locale: lang }),
+  })), [periodRows, lang]);
+  const trendSummary = useMemo(() => cashFlowSummary(periodRows), [periodRows]);
+  const periodLabel = useMemo(() => {
+    if (trendMonths.length === 1) return monthLabel;
+    const formatter = new Intl.DateTimeFormat(intlLocale, { month: 'short', year: 'numeric' });
+    return `${formatter.format(new Date(`${trendMonths[0]}-01T12:00:00`))} – ${formatter.format(new Date(`${activeMonth}-01T12:00:00`))}`;
+  }, [trendMonths, monthLabel, intlLocale, activeMonth]);
   const dailyTrend = useMemo(() => {
-    const daysInMonth = new Date(currentYear, currentMonthNum, 0).getDate();
-    const days = [];
-    let hasAnyData = false;
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayStr = `${activeMonth}-${String(day).padStart(2, '0')}`;
-      let inc = 0;
-      let exp = 0;
-
-      trendTransactions.forEach((t) => {
-        if (t.date === dayStr) {
-          const amt = Number(t.amount) || 0;
-          const fee = Number(t.fee) || 0;
-          if (t.type === 'income') inc += amt;
-          else if (t.type === 'expense') exp += amt + fee;
-        }
-      });
-
-      if (inc > 0 || exp > 0) hasAnyData = true;
-      days.push({
-        day,
-        label: `${day}`,
-        income: inc,
-        expense: exp
-      });
-    }
-
-    return { days, hasAnyData };
-  }, [trendTransactions, currentYear, currentMonthNum, activeMonth]);
+    const days = cashFlowDays(trendTransactions, activeMonth);
+    return { days, hasAnyData: hasCashFlowData(days, trendSeries) };
+  }, [trendTransactions, activeMonth, trendSeries]);
 
   const weekCount = Math.ceil(dailyTrend.days.length / 7);
   const defaultWeekIndex = useMemo(() => {
     const lastActiveDay = dailyTrend.days.reduce((last, day, index) =>
-      day.income > 0 || day.expense > 0 ? index : last, -1);
+      hasCashFlowData([day], trendSeries) ? index : last, -1);
     return lastActiveDay < 0 ? 0 : Math.floor(lastActiveDay / 7);
-  }, [dailyTrend.days]);
+  }, [dailyTrend.days, trendSeries]);
   const selectedWeekIndex = mobileWeek.month === activeMonth && mobileWeek.index !== null
     ? Math.min(mobileWeek.index, weekCount - 1) : defaultWeekIndex;
-  const visibleDailyDays = useMemo(() =>
-    isCompactChart
-      ? dailyTrend.days.slice(selectedWeekIndex * 7, (selectedWeekIndex + 1) * 7)
-      : dailyTrend.days,
-  [dailyTrend.days, isCompactChart, selectedWeekIndex]);
+  const visibleDailyDays = useMemo(() => isCompactChart
+    ? dailyTrend.days.slice(selectedWeekIndex * 7, (selectedWeekIndex + 1) * 7)
+    : dailyTrend.days, [dailyTrend.days, isCompactChart, selectedWeekIndex]);
   const weekStart = visibleDailyDays[0]?.day;
-  const weekEnd = visibleDailyDays[visibleDailyDays.length - 1]?.day;
-
-  const highestSpendingDays = useMemo(() => dailyTrend.days
-    .filter((day) => day.expense > 0)
-    .sort((a, b) => b.expense - a.expense)
-    .slice(0, 5), [dailyTrend]);
+  const weekEnd = visibleDailyDays.at(-1)?.day;
+  const highestSpendingDays = useMemo(() => cashFlowTopDays(trendTransactions, trendMonths),
+    [trendTransactions, trendMonths]);
   const unusualDays = useMemo(() => unusualSpendingDays(
     transactions, activeMonth, expectedDays, getLocalDateString()
   ).slice(0, 3), [transactions, activeMonth, expectedDays]);
 
-  const openDay = useCallback((date, type = 'expense') => {
-    setSelectedDay({ date, type });
-  }, []);
+  const openDay = useCallback((date, type = 'expense', dayExcludeRecurring = excludeRecurring) => {
+    setSelectedDay({ date, type, excludeRecurring: dayExcludeRecurring });
+  }, [excludeRecurring]);
 
-  const viewDayHistory = useCallback((date, type) => {
+  const viewDayHistory = useCallback((date, type, dayExcludeRecurring = excludeRecurring) => {
     setSelectedDay(null);
     const search = new URLSearchParams({ date, type });
-    if (excludeRecurring) search.set('excludeRecurring', '1');
+    if (dayExcludeRecurring) search.set('excludeRecurring', '1');
     navigate(`/spending/analytics/transactions?${search.toString()}`);
   }, [excludeRecurring, navigate]);
 
@@ -390,103 +346,100 @@ export function AnalyticsView() {
     navigateTo(source === 'jars' ? 'jars' : 'plan', source === 'jars' ? 'history' : 'recurring');
   }, [navigateTo]);
 
-  const recurringFilterSummary = useMemo(() => {
-    const prefixes = trendMode === 'daily'
-      ? [activeMonth]
-      : (trendMode === '3months' ? trend3Months.months : trend6Months.months).map((month) => month.prefix);
-    return summarizeRecurringExpenses(transactions, prefixes);
-  }, [transactions, trendMode, activeMonth, trend3Months.months, trend6Months.months]);
+  const recurringFilterSummary = useMemo(() => summarizeRecurringExpenses(transactions, trendMonths),
+    [transactions, trendMonths]);
 
-  const handleToggleRecurring = useCallback(async () => {
-    if (savingRecurringPreferenceRef.current) return;
-    savingRecurringPreferenceRef.current = true;
-    setSavingRecurringPreference(true);
-    const previousExcludeRecurring = useSpendingStore.getState().analyticsExcludeRecurring;
-    const nextExcludeRecurring = !previousExcludeRecurring;
+  const saveCashFlowChoice = useCallback(async (patch) => {
     barChartRef.current?.stop();
-    setAnalyticsExcludeRecurring(nextExcludeRecurring);
+    if (patch.series) setMobileWeek({ month: null, index: null });
     try {
-      await updatePreferences({ analyticsExcludeRecurring: nextExcludeRecurring });
-      const { count, amount } = recurringFilterSummary;
-      addToast({
-        dedupeKey: 'analytics-recurring-filter',
-        type: 'info',
-        duration: 3000,
-        message: count === 0
-          ? t('analytics.recurringEmptyToast')
-          : t(nextExcludeRecurring ? 'analytics.recurringExcludedToast' : 'analytics.recurringIncludedToast', {
-              count,
-              amount: formatCurrency(amount, { locale: lang }),
-            }),
-      });
-    } catch (error) {
-      if (error.code !== 'SESSION_CHANGED') {
-        setAnalyticsExcludeRecurring(previousExcludeRecurring);
-        addToast({
-          dedupeKey: 'analytics-recurring-filter',
-          type: 'error',
-          message: t('analytics.recurringSaveFailed'),
+      await setCashFlowView(patch);
+      if (typeof patch.excludeRecurring === 'boolean') {
+        const { count, amount } = recurringFilterSummary;
+        addToast({ dedupeKey: 'analytics-recurring-filter', type: 'info', duration: 3000,
+          message: count === 0 ? t('analytics.recurringEmptyToast')
+            : t(patch.excludeRecurring ? 'analytics.recurringExcludedToast' : 'analytics.recurringIncludedToast', {
+                count, amount: formatCurrency(amount, { locale: lang }),
+              }),
         });
       }
-    } finally {
-      savingRecurringPreferenceRef.current = false;
-      setSavingRecurringPreference(false);
+      return true;
+    } catch (error) {
+      if (error.code !== 'SESSION_CHANGED') addToast({
+        dedupeKey: 'cashflow-preferences', type: 'error', message: t('analytics.cashflow.saveFailed'),
+      });
+      return error.code === 'SESSION_CHANGED' ? null : false;
     }
-  }, [addToast, lang, recurringFilterSummary, setAnalyticsExcludeRecurring, t, updatePreferences]);
+  }, [setCashFlowView, recurringFilterSummary, addToast, t, lang]);
+  const changeCashFlowPeriod = useCallback(async (mode) => {
+    const previousDrilldown = drilldown;
+    const revision = ++drilldownRevision.current;
+    setDrilldown(null);
+    const saved = await saveCashFlowChoice({ mode });
+    const currentMonth = useSpendingStore.getState().selectedMonth || getLocalMonthString();
+    if (saved === false && previousDrilldown && drilldownRevision.current === revision && currentMonth === activeMonth) {
+      setDrilldown(previousDrilldown);
+    }
+  }, [saveCashFlowChoice, drilldown, activeMonth]);
+  const changeCashFlowMonth = useCallback((month) => {
+    drilldownRevision.current += 1;
+    setDrilldown(null);
+    setMobileWeek({ month: null, index: null });
+    setSelectedMonth(month);
+  }, [setSelectedMonth]);
+  const backToCashFlowPeriod = useCallback(() => {
+    if (!drilldown) return;
+    drilldownRevision.current += 1;
+    setSelectedMonth(drilldown.month);
+    setDrilldown(null);
+    setMobileWeek({ month: null, index: null });
+  }, [drilldown, setSelectedMonth]);
+  const saveCashFlowDefault = useCallback(async (remove = false) => {
+    const revision = drilldownRevision.current;
+    try {
+      if (remove) {
+        await clearDefault();
+        const currentMonth = useSpendingStore.getState().selectedMonth || getLocalMonthString();
+        if (drilldownRevision.current === revision && currentMonth === activeMonth) {
+          if (drilldown) setSelectedMonth(drilldown.month);
+          drilldownRevision.current += 1;
+          setDrilldown(null);
+        }
+      }
+      else {
+        // Pin the visible view independently of remembered deliberate choices.
+        await pinDefault({ mode: trendMode });
+      }
+    } catch (error) {
+      if (error.code !== 'SESSION_CHANGED') addToast({
+        dedupeKey: 'cashflow-preferences', type: 'error', message: t('analytics.cashflow.saveFailed'),
+      });
+    }
+  }, [pinDefault, clearDefault, drilldown, trendMode, activeMonth, setSelectedMonth, addToast, t]);
+  const viewCashFlowHistory = useCallback(() => {
+    const [year, month] = activeMonth.split('-').map(Number);
+    const search = new URLSearchParams({ from: `${trendMonths[0]}-01`,
+      to: `${activeMonth}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}` });
+    if (trendSeries !== 'both') search.set('type', trendSeries);
+    if (excludeRecurring) search.set('excludeRecurring', '1');
+    navigate(`/spending/analytics/transactions?${search.toString()}`);
+  }, [activeMonth, trendMonths, trendSeries, excludeRecurring, navigate]);
 
-  const hasTrendData = useMemo(() => {
-    if (trendMode === 'daily') return isCompactChart
-      ? visibleDailyDays.some((day) => day.income > 0 || day.expense > 0)
-      : dailyTrend.hasAnyData;
-    if (trendMode === '3months') return trend3Months.hasAnyData;
-    if (trendMode === '6months') return trend6Months.hasAnyData;
-    return false;
-  }, [trendMode, isCompactChart, visibleDailyDays, dailyTrend, trend3Months, trend6Months]);
+  const hasTrendData = useMemo(() => hasCashFlowData(
+    trendMode === 'daily' ? visibleDailyDays : monthlyTrend, trendSeries),
+  [trendMode, visibleDailyDays, monthlyTrend, trendSeries]);
 
-  // Dynamic Chart Theme Tokens tailored for dark, cream, green, and light themes
+  // Resolve semantic tokens for canvas, which cannot interpret CSS variables.
   const chartThemeTokens = useMemo(() => {
     const styles = getComputedStyle(document.documentElement);
-    const income = styles.getPropertyValue('--color-success').trim();
-    const expense = styles.getPropertyValue('--color-danger').trim();
-    switch (theme) {
-      case 'dark':
-        return {
-          income,
-          expense,
-          tick: '#8B949E',
-          grid: 'rgba(255, 255, 255, 0.08)',
-          tooltipBg: '#1F242C',
-          sliceBorder: '#12131C'
-        };
-      case 'cream':
-        return {
-          income,
-          expense,
-          tick: '#8C7564',
-          grid: 'rgba(140, 117, 100, 0.16)',
-          tooltipBg: '#2C1D10',
-          sliceBorder: '#FDF8F2'
-        };
-      case 'green':
-        return {
-          income,
-          expense,
-          tick: '#6B9582',
-          grid: 'rgba(75, 114, 96, 0.16)',
-          tooltipBg: '#0E2E1E',
-          sliceBorder: '#FFFFFF'
-        };
-      case 'light':
-      default:
-        return {
-          income,
-          expense,
-          tick: '#64748B',
-          grid: 'rgba(100, 116, 139, 0.12)',
-          tooltipBg: '#0F172A',
-          sliceBorder: '#FFFFFF'
-        };
-    }
+    const read = (name) => styles.getPropertyValue(name).trim();
+    return {
+      theme,
+      income: read('--color-success'), expense: read('--color-danger'),
+      tick: read('--color-text-muted'), grid: read('--color-border'),
+      tooltipBg: read('--color-surface'), text: read('--color-text'),
+      sliceBorder: read('--color-surface'), future: read('--color-surface-muted'),
+    };
   }, [theme]);
 
   // Doughnut Chart Configuration
@@ -528,6 +481,8 @@ export function AnalyticsView() {
         legend: { display: false },
         tooltip: {
           backgroundColor: chartThemeTokens.tooltipBg,
+          titleColor: chartThemeTokens.text,
+          bodyColor: chartThemeTokens.text,
           titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
           bodyFont: { family: 'Inter, sans-serif', size: 13, weight: 'bold' },
           padding: 10,
@@ -544,140 +499,95 @@ export function AnalyticsView() {
     };
   }, [monthData.expense, monthData.categories, chartThemeTokens, prefersReducedMotion, viewCategoryHistory]);
 
-  // Bar Chart Configuration
-  const barChartData = useMemo(() => {
-    if (trendMode === 'daily') {
-      return {
-        labels: visibleDailyDays.map((d) => d.label),
-        datasets: [
-          {
-            label: t('type.income'),
-            data: visibleDailyDays.map((d) => d.income),
-            backgroundColor: chartThemeTokens.income,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8
-          },
-          {
-            label: t('type.expense'),
-            data: visibleDailyDays.map((d) => d.expense),
-            backgroundColor: chartThemeTokens.expense,
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.8
-          }
-        ]
-      };
-    }
+  const chartRows = trendMode === 'daily' ? visibleDailyDays : monthlyTrend;
+  const barChartData = useMemo(() => ({
+    labels: chartRows.map((row) => row.label),
+    datasets: cashFlowSeriesTypes(trendSeries).map((type) => ({
+      cashFlowType: type,
+      label: t(`type.${type}`),
+      data: chartRows.map((row) => row[type]),
+      backgroundColor: chartThemeTokens[type],
+      borderRadius: trendMode === 'daily' ? 4 : 6,
+      barPercentage: trendMode === 'daily' ? 0.7 : 0.65,
+      categoryPercentage: trendMode === 'daily' ? 0.8 : 0.65,
+    })),
+  }), [chartRows, trendSeries, trendMode, chartThemeTokens, t]);
 
-    const currentMultiTrend = trendMode === '3months' ? trend3Months : trend6Months;
-    const barPercentage = trendMode === '3months' ? 0.45 : 0.6;
-    const categoryPercentage = trendMode === '3months' ? 0.55 : 0.7;
-
-    return {
-      labels: currentMultiTrend.months.map((m) => m.label),
-      datasets: [
-        {
-          label: t('type.income'),
-          data: currentMultiTrend.months.map((m) => m.income),
-          backgroundColor: chartThemeTokens.income,
-          borderRadius: 6,
-          barPercentage,
-          categoryPercentage
-        },
-        {
-          label: t('type.expense'),
-          data: currentMultiTrend.months.map((m) => m.expense),
-          backgroundColor: chartThemeTokens.expense,
-          borderRadius: 6,
-          barPercentage,
-          categoryPercentage
-        }
-      ]
-    };
-  }, [trendMode, visibleDailyDays, trend3Months, trend6Months, chartThemeTokens, t]);
-
-  const barOptions = useMemo(() => {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      onClick: (_event, elements) => {
-        if (!elements.length) return;
-        const { index, datasetIndex } = elements[0];
-        if (trendMode === 'daily') {
-          const day = visibleDailyDays[index];
-          if (day) openDay(`${activeMonth}-${String(day.day).padStart(2, '0')}`,
-            datasetIndex === 0 ? 'income' : 'expense');
-        } else {
-          const month = (trendMode === '3months' ? trend3Months : trend6Months).months[index];
-          if (month) {
-            setSelectedMonth(month.prefix);
-            setTrendMode('daily');
-          }
-        }
-      },
-      onHover: (_event, elements, chart) => {
-        chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
-      },
-      animation: prefersReducedMotion ? false : {
-        duration: 250,
-        easing: 'easeOutQuart'
-      },
-      resizeDelay: 150,
-      interaction: isCompactChart ? { mode: 'nearest', intersect: false, axis: 'x' } : undefined,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: chartThemeTokens.tooltipBg,
-          titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
-          bodyFont: { family: 'Inter, sans-serif', size: 12 },
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            title: (items) => {
-              if (!items.length) return '';
-              const item = items[0];
-              if (trendMode === 'daily') {
-                return formatDate(new Date(currentYear, currentMonthNum - 1, Number(item.label)), 'compact', { locale: lang });
-              }
-              return item.label;
-            },
-            label: (context) => {
-              const label = context.dataset.label || '';
-              const val = context.parsed.y || 0;
-              return ` ${label}: ${formatCurrency(val)}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: {
-            color: chartThemeTokens.tick,
-            font: { family: 'Inter, sans-serif', size: isCompactChart ? 12 : 11 },
-            minRotation: 0,
-            maxRotation: isCompactChart ? 0 : 50,
-            maxTicksLimit: isCompactChart ? 7 : 11,
-            autoSkip: !(isCompactChart && trendMode === 'daily')
-          }
-        },
-        y: {
-          min: 0,
-          grid: { color: chartThemeTokens.grid },
-          ticks: {
-            color: chartThemeTokens.tick,
-            font: { family: 'Inter, sans-serif', size: 11 },
-            maxTicksLimit: isCompactChart ? 5 : 11,
-            callback: (value) => {
-              return formatCompactCurrency(value);
-            }
-          }
+  const today = getLocalDateString();
+  const chartContextRef = useRef(null);
+  chartContextRef.current = {
+    mode: trendMode, days: visibleDailyDays, months: monthlyTrend, today,
+    colors: chartThemeTokens, futureLabel: t('analytics.cashflow.futureDays'),
+    ongoingLabel: t('analytics.cashflow.ongoing'),
+  };
+  // react-chartjs-2 registers plugins only when creating a chart, so keep the
+  // plugin stable and read the latest period, theme and labels for every draw.
+  const chartContext = useMemo(() => cashFlowChartContext(() => chartContextRef.current), []);
+  const barOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { top: trendMode === 'daily' ? 0 : 26 } },
+    onClick: (_event, elements) => {
+      if (!elements.length) return;
+      const { index, datasetIndex } = elements[0];
+      if (trendMode === 'daily') {
+        const day = visibleDailyDays[index];
+        if (day) openDay(day.date, barChartData.datasets[datasetIndex].cashFlowType);
+      } else {
+        const month = monthlyTrend[index];
+        if (month) {
+          drilldownRevision.current += 1;
+          setDrilldown({ month: activeMonth, mode: trendMode });
+          setMobileWeek({ month: null, index: null });
+          setSelectedMonth(month.prefix);
         }
       }
-    };
-  }, [trendMode, currentMonthNum, currentYear, chartThemeTokens, prefersReducedMotion, lang,
-    visibleDailyDays, isCompactChart, activeMonth, trend3Months, trend6Months, openDay, setSelectedMonth]);
+    },
+    onHover: (_event, elements, chart) => {
+      chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
+    },
+    animation: prefersReducedMotion ? false : { duration: 250, easing: 'easeOutQuart' },
+    resizeDelay: 150,
+    interaction: isCompactChart ? { mode: 'nearest', intersect: false, axis: 'x' } : undefined,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: chartThemeTokens.tooltipBg,
+        titleColor: chartThemeTokens.text,
+        bodyColor: chartThemeTokens.text,
+        borderColor: chartThemeTokens.grid,
+        borderWidth: 1,
+        titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
+        bodyFont: { family: 'Inter, sans-serif', size: 12 },
+        padding: 10,
+        cornerRadius: 8,
+        callbacks: {
+          title: (items) => {
+            if (!items.length) return '';
+            const row = chartRows[items[0].dataIndex];
+            if (trendMode === 'daily') return formatDate(row.date, 'compact', { locale: lang });
+            const label = formatDate(`${row.prefix}-01`, 'month', { locale: lang });
+            return row.prefix === today.slice(0, 7)
+              ? `${label} · ${t('analytics.cashflow.ongoing')}` : label;
+          },
+          label: (context) => ` ${context.dataset.label}: ${formatCurrency(context.parsed.y || 0)}`,
+        },
+      },
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: {
+        color: chartThemeTokens.tick, font: { family: 'Inter, sans-serif', size: 12 },
+        minRotation: 0, maxRotation: 0,
+        maxTicksLimit: isCompactChart ? 7 : 11,
+        autoSkip: !(isCompactChart && trendMode === 'daily'),
+      } },
+      y: { min: 0, grid: { color: chartThemeTokens.grid }, ticks: {
+        color: chartThemeTokens.tick, font: { family: 'Inter, sans-serif', size: 11 },
+        maxTicksLimit: 6, callback: (value) => formatCompactCurrency(value),
+      } },
+    },
+  }), [trendMode, visibleDailyDays, monthlyTrend, chartRows, barChartData, activeMonth,
+    chartThemeTokens, prefersReducedMotion, isCompactChart, openDay, setSelectedMonth, today, t, lang]);
 
   // ── Financial Report Statistics & Comparison ──
   const reportData = useMemo(() => {
@@ -1024,13 +934,16 @@ export function AnalyticsView() {
   };
 
   const handleActiveAnalyticsSection = useCallback((activeTab) => {
-    if (activeTab && useSpendingStore.getState().analyticsSubTab !== activeTab) {
+    const currentTab = useSpendingStore.getState().analyticsSubTab;
+    // A queued scroll/layout callback may run while the history chunk loads.
+    if (currentTab === 'transactions' || window.location.pathname.endsWith('/transactions')) return;
+    if (activeTab && currentTab !== activeTab) {
       setAnalyticsSubTab(activeTab, { syncRoute: false });
     }
   }, [setAnalyticsSubTab]);
 
   useSectionScrollSpy({
-    disabled: isMobile,
+    disabled: isMobile || analyticsSubTab === 'transactions',
     sections: ANALYTICS_SCROLL_SECTIONS,
     onActiveChange: handleActiveAnalyticsSection,
   });
@@ -1308,152 +1221,67 @@ export function AnalyticsView() {
       </>
       )}
 
-      {/* ── 4. Cash-flow Trend Section ── */}
-      {(!isMobile || analyticsSubTab === 'cash-flow') && (
-      <>
-      <div className="analytics-section-panel" id="analytics-cashflow">
-        <div className="panel-header">
-          <div className="panel-titles">
-            <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <TrendOutlineIcon size={18} /> Xu hướng dòng tiền
-            </h3>
-          </div>
-
-          <div className="trend-controls-wrap">
-            <div className="trend-legend">
-              <span className="legend-item"><span className="legend-dot dot-income" /> Thu nhập</span>
-              <span className="legend-item"><span className="legend-dot dot-expense" /> Chi tiêu</span>
-            </div>
-
-            <div className="trend-segmented-group" role="radiogroup" aria-label="Chế độ biểu đồ xu hướng">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={trendMode === 'daily'}
-                aria-label={t('analytics.trendDaily')}
-                className={`trend-seg-btn ${trendMode === 'daily' ? 'active' : ''}`}
-                onClick={() => setTrendMode('daily')}
-              >
-                <span className="trend-seg-label-full">{t('analytics.trendDaily')}</span>
-                <span className="trend-seg-label-short">{t('analytics.trendDailyShort')}</span>
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={trendMode === '3months'}
-                aria-label={t('analytics.trendThreeMonths')}
-                className={`trend-seg-btn ${trendMode === '3months' ? 'active' : ''}`}
-                onClick={() => setTrendMode('3months')}
-              >
-                <span className="trend-seg-label-full">{t('analytics.trendThreeMonths')}</span>
-                <span className="trend-seg-label-short">{t('analytics.trendThreeMonthsShort')}</span>
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={trendMode === '6months'}
-                aria-label={t('analytics.trendSixMonths')}
-                className={`trend-seg-btn ${trendMode === '6months' ? 'active' : ''}`}
-                onClick={() => setTrendMode('6months')}
-              >
-                <span className="trend-seg-label-full">{t('analytics.trendSixMonths')}</span>
-                <span className="trend-seg-label-short">{t('analytics.trendSixMonthsShort')}</span>
-              </button>
-            </div>
-
-            <div className="trend-recurring-filter">
-              <button
-                type="button"
-                className={`trend-recurring-toggle ${excludeRecurring ? 'is-active' : ''}`}
-                aria-pressed={excludeRecurring}
-                aria-busy={savingRecurringPreference}
-                disabled={savingRecurringPreference}
-                onClick={handleToggleRecurring}
-                title={t('analytics.recurringHint')}
-              >
-                <ClockOutlineIcon size={15} />
-                <span>{t(excludeRecurring ? 'analytics.recurringExcluded' : 'analytics.recurringIncluded')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {isCompactChart && trendMode === 'daily' && <div className="trend-week-nav" role="group" aria-label={t('analytics.weekNavigation')}>
-          <button type="button" className="trend-week-nav__button" disabled={selectedWeekIndex === 0}
-            aria-label={t('analytics.previousWeek')}
-            onClick={() => setMobileWeek({ month: activeMonth, index: selectedWeekIndex - 1 })}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
-          </button>
-          <span className="trend-week-nav__range" aria-live="polite">
-            {t('analytics.weekRange', { start: weekStart, end: weekEnd, month: currentMonthNum })}
-          </span>
-          <button type="button" className="trend-week-nav__button" disabled={selectedWeekIndex >= weekCount - 1}
-            aria-label={t('analytics.nextWeek')}
-            onClick={() => setMobileWeek({ month: activeMonth, index: selectedWeekIndex + 1 })}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
-          </button>
-        </div>}
-
-        {!hasTrendData ? (
-          /* Empty state: Low-emphasis grid + clean central message (NO fake axis) */
-          <div className="trend-empty-chart-box">
-            <div className="trend-empty-grid-lines" aria-hidden="true">
-              <div className="grid-line" />
-              <div className="grid-line" />
-              <div className="grid-line" />
-            </div>
-            <span className="trend-empty-center-text">
-              {isCompactChart && trendMode === 'daily' && dailyTrend.hasAnyData
-                ? t('analytics.noDataForRange')
-                : t('analytics.noChartData')}
-            </span>
-          </div>
-        ) : (
-          /* Data state: Bar Chart */
-          <div className="trend-chart-box">
-            <Bar ref={barChartRef} data={barChartData} options={barOptions}
-              role="img" aria-label={t('analytics.cashFlowChartAria')} />
-          </div>
-        )}
-        {trendMode === 'daily' && <div className="analytics-day-inspection">
-          <p>{t('analytics.chartHint')}</p>
-          <div className="analytics-day-picker">
-            <label>
-              <span>{t('analytics.pickDay')}</span>
-              <input type="date" min={`${activeMonth}-01`}
-                max={`${activeMonth}-${String(dailyTrend.days.length).padStart(2, '0')}`}
-                value={selectedDay?.date || ''}
-                onChange={(event) => { if (event.target.value) openDay(event.target.value); }} />
-            </label>
-            <button type="button" onClick={() => navigateTo('analytics', 'transactions')}>
-              {t('analytics.viewHistory')}
+      {/* Cash-flow controls and layout adapt to the available content width. */}
+      {cashFlowActive && <CashFlowPanel
+        t={t} lang={lang} intlLocale={intlLocale}
+        periodMode={trendMode} series={trendSeries} excludeRecurring={excludeRecurring}
+        activeMonth={activeMonth} periodLabel={periodLabel}
+        summary={trendSummary} topDays={highestSpendingDays} hasData={hasTrendData}
+        emptyMessage={trendMode === 'daily' && visibleDailyDays[0]?.date > today
+          ? t('analytics.cashflow.futureDays')
+          : isCompactChart && trendMode === 'daily' && dailyTrend.hasAnyData
+            ? t('analytics.noDataForRange') : t('analytics.noChartData')}
+        currentMonth={getLocalMonthString()} latestMonth={getLocalMonthString()}
+        savingPreferences={savingCashFlowPreferences} pinnedDefault={pinnedDefault}
+        onPeriodModeChange={changeCashFlowPeriod}
+        onSeriesChange={(series) => saveCashFlowChoice({ series })}
+        onExcludeRecurringChange={(excludeRecurring) => saveCashFlowChoice({ excludeRecurring })}
+        onMonthChange={changeCashFlowMonth} onOpenDay={openDay}
+        onViewHistory={viewCashFlowHistory}
+        onPinDefault={() => saveCashFlowDefault(false)} onClearDefault={() => saveCashFlowDefault(true)}
+        drilldownOrigin={drilldown} onBackToPeriod={backToCashFlowPeriod}
+        chart={<Bar ref={barChartRef} data={barChartData} options={barOptions} plugins={[chartContext]}
+          data-testid="cashflow-chart" data-series={trendSeries} data-mode={trendMode}
+          role="img" aria-label={t(trendSeries === 'expense' ? 'analytics.cashFlowExpenseChartAria'
+            : trendSeries === 'income' ? 'analytics.cashFlowIncomeChartAria' : 'analytics.cashFlowChartAria')} />}
+        weekNavigation={isCompactChart && trendMode === 'daily' &&
+          <div className="trend-week-nav" role="group" aria-label={t('analytics.weekNavigation')}>
+            <button type="button" className="trend-week-nav__button" disabled={selectedWeekIndex === 0}
+              aria-label={t('analytics.previousWeek')}
+              onClick={() => setMobileWeek({ month: activeMonth, index: selectedWeekIndex - 1 })}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
-          </div>
-          {highestSpendingDays.length > 0 && <div className="analytics-top-days" aria-label={t('analytics.highestDays')}>
-            <strong>{t('analytics.highestDays')}</strong>
-            <div>{highestSpendingDays.map((day) => <button key={day.day} type="button"
-              onClick={() => openDay(`${activeMonth}-${String(day.day).padStart(2, '0')}`)}>
-              {formatDate(`${activeMonth}-${String(day.day).padStart(2, '0')}`, 'short', { locale: lang })}
-              <span>{formatCurrency(day.expense)}</span>
-            </button>)}</div>
+            <span className="trend-week-nav__range" aria-live="polite">
+              {t('analytics.weekRange', { start: weekStart, end: weekEnd, month: currentMonthNum })}
+            </span>
+            <button type="button" className="trend-week-nav__button" disabled={selectedWeekIndex >= weekCount - 1}
+              aria-label={t('analytics.nextWeek')}
+              onClick={() => setMobileWeek({ month: activeMonth, index: selectedWeekIndex + 1 })}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>}
-          {unusualDays.length > 0 && <div className="analytics-unusual-days">
-            <div><strong>{t('analytics.unusualTitle')}</strong><p>{t('analytics.unusualExplanation')}</p></div>
+        unusualContent={trendMode === 'daily' && trendSeries !== 'income' && unusualDays.length > 0 &&
+          <div className="analytics-unusual-days">
+            <div><strong>{t('analytics.unusualTitle')}</strong><p>{t('analytics.unusualExplanation')}</p>
+              <small>{t('analytics.cashflow.recurringExcluded')}</small></div>
             {unusualDays.map((day) => <div className="analytics-unusual-row" key={day.date}>
-              <button type="button" onClick={() => openDay(day.date)}>
+              <button type="button" onClick={() => openDay(day.date, 'expense', true)}>
                 <strong>{formatDate(day.date, 'short', { locale: lang })}</strong>
                 <span>{formatCurrency(day.amount)} · {t('analytics.unusualRatio', {
-                  ratio: day.ratio.toLocaleString(intlLocale, { maximumFractionDigits: 1 })
+                  ratio: day.ratio.toLocaleString(intlLocale, { maximumFractionDigits: 1 }),
                 })}</span>
               </button>
               <button type="button" disabled={savingExpectedDay === day.date}
                 onClick={() => toggleExpectedDay(day.date, true)}>{t('analytics.unusualMarkExpected')}</button>
             </div>)}
           </div>}
-        </div>}
-      </div>
-      </>
-      )}
+      />}
 
       {/* ── 5. Detailed Financial Report Section (Báo cáo tài chính chuyên sâu) ── */}
       {(!isMobile || analyticsSubTab === 'reports') && (
@@ -1852,13 +1680,14 @@ export function AnalyticsView() {
       </div>
       </>
       )}
-      {selectedDay && <DailyTransactionsDrawer key={`${selectedDay.date}:${selectedDay.type}`}
+      {selectedDay && <DailyTransactionsDrawer key={`${selectedDay.date}:${selectedDay.type}:${selectedDay.excludeRecurring}`}
         date={selectedDay.date} initialType={selectedDay.type} transactions={transactions}
-        excludeRecurring={excludeRecurring} expected={expectedDays.includes(selectedDay.date)}
+        excludeRecurring={selectedDay.excludeRecurring} expected={expectedDays.includes(selectedDay.date)}
         savingExpected={savingExpectedDay === selectedDay.date} onToggleExpected={toggleExpectedDay}
         onClose={() => setSelectedDay(null)}
         onEdit={(transaction) => { setSelectedDay(null); openEditTransaction(transaction); }}
-        onManage={manageTransactionSource} onViewHistory={viewDayHistory} />}
+        onManage={manageTransactionSource}
+        onViewHistory={(date, type) => viewDayHistory(date, type, selectedDay.excludeRecurring)} />}
     </div>
   );
 }

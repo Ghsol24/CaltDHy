@@ -12,6 +12,7 @@ const { issueCsrf, createSession, setSession, revokeSession, clearSession } = re
 const { validEmail, normalizeEmail } = require('../utils/emailAddress');
 const { configuredProvider, sendAccountEmail } = require('../utils/accountEmail');
 const { publicPreferences, publicUser } = require('../utils/publicUser');
+const { validPreferencesUpdate, preferenceUpdateFields } = require('../utils/cashFlowPreferences');
 const router = express.Router();
 
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
@@ -206,16 +207,13 @@ router.post('/reset-password', async (req, res) => {
 
 router.put('/preferences', protect, async (req, res) => {
     const body = req.body;
-    if (!body || Array.isArray(body) || typeof body !== 'object' ||
-        Object.keys(body).length !== 1 ||
-        !Object.prototype.hasOwnProperty.call(body, 'analyticsExcludeRecurring') ||
-        typeof body.analyticsExcludeRecurring !== 'boolean') {
+    if (!validPreferencesUpdate(body)) {
         return res.status(400).json({ success: false, message: 'Tùy chọn tài khoản không hợp lệ.' });
     }
     try {
         const user = await User.findOneAndUpdate(
             { _id: req.user.id },
-            { $set: { 'preferences.analyticsExcludeRecurring': body.analyticsExcludeRecurring } },
+            { $set: preferenceUpdateFields(body, req.user.preferences) },
             { new: true, runValidators: true, projection: { preferences: 1 } }
         ).lean();
         if (!user) {

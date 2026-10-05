@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 
+const cashFlowViewSchema = new mongoose.Schema({
+    mode: { type: String, enum: ['daily', '3months', '6months'], required: true },
+    series: { type: String, enum: ['expense', 'income', 'both'], required: true },
+    excludeRecurring: { type: Boolean, required: true }
+}, { _id: false });
+
 /**
  * Schema: User
  * Tương đương với mảng `users` trong data.json cũ.
@@ -66,6 +72,10 @@ const userSchema = new mongoose.Schema(
             analyticsExcludeRecurring: {
                 type: Boolean,
                 default: false
+            },
+            cashFlow: {
+                lastUsed: { type: cashFlowViewSchema, default: null },
+                pinnedDefault: { type: cashFlowViewSchema, default: null }
             }
         }
     },

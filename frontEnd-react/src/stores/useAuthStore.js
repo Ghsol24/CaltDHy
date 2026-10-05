@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { authService } from '../services/authService';
 import { apiFetch, clearApiSession } from '../services/api';
-import { invalidateSession, sessionEpoch, assertSession } from '../services/sessionRuntime';
+import { invalidateSession, sessionEpoch, assertSession, sessionChangedError } from '../services/sessionRuntime';
+import { normalizeCashFlowPreferences, isCashFlowView } from '../utils/cashFlowPreferences';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
 import { useJarStore } from './useJarStore';
@@ -11,6 +12,7 @@ import { useConfirmStore } from './useConfirmStore';
 
 const EVENT_KEY = 'caltdhy_session_event';
 const LOGOUT_KEY = 'caltdhy_logout_pending';
+let preferencesQueue = Promise.resolve();
 const storage = {
   get: key => { try { return localStorage.getItem(key); } catch { return null; } },
   set: (key, value) => { try { localStorage.setItem(key, value); } catch {} },
@@ -23,6 +25,7 @@ function hydrateUserPreferences(user) {
 }
 function clearPrivateState() {
   invalidateSession(); clearApiSession();
+  preferencesQueue = Promise.resolve();
   try {
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith('caltdhy_') && !['caltdhy_theme', 'caltdhy_lang', 'caltdhy_curr', EVENT_KEY, LOGOUT_KEY].includes(key)) {
@@ -134,18 +137,35 @@ export const useAuthStore = create((set, get) => ({
       throw error;
     }
   },
-  updatePreferences: async preferencesUpdate => {
+  updatePreferences: preferencesUpdate => {
     const epoch = sessionEpoch();
-    const data = await authService.updatePreferences(preferencesUpdate);
-    assertSession(epoch);
-    const analyticsExcludeRecurring = data.preferences?.analyticsExcludeRecurring;
-    if (typeof analyticsExcludeRecurring !== 'boolean') {
-      throw new Error('Invalid preferences response.');
-    }
-    const preferences = { ...(get().user?.preferences || {}), ...data.preferences };
-    set((state) => state.user ? { user: { ...state.user, preferences } } : state);
-    hydrateUserPreferences({ preferences });
-    return { success: true, preferences };
+    const userId = get().user?.id;
+    const update = structuredClone(preferencesUpdate);
+    const operation = preferencesQueue.catch(() => {}).then(async () => {
+      assertSession(epoch);
+      if (!userId || get().user?.id !== userId) throw sessionChangedError();
+      const data = await authService.updatePreferences(update);
+      assertSession(epoch);
+      if (get().user?.id !== userId) throw sessionChangedError();
+      const received = data.preferences;
+      const cashFlow = received?.cashFlow;
+      if (typeof received?.analyticsExcludeRecurring !== 'boolean' ||
+          (cashFlow !== undefined && (!cashFlow || Array.isArray(cashFlow) ||
+            Object.keys(cashFlow).length !== 2 ||
+            !Object.prototype.hasOwnProperty.call(cashFlow, 'lastUsed') ||
+            !Object.prototype.hasOwnProperty.call(cashFlow, 'pinnedDefault') ||
+            (cashFlow.lastUsed !== null && !isCashFlowView(cashFlow.lastUsed)) ||
+            (cashFlow.pinnedDefault !== null && !isCashFlowView(cashFlow.pinnedDefault))))) {
+        throw new Error('Invalid preferences response.');
+      }
+      const preferences = { ...(get().user?.preferences || {}), ...received,
+        ...(cashFlow !== undefined ? { cashFlow: normalizeCashFlowPreferences(cashFlow) } : {}) };
+      set((state) => state.user?.id === userId ? { user: { ...state.user, preferences } } : state);
+      hydrateUserPreferences({ preferences });
+      return { success: true, preferences };
+    });
+    preferencesQueue = operation;
+    return operation;
   }
 }));
 clearPrivateState();

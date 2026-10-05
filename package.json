@@ -4,18 +4,19 @@
   "scripts": {
     "dev": "node scripts/start-all.js",
     "start": "node backEnd/server/server.js",
-    "test": "node --test tests/release-guards.cjs tests/launcher-safety.cjs frontEnd-react/tests/money-precision.test.mjs frontEnd-react/tests/analytics-filters.test.mjs frontEnd-react/tests/i18n-formatters.test.mjs frontEnd-react/tests/bug-remediation.test.mjs frontEnd-react/tests/csv-security.test.mjs frontEnd-react/tests/transaction-period.test.mjs && npm test --prefix backEnd/server",
+    "test": "node --test tests/release-guards.cjs tests/launcher-safety.cjs frontEnd-react/tests/money-precision.test.mjs frontEnd-react/tests/analytics-filters.test.mjs frontEnd-react/tests/i18n-formatters.test.mjs frontEnd-react/tests/bug-remediation.test.mjs frontEnd-react/tests/csv-security.test.mjs frontEnd-react/tests/transaction-period.test.mjs frontEnd-react/tests/cash-flow-data.test.mjs frontEnd-react/tests/cash-flow-preferences.test.mjs frontEnd-react/tests/cash-flow-preferences-hook.test.mjs && npm test --prefix backEnd/server",
     "test:browser": "node tests/browser-security.cjs",
     "test:transaction-period": "node tests/transaction-period-browser.cjs",
     "test:ux-budget": "node tests/ux-performance-budget.cjs",
-    "test:e2e": "npm run build --prefix frontEnd-react && npm run test:ux-budget && npm run test:browser && npm run test:transaction-period",
+    "test:e2e": "npm run build --prefix frontEnd-react && npm run test:ux-budget && npm run test:browser && npm run test:transaction-period && npm run test:cash-flow",
     "test:all": "npm test && npm run test:e2e && npm run check:release",
     "check:release": "node scripts/release.cjs --check",
     "prepare:release": "node scripts/release.cjs --prepare",
     "package:source": "node scripts/release.cjs --zip",
     "migrate:email": "node backEnd/server/scripts/migrate-email-verified.js",
     "migrate:dates": "node backEnd/server/scripts/migrate-transaction-dates.js",
-    "migrate:jar-transfers": "node backEnd/server/scripts/migrate-jar-transfer-types.js"
+    "migrate:jar-transfers": "node backEnd/server/scripts/migrate-jar-transfer-types.js",
+    "test:cash-flow": "node tests/cash-flow-browser.cjs"
   },
   "dependencies": {
     "jsdom": "^29.1.1"
