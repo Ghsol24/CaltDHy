@@ -533,13 +533,14 @@ async function check(name, work) {
       const lastWalletName = await lastOption.locator('.custom-wallet-item-name').innerText();
       await page.keyboard.press('End');
       await expect(lastOption).toHaveClass(/is-highlighted/);
-      const visible = await lastOption.evaluate(element => {
+      // Highlighting renders before the effect scrolls the option and the menu's
+      // opening animation settles. Wait for actual visibility, not just the class.
+      await expect.poll(() => lastOption.evaluate(element => {
         const box = element.getBoundingClientRect();
         const footer = element.closest('.txn-modal-card').querySelector('.txn-modal-footer').getBoundingClientRect();
         const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
         return box.top >= 0 && box.bottom <= footer.top + 1 && !!hit && element.contains(hit);
-      });
-      assert.ok(visible, 'The final wallet option is visible above the fixed footer');
+      }), { message: 'The final wallet option is visible above the fixed footer', timeout: 2000 }).toBe(true);
       await page.keyboard.press('Enter');
       await expect(modal.locator('.custom-wallet-menu')).toHaveCount(0);
       await expect(wallet).toContainText(lastWalletName);
