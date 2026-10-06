@@ -1,8 +1,6 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon, TrendOutlineIcon } from '../../components/ui/AppIcons';
-import { useIsMobile } from '../../hooks/useMediaQuery';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { CashFlowPopover } from './CashFlowPopover';
 import { formatCurrency, formatDate, getLocalDateString } from '../../utils/formatters';
 import '../../assets/css/cash-flow.css';
 
@@ -12,7 +10,6 @@ const PERIOD_OPTIONS = [
   { value: '6months', label: 'sixMonths', detail: 'byMonth' },
 ];
 const SERIES_OPTIONS = ['expense', 'income', 'both'];
-const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), a[href], [tabindex="0"]';
 
 function SmallIcon({ children, className = '' }) {
   return <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -36,12 +33,9 @@ export function CashFlowPanel({
   savingPreferences = false, drilldownOrigin, onBackToPeriod, currentMonth, latestMonth, preferenceMode = periodMode,
 }) {
   const id = useId();
-  const isMobile = useIsMobile(599);
   const [popover, setPopover] = useState(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const [inspectedDate, setInspectedDate] = useState('');
   const [showAllDays, setShowAllDays] = useState(false);
-  const popupRef = useRef(null);
   const triggersRef = useRef({});
   const isIncomeOnly = series === 'income';
   const visibleDays = topDays.slice(0, showAllDays ? 5 : 3);
@@ -64,68 +58,9 @@ export function CashFlowPanel({
     day: 'numeric', month: 'short', ...(rangeCrossesYear ? { year: 'numeric' } : {}),
   }), [intlLocale, lang, rangeCrossesYear]);
 
-  useBodyScrollLock(isMobile && Boolean(popover));
-
   useEffect(() => { setShowAllDays(false); }, [periodLabel, excludeRecurring, series]);
 
-  useEffect(() => {
-    if (!popover) return undefined;
-    const trigger = triggersRef.current[popover];
-    const panel = popupRef.current;
-    const updatePosition = () => {
-      if (isMobile || !trigger) return;
-      const rect = trigger.getBoundingClientRect();
-      const width = Math.min(popover === 'display' ? 344 : 304, window.innerWidth - 32);
-      const panelHeight = panel?.getBoundingClientRect().height || 360;
-      const spaceBelow = window.innerHeight - rect.bottom - 16;
-      const top = spaceBelow >= Math.min(panelHeight, 280) ? rect.bottom + 8
-        : Math.max(16, rect.top - panelHeight - 8);
-      setPosition({ top, left: Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16)) });
-    };
-    updatePosition();
-    const first = panel?.querySelector('input[type="radio"]:checked')
-      || panel?.querySelector('input[type="date"]') || panel?.querySelector(FOCUSABLE);
-    first?.focus();
-
-    const handlePointer = (event) => {
-      if (!panel?.contains(event.target) && !trigger?.contains(event.target)) setPopover(null);
-    };
-    const handleKey = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-        setPopover(null);
-      }
-      if (event.key !== 'Tab' || !isMobile || !panel) return;
-      const focusable = [...panel.querySelectorAll(FOCUSABLE)].filter((node) => (
-        node.getClientRects().length > 0 && (node.type !== 'radio' || node.checked)
-      ));
-      const firstNode = focusable[0];
-      const lastNode = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === firstNode) {
-        event.preventDefault(); lastNode?.focus();
-      } else if (!event.shiftKey && document.activeElement === lastNode) {
-        event.preventDefault(); firstNode?.focus();
-      }
-    };
-    const handleFocus = (event) => {
-      if (!isMobile && !panel?.contains(event.target) && !trigger?.contains(event.target)) setPopover(null);
-    };
-    document.addEventListener('pointerdown', handlePointer);
-    document.addEventListener('keydown', handleKey, true);
-    document.addEventListener('focusin', handleFocus);
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointer);
-      document.removeEventListener('keydown', handleKey, true);
-      document.removeEventListener('focusin', handleFocus);
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-      // Clicking another control should keep its focus; Escape and sheet dismissal return to the opener.
-      if (document.activeElement === document.body || panel?.contains(document.activeElement)) trigger?.focus();
-    };
-  }, [popover, isMobile]);
+  const closePopover = useCallback(() => setPopover(null), []);
 
   const togglePopover = (name) => {
     if (name === 'date' && (!inspectedDate || inspectedDate < dateMin || inspectedDate > dateMax)) {
@@ -140,13 +75,9 @@ export function CashFlowPanel({
     recurring: text(pinnedDefault.excludeRecurring ? 'recurringExcluded' : 'recurringIncluded'),
   }) : null;
 
-  const popoverContent = popover && createPortal(
-    <div className={`cashflow-overlay${isMobile ? ' cashflow-overlay--sheet' : ''}`}>
-      <section ref={popupRef} id={`${id}-${popover}`} className={`cashflow-popover cashflow-popover--${popover}`}
-        data-testid="cashflow-popover" data-popover={popover} role="dialog" aria-modal={isMobile || undefined}
-        aria-labelledby={`${id}-${popover}-title`} style={isMobile ? undefined : {
-          top: position.top, left: position.left, maxHeight: `calc(100dvh - ${position.top + 16}px)`,
-        }}>
+  const popoverContent = popover && (
+    <CashFlowPopover key={popover} id={`${id}-${popover}`} name={popover}
+      triggersRef={triggersRef} onClose={closePopover}>
         <div className="cashflow-popover__heading">
           <h4 id={`${id}-${popover}-title`}>{text(popover === 'date' ? 'daySearch' : popover)}</h4>
           <button type="button" className="cashflow-icon-button" onClick={() => setPopover(null)}
@@ -222,8 +153,7 @@ export function CashFlowPanel({
             {t('analytics.viewHistory')}
           </button>
         </form>}
-      </section>
-    </div>, document.body,
+    </CashFlowPopover>
   );
 
   return <section className="analytics-section-panel cashflow-panel" id="analytics-cashflow" data-testid="cashflow-panel"

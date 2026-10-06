@@ -325,6 +325,114 @@ async function check(name, work) { await work(); passed += 1; console.log('PASS 
     await expect.poll(async () => (await preferences()).cashFlow.pinnedDefault).toBe(null);
   });
 
+  await check('desktop menu follows page scrolling while its own scrolling leaves the anchor and page stable', async () => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await enter();
+    await display.evaluate(trigger => window.scrollTo({
+      top: window.scrollY + trigger.getBoundingClientRect().top - 200, behavior: 'instant',
+    }));
+    await display.click();
+    await expect(popover).toBeVisible();
+    await expect(popover).not.toHaveAttribute('aria-modal', 'true');
+    const initialTrigger = await display.boundingBox();
+    await expect.poll(async () => (await popover.boundingBox()).y - initialTrigger.y - initialTrigger.height)
+      .toBeGreaterThanOrEqual(0);
+    const initialMenu = await popover.boundingBox();
+    const gap = initialMenu.y - initialTrigger.y - initialTrigger.height;
+    assert.ok(gap <= 16, 'Desktop menu opens next to its trigger');
+    const scrollBefore = await page.evaluate(() => scrollY);
+    await page.evaluate(() => window.scrollBy({ top: 64, behavior: 'instant' }));
+    await expect.poll(async () => (await page.evaluate(() => scrollY)) - scrollBefore).toBe(64);
+    await expect.poll(async () => {
+      const trigger = await display.boundingBox(), menu = await popover.boundingBox();
+      return Math.abs(menu.y - trigger.y - trigger.height - gap);
+    }).toBeLessThanOrEqual(2);
+    const scrolledTrigger = await display.boundingBox();
+    assert.ok(Math.abs(initialTrigger.y - scrolledTrigger.y - 64) <= 2, 'The page and anchor actually moved');
+    const scrolledLayout = await verifyFit(popover, 'Scrolled desktop menu');
+    assert.ok(scrolledLayout.top >= 0 && scrolledLayout.bottom <= scrolledLayout.viewportHeight + 1);
+
+    // A short desktop viewport makes the real menu scroll, independent of the page.
+    await page.setViewportSize({ width: 1440, height: 420 });
+    await expect(popover).toBeVisible();
+    await expect.poll(async () => {
+      const box = await popover.boundingBox();
+      return box.y >= 0 && box.y + box.height <= 421;
+    }).toBe(true);
+    await expect.poll(() => popover.evaluate(element => element.scrollHeight - element.clientHeight))
+      .toBeGreaterThan(20);
+    const menuBeforeInternalScroll = await popover.boundingBox();
+    const pageBeforeInternalScroll = await page.evaluate(() => scrollY);
+    await page.mouse.move(menuBeforeInternalScroll.x + menuBeforeInternalScroll.width / 2,
+      menuBeforeInternalScroll.y + menuBeforeInternalScroll.height / 2);
+    await page.mouse.wheel(0, 20);
+    await expect.poll(() => popover.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+    assert.equal(await page.evaluate(() => scrollY), pageBeforeInternalScroll, 'Scrolling within the menu leaves the page in place');
+    const menuAfterInternalScroll = await popover.boundingBox();
+    assert.ok(Math.abs(menuAfterInternalScroll.x - menuBeforeInternalScroll.x) <= 1
+      && Math.abs(menuAfterInternalScroll.y - menuBeforeInternalScroll.y) <= 1,
+    'Internal menu scrolling leaves its viewport position unchanged');
+
+    await closePopover();
+    await expect(display).toBeFocused();
+    await expect(page.locator('.cashflow-overlay')).toHaveCount(0);
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const afterClose = await page.evaluate(() => scrollY);
+    await page.evaluate(() => window.scrollBy({ top: 48, behavior: 'instant' }));
+    await expect.poll(async () => (await page.evaluate(() => scrollY)) - afterClose).toBe(48);
+    await expect(popover).toHaveCount(0);
+    await display.click();
+    await expect(popover).toBeVisible();
+    const reopened = await verifyFit(popover, 'Reopened desktop menu');
+    assert.ok(reopened.top >= 0 && reopened.bottom <= reopened.viewportHeight + 1);
+    await expect.poll(async () => {
+      const trigger = await display.boundingBox(), menu = await popover.boundingBox();
+      return Math.abs(menu.x + menu.width - trigger.x - trigger.width);
+    }, { message: 'Reopening uses the current trigger position after the previous menu was removed' }).toBeLessThanOrEqual(2);
+    await closePopover();
+  });
+
+  await check('open menu adapts to a mobile sheet, locks background scrolling and restores focus and scrolling on close', async () => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await enter();
+    await display.evaluate(trigger => window.scrollTo({
+      top: window.scrollY + trigger.getBoundingClientRect().top - 140, behavior: 'instant',
+    }));
+    await display.click();
+    await expect(popover).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(popover).toBeVisible();
+    await expect(popover).toHaveAttribute('aria-modal', 'true');
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+    const sheetLayout = await verifyFit(popover, 'Resized mobile sheet');
+    assert.ok(sheetLayout.top >= 0 && sheetLayout.bottom <= sheetLayout.viewportHeight + 1,
+      'Sheet stays inside the mobile viewport after resizing');
+    assert.ok(sheetLayout.bottom >= sheetLayout.viewportHeight - 1, 'Mobile sheet sits at the bottom of the viewport');
+    const lockedScroll = await page.evaluate(() => scrollY);
+    await page.mouse.move(12, Math.max(4, sheetLayout.top / 2));
+    await page.mouse.wheel(0, 120);
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(lockedScroll);
+    await closePopover();
+    await expect(display).toBeFocused();
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
+    await expect(page.locator('.cashflow-overlay')).toHaveCount(0);
+    const unlockedScroll = await page.evaluate(() => scrollY);
+    await page.mouse.move(20, 200);
+    await page.mouse.wheel(0, 120);
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(unlockedScroll);
+
+    await display.click();
+    await expect(popover).toHaveAttribute('aria-modal', 'true');
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(popover).toBeVisible();
+    await expect(popover).not.toHaveAttribute('aria-modal', 'true');
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
+    const desktopLayout = await verifyFit(popover, 'Sheet resized back to desktop');
+    assert.ok(desktopLayout.top >= 0 && desktopLayout.bottom <= desktopLayout.viewportHeight + 1);
+    await closePopover();
+    await expect(display).toBeFocused();
+  });
+
   await check('mobile seven-day chart keeps its ranking explicitly scoped to the whole selected month', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await enter();
