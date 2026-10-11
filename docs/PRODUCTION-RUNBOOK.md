@@ -33,7 +33,7 @@ Test backend và browser tạo MongoDB replica set tạm. Lần đầu có thể
 
 `npm run dev` chạy hai tiến trình con do runner sở hữu, backend development tại 127.0.0.1:24127 và Vite tại 127.0.0.1:5173. Runner không cài dependency, không dọn cổng, không tự mở trình duyệt; nếu một dịch vụ dừng thì dịch vụ còn lại được dừng theo. Cấp URI database phát triển và khóa riêng trước khi chạy.
 
-Các file `tests/test-category-*.js`, `tests/test-archive-wallet.js` và `tests/run-api-contract.js` là test mô phỏng cũ, không phải bằng chứng bảo mật cho API hiện tại. Cổng kiểm tra hiện dùng test thật trong `backEnd/server/tests/*.test.js`, `tests/release-guards.cjs` và `tests/browser-security.cjs`. `tests/run-e2e.js` gọi lại cổng kiểm tra hiện tại.
+Cổng kiểm tra hiện dùng test thật trong `backEnd/server/tests/*.test.js`, `tests/release-guards.cjs` và `tests/browser-security.cjs`. `tests/run-e2e.js` gọi lại cổng kiểm tra hiện tại.
 
 ## Phát hành sạch
 
@@ -45,7 +45,7 @@ npm run package:source
 
 `prepare:release` sao chép nguồn theo allowlist sang thư mục mới trong `release/`, cài dependency backend từ lockfile, build frontend trong môi trường đã lọc bỏ bí mật, không chạy lifecycle script của dependency, quét bundle và xóa dependency build frontend. Chỉ build script đã có trong dự án được chạy. Không dùng lại `dist` có sẵn hay cấu hình `.env` của workspace. Cấp bí mật riêng cho thư mục runtime sau khi hoàn tất kiểm tra; chạy `npm start` tại thư mục đó hoặc launcher macOS đặt cạnh project. Runtime Node phải được cung cấp riêng hoặc đặt đúng cấu trúc bundle mà launcher hỗ trợ.
 
-`package:source` chỉ đóng **mã nguồn sạch** và manifest SHA-256, kiểm tra danh sách ZIP rồi xuất checksum cạnh ZIP. Gói này không chứa `node_modules`, `dist`, `.env` thật, dump database, khóa riêng hoặc archive cũ. Nó không phải ứng dụng macOS độc lập đã ký/notarize; người nhận cần cài dependency và build có kiểm soát. Quét tĩnh chỉ nhận diện các mẫu bí mật đã biết, không thay thế việc kiểm tra và quản lý secret.
+`package:source` chỉ đóng **mã nguồn sạch** và manifest SHA-256, kiểm tra danh sách ZIP rồi xuất checksum cạnh ZIP. Gói này không chứa `node_modules`, `dist`, `.env` thật, dump database, khóa riêng hoặc archive cũ. Hướng dẫn cho trợ lý, kế hoạch/báo cáo nội bộ, ảnh kiểm thử và test mô phỏng đã nghỉ dùng chỉ lưu trên máy, được loại khỏi Git và gói phát hành. Tài liệu trong ZIP được chọn rõ trong `scripts/release.cjs`; khi thêm hướng dẫn công khai mới, cập nhật danh sách đó. Manifest được tạo mới trong mỗi ZIP, không cần lưu ở thư mục gốc repository. Gói này không phải ứng dụng macOS độc lập đã ký/notarize; người nhận cần cài dependency và build có kiểm soát. Quét tĩnh chỉ nhận diện các mẫu bí mật đã biết, không thay thế việc kiểm tra và quản lý secret.
 
 CI có ba job: **Backend security and money integrity**, **Browser session and failure safety**, **Verified source release**. Job phát hành phụ thuộc hai job test, chuẩn bị build sạch trước khi tạo ZIP và chỉ upload ZIP/checksum. Sau khi đưa workflow lên GitHub, bật branch protection/ruleset yêu cầu cả ba check này trước merge; chỉnh file workflow không tự bật quy tắc trên repository. CI không triển khai server và không nhận production credential.
 

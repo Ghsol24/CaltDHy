@@ -21,6 +21,42 @@ test('release allowlist rejects secrets, dumps, archives and symlink-prone runti
     assert.equal(allowed('frontEnd-react/public/manifest.json'), true);
     assert.ok(checkSources().length > 50);
 });
+test('release keeps public sources and docs while ignoring local instructions, reports and old simulations', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'caltdhy-release-local-files-'));
+    const publicFiles = ['README.md', '.github/workflows/test.yml', 'backEnd/server/server.js',
+        'frontEnd-react/src/App.jsx', 'frontEnd-react/public/manifest.json', 'tests/run-e2e.js',
+        'tests/browser-security.cjs', 'scripts/release.cjs', 'CaltDHy.app/Contents/MacOS/CaltDHy',
+        'docs/PRODUCTION-RUNBOOK.md', 'docs/PWA-DEPLOYMENT.md', 'docs/financial-transaction-rules.md',
+        'docs/i18n-display-currency.md', 'docs/transaction-editing-rules.md'];
+    const privateFiles = ['AGENTS.md', 'AGENTS.override.md', 'backEnd/server/AGENTS.md',
+        'frontEnd-react/src/AGENTS.override.md', 'docs/new-private-audit.md', 'docs/CASH-FLOW-REDESIGN-PLAN.md',
+        'RELEASE-MANIFEST.json', 'frontEnd-react/README.md', 'tests/run-api-contract.js',
+        'tests/test-archive-wallet.js', 'tests/test-category-c.js', 'tests/test-category-h.js', 'tests/test-category-m.js'];
+    const privateDirectories = ['docs/local', 'docs/dark-theme-evidence', 'docs/mobile-ux-evidence',
+        'docs/ux-ui-evidence', '.agents', 'backEnd/server/.codex', 'frontEnd-react/.claude',
+        'scripts/.cursor', 'tests/.vscode', 'backEnd/.idea'];
+    try {
+        for (const relative of [...publicFiles, ...privateFiles]) {
+            const filename = path.join(root, relative);
+            fs.mkdirSync(path.dirname(filename), { recursive: true });
+            fs.writeFileSync(filename, 'fixture\n');
+        }
+        for (const relative of privateDirectories) {
+            const directory = path.join(root, relative);
+            fs.mkdirSync(directory, { recursive: true });
+            fs.writeFileSync(path.join(directory, 'local-notes.md'), 'private fixture\n');
+            fs.writeFileSync(path.join(directory, 'screenshot.png'), 'private image fixture\n');
+            // An ignored directory must not be traversed, even to inspect a symlink.
+            fs.symlinkSync('/nonexistent/private-file', path.join(directory, 'private-link.js'));
+            assert.equal(allowed(relative + '/local-notes.md'), false, relative);
+            assert.equal(allowed(relative + '/screenshot.png'), false, relative);
+        }
+        for (const relative of privateFiles) assert.equal(allowed(relative), false, relative);
+        for (const relative of publicFiles) assert.equal(allowed(relative), true, relative);
+        assert.deepEqual(collectFiles(root), publicFiles.sort());
+        assert.deepEqual(checkSources(root), publicFiles);
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
 test('release rejects symlinks and build credentials without printing secret contents', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'caltdhy-release-guard-'));
     try {

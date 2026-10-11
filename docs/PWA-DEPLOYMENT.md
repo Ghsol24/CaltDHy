@@ -6,14 +6,12 @@ biểu tượng không tạo một bản sao dữ liệu trên điện thoại.
 
 ## Bước 1 — Bảo toàn Atlas hiện có
 
-Dịch vụ Render hiện tại và ứng dụng trên máy trỏ đến database `CaltDHy` trên
-cùng cụm MongoDB Atlas. **Giữ nguyên đích database**, nhưng thay `MONGODB_URI`
-trên Render để dùng một DB user riêng, có mật khẩu mới. Render hiện báo
-`bad auth`, vì vậy URI cũ không thể dùng để triển khai. Không tạo database
-rỗng, không chạy seed/cleanup/migration trên production trong bước triển khai PWA. URI Atlas
+Khi nâng cấp một dịch vụ đã có dữ liệu, **giữ nguyên đích database** và kiểm
+tra `MONGODB_URI` trước khi triển khai. Không tạo database rỗng, không chạy
+seed/cleanup/migration trên production trong bước triển khai PWA. URI Atlas
 có thể ở dạng `mongodb://…` nhiều host hoặc `mongodb+srv://…`; cả hai đều hợp lệ.
-Cho dịch vụ công khai một DB user riêng với quyền `readWrite` chỉ trên
-`CaltDHy`, thay vì dùng user quản trị Atlas chung cho máy cá nhân.
+Cấp cho dịch vụ công khai một DB user riêng với quyền `readWrite` chỉ trên
+database của ứng dụng, không dùng tài khoản quản trị Atlas.
 
 Trước khi đổi phiên bản, tạo một bản sao lưu có thể khôi phục và kiểm tra việc
 khôi phục trên môi trường riêng. Nếu cluster là Atlas Free, nó không có backup
@@ -31,12 +29,11 @@ và [IP outbound của Render](https://render.com/docs/outbound-ip-addresses).
 
 ## Bước 2 — Nâng cấp dịch vụ Render hiện có
 
-Đang có dịch vụ **CaltDHy** tại `https://caltdhy.onrender.com`. Nó dùng mã cũ
-từ `giahuyz3sta-oss/CaltDHy` với Root Directory `server`, Build Command
-`npm install`, Start Command `node server.js`. Bản React/Express hiện tại ở
-`Ghsol24/CaltDHy` có cấu trúc khác. **Không dùng New → Blueprint ở bước này**:
-Blueprint mẫu `render.yaml` dành cho lần cài mới và có thể tạo dịch vụ thứ hai.
-Nâng cấp chính dịch vụ cũ sẽ giữ URL và biến môi trường hiện có. Render hỗ trợ
+Nếu đã có dịch vụ Render, kiểm tra repository nguồn, nhánh và cấu hình build
+của dịch vụ đó trước khi nâng cấp. **Không dùng New → Blueprint để nâng cấp
+dịch vụ hiện có**: Blueprint mẫu `render.yaml` dành cho lần cài mới và có thể
+tạo dịch vụ thứ hai. Nâng cấp chính dịch vụ cũ sẽ giữ URL và biến môi trường
+hiện có. Render hỗ trợ
 [đổi nguồn Git trên dịch vụ hiện hữu](https://render.com/changelog/change-your-services-backing-repo-or-image-in-the-render-dashboard).
 
 1. Đưa mã đã kiểm tra lên nhánh GitHub dự định chạy. Mã mới chỉ nằm trên máy sẽ
@@ -46,7 +43,7 @@ Nâng cấp chính dịch vụ cũ sẽ giữ URL và biến môi trường hi�
 
    | Mục | Giá trị mục tiêu |
    | --- | --- |
-   | Source | Public Git Repository `https://github.com/Ghsol24/CaltDHy` (hoặc kết nối GitHub có quyền truy cập repository này) |
+   | Source | URL repository mã nguồn cần triển khai, hoặc kết nối GitHub có quyền truy cập repository đó |
    | Branch | `main` hoặc nhánh phát hành đã kiểm tra |
    | Root Directory | để trống, chạy từ thư mục gốc repository |
    | Build Command | `npm ci --ignore-scripts --include=dev --prefix frontEnd-react && npm run build --prefix frontEnd-react && npm ci --ignore-scripts --omit=dev --prefix backEnd/server` |
@@ -54,23 +51,23 @@ Nâng cấp chính dịch vụ cũ sẽ giữ URL và biến môi trường hi�
    | Health Check Path | `/api/health` |
    | Node | `.node-version` chọn Node 24; Render tự đặt `NODE_ENV=production`; trên Render, ứng dụng mặc định lắng nghe `0.0.0.0:10000` |
    | Phiên và đăng ký | Code và blueprint Render mặc định đăng ký mở; đặt `REGISTRATION_MODE=invite` nếu chỉ muốn nhận người có lời mời. Đặt rõ `COOKIE_SECURE=true`, `TRUST_PROXY_HOPS=1` và `CLIENT_URL` HTTPS; Render dùng HOST mặc định công khai luôn buộc cookie Secure |
-   | URL | `CLIENT_URL=https://caltdhy.onrender.com` |
-   | Dữ liệu | `MONGODB_URI` tới **cùng database Atlas**, dùng DB user riêng chỉ có quyền `readWrite` trên `CaltDHy` |
+   | URL | `CLIENT_URL` là URL HTTPS công khai của dịch vụ |
+   | Dữ liệu | `MONGODB_URI` tới **cùng database Atlas đang sử dụng**, dùng DB user riêng chỉ có quyền `readWrite` trên database của ứng dụng |
 
    Nếu dịch vụ hiện có chỉ có `CLIENT_URL`, `JWT_SECRET` và `MONGODB_URI`, ba biến
    đó đủ để bản mới khởi động trên Render; các giá trị mặc định ở trên áp dụng
    khi Render cung cấp `RENDER=true`. Vẫn kiểm tra từng giá trị sau khi deploy.
 3. Trong **Atlas → Security → Database Access/Database Users → Add New Database
-   User**, chọn **Password**, đặt tên `caltdhy_render`, tự tạo và lưu mật khẩu
-   ngẫu nhiên, chọn role `readWrite` cho đúng database `CaltDHy`, rồi bật
-   **Restrict Access to Specific Clusters** và chọn `Cluster0`. Người sở hữu
-   Atlas tự hoàn tất bước tạo user và nhập mật khẩu. Sau đó lấy connection
-   string từ **Cluster0 → Connect → Drivers**, điền mật khẩu vào đúng chỗ trên
-   máy của mình; nếu mật khẩu có ký tự đặc biệt, URL-encode phần mật khẩu.
-   URI cần giữ database `/CaltDHy` và phương thức xác thực phù hợp với URI
+   User**, chọn **Password**, đặt tên riêng cho DB user của dịch vụ, tự tạo và
+   lưu mật khẩu ngẫu nhiên, chọn role `readWrite` cho đúng database, rồi bật
+   **Restrict Access to Specific Clusters** và chọn cluster của ứng dụng.
+   Người sở hữu Atlas tự hoàn tất bước tạo user và nhập mật khẩu. Sau đó mở
+   cluster đã chọn, lấy connection string từ **Connect → Drivers** và điền
+   mật khẩu vào đúng chỗ; nếu mật khẩu có ký tự đặc biệt, URL-encode phần mật khẩu.
+   URI cần giữ đúng tên database và phương thức xác thực phù hợp với URI
    Atlas. Cập nhật URI mới trong **Render → Environment → `MONGODB_URI`**.
-   Nếu xoay mật khẩu user quản trị cũ, cập nhật cả `backEnd/server/.env` trên
-   máy. Cũng thay
+   Khi xoay credential, cập nhật cấu hình riêng của các môi trường sử dụng
+   credential đó. Cũng thay
    `JWT_SECRET` mặc định/cũ bằng khóa ngẫu nhiên dài ít nhất 32 byte trong
    Render. Không gửi mật khẩu, URI hay khóa qua chat hoặc đưa vào repository.
    Khi chuẩn bị nhiều biến cùng lúc, Render cho phép chọn **Save only** để lưu
@@ -101,7 +98,7 @@ khởi động lại](https://render.com/docs/free). Gói này phù hợp chạy
 phù hợp khi cần luôn sẵn sàng hoặc dữ liệu thật quan trọng. Render Free cũng
 **chặn SMTP cổng 25, 465 và 587**; Gmail SMTP không dùng được ở đây. Ứng dụng
 hỗ trợ Brevo API qua HTTPS để gửi email xác minh/đặt lại mật khẩu. Dịch vụ
-`CaltDHy` hiện hữu không tự nhận biến mới từ `render.yaml`; cần cấu hình trong
+Render hiện hữu không tự nhận biến mới từ `render.yaml`; cần cấu hình trong
 Render → Environment:
 
 1. Tạo tài khoản Brevo và xác minh địa chỉ gửi ở **Senders**. Nếu chưa có tên
@@ -111,7 +108,7 @@ Render → Environment:
    thực DNS theo [hướng dẫn Brevo](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email).
 2. Lấy API key của Brevo, đặt `EMAIL_PROVIDER=brevo`, `BREVO_API_KEY` và
    `EMAIL_FROM` (địa chỉ sender đã xác minh) trong **Render → Environment**.
-   Giữ nguyên `CLIENT_URL=https://caltdhy.onrender.com`. Không đưa key vào chat,
+   Giữ `CLIENT_URL` đúng với URL HTTPS của dịch vụ. Không đưa key vào chat,
    Git hoặc frontend. Lưu cấu hình để Render triển khai lại bản mã có hỗ trợ
    Brevo. Gói Brevo Free hiện giới hạn
    [300 thư/ngày](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan).

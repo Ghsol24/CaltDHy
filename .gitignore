@@ -1,6 +1,38 @@
 # Dependencies — keep package.json and lockfiles in Git
 node_modules/
 
+# Local assistant instructions, workspace settings, and editor state
+AGENTS.md
+AGENTS.override.md
+.agents/
+.codex/
+.claude/
+.cursor/
+.vscode/
+.idea/
+
+# Internal planning, audit snapshots, and generated visual evidence
+/docs/local/
+/docs/*-PLAN.md
+/docs/*-REPORT.md
+/docs/*-AUDIT.md
+/docs/SECURITY-AUDIT-*.md
+/docs/MOBILE-UX-REMEDIATION-*.md
+/docs/PREDEPLOY-VALIDATION-*.md
+/docs/REMEDIATION-STATUS.md
+/docs/*-evidence/
+
+# Generated release inventory and unused scaffold documentation
+/RELEASE-MANIFEST.json
+/frontEnd-react/README.md
+
+# Retired simulations (the active test suites remain tracked)
+/tests/run-api-contract.js
+/tests/test-archive-wallet.js
+/tests/test-category-c.js
+/tests/test-category-h.js
+/tests/test-category-m.js
+
 # Generated build output and caches
 dist/
 dist-ssr/

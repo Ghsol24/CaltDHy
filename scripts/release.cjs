@@ -7,11 +7,21 @@ const { spawnSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const TOP = new Set(['backEnd', 'frontEnd-react', 'CaltDHy.app', 'scripts', 'tests', 'docs', '.github']);
 const ROOT_FILES = new Set(['package.json', 'package-lock.json', '.gitignore', 'README.md', '.node-version', 'render.yaml']);
-const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.git', '.agents', '.codex', 'coverage', 'release', 'test-results', 'playwright-report']);
+const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.git', '.agents', '.codex', '.claude', '.cursor', '.vscode', '.idea', 'coverage', 'release', 'test-results', 'playwright-report']);
+const AGENT_FILES = new Set(['AGENTS.md', 'AGENTS.override.md']);
+const EXCLUDED_FILES = new Set(['frontEnd-react/README.md', 'tests/run-api-contract.js',
+    'tests/test-archive-wallet.js', 'tests/test-category-c.js', 'tests/test-category-h.js', 'tests/test-category-m.js']);
+const PUBLIC_DOCS = new Set(['docs/PRODUCTION-RUNBOOK.md', 'docs/PWA-DEPLOYMENT.md',
+    'docs/financial-transaction-rules.md', 'docs/i18n-display-currency.md', 'docs/transaction-editing-rules.md']);
 const EXTENSIONS = new Set(['.js', '.jsx', '.cjs', '.mjs', '.css', '.html', '.md', '.yml', '.yaml', '.svg', '.png', '.jpg', '.jpeg', '.ico', '.icns', '.webp', '.woff', '.woff2', '.ttf', '.plist']);
+function excluded(relative) {
+    const parts = relative.split('/');
+    return parts.some(part => SKIP_DIRS.has(part)) || AGENT_FILES.has(parts.at(-1)) || EXCLUDED_FILES.has(relative)
+        || (relative.startsWith('docs/') && !PUBLIC_DOCS.has(relative));
+}
 function allowed(relative) {
     const parts = relative.split('/'); const name = parts.at(-1);
-    if (parts.some(part => SKIP_DIRS.has(part))) return false;
+    if (excluded(relative)) return false;
     if (parts.slice(0, -1).some((part, index) => part.startsWith('.') && !(index === 0 && part === '.github'))) return false;
     if (parts.length === 1) return ROOT_FILES.has(name);
     if (!TOP.has(parts[0])) return false;
@@ -26,8 +36,9 @@ function collectFiles(root = ROOT) {
     const files = [];
     function walk(directory, prefix = '') {
         for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-            if (SKIP_DIRS.has(entry.name)) continue;
             const relative = prefix ? prefix + '/' + entry.name : entry.name;
+            // Local files remain on disk after untracking; never traverse or package them.
+            if (excluded(relative)) continue;
             if (!prefix && !TOP.has(entry.name) && !ROOT_FILES.has(entry.name)) continue;
             if (entry.isSymbolicLink()) throw new Error('Symlink is not permitted in release sources.');
             if (entry.isDirectory()) walk(path.join(directory, entry.name), relative);

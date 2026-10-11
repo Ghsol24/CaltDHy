@@ -2,7 +2,7 @@ import React from 'react';
 
 /**
  * Common pure outline SVG icons (fill="none", stroke="currentColor")
- * Strictly following .agents/AGENTS.md iconography guidelines.
+ * Inherit theme colors and keep icon shapes unfilled.
  */
 
 export function BulbOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
