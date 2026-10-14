@@ -430,6 +430,13 @@ async function check(name, work) {
     await expect(popover).toBeVisible();
     await expect(popover).not.toHaveAttribute('aria-modal', 'true');
     await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
+    // Chromium can publish the media-query/ARIA change before the next layout
+    // frame has replaced the sheet geometry with the anchored desktop menu.
+    await expect.poll(() => popover.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.width <= 344 && rect.left >= 0 && rect.right <= innerWidth
+        && rect.top >= 0 && rect.bottom <= innerHeight;
+    }), { message: 'Resized desktop menu finishes layout inside the viewport' }).toBe(true);
     const desktopLayout = await verifyFit(popover, 'Sheet resized back to desktop');
     assert.ok(desktopLayout.top >= 0 && desktopLayout.bottom <= desktopLayout.viewportHeight + 1);
     await closePopover();
