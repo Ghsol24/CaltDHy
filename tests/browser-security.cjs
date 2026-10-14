@@ -71,7 +71,7 @@ function blendCssColor(color, background) {
   }
   async function logout(page) {
     await page.locator('.tb-settings-btn').click();
-    const mobileSettingsMenu = page.getByRole('button', { name: 'Quay lại danh sách cài đặt' });
+    const mobileSettingsMenu = page.getByRole('button', { name: 'Quay lại cài đặt' });
     if (await mobileSettingsMenu.isVisible()) await mobileSettingsMenu.click();
     await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
     await page.locator('.confirm-dialog-card button').filter({ hasText: /Đăng xuất/i }).click();
@@ -729,8 +729,8 @@ function blendCssColor(color, background) {
       const second = await readProgress();
       assert.ok(first >= 70 && second > first, `Tiến độ chờ phải tăng: ${first}% → ${second}%`);
       await heldLogin.fulfill({ status: 401, contentType: 'application/json',
-        body: '{"message":"Sai thông tin đăng nhập"}' });
-      await expect(page.locator('#formErr')).toContainText('Sai thông tin đăng nhập');
+        body: '{"message":"Email hoặc mật khẩu không đúng."}' });
+      await expect(page.locator('#formErr')).toContainText('Email hoặc mật khẩu không đúng.');
       await expect(overlay).toHaveCount(0);
       assert.ok(page.url().endsWith('/login'));
     } finally {
@@ -757,6 +757,52 @@ function blendCssColor(color, background) {
     } finally {
       if (heldLogin) await heldLogin.abort().catch(() => {});
       await timeoutPage.close();
+    }
+  });
+  await check('an unavailable login animation cannot block errors or a successful login', async () => {
+    const fallbackContext = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block' });
+    const fallbackPage = await fallbackContext.newPage();
+    const fallbackErrors = [];
+    let blockedAnimations = 0;
+    fallbackPage.on('pageerror', error => fallbackErrors.push(error.message));
+    await fallbackPage.route('**/assets/SignatureLoginOverlay-*.js', route => {
+      blockedAnimations += 1;
+      return route.abort('failed');
+    });
+    try {
+      await fallbackPage.goto('/login');
+      await expect.poll(() => blockedAnimations).toBeGreaterThan(0);
+      await fallbackPage.locator('#emailIn').fill(emailA);
+      await fallbackPage.locator('#pwIn').fill('Incorrect-password-1234');
+      await fallbackPage.locator('#loginForm button[type=submit]').click();
+      await expect(fallbackPage.locator('#formErr')).toBeVisible();
+      await expect(fallbackPage.locator('#loginForm button[type=submit]')).toBeEnabled();
+      assert.ok(fallbackPage.url().endsWith('/login'));
+      await fallbackPage.locator('#pwIn').fill(password);
+      await fallbackPage.locator('#loginForm button[type=submit]').click();
+      await fallbackPage.waitForURL('**/spending/home');
+      await expect(fallbackPage.locator('.user-chip-name')).toBeVisible();
+      await expect(fallbackPage.locator('.signature-login')).toHaveCount(0);
+      assert.deepEqual(fallbackErrors, []);
+    } finally { await fallbackContext.close(); }
+  });
+  await check('a stalled login animation cannot delay access indefinitely', async () => {
+    const delayedContext = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block' });
+    const delayedPage = await delayedContext.newPage();
+    let heldAnimation;
+    await delayedPage.route('**/assets/SignatureLoginOverlay-*.js', route => { heldAnimation = route; });
+    try {
+      await delayedPage.goto('/login', { waitUntil: 'domcontentloaded' });
+      await expect.poll(() => Boolean(heldAnimation)).toBe(true);
+      await delayedPage.locator('#emailIn').fill(emailA);
+      await delayedPage.locator('#pwIn').fill(password);
+      await delayedPage.locator('#loginForm button[type=submit]').click();
+      await delayedPage.waitForURL('**/spending/home', { waitUntil: 'domcontentloaded' });
+      await expect(delayedPage.locator('.user-chip-name')).toBeVisible();
+      await expect(delayedPage.locator('.signature-login')).toHaveCount(0);
+    } finally {
+      if (heldAnimation) await heldAnimation.abort().catch(() => {});
+      await delayedContext.close();
     }
   });
   await check('network failure cannot create a local authenticated session', async () => {
@@ -1067,7 +1113,8 @@ function blendCssColor(color, background) {
     await expect(recurringToggle).toBeChecked();
     await expect(recurringToggle).toBeEnabled();
     const recurringErrorToast = mobilePage.locator('.toast-item--error');
-    await expect(recurringErrorToast).toContainText(/Không thể lưu/);
+    await expect(recurringErrorToast).toContainText('Ứng dụng đang gặp sự cố. Vui lòng thử lại sau.');
+    await expect(recurringErrorToast).not.toContainText('Temporary preference failure');
     const [toastBox, mobileNavBox] = await Promise.all([recurringErrorToast.boundingBox(), primaryNav.boundingBox()]);
     assert.ok(toastBox && mobileNavBox && toastBox.y + toastBox.height <= mobileNavBox.y,
       'Toast mobile phải nằm phía trên thanh điều hướng');
@@ -1352,20 +1399,22 @@ function blendCssColor(color, background) {
     await mobileSettingsButton.click();
     const mobileSettingsDialog = mobilePage.locator('.settings-center-dialog');
     await expect(mobileSettingsDialog).toBeVisible();
-    await expect(mobileSettingsDialog).toHaveAccessibleName('Ngôn ngữ & khu vực');
+    await expect(mobileSettingsDialog).toHaveAccessibleName('Cài đặt');
+    await expect(mobileSettingsDialog.getByRole('group', { name: 'Chọn giao diện' }).getByRole('button')).toHaveCount(4);
     const mobileSettingsBox = await mobileSettingsDialog.boundingBox();
     assert.ok(mobileSettingsBox && mobileSettingsBox.width >= 389 && mobileSettingsBox.height >= 843,
       'Settings Center phải chiếm toàn màn hình trên mobile');
+    await mobileSettingsDialog.getByRole('button', { name: 'Ngôn ngữ & khu vực', exact: true }).click();
     const mobileCurrencyGroup = mobileSettingsDialog.getByRole('group', { name: 'Đơn vị tiền hiển thị' });
     await expect(mobileCurrencyGroup.getByRole('button', { name: 'VND' })).toHaveAttribute('aria-pressed', 'true');
     await expect(mobileCurrencyGroup.getByRole('button', { name: 'USD' })).toBeDisabled();
     await expect(mobileSettingsDialog.getByRole('button', { name: 'CNY' })).toHaveCount(0);
-    await mobileSettingsDialog.getByRole('button', { name: 'Quay lại danh sách cài đặt' }).click();
+    await mobileSettingsDialog.getByRole('button', { name: 'Quay lại cài đặt' }).click();
     await expect(mobileSettingsDialog).toHaveAccessibleName('Cài đặt');
     await expect(mobileSettingsDialog.locator('.settings-center-content')).toBeHidden();
-    await mobileSettingsDialog.getByRole('button', { name: 'Hồ sơ', exact: true }).click();
+    await mobileSettingsDialog.locator('.settings-user-summary').click();
     await expect(mobilePage.getByRole('dialog', { name: 'Hồ sơ' })).toBeVisible();
-    await expect(mobileSettingsDialog.getByRole('heading', { name: 'Hồ sơ cá nhân' })).toBeVisible();
+    await expect(mobileSettingsDialog.getByRole('heading', { name: 'Hồ sơ', exact: true })).toBeVisible();
     await mobileSettingsDialog.getByRole('button', { name: 'Đóng trung tâm cài đặt' }).click();
     await expect(mobileSettingsDialog).toHaveCount(0);
     await expect(mobileSettingsButton).toBeFocused();
@@ -1406,7 +1455,6 @@ function blendCssColor(color, background) {
     }
     const observerStartsBeforeVietnamese = await mobilePage.evaluate(() => window.__localizationObserverStarts);
     await mobilePage.locator('.tb-settings-btn').click();
-    await mobilePage.getByRole('button', { name: '返回设置列表' }).click();
     await mobilePage.getByRole('button', { name: '语言与地区' }).click();
     await mobilePage.getByRole('button', { name: 'Tiếng Việt', exact: true }).click();
     await expect(mobilePage.locator('html')).toHaveAttribute('lang', 'vi');

@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useWalletStore } from '../../stores/useWalletStore';
@@ -57,12 +58,12 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
         if (res.success && res.data) {
           setPreflightData(res.data);
         } else {
-          setErrorMsg(res.message || 'Không thể tải thông tin kiểm tra ví.');
+          setErrorMsg(getUserErrorMessage(res, 'error.load'));
         }
       })
       .catch((err) => {
         if (!isMounted) return;
-        setErrorMsg(err.message || 'Lỗi mạng khi kiểm tra ví.');
+        setErrorMsg(getUserErrorMessage(err, 'error.load'));
       })
       .finally(() => {
         if (isMounted) setIsLoadingPreflight(false);
@@ -113,7 +114,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || 'Không thể lưu trữ ví.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     } finally {
       setIsSubmitting(false);
     }

@@ -15,7 +15,10 @@ const mongoose = backend('mongoose');
 const { MongoMemoryReplSet } = backend('mongodb-memory-server');
 const evidenceDir = process.env.CASH_FLOW_QA_DIR || path.join(os.tmpdir(), 'caltdhy-cash-flow-evidence');
 let server, db, browser, auditPage, passed = 0;
-async function check(name, work) { await work(); passed += 1; console.log('PASS ' + name); }
+async function check(name, work) {
+  if (process.env.CASH_FLOW_SCENARIO && !name.includes(process.env.CASH_FLOW_SCENARIO)) return;
+  await work(); passed += 1; console.log('PASS ' + name);
+}
 
 (async () => {
   Object.assign(process.env, { NODE_ENV: 'test', JWT_SECRET: crypto.randomBytes(32).toString('hex'),
@@ -449,6 +452,26 @@ async function check(name, work) { await work(); passed += 1; console.log('PASS 
     await expect(drawer.locator('.day-drawer-summary strong')).toContainText(currency(480000));
     await drawer.getByRole('button', { name: 'Đóng', exact: true }).click();
     await selectMode('daily', '2026-10');
+  });
+
+  await check('mobile chart survives repeated section changes and resizing during animation', async () => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await enter();
+    const navigation = page.getByRole('navigation', { name: 'Điều hướng Phân tích' });
+    for (let cycle = 0; cycle < 3; cycle++) {
+      for (const section of ['Chi tiêu', 'Dòng tiền', 'Báo cáo', 'Dòng tiền', 'Tổng quan']) {
+        await navigation.getByRole('button', { name: section, exact: true }).click();
+        await expect(page.getByText('Đã xảy ra lỗi hiển thị', { exact: true })).toHaveCount(0);
+        await expect(page.getByText('Chưa thể hiển thị nội dung', { exact: true })).toHaveCount(0);
+        if (section === 'Dòng tiền') await expect(chart).toBeVisible();
+      }
+      await page.setViewportSize({ width: cycle % 2 ? 430 : 320, height: 844 });
+    }
+    await navigation.getByRole('button', { name: 'Dòng tiền', exact: true }).click();
+    await expect(chart).toBeVisible();
+    await expect(chart).toHaveAttribute('data-scale-min', '0');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
   });
 
   await check('four themes and six content widths fit the panel, menus and touch targets', async () => {

@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router';
 import { authService } from '../services/authService';
@@ -50,10 +51,10 @@ export const ResetPasswordPage = () => {
       if (data.success) {
         setForgotSuccess(data.message || t('auth.resetEmailSent'));
       } else {
-        setForgotError(data.message || t('auth.requestError'));
+        setForgotError(getUserErrorMessage(data, 'auth.requestError'));
       }
     } catch (err) {
-      setForgotError(err.message || t('auth.connectionError'));
+      setForgotError(getUserErrorMessage(err, 'error.generic'));
     } finally {
       setIsForgotSubmitting(false);
     }
@@ -88,11 +89,11 @@ export const ResetPasswordPage = () => {
           navigate('/login');
         }, 2000);
       } else {
-        setResetError(data.message || t('error.generic'));
+        setResetError(getUserErrorMessage(data));
         setIsResetSubmitting(false);
       }
     } catch (err) {
-      setResetError(err.message || t('auth.connectionError'));
+      setResetError(getUserErrorMessage(err, 'error.generic'));
       setIsResetSubmitting(false);
     }
   };

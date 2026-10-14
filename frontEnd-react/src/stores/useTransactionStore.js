@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import { sessionEpoch, scopedSet, scopedGet } from '../services/sessionRuntime';
 import { create } from 'zustand';
 import { spendingService } from '../services/spendingService';
@@ -153,9 +154,9 @@ return ({
         }
         return { success: true, data: txns };
       } else {
-        throw new Error(res.message || 'Lỗi lấy dữ liệu giao dịch');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, hasLoadedTransactions: true, error: error.message }); return { success: false, error: error.message }; }
+    } catch (error) { set({ isLoading: false, hasLoadedTransactions: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
   fetchBudgets: async (month = null) => {
@@ -210,9 +211,9 @@ return ({
       }
     } catch (error) {
       if (requestId === latestBudgetRequestId && targetMonth === useSpendingStore.getState().selectedMonth) {
-        set({ isLoading: false, error: error.message });
+        set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') });
       }
-      return { success: false, error: error.message };
+      return { success: false, error: getUserErrorMessage(error, 'error.generic') };
     }
     return { success: false };
   },
@@ -231,9 +232,9 @@ return ({
         set({ budgets: budgetsObj, budgetMonth: targetMonth, isLoading: false });
         return { success: true, data: budgetsObj };
       } else {
-        throw new Error(res.message || 'Lỗi cập nhật ngân sách');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   updateBudgetsAndCategories: async (budgetsObj, expenseCats, month = null) => {
@@ -256,7 +257,7 @@ return ({
         isLoading: false
       });
       return { success: true, data: budgetsObj };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   addTransaction: async (data) => {
@@ -280,9 +281,9 @@ return ({
         }
         return { success: true, data: newTxn };
       } else {
-        throw new Error(res.message || 'Thêm giao dịch thất bại.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   updateTransaction: async (id, data) => {
@@ -293,7 +294,7 @@ return ({
     try {
       const res = await spendingService.updateTransaction(id, data);
       if (!res.success || !res.data) {
-        throw new Error(res.message || 'Cập nhật giao dịch thất bại.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
       const updatedTxn = normalizeTxn(res.data);
       const updated = get().transactions.map((t) => (t.id === id ? updatedTxn : t));
@@ -307,7 +308,7 @@ return ({
         walletStore.syncWalletBalances();
       }
       return { success: true, data: updatedTxn };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   deleteTransaction: async (id) => {
@@ -328,7 +329,7 @@ return ({
         walletStore.syncWalletBalances();
       }
       return { success: true };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   undoDeleteTransaction: async (txn) => {
@@ -375,7 +376,7 @@ return ({
         walletStore.syncWalletBalances();
       }
       return { success: true };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   }
 });
 });

@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
@@ -509,7 +510,7 @@ export function WalletsTab() {
     } catch (err) {
       addToast({
         type: 'error',
-        message: err.message || 'Không thể mở lại ví.',
+        message: getUserErrorMessage(err, 'error.save'),
         duration: 4000
       });
     } finally {

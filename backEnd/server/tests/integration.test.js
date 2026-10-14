@@ -140,7 +140,7 @@ describe('Backend Integration Test Suite (Real MongoDB & Real Middleware)', () =
 
         assert.equal(res.status, 413, `Kỳ vọng HTTP 413 nhưng nhận ${res.status}: ${JSON.stringify(res.body)}`);
         assert.equal(res.body.success, false);
-        assert.match(res.body.message, /Dung lượng yêu cầu quá lớn/);
+        assert.match(res.body.message, /Dữ liệu quá lớn/);
     });
 
     it('6. Lấy số dư ví qua GET /api/wallets/balances', async () => {

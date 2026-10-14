@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useJarStore } from '../../stores/useJarStore';
@@ -207,7 +208,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       const updatedList = [...syncedExpenseCategories, newCategoryObj];
       try { await setExpenseCategories(updatedList); }
       catch (error) {
-        addToast({ type: 'error', message: error.message });
+        addToast({ type: 'error', message: getUserErrorMessage(error, 'error.save') });
         return;
       }
       setCategory(trimmed);
@@ -311,7 +312,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       onClose();
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Không thể lưu khoản định kỳ.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 

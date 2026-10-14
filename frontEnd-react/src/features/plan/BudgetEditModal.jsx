@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTransactionStore } from '../../stores/useTransactionStore';
@@ -358,7 +359,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
       });
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Không thể lưu hạn mức ngân sách.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 

@@ -18,6 +18,8 @@ export const useSpendingStore = create((set) => ({
   addTxnInitialState: null,
   isSettingsOpen: false,
   settingsSection: 'general',
+  isSettingsHome: true,
+  settingsNavigationRequest: null,
   isWrapupOpen: false,
   isHelpOpen: false,
 
@@ -99,9 +101,21 @@ export const useSpendingStore = create((set) => ({
   closeAddTxnModal: () =>
     set({ isAddTxnOpen: false, addTxnInitialState: null }),
 
-  openSettingsModal: (section = 'general') => set({ isSettingsOpen: true, settingsSection: section }),
-  setSettingsSection: (section) => set({ settingsSection: section }),
-  closeSettingsModal: () => set({ isSettingsOpen: false }),
+  openSettingsModal: (section) => set((state) => state.isSettingsOpen
+    // Let the mounted dialog protect drafts before changing its screen.
+    ? { settingsNavigationRequest: { section: section || 'home' } }
+    : {
+      isSettingsOpen: true,
+      settingsSection: section || 'general',
+      isSettingsHome: !section,
+      settingsNavigationRequest: null
+    }),
+  consumeSettingsNavigationRequest: (request) => set((state) => (
+    state.settingsNavigationRequest === request ? { settingsNavigationRequest: null } : state
+  )),
+  setSettingsSection: (section) => set({ settingsSection: section, isSettingsHome: false }),
+  showSettingsHome: () => set({ isSettingsHome: true }),
+  closeSettingsModal: () => set({ isSettingsOpen: false, settingsNavigationRequest: null }),
 
   openWrapupModal: () => set({ isWrapupOpen: true }),
   closeWrapupModal: () => set({ isWrapupOpen: false }),

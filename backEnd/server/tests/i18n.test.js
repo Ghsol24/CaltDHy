@@ -53,3 +53,45 @@ test('literal API messages have specific translations, not generic fallbacks', (
     }
     assert.deepEqual(missing, []);
 });
+
+test('technical API failures become plain-language feedback even for Vietnamese', () => {
+    for (const locale of ['vi', 'en', 'zh-CN']) {
+        for (const source of ['Cần Idempotency-Key dạng UUID cho thao tác ghi.',
+            'Idempotency-Key đã dùng với nội dung khác.',
+            'Yêu cầu bị từ chối bởi chính sách bảo mật CORS.',
+            'ID ví không hợp lệ.', 'API không tồn tại.',
+            'Giao dịch chưa được xác nhận. Hãy thử lại với cùng mã yêu cầu.',
+            'Tên/email không hợp lệ. Mật khẩu cần ít nhất 12 ký tự và tối đa 72 byte.']) {
+            const message = translateMessage(locale, source);
+            assert.notEqual(message, source);
+            assert.doesNotMatch(message, /Idempotency|UUID|CORS|\bID\b|\bAPI\b|byte|request key|密钥|字节/);
+        }
+    }
+});
+
+test('public response localization changes only copy and preserves error codes and values', () => {
+    const { localizeApiResponse } = require('../utils/i18n');
+    for (const locale of ['vi', 'en', 'zh-CN']) {
+        let result;
+        const response = { json: (body) => { result = body; } };
+        localizeApiResponse({ get: () => locale }, response, () => {});
+        response.json({ success: false, code: 'TRANSACTION_FAILED', amount: 27000,
+            message: 'Giao dịch chưa được xác nhận. Hãy thử lại với cùng mã yêu cầu.' });
+        assert.equal(result.code, 'TRANSACTION_FAILED');
+        assert.equal(result.amount, 27000);
+        assert.equal(result.success, false);
+        assert.doesNotMatch(result.message, /mã yêu cầu|request key|密钥/);
+    }
+});
+
+test('financial rejection messages have reviewed translations too', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../utils/financialRequest.js'), 'utf8');
+    for (const match of source.matchAll(/reject\('([^']+)'/g)) {
+        for (const locale of ['en', 'zh-CN']) {
+            const result = translateMessage(locale, match[1]);
+            assert.notEqual(result, 'Unable to complete the request.', match[1]);
+            assert.notEqual(result, '无法完成请求。', match[1]);
+            assert.notEqual(result, match[1]);
+        }
+    }
+});

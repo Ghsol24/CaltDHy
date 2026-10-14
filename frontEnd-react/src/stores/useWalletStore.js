@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import { sessionEpoch, scopedSet, scopedGet } from '../services/sessionRuntime';
 import { create } from 'zustand';
 import { walletService } from '../services/walletService';
@@ -67,9 +68,9 @@ return ({
         });
         return { success: true, data: calculatedActive, archived: calculatedArchived };
       } else {
-        throw new Error(res.message || 'Lỗi tải danh sách ví');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, error: error.message }); return { success: false, error: error.message }; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
   createWallet: async (data) => {
@@ -91,9 +92,9 @@ return ({
         set({ wallets: calculated, isLoading: false });
         return { success: true, data: newWallet };
       } else {
-        throw new Error(res.message || 'Tạo ví mới thất bại.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   updateWallet: async (id, data) => {
@@ -104,7 +105,7 @@ return ({
     try {
       const res = await walletService.updateWallet(id, data);
       if (!res.success || !res.data) {
-        throw new Error(res.message || 'Cập nhật ví thất bại.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
       const updatedWallet = normalizeWallet(res.data);
       const updated = get().wallets.map((w) => {
@@ -117,7 +118,7 @@ return ({
       const { wallets: calculated } = calculateWalletBalances(updated, txns);
       set({ wallets: calculated, isLoading: false });
       return { success: true, data: updatedWallet };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   deleteWallet: async (id) => {
@@ -128,7 +129,7 @@ return ({
     try {
       const res = await walletService.deleteWallet(id);
       if (!res.success) {
-        throw new Error(res.message || 'Xóa ví thất bại.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
       // Re-fetch transactions because backend moved orphaned transactions to fallback wallet
       if (useTransactionStore.getState()?.fetchTransactions) {
@@ -139,7 +140,7 @@ return ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   archiveWallet: async (id, options = {}) => {
@@ -150,7 +151,7 @@ return ({
     try {
       const res = await walletService.archiveWallet(id, options);
       if (!res.success) {
-        throw new Error(res.message || 'Không thể đóng và lưu trữ ví.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
 
       // Nếu có chuyển tiền tất toán, fetch lại transactions
@@ -162,7 +163,7 @@ return ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true, data: res.data };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   unarchiveWallet: async (id) => {
@@ -173,12 +174,12 @@ return ({
     try {
       const res = await walletService.unarchiveWallet(id);
       if (!res.success) {
-        throw new Error(res.message || 'Không thể mở lại ví.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true, data: res.data };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   transferMoney: async ({ fromWalletId, toWalletId, amount, date, desc, fee }) => {
@@ -198,7 +199,7 @@ return ({
         fee: Number(fee) || 0
       });
       if (!res.success) {
-        throw new Error(res.message || 'Chuyển tiền thất bại.');
+        throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
 
       // Fetch lại cả transactions và wallets sau khi chuyển tiền thành công
@@ -206,7 +207,7 @@ return ({
       await get().fetchWallets();
       set({ isLoading: false });
       return { success: true, data: res.data };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   }
 });
 });

@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -79,7 +80,7 @@ export const SignupPage = () => {
         navigate('/spending/home');
       }, 300);
     } catch (err) {
-      setError(err.message || t('auth.connectionError'));
+      setError(getUserErrorMessage(err, 'error.generic'));
       setIsSubmitting(false);
     }
   };

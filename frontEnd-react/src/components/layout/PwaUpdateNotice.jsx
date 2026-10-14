@@ -6,6 +6,7 @@ import { useSignatureLoginStore } from '../../stores/useSignatureLoginStore';
 export function PwaUpdateNotice() {
   const { t } = useTranslation();
   const [updating, setUpdating] = useState(false);
+  const [updateFailed, setUpdateFailed] = useState(false);
   const [registration, setRegistration] = useState(null);
   const loginBusy = useSignatureLoginStore((store) => store.state !== 'idle');
   const {
@@ -40,15 +41,17 @@ export function PwaUpdateNotice() {
 
   const applyUpdate = async () => {
     setUpdating(true);
+    setUpdateFailed(false);
     try {
       await updateServiceWorker(true);
     } catch {
+      setUpdateFailed(true);
       setUpdating(false);
     }
   };
 
   return <div className="pwa-update-notice" role="status" aria-live="polite">
-    <span>{t('pwa.updateAvailable')}</span>
+    <span role={updateFailed ? 'alert' : undefined}>{t(updateFailed ? 'pwa.updateFailed' : 'pwa.updateAvailable')}</span>
     <div className="pwa-update-actions">
       <button type="button" className="pwa-update-now" disabled={updating || loginBusy} onClick={() => { void applyUpdate(); }}>
         {t('pwa.updateNow')}

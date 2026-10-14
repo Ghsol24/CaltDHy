@@ -1,4 +1,4 @@
-import { normalizeLocale, translate } from '../i18n/translations';
+import { normalizeLocale, translate } from '../i18n/translations.js';
 
 let epoch = 0;
 const controllers = new Set();

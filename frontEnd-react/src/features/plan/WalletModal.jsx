@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useWalletStore } from '../../stores/useWalletStore';
@@ -158,7 +159,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
       }
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Lỗi khi lưu thông tin ví.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 

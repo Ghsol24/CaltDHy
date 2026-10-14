@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -75,7 +76,7 @@ export const LoginPage = () => {
       window.clearTimeout(attempt.timeout);
       attemptRef.current = null;
       failSignature(id);
-      setError(attempt.timedOut ? t('auth.loginTimeout') : err.message || t('auth.connectionError'));
+      setError(attempt.timedOut ? t('auth.loginTimeout') : getUserErrorMessage(err, 'error.generic'));
       setIsSubmitting(false);
     }
   };

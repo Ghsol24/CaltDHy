@@ -4,6 +4,8 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { THEME_OPTIONS } from '../../utils/themes';
+import { SettingsThemePicker } from './SettingsThemePicker';
+import { getUserErrorMessage } from '../../utils/userErrors';
 import { useLangStore } from '../../stores/useLangStore';
 import { useCurrencyStore } from '../../stores/useCurrencyStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
@@ -60,6 +62,12 @@ const SECTION_TITLE_KEYS = Object.fromEntries(
 const SECTION_GROUP_TITLE_KEYS = Object.fromEntries(
   SETTINGS_GROUPS.flatMap((group) => group.items.map((item) => [item.id, group.headingKey]))
 );
+const MOBILE_SETTINGS_GROUPS = [{
+  labelKey: 'settings.title',
+  items: ['general', 'security', 'data', 'guide'].map((id) => (
+    SETTINGS_GROUPS.flatMap((group) => group.items).find((item) => item.id === id)
+  ))
+}];
 
 function SettingsNavIcon({ type }) {
   const paths = {
@@ -147,6 +155,10 @@ export function AccountModal() {
   const { user, updateProfile } = useAuthStore();
   const logout = useAuthStore((state) => state.logout);
   const settingsSection = useSpendingStore((state) => state.settingsSection);
+  const isSettingsHome = useSpendingStore((state) => state.isSettingsHome);
+  const showSettingsHome = useSpendingStore((state) => state.showSettingsHome);
+  const settingsNavigationRequest = useSpendingStore((state) => state.settingsNavigationRequest);
+  const consumeSettingsNavigationRequest = useSpendingStore((state) => state.consumeSettingsNavigationRequest);
   const setSettingsSection = useSpendingStore((state) => state.setSettingsSection);
   const closeSettingsModal = useSpendingStore((state) => state.closeSettingsModal);
   const openHelpModal = useSpendingStore((state) => state.openHelpModal);
@@ -164,9 +176,14 @@ export function AccountModal() {
   const navigate = useNavigate();
   const dialogRef = useRef(null);
   const resetDialogRef = useRef(null);
+  const headingRef = useRef(null);
+  const contentRef = useRef(null);
+  const lastSectionTriggerRef = useRef(null);
+  const profileTriggerRef = useRef(null);
 
   const activeTab = settingsSection || 'general';
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const showMobileMenu = isMobile && isSettingsHome;
+  const [themeMessage, setThemeMessage] = useState('');
 
   // Tab 1: Profile states
   const [name, setName] = useState(user?.name || '');
@@ -189,6 +206,7 @@ export function AccountModal() {
 
   // Tab 3: Data & Danger Zone states
   const [copySuccess, setCopySuccess] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState('');
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
@@ -198,14 +216,31 @@ export function AccountModal() {
   useFocusTrap(dialogRef, !isConfirmOpen && !isResetDialogOpen);
   useFocusTrap(resetDialogRef, isResetDialogOpen);
 
-  // Sync state khi user thay đổi từ store
+  // Each mobile screen change keeps focus on a visible control or its heading.
   useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setAvatar(user.avatar || '');
+    if (!isMobile) return;
+    if (showMobileMenu) {
+      const trigger = lastSectionTriggerRef.current;
+      if (trigger?.isConnected && trigger.getClientRects().length) trigger.focus();
+      else profileTriggerRef.current?.focus();
+    } else {
+      headingRef.current?.focus();
+      if (contentRef.current) contentRef.current.scrollTop = 0;
     }
-  }, [user]);
+  }, [isMobile, showMobileMenu, activeTab]);
+
+  const handleSelectTheme = (nextTheme) => {
+    setTheme(nextTheme);
+    const option = THEME_OPTIONS.find(({ id }) => id === nextTheme);
+    setThemeMessage(t('settings.themeApplied', { theme: t(option.labelKey) }));
+  };
+
+  // Only profile fields replace this draft; unrelated preference updates do not.
+  useEffect(() => {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+    setAvatar(user?.avatar || '');
+  }, [user?.id, user?.name, user?.email, user?.avatar]);
 
   // Dirty state tracking cho tab Profile
   const isProfileDirty = useMemo(() => {
@@ -257,15 +292,31 @@ export function AccountModal() {
     closeSettingsModal();
   };
 
-  const handleSelectSection = async (section) => {
+  const handleSelectSection = async (section, trigger) => {
     if (section === activeTab) {
-      setShowMobileMenu(false);
+      lastSectionTriggerRef.current = trigger;
+      setSettingsSection(section);
       return;
     }
     if (!(await confirmDiscardChanges())) return;
+    lastSectionTriggerRef.current = trigger;
     setSettingsSection(section);
-    setShowMobileMenu(false);
   };
+
+  const handleExternalSettingsNavigation = useEffectEvent(async (request) => {
+    consumeSettingsNavigationRequest(request);
+    // An external trigger must not replace a nested confirmation or interrupt a save.
+    if (useConfirmStore.getState().isOpen || isResetDialogOpen || isProfileSaving || isPwdSaving || isResetting) return;
+    if (request.section === 'home' && isMobile) {
+      showSettingsHome();
+      return;
+    }
+    await handleSelectSection(request.section === 'home' ? 'general' : request.section);
+  });
+
+  useEffect(() => {
+    if (settingsNavigationRequest) void handleExternalSettingsNavigation(settingsNavigationRequest);
+  }, [settingsNavigationRequest]);
 
   const handleLogout = async () => {
     if (!(await confirmDiscardChanges())) return;
@@ -368,7 +419,7 @@ export function AccountModal() {
       setProfileMsg({ type: 'success', text: 'Hồ sơ đã được lưu thành công!' });
       setTimeout(() => setProfileMsg({ type: '', text: '' }), 4000);
     } catch (err) {
-      setProfileMsg({ type: 'error', text: err.message || 'Không thể lưu hồ sơ.' });
+      setProfileMsg({ type: 'error', text: getUserErrorMessage(err, 'error.save') });
     } finally {
       setIsProfileSaving(false);
     }
@@ -412,19 +463,25 @@ export function AccountModal() {
       setConfirmPassword('');
       setTimeout(() => setPwdMsg({ type: '', text: '' }), 6000);
     } catch (err) {
-      setPwdMsg({ type: 'error', text: err.message || 'Không thể đổi mật khẩu.' });
+      setPwdMsg({ type: 'error', text: getUserErrorMessage(err, 'error.save') });
     } finally {
       setIsPwdSaving(false);
     }
   };
 
   // Sao chép UID
-  const handleCopyUid = () => {
+  const handleCopyUid = async () => {
     const uid = user?.id || '';
     if (!uid) return;
-    navigator.clipboard.writeText(uid);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2500);
+    setCopyError('');
+    setCopySuccess(false);
+    try {
+      await navigator.clipboard.writeText(uid);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2500);
+    } catch (error) {
+      setCopyError(getUserErrorMessage(error, 'settings.copyFailed'));
+    }
   };
 
   const handleExportData = async () => {
@@ -446,7 +503,7 @@ export function AccountModal() {
       downloadAnchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
-      setExportError(error.message || t('settings.exportFailed'));
+      setExportError(getUserErrorMessage(error, 'settings.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -465,7 +522,7 @@ export function AccountModal() {
       setResetConfirmInput('');
       closeSettingsModal();
     } catch (err) {
-      setResetError(err.message || 'Không thể đặt lại dữ liệu. Vui lòng thử lại.');
+      setResetError(getUserErrorMessage(err));
     } finally {
       setIsResetting(false);
     }
@@ -495,8 +552,8 @@ export function AccountModal() {
                 <button
                   type="button"
                   className="settings-mobile-back"
-                  onClick={() => setShowMobileMenu(true)}
-                  aria-label="Quay lại danh sách cài đặt"
+                  onClick={showSettingsHome}
+                  aria-label={t('settings.backToSettings')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="m15 18-6-6 6-6" />
@@ -510,7 +567,7 @@ export function AccountModal() {
                 </svg>
               </div>
               <div className="account-header-titles">
-                <h2 id="settings-center-title" className="account-header-title">
+                <h2 ref={headingRef} tabIndex={-1} id="settings-center-title" className="account-header-title">
                   {isMobile && !showMobileMenu ? t(SECTION_TITLE_KEYS[activeTab]) : t('settings.title')}
                 </h2>
                 <p className="account-header-desc">
@@ -527,34 +584,53 @@ export function AccountModal() {
               <CloseOutlineIcon size={18} />
             </button>
           </header>
+          <span className="u-sr-only" role="status">{themeMessage}</span>
 
           <div className={`settings-center-layout ${showMobileMenu ? 'show-mobile-menu' : ''}`}>
             <aside className="settings-center-sidebar" aria-label="Điều hướng cài đặt">
-              <div className="settings-user-summary">
-                <div className="settings-user-avatar" aria-hidden="true">
+              <button
+                ref={profileTriggerRef}
+                type="button"
+                className="settings-user-summary"
+                aria-label={t('settings.viewEditProfile')}
+                onClick={(event) => void handleSelectSection('profile', event.currentTarget)}
+              >
+                <span className="settings-user-avatar" aria-hidden="true">
                   {user?.avatar ? (
                     user.avatar.startsWith('data:image') || user.avatar.startsWith('http')
                       ? <img src={user.avatar} alt="" />
                       : <span>{user.avatar}</span>
                   ) : <span>{userInitials}</span>}
-                </div>
-                <div>
+                </span>
+                <span className="settings-user-details">
                   <strong>{user?.name || 'Người dùng'}</strong>
-                  <span>{user?.email || ''}</span>
-                </div>
-              </div>
+                  <span className="settings-user-email">{user?.email || ''}</span>
+                  <span className="settings-user-profile-hint">{t('settings.viewEditProfile')}</span>
+                </span>
+                <svg className="settings-user-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+              </button>
+
+              {isMobile && (
+                <section className="settings-home-appearance" aria-labelledby="settings-home-appearance-title">
+                  <div className="settings-home-section-heading">
+                    <h3 id="settings-home-appearance-title">{t('settings.appearance')}</h3>
+                    <span>{t(THEME_OPTIONS.find(({ id }) => id === theme)?.labelKey)}</span>
+                  </div>
+                  <SettingsThemePicker theme={theme} onChange={handleSelectTheme} compact />
+                </section>
+              )}
 
               <nav className="settings-center-nav">
-                {SETTINGS_GROUPS.map((group) => (
+                {(isMobile ? MOBILE_SETTINGS_GROUPS : SETTINGS_GROUPS).map((group) => (
                   <div className="settings-nav-group" key={group.labelKey}>
                     <p>{t(group.labelKey)}</p>
                     {group.items.map((item) => (
                       <button
                         key={item.id}
                         type="button"
-                        className={`settings-nav-item ${activeTab === item.id ? 'active' : ''}`}
-                        aria-current={activeTab === item.id ? 'page' : undefined}
-                        onClick={() => void handleSelectSection(item.id)}
+                        className={`settings-nav-item ${!showMobileMenu && activeTab === item.id ? 'active' : ''}`}
+                        aria-current={!showMobileMenu && activeTab === item.id ? 'page' : undefined}
+                        onClick={(event) => void handleSelectSection(item.id, event.currentTarget)}
                       >
                         <SettingsNavIcon type={item.icon} />
                         <span>{t(item.labelKey)}</span>
@@ -573,7 +649,7 @@ export function AccountModal() {
               </div>
             </aside>
 
-            <main className="account-modal-body settings-center-content" aria-live="polite">
+            <main ref={contentRef} className="account-modal-body settings-center-content">
             {/* ── TAB 1: HỒ SƠ ── */}
             {activeTab === 'profile' && (
               <form onSubmit={handleSaveProfile} className="account-tab-pane">
@@ -704,7 +780,7 @@ export function AccountModal() {
                 )}
                 {/* Inline Message */}
                 {profileMsg.text && (
-                  <div className={`account-feedback-msg ${profileMsg.type}`}>
+                  <div className={`account-feedback-msg ${profileMsg.type}`} role={profileMsg.type === 'error' ? 'alert' : 'status'}>
                     {profileMsg.text}
                   </div>
                 )}
@@ -832,7 +908,7 @@ export function AccountModal() {
                   </div>
 
                   {pwdMsg.text && (
-                    <div className={`account-feedback-msg ${pwdMsg.type}`}>
+                    <div className={`account-feedback-msg ${pwdMsg.type}`} role={pwdMsg.type === 'error' ? 'alert' : 'status'}>
                       {pwdMsg.text}
                     </div>
                   )}
@@ -889,6 +965,8 @@ export function AccountModal() {
                       </button>
                     </div>
                   </div>
+
+                  {copyError && <div className="account-feedback-msg error" role="alert">{copyError}</div>}
 
                   <div className="account-card-panel-row">
                     <span className="account-panel-label">Ngày tham gia</span>
@@ -1012,28 +1090,7 @@ export function AccountModal() {
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">{t('settings.appearance')}</h3>
                 </div>
-                <div className="theme-grid settings-theme-grid" role="group" aria-label="Chọn giao diện">
-                  {THEME_OPTIONS.map((option) => {
-                    const isActive = theme === option.id;
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        className="theme-card"
-                        aria-pressed={isActive}
-                        aria-label={`${t('settings.appearance')} ${t(option.labelKey)}`}
-                        onClick={() => setTheme(option.id)}
-                      >
-                        <span className="theme-card__swatch" style={{ background: option.swatch }} />
-                        <span className="theme-card__name">{t(option.labelKey)}</span>
-                        <svg className="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-                          <polyline points="4.5,8 7,10.5 11.5,5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    );
-                  })}
-                </div>
+                <SettingsThemePicker theme={theme} onChange={handleSelectTheme} />
               </div>
             )}
 
@@ -1109,7 +1166,7 @@ export function AccountModal() {
             </div>
 
             {resetError && (
-              <div className="account-feedback-msg error">
+              <div className="account-feedback-msg error" role="alert">
                 {resetError}
               </div>
             )}

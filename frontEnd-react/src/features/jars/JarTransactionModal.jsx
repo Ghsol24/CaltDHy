@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors.js';
 import React, { useState, useEffect, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
@@ -113,7 +114,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
       });
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Lỗi khi thực hiện giao dịch hũ.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 

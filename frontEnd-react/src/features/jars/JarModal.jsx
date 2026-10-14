@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors.js';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useToastStore } from '../../stores/useToastStore';
@@ -169,7 +170,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       }
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Lỗi khi lưu thông tin hũ.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 

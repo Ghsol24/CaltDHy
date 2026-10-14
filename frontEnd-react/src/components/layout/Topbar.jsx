@@ -68,7 +68,7 @@ export function Topbar() {
         <button
           type="button"
           className="tb-settings-btn"
-          onClick={() => openSettingsModal('general')}
+          onClick={() => openSettingsModal()}
           title={t('topbar.openSettings')}
           aria-label={t('topbar.openSettings')}
         >

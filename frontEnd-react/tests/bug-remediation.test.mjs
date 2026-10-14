@@ -87,7 +87,8 @@ test('failed confirmation remains open with an error and can be retried or cance
   assert.equal(await store.handleConfirm(), false);
   assert.equal(useConfirmStore.getState().isOpen, true);
   assert.equal(useConfirmStore.getState().isConfirming, false);
-  assert.equal(useConfirmStore.getState().error, 'Temporary failure');
+  assert.equal(useConfirmStore.getState().error, translate('vi', 'error.generic'));
+  assert.doesNotMatch(useConfirmStore.getState().error, /Temporary failure/);
   assert.equal(await store.handleConfirm(), true);
   assert.equal(await decision, true);
   assert.equal(attempts, 2);

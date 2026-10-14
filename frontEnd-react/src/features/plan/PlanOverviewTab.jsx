@@ -11,6 +11,8 @@ import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, 
 import { getCategoryIcon } from '../../utils/categories';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { CategoryOutlineIcon, SparkleOutlineIcon, ChartOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
+import { useTranslation } from '../../i18n/useTranslation';
+import { getPlanCopy } from './planCopy';
 import { isInstallmentEnded } from '../../utils/installmentTerm';
 
 const WALLET_TYPE_LABELS = {
@@ -21,6 +23,9 @@ const WALLET_TYPE_LABELS = {
 };
 
 export function PlanOverviewTab() {
+  const { label, lang } = useTranslation();
+  const copy = getPlanCopy(lang);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const wallets = useWalletStore((state) => state.wallets);
@@ -192,7 +197,7 @@ export function PlanOverviewTab() {
             type: 'budget',
             priority: 1,
             variant: 'danger',
-            title: `Ngân sách ${cat.category}`,
+            title: `Ngân sách ${label(cat.category)}`,
             subText: `đã vượt ${formatCurrency(Math.abs(cat.remaining || 0))} (${formatPercent(cat.percent)})`,
             targetTab: 'budgets'
           });
@@ -202,7 +207,7 @@ export function PlanOverviewTab() {
             type: 'budget',
             priority: 2,
             variant: 'high-warning',
-            title: `Ngân sách ${cat.category}`,
+            title: `Ngân sách ${label(cat.category)}`,
             subText: `đã dùng ${formatPercent(cat.percent)} hạn mức`,
             targetTab: 'budgets'
           });
@@ -212,7 +217,7 @@ export function PlanOverviewTab() {
             type: 'budget',
             priority: 4,
             variant: 'warning',
-            title: `Ngân sách ${cat.category}`,
+            title: `Ngân sách ${label(cat.category)}`,
             subText: `đã dùng ${formatPercent(cat.percent)} hạn mức`,
             targetTab: 'budgets'
           });
@@ -220,10 +225,13 @@ export function PlanOverviewTab() {
       }
     });
 
-    // Sort by priority ascending, take max 3
+    // Keep the full ordered list so the count and expansion reflect every alert.
     list.sort((a, b) => a.priority - b.priority);
-    return list.slice(0, 3);
-  }, [activeInstallments, categoryBudgets, currentMonthStr]);
+    return list;
+  }, [activeInstallments, categoryBudgets, currentMonthStr, label]);
+
+  const visibleAlerts = showAllAlerts ? activeAlerts : activeAlerts.slice(0, 2);
+  const budgetUsagePercent = totalBudgetLimit > 0 ? (totalBudgetSpent / totalBudgetLimit) * 100 : 0;
 
   // Top items for summary columns
   const topWallets = useMemo(() => {
@@ -270,7 +278,10 @@ export function PlanOverviewTab() {
       {/* ── 1. Page Header: Title, Subtitle, and + Tạo kế hoạch Dropdown ── */}
       <div className="plan-overview-header">
         <div className="plan-header-titles">
-          <h2 className="plan-overview-title">Tổng quan kế hoạch</h2>
+          <h2 className="plan-overview-title">
+            <span className="plan-wide-copy">{copy.overview}</span>
+            <span className="plan-mobile-copy">{copy.mobileOverview}</span>
+          </h2>
         </div>
 
         {/* Action Button with Dropdown */}
@@ -297,7 +308,8 @@ export function PlanOverviewTab() {
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            <span>Lập kế hoạch</span>
+            <span className="plan-wide-copy">{copy.create}</span>
+            <span className="plan-mobile-copy">{copy.mobileCreate}</span>
             <svg
               width="12"
               height="12"
@@ -396,10 +408,10 @@ export function PlanOverviewTab() {
             </svg>
           </div>
           <div className="top-alerts-header-info">
-            <h3 className="top-alerts-title">Cảnh báo / Sắp đến hạn</h3>
+            <h3 className="top-alerts-title">{copy.attention}</h3>
             <span className="top-alerts-subtext">
               {activeAlerts.length > 0
-                ? `Bạn có ${activeAlerts.length} việc cần lưu ý`
+                ? copy.alertCount(activeAlerts.length)
                 : hasPlanData
                   ? 'Hiện chưa có cảnh báo cần xử lý'
                   : 'Chưa đủ dữ liệu để đánh giá kế hoạch'}
@@ -408,20 +420,13 @@ export function PlanOverviewTab() {
         </div>
 
         {activeAlerts.length > 0 ? (
-          <div className="top-alerts-items-scroll">
-            {activeAlerts.map((alert) => (
-              <div
+          <div className="top-alerts-items-scroll" id="plan-alert-list">
+            {visibleAlerts.map((alert) => (
+              <button
+                type="button"
                 key={alert.id}
-                className="top-alert-pill-item"
-                role="button"
-                tabIndex={0}
+                className={`top-alert-pill-item plan-alert--${alert.variant}`}
                 onClick={() => setPlanSubTab(alert.targetTab)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setPlanSubTab(alert.targetTab);
-                  }
-                }}
               >
                 {alert.type === 'recurring' ? (
                   <div className="top-alert-calendar-tile" aria-hidden="true">
@@ -439,12 +444,10 @@ export function PlanOverviewTab() {
                   <span className="top-alert-amount-desc">{alert.subText}</span>
                 </div>
 
-                {alert.type === 'budget' && (
-                  <svg className="top-alert-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                )}
-              </div>
+                <svg className="top-alert-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
             ))}
           </div>
         ) : (
@@ -458,14 +461,18 @@ export function PlanOverviewTab() {
           </div>
         )}
 
-        {activeAlerts.length > 0 && (
+        {activeAlerts.length > 2 && (
           <button
             type="button"
             className="top-alerts-view-all-link"
-            onClick={() => setPlanSubTab(activeAlerts[0]?.targetTab || 'budgets')}
+            aria-expanded={showAllAlerts}
+            aria-controls="plan-alert-list"
+            onClick={() => setShowAllAlerts((value) => !value)}
           >
-            <span>Xem tất cả</span>
-            <span aria-hidden="true">→</span>
+            <span>{showAllAlerts ? copy.collapse : copy.moreAlerts(activeAlerts.length - 2)}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d={showAllAlerts ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'} />
+            </svg>
           </button>
         )}
       </div>
@@ -482,8 +489,8 @@ export function PlanOverviewTab() {
               </svg>
             </div>
             <div className="metric-titles">
-              <span className="metric-label">Tổng tài sản</span>
-              <strong className="metric-value">
+              <span className="plan-metric-label">Tổng tài sản</span>
+              <strong className="plan-metric-value">
                 {formatCurrency(totalAssets)}
               </strong>
             </div>
@@ -508,12 +515,12 @@ export function PlanOverviewTab() {
               </svg>
             </div>
             <div className="metric-titles">
-              <span className="metric-label">
+              <span className="plan-metric-label">
                 {hasAnyBudgetLimit && totalBudgetRemaining !== null && totalBudgetRemaining < 0
                   ? 'Đã vượt ngân sách'
                   : 'Ngân sách còn lại'}
               </span>
-              <strong className={`metric-value ${!hasAnyBudgetLimit ? 'is-unset' : totalBudgetRemaining < 0 ? 'text-danger' : ''}`}>
+              <strong className={`plan-metric-value ${!hasAnyBudgetLimit ? 'is-unset' : totalBudgetRemaining < 0 ? 'text-danger' : ''}`}>
                 {hasAnyBudgetLimit
                   ? totalBudgetRemaining < 0
                     ? formatCurrency(Math.abs(totalBudgetRemaining))
@@ -526,8 +533,8 @@ export function PlanOverviewTab() {
           <div className="metric-card-bottom-row">
             <span className="metric-sub-left">Trong tháng {currentMonthNum}</span>
             {hasAnyBudgetLimit && totalBudgetLimit > 0 ? (
-              <span className={`metric-sub-trend ${totalBudgetRemaining < 0 ? 'trend-down' : 'trend-positive'}`}>
-                {Math.round((totalBudgetSpent / totalBudgetLimit) * 100)}% <span className="trend-note">đã dùng</span>
+              <span className={`metric-sub-trend ${budgetUsagePercent >= 100 ? 'trend-down' : budgetUsagePercent >= 80 ? 'plan-trend-warning' : 'trend-positive'}`}>
+                {Math.round(budgetUsagePercent)}% <span className="trend-note">đã dùng</span>
               </span>
             ) : (
               <span className="metric-sub-trend">
@@ -549,8 +556,8 @@ export function PlanOverviewTab() {
               </svg>
             </div>
             <div className="metric-titles">
-              <span className="metric-label">Chi phí định kỳ (ước tính)</span>
-              <strong className="metric-value">
+              <span className="plan-metric-label">Chi phí định kỳ (ước tính)</span>
+              <strong className="plan-metric-value">
                 ~{formatCurrency(Math.round(monthlyEstimatedCost))} / tháng
               </strong>
             </div>
@@ -690,7 +697,7 @@ export function PlanOverviewTab() {
                             <CategoryOutlineIcon name={cat.name || cat.category} size={16} />
                           </span>
                           <div className="budget-item-names">
-                            <strong className="budget-item-name" title={cat.category}>{cat.category}</strong>
+                            <strong className="budget-item-name" title={cat.category}>{label(cat.category)}</strong>
                             <span className="budget-item-amounts">
                               {formatCurrency(cat.spent)}
                               {cat.hasLimit && (
@@ -845,7 +852,7 @@ export function PlanOverviewTab() {
             <strong className="insight-banner-title">Gợi ý dành cho bạn</strong>
             <p className="insight-banner-desc">
               {highestSpendCategory
-                ? `Bạn có thể tiết kiệm thêm ${formatCurrency(Math.round(highestSpendCategory.spent * 0.2))} trong tháng này nếu tối ưu 20% chi tiêu ở danh mục ${highestSpendCategory.category}.`
+                ? `Bạn có thể tiết kiệm thêm ${formatCurrency(Math.round(highestSpendCategory.spent * 0.2))} trong tháng này nếu tối ưu 20% chi tiêu ở danh mục ${label(highestSpendCategory.category)}.`
                 : 'Chưa đủ dữ liệu chi tiêu để đưa ra gợi ý cá nhân hóa. Hãy ghi nhận giao dịch đầu tiên hoặc thiết lập ngân sách.'}
             </p>
           </div>

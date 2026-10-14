@@ -1,0 +1,416 @@
+/* Plan owns its typography: landing-page metric selectors must not leak here. */
+.plan-feature-view .plan-mobile-copy { display: none; }
+
+.plan-feature-view .plan-metric-label {
+  font: 500 12px/1.4 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.plan-feature-view .plan-metric-value {
+  font: 800 22px/1.25 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.plan-feature-view .plan-metric-value.is-unset {
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+
+.plan-feature-view .plan-metric-value.text-danger,
+.plan-feature-view .trend-down { color: var(--color-danger); }
+.plan-feature-view .plan-trend-warning { color: var(--color-warning); }
+.plan-feature-view .trend-positive { color: var(--color-success); }
+
+.plan-feature-view .plan-overview-container .plan-top-alerts-card {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.plan-feature-view .plan-top-alerts-card .top-alerts-bell-box {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.plan-feature-view .top-alert-pill-item {
+  font: inherit;
+  text-align: start;
+  color: var(--color-text);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.plan-feature-view .top-alert-text-body { min-width: 0; flex: 1; }
+.plan-feature-view .top-alert-name,
+.plan-feature-view .top-alert-amount-desc { overflow-wrap: anywhere; }
+.plan-feature-view .top-alert-calendar-tile,
+.plan-feature-view .top-alert-dot-tile,
+.plan-feature-view .top-alert-chevron { flex-shrink: 0; }
+
+.plan-feature-view .top-alert-pill-item .top-alert-calendar-tile {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+.plan-feature-view .top-alert-calendar-tile .cal-header {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.plan-feature-view .top-alert-dot-tile .dot-indicator { background: var(--color-warning); }
+.plan-feature-view .plan-alert--danger .dot-indicator,
+.plan-feature-view .plan-alert--today .dot-indicator { background: var(--color-danger); }
+.plan-feature-view .plan-alert--danger .top-alert-name,
+.plan-feature-view .plan-alert--today .top-alert-name { color: var(--color-danger); }
+.plan-feature-view .plan-alert--danger .cal-header,
+.plan-feature-view .plan-alert--today .cal-header {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+.plan-feature-view .top-alerts-view-all-link { min-height: 44px; }
+
+.plan-feature-view .metric-icon--purple,
+.plan-feature-view .dropdown-icon--purple {
+  color: var(--color-link);
+  background: var(--color-neutral-bg);
+}
+.plan-feature-view .metric-icon--emerald,
+.plan-feature-view .dropdown-icon--emerald {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+.plan-feature-view .metric-icon--orange,
+.plan-feature-view .dropdown-icon--orange {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.plan-feature-view button:focus-visible,
+.plan-feature-view [role="button"]:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .plan-feature-view .plan-wide-copy { display: none; }
+  .plan-feature-view .plan-mobile-copy { display: inline; }
+
+  .plan-feature-view,
+  .plan-feature-view .plan-tab-content { min-width: 0; }
+
+  .plan-feature-view :is(.plan-overview-container, .wallets-v2-container,
+    .budgets-tab-container, .budget-month-data, .recurring-view-v2-container) { gap: 14px; }
+
+  .plan-feature-view :is(.plan-overview-header, .wallets-v2-header, .budgets-page-header) {
+    gap: 10px;
+    align-items: center;
+  }
+  .plan-feature-view :is(.plan-overview-title, .wallets-v2-heading, .budgets-view-title) {
+    font-size: 19px;
+    line-height: 1.35;
+  }
+  .plan-feature-view .plan-overview-header { flex-wrap: nowrap; }
+  .plan-feature-view .plan-header-titles { min-width: 0; flex: 1; }
+  .plan-feature-view .plan-create-menu-wrapper { flex-shrink: 0; }
+  .plan-feature-view .plan-btn-create-primary { padding: 8px 10px; gap: 6px; }
+  .plan-feature-view .plan-btn-create-primary .dropdown-chevron-icon { display: none; }
+  .plan-feature-view .plan-create-dropdown { width: min(290px, calc(100vw - 32px)); }
+
+  .plan-feature-view button,
+  .plan-feature-view [role="button"] { min-height: 44px; }
+  .plan-feature-view :is(.wallet-dots-btn, .recurring-dots-action-btn, .month-nav-btn,
+    .view-toggle-btn) { min-width: 44px; }
+  .plan-feature-view :is(.plan-dropdown-item, .wallet-popover-action,
+    .actions-dropdown-item) { font-size: 13px; }
+
+  /* One full-width list, with the disclosure following the items. */
+  .plan-feature-view .plan-top-alerts-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 8px;
+    box-shadow: none;
+  }
+  .plan-feature-view .top-alerts-left-brand { gap: 8px; min-width: 0; }
+  .plan-feature-view .top-alerts-bell-box { width: 32px; height: 32px; border-radius: 8px; }
+  .plan-feature-view .top-alerts-title { font-size: 14px; }
+  .plan-feature-view .top-alerts-items-scroll { width: 100%; gap: 0; }
+  .plan-feature-view .plan-top-alerts-card .top-alert-pill-item {
+    width: 100%;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+    padding: 10px 0;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+    gap: 8px;
+  }
+  .plan-feature-view .top-alert-name { font-size: 13px; line-height: 1.4; }
+  .plan-feature-view .top-alert-amount-desc { font-size: 12px; line-height: 1.4; }
+  .plan-feature-view .top-alerts-view-all-link {
+    width: 100%;
+    justify-content: center;
+    border-top: 1px solid var(--color-border);
+    margin-top: -8px;
+    font-size: 13px;
+  }
+  .plan-feature-view .top-alerts-empty-reassurance { font-size: 12px; line-height: 1.5; }
+
+  /* Three compact rows retain amounts and their supporting context. */
+  .plan-feature-view .plan-metrics-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+  .plan-feature-view .plan-metric-card {
+    border: 0;
+    border-radius: 0;
+    padding: 12px;
+    gap: 5px;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+    min-width: 0;
+  }
+  .plan-feature-view .plan-metric-card + .plan-metric-card { border-top: 1px solid var(--color-border); }
+  .plan-feature-view .metric-icon-circle { display: none; }
+  .plan-feature-view .metric-card-top-row { display: block; }
+  .plan-feature-view .metric-titles {
+    display: grid;
+    grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+    align-items: baseline;
+    gap: 10px;
+  }
+  .plan-feature-view .plan-metric-label { font-size: 13px; }
+  .plan-feature-view .plan-metric-value { font-size: 17px; text-align: end; }
+  .plan-feature-view .plan-metric-value.is-unset { font-size: 14px; }
+  .plan-feature-view .metric-card-bottom-row {
+    border: 0;
+    padding: 0;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .plan-feature-view :is(.metric-sub-left, .metric-sub-trend) { font-size: 11px; }
+
+  /* Summary sections use separators rather than cards nested inside cards. */
+  .plan-feature-view .plan-columns-container { gap: 14px; min-width: 0; }
+  .plan-feature-view .column-card-header { padding: 8px 12px; gap: 8px; }
+  .plan-feature-view .column-card-body { padding: 0 12px; min-height: 0; }
+  .plan-feature-view .column-items-list { gap: 0; }
+  .plan-feature-view .plan-item-box {
+    padding: 10px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .plan-feature-view .plan-item-box + .plan-item-box { border-top: 1px solid var(--color-border); }
+  .plan-feature-view .column-card-footer { padding: 6px 12px; }
+  .plan-feature-view .column-empty-state { padding: 16px 0; }
+  .plan-feature-view :is(.wallet-name-text, .budget-item-name, .recurring-name-text) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .plan-feature-view .item-box-right { margin-left: auto; max-width: 100%; }
+  .plan-feature-view :is(.wallet-amount-val, .budget-item-amounts) { overflow-wrap: anywhere; }
+  .plan-feature-view .plan-insight-banner-card { padding: 12px; gap: 10px; }
+  .plan-feature-view .plan-overview-container .plan-insight-banner-card {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+  .plan-feature-view .insight-banner-left {
+    min-width: 0;
+    width: 100%;
+    flex-basis: 100%;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .plan-feature-view .insight-banner-text { min-width: 0; overflow-wrap: anywhere; }
+  .plan-feature-view .insight-3d-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--color-neutral-bg);
+    color: var(--color-link);
+    box-shadow: none;
+  }
+  .plan-feature-view .insight-3d-icon-box svg { width: 20px; height: 20px; }
+  .plan-feature-view .insight-banner-btn { max-width: 100%; white-space: normal; }
+
+  /* Wallets: readable totals and balanced controls at narrow widths. */
+  .plan-feature-view .wallets-v2-main-icon { display: none; }
+  .plan-feature-view .wallets-v2-header-actions { gap: 8px; flex-wrap: wrap; }
+  .plan-feature-view .wallets-top-stats-card { gap: 10px; padding: 12px; }
+  .plan-feature-view .stat-card-cell { grid-column: 1 / -1; }
+  .plan-feature-view .stat-cell-icon-wrap { display: none; }
+  .plan-feature-view .stat-cell-info {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+    overflow: visible;
+  }
+  .plan-feature-view .stat-cell-label { font-size: 12px; white-space: normal; }
+  .plan-feature-view .stat-cell-val {
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-align: end;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-feature-view .stat-cell-val.text-brand-default { justify-content: flex-end; }
+  .plan-feature-view .wallets-filter-inputs-group { min-width: 0; width: 100%; flex-basis: 100%; }
+  .plan-feature-view .wallets-search-box { max-width: none; flex-basis: 100%; }
+  .plan-feature-view .wallets-search-input { min-height: 44px; font-size: 16px; }
+  .plan-feature-view .wallet-custom-dropdown { flex: 1; min-width: 0; }
+  .plan-feature-view .wallet-custom-dropdown-trigger { width: 100%; }
+  .plan-feature-view .wallets-view-toggle-bar { margin-left: auto; }
+  .plan-feature-view .wallet-grid-card { padding: 12px; gap: 8px; box-shadow: none; }
+  .plan-feature-view .wallet-grid-name { max-width: none; white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .wallet-grid-card-body { gap: 7px; padding: 0; }
+  .plan-feature-view .wallet-grid-balance,
+  .plan-feature-view .wallet-h-balance-val {
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-feature-view .wallet-grid-card-footer { gap: 8px; flex-wrap: wrap; }
+  .plan-feature-view .wallet-h-card {
+    grid-template-columns: 32px minmax(0, 1fr) 44px;
+    gap: 8px;
+    padding: 12px;
+  }
+  .plan-feature-view .wallet-h-icon-container { width: 32px; height: 32px; }
+  .plan-feature-view .wallet-h-name { white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .wallet-h-balance-col { grid-column: 1 / -1; grid-row: 2; align-items: flex-start; text-align: start; }
+  .plan-feature-view .wallet-h-action-col { grid-column: 3; grid-row: 1; }
+  .plan-feature-view .wallet-h-meta-row { flex-wrap: wrap; }
+  .plan-feature-view .wallet-add-card-dashed { padding: 12px; min-height: 60px; }
+  .plan-feature-view .wallet-actions-popover { max-width: calc(100vw - 48px); }
+  .plan-feature-view .wallet-quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .plan-feature-view .wallet-quick-action-card { min-width: 0; padding: 10px; gap: 8px; }
+  .plan-feature-view .quick-action-icon-box { width: 28px; height: 28px; border-radius: 8px; }
+  .plan-feature-view .quick-action-title { white-space: normal; overflow-wrap: anywhere; font-size: 12px; }
+  .plan-feature-view .wallets-side-card { padding: 12px; gap: 12px; min-width: 0; }
+  .plan-feature-view .side-card-header { flex-wrap: wrap; gap: 8px; }
+  .plan-feature-view .donut-card-title-group { min-width: 0; }
+  .plan-feature-view .donut-card-title { white-space: normal; font-size: 15px; }
+  .plan-feature-view .donut-dist-dropdown-wrap { margin-left: auto; max-width: 100%; }
+  .plan-feature-view .donut-dist-dropdown-trigger { max-width: 100%; }
+  .plan-feature-view .wallet-donut-svg-wrapper {
+    width: min(220px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0;
+  }
+  .plan-feature-view .wallet-donut-svg { max-width: 100%; height: auto; }
+  .plan-feature-view .donut-center-val { font-size: 16px; white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .donut-center-label { font-size: 12px; }
+  .plan-feature-view .donut-table-header,
+  .plan-feature-view .donut-table-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px 8px;
+    padding: 10px;
+  }
+  .plan-feature-view .donut-th-cat,
+  .plan-feature-view .donut-row-cat { grid-column: 1 / -1; }
+  .plan-feature-view .donut-th-pct,
+  .plan-feature-view .donut-row-pct { text-align: left; }
+  .plan-feature-view .donut-row-name { white-space: normal; overflow-wrap: anywhere; font-size: 13px; }
+  .plan-feature-view .donut-row-val { white-space: normal; overflow-wrap: anywhere; font-size: 13px; }
+  .plan-feature-view .donut-th-spacer,
+  .plan-feature-view .donut-row-chevron { display: none; }
+  .plan-feature-view .side-card-title-group { position: relative; }
+  .plan-feature-view .wallet-activity-tooltip-wrapper { position: static; }
+  .plan-feature-view .wallet-activity-tooltip-popup {
+    left: 0;
+    width: min(240px, calc(100vw - 64px));
+    max-width: 100%;
+    transform: translateY(4px);
+  }
+  .plan-feature-view .wallet-activity-tooltip-wrapper:hover .wallet-activity-tooltip-popup,
+  .plan-feature-view .wallet-activity-info-trigger:focus-visible + .wallet-activity-tooltip-popup {
+    transform: translateY(0);
+  }
+
+  /* Budget: retain month, limit, spending and status without fixed card heights. */
+  .plan-feature-view .budget-month-selector {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    width: 100%;
+    height: auto;
+    padding: 4px;
+    gap: 4px;
+  }
+  .plan-feature-view .month-current-display { justify-content: center; padding: 0; white-space: normal; }
+  .plan-feature-view .month-name-text { text-align: center; }
+  .plan-feature-view .month-today-btn { grid-column: 1 / -1; }
+  .plan-feature-view .budget-overview-card { padding: 12px; }
+  .plan-feature-view .budget-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .plan-feature-view .budget-ov-value { font-size: 17px; overflow-wrap: anywhere; }
+  .plan-feature-view .budget-categories-grid { gap: 10px; }
+  .plan-feature-view .budget-category-card { min-height: 0; padding: 12px; gap: 9px; }
+  .plan-feature-view .budget-card-emoji-tile { width: 32px; height: 32px; }
+  .plan-feature-view .budget-card-name { white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .budget-card-body { flex-wrap: wrap; gap: 6px; }
+  .plan-feature-view :is(.budget-card-spent, .budget-card-limit-val, .budget-card-status-badge) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .plan-feature-view .budget-load-error { padding: 12px; flex-wrap: wrap; }
+
+  /* Recurring: one compact header plus amount, due date and assigned wallet. */
+  .plan-feature-view .recurring-top-bar-card { padding: 12px; gap: 12px; }
+  .plan-feature-view .recurring-bar-stats-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .plan-feature-view .banner-stat-block:first-child { grid-column: 1 / -1; }
+  .plan-feature-view .banner-stat-divider { display: none; }
+  .plan-feature-view .banner-stat-val { overflow-wrap: anywhere; font-family: var(--font-sans); }
+  .plan-feature-view .recurring-btn-create-primary { justify-content: center; }
+  .plan-feature-view .recurring-controls-bar { gap: 8px; }
+  .plan-feature-view .recurring-filter-pills { gap: 6px; }
+  .plan-feature-view .filter-pill-btn { padding: 6px 10px; }
+  .plan-feature-view .recurring-sort-custom-wrap { margin-left: auto; }
+  .plan-feature-view .recurring-row-card {
+    grid-template-columns: 32px minmax(0, 1fr) minmax(0, 1fr) 44px;
+    grid-template-areas: 'logo main main actions' 'amount amount amount amount' 'due due wallet wallet';
+    gap: 10px 8px;
+    padding: 12px;
+    box-shadow: none;
+  }
+  .plan-feature-view .recurring-row-logo-col { grid-area: logo; }
+  .plan-feature-view .recurring-row-logo-col > * { width: 32px; height: 32px; }
+  .plan-feature-view .recurring-row-main-col { grid-area: main; }
+  .plan-feature-view .recurring-row-actions-col { grid-area: actions; width: 44px; align-self: start; }
+  .plan-feature-view .recurring-row-amount-col { grid-area: amount; align-items: flex-start; text-align: start; }
+  .plan-feature-view .recurring-row-wallet-col { grid-area: wallet; min-width: 0; align-self: start; }
+  .plan-feature-view .recurring-row-due-col { grid-area: due; min-width: 0; align-self: start; }
+  .plan-feature-view .recurring-row-price { white-space: normal; overflow-wrap: anywhere; font: 700 17px/1.4 var(--font-sans); }
+  .plan-feature-view .recurring-main-name { white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .recurring-title-row { flex-wrap: wrap; gap: 4px; }
+  .plan-feature-view .recurring-meta-row { gap: 4px; font-size: 11px; }
+  .plan-feature-view .recurring-meta-note { white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .recurring-due-pill-box { padding: 8px; min-width: 0; width: 100%; }
+  .plan-feature-view .due-pill-top { font-size: 12px; flex-wrap: wrap; white-space: normal; }
+  .plan-feature-view .due-pill-sub { white-space: normal; overflow-wrap: anywhere; font-size: 11px; }
+  .plan-feature-view .recurring-wallet-chip-btn { padding: 8px; min-width: 0; max-width: 100%; }
+  .plan-feature-view .wallet-chip-name { white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .recurring-wallet-popover-menu { right: 0; left: auto; max-width: calc(100vw - 48px); }
+  .plan-feature-view .recurring-actions-dropdown { max-width: calc(100vw - 48px); }
+  .plan-feature-view .recurring-summary-bottom-card { padding: 12px; gap: 12px; }
+  .plan-feature-view .summary-bottom-grid { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plan-feature-view .summary-grid-cell { min-width: 0; }
+  .plan-feature-view .grid-cell-num { font-size: 16px; font-family: var(--font-sans); overflow-wrap: anywhere; }
+}

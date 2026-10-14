@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import { create } from 'zustand';
 import { authService } from '../services/authService';
 import { apiFetch, clearApiSession } from '../services/api';
@@ -62,7 +63,7 @@ export const useAuthStore = create((set, get) => ({
         if (sessionEpoch() !== epoch) return;
         hydrateUserPreferences(null);
         set({ user: null, isAuthenticated: false, status: 'anonymous',
-          error: error.status === 401 ? null : error.message });
+          error: error.status === 401 ? null : getUserErrorMessage(error, 'error.generic') });
       } finally { if (initialization === current) initialization = null; }
     })();
     initialization = current;
@@ -82,7 +83,7 @@ export const useAuthStore = create((set, get) => ({
       broadcast();
       return { success: true, user: data.user };
     } catch (error) {
-      if (epoch === sessionEpoch()) set({ status: 'anonymous', isLoading: false, error: error.message });
+      if (epoch === sessionEpoch()) set({ status: 'anonymous', isLoading: false, error: getUserErrorMessage(error, 'error.generic') });
       throw error;
     }
   },
@@ -99,7 +100,7 @@ export const useAuthStore = create((set, get) => ({
       broadcast();
       return { success: true, user: data.user };
     } catch (error) {
-      if (epoch === sessionEpoch()) set({ status: 'anonymous', isLoading: false, error: error.message });
+      if (epoch === sessionEpoch()) set({ status: 'anonymous', isLoading: false, error: getUserErrorMessage(error, 'error.generic') });
       throw error;
     }
   },
@@ -113,7 +114,7 @@ export const useAuthStore = create((set, get) => ({
     try { await apiFetch('/api/auth/logout', { method: 'POST' }); }
     catch {
       if (sessionEpoch() === epoch) {
-        set({ error: 'Đã khóa dữ liệu trên thiết bị. Cần kết nối mạng để thu hồi phiên trên server.' });
+        set({ error: getUserErrorMessage(null, 'error.logoutPending') });
       }
     }
     // Keep the local logout barrier until a deliberate, successful login.

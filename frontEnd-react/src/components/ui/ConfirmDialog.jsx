@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors.js';
 import React, { useRef, useEffect, useCallback } from 'react';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
@@ -110,7 +111,7 @@ export function ConfirmDialog() {
           </p>
         )}
 
-        {error && <p className="confirm-dialog-error" role="alert">{typeof error === 'string' ? error : t('dialog.actionFailed')}</p>}
+        {error && <p className="confirm-dialog-error" role="alert">{getUserErrorMessage(error, 'dialog.actionFailed')}</p>}
 
         <div className="confirm-dialog-actions">
           <button

@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors.js';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
@@ -367,7 +368,7 @@ export function TransactionModal() {
         await persist();
       }
     } catch (err) {
-      setErrorMsg(err.message || t('transaction.error'));
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     } finally {
       setIsSubmitting(false);
     }

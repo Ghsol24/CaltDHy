@@ -1,5 +1,6 @@
-import { sessionEpoch, assertSession, trackRequest } from './sessionRuntime';
-import { normalizeLocale, translate } from '../i18n/translations';
+import { sessionEpoch, assertSession, trackRequest } from './sessionRuntime.js';
+import { normalizeLocale, translate } from '../i18n/translations.js';
+import { getUserErrorMessage, loadApiErrorMessages } from '../utils/userErrors.js';
 
 function message(key) {
   let locale = 'vi';
@@ -28,6 +29,10 @@ async function request(endpoint, options, epoch) {
   const controller = new AbortController();
   const release = trackRequest(controller);
   const abort = () => controller.abort();
+  const assertActive = () => {
+    assertSession(epoch);
+    if (controller.signal.aborted) throw new DOMException('Request cancelled', 'AbortError');
+  };
   options.signal?.addEventListener('abort', abort, { once: true });
   if (options.signal?.aborted) abort();
   try {
@@ -40,11 +45,27 @@ async function request(endpoint, options, epoch) {
     if (!['GET', 'HEAD'].includes(method)) {
       fetchOptions.cache = 'no-store';
     }
-    const response = await fetch(endpoint, fetchOptions);
-    const data = await response.json().catch(() => null);
-    assertSession(epoch);
+    let response;
+    try {
+      response = await fetch(endpoint, fetchOptions);
+    } catch (cause) {
+      if (cause?.name === 'AbortError') throw cause;
+      const error = new Error(message(['GET', 'HEAD'].includes(method) ? 'error.network' : 'error.writeUnconfirmed'), { cause });
+      error.code = ['GET', 'HEAD'].includes(method) ? 'NETWORK_ERROR' : 'WRITE_UNCONFIRMED';
+      throw error;
+    }
+    const data = await response.json().catch((cause) => {
+      if (cause?.name === 'AbortError') throw cause;
+      return null;
+    });
+    assertActive();
     if (!response.ok) {
-      const error = new Error(data?.message || message('error.requestFailed'));
+      await loadApiErrorMessages();
+      assertActive();
+      const error = new Error(getUserErrorMessage({
+        message: data?.message, status: response.status, code: data?.code,
+        context: /^\/api\/auth\/login(?:\?|$)/.test(endpoint) ? 'login' : undefined,
+      }, 'error.requestFailed'));
       error.status = response.status; error.code = data?.code;
       if (response.status === 401 && !/^\/api\/auth\/(login|session)(?:\?|$)/.test(endpoint)) {
         window.dispatchEvent(new CustomEvent('caltdhy:auth-expired'));
@@ -54,15 +75,15 @@ async function request(endpoint, options, epoch) {
     const sessionResponse = /^\/api\/auth\/(login|register|session|profile)(?:\?|$)/.test(endpoint);
     if (!data || typeof data !== 'object' || Array.isArray(data) || data.success !== true ||
       (sessionResponse && (!data.user || !/^[a-f\d]{24}$/i.test(data.user.id || '')))) {
-      throw new Error(message('error.invalidResponse'));
+      const read = ['GET', 'HEAD'].includes(method);
+      const error = new Error(message(read ? 'error.invalidResponse' : 'error.writeUnconfirmed'));
+      error.code = read ? 'INVALID_RESPONSE' : 'WRITE_UNCONFIRMED';
+      throw error;
     }
     if (data.csrfToken) { csrfToken = data.csrfToken; csrfEpoch = epoch; }
     return data;
   } catch (error) {
     assertSession(epoch);
-    if (!error.status) {
-      error.message = error.name === 'AbortError' ? message('error.cancelled') : message('error.networkUnknown');
-    }
     throw error;
   } finally {
     release(); options.signal?.removeEventListener('abort', abort);

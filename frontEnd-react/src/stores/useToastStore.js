@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import { create } from 'zustand';
 
 const toastTimers = new Map();
@@ -27,6 +28,7 @@ export const useToastStore = create((set, get) => ({
    */
   addToast: (toast) => {
     const input = typeof toast === 'string' ? { message: toast } : toast;
+    if (input?.type === 'error' && !input.message) return null;
     const dedupeKey = input?.dedupeKey || null;
     const existing = dedupeKey
       ? get().toasts.find((item) => item.dedupeKey === dedupeKey)
@@ -37,7 +39,7 @@ export const useToastStore = create((set, get) => ({
         ? { id, message: toast, type: 'success', duration: 4000 }
         : {
             id,
-            message: toast.message || '',
+            message: toast.type === 'error' ? getUserErrorMessage(toast.message) : toast.message || '',
             type: toast.type || 'success',
             action: toast.action || null,
             duration: toast.duration ?? 4000,

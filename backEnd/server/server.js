@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { csrfProtection, sessionLifetime } = require('./utils/sessionSecurity');
-const { localizeApiResponse } = require('./utils/i18n');
+const { localizeApiResponse, translateMessage, normalizeLocale } = require('./utils/i18n');
 
 function integerSetting(name, fallback, maximum) {
     const value = process.env[name];
@@ -248,7 +248,7 @@ app.use((err, req, res, next) => {
         return;
     }
     res.set('Cache-Control', 'no-store');
-    res.status(status).json({ success: false, message });
+    res.status(status).json({ success: false, message: translateMessage(normalizeLocale(req.get('Accept-Language')), message) });
 });
 
 if (require.main === module) {

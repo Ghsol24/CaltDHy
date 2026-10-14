@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
@@ -135,7 +136,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
       });
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMsg(err.message || 'Lỗi khi thực hiện chuyển tiền ví.');
+      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 

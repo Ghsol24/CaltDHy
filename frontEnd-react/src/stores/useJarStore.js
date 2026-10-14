@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import { sessionEpoch, scopedSet, scopedGet } from '../services/sessionRuntime';
 import { create } from 'zustand';
 import { jarsService } from '../services/jarsService';
@@ -84,7 +85,7 @@ return ({
         isLoading: false,
         hasLoaded: true
       });
-    } catch (error) { set({ isLoading: false, hasLoaded: true, error: error.message }); return { success: false, error: error.message }; }
+    } catch (error) { set({ isLoading: false, hasLoaded: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
   createJar: async (data) => {
@@ -98,7 +99,7 @@ return ({
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: newJar };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   updateJar: async (id, data) => {
@@ -112,7 +113,7 @@ return ({
       saveStoredJars(updated);
       set({ jars: updated });
       return { success: true, data: updatedJar };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   updateJarBalance: async (id, action, amount, reason, walletId = null) => {
@@ -131,7 +132,7 @@ return ({
       useTransactionStore.getState()?.fetchTransactions?.();
       useWalletStore.getState()?.fetchWallets?.();
       return { success: true, data: updatedJar };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   deleteJar: async (id) => {
@@ -143,7 +144,7 @@ return ({
       const updated = get().jars.filter((jar) => jar.id !== id);
       saveStoredJars(updated);
       set({ jars: updated });
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   createInstallment: async (data) => {
@@ -156,7 +157,7 @@ return ({
       const updated = [...get().installments, newInst];
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   updateInstallment: async (id, data) => {
@@ -177,7 +178,7 @@ return ({
       }
 
       return { success: true, data: updatedInst };
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   payInstallment: async (id) => {
@@ -193,7 +194,7 @@ return ({
       // Tự động đồng bộ giao dịch chi tiêu mới và số dư ví sau khi thanh toán định kỳ
       useTransactionStore.getState()?.fetchTransactions?.();
       useWalletStore.getState()?.fetchWallets?.();
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   toggleInstallment: async (id) => {
@@ -206,7 +207,7 @@ return ({
       const updated = get().installments.map((item) => (item.id === id ? updatedInst : item));
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
   deleteInstallment: async (id) => {
@@ -218,7 +219,7 @@ return ({
       const updated = get().installments.filter((item) => item.id !== id);
       saveStoredInstallments(updated);
       set({ installments: updated });
-    } catch (error) { set({ isLoading: false, error: error.message }); throw error; }
+    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   }
 });
 });

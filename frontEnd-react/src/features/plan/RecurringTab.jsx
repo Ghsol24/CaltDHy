@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
@@ -274,7 +275,7 @@ export function RecurringTab() {
     } catch (err) {
       addToast({
         type: 'error',
-        message: err.message || 'Không thể ghi nhận thanh toán.',
+        message: getUserErrorMessage(err, 'error.save'),
         duration: 4000
       });
     } finally {
@@ -299,7 +300,7 @@ export function RecurringTab() {
     } catch (err) {
       addToast({
         type: 'error',
-        message: err.message || 'Không thể đổi trạng thái.',
+        message: getUserErrorMessage(err, 'error.save'),
         duration: 4000
       });
     } finally {
@@ -341,7 +342,7 @@ export function RecurringTab() {
     } catch (err) {
       addToast({
         type: 'error',
-        message: err.message || 'Không thể cập nhật ví.',
+        message: getUserErrorMessage(err, 'error.save'),
         duration: 3000
       });
     } finally {
@@ -377,7 +378,7 @@ export function RecurringTab() {
 
           <div className="banner-stat-block">
             <span className="banner-stat-label">Sắp đến hạn (7 ngày)</span>
-            <strong className="banner-stat-val" style={{ color: '#EF4444' }}>
+            <strong className="banner-stat-val" style={{ color: 'var(--color-danger)' }}>
               {counts.soon} khoản
             </strong>
           </div>

@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../../utils/userErrors.js';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
@@ -870,7 +871,7 @@ export function JarsView() {
         <EmptyState
           icon={<AlertTriangleOutlineIcon size={32} />}
           title="Chưa thể tải dữ liệu hũ"
-          description={error}
+          description={getUserErrorMessage(error, 'error.load')}
           actionLabel="Thử lại"
           onAction={fetchData}
           className="jars-first-run-state"
@@ -935,7 +936,7 @@ export function JarsView() {
             fontSize: '13px'
           }}
         >
-          <span>{error}</span>
+          <span>{getUserErrorMessage(error, 'error.load')}</span>
           <button
             type="button"
             onClick={fetchData}

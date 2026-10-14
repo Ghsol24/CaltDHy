@@ -1,3 +1,4 @@
+import { getUserErrorMessage, isSilentError } from '../../utils/userErrors.js';
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
@@ -148,7 +149,7 @@ export function AnalyticsView() {
     spendingService.getExpectedDays(activeMonth).then((result) => {
       if (active) setExpectedDays(Array.isArray(result.data) ? result.data : []);
     }).catch((error) => {
-      if (active && error.code !== 'SESSION_CHANGED') addToast({ type: 'error', message: t('analytics.unusualLoadFailed') });
+      if (active) addToast({ type: 'error', message: getUserErrorMessage(error, 'analytics.unusualLoadFailed') });
     });
     return () => { active = false; };
   }, [activeMonth, financialResetVersion, addToast, t]);
@@ -159,11 +160,11 @@ export function AnalyticsView() {
       await spendingService.setExpectedDay(date, expected);
       setExpectedDays((days) => expected ? [...new Set([...days, date])] : days.filter((day) => day !== date));
     } catch (error) {
-      if (error.code !== 'SESSION_CHANGED') addToast({ type: 'error', message: t('analytics.unusualSaveFailed') });
+      addToast({ type: 'error', message: getUserErrorMessage(error, 'analytics.unusualSaveFailed') });
     } finally {
       setSavingExpectedDay('');
     }
-  }, [addToast, t]);
+  }, [addToast]);
 
   // Month & Quarter navigation helpers
   const {
@@ -365,10 +366,10 @@ export function AnalyticsView() {
       }
       return true;
     } catch (error) {
-      if (error.code !== 'SESSION_CHANGED') addToast({
-        dedupeKey: 'cashflow-preferences', type: 'error', message: t('analytics.cashflow.saveFailed'),
+      addToast({
+        dedupeKey: 'cashflow-preferences', type: 'error', message: getUserErrorMessage(error, 'analytics.cashflow.saveFailed'),
       });
-      return error.code === 'SESSION_CHANGED' ? null : false;
+      return isSilentError(error) ? null : false;
     }
   }, [setCashFlowView, recurringFilterSummary, addToast, t, lang]);
   const changeCashFlowPeriod = useCallback(async (mode) => {
@@ -411,11 +412,11 @@ export function AnalyticsView() {
         await pinDefault({ mode: trendMode });
       }
     } catch (error) {
-      if (error.code !== 'SESSION_CHANGED') addToast({
-        dedupeKey: 'cashflow-preferences', type: 'error', message: t('analytics.cashflow.saveFailed'),
+      addToast({
+        dedupeKey: 'cashflow-preferences', type: 'error', message: getUserErrorMessage(error, 'analytics.cashflow.saveFailed'),
       });
     }
-  }, [pinDefault, clearDefault, drilldown, trendMode, activeMonth, setSelectedMonth, addToast, t]);
+  }, [pinDefault, clearDefault, drilldown, trendMode, activeMonth, setSelectedMonth, addToast]);
   const viewCashFlowHistory = useCallback(() => {
     const [year, month] = activeMonth.split('-').map(Number);
     const search = new URLSearchParams({ from: `${trendMonths[0]}-01`,
@@ -878,59 +879,66 @@ export function AnalyticsView() {
 
   // Handle CSV Export with UTF-8 BOM
   const handleExportCSV = () => {
-    const { curLabel, prevLabel, curStats, prevStats, categoryRows, curTxns, incomeDelta, incomeDeltaPct, expenseDelta, expenseDeltaPct, netDelta, savingsRateDelta } = reportData;
-    
-    let csv = '\uFEFF'; // UTF-8 BOM for Excel Vietnamese compatibility
-    csv += `${t('analytics.csvTitle')}\n`;
-    csv += `${t('analytics.csvPeriod')}:,"${translateLegacyText(lang, curLabel)}"\n`;
-    csv += `${t('analytics.csvComparison')}:,"${translateLegacyText(lang, prevLabel)}"\n`;
-    csv += `${t('analytics.csvExportedAt')}:,"${formatDateTime(new Date())}"\n\n`;
+    try {
+      const { curLabel, prevLabel, curStats, prevStats, categoryRows, curTxns, incomeDelta, incomeDeltaPct, expenseDelta, expenseDeltaPct, netDelta, savingsRateDelta } = reportData;
 
-    // 1. Chỉ số tài chính
-    csv += `${t('analytics.csvSummary')}\n`;
-    csv += `${t('analytics.csvSummaryHeaders')}\n`;
-    csv += `${t('analytics.totalIncome')},"${curStats.income}","${prevStats.income}","${incomeDelta}","${incomeDeltaPct.toFixed(1)}%"\n`;
-    csv += `${t('analytics.totalExpense')},"${curStats.expense}","${prevStats.expense}","${expenseDelta}","${expenseDeltaPct.toFixed(1)}%"\n`;
-    csv += `${t('analytics.net')},"${curStats.net}","${prevStats.net}","${netDelta}",""\n`;
-    csv += `${t('analytics.savingsRate')},"${curStats.savingsRate.toFixed(1)}%","${prevStats.savingsRate.toFixed(1)}%","${savingsRateDelta.toFixed(1)}%",""\n\n`;
+      let csv = '\uFEFF'; // UTF-8 BOM for Excel Vietnamese compatibility
+      csv += `${t('analytics.csvTitle')}\n`;
+      csv += `${t('analytics.csvPeriod')}:,"${translateLegacyText(lang, curLabel)}"\n`;
+      csv += `${t('analytics.csvComparison')}:,"${translateLegacyText(lang, prevLabel)}"\n`;
+      csv += `${t('analytics.csvExportedAt')}:,"${formatDateTime(new Date())}"\n\n`;
 
-    // 2. Phân tích chi tiết danh mục
-    csv += `${t('analytics.csvCategorySection')}\n`;
-    csv += `${t('analytics.csvCategoryHeaders')}\n`;
-    categoryRows.forEach((r) => {
-      const statusText = r.limit 
-        ? t(r.budgetStatus.isOver ? 'analytics.overBudget' : r.budgetStatus.status === 'warning' ? 'analytics.warningBudget' : 'analytics.safeBudget', { percent: r.budgetStatus.percent })
-        : t('transaction.limitUnset');
-      const advice = translateLegacyText(lang, r.adviceText);
-      csv += csvRow([label(r.name), r.spentCur, r.spentPrev, r.deltaAmt,
-        `${r.deltaPct.toFixed(1)}%`, `${r.pctOfTotal.toFixed(1)}%`, r.countCur,
-        r.limit || 0, statusText, advice]);
-    });
-    csv += '\n';
+      // 1. Chỉ số tài chính
+      csv += `${t('analytics.csvSummary')}\n`;
+      csv += `${t('analytics.csvSummaryHeaders')}\n`;
+      csv += `${t('analytics.totalIncome')},"${curStats.income}","${prevStats.income}","${incomeDelta}","${incomeDeltaPct.toFixed(1)}%"\n`;
+      csv += `${t('analytics.totalExpense')},"${curStats.expense}","${prevStats.expense}","${expenseDelta}","${expenseDeltaPct.toFixed(1)}%"\n`;
+      csv += `${t('analytics.net')},"${curStats.net}","${prevStats.net}","${netDelta}",""\n`;
+      csv += `${t('analytics.savingsRate')},"${curStats.savingsRate.toFixed(1)}%","${prevStats.savingsRate.toFixed(1)}%","${savingsRateDelta.toFixed(1)}%",""\n\n`;
 
-    // 3. Danh sách giao dịch trong kỳ
-    csv += `${t('analytics.csvTransactions')}\n`;
-    csv += `${t('analytics.csvTransactionHeaders')}\n`;
-    curTxns.forEach((tx) => {
-      csv += csvRow([tx.date || '', t(`type.${tx.type === 'income' ? 'income' : 'expense'}`),
-        label(tx.category || ''), tx.amount || 0, tx.fee || 0, tx.note || '']);
-    });
+      // 2. Phân tích chi tiết danh mục
+      csv += `${t('analytics.csvCategorySection')}\n`;
+      csv += `${t('analytics.csvCategoryHeaders')}\n`;
+      categoryRows.forEach((r) => {
+        const statusText = r.limit
+          ? t(r.budgetStatus.isOver ? 'analytics.overBudget' : r.budgetStatus.status === 'warning' ? 'analytics.warningBudget' : 'analytics.safeBudget', { percent: r.budgetStatus.percent })
+          : t('transaction.limitUnset');
+        const advice = translateLegacyText(lang, r.adviceText);
+        csv += csvRow([label(r.name), r.spentCur, r.spentPrev, r.deltaAmt,
+          `${r.deltaPct.toFixed(1)}%`, `${r.pctOfTotal.toFixed(1)}%`, r.countCur,
+          r.limit || 0, statusText, advice]);
+      });
+      csv += '\n';
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const cleanPeriod = curLabel.replace(/[\s,/()]/g, '_');
-    a.download = `Bao_Cao_Tai_Chinh_CaltDHy_${cleanPeriod}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      // 3. Danh sách giao dịch trong kỳ
+      csv += `${t('analytics.csvTransactions')}\n`;
+      csv += `${t('analytics.csvTransactionHeaders')}\n`;
+      curTxns.forEach((tx) => {
+        csv += csvRow([tx.date || '', t(`type.${tx.type === 'income' ? 'income' : 'expense'}`),
+          label(tx.category || ''), tx.amount || 0, tx.fee || 0, tx.note || '']);
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanPeriod = curLabel.replace(/[\s,/()]/g, '_');
+      a.download = `Bao_Cao_Tai_Chinh_CaltDHy_${cleanPeriod}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      addToast({ type: 'error', message: getUserErrorMessage(error, 'settings.exportFailed') });
+    }
   };
+
 
   // Handle Print
   const handlePrint = () => {
-    window.print();
+    try { window.print(); } catch (error) {
+      addToast({ type: 'error', message: getUserErrorMessage(error) });
+    }
   };
 
   const handleActiveAnalyticsSection = useCallback((activeTab) => {

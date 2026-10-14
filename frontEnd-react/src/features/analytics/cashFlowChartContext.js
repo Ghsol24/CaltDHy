@@ -1,8 +1,18 @@
+// Chart.js can draw while a responsive canvas is detached or its scales are
+// being rebuilt. Decorations must wait for a complete, measurable chart.
+function drawableChart(chart) {
+  const area = chart?.chartArea;
+  return chart?.ctx && chart?.canvas && typeof chart.scales?.x?.getPixelForValue === 'function'
+    && area && [area.left, area.right, area.top, area.bottom, area.width, area.height].every(Number.isFinite)
+    && area.width > 0 && area.height > 0;
+}
+
 // Context belongs to the rendered chart so it follows resizing and theme changes.
 export function cashFlowChartContext(readContext) {
   return {
     id: 'cashFlowContext',
     afterUpdate(chart) {
+      if (!chart?.canvas?.dataset || !chart.scales?.y) return;
       // Report the actual rendered scale for regression checks and inspection.
       chart.canvas.dataset.scaleMin = String(chart.scales.y.min);
       chart.canvas.dataset.scaleMax = String(chart.scales.y.max);
@@ -14,8 +24,10 @@ export function cashFlowChartContext(readContext) {
         })));
     },
     beforeDatasetsDraw(chart) {
-      const { mode, days, today, colors, futureLabel } = readContext();
-      if (mode !== 'daily') return;
+      const context = readContext();
+      if (!context || !drawableChart(chart)) return;
+      const { mode, days, today, colors, futureLabel } = context;
+      if (mode !== 'daily' || !days?.length) return;
       const firstFuture = days.findIndex((day) => day.date > today);
       if (firstFuture < 0) return;
       const { ctx, chartArea: area, scales: { x } } = chart;
@@ -23,6 +35,7 @@ export function cashFlowChartContext(readContext) {
         ? Math.abs(x.getPixelForValue(1) - x.getPixelForValue(0)) : area.width;
       const left = Math.max(area.left, x.getPixelForValue(firstFuture) - categoryWidth / 2);
       const width = area.right - left;
+      if (!Number.isFinite(left) || !Number.isFinite(width) || width <= 0) return;
       ctx.save();
       ctx.beginPath();
       ctx.rect(left, area.top, width, area.height);
@@ -41,11 +54,15 @@ export function cashFlowChartContext(readContext) {
       ctx.restore();
     },
     afterDatasetsDraw(chart) {
-      const { mode, months, today, colors, ongoingLabel } = readContext();
-      if (mode === 'daily') return;
+      const context = readContext();
+      if (!context || !drawableChart(chart)) return;
+      const { mode, months, today, colors, ongoingLabel } = context;
+      if (mode === 'daily' || !months?.length) return;
       const index = months.findIndex((month) => month.prefix === today.slice(0, 7));
       if (index < 0) return;
       const { ctx, chartArea: area, scales: { x } } = chart;
+      const position = x.getPixelForValue(index);
+      if (!Number.isFinite(position)) return;
       ctx.save();
       ctx.font = '12px Inter, sans-serif';
       ctx.fillStyle = colors.tick;
@@ -53,7 +70,7 @@ export function cashFlowChartContext(readContext) {
       ctx.textBaseline = 'bottom';
       const halfWidth = ctx.measureText(ongoingLabel).width / 2;
       const center = Math.max(area.left + halfWidth,
-        Math.min(area.right - halfWidth, x.getPixelForValue(index)));
+        Math.min(area.right - halfWidth, position));
       ctx.fillText(ongoingLabel, center, area.top - 6);
       ctx.restore();
     },

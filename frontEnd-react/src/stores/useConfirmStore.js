@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import { create } from 'zustand';
 
 /** An imperative confirmation that keeps async work inside the dialog. */
@@ -54,7 +55,7 @@ export const useConfirmStore = create((set, get) => ({
       return true;
     } catch (error) {
       if (get()._resolver === request._resolver) {
-        set({ isConfirming: false, error: error?.message || true });
+        set({ isConfirming: false, error: getUserErrorMessage(error, 'error.generic') });
       }
       return false;
     }

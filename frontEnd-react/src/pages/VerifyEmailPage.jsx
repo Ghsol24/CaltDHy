@@ -1,3 +1,4 @@
+import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { authService } from '../services/authService';
@@ -25,7 +26,7 @@ export function VerifyEmailPage() {
         setTimeout(() => navigate('/login', { replace: true }), 1500);
       })
       .catch((error) => {
-        setMessage(error.message || t('auth.invalidVerification'));
+        setMessage(getUserErrorMessage(error, 'error.load'));
         setCanResend(true);
       });
   }, [email, navigate, token, t]);
@@ -36,7 +37,7 @@ export function VerifyEmailPage() {
       const data = await authService.resendVerification(email);
       setMessage(data.message || t('auth.resendDone'));
     } catch (error) {
-      setMessage(error.message || t('auth.resendError'));
+      setMessage(getUserErrorMessage(error, 'error.load'));
     } finally {
       setIsSending(false);
     }

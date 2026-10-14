@@ -1,101 +1,54 @@
 import React from 'react';
-import { AlertTriangleOutlineIcon } from './AppIcons';
-import { getActiveLocale } from '../../utils/formatters';
-import { translate } from '../../i18n/translations';
+import { normalizeLocale, translate } from '../../i18n/translations';
+import '../../assets/css/error-feedback.css';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
+    // Diagnostic detail stays in developer tools, never in the fallback UI.
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
+  componentDidUpdate(previousProps) {
+    if (this.state.hasError && previousProps.resetKey !== this.props.resetKey) {
+      this.handleReset();
+    }
+  }
+
   handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false });
   };
 
   render() {
-    const t = (key) => translate(getActiveLocale(), key);
+    let locale = 'vi';
+    try { locale = normalizeLocale(localStorage.getItem('caltdhy_lang')); } catch { /* default locale */ }
+    const t = (key) => translate(locale, key);
     if (this.state.hasError) {
       return (
-        <div
-          style={{
-            padding: '40px 24px',
-            maxWidth: '560px',
-            margin: '40px auto',
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.08)',
-            textAlign: 'center'
-          }}
-        >
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              background: '#FEE2E2',
-              color: '#EF4444',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px'
-            }}
-          >
-            <AlertTriangleOutlineIcon size={24} />
+        <section className="display-error" role="alert" aria-labelledby="display-error-title">
+          <span className="display-error__icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <path d="M12 9v4M12 17h.01" />
+            </svg>
+          </span>
+          <h2 id="display-error-title">{t('error.displayTitle')}</h2>
+          <p>{t('error.displayBody')}</p>
+          <div className="display-error__actions">
+            <button type="button" className="btn btn--primary" onClick={this.handleReset}>{t('common.tryAgain')}</button>
+            <button type="button" className="btn btn--secondary" onClick={() => window.location.reload()}>{t('error.reload')}</button>
           </div>
-          <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px' }}>
-            {t('error.displayTitle')}
-          </h2>
-          <p style={{ fontSize: '13.5px', color: '#64748B', margin: '0 0 20px', lineHeight: 1.5 }}>
-            {this.state.error?.message || t('error.displayBody')}
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '10px 20px',
-                background: '#5356F1',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              {t('error.reload')}
-            </button>
-            <button
-              type="button"
-              onClick={this.handleReset}
-              style={{
-                padding: '10px 18px',
-                background: '#F1F5F9',
-                color: '#475569',
-                border: '1px solid #E2E8F0',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              {t('common.tryAgain')}
-            </button>
-          </div>
-        </div>
+        </section>
       );
     }
-
     return this.props.children;
   }
 }
