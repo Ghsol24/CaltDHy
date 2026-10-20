@@ -164,6 +164,8 @@ export const translations = {
     'history.viewCategory': 'Xem giao dịch',
     'history.lockedJar': 'Quản lý trong Hũ', 'history.lockedRecurring': 'Quản lý trong Khoản định kỳ',
     'history.lockedGeneric': 'Giao dịch hệ thống không thể sửa trực tiếp',
+    'type.wallet_created': 'Tạo ví', 'history.walletCreated': 'Tạo ví “{name}”',
+    'history.openingBalance': 'Số dư ban đầu', 'history.entries': '{count} mục',
 
     'date.today': 'Hôm nay', 'date.yesterday': 'Hôm qua', 'date.noDate': 'Chưa định ngày',
     'date.dueToday': 'Đến hạn hôm nay', 'date.overdueDays': 'Quá hạn {count} ngày',
@@ -464,6 +466,8 @@ export const translations = {
     'history.viewCategory': 'View transactions',
     'history.lockedJar': 'Manage in Jars', 'history.lockedRecurring': 'Manage in Recurring items',
     'history.lockedGeneric': 'System transaction cannot be edited here',
+    'type.wallet_created': 'Wallet creation', 'history.walletCreated': 'Created wallet “{name}”',
+    'history.openingBalance': 'Opening balance', 'history.entries': '{count} entries',
 
     'date.today': 'Today', 'date.yesterday': 'Yesterday', 'date.noDate': 'No date set',
     'date.dueToday': 'Due today', 'date.overdueDays': '{count} days overdue',
@@ -756,6 +760,8 @@ export const translations = {
     'history.viewCategory': '查看交易',
     'history.lockedJar': '在储蓄罐中管理', 'history.lockedRecurring': '在周期项目中管理',
     'history.lockedGeneric': '系统交易无法在此直接编辑',
+    'type.wallet_created': '创建钱包', 'history.walletCreated': '创建钱包“{name}”',
+    'history.openingBalance': '初始余额', 'history.entries': '{count} 条记录',
 
     'date.today': '今天', 'date.yesterday': '昨天', 'date.noDate': '未设置日期',
     'date.dueToday': '今天到期', 'date.overdueDays': '已逾期 {count} 天',
