@@ -1565,7 +1565,7 @@ html.dark-theme .jars-view-btn.active {
 /* Jar Cards Grid */
 .jars-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
   gap: 20px;
 }
 
@@ -2550,4 +2550,14 @@ html.green-theme .jars-tip-link {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Keep jar cards and their edit action inside narrow phone screens. */
+.jars-grid-container > *, .jar-premium-card, .jar-info-section { min-width: 0; }
+.jar-amounts-row, .jar-meta-cols-row { flex-wrap: wrap; gap: 6px 10px; }
+.jar-amounts-row > *, .jar-meta-cols-row > * { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .jars-grid-container { grid-template-columns: minmax(0, 1fr); }
+  .jar-card-footer-actions > button { min-width: 0; min-height: 44px; }
+  .jar-card-footer-actions .jar-btn-detail-icon { flex: 0 0 40px; }
 }

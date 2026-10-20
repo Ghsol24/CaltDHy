@@ -17,6 +17,7 @@ import { formatCompactCurrency, formatCurrency, formatDate, formatPercent } from
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { buildJarSuggestions, getJarSuggestionCopy } from './jarSuggestionCopy';
 import {
   FlameOutlineIcon,
   BulbOutlineIcon,
@@ -26,16 +27,10 @@ import {
   AlertTriangleOutlineIcon,
   CheckOutlineIcon,
   JarOutlineIcon,
-  HistoryOutlineIcon,
-  SparkleOutlineIcon,
-  LeafOutlineIcon,
-  ZapOutlineIcon,
-  ClockOutlineIcon,
-  TrendOutlineIcon,
-  ScaleOutlineIcon,
-  ShieldOutlineIcon
+  HistoryOutlineIcon
 } from '../../components/ui/AppIcons';
 import '../../assets/css/jars.css';
+import '../../assets/css/jar-suggestion.css';
 
 const JARS_PER_PAGE = 12;
 const JARS_SCROLL_SECTIONS = Object.freeze([
@@ -76,26 +71,12 @@ function DeferredJarGlassGraphic(props) {
   );
 }
 
-function renderNoteIcon(iconKey) {
-  if (!iconKey) return <TargetOutlineIcon size={18} />;
-  if (iconKey === 'sparkle') return <SparkleOutlineIcon size={18} />;
-  if (iconKey === 'leaf') return <LeafOutlineIcon size={18} />;
-  if (iconKey === 'bulb') return <BulbOutlineIcon size={18} />;
-  if (iconKey === 'target') return <TargetOutlineIcon size={18} />;
-  if (iconKey === 'zap') return <ZapOutlineIcon size={18} />;
-  if (iconKey === 'clock') return <ClockOutlineIcon size={18} />;
-  if (iconKey === 'trend') return <TrendOutlineIcon size={18} />;
-  if (iconKey === 'scale') return <ScaleOutlineIcon size={18} />;
-  if (iconKey === 'shield') return <ShieldOutlineIcon size={18} />;
-  return <TargetOutlineIcon size={18} />;
-}
-
 function formatTick(num) {
   return formatCompactCurrency(num);
 }
 
 export function JarsView() {
-  const { t, lang } = useTranslation();
+  const { lang } = useTranslation();
   const jars = useJarStore((s) => s.jars);
   const isLoading = useJarStore((s) => s.isLoading);
   const hasLoaded = useJarStore((s) => s.hasLoaded);
@@ -117,6 +98,7 @@ export function JarsView() {
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
   const [activeJar, setActiveJar] = useState(null);
   const [txAction, setTxAction] = useState('deposit'); // 'deposit' | 'withdraw'
+  const [txInitialAmount, setTxInitialAmount] = useState(null);
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDetailJar, setSelectedDetailJar] = useState(null);
@@ -541,133 +523,18 @@ export function JarsView() {
     }
   }, [theme]);
 
-  // ── 3. Multi-rule Smart Suggestions Algorithm ──
-  const smartSuggestions = useMemo(() => {
-    if (jars.length === 0) {
-      return [
-        {
-          title: 'Khởi đầu tài chính',
-          highlight: 'Bắt đầu hành trình tự do tài chính',
-          text: 'Tạo hũ tiết kiệm đầu tiên để bắt đầu tích lũy cho những ước mơ và mục tiêu tương lai của bạn.',
-          actionText: 'Tạo hũ ngay',
-          actionType: 'create',
-          jar: null,
-          note1Icon: 'sparkle',
-          note1Label: 'Mục tiêu rõ ràng',
-          note1Desc: 'Đặt số tiền cụ thể để dễ theo dõi tiến độ.',
-          note2Icon: 'leaf',
-          note2Label: 'Khởi đầu nhẹ nhàng',
-          note2Desc: 'Bắt đầu từ số tiền nhỏ để hình thành thói quen tài chính vững vàng.'
-        }
-      ];
-    }
-
-    const list = [];
-
-    // Rule 1: Zero-balance jar
-    const zeroJar = jars.find((j) => (Number(j.current) || 0) === 0 && (Number(j.target) || 0) > 0);
-    if (zeroJar) {
-      list.push({
-        title: 'Khởi động mục tiêu',
-        highlight: `Kích hoạt hũ "${zeroJar.name}" ngay hôm nay`,
-        text: `Mục tiêu ${formatCurrency(zeroJar.target)} sẽ nhanh chóng thành hình khi bạn nạp những đồng tích lũy đầu tiên!`,
-        actionText: `Nạp hũ "${zeroJar.name}"`,
-        actionType: 'deposit',
-        jar: zeroJar,
-        amount: 50000,
-        note1Icon: 'leaf',
-        note1Label: 'Bước khởi đầu',
-        note1Desc: 'Nạp những đồng đầu tiên để kích hoạt thói quen tích lũy.',
-        note2Icon: 'bulb',
-        note2Label: 'Gợi ý số tiền',
-        note2Desc: t('jars.trySmallAmounts', { first: formatCurrency(50000), second: formatCurrency(100000) })
-      });
-    }
-
-    // Rule 2: Top progress jar (< 100%)
-    const incompleteJars = jars.filter((j) => (Number(j.current) || 0) < (Number(j.target) || 0));
-    if (incompleteJars.length > 0) {
-      const sortedByProgress = [...incompleteJars].sort((a, b) => {
-        const pA = (Number(a.current) || 0) / (Number(a.target) || 1);
-        const pB = (Number(b.current) || 0) / (Number(b.target) || 1);
-        return pB - pA;
-      });
-      const topJar = sortedByProgress[0];
-      const cur = Number(topJar.current) || 0;
-      const tgt = Number(topJar.target) || 1;
-      const pct = Math.round((cur / tgt) * 100);
-      const remaining = Math.max(0, tgt - cur);
-      const nextMilestone = pct < 25 ? 25 : pct < 50 ? 50 : pct < 75 ? 75 : 100;
-      const amtToMilestone = Math.max(0, Math.round(tgt * (nextMilestone / 100) - cur));
-
-      list.push({
-        title: 'Đẩy nhanh về đích',
-        highlight: `"${topJar.name}" đã đạt ${pct}% chỉ tiêu`,
-        text: `Chỉ còn thiếu ${formatCurrency(remaining)} nữa! Tích lũy thêm một khoản nhỏ để sớm ăn mừng thành quả nhé.`,
-        actionText: `Nạp ngay cho "${topJar.name}"`,
-        actionType: 'deposit',
-        jar: topJar,
-        amount: Math.min(remaining, 200000),
-        note1Icon: 'target',
-        note1Label: `Mốc kế tiếp: ${nextMilestone}%`,
-        note1Desc: nextMilestone === 100 
-          ? `Chỉ cần nạp thêm ${formatCurrency(remaining)} là về đích trọn vẹn!` 
-          : `Cần thêm ${formatCurrency(amtToMilestone)} để chạm mốc ${nextMilestone}%.`,
-        note2Icon: 'zap',
-        note2Label: 'Chiến lược giữ nhịp',
-        note2Desc: 'Thử góp đều mỗi tuần để khoản nạp nhẹ hơn.'
-      });
-    }
-
-    // Rule 3: Pacing with deadline
-    const datedJar = jars.find((j) => {
-      if (!j.targetDate) return false;
-      const diff = new Date(j.targetDate).getTime() - Date.now();
-      return diff > 0 && (Number(j.current) || 0) < (Number(j.target) || 0);
-    });
-    if (datedJar) {
-      const remainingAmt = Math.max(0, (Number(datedJar.target) || 0) - (Number(datedJar.current) || 0));
-      const diffDays = Math.max(1, Math.ceil((new Date(datedJar.targetDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-      const monthsRemaining = Math.max(1, Math.round(diffDays / 30));
-      const suggested = Math.min(remainingAmt, Math.max(50000, Math.round(remainingAmt / monthsRemaining)));
-
-      list.push({
-        title: 'Kế hoạch định kỳ',
-        highlight: `Gợi ý cho "${datedJar.name}": ~${formatCurrency(suggested)}/tháng`,
-        text: `Thử nạp đều trong ${monthsRemaining} tháng còn lại và điều chỉnh theo khả năng của bạn.`,
-        actionText: `Nạp ${formatCurrency(suggested)}`,
-        actionType: 'deposit',
-        jar: datedJar,
-        amount: suggested,
-        note1Icon: 'clock',
-        note1Label: 'Thời gian còn lại',
-        note1Desc: `Còn ${monthsRemaining} tháng (${diffDays} ngày) tới ngày hẹn (${formatDate(datedJar.targetDate)}).`,
-        note2Icon: 'trend',
-        note2Label: 'Kỷ luật tài chính',
-        note2Desc: `Có thể nạp khoảng ${formatCurrency(suggested)}/tháng để theo kịp mục tiêu.`
-      });
-    }
-
-    // Rule 4: Balanced Portfolio
-    list.push({
-      title: 'Tối ưu danh mục',
-      highlight: `Bạn đang theo đuổi ${jars.length} mục tiêu tiết kiệm`,
-      text: 'Mẹo tài chính: Hãy tập trung đẩy mạnh 1-2 mục tiêu quan trọng trước để tạo đòn bẩy tâm lý thành công vượt trội.',
-      actionText: 'Tạo thêm mục tiêu mới',
-      actionType: 'create',
-      jar: null,
-      note1Icon: 'scale',
-      note1Label: 'Quy tắc 50/30/20',
-      note1Desc: 'Dành 20% thu nhập hàng tháng cho các mục tiêu tích lũy tương lai.',
-      note2Icon: 'shield',
-      note2Label: 'Mẹo phân bổ',
-      note2Desc: 'Nên hoàn thành quỹ dự phòng khẩn cấp trước các hũ mua sắm xa xỉ.'
-    });
-
-    return list;
-  }, [jars, t]);
-
-  const currentSuggestion = smartSuggestions[recomIndex % smartSuggestions.length] || smartSuggestions[0];
+  // Suggestions use exact balances; locale changes only affect their presentation.
+  const smartSuggestions = useMemo(() => buildJarSuggestions(jars), [jars]);
+  const currentSuggestion = smartSuggestions[recomIndex % smartSuggestions.length];
+  const suggestionCopy = getJarSuggestionCopy(lang);
+  const suggestionPercent = currentSuggestion.kind === 'complete' ? 100 : Math.floor(currentSuggestion.progress);
+  const splitFirst = Math.floor((currentSuggestion.amount || 0) / 2);
+  const splitSecond = (currentSuggestion.amount || 0) - splitFirst;
+  const splitSuggestion = splitFirst > 0
+    ? splitFirst === splitSecond
+      ? suggestionCopy.splitEven(formatCurrency(splitFirst))
+      : suggestionCopy.splitUneven(formatCurrency(splitFirst), formatCurrency(splitSecond))
+    : '';
 
   // ── 4. Progress Overview 3 Cards Data ──
   const progressOverview = useMemo(() => {
@@ -800,15 +667,17 @@ export function JarsView() {
     setIsJarModalOpen(true);
   };
 
-  const handleDeposit = (jar) => {
+  const handleDeposit = (jar, initialAmount = null) => {
     setActiveJar(jar);
     setTxAction('deposit');
+    setTxInitialAmount(typeof initialAmount === 'number' && Number.isFinite(initialAmount) && initialAmount > 0 ? initialAmount : null);
     setIsTxModalOpen(true);
   };
 
   const handleWithdraw = (jar) => {
     setActiveJar(jar);
     setTxAction('withdraw');
+    setTxInitialAmount(null);
     setIsTxModalOpen(true);
   };
 
@@ -1294,117 +1163,88 @@ export function JarsView() {
           </div>
         </div>
 
-        {/* Section 3: Gợi ý cho bạn (Smart Financial Insights) */}
-        <div className="jars-recommendation-card">
-          {/* Top Header Row */}
-          <div className="jars-recom-header-row">
-            <span className="jars-recom-badge">
-              <BulbOutlineIcon size={14} />
-              <span>{currentSuggestion.title || 'Gợi ý cho bạn'}</span>
-            </span>
+        <section
+          className="jars-recommendation-card jar-next-step-card"
+          aria-labelledby="jar-next-step-title"
+          data-suggestion-kind={currentSuggestion.kind}
+          data-suggestion-amount={currentSuggestion.amount || undefined}
+        >
+          <header className="jar-next-step-header">
+            <h3 id="jar-next-step-title"><BulbOutlineIcon size={18} />{suggestionCopy.nextStep}</h3>
             {smartSuggestions.length > 1 && (
-              <button
-                type="button"
-                className="jars-recom-switch-btn"
-                onClick={() => setRecomIndex((prev) => prev + 1)}
-                title="Xem gợi ý khác"
-              >
-                <span>Gợi ý khác</span>
-                <RefreshOutlineIcon size={12} />
+              <button type="button" className="jar-next-step-switch" onClick={() => setRecomIndex(index => index + 1)}>
+                {suggestionCopy.another}<RefreshOutlineIcon size={13} />
               </button>
             )}
-          </div>
+          </header>
 
-          {/* Main Visual & Content Body */}
-          <div className="jars-recom-main-body">
-            <div className="jars-recom-text-col">
-              <div className="jars-recom-highlight">
-                {currentSuggestion.highlight}
-              </div>
-
-              <p className="jars-recom-text">
-                {currentSuggestion.text}
-              </p>
-
-              <div className="jars-recom-action-wrap">
-                {currentSuggestion.actionType === 'deposit' && currentSuggestion.jar ? (
-                  <button
-                    type="button"
-                    className="jars-recom-action-btn"
-                    onClick={() => handleDeposit(currentSuggestion.jar)}
-                  >
-                    {currentSuggestion.actionText}
-                  </button>
-                ) : currentSuggestion.actionType === 'create' ? (
-                  <button
-                    type="button"
-                    className="jars-recom-action-btn"
-                    onClick={handleCreateNew}
-                  >
-                    {currentSuggestion.actionText}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            {/* 3D Target Vector Art */}
-            <div className="jars-recom-art-wrap" aria-hidden="true">
-              <svg width="95" height="95" viewBox="0 0 120 120" fill="none">
-                <defs>
-                  <linearGradient id="outerTgt" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#818CF8" />
-                    <stop offset="100%" stopColor="#4F46E5" />
-                  </linearGradient>
-                  <linearGradient id="midTgt" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#FFFFFF" />
-                    <stop offset="100%" stopColor="#E2E8F0" />
-                  </linearGradient>
-                  <linearGradient id="bullseye" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#EF4444" />
-                    <stop offset="100%" stopColor="#B91C1C" />
-                  </linearGradient>
-                </defs>
-                {/* 3D Shadow */}
-                <ellipse cx="60" cy="98" rx="45" ry="14" fill="rgba(15, 23, 42, 0.08)" />
-                {/* Outer Ring */}
-                <ellipse cx="60" cy="55" rx="48" ry="38" fill="url(#outerTgt)" />
-                {/* Ring 2 */}
-                <ellipse cx="60" cy="55" rx="36" ry="28" fill="url(#midTgt)" />
-                {/* Ring 3 */}
-                <ellipse cx="60" cy="55" rx="24" ry="19" fill="url(#outerTgt)" />
-                {/* Center Bullseye */}
-                <ellipse cx="60" cy="55" rx="14" ry="11" fill="url(#bullseye)" />
-                {/* Floating Spheres / Darts */}
-                <circle cx="85" cy="28" r="8" fill="#F59E0B" />
-                <circle cx="87" cy="26" r="3" fill="#FEF3C7" />
-                <circle cx="34" cy="75" r="6" fill="#10B981" />
+          <div className="jar-next-step-goal">
+            <div
+              className="jar-next-step-ring"
+              role={currentSuggestion.target > 0 ? 'progressbar' : undefined}
+              aria-label={currentSuggestion.target > 0 ? suggestionCopy.progressLabel(currentSuggestion.jar.name) : undefined}
+              aria-valuemin={currentSuggestion.target > 0 ? 0 : undefined}
+              aria-valuemax={currentSuggestion.target > 0 ? 100 : undefined}
+              aria-valuenow={currentSuggestion.target > 0 ? suggestionPercent : undefined}
+              aria-hidden={currentSuggestion.target > 0 ? undefined : true}
+            >
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle className="jar-next-step-ring-track" cx="50" cy="50" r="43" />
+                {currentSuggestion.target > 0 && <circle cx="50" cy="50" r="43" pathLength="100"
+                  strokeDasharray={`${currentSuggestion.progress} 100`} strokeLinecap="round" />}
               </svg>
+              <span className="jar-next-step-ring-value">
+                {currentSuggestion.target > 0 ? formatPercent(suggestionPercent) : <JarOutlineIcon size={30} />}
+              </span>
+            </div>
+            <div>
+              <h4 className="jar-next-step-name">{currentSuggestion.jar?.name || suggestionCopy.emptyTitle}</h4>
+              <p className="jar-next-step-milestone">
+                {currentSuggestion.kind === 'milestone'
+                  ? suggestionCopy.milestone(formatPercent(currentSuggestion.nextMilestone))
+                  : currentSuggestion.kind === 'complete' ? suggestionCopy.completeTitle : suggestionCopy.noTargetTitle}
+              </p>
             </div>
           </div>
 
-          {/* 2 Financial Notes Strip (Matches Section 2's Footer Strip) */}
-          <div className="jars-recom-notes-grid">
-            <div className="jars-recom-note-item">
-              <div className="jars-recom-note-icon-box" aria-hidden="true">
-                {renderNoteIcon(currentSuggestion.note1Icon)}
+          {currentSuggestion.kind === 'milestone' ? (
+            <>
+              <div className="jar-next-step-amount-block">
+                <span className="jar-next-step-amount-label">{suggestionCopy.amountNeeded}</span>
+                <strong className="jar-next-step-amount">{formatCurrency(currentSuggestion.amount)}</strong>
               </div>
-              <div className="jars-recom-note-content">
-                <span className="jars-recom-note-label">{currentSuggestion.note1Label}</span>
-                <span className="jars-recom-note-desc">{currentSuggestion.note1Desc}</span>
-              </div>
-            </div>
+              <button type="button" className="jar-next-step-cta"
+                onClick={() => handleDeposit(currentSuggestion.jar, currentSuggestion.amount)}>
+                {suggestionCopy.deposit(formatCurrency(currentSuggestion.amount))}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="jar-next-step-description">
+                {currentSuggestion.kind === 'complete' ? suggestionCopy.completeText
+                  : currentSuggestion.kind === 'no-target' ? suggestionCopy.noTargetText : suggestionCopy.emptyText}
+              </p>
+              <button type="button" className="jar-next-step-cta"
+                onClick={currentSuggestion.kind === 'no-target' ? () => handleEdit(currentSuggestion.jar) : handleCreateNew}>
+                {currentSuggestion.kind === 'no-target' ? suggestionCopy.editTarget
+                  : currentSuggestion.kind === 'complete' ? suggestionCopy.createNext : suggestionCopy.createFirst}
+              </button>
+            </>
+          )}
 
-            <div className="jars-recom-note-item">
-              <div className="jars-recom-note-icon-box" aria-hidden="true">
-                {renderNoteIcon(currentSuggestion.note2Icon)}
-              </div>
-              <div className="jars-recom-note-content">
-                <span className="jars-recom-note-label">{currentSuggestion.note2Label}</span>
-                <span className="jars-recom-note-desc">{currentSuggestion.note2Desc}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+          {currentSuggestion.jar && (
+            <footer className="jar-next-step-footer">
+              <dl className="jar-next-step-balances">
+                <div><dt>{suggestionCopy.saved}</dt><dd>{formatCurrency(currentSuggestion.current)}</dd></div>
+                <div><dt>{suggestionCopy.target}</dt><dd>{currentSuggestion.target > 0
+                  ? formatCurrency(currentSuggestion.target) : suggestionCopy.noTarget}</dd></div>
+              </dl>
+              {currentSuggestion.kind === 'milestone' && <p className="jar-next-step-split">
+                {splitSuggestion && <>{splitSuggestion}<br /></>}{suggestionCopy.confirmNext}
+              </p>}
+            </footer>
+          )}
+        </section>
       </section>
 
       {/* ── SECTION 4: TỔNG QUAN TIẾN ĐỘ (#jars-section-progress) ── */}
@@ -2169,9 +2009,11 @@ export function JarsView() {
           onClose={() => {
             setIsTxModalOpen(false);
             setActiveJar(null);
+            setTxInitialAmount(null);
           }}
           jar={activeJar}
           initialAction={txAction}
+          initialAmount={txInitialAmount}
         />
       )}
 

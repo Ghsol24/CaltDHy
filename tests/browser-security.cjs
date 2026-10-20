@@ -496,25 +496,25 @@ function blendCssColor(color, background) {
         await jarPage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
         await jarPage.reload();
         await jarPage.getByRole('button', { name: 'Tạo hũ đầu tiên' }).click();
-        const modal = jarPage.getByRole('dialog', { name: 'Tạo hũ tiết kiệm mới' });
+        const modal = jarPage.getByRole('dialog', { name: 'Tạo hũ tiết kiệm' });
         await expect(modal).toBeVisible();
         const colors = await modal.evaluate(element => {
           const style = selector => getComputedStyle(element.querySelector(selector));
           return {
-            body: style('.jar-modal-body').backgroundColor,
-            input: style('.jar-text-input').backgroundColor,
-            subtitle: style('.jar-modal-subtitle').color
+            body: getComputedStyle(element).backgroundColor,
+            input: style('.jm-input').backgroundColor,
+            subtitle: style('.jar-dialog-header p').color
           };
         });
         assert.equal(colors.body, expectedSurface[theme], `${theme}: phần thân modal phải theo bề mặt theme`);
         if (theme === 'dark') {
-          assert.equal(colors.input, 'rgb(26, 28, 41)');
-          assert.equal(colors.subtitle, 'rgb(148, 163, 184)');
+          assert.equal(colors.input, expectedSurface.dark);
+          assert.equal(colors.subtitle, 'rgb(180, 192, 207)');
         }
       }
       await jarPage.setViewportSize({ width: 390, height: 430 });
-      await jarPage.locator('.jar-text-input').focus();
-      const compactFooter = await jarPage.locator('.jar-modal-footer').boundingBox();
+      await jarPage.locator('.jm-input').first().focus();
+      const compactFooter = await jarPage.locator('.jar-dialog-footer').boundingBox();
       assert.ok(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430,
         'Các nút tạo Hũ phải còn truy cập được khi bàn phím thu hẹp viewport');
     } finally {
@@ -569,7 +569,7 @@ function blendCssColor(color, background) {
     await settingsDialog.getByRole('button', { name: 'Hướng dẫn sử dụng', exact: true }).click();
     await expect(settingsDialog.locator('.account-header-desc')).toHaveText('Hỗ trợ');
     await settingsDialog.getByRole('button', { name: 'Mở hướng dẫn' }).click();
-    const guideDialog = page.getByRole('dialog', { name: 'Sổ tay hướng dẫn CaltDHy' });
+    const guideDialog = page.getByRole('dialog', { name: 'Hướng dẫn sử dụng CaltDHy' });
     await expect(guideDialog).toBeVisible();
     await guideDialog.getByRole('button', { name: 'Đóng hướng dẫn' }).click();
     await settingsButton.click();
@@ -936,7 +936,7 @@ function blendCssColor(color, background) {
     await expect(guideDisclosure).toBeVisible();
     await expect(mobilePage.locator('#contextual-section-guide')).toHaveCount(0);
     await guideDisclosure.click();
-    await expect(mobilePage.getByRole('complementary', { name: 'Hướng dẫn nhanh' })).toBeVisible();
+    await expect(mobilePage.getByRole('complementary', { name: 'Hướng dẫn sử dụng CaltDHy' })).toBeVisible();
     await mobilePage.getByRole('button', { name: 'Đóng hướng dẫn' }).click();
     await expect(mobilePage.locator('#contextual-section-guide')).toHaveCount(0);
 

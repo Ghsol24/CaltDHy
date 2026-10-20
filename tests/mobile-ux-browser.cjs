@@ -33,6 +33,42 @@ async function fit(locator, name) {
     `${name}: fits without horizontal scrolling ${JSON.stringify(layout)}`);
 }
 
+async function settleScroll() {
+  await page.evaluate(() => new Promise(resolve => {
+    let previous = scrollY, stable = 0;
+    const started = performance.now();
+    const inspect = () => {
+      stable = Math.abs(scrollY - previous) < .5 ? stable + 1 : 0;
+      previous = scrollY;
+      if (stable >= 8 || performance.now() - started > 2500) return resolve();
+      requestAnimationFrame(inspect);
+    };
+    requestAnimationFrame(inspect);
+  }));
+}
+
+async function readableRouteHeading(selector, label, headerSelector = selector) {
+  const heading = page.locator(selector);
+  await expect(heading).toBeVisible();
+  await expect(heading).toBeFocused();
+  await settleScroll();
+  const layout = await heading.evaluate((element, header) => {
+    const rect = element.getBoundingClientRect();
+    const headerRect = document.querySelector(header).getBoundingClientRect();
+    const obstructionBottom = Math.max(0, ...[...document.querySelectorAll('.topbar, .mobile-section-nav')]
+      .filter(node => ['sticky', 'fixed'].includes(getComputedStyle(node).position) && node.getClientRects().length)
+      .map(node => node.getBoundingClientRect().bottom));
+    return { top: rect.top, bottom: rect.bottom, headingWidth: rect.width, height: rect.height,
+      headerTop: headerRect.top, headerBottom: headerRect.bottom, obstructionBottom,
+      viewportHeight: innerHeight, scrollY };
+  }, headerSelector);
+  assert.ok(layout.headingWidth > 30 && layout.height >= 18, `${label}: page title is visibly readable ${JSON.stringify(layout)}`);
+  assert.ok(layout.headerTop >= layout.obstructionBottom - 1 && layout.headerBottom <= layout.viewportHeight,
+    `${label}: complete page header is clear of navigation ${JSON.stringify(layout)}`);
+  await fit(heading, label + ' title');
+  return layout;
+}
+
 (async () => {
   Object.assign(process.env, { NODE_ENV: 'test', HOST: '127.0.0.1', REGISTRATION_MODE: 'open',
     JWT_SECRET: crypto.randomBytes(32).toString('hex'), JWT_EXPIRES_IN: '1h',
@@ -84,6 +120,129 @@ async function fit(locator, name) {
   const openSettings = async () => { await page.locator('.tb-settings-btn').click(); await expect(dialog).toBeVisible(); };
   const closeSettings = async () => { await dialog.locator('.account-modal-close-btn').click(); await expect(dialog).toHaveCount(0); };
   const goPlan = async () => { await page.goto('/spending/plan/overview'); await expect(page.locator('.plan-metrics-grid')).toBeVisible(); };
+
+  await check('route headings stay clear of navigation and recurring has a visible page title', async () => {
+    const layouts = [];
+    const scrollDown = async () => {
+      await page.evaluate(() => {
+        document.activeElement?.blur();
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
+      });
+      await settleScroll();
+    };
+    for (const theme of ['dark', 'light', 'cream', 'green']) {
+      for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: width === 1440 ? 1000 : 844 });
+        await page.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
+        await page.goto('/spending/home');
+        await expect(page.locator('html')).toHaveClass(new RegExp(theme + '-theme'));
+        await expect(page.locator('.home-txns-view-all-btn')).toBeVisible();
+        const desktop = width > 900;
+        const planNavigation = desktop ? page.locator('.sidebar-nav-group').nth(1) : page.locator('.mobile-section-nav');
+        await scrollDown();
+        if (desktop) await planNavigation.getByRole('button', { name: 'Tổng quan', exact: true }).click();
+        else await page.locator('.mobile-primary-nav').getByRole('button', { name: 'Kế hoạch', exact: true }).click();
+        await page.waitForURL('**/spending/plan/overview');
+        layouts.push({ theme, width, route: 'plan/overview', ...await readableRouteHeading('.plan-overview-title', `${theme}/${width}/overview`, '.plan-overview-header') });
+        for (const [tab, name, selector, header] of [
+          ['wallets', 'Ví & Tài khoản', '.wallets-v2-heading', '.wallets-v2-header'],
+          ['budgets', 'Ngân sách', '.budgets-view-title', '.budgets-page-header'],
+          ['recurring', 'Khoản định kỳ', '.recurring-route-heading', '.recurring-page-header']
+        ]) {
+          await scrollDown();
+          await planNavigation.getByRole('button', { name, exact: true }).click();
+          await page.waitForURL('**/spending/plan/' + tab);
+          const layout = await readableRouteHeading(selector, `${theme}/${width}/${tab}`, header);
+          layouts.push({ theme, width, route: 'plan/' + tab, ...layout });
+          if (tab !== 'budgets') await page.screenshot({ path: path.join(evidence, `route-${tab}-${theme}-${width}.png`) });
+        }
+        await scrollDown();
+        if (desktop) await page.locator('.sidebar-nav-group').nth(2).getByRole('button', { name: 'Lịch sử', exact: true }).click();
+        else {
+          await page.locator('.mobile-primary-nav').getByRole('button', { name: 'Phân tích', exact: true }).click();
+          await page.locator('.mobile-section-nav').getByRole('button', { name: 'Lịch sử', exact: true }).click();
+        }
+        await page.waitForURL('**/spending/analytics/transactions');
+        layouts.push({ theme, width, route: 'analytics/transactions', ...await readableRouteHeading('#transaction-history-title', `${theme}/${width}/history`, '.transaction-history-header') });
+        await page.screenshot({ path: path.join(evidence, `route-history-${theme}-${width}.png`) });
+        await page.goBack();
+        if (!desktop) await page.goBack();
+        await page.waitForURL('**/spending/plan/recurring');
+        await readableRouteHeading('.recurring-route-heading', `${theme}/${width}/back`, '.recurring-page-header');
+        await scrollDown();
+        if (!desktop) await page.goForward();
+        await page.goForward();
+        await page.waitForURL('**/spending/analytics/transactions');
+        await readableRouteHeading('#transaction-history-title', `${theme}/${width}/forward`, '.transaction-history-header');
+      }
+    }
+    fs.writeFileSync(path.join(evidence, 'route-heading-layouts.json'), JSON.stringify(layouts, null, 2));
+    await page.setViewportSize({ width: 390, height: 844 });
+  });
+
+  await check('guide stays readable, keyboard accessible and opens the requested tools', async () => {
+    const guide = page.locator('.guide-modal-dialog');
+    const openGuide = async () => {
+      await openSettings();
+      await dialog.locator('.settings-nav-item').filter({ hasText: /Hướng dẫn sử dụng|User guide|使用指南/ }).click();
+      await dialog.locator('.settings-guide-card button').click();
+      await expect(guide).toBeVisible();
+      await expect(dialog).toHaveCount(0);
+    };
+    for (const locale of ['vi', 'en', 'zh-CN']) {
+      for (const [width, height] of [[1440, 1000], [1280, 720], [390, 844], [320, 568]]) {
+        await page.setViewportSize({ width, height });
+        await page.evaluate(value => localStorage.setItem('caltdhy_lang', value), locale);
+        await page.goto('/spending/home');
+        await expect(page.locator('.home-btn-add-txn')).toBeVisible();
+        await openGuide();
+        await expect(guide.getByRole('tab')).toHaveCount(6);
+        await expect(guide.getByRole('tab').first()).toHaveAttribute('aria-selected', 'true');
+        assert.equal(await page.locator('body').evaluate(node => node.style.overflow), 'hidden');
+        for (const tab of await guide.getByRole('tab').all()) {
+          await tab.click();
+          await expect(tab).toHaveAttribute('aria-selected', 'true');
+          const panel = guide.getByRole('tabpanel');
+          await expect(panel).toBeVisible();
+          await fit(guide, `${locale}/${width} guide`);
+          await fit(panel, `${locale}/${width} guide content`);
+          const bounds = await guide.boundingBox();
+          assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height + 1, 'Guide fits vertically');
+          await expect(guide.locator('.guide-modal-footer button')).toBeInViewport();
+          if (locale === 'vi' && width === 390 && /Hũ/.test(await tab.innerText())) {
+            await guide.screenshot({ path: path.join(evidence, 'guide-jars-mobile.png') });
+          }
+        }
+        await guide.getByRole('tab').first().focus();
+        await page.keyboard.press('End');
+        await expect(guide.getByRole('tab').last()).toBeFocused();
+        await expect(guide.getByRole('tab').last()).toHaveAttribute('aria-selected', 'true');
+        await page.keyboard.press('Home');
+        await expect(guide.getByRole('tab').first()).toBeFocused();
+        if (locale === 'vi' && width === 1440) await guide.screenshot({ path: path.join(evidence, 'guide-quickstart-desktop.png') });
+        await page.keyboard.press('Escape');
+        await expect(guide).toHaveCount(0);
+        assert.notEqual(await page.locator('body').evaluate(node => node.style.overflow), 'hidden');
+      }
+    }
+    await page.evaluate(() => localStorage.setItem('caltdhy_lang', 'vi'));
+    await page.goto('/spending/home');
+    await openGuide();
+    await guide.getByRole('tabpanel').locator('.guide-action-link').first().click();
+    await page.waitForURL('**/spending/plan/wallets');
+    await readableRouteHeading('.wallets-v2-heading', 'guide wallet link', '.wallets-v2-header');
+    await openGuide();
+    await guide.getByRole('tabpanel').locator('.guide-action-link').nth(2).click();
+    await expect(page.locator('.txn-modal-card')).toBeVisible();
+    await expect(guide).toHaveCount(0);
+    await page.locator('.txn-modal-close-btn').click();
+    await openGuide();
+    await guide.getByRole('tab', { name: 'Cài đặt', exact: true }).click();
+    await guide.getByRole('tabpanel').locator('.guide-action-link').nth(1).click();
+    await expect(dialog).toHaveAccessibleName('Hồ sơ');
+    await closeSettings();
+    await page.setViewportSize({ width: 390, height: 844 });
+  });
 
   await check('settings opens its home, themes take one further tap and profile opens directly', async () => {
     await openSettings();
@@ -260,6 +419,7 @@ async function fit(locator, name) {
       } finally { await errorPage.close(); }
     }
   });
+  await require('./jars-ux-scenarios.cjs')({ page, check, backend, user, wallet, evidence, fit });
   assert.deepEqual(errors, [], 'No unhandled browser errors in normal flows');
   console.log(`PASS ${passed} mobile UX scenarios; screenshots: ${evidence}`);
   await context.close();

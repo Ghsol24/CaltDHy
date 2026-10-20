@@ -1,0 +1,54 @@
+.jar-dialog-backdrop {
+  position: fixed;
+  inset: var(--jar-viewport-top, 0px) 0 auto;
+  height: var(--jar-viewport-height, 100dvh);
+  z-index: var(--z-dialog);
+  display: grid;
+  place-items: center;
+  padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  box-sizing: border-box;
+  background: var(--color-overlay);
+  overscroll-behavior: contain;
+}
+.jar-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 620px);
+  max-height: min(740px, 100%);
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-dialog);
+  overflow: hidden;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.jar-dialog *, .jar-dialog *::before, .jar-dialog *::after { box-sizing: border-box; }
+.jar-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 26px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.jar-dialog-header > div { min-width: 0; }
+.jar-dialog-header h2 { margin: 0; font-size: 21px; font-weight: 750; line-height: 1.35; overflow-wrap: anywhere; }
+.jar-dialog-header p { margin: 6px 0 0; font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.jar-dialog-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 12px; background: var(--surface-subtle); color: var(--text-secondary); cursor: pointer; }
+.jar-dialog-close:hover { color: var(--primary); background: var(--primary-light); }
+.jar-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 22px 26px; }
+.jar-dialog-footer { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 16px 26px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.jar-dialog button:focus-visible, .jar-dialog input:focus-visible, .jar-dialog textarea:focus-visible, .jar-dialog select:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.jar-dialog button:disabled { opacity: .55; cursor: not-allowed; }
+.jar-dialog input, .jar-dialog select, .jar-dialog textarea { max-width: 100%; min-width: 0; }
+.jar-dialog-footer button { min-height: 44px; white-space: normal; }
+.jar-dialog .jar-detail-body { overflow: visible; padding: 0; }
+.jar-dialog .jar-detail-footer { border: 0; padding: 0; width: 100%; flex-wrap: wrap; gap: 10px; }
+.jar-dialog .jar-detail-history-item { gap: 12px; overflow-wrap: anywhere; }
+.jar-dialog .jar-detail-history-item > div { min-width: 0; }
+@media (max-width: 600px) {
+  .jar-dialog-backdrop { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+  .jar-dialog { border-radius: 18px; }
+  .jar-dialog-header { padding: 18px 18px 16px; gap: 10px; }
+  .jar-dialog-header h2 { font-size: 20px; }
+  .jar-dialog-body { padding: 18px; }
+  .jar-dialog-footer { padding: 14px 18px; }
+  .jar-dialog input, .jar-dialog select, .jar-dialog textarea { font-size: 16px; }
+}

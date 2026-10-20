@@ -1,0 +1,53 @@
+.jar-dialog.jar-transaction-dialog { width: min(100%, 570px); }
+.jar-transfer-form { display: grid; gap: 20px; min-width: 0; color: var(--color-text); }
+.jar-transfer-route { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--color-link); font-size: 13px; font-weight: 650; }
+.jar-transfer-route small { margin-left: auto; color: var(--color-text-secondary); font-size: 12px; font-weight: 400; }
+.jar-transfer-field { min-width: 0; }
+.jar-transfer-field > label, .jar-transfer-wallet-box > label { display: block; margin-bottom: 8px; color: var(--color-text); font-size: 13px; font-weight: 650; }
+.jar-transfer-field > label > span, .jar-transfer-wallet-box > label > span { color: var(--color-text-secondary); font-weight: 400; }
+.jar-transfer-amount-box { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 15px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); }
+.jar-transfer-amount-box:focus-within { border-color: var(--color-link); box-shadow: var(--focus-ring); }
+.jar-transfer-amount-box > input { min-width: 0; width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-text); font: 650 clamp(22px, 5vw, 30px)/1.25 var(--font-mono); font-variant-numeric: tabular-nums; outline: none; }
+.jar-transfer-amount-box > span { flex: 0 0 auto; color: var(--color-text-secondary); font-size: 12px; font-weight: 600; }
+.jar-transfer-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.jar-transfer-presets > button { min-height: 32px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text-secondary); font: 500 12px/1.4 var(--font-sans); cursor: pointer; }
+.jar-transfer-presets > button:hover, .jar-transfer-presets > button.is-selected, .jar-transfer-presets > .jar-transfer-preset-goal { border-color: var(--color-border-strong); background: var(--color-brand-50); color: var(--color-link); }
+.jar-transfer-wallet-box { min-width: 0; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface-muted); }
+.jar-transfer-select-wrap { position: relative; min-width: 0; }
+.jar-transfer-select-wrap > select { display: block; width: 100%; min-width: 0; min-height: 43px; padding: 10px 34px 10px 11px; border: 1px solid var(--color-border-strong); border-radius: 8px; appearance: none; background: var(--color-surface); color: var(--color-text); font: 500 14px/1.4 var(--font-sans); text-overflow: ellipsis; cursor: pointer; }
+.jar-transfer-select-wrap > svg { position: absolute; top: 50%; right: 11px; transform: translateY(-50%); color: var(--color-text-secondary); pointer-events: none; }
+.jar-transfer-wallet-box p { margin: 8px 0 0; color: var(--color-text-secondary); font-size: 12px; line-height: 1.55; }
+.jar-transfer-no-wallet > button { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--color-link); font: 600 13px/1.5 var(--font-sans); text-align: left; cursor: pointer; }
+.jar-transfer-preview { min-width: 0; padding: 14px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-brand-50); }
+.jar-transfer-preview > h3 { margin: 0 0 12px; color: var(--color-text); font-size: 13px; font-weight: 650; }
+.jar-transfer-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.jar-transfer-preview-grid > div { display: grid; align-content: start; gap: 5px; min-width: 0; }
+.jar-transfer-preview-grid > div > span { display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--color-text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.jar-transfer-preview-grid > div > span > svg { flex: 0 0 auto; }
+.jar-transfer-preview-grid strong { color: var(--color-text); font: 650 18px/1.4 var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.jar-transfer-preview-grid small { color: var(--color-text-secondary); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.jar-transfer-note > textarea { display: block; min-width: 0; width: 100%; min-height: 72px; max-height: 160px; padding: 10px 12px; border: 1px solid var(--color-border-strong); border-radius: 9px; resize: vertical; background: var(--color-surface); color: var(--color-text); font: 400 14px/1.5 var(--font-sans); }
+.jar-transfer-note > textarea::placeholder { color: var(--color-text-muted); }
+.jar-transfer-form .jar-transfer-error, .jar-transfer-preview-grid strong.is-invalid { color: var(--color-danger); }
+.jar-transfer-form .jar-transfer-error { margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
+.jar-transfer-amount-box.is-invalid, .jar-transfer-wallet-box.is-invalid { border-color: var(--color-danger); }
+.jar-transfer-server-error { padding: 11px 13px; border: 1px solid var(--color-danger-border); border-radius: 9px; background: var(--color-danger-bg); color: var(--color-danger); font-size: 13px; line-height: 1.5; }
+.jar-transfer-cancel, .jar-transfer-submit { min-height: 42px; min-width: 0; padding: 10px 16px; border: 1px solid var(--color-border-strong); border-radius: 9px; font: 600 14px/1.4 var(--font-sans); overflow-wrap: anywhere; cursor: pointer; }
+.jar-transfer-cancel { background: var(--color-surface); color: var(--color-text); }
+.jar-transfer-submit { border-color: var(--color-action-bg); background: var(--color-action-bg); color: var(--color-on-action); }
+.jar-transfer-submit:hover:not(:disabled) { background: var(--color-action-hover-bg); }
+.jar-transfer-form :focus-visible, .jar-transfer-cancel:focus-visible, .jar-transfer-submit:focus-visible { outline: 2px solid var(--color-link); outline-offset: 3px; }
+.jar-transfer-form :disabled, .jar-transfer-cancel:disabled, .jar-transfer-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+@media (max-width: 430px) {
+  .jar-transfer-form { gap: 16px; }
+  .jar-transfer-route small { width: 100%; margin-left: 0; }
+  .jar-transfer-preview-grid { grid-template-columns: minmax(0, 1fr); gap: 13px; }
+  .jar-transfer-preview-grid > div + div { padding-top: 12px; border-top: 1px solid var(--color-border); }
+  .jar-transfer-cancel, .jar-transfer-submit { padding-inline: 11px; font-size: 13px; }
+}
+
+/* The surrounding amount box carries the focus ring. */
+.jar-dialog .jar-transfer-amount-box > input:focus-visible { outline: none; }
+@media (max-width: 600px) {
+  .jar-transfer-presets > button { min-height: 44px; }
+}

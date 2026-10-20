@@ -9028,6 +9028,32 @@ input[type="date"].modal-pro-input::-webkit-calendar-picker-indicator:hover {
   gap: 20px;
 }
 
+.recurring-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recurring-page-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--color-action-bg, #10B981);
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.recurring-route-heading {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-text, var(--txt));
+}
+
 /* 1. Top Header Bar Card (Full-width card chuẩn Ảnh 1) */
 .recurring-top-bar-card {
   background: var(--color-surface, var(--surface));
@@ -11194,6 +11220,12 @@ html.green-theme .cal-weekday.cal-danger {
   max-height: 88vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.guide-modal-dialog .budget-dialog-header,
+.guide-modal-dialog .guide-modal-footer {
+  flex-shrink: 0;
 }
 
 .guide-header-icon {
@@ -11242,6 +11274,8 @@ html.green-theme .cal-weekday.cal-danger {
 }
 
 .guide-modal-body {
+  min-height: 0;
+  overscroll-behavior: contain;
   padding: 20px 24px;
   overflow-y: auto;
   flex: 1;
@@ -11279,7 +11313,7 @@ html.green-theme .cal-weekday.cal-danger {
 
 .guide-steps-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 12px;
 }
 
@@ -11357,11 +11391,28 @@ html.green-theme .cal-weekday.cal-danger {
   padding: 14px 18px;
 }
 
+.guide-section-block h3,
 .guide-section-block h5 {
   font-size: 14px;
   font-weight: 700;
   color: var(--color-text, var(--text-primary));
   margin: 0;
+}
+
+.guide-modal-dialog .guide-action-link {
+  align-self: flex-start;
+  min-height: 32px;
+}
+
+@media (max-width: 600px) {
+  .guide-modal-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 32px); }
+  .guide-modal-dialog .budget-dialog-header { padding: 16px; gap: 10px; }
+  .guide-modal-dialog .budget-dialog-title { font-size: 18px; }
+  .guide-tabs-bar { padding: 8px 12px 0; }
+  .guide-tab-btn { min-height: 44px; padding: 10px; }
+  .guide-modal-body { padding: 16px; }
+  .guide-section-block { padding: 14px; }
+  .guide-modal-dialog .guide-action-link { min-height: 44px; }
 }
 
 .guide-section-block p {

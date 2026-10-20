@@ -104,7 +104,7 @@
     gap: 10px;
     align-items: center;
   }
-  .plan-feature-view :is(.plan-overview-title, .wallets-v2-heading, .budgets-view-title) {
+  .plan-feature-view :is(.plan-overview-title, .wallets-v2-heading, .budgets-view-title, .recurring-route-heading) {
     font-size: 19px;
     line-height: 1.35;
   }

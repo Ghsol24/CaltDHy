@@ -1,356 +1,228 @@
-import { getUserErrorMessage } from '../../utils/userErrors.js';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
-import { CheckOutlineIcon, TargetOutlineIcon, ArrowUpRightOutlineIcon, BulbOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
-import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
+import { getUserErrorMessage } from '../../utils/userErrors.js';
+import { JarOutlineIcon } from '../../components/ui/AppIcons';
+import { JarDialog } from './JarDialog';
+import { getJarTransactionCopy } from './jarTransactionCopy';
+import '../../assets/css/jar-transaction.css';
 
-const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
+const QUICK_AMOUNTS = [50000, 100000, 250000, 500000];
+const amountNumber = (value) => Number(String(value).replace(/\D/g, ''));
 
-export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'deposit' }) {
+export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'deposit', initialAmount = 0 }) {
   const { updateJarBalance } = useJarStore();
   const { wallets } = useWalletStore();
   const { addToast } = useToastStore();
-
-  const [action, setAction] = useState(initialAction); // 'deposit' | 'withdraw'
+  const navigateTo = useSpendingStore((state) => state.navigateTo);
+  const { lang } = useTranslation();
+  const copy = getJarTransactionCopy(lang);
+  const formId = useId();
+  const amountId = `${formId}-amount`;
+  const walletId = `${formId}-wallet`;
+  const noteId = `${formId}-note`;
+  const [action, setAction] = useState(initialAction === 'withdraw' ? 'withdraw' : 'deposit');
   const [amount, setAmount] = useState('');
   const [selectedWalletId, setSelectedWalletId] = useState('');
   const [reason, setReason] = useState('');
+  const [amountTouched, setAmountTouched] = useState(false);
+  const [walletTouched, setWalletTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  const modalRef = useRef(null);
   const amountInputRef = useRef(null);
-
-  useFocusTrap(modalRef, isOpen);
+  const walletInputRef = useRef(null);
+  const submittingRef = useRef(false);
+  const openTargetRef = useRef(null);
+  const activeWallets = useMemo(() => wallets.filter((wallet) => wallet.id && !wallet.archived), [wallets]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    setAction(initialAction || 'deposit');
-    setAmount('');
+    if (!isOpen) {
+      openTargetRef.current = null;
+      return;
+    }
+    const target = `${jar?.id || ''}:${initialAction}`;
+    // A wallet refresh must never erase the amount or note after a failed save.
+    if (openTargetRef.current === target) return;
+    openTargetRef.current = target;
+    setAction(initialAction === 'withdraw' ? 'withdraw' : 'deposit');
+    setAmount(Number.isSafeInteger(initialAmount) && initialAmount > 0 ? formatInputNumber(initialAmount) : '');
     setReason('');
+    setAmountTouched(false);
+    setWalletTouched(false);
     setErrorMsg('');
-
-    // Default wallet selection: pick default wallet if exists
-    const defaultWallet = wallets.find((w) => w.isDefault) || wallets[0];
-    setSelectedWalletId(defaultWallet ? defaultWallet.id : '');
-
-    const timer = setTimeout(() => {
-      amountInputRef.current?.focus();
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [isOpen, initialAction, wallets]);
+    const defaultWallet = activeWallets.find((wallet) => wallet.isDefault) || activeWallets[0];
+    setSelectedWalletId(defaultWallet?.id || '');
+  }, [isOpen, jar?.id, initialAction, initialAmount, activeWallets]);
 
   if (!isOpen || !jar) return null;
 
-  const currentBal = Number(jar.current || 0);
-  const targetBal = Number(jar.target || 0);
-  const remaining = Math.max(0, targetBal - currentBal);
+  const isDeposit = action === 'deposit';
+  const currentBalance = Number(jar.current || 0);
+  const remaining = Math.max(0, Number(jar.target || 0) - currentBalance);
+  const enteredAmount = amountNumber(amount);
+  const validAmount = Number.isSafeInteger(enteredAmount) && enteredAmount > 0;
+  const selectedWallet = activeWallets.find((wallet) => wallet.id === selectedWalletId);
+  const walletBalance = Number(selectedWallet?.currentBalance ?? selectedWallet?.initialBalance ?? 0);
+  const walletMinimum = selectedWallet?.type === 'credit' ? -Number(selectedWallet.creditLimit || 0) : 0;
+  const previewAmount = validAmount ? enteredAmount : 0;
+  const walletAfter = walletBalance + (isDeposit ? -previewAmount : previewAmount);
+  const jarAfter = currentBalance + (isDeposit ? previewAmount : -previewAmount);
+  const safePreview = Number.isSafeInteger(walletAfter) && Number.isSafeInteger(jarAfter);
+  const money = (value) => formatCurrency(value, { locale: lang });
+  const presetMoney = (value) => formatCurrency(value, { locale: lang, currency: 'VND' });
+  let amountError = '';
+  if (!validAmount) amountError = copy.amountPositive;
+  else if (!safePreview) amountError = copy.amountRange;
+  else if (!isDeposit && enteredAmount > currentBalance) amountError = copy.withdrawTooMuch(money(currentBalance));
+  else if (isDeposit && selectedWallet && walletAfter < walletMinimum) amountError = copy.walletInsufficient;
+  const walletError = selectedWallet ? '' : copy.chooseWallet;
+  const showAmountError = amountTouched || amount.length > 0;
+  const showWalletError = walletTouched || Boolean(selectedWalletId && !selectedWallet);
+  const canSubmit = !isSubmitting && !amountError && !walletError;
 
-  const handleAmountChange = (e) => {
-    const rawVal = e.target.value.replace(/\D/g, '');
-    if (!rawVal) {
-      setAmount('');
-      return;
-    }
-    const num = parseInt(rawVal, 10);
-    setAmount(num ? formatInputNumber(num) : '');
-  };
-
-  const handleQuickAdd = (val) => {
-    const currentNum = amount ? parseInt(String(amount).replace(/\D/g, ''), 10) : 0;
-    const nextVal = currentNum + val;
-    setAmount(formatInputNumber(nextVal));
-  };
-
-  const handleQuickFillRemaining = () => {
-    if (remaining > 0) {
-      setAmount(formatInputNumber(remaining));
-    }
-  };
-
-  const handleQuickFillAllBalance = () => {
-    if (currentBal > 0) {
-      setAmount(formatInputNumber(currentBal));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const setEnteredAmount = (value) => {
+    if (submittingRef.current) return;
+    setAmount(formatInputNumber(value));
+    setAmountTouched(true);
     setErrorMsg('');
-
-    const cleanAmount = amount ? parseInt(String(amount).replace(/\D/g, ''), 10) : 0;
-
-    if (!cleanAmount || cleanAmount <= 0) {
-      setErrorMsg('Vui lòng nhập số tiền hợp lệ lớn hơn 0.');
+  };
+  const requestClose = () => {
+    if (!submittingRef.current) onClose();
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (submittingRef.current) return;
+    setAmountTouched(true);
+    setWalletTouched(true);
+    setErrorMsg('');
+    if (amountError) {
       amountInputRef.current?.focus();
       return;
     }
-
-    if (action === 'withdraw' && cleanAmount > currentBal) {
-      setErrorMsg(`Số tiền rút không được vượt quá số dư trong hũ (${formatCurrency(currentBal)}).`);
+    if (walletError) {
+      walletInputRef.current?.focus();
       return;
     }
-
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
-      // Gộp việc đổi số dư hũ + đồng bộ ví (nếu có chọn) thành 1 lệnh gọi duy nhất.
-      // Backend xử lý atomic trong 1 Mongo transaction (xem PATCH /:id/deposit|withdraw),
-      // tránh tình trạng đổi số hũ thành công nhưng phần đồng bộ ví lỡ thất bại giữa chừng
-      // (ví dụ mất mạng) để lại trạng thái "hũ đã đổi nhưng không có giao dịch nào ghi nhận".
-      await updateJarBalance(jar.id, action, cleanAmount, reason.trim(), selectedWalletId || null);
-
-      setIsSubmitting(false);
+      const result = await updateJarBalance(jar.id, action, enteredAmount, reason.trim(), selectedWallet.id);
+      if (!result?.success) throw Object.assign(new Error('INVALID_RESPONSE'), { code: 'INVALID_RESPONSE' });
       onClose();
-      addToast({
-        type: 'success',
-        message: action === 'deposit'
-          ? `Đã nạp ${formatCurrency(cleanAmount)} vào hũ "${jar.name}".`
-          : `Đã rút ${formatCurrency(cleanAmount)} từ hũ "${jar.name}".`,
-        duration: 4000
-      });
-    } catch (err) {
+      addToast({ type: 'success', message: isDeposit
+        ? copy.depositSuccess(money(enteredAmount), jar.name)
+        : copy.withdrawSuccess(money(enteredAmount), jar.name), duration: 4000 });
+    } catch (error) {
+      setErrorMsg(getUserErrorMessage(error, 'error.save', lang));
+    } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
-      setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
+  };
+  const openWallets = () => {
+    if (submittingRef.current) return;
+    onClose();
+    navigateTo('plan', 'wallets');
   };
 
   return (
-    <div
-      className="txn-modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <JarDialog isOpen={isOpen} onClose={requestClose}
+      title={isDeposit ? copy.depositTitle : copy.withdrawTitle} subtitle={jar.name}
+      className="jar-transaction-dialog" busy={isSubmitting} initialFocusRef={amountInputRef}
+      footer={<>
+        <button type="button" className="jar-transfer-cancel" onClick={requestClose} disabled={isSubmitting}>{copy.cancel}</button>
+        <button type="submit" form={formId} className="jar-transfer-submit" disabled={!canSubmit}>
+          {isSubmitting ? copy.processing : validAmount
+            ? (isDeposit ? copy.depositAmount(money(enteredAmount)) : copy.withdrawAmount(money(enteredAmount)))
+            : (isDeposit ? copy.depositTitle : copy.withdrawTitle)}
+        </button>
+      </>}
     >
-      <div
-        ref={modalRef}
-        className="txn-modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="jar-tx-modal-title"
-      >
-        {/* Header */}
-        <div className="txn-modal-header">
-          <div className="jar-tx-header-title-box">
-            <h2 id="jar-tx-modal-title" className="txn-modal-title">
-              {action === 'deposit' ? 'Nạp tiền vào hũ' : 'Rút tiền từ hũ'}
-            </h2>
-            <span className="jar-tx-subtitle" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <JarOutlineIcon size={14} /> {jar.name} · Hiện có {formatCurrency(currentBal)}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="txn-modal-close-btn"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+      <form id={formId} onSubmit={handleSubmit} noValidate className="jar-transfer-form" aria-busy={isSubmitting}>
+        <div className="jar-transfer-route" aria-label={isDeposit ? copy.depositRoute : copy.withdrawRoute}>
+          <span>{isDeposit ? copy.wallet : copy.jar}</span>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6" /></svg>
+          <span>{isDeposit ? copy.jar : copy.wallet}</span>
+          <small>{copy.internalTransfer}</small>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body">
-            {/* Jar Status Mini Card */}
-            <div className="jar-tx-summary-card">
-              <div className="jar-tx-summary-col">
-                <span className="jar-tx-summary-label">Số dư hiện tại</span>
-                <strong className="jar-tx-summary-val text-primary">{formatCurrency(currentBal)}</strong>
-              </div>
-              <div className="jar-tx-summary-divider" />
-              <div className="jar-tx-summary-col">
-                <span className="jar-tx-summary-label">Mục tiêu</span>
-                <strong className="jar-tx-summary-val">{formatCurrency(targetBal)}</strong>
-              </div>
-              <div className="jar-tx-summary-divider" />
-              <div className="jar-tx-summary-col">
-                <span className="jar-tx-summary-label">Còn thiếu</span>
-                <strong className="jar-tx-summary-val text-secondary">
-                  {remaining > 0 ? (
-                    formatCurrency(remaining)
-                  ) : (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--color-success, #10B981)' }}>
-                      <CheckOutlineIcon size={13} />
-                      <span>Đã đạt</span>
-                    </span>
-                  )}
-                </strong>
-              </div>
-            </div>
-
-            {/* Amount Input */}
-            <div className="txn-field-group">
-              <label htmlFor="jar-tx-amount" className="txn-label">
-                <span>{action === 'deposit' ? 'Số tiền nạp' : 'Số tiền rút'}</span>
-              </label>
-              <div className="txn-amount-box">
-                <input
-                  id="jar-tx-amount"
-                  ref={amountInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  className="txn-amount-input"
-                  placeholder="0"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  required
-                />
-                <span className="txn-amount-suffix">VNĐ</span>
-              </div>
-            </div>
-
-            {/* Quick Amount Chips */}
-            <div className="jar-tx-chips-wrap">
-              {QUICK_AMOUNTS.map((val) => (
-                <button
-                  key={val}
-                  type="button"
-                  className="jar-tx-chip-btn"
-                  onClick={() => handleQuickAdd(val)}
-                >
-                  +{val >= 1000000 ? `${val / 1000000}tr` : `${val / 1000}k`}
-                </button>
-              ))}
-
-              {action === 'deposit' && remaining > 0 && (
-                <button
-                  type="button"
-                  className="jar-tx-chip-btn jar-tx-chip-btn--accent"
-                  onClick={handleQuickFillRemaining}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                >
-                  <TargetOutlineIcon size={13} />
-                  <span>Nạp đủ mục tiêu</span>
-                </button>
-              )}
-
-              {action === 'withdraw' && currentBal > 0 && (
-                <button
-                  type="button"
-                  className="jar-tx-chip-btn jar-tx-chip-btn--accent"
-                  onClick={handleQuickFillAllBalance}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-                >
-                  <ArrowUpRightOutlineIcon size={13} />
-                  <span>Rút toàn bộ số dư</span>
-                </button>
-              )}
-            </div>
-
-            {/* Wallet Selection for Auto-Sync */}
-            <div className="txn-field-group">
-              <label className="txn-label">
-                <span>
-                  {action === 'deposit' ? 'Trừ tiền từ ví (tùy chọn)' : 'Cộng tiền vào ví (tùy chọn)'}
-                </span>
-              </label>
-              <CustomWalletDropdown
-                wallets={wallets}
-                value={selectedWalletId}
-                onChange={setSelectedWalletId}
-                allowNone={true}
-                noneLabel="-- Không đồng bộ ví (chỉ ghi nhận hũ độc lập) --"
-              />
-              <span className="txn-field-hint" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <BulbOutlineIcon size={13} style={{ flexShrink: 0 }} />
-                <span>
-                  {selectedWalletId
-                    ? action === 'deposit'
-                      ? 'Hệ thống sẽ tự động tạo 1 giao dịch Chi tiêu từ ví này để số dư ví luôn chính xác.'
-                      : 'Hệ thống sẽ tự động tạo 1 giao dịch Thu nhập vào ví này để cập nhật số dư ví.'
-                    : 'Tiền trong hũ sẽ được cập nhật độc lập, không làm thay đổi số dư ví nào.'}
-                </span>
-              </span>
-            </div>
-
-            {/* Reason / Note */}
-            <div className="txn-field-group">
-              <label htmlFor="jar-tx-reason" className="txn-label">
-                <span>Lý do / Ghi chú</span>
-              </label>
-              <input
-                id="jar-tx-reason"
-                type="text"
-                className="txn-input"
-                placeholder={
-                  action === 'deposit'
-                    ? 'VD: Trích lương tháng 8, Tiết kiệm hàng tuần...'
-                    : 'VD: Rút tiền đặt cọc, Mua sắm mục tiêu...'
-                }
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                maxLength={100}
-              />
-            </div>
-
-            {/* Error Message */}
-            {errorMsg && (
-              <div className="txn-error-banner" role="alert">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <span>{errorMsg}</span>
-              </div>
-            )}
+        <div className="jar-transfer-field">
+          <label htmlFor={amountId}>{isDeposit ? copy.depositAmountLabel : copy.withdrawAmountLabel}</label>
+          <div className={`jar-transfer-amount-box${showAmountError && amountError ? ' is-invalid' : ''}`}>
+            <input id={amountId} ref={amountInputRef} type="text" inputMode="numeric" autoComplete="off"
+              value={amount} placeholder="0" required disabled={isSubmitting}
+              aria-invalid={Boolean(showAmountError && amountError)}
+              aria-describedby={showAmountError && amountError ? `${amountId}-error` : undefined}
+              onBlur={() => setAmountTouched(true)}
+              onChange={(event) => { setAmount(formatInputNumber(event.target.value)); setErrorMsg(''); }} />
+            <span>VND</span>
           </div>
-
-          {/* Footer */}
-          <div className="txn-modal-footer">
-            <button
-              type="button"
-              className="txn-btn-cancel"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className={`txn-btn-submit ${action === 'withdraw' ? 'txn-btn-submit--withdraw' : ''}`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
-                  <span>Đang xử lý...</span>
-                </>
-              ) : action === 'deposit' ? (
-                'Xác nhận nạp tiền'
-              ) : (
-                'Xác nhận rút tiền'
-              )}
-            </button>
+          <div className="jar-transfer-presets" role="group" aria-label={copy.quickAmounts}>
+            {QUICK_AMOUNTS.map((value) => <button key={value} type="button"
+              className={enteredAmount === value ? 'is-selected' : ''} disabled={isSubmitting}
+              onClick={() => setEnteredAmount(value)}>{presetMoney(value)}</button>)}
+            {(isDeposit ? remaining > 0 : currentBalance > 0) && <button type="button"
+              className="jar-transfer-preset-goal" disabled={isSubmitting}
+              onClick={() => setEnteredAmount(isDeposit ? remaining : currentBalance)}>
+              {isDeposit ? copy.fillGoal : copy.withdrawAll}
+            </button>}
           </div>
-        </form>
-      </div>
-    </div>
+          {showAmountError && amountError && <p id={`${amountId}-error`} className="jar-transfer-error" role="alert">{amountError}</p>}
+        </div>
+
+        <div className={`jar-transfer-wallet-box${showWalletError && walletError ? ' is-invalid' : ''}`}>
+          <label htmlFor={walletId}>{isDeposit ? copy.sourceWallet : copy.destinationWallet} <span>{copy.required}</span></label>
+          {activeWallets.length > 0 ? <>
+            <div className="jar-transfer-select-wrap">
+              <select id={walletId} ref={walletInputRef} value={selectedWallet ? selectedWalletId : ''}
+                required disabled={isSubmitting} aria-invalid={Boolean(showWalletError && walletError)}
+                aria-describedby={`${walletId}-hint${showWalletError && walletError ? ` ${walletId}-error` : ''}`}
+                onChange={(event) => { setSelectedWalletId(event.target.value); setWalletTouched(true); setErrorMsg(''); }}>
+                <option value="" disabled>{copy.chooseWallet}</option>
+                {activeWallets.map((wallet) => <option key={wallet.id} value={wallet.id}>
+                  {wallet.name}{wallet.isDefault ? ` · ${copy.defaultWallet}` : ''} · {money(wallet.currentBalance ?? wallet.initialBalance ?? 0)}
+                </option>)}
+              </select>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </div>
+            <p id={`${walletId}-hint`}>{isDeposit ? copy.depositHint : copy.withdrawHint}</p>
+            {showWalletError && walletError && <p id={`${walletId}-error`} className="jar-transfer-error" role="alert">{walletError}</p>}
+          </> : <div className="jar-transfer-no-wallet" role="status">
+            <p>{copy.noWallet}</p>
+            <button type="button" onClick={openWallets}>{copy.openWallets} <span aria-hidden="true">→</span></button>
+          </div>}
+        </div>
+
+        <section className="jar-transfer-preview" aria-labelledby={`${formId}-preview`}>
+          <h3 id={`${formId}-preview`}>{copy.afterConfirmation}</h3>
+          <div className="jar-transfer-preview-grid">
+            <div>
+              <span>{selectedWallet?.name || copy.selectedWallet}</span>
+              <strong className={isDeposit && selectedWallet && walletAfter < walletMinimum ? 'is-invalid' : ''}>
+                {selectedWallet && safePreview ? money(walletAfter) : '—'}
+              </strong>
+              <small>{copy.currently} {selectedWallet ? money(walletBalance) : '—'}</small>
+            </div>
+            <div>
+              <span><JarOutlineIcon size={14} aria-hidden="true" />{jar.name}</span>
+              <strong className={jarAfter < 0 ? 'is-invalid' : ''}>{safePreview ? money(jarAfter) : '—'}</strong>
+              <small>{copy.currently} {money(currentBalance)}</small>
+            </div>
+          </div>
+        </section>
+
+        <div className="jar-transfer-field jar-transfer-note">
+          <label htmlFor={noteId}>{copy.note} <span>{copy.optional}</span></label>
+          <textarea id={noteId} rows={2} maxLength={200} value={reason} disabled={isSubmitting}
+            placeholder={isDeposit ? copy.depositNotePlaceholder : copy.withdrawNotePlaceholder}
+            onChange={(event) => { setReason(event.target.value); setErrorMsg(''); }} />
+        </div>
+        {errorMsg && <div className="jar-transfer-server-error" role="alert">{errorMsg}</div>}
+      </form>
+    </JarDialog>
   );
 }

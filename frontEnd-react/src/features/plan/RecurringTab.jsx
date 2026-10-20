@@ -354,7 +354,15 @@ export function RecurringTab() {
 
   return (
     <div className="recurring-view-v2-container" role="region" aria-label="Khoản chi định kỳ và trả góp">
-      <h2 className="u-sr-only recurring-route-heading">Khoản định kỳ</h2>
+      <div className="recurring-page-header">
+        <span className="recurring-page-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        </span>
+        <h2 className="recurring-route-heading">{t('nav.recurring')}</h2>
+      </div>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
       <div className="recurring-top-bar-card">
         <div className="recurring-bar-stats-group">

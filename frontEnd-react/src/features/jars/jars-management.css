@@ -1,0 +1,93 @@
+.jar-management-dialog { width: min(100%, 610px); }
+.jar-history-management-dialog { width: min(100%, 760px); }
+.jm-form { display: flex; flex-direction: column; gap: 20px; }
+.jm-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.jm-field > label, .jm-colors > legend { color: var(--color-text); font-size: 13px; font-weight: 650; line-height: 1.5; }
+.jm-unit { color: var(--color-text-muted); font-size: 11px; margin-left: 4px; }
+.jm-optional { font-size: 12px; font-weight: 400; color: var(--color-text-muted); }
+.jm-input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 46px; border: 1px solid var(--color-border); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; line-height: 1.4; color: var(--color-text); background: var(--color-surface); }
+.jm-input::placeholder, .jm-history-search input::placeholder { color: var(--color-text-muted); opacity: 1; }
+.jm-input:focus-visible, .jm-history-search:focus-within { border-color: var(--color-brand-600); outline: 2px solid var(--color-brand-600); outline-offset: 2px; }
+.jm-input[aria-invalid="true"] { border-color: var(--color-danger); }
+.jm-money-input { font-family: var(--font-mono, monospace); font-weight: 650; }
+.jm-two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.jm-field-hint, .jm-balance-readonly p { margin: 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.jm-balance-readonly { border: 1px solid var(--color-border); background: var(--color-surface-muted); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.jm-balance-readonly > span { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--color-text-muted); font-size: 13px; }
+.jm-balance-readonly strong { color: var(--color-text); font-family: var(--font-mono, monospace); }
+.jm-colors { min-width: 0; border: 0; padding: 0; margin: 0; }
+.jm-color-options { display: flex; flex-wrap: wrap; gap: 2px; margin: 3px 0 -6px -7px; }
+.jm-color-option { position: relative; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
+.jm-color-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.jm-color-swatch { display: grid; place-items: center; width: 28px; height: 28px; background: var(--jm-swatch); border-radius: 50%; border: 1px solid color-mix(in srgb, var(--color-text) 15%, transparent); color: var(--color-on-action); }
+.jm-color-swatch svg { width: 18px; height: 18px; }
+.jm-color-option input:checked + .jm-color-swatch { outline: 2px solid var(--color-text); outline-offset: 3px; }
+.jm-color-option input:focus-visible + .jm-color-swatch { outline: 3px solid var(--color-brand-600); outline-offset: 4px; }
+.jm-remaining { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 13px 14px; border-radius: 10px; background: var(--color-surface-muted); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 13px; }
+.jm-remaining strong { color: var(--color-text); font-size: 19px; font-family: var(--font-mono, monospace); overflow-wrap: anywhere; }
+.jm-error { margin: 0; padding: 10px 12px; border: 1px solid var(--color-danger-border); background: var(--color-danger-bg); border-radius: 10px; color: var(--color-danger); font-size: 13px; line-height: 1.5; }
+.jm-button { min-height: 44px; border-radius: 10px; padding: 10px 16px; border: 1px solid transparent; font: inherit; font-size: 13px; line-height: 1.4; font-weight: 650; cursor: pointer; }
+.jm-button-primary { background: var(--color-action-bg); color: var(--color-on-action); border-color: var(--color-action-bg); }
+.jm-button-secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--color-border); }
+.jm-button:focus-visible, .jm-history-type-button:focus-visible { outline: 3px solid var(--color-brand-600); outline-offset: 3px; }
+.jm-button:disabled { cursor: wait; opacity: .65; }
+.jar-history-management-dialog .jar-dialog-body { padding: 0; display: flex; overflow: hidden; }
+.jm-history { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+.jm-history-toolbar { flex-shrink: 0; padding: 18px 24px 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+.jm-history-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 12px; }
+.jm-history-totals > div { min-width: 0; padding-right: 10px; }
+.jm-history-totals > div + div { border-left: 1px solid var(--color-border); padding-left: 12px; }
+.jm-history-totals dt { font-size: 12px; color: var(--color-text-muted); margin-bottom: 5px; line-height: 1.5; }
+.jm-history-totals dd { margin: 0; color: var(--color-text); font-family: var(--font-mono, monospace); font-size: clamp(13px, 2.4vw, 17px); font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.jm-history-totals .jm-deposit { color: var(--color-success); }
+.jm-history-totals .jm-withdraw { color: var(--color-text); }
+.jm-history-type-filter { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 6px; padding: 5px; box-sizing: border-box; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 12px; }
+.jm-history-type-button { min-width: 0; min-height: 44px; display: flex; gap: 8px; justify-content: center; align-items: center; border: 1px solid transparent; border-radius: 8px; padding: 8px 6px; color: var(--color-text-muted); background: transparent; font: inherit; font-weight: 650; font-size: 13px; line-height: 1.4; cursor: pointer; }
+.jm-history-type-button:hover { background: var(--color-surface); color: var(--color-text); }
+.jm-history-type-button.is-active { color: var(--color-on-action); background: var(--color-action-bg); border-color: var(--color-action-bg); box-shadow: var(--shadow-sm); }
+.jm-history-type-count { min-width: 19px; padding: 1px 4px; border-radius: 5px; font-size: 11px; font-weight: 650; background: color-mix(in srgb, currentColor 10%, transparent); }
+.jm-history-type-button.is-active .jm-history-type-count { background: color-mix(in srgb, var(--color-on-action) 18%, transparent); }
+.jm-history-search-row { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(0, 1.2fr); gap: 10px; min-width: 0; }
+.jm-history-jar-select, .jm-history-jar-select .custom-select-trigger { min-width: 0; width: 100%; }
+.jm-history-jar-select .custom-select-trigger { min-height: 44px; }
+.jm-history-search { display: flex; align-items: center; min-width: 0; border: 1px solid var(--color-border); border-radius: 10px; padding: 0 11px; background: var(--color-surface); color: var(--color-text-muted); gap: 8px; }
+.jm-history-search svg { flex-shrink: 0; width: 17px; height: 17px; }
+.jm-history-search input { min-width: 0; width: 100%; min-height: 44px; border: 0; padding: 8px 0; background: transparent; color: var(--color-text); font: inherit; font-size: 13px; outline: none; box-sizing: border-box; }
+.jm-history-list { flex: 1; min-height: 90px; max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; padding: 6px 24px 16px; scrollbar-gutter: stable; }
+.jm-history-list:focus-visible { outline: 2px solid var(--color-brand-600); outline-offset: -3px; }
+.jm-history-day h3 { font-size: 12px; line-height: 1.5; color: var(--color-text-muted); margin: 13px 0 6px; font-weight: 600; }
+.jm-history-day ul { padding: 0; margin: 0; list-style: none; }
+.jm-history-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+.jm-history-row:last-child { border-bottom: 0; }
+.jm-history-direction { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-size: 19px; color: var(--color-text-muted); background: var(--color-surface-muted); }
+.jm-history-row.is-deposit .jm-history-direction { color: var(--color-success); background: var(--color-success-bg); }
+.jm-history-row-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.jm-history-row-copy strong { color: var(--color-text); font-size: 13px; font-weight: 650; line-height: 1.5; overflow-wrap: anywhere; }
+.jm-history-row-action { font-size: 11px; line-height: 1.4; color: var(--color-text-muted); }
+.jm-history-row-copy p { color: var(--color-text-muted); margin: 2px 0 0; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.jm-history-amount { font-family: var(--font-mono, monospace); font-size: 13px; line-height: 1.5; font-weight: 700; color: var(--color-text); text-align: right; padding-top: 1px; overflow-wrap: anywhere; max-width: 220px; }
+.jm-history-row.is-deposit .jm-history-amount { color: var(--color-success); }
+.jm-history-empty { padding: 28px 8px; margin: 0; color: var(--color-text-muted); text-align: center; font-size: 13px; line-height: 1.6; }
+.jm-history-count { color: var(--color-text-muted); font-size: 12px; line-height: 1.5; margin-right: auto; }
+.jm-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 480px) {
+  .jm-two-columns { grid-template-columns: 1fr; gap: 18px; }
+  .jm-form { gap: 18px; }
+  .jm-history-toolbar { padding: 14px; gap: 12px; }
+  .jm-history-list { padding: 4px 14px 12px; }
+  .jm-history-search-row { grid-template-columns: 1fr; }
+  .jm-history-totals { gap: 6px; }
+  .jm-history-totals > div { padding-right: 0; }
+  .jm-history-totals > div + div { padding-left: 7px; }
+  .jm-history-row { grid-template-columns: 26px minmax(0, 1fr); gap: 8px; }
+  .jm-history-direction { width: 26px; height: 28px; }
+  .jm-history-amount { grid-column: 2; text-align: left; padding-top: 0; max-width: 100%; }
+  .jm-history-type-button { gap: 5px; font-size: 12px; }
+  .jm-history-type-count { min-width: 14px; padding: 1px 3px; }
+  .jm-history-count { max-width: 55%; }
+}
+@media (max-height: 600px) and (min-width: 481px) {
+  .jm-history-toolbar { padding-top: 10px; padding-bottom: 10px; gap: 9px; }
+  .jm-history-totals dt { margin-bottom: 0; }
+  .jm-history-list { min-height: 48px; }
+}

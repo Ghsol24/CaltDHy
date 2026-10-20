@@ -13,9 +13,19 @@ function focusRouteContent(route) {
     const target = document.querySelector(focus);
     if (target) {
       if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
-      if (route.subTab) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      // Standalone pages start at the top; long views keep their section links.
+      // Account for both sticky bars before placing a section below them.
+      const isStandalone = route.view === 'home' || route.view === 'plan' || route.subTab === 'transactions';
+      const stickyBottom = [...document.querySelectorAll('.topbar, .mobile-section-nav')]
+        .reduce((bottom, bar) => {
+          const style = getComputedStyle(bar);
+          if (!['sticky', 'fixed'].includes(style.position) || bar.getClientRects().length === 0) return bottom;
+          return Math.max(bottom, (parseFloat(style.top) || 0) + bar.getBoundingClientRect().height);
+        }, 0);
+      window.scrollTo({
+        top: isStandalone ? 0 : Math.max(0, window.scrollY + target.getBoundingClientRect().top - stickyBottom - 24),
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+      });
       target.focus({ preventScroll: true });
       return;
     }

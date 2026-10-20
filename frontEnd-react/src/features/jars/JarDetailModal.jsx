@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import React from 'react';
+import { JarDialog } from './JarDialog';
 import { formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
 import { JarGlassGraphic } from './JarGlassGraphic';
-import { TargetOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+import { TargetOutlineIcon, CheckOutlineIcon } from '../../components/ui/AppIcons';
 
 export function JarDetailModal({
   isOpen,
@@ -12,9 +12,6 @@ export function JarDetailModal({
   onWithdraw,
   onEdit
 }) {
-  const modalRef = useRef(null);
-  useFocusTrap(modalRef, isOpen);
-
   if (!isOpen || !jar) return null;
 
   const currentAmt = Number(jar.current || 0);
@@ -50,50 +47,51 @@ export function JarDetailModal({
   }
 
   return (
-    <div
-      className="modal-backdrop-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="presentation"
-    >
-      <div
-        className="jar-detail-modal-dialog"
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Chi tiết hũ ${jar.name}`}
-      >
-        {/* Header */}
-        <div className="jar-detail-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 800,
-                color: accentColor,
-                background: `${accentColor}15`,
-                padding: '3px 10px',
-                borderRadius: '99px',
-                letterSpacing: '0.04em'
-              }}
-            >
-              {jar.category || 'MỤC TIÊU'}
-            </span>
-            <h3 className="jar-detail-title">
-              {jar.name}
-            </h3>
-          </div>
+    <JarDialog isOpen={isOpen} onClose={onClose} title={jar.name}
+      subtitle={jar.category || 'Mục tiêu tiết kiệm'} className="jar-detail-centered-dialog"
+      footer={(
+        <div className="jar-detail-footer">
           <button
             type="button"
-            className="jar-detail-close-btn"
-            onClick={onClose}
-            aria-label="Đóng"
+            className="jar-detail-btn-edit"
+            onClick={() => {
+              onClose();
+              onEdit(jar);
+            }}
           >
-            <CloseOutlineIcon size={14} />
+            Chỉnh sửa hũ
           </button>
-        </div>
 
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className="jar-detail-btn-withdraw"
+              onClick={() => {
+                onClose();
+                onWithdraw(jar);
+              }}
+              disabled={currentAmt <= 0}
+              style={{
+                cursor: currentAmt <= 0 ? 'not-allowed' : 'pointer',
+                opacity: currentAmt <= 0 ? 0.5 : 1
+              }}
+            >
+              Rút tiền
+            </button>
+
+            <button
+              type="button"
+              className="jar-detail-btn-deposit"
+              onClick={() => {
+                onClose();
+                onDeposit(jar);
+              }}
+            >
+              + Nạp tiền
+            </button>
+          </div>
+        </div>
+      )}>
         {/* Modal Scrollable Content */}
         <div className="jar-detail-body">
           {/* Top Visual & Stats Banner */}
@@ -213,7 +211,7 @@ export function JarDetailModal({
                 Hũ này chưa có giao dịch nạp hoặc rút nào.
               </div>
             ) : (
-              <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {history.map((entry, idx) => {
                   const isDeposit = entry.type === 'deposit';
                   return (
@@ -266,49 +264,6 @@ export function JarDetailModal({
           </div>
         </div>
 
-        {/* Modal Footer Actions */}
-        <div className="jar-detail-footer">
-          <button
-            type="button"
-            className="jar-detail-btn-edit"
-            onClick={() => {
-              onClose();
-              onEdit(jar);
-            }}
-          >
-            Chỉnh sửa hũ
-          </button>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className="jar-detail-btn-withdraw"
-              onClick={() => {
-                onClose();
-                onWithdraw(jar);
-              }}
-              disabled={currentAmt <= 0}
-              style={{
-                cursor: currentAmt <= 0 ? 'not-allowed' : 'pointer',
-                opacity: currentAmt <= 0 ? 0.5 : 1
-              }}
-            >
-              Rút tiền
-            </button>
-
-            <button
-              type="button"
-              className="jar-detail-btn-deposit"
-              onClick={() => {
-                onClose();
-                onDeposit(jar);
-              }}
-            >
-              + Nạp tiền
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </JarDialog>
   );
 }

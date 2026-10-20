@@ -1,247 +1,120 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import React, { useId, useMemo, useState } from 'react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { HistoryOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+import { useTranslation } from '../../i18n/useTranslation';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { JarDialog } from './JarDialog';
+import { jarsManagementText } from './jarsManagementCopy';
+import './jars-management.css';
+
+function activityDay(date) {
+  if (!date) return '';
+  const value = new Date(date);
+  if (Number.isNaN(value.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(value);
+  const part = (name) => parts.find((item) => item.type === name)?.value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
 
 export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
-  const modalRef = useRef(null);
-  useFocusTrap(modalRef, isOpen);
-
-  const [filterType, setFilterType] = useState('all'); // 'all' | 'deposit' | 'withdraw'
+  const { lang, label } = useTranslation();
+  const text = (key, values) => jarsManagementText(lang, key, values);
+  const id = useId();
+  const [filterType, setFilterType] = useState('all');
   const [selectedJarId, setSelectedJarId] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Aggregate all transactions from all jars
-  const allActivities = useMemo(() => {
-    const list = [];
-    jars.forEach((jar) => {
-      const history = Array.isArray(jar.history) ? jar.history : [];
-      history.forEach((h) => {
-        list.push({
-          ...h,
-          jarId: jar.id,
-          jarName: jar.name,
-          jarColor: jar.color || '#5356F1',
-          jarIcon: jar.icon || 'jar',
-          jarCategory: jar.category || 'Mục tiêu chung'
-        });
-      });
+  const allActivities = useMemo(() => jars.flatMap((jar) => (
+    Array.isArray(jar.history) ? jar.history : []
+  ).map((activity, index) => ({
+    ...activity, type: activity.type === 'initial' ? 'deposit' : activity.type,
+    jarId: jar.id, jarName: jar.name, rowKey: `${jar.id}-${activity.id || activity._id || index}`,
+    day: activityDay(activity.date),
+  }))).sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()), [jars]);
+
+  // Counts follow the selected jar and search while keeping every type available.
+  const matchingActivities = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase(lang);
+    return allActivities.filter((activity) => (
+      (selectedJarId === 'all' || activity.jarId === selectedJarId)
+      && (!query || `${activity.jarName || ''} ${activity.reason || ''}`.toLocaleLowerCase(lang).includes(query))
+    ));
+  }, [allActivities, selectedJarId, searchQuery, lang]);
+  const counts = useMemo(() => matchingActivities.reduce((values, activity) => {
+    values.all += 1;
+    if (activity.type === 'deposit' || activity.type === 'withdraw') values[activity.type] += 1;
+    return values;
+  }, { all: 0, deposit: 0, withdraw: 0 }), [matchingActivities]);
+  const filteredActivities = useMemo(() => matchingActivities.filter((activity) => (
+    filterType === 'all' || activity.type === filterType
+  )), [matchingActivities, filterType]);
+  const totals = useMemo(() => filteredActivities.reduce((summary, activity) => {
+    if (activity.type === 'deposit' || activity.type === 'withdraw') summary[activity.type] += Number(activity.amount) || 0;
+    return summary;
+  }, { deposit: 0, withdraw: 0 }), [filteredActivities]);
+  // Group after filtering: a date heading can never be left empty.
+  const dayGroups = useMemo(() => {
+    const groups = new Map();
+    filteredActivities.forEach((activity) => {
+      if (!groups.has(activity.day)) groups.set(activity.day, []);
+      groups.get(activity.day).push(activity);
     });
-    return list.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
-  }, [jars]);
-
-  const filteredActivities = useMemo(() => {
-    return allActivities.filter((item) => {
-      if (filterType !== 'all' && item.type !== filterType) return false;
-      if (selectedJarId !== 'all' && item.jarId !== selectedJarId) return false;
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const reasonMatch = (item.reason || '').toLowerCase().includes(query);
-        const nameMatch = (item.jarName || '').toLowerCase().includes(query);
-        return reasonMatch || nameMatch;
-      }
-      return true;
-    });
-  }, [allActivities, filterType, selectedJarId, searchQuery]);
-
-  const totalDeposited = useMemo(() => {
-    return filteredActivities
-      .filter((a) => a.type === 'deposit')
-      .reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+    return [...groups.entries()];
   }, [filteredActivities]);
-
-  const totalWithdrawn = useMemo(() => {
-    return filteredActivities
-      .filter((a) => a.type === 'withdraw')
-      .reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
-  }, [filteredActivities]);
-
-  if (!isOpen) return null;
+  const net = totals.deposit - totals.withdraw;
 
   return (
-    <div
-      className="modal-backdrop-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="presentation"
-    >
-      <div
-        className="jar-history-modal-dialog"
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Toàn bộ lịch sử hoạt động hũ chi tiêu"
-      >
-        {/* Header */}
-        <div className="jar-history-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--color-brand-600, #059669)' }}>
-              <HistoryOutlineIcon size={20} />
-            </span>
-            <h3 className="jar-history-title">
-              Lịch sử hoạt động hũ chi tiêu
-            </h3>
+    <JarDialog isOpen={isOpen} onClose={onClose} title={text('historyTitle')}
+      subtitle={text('historyCap')} className="jar-history-management-dialog"
+      footer={<><span className="jm-history-count" role="status">{text('resultCount', { count: filteredActivities.length })}</span>
+        <button type="button" className="jm-button jm-button-primary" onClick={onClose}>{text('close')}</button></>}>
+      <div className="jm-history">
+        <div className="jm-history-toolbar">
+          <dl className="jm-history-totals" aria-label={text('filteredSummary')}>
+            <div><dt>{text('totalDeposit')}</dt><dd className="jm-deposit">+{formatCurrency(totals.deposit, { locale: lang })}</dd></div>
+            <div><dt>{text('totalWithdraw')}</dt><dd className="jm-withdraw">−{formatCurrency(totals.withdraw, { locale: lang })}</dd></div>
+            <div><dt>{text('net')}</dt><dd>{net > 0 ? '+' : net < 0 ? '−' : ''}{formatCurrency(Math.abs(net), { locale: lang })}</dd></div>
+          </dl>
+          <div className="jm-history-type-filter" role="group" aria-label={text('filterType')}>
+            {['all', 'deposit', 'withdraw'].map((type) => (
+              <button type="button" key={type} className={`jm-history-type-button${filterType === type ? ' is-active' : ''}`}
+                aria-pressed={filterType === type} onClick={() => setFilterType(type)}>
+                <span>{text(type)}</span><span className="jm-history-type-count">{counts[type]}</span>
+              </button>
+            ))}
           </div>
-          <button
-            type="button"
-            className="jar-history-close-btn"
-            onClick={onClose}
-            aria-label="Đóng"
-          >
-            <CloseOutlineIcon size={14} />
-          </button>
+          <div className="jm-history-search-row">
+            <CustomSelect options={[{ value: 'all', label: text('allJars') }, ...jars.map((jar) => ({ value: jar.id, label: jar.name }))]}
+              value={selectedJarId} onChange={setSelectedJarId} ariaLabel={text('filterJar')} className="jm-history-jar-select" />
+            <label className="jm-history-search" htmlFor={`${id}-search`}>
+              <span className="jm-visually-hidden">{text('search')}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+              <input id={`${id}-search`} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={text('search')} />
+            </label>
+          </div>
         </div>
-
-        {/* Toolbar & Filters */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--surface)' }}>
-          {/* Summary Row */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ flex: 1, padding: '10px 14px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-              <span style={{ fontSize: '11px', color: '#059669', display: 'block', fontWeight: 600 }}>Tổng tiền nạp</span>
-              <strong style={{ fontSize: '15px', color: '#059669', fontFamily: 'var(--font-mono)' }}>
-                +{formatCurrency(totalDeposited)}
-              </strong>
-            </div>
-            <div style={{ flex: 1, padding: '10px 14px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-              <span style={{ fontSize: '11px', color: '#DC2626', display: 'block', fontWeight: 600 }}>Tổng tiền rút</span>
-              <strong style={{ fontSize: '15px', color: '#DC2626', fontFamily: 'var(--font-mono)' }}>
-                −{formatCurrency(totalWithdrawn)}
-              </strong>
-            </div>
-          </div>
-
-          {/* Filter Controls Row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
-            {/* Type buttons */}
-            <div className="jar-history-tab-group">
-              {[
-                { id: 'all', label: 'Tất cả' },
-                { id: 'deposit', label: '+ Nạp tiền' },
-                { id: 'withdraw', label: '− Rút tiền' }
-              ].map((btn) => (
-                <button
-                  key={btn.id}
-                  type="button"
-                  onClick={() => setFilterType(btn.id)}
-                  className={`jar-history-tab-btn ${filterType === btn.id ? 'active' : ''}`}
-                >
-                  {btn.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Jar select */}
-            <CustomSelect
-              options={[
-                { value: 'all', label: 'Tất cả các hũ' },
-                ...jars.map((j) => ({ value: j.id, label: j.name })),
-              ]}
-              value={selectedJarId}
-              onChange={setSelectedJarId}
-              size="sm"
-              ariaLabel="Lọc theo hũ"
-            />
-          </div>
-
-          {/* Search input */}
-          <input
-            type="text"
-            placeholder="Tìm theo lý do hoặc tên hũ..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="jar-history-search-input"
-          />
-        </div>
-
-        {/* Transaction list */}
-        <div style={{ padding: '16px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--surface)' }}>
-          {filteredActivities.length === 0 ? (
-            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-              Không có giao dịch nào khớp với bộ lọc.
-            </div>
-          ) : (
-            filteredActivities.map((act, index) => {
-              const isDeposit = act.type === 'deposit';
-              return (
-                <div
-                  key={act.id || index}
-                  className="jar-history-item"
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '8px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        background: isDeposit ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                        color: isDeposit ? '#10B981' : '#EF4444'
-                      }}
-                    >
-                      {isDeposit ? '+' : '−'}
-                    </span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {isDeposit ? 'Nạp vào' : 'Rút từ'} <strong>"{act.jarName}"</strong>
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '10.5px',
-                            padding: '1px 6px',
-                            borderRadius: '4px',
-                            background: 'var(--surface-subtle)',
-                            color: 'var(--text-secondary)'
-                          }}
-                        >
-                          {act.jarCategory}
-                        </span>
-                      </div>
-                      {act.reason && (
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          {act.reason}
-                        </span>
-                      )}
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {act.date ? formatDate(act.date, 'full') : '--'}
-                      </span>
+        <div className="jm-history-list" tabIndex={0} aria-label={text('historyTitle')}>
+          {dayGroups.length === 0 ? <p className="jm-history-empty">{text('empty')}</p> : dayGroups.map(([day, activities]) => (
+            <section className="jm-history-day" key={day || 'unknown'} aria-labelledby={`${id}-day-${day || 'unknown'}`}>
+              <h3 id={`${id}-day-${day || 'unknown'}`}>{day ? formatDate(day, 'full', { locale: lang }) : text('unknownDate')}</h3>
+              <ul>
+                {activities.map((activity) => {
+                  const isDeposit = activity.type === 'deposit';
+                  return <li className={`jm-history-row ${isDeposit ? 'is-deposit' : 'is-withdraw'}`} key={activity.rowKey}>
+                    <span className="jm-history-direction" aria-hidden="true">{isDeposit ? '↙' : '↗'}</span>
+                    <div className="jm-history-row-copy"><strong>{activity.jarName}</strong>
+                      <span className="jm-history-row-action">{text(isDeposit ? 'depositDirection' : 'withdrawDirection')}</span>
+                      {activity.reason && <p>{label(activity.reason)}</p>}
                     </div>
-                  </div>
-
-                  <strong
-                    style={{
-                      fontFamily: 'var(--font-mono, monospace)',
-                      fontSize: '14px',
-                      fontWeight: 800,
-                      color: isDeposit ? '#10B981' : '#EF4444'
-                    }}
-                  >
-                    {isDeposit ? '+' : '−'}{formatCurrency(act.amount)}
-                  </strong>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="jar-history-footer">
-          <div />
-          <button
-            type="button"
-            onClick={onClose}
-            className="jar-detail-btn-deposit"
-          >
-            Đóng
-          </button>
+                    <strong className="jm-history-amount">{isDeposit ? '+' : '−'}{formatCurrency(activity.amount, { locale: lang })}</strong>
+                  </li>;
+                })}
+              </ul>
+            </section>
+          ))}
         </div>
       </div>
-    </div>
+    </JarDialog>
   );
 }
