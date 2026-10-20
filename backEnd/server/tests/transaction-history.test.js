@@ -13,6 +13,9 @@ for (const name of ['MONGODB_URI', 'GMAIL_USER', 'GMAIL_PASS', 'CORS_WHITELIST',
 const app = require('../server');
 const Transaction = require('../models/Transaction');
 const TransactionRevision = require('../models/TransactionRevision');
+const WalletActivity = require('../models/WalletActivity');
+const Wallet = require('../models/Wallet');
+const { getVietnamTodayString } = require('../utils/localDate');
 const Receipt = require('../models/IdempotencyReceipt');
 const { getAllWalletBalances } = require('../utils/walletBalance');
 
@@ -58,6 +61,46 @@ describe('Transaction change history on a temporary replica set', { concurrency:
         }
     });
     after(async () => { await mongoose.disconnect(); if (db) await db.stop(); });
+
+    it('records wallet creation once, keeps snapshots and never changes the money ledger', async () => {
+        const c = await client(), other = await client('Other wallet owner');
+        for (const initialBalance of [0, 125000, -50000]) {
+            const body = { name: 'New wallet', initialBalance, type: 'credit', creditLimit: 100000 };
+            const key = crypto.randomUUID();
+            const created = await c.send('post', '/api/wallets', body, key);
+            assert.equal(created.status, 201, JSON.stringify(created.body));
+            assert.deepEqual((await c.send('post', '/api/wallets', body, key)).body, created.body);
+            const event = created.body.activity;
+            assert.equal(event.type, 'wallet_created');
+            assert.equal(event.walletId, created.body.data.id);
+            assert.equal(event.walletName, body.name);
+            assert.equal(event.initialBalance, initialBalance);
+            assert.equal(event.date, getVietnamTodayString());
+            assert.equal(await WalletActivity.countDocuments({ walletId: event.walletId }), 1);
+            assert.equal((await getAllWalletBalances(c.userId))[event.walletId], initialBalance);
+            assert.equal((await c.send('put', '/api/wallets/' + event.walletId, { name: 'Renamed' })).status, 200);
+            const loaded = await c.agent.get('/api/wallets');
+            assert.deepEqual(loaded.body.history.find(row => row.id === event.id), event);
+        }
+        assert.equal(await Transaction.countDocuments({ userId: c.userId }), 0);
+        assert.deepEqual((await other.agent.get('/api/wallets')).body.history, []);
+        assert.equal((await request(app).get('/api/wallets')).status, 401);
+        const failed = await c.send('post', '/api/wallets', { name: 'Invalid wallet', initialBalance: -1 });
+        assert.equal(failed.status, 409);
+        assert.equal(await Wallet.countDocuments({ userId: c.userId, name: 'Invalid wallet' }), 0);
+        assert.equal(await WalletActivity.countDocuments({ userId: c.userId }), 3);
+    });
+
+    it('rolls back wallet creation if recording its history fails', async () => {
+        const c = await client(), original = WalletActivity.create;
+        try {
+            WalletActivity.create = async () => { throw new Error('Simulated history failure'); };
+            const response = await c.send('post', '/api/wallets', { name: 'Rollback wallet', initialBalance: 10 });
+            assert.equal(response.status, 500);
+        } finally { WalletActivity.create = original; }
+        assert.equal(await Wallet.countDocuments({ userId: c.userId, name: 'Rollback wallet' }), 0);
+        assert.equal(await WalletActivity.countDocuments({ userId: c.userId }), 0);
+    });
 
     it('captures legacy historical edits and deletion with actor, snapshots and exactly-once retries', async () => {
         const c = await client(), oldWallet = await wallet(c), newWallet = await wallet(c);
@@ -225,10 +268,14 @@ describe('Transaction change history on a temporary replica set', { concurrency:
         assert.equal(exported.body.data.transactionRevisions.length, 1);
         assert.equal(exported.body.data.transactionRevisions[0].transactionId, own.id);
         assert.equal(exported.body.data.transactionRevisions[0].before.amount, 100);
+        assert.equal(exported.body.data.walletHistory.length, 1);
+        assert.equal(exported.body.data.walletHistory[0].walletId, ow);
         assert.ok(!exported.text.includes(foreign.id));
         assert.equal((await owner.send('post', '/api/spending/reset-data', {})).status, 200);
         assert.equal(await TransactionRevision.countDocuments({ userId: owner.userId }), 0);
         assert.equal(await Transaction.countDocuments({ userId: owner.userId }), 0);
+        assert.equal(await WalletActivity.countDocuments({ userId: owner.userId }), 0);
+        assert.equal(await WalletActivity.countDocuments({ userId: other.userId }), 1);
         assert.equal((await owner.agent.get('/api/spending/' + own.id + '/history')).status, 404);
         assert.equal(await TransactionRevision.countDocuments({ userId: other.userId }), 1);
         assert.equal((await other.agent.get('/api/spending/' + foreign.id + '/history')).status, 200);
