@@ -4,6 +4,7 @@ const router = express.Router();
 const { financialRequest } = require('../utils/financialRequest');
 const { protect } = require('../middleware/authMiddleware');
 const Wallet = require('../models/Wallet');
+const WalletActivity = require('../models/WalletActivity');
 const Transaction = require('../models/Transaction');
 const Installment = require('../models/Installment');
 const { runWithTransaction } = require('../utils/mongoTransaction');
@@ -64,9 +65,11 @@ router.get('/', financialRequest(async (req, res) => {
             query.archived = false;
         }
         const wallets = await Wallet.find(query).sort({ isDefault: -1, createdAt: 1 });
+        const history = await WalletActivity.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.json({
             success: true,
-            data: wallets.map(w => w.toJSON())
+            data: wallets.map(w => w.toJSON()),
+            history: history.map(event => event.toJSON())
         });
     } catch (error) {
         if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
@@ -359,10 +362,20 @@ router.post('/', financialRequest(async (req, res) => {
             isDefault: Boolean(isDefault)
         });
 
+        // financialRequest commits the wallet and its audit event atomically,
+        // and replays the same response when the client retries its request.
+        const activity = await WalletActivity.create({
+            userId: req.user.id,
+            walletId: newWallet._id,
+            walletName: newWallet.name,
+            initialBalance: newWallet.initialBalance
+        });
+
         res.status(201).json({
             success: true,
             message: 'Tạo ví mới thành công!',
-            data: newWallet.toJSON()
+            data: newWallet.toJSON(),
+            activity: activity.toJSON()
         });
     } catch (error) {
         if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
