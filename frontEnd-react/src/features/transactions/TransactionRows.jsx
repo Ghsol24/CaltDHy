@@ -4,6 +4,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { transactionTotal } from '../../utils/transactionInsights';
 import { CategoryOutlineIcon } from '../../components/ui/AppIcons';
+import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 
 export function TransactionRows({ transactions, onEdit, onManage, showDate = false, variant = 'cards' }) {
   const { t, label, lang } = useTranslation();
@@ -22,14 +23,16 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
       <span>{t('history.columnAmount')}</span>
     </div>}
     {transactions.map((transaction) => {
-      const locked = Boolean(transaction.systemGenerated || transaction.jarId || transaction.installmentId);
+      const isWalletCreation = transaction.type === 'wallet_created';
+      const locked = Boolean(isWalletCreation || transaction.systemGenerated || transaction.jarId || transaction.installmentId);
       const source = transaction.jarId ? 'jars' : transaction.installmentId ? 'recurring' : null;
       const action = locked ? (source && onManage ? () => onManage(source) : null) : () => onEdit(transaction);
       const amount = transaction.type === 'expense' ? transactionTotal(transaction) : Number(transaction.amount) || 0;
-      const walletName = walletNames.get(transaction.walletId) || t('home.cash');
+      const walletName = walletNames.get(transaction.walletId) || transaction.walletName || t('home.cash');
       const description = transaction.desc || label(transaction.category);
       const categoryIcon = <span className={`transaction-inspection-icon is-${transaction.type}`} aria-hidden="true">
-        <CategoryOutlineIcon name={transaction.category || transaction.type} size={19} />
+        {isWalletCreation ? <WalletOutlineIcon size={19} />
+          : <CategoryOutlineIcon name={transaction.category || transaction.type} size={19} />}
       </span>;
       const walletBadge = <span className="transaction-inspection-wallet">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8"
@@ -37,7 +40,10 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
           <rect x="2" y="5" width="20" height="16" rx="3" /><path d="M18 14h4M5 5V3h14" />
         </svg>{walletName}
       </span>;
-      const amountLabel = <strong className={`transaction-inspection-amount is-${transaction.type}`}>
+      const amountLabel = isWalletCreation ? <span className="transaction-inspection-amount">
+        <small>{t('history.openingBalance')}</small>{' '}
+        <strong>{formatCurrency(transaction.initialBalance)}</strong>
+      </span> : <strong className={`transaction-inspection-amount is-${transaction.type}`}>
         {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '−' : '↔ '}{formatCurrency(amount)}
       </strong>;
       const content = variant === 'ledger' ? <>
@@ -46,7 +52,7 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
           <span className="transaction-ledger-main">
             <strong>{description}</strong>
             {Number(transaction.fee) > 0 && <small>{t('history.fee', { amount: formatCurrency(transaction.fee) })}</small>}
-            {locked && <small>{t(transaction.jarId ? 'history.lockedJar'
+            {locked && !isWalletCreation && <small>{t(transaction.jarId ? 'history.lockedJar'
               : transaction.installmentId ? 'history.lockedRecurring' : 'history.lockedGeneric')}</small>}
           </span>
         </span>
@@ -66,7 +72,7 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
           </span>
           {walletBadge}
           {Number(transaction.fee) > 0 && <small>{t('history.fee', { amount: formatCurrency(transaction.fee) })}</small>}
-          {locked && <small>{t(transaction.jarId ? 'history.lockedJar'
+          {locked && !isWalletCreation && <small>{t(transaction.jarId ? 'history.lockedJar'
             : transaction.installmentId ? 'history.lockedRecurring' : 'history.lockedGeneric')}</small>}
         </span>
         {amountLabel}
