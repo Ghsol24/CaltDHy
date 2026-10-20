@@ -372,6 +372,7 @@ return ({
       }));
       get().updateSpendingMetrics([]);
       const walletStore = useWalletStore.getState();
+      useWalletStore.setState({ walletHistory: [] });
       if (walletStore?.syncWalletBalances) {
         walletStore.syncWalletBalances();
       }
