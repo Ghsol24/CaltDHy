@@ -30,6 +30,7 @@ const get = storeGet;
 return ({
   wallets: getStoredWallets(),
   archivedWallets: [],
+  walletHistory: [],
   selectedWalletId: null,
   isLoading: false,
   error: null,
@@ -64,6 +65,7 @@ return ({
         set({
           wallets: calculatedActive,
           archivedWallets: calculatedArchived,
+          walletHistory: res.history || [],
           isLoading: false
         });
         return { success: true, data: calculatedActive, archived: calculatedArchived };
@@ -89,7 +91,11 @@ return ({
         saveStoredWallets(updated);
         const txns = useTransactionStore.getState()?.transactions || [];
         const { wallets: calculated } = calculateWalletBalances(updated, txns);
-        set({ wallets: calculated, isLoading: false });
+        const walletHistory = get().walletHistory;
+        set({ wallets: calculated, isLoading: false,
+          walletHistory: res.activity
+            ? [res.activity, ...walletHistory.filter((event) => event.id !== res.activity.id)]
+            : walletHistory });
         return { success: true, data: newWallet };
       } else {
         throw new Error(getUserErrorMessage(res, 'error.generic'));

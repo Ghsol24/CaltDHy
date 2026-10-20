@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "node scripts/start-all.js",
     "start": "node backEnd/server/server.js",
-    "test": "node --test tests/release-guards.cjs tests/launcher-safety.cjs frontEnd-react/tests/money-precision.test.mjs frontEnd-react/tests/analytics-filters.test.mjs frontEnd-react/tests/i18n-formatters.test.mjs frontEnd-react/tests/bug-remediation.test.mjs frontEnd-react/tests/csv-security.test.mjs frontEnd-react/tests/transaction-period.test.mjs frontEnd-react/tests/cash-flow-data.test.mjs frontEnd-react/tests/cash-flow-preferences.test.mjs frontEnd-react/tests/cash-flow-preferences-hook.test.mjs frontEnd-react/tests/cash-flow-chart-context.test.mjs frontEnd-react/tests/user-errors.test.mjs frontEnd-react/tests/api-errors.test.mjs && npm test --prefix backEnd/server",
+    "test": "node --test tests/release-guards.cjs tests/launcher-safety.cjs frontEnd-react/tests/money-precision.test.mjs frontEnd-react/tests/analytics-filters.test.mjs frontEnd-react/tests/i18n-formatters.test.mjs frontEnd-react/tests/bug-remediation.test.mjs frontEnd-react/tests/csv-security.test.mjs frontEnd-react/tests/transaction-period.test.mjs frontEnd-react/tests/wallet-history.test.mjs frontEnd-react/tests/cash-flow-data.test.mjs frontEnd-react/tests/cash-flow-preferences.test.mjs frontEnd-react/tests/cash-flow-preferences-hook.test.mjs frontEnd-react/tests/cash-flow-chart-context.test.mjs frontEnd-react/tests/user-errors.test.mjs frontEnd-react/tests/api-errors.test.mjs && npm test --prefix backEnd/server",
     "test:browser": "node tests/browser-security.cjs",
     "test:transaction-period": "node tests/transaction-period-browser.cjs",
     "test:ux-budget": "node tests/ux-performance-budget.cjs",

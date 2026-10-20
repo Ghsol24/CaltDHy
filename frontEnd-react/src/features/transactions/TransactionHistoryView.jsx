@@ -25,7 +25,7 @@ export function TransactionHistoryView() {
   const [endDate, setEndDate] = useState(VALID_DATE.test(seedDate || '') ? seedDate
     : VALID_DATE.test(seedTo || '') ? seedTo : '');
   const [datePreset, setDatePreset] = useState(seedDate || seedFrom || seedTo ? 'custom' : 'all');
-  const [type, setType] = useState(['income', 'expense', 'transfer'].includes(searchParams.get('type'))
+  const [type, setType] = useState(['income', 'expense', 'transfer', 'wallet_created'].includes(searchParams.get('type'))
     ? searchParams.get('type') : 'all');
   const [category, setCategory] = useState(searchParams.get('category') || 'all');
   const [walletId, setWalletId] = useState('all');
@@ -37,14 +37,21 @@ export function TransactionHistoryView() {
   const openEditTransaction = useTransactionStore((state) => state.openEditTransaction);
   const wallets = useWalletStore((state) => state.wallets);
   const archivedWallets = useWalletStore((state) => state.archivedWallets);
+  const walletHistory = useWalletStore((state) => state.walletHistory);
+  const walletLoadError = useWalletStore((state) => state.error);
+  const reloadWallets = useWalletStore((state) => state.fetchWallets);
+  const historyRows = useMemo(() => [...transactions, ...walletHistory.map((event) => ({
+    ...event, systemGenerated: true, category: t('type.wallet_created'),
+    desc: t('history.walletCreated', { name: event.walletName })
+  }))], [transactions, walletHistory, t]);
   const navigateTo = useSpendingStore((state) => state.navigateTo);
 
-  const categories = useMemo(() => [...new Set(transactions.map((row) => row.category).filter(Boolean))].sort(), [transactions]);
+  const categories = useMemo(() => [...new Set(historyRows.map((row) => row.category).filter(Boolean))].sort(), [historyRows]);
   const invalidRange = Boolean(startDate && endDate && startDate > endDate);
   const filtered = useMemo(() => {
     if (invalidRange) return [];
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    return transactions.filter((row) =>
+    return historyRows.filter((row) =>
       (!startDate || row.date >= startDate) && (!endDate || row.date <= endDate) &&
       (type === 'all' || row.type === type) &&
       (category === 'all' || row.category === category) &&
@@ -52,7 +59,7 @@ export function TransactionHistoryView() {
       (!excludeRecurring || !isRecurringTrendTransaction(row)) &&
       (!normalizedQuery || `${row.desc || ''} ${row.category || ''}`.toLocaleLowerCase().includes(normalizedQuery))
     ).sort((a, b) => b.date.localeCompare(a.date) || transactionTotal(b) - transactionTotal(a));
-  }, [transactions, startDate, endDate, type, category, walletId, excludeRecurring, query, invalidRange]);
+  }, [historyRows, startDate, endDate, type, category, walletId, excludeRecurring, query, invalidRange]);
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
   const hasActiveFilters = Boolean(query || startDate || endDate || datePreset !== 'all' ||
     type !== 'all' || category !== 'all' || walletId !== 'all' || excludeRecurring);
@@ -98,7 +105,7 @@ export function TransactionHistoryView() {
       <div className="transaction-filter-controls">
         <TransactionFilterDropdown compact label={t('history.filterType')} value={type} onChange={setType}
           options={[{ value: 'all', label: t('history.allTypes') },
-            ...['expense', 'income', 'transfer'].map((value) => ({ value, label: t(`type.${value}`) }))]} />
+            ...['expense', 'income', 'transfer', 'wallet_created'].map((value) => ({ value, label: t(`type.${value}`) }))]} />
         <TransactionFilterDropdown compact label={t('history.filterCategory')} value={category} onChange={setCategory}
           options={[{ value: 'all', label: t('history.allCategories') },
             ...categories.map((value) => ({ value, label: label(value) }))]} />
@@ -137,16 +144,16 @@ export function TransactionHistoryView() {
     </div>}
 
     {invalidRange && <p role="alert" className="transaction-history-error">{t('history.invalidRange')}</p>}
-    {loadError && <div role="alert" className="transaction-history-error">
+    {(loadError || walletLoadError) && <div role="alert" className="transaction-history-error">
       <span>{t('history.loadFailed')}</span>
-      <button type="button" onClick={() => { void reloadTransactions(); }}>{t('common.tryAgain')}</button>
+      <button type="button" onClick={() => { void reloadTransactions(); void reloadWallets(); }}>{t('common.tryAgain')}</button>
     </div>}
     <div className="transaction-history-summary" aria-live="polite">
-      <strong>{t('history.results', { count: summary.count })}</strong>
+      <strong>{t('history.entries', { count: summary.count })}</strong>
       <span>{t('type.expense')}: {formatCurrency(summary.expense)}</span>
       <span>{t('type.income')}: {formatCurrency(summary.income)}</span>
     </div>
-    {(!loadError || transactions.length > 0) && <TransactionRows transactions={filtered.slice(0, visibleCount)}
+    {(!loadError || historyRows.length > 0) && <TransactionRows transactions={filtered.slice(0, visibleCount)}
       onEdit={openEditTransaction} onManage={manageSource} showDate variant="ledger" />}
     {visibleCount < filtered.length && <button type="button" className="transaction-history-more"
       onClick={() => setVisibleCount((count) => count + 50)}>{t('history.loadMore')}

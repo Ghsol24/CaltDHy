@@ -5,6 +5,7 @@ const { financialRequest } = require('../utils/financialRequest');
 const { protect } = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
 const TransactionRevision = require('../models/TransactionRevision');
+const WalletActivity = require('../models/WalletActivity');
 const Budget = require('../models/Budget');
 const Wallet = require('../models/Wallet');
 const User = require('../models/User');
@@ -23,7 +24,7 @@ router.use(protect);
 router.get('/export', async (req, res) => {
     try {
         const userId = req.user.id;
-        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays, transactionRevisions] = await Promise.all([
+        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays, transactionRevisions, walletHistory] = await Promise.all([
             User.findById(userId).select('_id name email customCategories').lean(),
             Transaction.find({ userId }).lean(),
             Budget.find({ userId }).lean(),
@@ -32,7 +33,8 @@ router.get('/export', async (req, res) => {
             Jar.find({ userId }).lean(),
             Installment.find({ userId }).lean(),
             ExpectedHighSpendDay.find({ userId }).lean(),
-            TransactionRevision.find({ userId }).lean()
+            TransactionRevision.find({ userId }).lean(),
+            WalletActivity.find({ userId }).lean()
         ]);
         if (!user) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
@@ -53,7 +55,8 @@ router.get('/export', async (req, res) => {
                 jars,
                 installments,
                 expectedHighSpendDays,
-                transactionRevisions
+                transactionRevisions,
+                walletHistory
             }
         });
     } catch {
@@ -853,6 +856,7 @@ router.post('/reset-data', financialRequest(async (req, res) => {
         // 1. Xóa sạch giao dịch, ngân sách và ngày chi tiêu được đánh dấu của user hiện tại
         await Transaction.deleteMany({ userId });
         await TransactionRevision.deleteMany({ userId });
+        await WalletActivity.deleteMany({ userId });
         await Budget.deleteMany({ userId });
         await ExpectedHighSpendDay.deleteMany({ userId });
 
