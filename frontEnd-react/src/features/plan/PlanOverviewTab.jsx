@@ -231,6 +231,9 @@ export function PlanOverviewTab() {
   }, [activeInstallments, categoryBudgets, currentMonthStr, label]);
 
   const visibleAlerts = showAllAlerts ? activeAlerts : activeAlerts.slice(0, 2);
+  // Overdue, due today or over-budget items make the whole panel read as a warning.
+  const alertSeverity = activeAlerts.some((alert) => alert.variant === 'danger' || alert.variant === 'today')
+    ? 'critical' : activeAlerts.length > 0 ? 'warning' : 'calm';
   const budgetUsagePercent = totalBudgetLimit > 0 ? (totalBudgetSpent / totalBudgetLimit) * 100 : 0;
 
   // Top items for summary columns
@@ -399,7 +402,7 @@ export function PlanOverviewTab() {
       </div>
 
       {/* ── 2. SECTION 1: CẢNH BÁO / SẮP ĐẾN HẠN (NGAY TRÊN CÙNG) ── */}
-      <div className="plan-top-alerts-card" role="region" aria-label="Cảnh báo và nhắc nhở tài chính">
+      <div className={`plan-top-alerts-card is-${alertSeverity}`} role="region" aria-label="Cảnh báo và nhắc nhở tài chính">
         <div className="top-alerts-left-brand">
           <div className="top-alerts-bell-box" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -408,7 +411,10 @@ export function PlanOverviewTab() {
             </svg>
           </div>
           <div className="top-alerts-header-info">
-            <h3 className="top-alerts-title">{copy.attention}</h3>
+            <h3 className="top-alerts-title">
+              {copy.attention}
+              {activeAlerts.length > 0 && <span className="top-alerts-count" aria-hidden="true">{activeAlerts.length}</span>}
+            </h3>
             <span className="top-alerts-subtext">
               {activeAlerts.length > 0
                 ? copy.alertCount(activeAlerts.length)
