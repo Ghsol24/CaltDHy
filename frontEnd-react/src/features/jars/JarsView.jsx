@@ -4,7 +4,6 @@ import { useJarStore } from '../../stores/useJarStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
-import { useThemeStore } from '../../stores/useThemeStore';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { JarModal } from './JarModal';
@@ -13,24 +12,23 @@ import { JarDetailModal } from './JarDetailModal';
 import { JarHistoryModal } from './JarHistoryModal';
 import { FinancialTipsModal } from './FinancialTipsModal';
 import { JarGlassGraphic } from './JarGlassGraphic';
-import { formatCompactCurrency, formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
+import { formatCurrency, formatPercent, getLocalDateString } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { buildJarSuggestions, getJarSuggestionCopy } from './jarSuggestionCopy';
+import { JarActivityCalendar } from './JarActivityCalendar';
+import { JarRecentActivity } from './JarRecentActivity';
+import { JarNextStepStrip } from './JarNextStepStrip';
+import { collectJarEvents, compareWithPreviousMonth, monthOf, monthTotals, summariseDays } from './jarActivity';
 import {
-  FlameOutlineIcon,
-  BulbOutlineIcon,
-  RefreshOutlineIcon,
   TargetOutlineIcon,
   TrophyOutlineIcon,
   AlertTriangleOutlineIcon,
   CheckOutlineIcon,
-  JarOutlineIcon,
-  HistoryOutlineIcon
+  JarOutlineIcon
 } from '../../components/ui/AppIcons';
 import '../../assets/css/jars.css';
-import '../../assets/css/jar-suggestion.css';
 
 const JARS_PER_PAGE = 12;
 const JARS_SCROLL_SECTIONS = Object.freeze([
@@ -71,12 +69,15 @@ function DeferredJarGlassGraphic(props) {
   );
 }
 
-function formatTick(num) {
-  return formatCompactCurrency(num);
-}
+// Display preference only. The hyphenated name keeps it out of the sign-in
+// cleanup that clears private `caltdhy_*` data, without growing the first-load bundle.
+const CALENDAR_VIEW_KEY = 'caltdhy-jar-calendar-view';
+const readCalendarView = () => {
+  try { return localStorage.getItem(CALENDAR_VIEW_KEY) === 'year' ? 'year' : 'month'; } catch { return 'month'; }
+};
 
 export function JarsView() {
-  const { lang } = useTranslation();
+  const { lang, intlLocale } = useTranslation();
   const jars = useJarStore((s) => s.jars);
   const isLoading = useJarStore((s) => s.isLoading);
   const hasLoaded = useJarStore((s) => s.hasLoaded);
@@ -88,7 +89,6 @@ export function JarsView() {
   const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
   const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
-  const theme = useThemeStore((s) => s.theme);
   const isMobile = useIsMobile(900);
 
   // Modals state
@@ -115,24 +115,32 @@ export function JarsView() {
   const [deletingJarId, setDeletingJarId] = useState(null);
   const [recomIndex, setRecomIndex] = useState(0);
 
-  // Financial Chart Settings
-  const [selectedMonthVal, setSelectedMonthVal] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
-  const [activePointIndex, setActivePointIndex] = useState(null);
+  // Savings calendar (replaces the old line chart): month/year view and the day
+  // picked on it, which also filters the recent-activity list.
+  const today = getLocalDateString();
+  const [calendarMonth, setCalendarMonth] = useState(() => monthOf(getLocalDateString()));
+  const [calendarView, setCalendarView] = useState(readCalendarView);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const changeCalendarView = (view) => {
+    setCalendarView(view);
+    try { localStorage.setItem(CALENDAR_VIEW_KEY, view); } catch { /* preference only */ }
+  };
+  const changeCalendarMonth = (month) => {
+    setCalendarMonth(month);
+    setSelectedDay((day) => (day && monthOf(day) === month ? day : null));
+  };
 
   const availableMonths = useMemo(() => {
     const months = [];
     const now = new Date();
-    for (let i = 0; i < 6; i++) {
+    const formatter = new Intl.DateTimeFormat(intlLocale || 'vi-VN', { month: 'long', year: 'numeric' });
+    for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = formatDate(d, 'month', { locale: lang });
-      months.push({ value: val, label });
+      months.push({ value: val, label: formatter.format(d) });
     }
     return months;
-  }, [lang]);
+  }, [intlLocale]);
 
   // Close card menu on outside click
   useEffect(() => {
@@ -171,357 +179,12 @@ export function JarsView() {
 
   const totalCurrent = totalSaved;
 
-  // ── 2. Month-Over-Month Saving Trend ──
-  const savingTrend = useMemo(() => {
-    const now = new Date();
-    const curYear = now.getFullYear();
-    const curMonth = now.getMonth();
-    const lastMonthDate = new Date(curYear, curMonth - 1, 1);
-    const lastYear = lastMonthDate.getFullYear();
-    const lastMonth = lastMonthDate.getMonth();
-
-    let thisMonthTotal = 0;
-    let lastMonthTotal = 0;
-    let hasTransactions = false;
-
-    jars.forEach((jar) => {
-      const history = Array.isArray(jar.history) ? jar.history : [];
-      history.forEach((h) => {
-        const amt = Number(h.amount) || 0;
-        const d = new Date(h.date || Date.now());
-        const isDeposit = h.type === 'deposit' || h.type === 'initial';
-        const isWithdraw = h.type === 'withdraw';
-
-        if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
-          if (isDeposit) {
-            thisMonthTotal += amt;
-            hasTransactions = true;
-          } else if (isWithdraw) {
-            thisMonthTotal -= amt;
-            hasTransactions = true;
-          }
-        } else if (d.getFullYear() === lastYear && d.getMonth() === lastMonth) {
-          if (isDeposit) {
-            lastMonthTotal += amt;
-          } else if (isWithdraw) {
-            lastMonthTotal -= amt;
-          }
-        }
-      });
-    });
-
-    thisMonthTotal = Math.max(0, thisMonthTotal);
-    lastMonthTotal = Math.max(0, lastMonthTotal);
-
-    if (!hasTransactions && totalSaved > 0) {
-      thisMonthTotal = totalSaved;
-    }
-
-    let trend = 12;
-    let isPositive = true;
-
-    if (lastMonthTotal > 0) {
-      trend = Math.round(((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100);
-      isPositive = trend >= 0;
-    } else if (thisMonthTotal > 0) {
-      trend = 12;
-      isPositive = true;
-    } else {
-      trend = 0;
-      isPositive = true;
-    }
-
-    return {
-      thisMonthSavings: thisMonthTotal,
-      trendPercent: Math.abs(trend),
-      trendIsPositive: isPositive
-    };
-  }, [jars, totalSaved]);
-
-  const { trendPercent, trendIsPositive } = savingTrend;
-
-  // ── 2b. Comprehensive Financial Chart Calculation (100% Real User Data) ──
-  const detailedChartData = useMemo(() => {
-    const [selYearStr, selMonthStr] = selectedMonthVal.split('-');
-    const year = parseInt(selYearStr, 10) || new Date().getFullYear();
-    const month = parseInt(selMonthStr, 10) - 1;
-
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const now = new Date();
-    const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
-    const currentDay = isCurrentMonth ? Math.min(now.getDate(), daysInMonth) : daysInMonth;
-
-    // Track daily net savings, deposits, and withdrawals strictly from user's actual jar history
-    const dailyNet = Array.from({ length: daysInMonth + 1 }, () => 0);
-    const dailyDeposits = Array.from({ length: daysInMonth + 1 }, () => 0);
-    const dailyWithdrawals = Array.from({ length: daysInMonth + 1 }, () => 0);
-    const activeDaysSet = new Set();
-    let totalMonthNet = 0;
-
-    jars.forEach((jar) => {
-      const history = Array.isArray(jar.history) ? jar.history : [];
-      let jarNetThisMonth = 0;
-
-      history.forEach((h) => {
-        const d = new Date(h.date || Date.now());
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          const day = Math.min(daysInMonth, Math.max(1, d.getDate()));
-          const amt = Number(h.amount) || 0;
-          if (amt > 0) {
-            if (h.type === 'deposit' || h.type === 'initial') {
-              dailyNet[day] += amt;
-              dailyDeposits[day] += amt;
-              jarNetThisMonth += amt;
-              totalMonthNet += amt;
-              activeDaysSet.add(day);
-            } else if (h.type === 'withdraw') {
-              dailyNet[day] -= amt;
-              dailyWithdrawals[day] += amt;
-              jarNetThisMonth -= amt;
-              totalMonthNet -= amt;
-              activeDaysSet.add(day);
-            }
-          }
-        }
-      });
-
-      // If jar has current balance created in this month but history was not explicitly logged
-      const jarCurrent = Number(jar.current) || 0;
-      if (jarCurrent > jarNetThisMonth && jar.createdAt) {
-        const createD = new Date(jar.createdAt);
-        if (createD.getFullYear() === year && createD.getMonth() === month) {
-          const day = Math.min(daysInMonth, Math.max(1, createD.getDate()));
-          const delta = jarCurrent - jarNetThisMonth;
-          if (delta > 0) {
-            dailyNet[day] += delta;
-            dailyDeposits[day] += delta;
-            totalMonthNet += delta;
-            activeDaysSet.add(day);
-          }
-        }
-      }
-    });
-
-    // Fallback: If no explicit history records exist yet, use totalSaved on currentDay
-    if (activeDaysSet.size === 0 && totalSaved > 0) {
-      dailyNet[currentDay] = totalSaved;
-      dailyDeposits[currentDay] = totalSaved;
-      totalMonthNet = totalSaved;
-      activeDaysSet.add(currentDay);
-    }
-
-    // Compute actual cumulative savings across each day in the month
-    const cumulativeByDay = Array.from({ length: daysInMonth + 1 }, () => 0);
-    let running = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      running += dailyNet[d];
-      cumulativeByDay[d] = Math.max(0, running);
-    }
-
-    const monthSavingsTotal = Math.max(0, running);
-
-    // Calculate highest day amount based on net daily savings or single highest deposit
-    let highestDayAmount = 0;
-    let highestDepositDay = currentDay;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const netDay = dailyNet[d];
-      if (netDay > highestDayAmount) {
-        highestDayAmount = netDay;
-        highestDepositDay = d;
-      }
-    }
-    if (highestDayAmount === 0) {
-      for (let d = 1; d <= daysInMonth; d++) {
-        if (dailyDeposits[d] > highestDayAmount) {
-          highestDayAmount = dailyDeposits[d];
-          highestDepositDay = d;
-        }
-      }
-    }
-    if (highestDayAmount === 0 && monthSavingsTotal > 0) {
-      highestDayAmount = monthSavingsTotal;
-    }
-
-    // Determine the furthest day to plot:
-    // For current month, stop at currentDay (today, e.g. 27); for past months, plot entire daysInMonth
-    const maxDayToPlot = isCurrentMonth ? currentDay : daysInMonth;
-
-    // Milestone days: 1, 5, 10, 15, 20, 25 up to maxDayToPlot
-    const standardMilestones = [1, 5, 10, 15, 20, 25];
-    const milestoneDays = standardMilestones.filter((d) => d < maxDayToPlot);
-    if (!milestoneDays.includes(maxDayToPlot)) {
-      milestoneDays.push(maxDayToPlot);
-    }
-
-    const keyDays = Array.from(new Set([...milestoneDays, ...activeDaysSet]))
-      .filter((d) => d >= 1 && d <= maxDayToPlot)
-      .sort((a, b) => a - b);
-
-    const points = keyDays.map((d) => ({
-      day: d,
-      value: cumulativeByDay[d],
-      hasDeposit: dailyDeposits[d] > 0,
-      hasWithdraw: dailyWithdrawals[d] > 0,
-      isToday: isCurrentMonth && d === currentDay
-    }));
-
-    // Calculate Y-scale with 5 clean steps based on real max value
-    const maxVal = Math.max(...points.map((p) => p.value), 1000);
-    let yMax = 2500000;
-    if (maxVal <= 500000) {
-      yMax = 500000;
-    } else if (maxVal <= 1000000) {
-      yMax = 1000000;
-    } else if (maxVal <= 2500000) {
-      yMax = 2500000;
-    } else if (maxVal <= 5000000) {
-      yMax = 5000000;
-    } else if (maxVal <= 10000000) {
-      yMax = 10000000;
-    } else {
-      const power = Math.pow(10, Math.floor(Math.log10(maxVal)));
-      yMax = Math.ceil((maxVal * 1.15) / power) * power;
-    }
-
-    const yStep = yMax / 5;
-    const yTicks = [
-      { val: yMax, label: formatTick(yMax) },
-      { val: yStep * 4, label: formatTick(yStep * 4) },
-      { val: yStep * 3, label: formatTick(yStep * 3) },
-      { val: yStep * 2, label: formatTick(yStep * 2) },
-      { val: yStep, label: formatTick(yStep) },
-      { val: 0, label: '0' }
-    ];
-
-    const svgWidth = 520;
-    const svgHeight = 175;
-    const padLeft = 46;
-    const padRight = 24;
-    const padTop = 22;
-    const padBottom = 26;
-    const chartW = svgWidth - padLeft - padRight;
-    const chartH = svgHeight - padTop - padBottom;
-
-    const gridLines = yTicks.map((tick) => {
-      const y = padTop + (1 - tick.val / yMax) * chartH;
-      return { y, label: tick.label, val: tick.val };
-    });
-
-    const coords = points.map((p) => {
-      const ratioX = daysInMonth > 1 ? (p.day - 1) / (daysInMonth - 1) : 0.5;
-      const x = padLeft + ratioX * chartW;
-      const ratioY = Math.min(1, Math.max(0, p.value / yMax));
-      const y = padTop + (1 - ratioY) * chartH;
-      const dateStr = `${String(p.day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}`;
-      return {
-        x: Math.round(x * 10) / 10,
-        y: Math.round(y * 10) / 10,
-        day: p.day,
-        val: p.value,
-        dateStr,
-        hasDeposit: p.hasDeposit,
-        isToday: p.isToday
-      };
-    });
-
-    // Genuine Line Chart (Đường gấp khúc chuẩn kết nối giữa các mốc thực tế)
-    let pathStr = `M ${coords[0].x},${coords[0].y}`;
-    for (let i = 1; i < coords.length; i++) {
-      pathStr += ` L ${coords[i].x},${coords[i].y}`;
-    }
-
-    const lastCoord = coords[coords.length - 1];
-    const areaStr = `${pathStr} L ${lastCoord.x},${padTop + chartH} L ${coords[0].x},${padTop + chartH} Z`;
-
-    // Calendar X-axis reference labels (01, 05, 10, 15, 20, 25, 31)
-    const calendarMilestones = [1, 5, 10, 15, 20, 25, daysInMonth];
-    const xLabels = calendarMilestones.map((d) => {
-      const ratioX = (d - 1) / (daysInMonth - 1);
-      const x = padLeft + ratioX * chartW;
-      return {
-        day: d,
-        label: String(d).padStart(2, '0'),
-        x: Math.round(x * 10) / 10,
-        isHighlighted: isCurrentMonth ? d === currentDay : d === daysInMonth
-      };
-    });
-
-    const dailyAverage = currentDay > 0 ? Math.round(monthSavingsTotal / currentDay) : 0;
-    const streakDays = activeDaysSet.size || (monthSavingsTotal > 0 ? 1 : 0);
-    const highestDayStr = `${String(highestDepositDay).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}`;
-    const highestDayAmt = highestDayAmount > 0 ? highestDayAmount : monthSavingsTotal;
-
-    return {
-      monthSavingsTotal,
-      dailyAverage,
-      highestDayStr,
-      highestDayAmount: highestDayAmt,
-      streakDays,
-      yTicks: gridLines,
-      xLabels,
-      coords,
-      pathStr,
-      areaStr,
-      lastCoord,
-      padLeft,
-      padTop,
-      chartW,
-      chartH,
-      svgWidth,
-      svgHeight
-    };
-  }, [selectedMonthVal, jars, totalSaved]);
-
-  // Dynamic Chart Theme Tokens (Adapted for dark, cream, green, light)
-  const jarChartTheme = useMemo(() => {
-    switch (theme) {
-      case 'dark':
-        return {
-          stroke: '#818CF8',
-          gradStart: '#818CF8',
-          pointFill: '#12131C',
-          pointStroke: '#818CF8',
-          activeGlow: '#818CF8',
-          grid: 'rgba(255, 255, 255, 0.08)',
-          label: '#94A3B8',
-          labelHighlight: '#818CF8'
-        };
-      case 'cream':
-        return {
-          stroke: '#C0531E',
-          gradStart: '#C0531E',
-          pointFill: '#FDF8F2',
-          pointStroke: '#C0531E',
-          activeGlow: '#C0531E',
-          grid: 'rgba(140, 117, 100, 0.16)',
-          label: '#8C7564',
-          labelHighlight: '#C0531E'
-        };
-      case 'green':
-        return {
-          stroke: '#059669',
-          gradStart: '#059669',
-          pointFill: '#FFFFFF',
-          pointStroke: '#059669',
-          activeGlow: '#059669',
-          grid: 'rgba(75, 114, 96, 0.16)',
-          label: '#6B9582',
-          labelHighlight: '#059669'
-        };
-      case 'light':
-      default:
-        return {
-          stroke: '#5356F1',
-          gradStart: '#5356F1',
-          pointFill: '#FFFFFF',
-          pointStroke: '#5356F1',
-          activeGlow: '#5356F1',
-          grid: '#F1F5F9',
-          label: '#94A3B8',
-          labelHighlight: '#5356F1'
-        };
-    }
-  }, [theme]);
+  // ── 2. Real jar activity (deposits and withdrawals by day) ──
+  const jarEvents = useMemo(() => collectJarEvents(jars), [jars]);
+  const jarDays = useMemo(() => summariseDays(jarEvents), [jarEvents]);
+  const thisMonth = monthOf(today);
+  const thisMonthNet = useMemo(() => monthTotals(jarDays, thisMonth).net, [jarDays, thisMonth]);
+  const thisMonthComparison = useMemo(() => compareWithPreviousMonth(jarDays, thisMonth), [jarDays, thisMonth]);
 
   // Suggestions use exact balances; locale changes only affect their presentation.
   const smartSuggestions = useMemo(() => buildJarSuggestions(jars), [jars]);
@@ -637,24 +300,6 @@ export function JarsView() {
     requestAnimationFrame(() => document.getElementById('jars-section-list')?.scrollIntoView({ behavior: 'auto', block: 'start' }));
   };
 
-  // ── 6. Top 5 Recent Activities Across All Jars ──
-  const recentActivities = useMemo(() => {
-    const list = [];
-    jars.forEach((jar) => {
-      const history = Array.isArray(jar.history) ? jar.history : [];
-      history.forEach((h) => {
-        list.push({
-          ...h,
-          jarName: jar.name,
-          jarCategory: jar.category || 'Mục tiêu chung',
-          jarColor: jar.color || '#5356F1'
-        });
-      });
-    });
-    return list
-      .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
-      .slice(0, 5);
-  }, [jars]);
 
   // Handlers
   const handleCreateNew = () => {
@@ -872,9 +517,16 @@ export function JarsView() {
               </div>
             </div>
             <strong className="jars-metric-value">{formatCurrency(totalCurrent)}</strong>
-            <span className="jars-metric-trend">
-              {trendIsPositive ? '↑' : '↓'} {trendPercent}% so với tháng trước
-            </span>
+            {thisMonthComparison.percent !== null ? (
+              <span className={`jars-metric-trend${thisMonthComparison.percent < 0 ? ' jars-metric-trend--down' : ''}`}>
+                {thisMonthComparison.percent < 0 ? '↓' : '↑'} {Math.abs(thisMonthComparison.percent)}% so với tháng trước
+              </span>
+            ) : (
+              <span className={`jars-metric-trend${thisMonthNet > 0 ? '' : ' jars-metric-trend--neutral'}`}>
+                {thisMonthNet > 0 ? `+${formatCurrency(thisMonthNet)} trong tháng này`
+                  : thisMonthNet < 0 ? `${formatCurrency(thisMonthNet)} trong tháng này` : 'Tháng này chưa nạp thêm'}
+              </span>
+            )}
           </div>
 
           {/* Card 2: Tổng mục tiêu */}
@@ -953,299 +605,41 @@ export function JarsView() {
         </div>
       </section>
 
-      {/* ── SECTIONS 2 & 3: BIỂU ĐỒ & GỢI Ý (2 COLUMNS) ── */}
-      <section className="jars-insights-grid">
-        {/* Section 2: Tháng này bạn đã tiết kiệm (Financial Analytics Card) */}
-        <div className="jars-saving-trend-card">
-          {/* Top Bar: Title & Big Amount on Left, Month Picker on Right */}
-          <div className="jars-trend-top-bar">
-            <div className="jars-trend-header-row">
-              <span className="jars-trend-title">Tháng này bạn đã tiết kiệm</span>
-              <strong className="jars-trend-amount">+{formatCurrency(detailedChartData.monthSavingsTotal)}</strong>
-              <span className="jars-trend-badge">
-                <span>{trendIsPositive ? '↑' : '↓'}</span>
-                <span>{trendPercent}% so với tháng trước</span>
-              </span>
-            </div>
-
-            {/* Month Filter Selector */}
-            <CustomSelect
-              options={availableMonths}
-              value={selectedMonthVal}
-              onChange={setSelectedMonthVal}
-              size="sm"
-              variant="subtle"
-              prefixIcon={
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                  <line x1="16" x2="16" y1="2" y2="6" />
-                  <line x1="8" x2="8" y1="2" y2="6" />
-                  <line x1="3" x2="21" y1="10" y2="10" />
-                </svg>
-              }
-              ariaLabel="Chọn tháng hiển thị biểu đồ"
-            />
-          </div>
-
-          {/* SVG Chart Canvas with Y-Axis, Gridlines, Curve, Points, Glow & Tooltip */}
-          <div className="jars-chart-canvas-wrap">
-            <svg
-              className="jars-chart-full-svg"
-              viewBox={`0 0 ${detailedChartData.svgWidth} ${detailedChartData.svgHeight}`}
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="financialTrendGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={jarChartTheme.gradStart} stopOpacity="0.28" />
-                  <stop offset="100%" stopColor={jarChartTheme.gradStart} stopOpacity="0.01" />
-                </linearGradient>
-              </defs>
-
-              {/* Horizontal Gridlines & Y-Axis Labels */}
-              {detailedChartData.yTicks.map((tick, idx) => (
-                <g key={idx}>
-                  <line
-                    x1={detailedChartData.padLeft}
-                    y1={tick.y}
-                    x2={detailedChartData.padLeft + detailedChartData.chartW}
-                    y2={tick.y}
-                    stroke={jarChartTheme.grid}
-                    strokeWidth="1"
-                    strokeDasharray="3 3"
-                  />
-                  <text
-                    x={detailedChartData.padLeft - 8}
-                    y={tick.y + 4}
-                    textAnchor="end"
-                    fontSize="11"
-                    fill={jarChartTheme.label}
-                    fontFamily="monospace"
-                    fontWeight="500"
-                  >
-                    {tick.label}
-                  </text>
-                </g>
-              ))}
-
-              {/* Smooth Bézier Gradient Fill */}
-              <path d={detailedChartData.areaStr} fill="url(#financialTrendGrad)" />
-
-              {/* Real Data Stroke Line */}
-              <path
-                d={detailedChartData.pathStr}
-                fill="none"
-                stroke={jarChartTheme.stroke}
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {/* Interactive Data Points */}
-              {detailedChartData.coords.map((pt, i) => (
-                <g key={i}>
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="3.5"
-                    fill={jarChartTheme.pointFill}
-                    stroke={jarChartTheme.pointStroke}
-                    strokeWidth="2"
-                  />
-                  {/* Transparent hover hit target */}
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="12"
-                    fill="transparent"
-                    cursor="pointer"
-                    onMouseEnter={() => setActivePointIndex(i)}
-                    onMouseLeave={() => setActivePointIndex(null)}
-                  />
-                </g>
-              ))}
-
-              {/* Active Point Glow Indicator */}
-              {(() => {
-                const activePt =
-                  activePointIndex !== null
-                    ? detailedChartData.coords[activePointIndex]
-                    : detailedChartData.lastCoord;
-                if (!activePt) return null;
-                return (
-                  <g pointerEvents="none">
-                    <circle cx={activePt.x} cy={activePt.y} r="10" fill={jarChartTheme.activeGlow} fillOpacity="0.25" />
-                    <circle cx={activePt.x} cy={activePt.y} r="5" fill={jarChartTheme.activeGlow} />
-                  </g>
-                );
-              })()}
-
-              {/* X-Axis Major Labels */}
-              {detailedChartData.xLabels.map((lbl, i) => (
-                <text
-                  key={i}
-                  x={lbl.x}
-                  y={detailedChartData.svgHeight - 6}
-                  textAnchor="middle"
-                  fontSize="11.5"
-                  fill={lbl.isHighlighted ? jarChartTheme.labelHighlight : jarChartTheme.label}
-                  fontWeight={lbl.isHighlighted ? '800' : '500'}
-                >
-                  {lbl.label}
-                </text>
-              ))}
-            </svg>
-
-            {/* Floating Interactive Tooltip */}
-            {(() => {
-              const activePt =
-                activePointIndex !== null
-                  ? detailedChartData.coords[activePointIndex]
-                  : detailedChartData.lastCoord;
-              if (!activePt) return null;
-              const isNearRight = activePt.x > detailedChartData.padLeft + detailedChartData.chartW * 0.78;
-              const isNearLeft = activePt.x < detailedChartData.padLeft + detailedChartData.chartW * 0.22;
-              const transX = isNearRight ? '-80%' : isNearLeft ? '-20%' : '-50%';
-              const arrowLeft = isNearRight ? '80%' : isNearLeft ? '20%' : '50%';
-              return (
-                <div
-                  className="jars-chart-floating-tooltip"
-                  style={{
-                    left: `${(activePt.x / detailedChartData.svgWidth) * 100}%`,
-                    top: `${(activePt.y / detailedChartData.svgHeight) * 100}%`,
-                    transform: `translate(${transX}, -100%)`,
-                    '--arrow-left': arrowLeft
-                  }}
-                >
-                  <span className="jars-chart-tooltip-date">
-                    {activePt.isToday ? `Hôm nay (${activePt.dateStr})` : activePt.dateStr}
-                  </span>
-                  <strong className="jars-chart-tooltip-amount">{formatCurrency(activePt.val)}</strong>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Footer Metrics Strip (3 Columns) */}
-          <div className="jars-chart-footer-strip">
-            <div className="jars-chart-footer-col">
-              <div className="jars-chart-footer-icon-box">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                  <polyline points="16 7 22 7 22 13" />
-                </svg>
-              </div>
-              <div className="jars-chart-footer-text">
-                <span>Trung bình mỗi ngày: </span>
-                <strong>{formatCurrency(detailedChartData.dailyAverage)}</strong>
-              </div>
-            </div>
-
-            <div className="jars-chart-footer-divider" />
-
-            <div className="jars-chart-footer-col">
-              <div className="jars-chart-footer-text">
-                <span>Ngày cao nhất: </span>
-                <strong>
-                  {detailedChartData.highestDayStr} ({formatCurrency(detailedChartData.highestDayAmount)})
-                </strong>
-              </div>
-            </div>
-
-            <div className="jars-chart-footer-divider" />
-
-            <div className="jars-chart-footer-col">
-              <div className="jars-chart-footer-text">
-                <span>Chuỗi tiết kiệm: </span>
-                <strong>{detailedChartData.streakDays} ngày</strong>
-                <FlameOutlineIcon size={14} style={{ marginLeft: '4px', verticalAlign: '-2px' }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <section
-          className="jars-recommendation-card jar-next-step-card"
-          aria-labelledby="jar-next-step-title"
-          data-suggestion-kind={currentSuggestion.kind}
-          data-suggestion-amount={currentSuggestion.amount || undefined}
-        >
-          <header className="jar-next-step-header">
-            <h3 id="jar-next-step-title"><BulbOutlineIcon size={18} />{suggestionCopy.nextStep}</h3>
-            {smartSuggestions.length > 1 && (
-              <button type="button" className="jar-next-step-switch" onClick={() => setRecomIndex(index => index + 1)}>
-                {suggestionCopy.another}<RefreshOutlineIcon size={13} />
-              </button>
-            )}
-          </header>
-
-          <div className="jar-next-step-goal">
-            <div
-              className="jar-next-step-ring"
-              role={currentSuggestion.target > 0 ? 'progressbar' : undefined}
-              aria-label={currentSuggestion.target > 0 ? suggestionCopy.progressLabel(currentSuggestion.jar.name) : undefined}
-              aria-valuemin={currentSuggestion.target > 0 ? 0 : undefined}
-              aria-valuemax={currentSuggestion.target > 0 ? 100 : undefined}
-              aria-valuenow={currentSuggestion.target > 0 ? suggestionPercent : undefined}
-              aria-hidden={currentSuggestion.target > 0 ? undefined : true}
-            >
-              <svg viewBox="0 0 100 100" aria-hidden="true">
-                <circle className="jar-next-step-ring-track" cx="50" cy="50" r="43" />
-                {currentSuggestion.target > 0 && <circle cx="50" cy="50" r="43" pathLength="100"
-                  strokeDasharray={`${currentSuggestion.progress} 100`} strokeLinecap="round" />}
-              </svg>
-              <span className="jar-next-step-ring-value">
-                {currentSuggestion.target > 0 ? formatPercent(suggestionPercent) : <JarOutlineIcon size={30} />}
-              </span>
-            </div>
-            <div>
-              <h4 className="jar-next-step-name">{currentSuggestion.jar?.name || suggestionCopy.emptyTitle}</h4>
-              <p className="jar-next-step-milestone">
-                {currentSuggestion.kind === 'milestone'
-                  ? suggestionCopy.milestone(formatPercent(currentSuggestion.nextMilestone))
-                  : currentSuggestion.kind === 'complete' ? suggestionCopy.completeTitle : suggestionCopy.noTargetTitle}
-              </p>
-            </div>
-          </div>
-
-          {currentSuggestion.kind === 'milestone' ? (
-            <>
-              <div className="jar-next-step-amount-block">
-                <span className="jar-next-step-amount-label">{suggestionCopy.amountNeeded}</span>
-                <strong className="jar-next-step-amount">{formatCurrency(currentSuggestion.amount)}</strong>
-              </div>
-              <button type="button" className="jar-next-step-cta"
-                onClick={() => handleDeposit(currentSuggestion.jar, currentSuggestion.amount)}>
-                {suggestionCopy.deposit(formatCurrency(currentSuggestion.amount))}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="jar-next-step-description">
-                {currentSuggestion.kind === 'complete' ? suggestionCopy.completeText
-                  : currentSuggestion.kind === 'no-target' ? suggestionCopy.noTargetText : suggestionCopy.emptyText}
-              </p>
-              <button type="button" className="jar-next-step-cta"
-                onClick={currentSuggestion.kind === 'no-target' ? () => handleEdit(currentSuggestion.jar) : handleCreateNew}>
-                {currentSuggestion.kind === 'no-target' ? suggestionCopy.editTarget
-                  : currentSuggestion.kind === 'complete' ? suggestionCopy.createNext : suggestionCopy.createFirst}
-              </button>
-            </>
-          )}
-
-          {currentSuggestion.jar && (
-            <footer className="jar-next-step-footer">
-              <dl className="jar-next-step-balances">
-                <div><dt>{suggestionCopy.saved}</dt><dd>{formatCurrency(currentSuggestion.current)}</dd></div>
-                <div><dt>{suggestionCopy.target}</dt><dd>{currentSuggestion.target > 0
-                  ? formatCurrency(currentSuggestion.target) : suggestionCopy.noTarget}</dd></div>
-              </dl>
-              {currentSuggestion.kind === 'milestone' && <p className="jar-next-step-split">
-                {splitSuggestion && <>{splitSuggestion}<br /></>}{suggestionCopy.confirmNext}
-              </p>}
-            </footer>
-          )}
-        </section>
+      {/* ── SECTIONS 2 & 3: LỊCH TIẾT KIỆM + HOẠT ĐỘNG GẦN ĐÂY, rồi MỐC KẾ TIẾP ── */}
+      <section className="jars-insights-grid jars-insights-grid--calendar">
+        <JarActivityCalendar
+          days={jarDays}
+          month={calendarMonth}
+          monthOptions={availableMonths}
+          onMonthChange={changeCalendarMonth}
+          view={calendarView}
+          onViewChange={changeCalendarView}
+          selectedDay={selectedDay}
+          onSelectDay={setSelectedDay}
+          today={today}
+        />
+        <JarRecentActivity
+          id={isMobile ? undefined : 'jars-section-history'}
+          events={jarEvents}
+          selectedDay={selectedDay}
+          onClearDay={() => setSelectedDay(null)}
+          onViewAll={() => (isMobile ? navigateTo('jars', 'history') : setIsHistoryModalOpen(true))}
+          limit={isMobile ? 3 : 6}
+          compact={isMobile}
+        />
       </section>
+
+      <JarNextStepStrip
+        suggestion={currentSuggestion}
+        copy={suggestionCopy}
+        percent={suggestionPercent}
+        splitText={currentSuggestion.kind === 'milestone' ? splitSuggestion : ''}
+        canSwitch={smartSuggestions.length > 1}
+        onSwitch={() => setRecomIndex((index) => index + 1)}
+        onDeposit={handleDeposit}
+        onEditTarget={handleEdit}
+        onCreate={handleCreateNew}
+      />
 
       {/* ── SECTION 4: TỔNG QUAN TIẾN ĐỘ (#jars-section-progress) ── */}
       <section id="jars-section-progress" className="jars-progress-overview-section">
@@ -1871,81 +1265,18 @@ export function JarsView() {
       </>
       )}
 
-      {/* ── SECTION 6: HOẠT ĐỘNG GẦN ĐÂY (#jars-section-history) ── */}
-      {(!isMobile || jarsSubTab === 'history') && (
-      <>
-      <section id="jars-section-history" className="jars-recent-activities-section">
-        <div className="jars-section-header-row">
-          <h2 className="jars-section-title">
-            <HistoryOutlineIcon size={20} />
-            <span>Hoạt động gần đây</span>
-          </h2>
-          <button
-            type="button"
-            className="jars-section-action-link"
-            onClick={() => setIsHistoryModalOpen(true)}
-          >
-            <span>Xem tất cả</span>
-            <span>→</span>
-          </button>
-        </div>
-
-        <div className="jars-activity-list-card">
-          {recentActivities.length === 0 ? (
-            <div style={{ padding: '30px 20px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>
-              Chưa có hoạt động nạp hoặc rút tiền nào gần đây.
-            </div>
-          ) : (
-            recentActivities.map((act, index) => {
-              const isDeposit = act.type === 'deposit';
-              return (
-                <div key={act.id || index} className="jars-activity-item">
-                  <div className="jars-activity-item-left">
-                    <div
-                      className={`jars-activity-icon-box ${
-                        isDeposit ? 'jars-activity-icon-box--deposit' : 'jars-activity-icon-box--withdraw'
-                      }`}
-                    >
-                      {isDeposit ? '+' : '−'}
-                    </div>
-
-                    <div className="jars-activity-info">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span
-                          className={`jars-activity-amount-text ${
-                            isDeposit
-                              ? 'jars-activity-amount-text--deposit'
-                              : 'jars-activity-amount-text--withdraw'
-                          }`}
-                        >
-                          {isDeposit ? '+' : '−'}
-                          {formatCurrency(act.amount)}
-                        </span>
-                        <span className="jars-activity-desc-text">
-                          {isDeposit ? 'Nạp vào' : 'Rút từ'} "{act.jarName}"
-                        </span>
-                      </div>
-                      <span className="jars-activity-time-text">
-                        {act.date ? formatDate(act.date, 'full') : '--'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="jars-section-action-link"
-                    style={{ fontSize: '12px' }}
-                    onClick={() => setIsHistoryModalOpen(true)}
-                  >
-                    Chi tiết
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </section>
-      </>
+      {/* ── SECTION 6: LỊCH SỬ HŨ ──
+          Desktop shows recent activity beside the calendar (id jars-section-history
+          lives there). On phones the "Lịch sử" tab shows the longer list here. */}
+      {isMobile && jarsSubTab === 'history' && (
+        <JarRecentActivity
+          id="jars-section-history"
+          events={jarEvents}
+          selectedDay={selectedDay}
+          onClearDay={() => setSelectedDay(null)}
+          onViewAll={() => setIsHistoryModalOpen(true)}
+          limit={30}
+        />
       )}
 
       {/* ── SECTION 7: THÔNG TIN HỮU ÍCH ── */}

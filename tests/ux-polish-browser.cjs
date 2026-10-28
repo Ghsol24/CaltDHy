@@ -232,6 +232,71 @@ check('"Cần chú ý" turns into a red warning when something is overdue or ove
   }
 });
 
+check('Goals page: savings calendar beside recent activity, no invented figures', async ({ browser, server }) => {
+  const { context, page, errors, open } = await newPage(browser, server, { theme: 'green' });
+  await open('/spending/jars/goals');
+  await expect(page.locator('.jars-saving-trend-card, .jar-next-step-card')).toHaveCount(0);
+  const calendar = page.locator('.jar-cal-card');
+  const activity = page.locator('.jars-insights-grid--calendar .jar-activity-card');
+  await expect(calendar).toBeVisible();
+  await expect(activity).toBeVisible();
+  await expect(activity).toHaveAttribute('id', 'jars-section-history');
+  // Calendar and list sit side by side on desktop.
+  const [a, b] = await Promise.all([calendar.boundingBox(), activity.boundingBox()]);
+  assert.ok(b.x > a.x + a.width - 1 && Math.abs(a.y - b.y) < 2, 'activity sits to the right of the calendar');
+  // Real numbers only: the fixture has no savings last month, so no percentage is shown.
+  await expect(calendar.locator('.jar-cal-amount-total')).toHaveText('+2.000.000 ₫');
+  await expect(calendar.locator('.jar-cal-compare')).toHaveText('Tháng trước chưa có khoản tiết kiệm để so sánh');
+  await expect(page.locator('.jars-metric-trend').first()).toHaveText('+2.000.000 ₫ trong tháng này');
+  assert.equal(await page.getByText('12% so với tháng trước').count(), 0, 'the hard-coded 12% is gone');
+  // The next-milestone strip keeps the deposit shortcut.
+  const strip = page.locator('.jar-next-strip');
+  await expect(strip).toContainText('Sức khoẻ');
+  await expect(strip.locator('.jar-next-strip-cta')).toHaveText('Nạp 250.000 ₫ vào hũ');
+  await strip.locator('.jar-next-strip-cta').click();
+  await expect(page.locator('.jar-transaction-dialog input[inputmode="numeric"]')).toHaveValue('250.000');
+  await page.keyboard.press('Escape');
+  // Picking a day filters the activity list; the chip clears it again.
+  await expect(activity.locator('.jar-activity-row')).toHaveCount(6);
+  const withdrawDay = calendar.locator('.jar-cal-cell.is-withdraw').first();
+  await withdrawDay.click();
+  await expect(withdrawDay).toHaveAttribute('aria-pressed', 'true');
+  await expect(activity.locator('.jar-activity-row')).toHaveCount(3);
+  await expect(activity.locator('.jar-activity-amount.is-deposit')).toHaveCount(0);
+  await activity.locator('.jar-activity-day-chip').click();
+  await expect(activity.locator('.jar-activity-row')).toHaveCount(6);
+  // Keyboard: arrows move between days inside the grid.
+  await calendar.locator('.jar-cal-cell[tabindex="0"]').focus();
+  const before = await page.evaluate(() => document.activeElement?.dataset.day);
+  await page.keyboard.press('ArrowLeft');
+  const after = await page.evaluate(() => document.activeElement?.dataset.day);
+  assert.notEqual(after, before, 'focus moved to another day');
+  // Year view is remembered on this device.
+  await calendar.locator('.jar-cal-view-switch button', { hasText: 'Năm' }).click();
+  await expect(calendar.locator('.jar-cal-months, .jar-cal-year')).toBeVisible();
+  await expect(calendar.locator('.jar-cal-title')).toHaveText('12 tháng qua bạn đã tiết kiệm');
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(page.locator('.jar-cal-card .jar-cal-months, .jar-cal-card .jar-cal-year')).toBeVisible();
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+check('Goals page on phones: compact list on Mục tiêu, full list on Lịch sử', async ({ browser, server }) => {
+  const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 390 });
+  await open('/spending/jars/goals');
+  const calendar = page.locator('.jar-cal-card');
+  await expect(calendar).toHaveClass(/is-narrow/);
+  await expect(calendar.locator('.jar-cal-view-switch')).toHaveCount(0); // year view needs a wider screen
+  await expect(page.locator('.jar-activity-card .jar-activity-row')).toHaveCount(3);
+  await page.locator('.jar-activity-card .jar-activity-view-all').click();
+  await page.waitForURL('**/spending/jars/history');
+  await expect(page.locator('#jars-section-history .jar-activity-row')).toHaveCount(6);
+  const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+  assert.equal(overflows, false, 'no sideways scrolling on a phone');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 module.exports = { check, checks, newPage };
 
 if (require.main === module) {

@@ -1,0 +1,560 @@
+/* Goals page: savings calendar, recent activity and the next-milestone strip.
+   Colours come from theme tokens so all four themes stay readable. */
+
+.jars-insights-grid.jars-insights-grid--calendar {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: stretch;
+  contain-intrinsic-size: auto 460px;
+}
+
+.jar-cal-card,
+.jar-activity-card,
+.jar-next-strip {
+  box-sizing: border-box;
+  min-width: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 20px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Calendar card ── */
+.jar-cal-card {
+  --cal-save: var(--color-success);
+  --cal-withdraw: var(--color-danger);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px;
+}
+
+.jar-cal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.jar-cal-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.jar-cal-title {
+  margin: 0;
+  font: 700 15px/1.3 var(--font-sans);
+  color: var(--color-text);
+}
+
+.jar-cal-amount-total {
+  font: 800 28px/1.15 var(--font-mono);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.jar-cal-amount-total.is-positive { color: var(--color-success); }
+.jar-cal-amount-total.is-negative { color: var(--color-danger); }
+
+.jar-cal-compare {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 600 12px/1.4 var(--font-sans);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted);
+}
+
+.jar-cal-compare.is-up { color: var(--color-success); background: var(--color-success-bg); }
+.jar-cal-compare.is-down { color: var(--color-danger); background: var(--color-danger-bg); }
+
+.jar-cal-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.jar-cal-view-switch {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+}
+
+.jar-cal-view-switch button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: 600 12px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.jar-cal-view-switch button[aria-pressed="true"] {
+  background: var(--color-surface);
+  color: var(--color-link);
+  box-shadow: var(--shadow-sm);
+}
+
+.jar-cal-weekdays,
+.jar-cal-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.jar-cal-weekdays span {
+  text-align: center;
+  font: 700 11px/1.6 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-cal-grid {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.jar-cal-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 52px;
+  padding: 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  /* Neutral grey for empty days so they never read as a light "saved" tint. */
+  background: color-mix(in srgb, var(--color-text) 5%, var(--color-surface));
+  color: var(--color-text);
+  font: 500 12px/1.2 var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+
+button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-strong); }
+.jar-cal-cell.is-outside { background: transparent; cursor: default; }
+.jar-cal-cell.is-future { background: transparent; border: 1px dashed var(--color-border); color: var(--color-text-muted); cursor: default; }
+.jar-cal-cell.is-future .jar-cal-date { opacity: 0.75; }
+
+/* Saving intensity: a calm tint that keeps day numbers and amounts readable. */
+.jar-cal-cell.level-1 { background: color-mix(in srgb, var(--cal-save) 12%, var(--color-surface)); }
+.jar-cal-cell.level-2 { background: color-mix(in srgb, var(--cal-save) 22%, var(--color-surface)); }
+.jar-cal-cell.level-3 { background: color-mix(in srgb, var(--cal-save) 33%, var(--color-surface)); }
+.jar-cal-cell.level-4 { background: color-mix(in srgb, var(--cal-save) 45%, var(--color-surface)); }
+.jar-cal-cell.is-withdraw { background: color-mix(in srgb, var(--cal-withdraw) 18%, var(--color-surface)); }
+.jar-cal-cell.is-neutral { background: color-mix(in srgb, var(--color-text) 9%, var(--color-surface)); }
+
+.jar-cal-cell.is-today { border-color: var(--color-link); }
+.jar-cal-cell.is-today .jar-cal-date { color: var(--color-link); font-weight: 800; }
+.jar-cal-cell.is-selected { border-color: var(--color-text); box-shadow: 0 0 0 1px var(--color-text); }
+
+.jar-cal-date { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.jar-cal-amount {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 700 11px/1.2 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.jar-cal-cell.is-withdraw .jar-cal-amount { color: var(--color-danger); }
+
+.jar-cal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cal-save);
+}
+
+.jar-cal-cell.is-withdraw .jar-cal-dot { background: var(--cal-withdraw); }
+
+.jar-cal-card.is-narrow .jar-cal-cell { min-height: 40px; align-items: center; }
+.jar-cal-card.is-narrow .jar-cal-row,
+.jar-cal-card.is-narrow .jar-cal-weekdays,
+.jar-cal-card.is-narrow .jar-cal-grid { gap: 4px; }
+
+/* Year view: GitHub-style strip of the last 53 weeks. */
+.jar-cal-year { display: grid; gap: 6px; }
+
+.jar-cal-year-months,
+.jar-cal-year-grid {
+  display: grid;
+  gap: 3px;
+}
+
+.jar-cal-year-months span {
+  font: 600 11px/1.2 var(--font-sans);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.jar-cal-year-column {
+  display: grid;
+  grid-template-rows: repeat(7, auto);
+  gap: 3px;
+}
+
+.jar-cal-year-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-text) 7%, var(--color-surface));
+  cursor: pointer;
+}
+
+.jar-cal-year-cell.is-future { background: transparent; cursor: default; }
+.jar-cal-year-cell.is-blank { background: transparent; cursor: default; }
+
+/* Year view on medium cards: twelve small month calendars. */
+.jar-cal-months {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 12px;
+}
+
+.jar-cal-mini {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.jar-cal-mini-title {
+  margin-bottom: 4px;
+  font: 700 11px/1.3 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-cal-mini-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.jar-cal-mini .jar-cal-year-cell { border-radius: 2px; }
+.jar-cal-year-cell.level-1 { background: color-mix(in srgb, var(--cal-save) 30%, var(--color-surface)); }
+.jar-cal-year-cell.level-2 { background: color-mix(in srgb, var(--cal-save) 50%, var(--color-surface)); }
+.jar-cal-year-cell.level-3 { background: color-mix(in srgb, var(--cal-save) 72%, var(--color-surface)); }
+.jar-cal-year-cell.level-4 { background: var(--cal-save); }
+.jar-cal-year-cell.is-withdraw { background: color-mix(in srgb, var(--cal-withdraw) 60%, var(--color-surface)); }
+.jar-cal-year-cell.is-today { box-shadow: inset 0 0 0 1.5px var(--color-link); }
+.jar-cal-year-cell.is-selected { box-shadow: 0 0 0 2px var(--color-text); }
+
+.jar-cal-cell:focus-visible,
+.jar-cal-year-cell:focus-visible,
+.jar-cal-view-switch button:focus-visible,
+.jar-activity-view-all:focus-visible,
+.jar-activity-day-chip:focus-visible,
+.jar-next-strip-cta:focus-visible,
+.jar-next-strip-switch:focus-visible {
+  outline: 2px solid var(--color-brand-700, var(--color-link));
+  outline-offset: 2px;
+}
+
+.jar-cal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.jar-cal-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font: 500 11px/1.4 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-cal-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.jar-cal-swatch.level-1 { background: color-mix(in srgb, var(--color-success) 30%, var(--color-surface)); }
+.jar-cal-swatch.level-2 { background: color-mix(in srgb, var(--color-success) 50%, var(--color-surface)); }
+.jar-cal-swatch.level-3 { background: color-mix(in srgb, var(--color-success) 72%, var(--color-surface)); }
+.jar-cal-swatch.level-4 { background: var(--color-success); }
+.jar-cal-swatch.is-withdraw { margin-left: 10px; background: color-mix(in srgb, var(--color-danger) 60%, var(--color-surface)); }
+
+.jar-cal-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 500 12px/1.5 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-cal-streak { display: inline-flex; align-items: center; gap: 4px; color: var(--color-warning); font-weight: 700; }
+
+/* ── Recent activity ── */
+.jar-activity-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 24px;
+}
+
+.jar-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jar-activity-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: 700 15px/1.3 var(--font-sans);
+  color: var(--color-text);
+}
+
+.jar-activity-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-link);
+  font: 700 13px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.jar-activity-day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 9px 4px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-brand-50);
+  color: var(--color-link);
+  font: 600 12px/1.3 var(--font-sans);
+  cursor: pointer;
+}
+
+.jar-activity-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jar-activity-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.jar-activity-row:first-child { border-top: 0; padding-top: 2px; }
+
+.jar-activity-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font: 700 15px/1 var(--font-sans);
+}
+
+.jar-activity-icon.is-deposit { background: var(--color-success-bg); color: var(--color-success); }
+.jar-activity-icon.is-withdraw { background: var(--color-danger-bg); color: var(--color-danger); }
+
+.jar-activity-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.jar-activity-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 13px/1.35 var(--font-sans);
+  color: var(--color-text);
+}
+
+.jar-activity-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 12px/1.35 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-activity-amount {
+  font: 700 13px/1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.jar-activity-amount.is-deposit { color: var(--color-success); }
+.jar-activity-amount.is-withdraw { color: var(--color-danger); }
+
+.jar-activity-empty,
+.jar-activity-more {
+  margin: 0;
+  padding: 18px 0;
+  text-align: center;
+  font: 500 13px/1.5 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-activity-more { padding: 4px 0 0; font-size: 12px; }
+
+/* ── Next milestone strip ── */
+.jar-next-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background:
+    linear-gradient(100deg, var(--color-brand-50) 0%, transparent 70%),
+    var(--color-surface);
+}
+
+.jar-next-strip-lead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1 1 340px;
+}
+
+.jar-next-strip-ring {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+}
+
+.jar-next-strip-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.jar-next-strip-ring circle { fill: none; stroke-width: 4; }
+.jar-next-strip-ring-track { stroke: var(--color-border); }
+.jar-next-strip-ring-fill { stroke: var(--color-action-bg); stroke-linecap: round; }
+
+.jar-next-strip-ring span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 800 11px/1 var(--font-sans);
+  color: var(--color-text);
+}
+
+.jar-next-strip-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.jar-next-strip-text { min-width: 0; }
+
+.jar-next-strip-text h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 2px;
+  font: 700 14px/1.35 var(--font-sans);
+  color: var(--color-text);
+}
+
+.jar-next-strip-kicker {
+  font: 700 11px/1.4 var(--font-sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.jar-next-strip-text p {
+  margin: 0;
+  font: 500 13px/1.5 var(--font-sans);
+  color: var(--color-text-secondary);
+}
+
+.jar-next-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.jar-next-strip-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: 600 12px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.jar-next-strip-cta {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
+  font: 700 13px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.jar-next-strip-cta:hover { background: var(--color-action-hover-bg); }
+
+@media (max-width: 1100px) {
+  .jars-insights-grid.jars-insights-grid--calendar { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .jar-cal-card,
+  .jar-activity-card { padding: 16px; }
+  .jar-cal-amount-total { font-size: 24px; }
+  .jar-next-strip { padding: 14px; }
+  .jar-next-strip-actions { width: 100%; }
+  .jar-next-strip-cta { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jar-cal-cell { transition: none; }
+}

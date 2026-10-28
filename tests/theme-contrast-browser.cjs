@@ -38,7 +38,7 @@ const MENUS = [
   { route: '/spending/plan/recurring', open: ['button:has(.wallet-chip-name)'], menu: '.recurring-wallet-popover-menu' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=0 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=2 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },
-  { route: '/spending/jars/goals', open: ['#jars-section-goals ~ * .calt-custom-select-trigger, .jars-goals-activity-card .calt-custom-select-trigger, .jars-saving-trend-card .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
+  { route: '/spending/jars/goals', open: ['.jar-cal-card .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
   { route: '/spending/jars/list', open: ['.jars-toolbar-right .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
   { route: '/spending/jars/list', open: ['.jar-card-menu-btn'], menu: '.jar-card-dropdown-menu' },
   { route: '/spending/jars/list', open: ['button:has-text("Nạp tiền")', '.jar-transfer-wallet-box .custom-wallet-trigger'], menu: '.custom-wallet-menu' },
@@ -47,6 +47,9 @@ const MENUS = [
 
 function scanScript({ rootSelector, minimum }) {
   const parse = (value) => {
+    // color-mix() resolves to color(srgb r g b / a) with 0–1 channels.
+    const srgb = /color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.e-]+))?\)/.exec(value || '');
+    if (srgb) return { r: Number(srgb[1]) * 255, g: Number(srgb[2]) * 255, b: Number(srgb[3]) * 255, a: srgb[4] === undefined ? 1 : Number(srgb[4]) };
     const match = /rgba?\(([^)]+)\)/.exec(value || '');
     if (!match) return null;
     const parts = match[1].split(/[\s,/]+/).filter(Boolean).map(Number);
