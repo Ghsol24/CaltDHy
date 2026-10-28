@@ -1973,7 +1973,7 @@ export function JarsView() {
 
         {/* Tip 2 */}
         <div className="jars-tip-card" onClick={() => handleOpenTips('50-30-20')} style={{ cursor: 'pointer' }}>
-          <div className="jars-tip-icon-box" style={{ background: '#ECFDF5', color: '#10B981' }}>
+          <div className="jars-tip-icon-box jars-tip-icon-box--success">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="20" x2="18" y2="10" />
               <line x1="12" y1="20" x2="12" y2="4" />
@@ -1985,7 +1985,7 @@ export function JarsView() {
             <p className="jars-tip-desc">
               50% cho nhu cầu thiết yếu, 30% cho mong muốn cá nhân, 20% cho tiết kiệm và đầu tư.
             </p>
-            <button type="button" className="jars-tip-link" style={{ color: '#10B981' }}>
+            <button type="button" className="jars-tip-link jars-tip-link--success">
               <span>Xem chi tiết & Tính toán</span>
               <span>→</span>
             </button>

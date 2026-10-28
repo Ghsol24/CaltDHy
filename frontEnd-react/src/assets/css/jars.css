@@ -265,7 +265,7 @@ html.dark-theme .jars-metric-icon-box--teal {
   gap: 3px;
   font-size: 11.5px;
   font-weight: 600;
-  color: #10B981;
+  color: var(--color-success);
 }
 
 .jars-metric-trend--neutral {
@@ -398,7 +398,7 @@ html.dark-theme .jars-global-progress-track {
   font-family: var(--font-mono, monospace);
   font-size: 28px;
   font-weight: 800;
-  color: #00C076;
+  color: var(--color-success);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -1630,10 +1630,10 @@ html.dark-theme .jars-view-btn.active {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  background: #FFFFFF;
+  background: var(--menu-bg);
   border-radius: 12px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 8px -2px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--menu-border);
+  box-shadow: var(--menu-shadow);
   z-index: 50;
   width: 140px;
   padding: 6px;
@@ -1661,25 +1661,27 @@ html.dark-theme .jars-view-btn.active {
   text-align: left;
   font-size: 13px;
   font-weight: 500;
-  color: #1E293B;
+  color: var(--menu-text);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   width: 100%;
 }
 
-.jar-dropdown-item:hover {
-  background: #F1F5F9;
-  color: #0F172A;
+.jar-dropdown-item:hover,
+.jar-dropdown-item:focus-visible {
+  background: var(--menu-item-hover-bg);
+  color: var(--menu-text);
 }
 
 .jar-dropdown-item--danger {
-  color: #EF4444;
+  color: var(--menu-danger-text);
 }
 
-.jar-dropdown-item--danger:hover {
-  background: #FEF2F2;
-  color: #DC2626;
+.jar-dropdown-item--danger:hover,
+.jar-dropdown-item--danger:focus-visible {
+  background: var(--menu-danger-hover-bg);
+  color: var(--menu-danger-text);
 }
 
 /* Graphic Container */
@@ -2346,13 +2348,13 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
 }
 
 .jars-activity-icon-box--deposit {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10B981;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .jars-activity-icon-box--withdraw {
-  background: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .jars-activity-info {
@@ -2368,11 +2370,11 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
 }
 
 .jars-activity-amount-text--deposit {
-  color: #10B981;
+  color: var(--color-success);
 }
 
 .jars-activity-amount-text--withdraw {
-  color: #EF4444;
+  color: var(--color-danger);
 }
 
 .jars-activity-desc-text {
@@ -2505,6 +2507,16 @@ html.green-theme .jars-tip-link {
 
 .jars-tip-link:hover {
   text-decoration: underline;
+}
+
+/* Second tip card uses the success colour in every theme. */
+.jars-tip-card .jars-tip-icon-box.jars-tip-icon-box--success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.jars-tip-card .jars-tip-link.jars-tip-link--success {
+  color: var(--color-success);
 }
 
 /* ============================================================

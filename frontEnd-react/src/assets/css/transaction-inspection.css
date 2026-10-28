@@ -477,11 +477,11 @@ button.transaction-inspection-row:hover {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 5px;
-  border: 1px solid var(--history-border);
+  border: 1px solid var(--menu-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-lg);
+  background: var(--menu-bg);
+  color: var(--menu-text);
+  box-shadow: var(--menu-shadow);
 }
 .transaction-filter-dropdown.is-compact .transaction-filter-menu {
   left: auto;
@@ -507,8 +507,8 @@ button.transaction-inspection-row:hover {
 .transaction-filter-option > span { overflow-wrap: anywhere; }
 .transaction-filter-option svg { flex: 0 0 auto; color: var(--color-link); }
 .transaction-filter-option:hover,
-.transaction-filter-option:focus-visible { background: var(--history-hover); outline: none; }
-.transaction-filter-option.is-selected { background: var(--color-brand-50); color: var(--color-link); font-weight: 700; }
+.transaction-filter-option:focus-visible { background: var(--menu-item-hover-bg); outline: none; }
+.transaction-filter-option.is-selected { background: var(--menu-item-selected-bg); color: var(--menu-item-selected-text); font-weight: 700; }
 .transaction-filter-option.is-selected:hover,
 .transaction-filter-option.is-selected:focus-visible { background: var(--color-brand-100); }
 .transaction-history-checkbox {
