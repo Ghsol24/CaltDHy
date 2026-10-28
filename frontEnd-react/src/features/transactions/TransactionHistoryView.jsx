@@ -13,11 +13,13 @@ import { TransactionRows } from './TransactionRows';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatDisplayDate } from '../../utils/datePicker';
+import { getHistoryFilterCopy } from './historyFilterCopy';
 
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function TransactionHistoryView() {
   const { t, label, lang } = useTranslation();
+  const chipCopy = getHistoryFilterCopy(lang);
   const [searchParams, setSearchParams] = useSearchParams();
   const seedDate = searchParams.get('date');
   const seedFrom = searchParams.get('from');
@@ -101,7 +103,7 @@ export function TransactionHistoryView() {
     const dateOrder = String(lang).startsWith('zh') ? 'ymd' : 'dmy';
     const showDate = (iso) => formatDisplayDate(iso, dateOrder);
     const chips = [];
-    if (query.trim()) chips.push({ id: 'query', text: t('history.searchChip', { query: query.trim() }), remove: () => setQuery('') });
+    if (query.trim()) chips.push({ id: 'query', text: chipCopy.searchChip(query.trim()), remove: () => setQuery('') });
     if (type !== 'all') chips.push({ id: 'type', text: `${t('history.filterType')}: ${t(`type.${type}`)}`,
       remove: () => { setType('all'); dropParams('type'); } });
     if (category !== 'all') chips.push({ id: 'category', text: `${t('history.filterCategory')}: ${label(category)}`,
@@ -114,7 +116,7 @@ export function TransactionHistoryView() {
       let period;
       if (datePreset !== 'custom') period = t(`history.${datePreset}`);
       else if (startDate && endDate) period = startDate === endDate ? showDate(startDate) : `${showDate(startDate)} – ${showDate(endDate)}`;
-      else period = startDate ? t('history.rangeFrom', { date: showDate(startDate) }) : t('history.rangeTo', { date: showDate(endDate) });
+      else period = startDate ? chipCopy.rangeFrom(showDate(startDate)) : chipCopy.rangeTo(showDate(endDate));
       chips.push({ id: 'period', text: `${t('history.filterPeriod')}: ${period}`,
         remove: () => { setDatePreset('all'); setStartDate(''); setEndDate(''); dropParams('date', 'from', 'to'); } });
     }
@@ -160,7 +162,7 @@ export function TransactionHistoryView() {
         aria-expanded={filtersOpen} aria-controls={controlsId} onClick={() => setFiltersOpen((open) => !open)}>
         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2"
           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
-        <span>{t('history.filters')}</span>
+        <span>{chipCopy.filters}</span>
         {filterCount > 0 && <span className="transaction-filter-count">{filterCount}</span>}
         <svg className="transaction-filter-toggle-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
@@ -200,15 +202,15 @@ export function TransactionHistoryView() {
     </div>
 
     {activeFilters.length > 0 && <div ref={chipsRef} className="transaction-active-filters" role="group"
-      aria-label={t('history.activeFilters')}>
+      aria-label={chipCopy.activeFilters}>
       {activeFilters.map((chip, index) => <button key={chip.id} type="button" className="transaction-filter-chip"
-        aria-label={t('history.removeFilter', { name: chip.text })} onClick={() => removeChip(chip, index)}>
+        aria-label={chipCopy.removeFilter(chip.text)} onClick={() => removeChip(chip, index)}>
         <span>{chip.text}</span>
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4"
           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </button>)}
       {isCompact && activeFilters.length > 1 && <button type="button" className="transaction-filter-chip-clear"
-        onClick={() => { clearFilters(); requestAnimationFrame(() => searchRef.current?.focus()); }}>{t('history.clearAll')}</button>}
+        onClick={() => { clearFilters(); requestAnimationFrame(() => searchRef.current?.focus()); }}>{chipCopy.clearAll}</button>}
     </div>}
 
     {datePreset === 'custom' && <div className="transaction-filter-custom-dates">
@@ -229,7 +231,7 @@ export function TransactionHistoryView() {
     </div>}
     <div className="transaction-history-summary" aria-live="polite">
       <strong>{activeFilters.length > 0
-        ? t('history.entriesFiltered', { count: summary.count, total: historyRows.length })
+        ? chipCopy.entriesFiltered({ count: summary.count, total: historyRows.length })
         : t('history.entries', { count: summary.count })}</strong>
       <span>{t('type.expense')}: {formatCurrency(summary.expense)}</span>
       <span>{t('type.income')}: {formatCurrency(summary.income)}</span>

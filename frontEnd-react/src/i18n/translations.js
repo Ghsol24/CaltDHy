@@ -166,10 +166,6 @@ export const translations = {
     'history.lockedGeneric': 'Giao dịch hệ thống không thể sửa trực tiếp',
     'type.wallet_created': 'Tạo ví', 'history.walletCreated': 'Tạo ví “{name}”',
     'history.openingBalance': 'Số dư ban đầu', 'history.entries': '{count} mục',
-    'history.entriesFiltered': '{count} / {total} mục', 'history.filters': 'Bộ lọc',
-    'history.activeFilters': 'Bộ lọc đang áp dụng', 'history.removeFilter': 'Bỏ bộ lọc {name}',
-    'history.clearAll': 'Xóa tất cả', 'history.searchChip': 'Tìm: “{query}”',
-    'history.rangeFrom': 'Từ {date}', 'history.rangeTo': 'Đến {date}',
 
     'date.today': 'Hôm nay', 'date.yesterday': 'Hôm qua', 'date.noDate': 'Chưa định ngày',
     'date.dueToday': 'Đến hạn hôm nay', 'date.overdueDays': 'Quá hạn {count} ngày',
@@ -472,10 +468,6 @@ export const translations = {
     'history.lockedGeneric': 'System transaction cannot be edited here',
     'type.wallet_created': 'Wallet creation', 'history.walletCreated': 'Created wallet “{name}”',
     'history.openingBalance': 'Opening balance', 'history.entries': '{count} entries',
-    'history.entriesFiltered': '{count} of {total} entries', 'history.filters': 'Filters',
-    'history.activeFilters': 'Active filters', 'history.removeFilter': 'Remove filter {name}',
-    'history.clearAll': 'Clear all', 'history.searchChip': 'Search: “{query}”',
-    'history.rangeFrom': 'From {date}', 'history.rangeTo': 'Until {date}',
 
     'date.today': 'Today', 'date.yesterday': 'Yesterday', 'date.noDate': 'No date set',
     'date.dueToday': 'Due today', 'date.overdueDays': '{count} days overdue',
@@ -770,10 +762,6 @@ export const translations = {
     'history.lockedGeneric': '系统交易无法在此直接编辑',
     'type.wallet_created': '创建钱包', 'history.walletCreated': '创建钱包“{name}”',
     'history.openingBalance': '初始余额', 'history.entries': '{count} 条记录',
-    'history.entriesFiltered': '{count} / {total} 条记录', 'history.filters': '筛选',
-    'history.activeFilters': '已应用的筛选', 'history.removeFilter': '移除筛选：{name}',
-    'history.clearAll': '全部清除', 'history.searchChip': '搜索：“{query}”',
-    'history.rangeFrom': '{date} 起', 'history.rangeTo': '至 {date}',
 
     'date.today': '今天', 'date.yesterday': '昨天', 'date.noDate': '未设置日期',
     'date.dueToday': '今天到期', 'date.overdueDays': '已逾期 {count} 天',
