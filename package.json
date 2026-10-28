@@ -8,7 +8,7 @@
     "test:browser": "node tests/browser-security.cjs",
     "test:transaction-period": "node tests/transaction-period-browser.cjs",
     "test:ux-budget": "node tests/ux-performance-budget.cjs",
-    "test:e2e": "npm run build --prefix frontEnd-react && npm run test:ux-budget && npm run test:browser && npm run test:transaction-period && npm run test:cash-flow && npm run test:mobile-ux && node tests/theme-contrast-browser.cjs",
+    "test:e2e": "npm run build --prefix frontEnd-react && npm run test:ux-budget && npm run test:browser && npm run test:transaction-period && npm run test:cash-flow && npm run test:mobile-ux && node tests/theme-contrast-browser.cjs && node tests/mobile-section-nav-browser.cjs",
     "test:all": "npm test && npm run test:e2e && npm run check:release",
     "check:release": "node scripts/release.cjs --check",
     "prepare:release": "node scripts/release.cjs --prepare",
@@ -18,7 +18,8 @@
     "migrate:jar-transfers": "node backEnd/server/scripts/migrate-jar-transfer-types.js",
     "test:cash-flow": "node tests/cash-flow-browser.cjs",
     "test:mobile-ux": "node tests/mobile-ux-browser.cjs",
-    "test:theme-contrast": "npm run build --prefix frontEnd-react && node tests/theme-contrast-browser.cjs"
+    "test:theme-contrast": "npm run build --prefix frontEnd-react && node tests/theme-contrast-browser.cjs",
+    "test:mobile-tabs": "node tests/mobile-section-nav-browser.cjs"
   },
   "dependencies": {
     "jsdom": "^29.1.1"
