@@ -419,9 +419,8 @@ button.transaction-inspection-row:hover {
   gap: 12px;
   padding: 2px 4px;
 }
-.transaction-filter-custom-dates label { flex: 0 1 190px; min-width: 145px; }
-.transaction-filter-custom-dates input { width: 100%; color-scheme: light; }
-.transaction-filter-custom-dates input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .75; }
+.transaction-filter-date-field { flex: 0 1 210px; min-width: 160px; display: grid; gap: 6px; }
+.transaction-filter-custom-dates input { width: 100%; }
 .transaction-filter-dropdown { position: relative; display: grid; gap: 6px; min-width: 0; }
 .transaction-filter-label {
   color: var(--color-text-secondary);
@@ -467,6 +466,86 @@ button.transaction-inspection-row:hover {
 }
 .transaction-filter-dropdown.is-compact .transaction-filter-value { max-width: 160px; }
 .transaction-filter-prefix { color: var(--color-text-secondary); font-weight: 600; }
+/* A dropdown that is narrowing the list says so on the control itself. */
+.transaction-filter-dropdown.is-filtering .transaction-filter-trigger {
+  border-color: var(--color-action-bg);
+  background: var(--color-brand-50);
+  color: var(--color-link);
+}
+.transaction-filter-dropdown.is-filtering .transaction-filter-prefix,
+.transaction-filter-dropdown.is-filtering .transaction-filter-trigger svg { color: var(--color-link); }
+.transaction-filter-controls[hidden] { display: none !important; }
+.transaction-filter-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--history-border);
+  border-radius: var(--radius-full);
+  background: var(--history-control);
+  color: var(--color-text);
+  font: 600 13px var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+}
+.transaction-filter-toggle.has-filters { border-color: var(--color-action-bg); color: var(--color-link); }
+.transaction-filter-toggle-chevron { transition: transform var(--dur-fast); }
+.transaction-filter-toggle[aria-expanded="true"] .transaction-filter-toggle-chevron { transform: rotate(180deg); }
+.transaction-filter-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
+  font: 700 11px/20px var(--font-sans, system-ui, sans-serif);
+  text-align: center;
+}
+.transaction-filter-bar.is-compact .transaction-history-search { flex: 1 1 0; min-width: 0; }
+.transaction-filter-bar.is-compact .transaction-filter-controls { flex: 1 1 100%; justify-content: flex-start; }
+.transaction-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+}
+.transaction-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 4px 9px 4px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-brand-50);
+  color: var(--color-link);
+  font: 600 12px/1.3 var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+  transition: background-color var(--dur-fast), border-color var(--dur-fast);
+}
+.transaction-filter-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transaction-filter-chip > svg { flex: 0 0 auto; opacity: .8; }
+.transaction-filter-chip:hover { background: var(--color-brand-100); border-color: var(--color-action-bg); }
+.transaction-filter-chip-clear {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-text-secondary);
+  font: 600 12px var(--font-sans, system-ui, sans-serif);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.transaction-filter-chip-clear:hover { color: var(--color-text); }
+.transaction-filter-chip:focus-visible,
+.transaction-filter-chip-clear:focus-visible,
+.transaction-filter-toggle:focus-visible {
+  outline: 2px solid var(--color-brand-700);
+  outline-offset: 2px;
+}
 .transaction-filter-menu {
   position: absolute;
   top: calc(100% + 7px);
@@ -675,7 +754,6 @@ html.dark-theme .transaction-history {
   --history-hover: rgba(96, 165, 250, .11);
   --history-border: rgba(255, 255, 255, .08);
 }
-html.dark-theme .transaction-filter-custom-dates input[type="date"] { color-scheme: dark; }
 html.dark-theme .transaction-inspection-row {
   background: rgba(18, 19, 28, .86);
   border-color: rgba(255, 255, 255, .08);
@@ -762,7 +840,7 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
 @media (max-width: 420px) {
   .transaction-filter-dropdown.is-compact .transaction-filter-value { max-width: 120px; }
   .transaction-history-checkbox { padding-right: 10px; }
-  .transaction-filter-custom-dates label { flex: 1 1 100%; }
+  .transaction-filter-date-field { flex: 1 1 100%; }
   .transaction-inspection-row:not(.transaction-ledger-row) { flex-wrap: wrap; }
   .transaction-inspection-row:not(.transaction-ledger-row) .transaction-inspection-amount { flex-basis: 100%; text-align: right; }
   .transaction-ledger-row { grid-template-columns: minmax(0, 1fr) auto; }

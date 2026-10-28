@@ -2651,10 +2651,6 @@ html.light-theme .custom-wallet-trigger {
 html.light-theme .custom-wallet-trigger:hover {
   background: #F1F5F9 !important;
 }
-html.light-theme .custom-wallet-badge {
-  background: rgba(79, 70, 229, 0.12) !important;
-  color: #4F46E5 !important;
-}
 
 /* Cream Theme */
 html.cream-theme .custom-wallet-trigger {
@@ -2663,10 +2659,6 @@ html.cream-theme .custom-wallet-trigger {
 }
 html.cream-theme .custom-wallet-trigger:hover {
   background: #EDE4D8 !important;
-}
-html.cream-theme .custom-wallet-badge {
-  background: rgba(192, 83, 30, 0.12) !important;
-  color: #C0531E !important;
 }
 
 /* Green Theme */
@@ -2677,10 +2669,6 @@ html.green-theme .custom-wallet-trigger {
 html.green-theme .custom-wallet-trigger:hover {
   background: #E2F2E9 !important;
 }
-html.green-theme .custom-wallet-badge {
-  background: rgba(5, 150, 105, 0.14) !important;
-  color: #047857 !important;
-}
 
 /* Dark Theme */
 html.dark-theme .custom-wallet-trigger {
@@ -2689,8 +2677,4 @@ html.dark-theme .custom-wallet-trigger {
 }
 html.dark-theme .custom-wallet-trigger:hover {
   background: #26293A !important;
-}
-html.dark-theme .custom-wallet-badge {
-  background: rgba(37, 99, 235, 0.25) !important;
-  color: #60A5FA !important;
 }

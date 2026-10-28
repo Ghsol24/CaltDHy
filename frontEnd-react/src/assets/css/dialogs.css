@@ -1355,8 +1355,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgba(var(--accent-rgb, 79, 70, 229), 0.12);
-  color: var(--color-link);
+  /* Solid menu surface keeps the badge readable on top of the selected row. */
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  color: var(--menu-item-selected-text);
 }
 
 .custom-wallet-balance {
@@ -1482,6 +1484,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-mono, monospace);
   font-size: 11.5px;
   color: var(--text-secondary);
+}
+
+.custom-wallet-balance-label {
+  font-family: var(--font-sans);
 }
 
 .custom-wallet-item--none {

@@ -41,7 +41,7 @@ const MENUS = [
   { route: '/spending/jars/goals', open: ['#jars-section-goals ~ * .calt-custom-select-trigger, .jars-goals-activity-card .calt-custom-select-trigger, .jars-saving-trend-card .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
   { route: '/spending/jars/list', open: ['.jars-toolbar-right .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
   { route: '/spending/jars/list', open: ['.jar-card-menu-btn'], menu: '.jar-card-dropdown-menu' },
-  { route: '/spending/jars/goals', open: ['.jar-card-action-btn--deposit, button:has-text("Nạp tiền")', '.jar-transfer-wallet-box .custom-wallet-trigger'], menu: '.custom-wallet-menu', optional: true },
+  { route: '/spending/jars/list', open: ['button:has-text("Nạp tiền")', '.jar-transfer-wallet-box .custom-wallet-trigger'], menu: '.custom-wallet-menu' },
   { route: '/spending/plan/recurring', open: ['.recurring-add-btn, button:has-text("Thêm khoản định kỳ")', '.modal-custom-dropdown-btn'], menu: '.modal-custom-dropdown-menu', optional: true }
 ];
 
