@@ -10,10 +10,12 @@ import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath'
 import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { CategoryOutlineIcon, SparkleOutlineIcon, ChartOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
+import { CategoryOutlineIcon, ChartOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { getPlanCopy } from './planCopy';
 import { isInstallmentEnded } from '../../utils/installmentTerm';
+import { buildPlanAlerts } from '../../utils/planAlerts';
+import { PlanAttentionBar } from './PlanAttentionBar';
 
 const WALLET_TYPE_LABELS = {
   cash: 'Tiền mặt',
@@ -25,7 +27,6 @@ const WALLET_TYPE_LABELS = {
 export function PlanOverviewTab() {
   const { label, lang } = useTranslation();
   const copy = getPlanCopy(lang);
-  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const wallets = useWalletStore((state) => state.wallets);
@@ -130,110 +131,11 @@ export function PlanOverviewTab() {
     return sum + amt;
   }, 0);
 
-  // 4. Deterministic Alerts calculation for Top Banner
-  const activeAlerts = useMemo(() => {
-    const list = [];
-
-    // A. Recurring alerts
-    activeInstallments.forEach((item) => {
-      const tierInfo = getRecurringTier(item, currentMonthStr);
-      // Đã trả trong tháng -> Không hiển thị cảnh báo
-      if (tierInfo.isPaidThisMonth) return;
-
-      const dateParts = getCalendarDateParts(item.nextDueDate);
-      if (tierInfo.isOverdue) {
-        list.push({
-          id: `rec-overdue-${item.id}`,
-          type: 'recurring',
-          priority: 0,
-          variant: 'danger',
-          dateParts,
-          title: `Khoản "${item.name}" đã quá hạn!`,
-          subText: `${formatCurrency(item.amount)} (${tierInfo.text})`,
-          targetTab: 'recurring'
-        });
-      } else if (tierInfo.isToday) {
-        list.push({
-          id: `rec-today-${item.id}`,
-          type: 'recurring',
-          priority: 1,
-          variant: 'today',
-          dateParts,
-          title: `Khoản "${item.name}" đến hạn hôm nay!`,
-          subText: formatCurrency(item.amount),
-          targetTab: 'recurring'
-        });
-      } else if (tierInfo.tier === 'danger') {
-        list.push({
-          id: `rec-danger-${item.id}`,
-          type: 'recurring',
-          priority: 2,
-          variant: 'danger',
-          dateParts,
-          title: `Khoản "${item.name}" sắp đến hạn (< 3 ngày)`,
-          subText: `${tierInfo.text} (${formatCurrency(item.amount)})`,
-          targetTab: 'recurring'
-        });
-      } else if (tierInfo.tier === 'warning') {
-        list.push({
-          id: `rec-soon-${item.id}`,
-          type: 'recurring',
-          priority: 3,
-          variant: 'soon',
-          dateParts,
-          title: `Khoản "${item.name}" sắp đến hạn`,
-          subText: `${tierInfo.text} (${formatCurrency(item.amount)})`,
-          targetTab: 'recurring'
-        });
-      }
-    });
-
-    // B. Budget alerts
-    categoryBudgets.forEach((cat) => {
-      if (cat.hasLimit) {
-        if (cat.percent >= 100) {
-          list.push({
-            id: `bud-over-${cat.category}`,
-            type: 'budget',
-            priority: 1,
-            variant: 'danger',
-            title: `Ngân sách ${label(cat.category)}`,
-            subText: `đã vượt ${formatCurrency(Math.abs(cat.remaining || 0))} (${formatPercent(cat.percent)})`,
-            targetTab: 'budgets'
-          });
-        } else if (cat.percent >= 90) {
-          list.push({
-            id: `bud-high-${cat.category}`,
-            type: 'budget',
-            priority: 2,
-            variant: 'high-warning',
-            title: `Ngân sách ${label(cat.category)}`,
-            subText: `đã dùng ${formatPercent(cat.percent)} hạn mức`,
-            targetTab: 'budgets'
-          });
-        } else if (cat.percent >= 70) {
-          list.push({
-            id: `bud-warn-${cat.category}`,
-            type: 'budget',
-            priority: 4,
-            variant: 'warning',
-            title: `Ngân sách ${label(cat.category)}`,
-            subText: `đã dùng ${formatPercent(cat.percent)} hạn mức`,
-            targetTab: 'budgets'
-          });
-        }
-      }
-    });
-
-    // Keep the full ordered list so the count and expansion reflect every alert.
-    list.sort((a, b) => a.priority - b.priority);
-    return list;
-  }, [activeInstallments, categoryBudgets, currentMonthStr, label]);
-
-  const visibleAlerts = showAllAlerts ? activeAlerts : activeAlerts.slice(0, 2);
-  // Overdue, due today or over-budget items make the whole panel read as a warning.
-  const alertSeverity = activeAlerts.some((alert) => alert.variant === 'danger' || alert.variant === 'today')
-    ? 'critical' : activeAlerts.length > 0 ? 'warning' : 'calm';
+  // 4. Alerts for "Cần chú ý", most severe first.
+  const activeAlerts = useMemo(
+    () => buildPlanAlerts({ installments: activeInstallments, categoryBudgets, currentMonth: currentMonthStr }),
+    [activeInstallments, categoryBudgets, currentMonthStr]
+  );
   const budgetUsagePercent = totalBudgetLimit > 0 ? (totalBudgetSpent / totalBudgetLimit) * 100 : 0;
 
   // Top items for summary columns
@@ -402,86 +304,7 @@ export function PlanOverviewTab() {
       </div>
 
       {/* ── 2. SECTION 1: CẢNH BÁO / SẮP ĐẾN HẠN (NGAY TRÊN CÙNG) ── */}
-      <div className={`plan-top-alerts-card is-${alertSeverity}`} role="region" aria-label="Cảnh báo và nhắc nhở tài chính">
-        <div className="top-alerts-left-brand">
-          <div className="top-alerts-bell-box" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          </div>
-          <div className="top-alerts-header-info">
-            <h3 className="top-alerts-title">
-              {copy.attention}
-              {activeAlerts.length > 0 && <span className="top-alerts-count" aria-hidden="true">{activeAlerts.length}</span>}
-            </h3>
-            <span className="top-alerts-subtext">
-              {activeAlerts.length > 0
-                ? copy.alertCount(activeAlerts.length)
-                : hasPlanData
-                  ? 'Hiện chưa có cảnh báo cần xử lý'
-                  : 'Chưa đủ dữ liệu để đánh giá kế hoạch'}
-            </span>
-          </div>
-        </div>
-
-        {activeAlerts.length > 0 ? (
-          <div className="top-alerts-items-scroll" id="plan-alert-list">
-            {visibleAlerts.map((alert) => (
-              <button
-                type="button"
-                key={alert.id}
-                className={`top-alert-pill-item plan-alert--${alert.variant}`}
-                onClick={() => setPlanSubTab(alert.targetTab)}
-              >
-                {alert.type === 'recurring' ? (
-                  <div className="top-alert-calendar-tile" aria-hidden="true">
-                    <span className="cal-header">{alert.dateParts?.weekdayShort || 'THỨ'}</span>
-                    <strong className="cal-day">{alert.dateParts?.day || '01'}</strong>
-                  </div>
-                ) : (
-                  <div className="top-alert-dot-tile" aria-hidden="true">
-                    <span className="dot-indicator" />
-                  </div>
-                )}
-
-                <div className="top-alert-text-body">
-                  <strong className="top-alert-name">{alert.title}</strong>
-                  <span className="top-alert-amount-desc">{alert.subText}</span>
-                </div>
-
-                <svg className="top-alert-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="top-alerts-empty-reassurance">
-            <SparkleOutlineIcon size={16} className="reassurance-sparkle" />
-            <span>
-              {hasPlanData
-                ? 'Không có ngân sách hoặc khoản định kỳ nào đang chạm ngưỡng cảnh báo.'
-                : 'Hãy tạo ngân sách hoặc khoản định kỳ đầu tiên để bắt đầu theo dõi cảnh báo.'}
-            </span>
-          </div>
-        )}
-
-        {activeAlerts.length > 2 && (
-          <button
-            type="button"
-            className="top-alerts-view-all-link"
-            aria-expanded={showAllAlerts}
-            aria-controls="plan-alert-list"
-            onClick={() => setShowAllAlerts((value) => !value)}
-          >
-            <span>{showAllAlerts ? copy.collapse : copy.moreAlerts(activeAlerts.length - 2)}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d={showAllAlerts ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'} />
-            </svg>
-          </button>
-        )}
-      </div>
+      <PlanAttentionBar alerts={activeAlerts} hasPlanData={hasPlanData} copy={copy} label={label} onOpen={setPlanSubTab} />
 
       {/* ── 3. SECTION 2: TỔNG QUAN NHANH (3 METRIC CARDS) ── */}
       <div className="plan-metrics-grid">

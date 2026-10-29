@@ -2,7 +2,7 @@
 .calt-sheet-backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-modal, 1200);
+  z-index: var(--z-dialog, 1000);
   display: flex;
   align-items: flex-end;
   justify-content: center;

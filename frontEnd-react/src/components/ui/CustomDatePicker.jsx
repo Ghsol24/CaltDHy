@@ -400,7 +400,13 @@ export function CustomDatePicker({
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={isOpen ? calendarId : undefined}
-        onChange={(event) => setText(event.target.value.replace(/[^\d/.-]/g, '').slice(0, 10))}
+        onChange={(event) => {
+          const next = event.target.value.replace(/[^\d/.-]/g, '').slice(0, 10);
+          setText(next);
+          // A complete, valid date applies at once so previews follow the typing.
+          const parsed = parseTypedDate(next);
+          if (parsed && parsed !== value && !isOutOfRange(parsed)) onChange?.(parsed);
+        }}
         onClick={() => { if (!isOpen) open(false); }}
         onBlur={(event) => { if (!rootRef.current?.contains(event.relatedTarget)) commitTyped(); }}
         onKeyDown={(event) => {

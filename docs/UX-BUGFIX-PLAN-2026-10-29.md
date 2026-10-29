@@ -1,7 +1,7 @@
 # Kế hoạch sửa lỗi UX/UI nhỏ — 29/10/2026
 
 Phạm vi: 5 vấn đề người dùng báo qua 13 ảnh chụp màn hình (PC + điện thoại).
-Trạng thái: **chỉ là kế hoạch, chưa sửa code.**
+Trạng thái: **đã thực hiện cả 5 mục** (xem mục "Đã chốt và kết quả" cuối file).
 
 > Ghi chú về số ảnh: mục "Cần chú ý" nói "giống ảnh 5", nhưng ảnh 5 là lịch chọn ngày của
 > modal *Tạo hũ tiết kiệm*. Bản mẫu thanh cảnh báo (badge "Vượt nhiều / Vượt trung bình /
@@ -264,3 +264,14 @@ xem bằng mắt ở 375px + 1440px trong 3 theme.
 - Ảnh 1–2: thẻ "Kế hoạch tháng này" và "Cảnh báo" ở Trang chủ hiện tên danh mục tiếng Anh
   ("Other Expense", "Food & Dining") trong khi chỗ khác là tiếng Việt. Có vẻ thiếu `label()`
   ở `AttentionPanel`.
+
+## Đã chốt và kết quả (29/10/2026)
+- Mục 2/3: ngưỡng "Vượt nhiều" = 150%; mobile dùng bottom sheet. Nhóm tóm tắt dùng tên tầng
+  chung (nghiêm trọng / cần xử lý / cần theo dõi) vì một tầng có thể gồm cả hoá đơn quá hạn lẫn
+  ngân sách; badge trên từng thẻ vẫn nói cụ thể (Vượt nhiều, Đã vượt, Quá hạn, Còn N ngày…).
+- Mục 5: phương án A + B. Giữ nhãn "Xóa bộ lọc" và "Ẩn khoản định kỳ" có sẵn trong bản dịch.
+- Lịch gõ tay: gõ đủ một ngày hợp lệ là áp dụng ngay (như ô ngày gốc), không cần rời ô.
+- Test: `npm test` pass; browser test ux-polish, browser-security, transaction-period, cash-flow,
+  theme-contrast, mobile-section-nav, ux-budget pass. mobile-ux còn 1 lỗi `.jar-next-strip` ở
+  kịch bản Hũ — lỗi này đã có sẵn ở commit `9c8fcaa`, không liên quan các thay đổi trên.
+

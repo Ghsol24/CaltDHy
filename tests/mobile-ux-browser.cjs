@@ -284,15 +284,20 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
     await page.getByRole('button', { name: 'Bỏ thay đổi', exact: true }).click();
   });
 
-  await check('plan shows the real alert count and expands mixed alerts without changing the page', async () => {
+  await check('plan shows the two most severe alerts and opens the rest in a sheet without moving the page', async () => {
     await goPlan();
-    const alerts = page.locator('.plan-top-alerts-card');
-    await expect(alerts.locator('.top-alerts-subtext')).toContainText('4');
-    await expect(alerts.locator('.top-alert-pill-item')).toHaveCount(2);
-    await alerts.locator('.top-alerts-view-all-link').click();
-    await expect(alerts.locator('.top-alert-pill-item')).toHaveCount(4);
+    const alerts = page.getByTestId('plan-attention');
+    await expect(alerts.locator('.plan-attention-count')).toHaveText('4');
+    await expect(alerts.locator('.plan-alert-card')).toHaveCount(2);
+    const before = await alerts.boundingBox();
+    await alerts.getByRole('button', { name: 'Xem tất cả 4 việc' }).click();
+    const sheet = page.getByTestId('plan-attention-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator('.plan-attention-row')).toHaveCount(4);
+    assert.deepEqual(await alerts.boundingBox(), before, 'opening the sheet must not push the page');
     await expect(page).toHaveURL(/\/plan\/overview$/);
-    await alerts.locator('.top-alert-pill-item').filter({ hasText: /định kỳ kiểm thử/ }).click();
+    await sheet.locator('.plan-attention-row').filter({ hasText: /định kỳ kiểm thử/ }).click();
+    await expect(sheet).toHaveCount(0);
     await page.waitForURL('**/plan/recurring');
     await expect(page.locator('.recurring-view-v2-container')).toBeVisible();
     await expect(page.locator('.recurring-row-card')).toHaveCount(1);

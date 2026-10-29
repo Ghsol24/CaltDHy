@@ -165,12 +165,13 @@
 
 .calt-month-cell {
   height: 40px;
-  padding: 0 4px;
+  padding: 0 2px;
   border: 0;
   border-radius: 10px;
   background: transparent;
   color: var(--menu-text);
-  font: 500 13px/1.2 var(--font-sans);
+  font: 500 12px/1.2 var(--font-sans);
+  white-space: nowrap;
   cursor: pointer;
 }
 

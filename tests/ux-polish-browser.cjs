@@ -143,67 +143,91 @@ async function pick(page, index, option) {
   return dropdown;
 }
 
-check('history shows each active filter as a removable chip', async ({ browser, server }) => {
+check('history chips show the chosen value and a single clear button', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'green' });
   await open('/spending/analytics/transactions');
-  const chips = page.locator('.transaction-active-filters .transaction-filter-chip');
-  await expect(chips).toHaveCount(0);
+  const clear = page.locator('.transaction-history-clear');
+  await expect(clear).toHaveCount(0);
   const summary = page.locator('.transaction-history-summary strong');
   const total = Number((await summary.textContent()).match(/\d+/)[0]);
   const typeDropdown = await pick(page, 0, 'Chi tiêu');
-  await pick(page, 2, 'ZaloPay');
-  await expect(chips).toHaveCount(2);
-  await expect(chips.nth(0)).toHaveText('Loại: Chi tiêu');
-  await expect(chips.nth(1)).toHaveText('Ví: ZaloPay');
+  const walletDropdown = await pick(page, 2, 'ZaloPay');
+  // A chip names its filter while unused and shows the chosen value while filtering.
+  await expect(typeDropdown.locator('.transaction-filter-value')).toHaveText('Chi tiêu');
+  await expect(walletDropdown.locator('.transaction-filter-value')).toHaveText('ZaloPay');
+  await expect(page.locator('.transaction-filter-dropdown').nth(1).locator('.transaction-filter-value')).toHaveText('Danh mục');
   await expect(typeDropdown).toHaveClass(/is-filtering/);
   await expect(summary).toHaveText(new RegExp(`^\\d+ / ${total} mục$`));
-  // Wide screens already have "Xóa bộ lọc" in the bar, so the chip row does not repeat it.
+  // One clear button, first in the row, with the number of filters.
+  await expect(clear).toHaveText('Xóa bộ lọc (2)');
+  await expect(page.locator('.transaction-filter-controls > *').first()).toHaveClass(/transaction-history-clear/);
   await expect(page.getByRole('button', { name: 'Xóa tất cả' })).toHaveCount(0);
-  // Removing one chip keeps the other filter and moves focus to the remaining chip.
-  await page.getByRole('button', { name: 'Bỏ bộ lọc Loại: Chi tiêu' }).click();
-  await expect(chips).toHaveCount(1);
-  await expect(chips.first()).toHaveText('Ví: ZaloPay');
-  await expect(chips.first()).toBeFocused();
+  await pick(page, 0, 'Mọi loại');
   await expect(typeDropdown).not.toHaveClass(/is-filtering/);
+  await expect(clear).toHaveText('Xóa bộ lọc (1)');
   await page.getByPlaceholder('Tìm mô tả hoặc danh mục').fill('cơm');
-  await expect(chips).toHaveCount(2);
-  await expect(chips.first()).toHaveText('Tìm: “cơm”');
-  await page.getByRole('button', { name: 'Xóa bộ lọc' }).click();
-  await expect(chips).toHaveCount(0);
+  await clear.click();
+  await expect(clear).toHaveCount(0);
   await expect(page.getByPlaceholder('Tìm mô tả hoặc danh mục')).toHaveValue('');
   await expect(summary).toHaveText(`${total} mục`);
-  // A custom range is summarised in one chip.
-  await pick(page, 3, 'Tùy chọn ngày');
-  await expect(chips).toHaveCount(0);
+  // A custom range is summarised on the period chip.
+  const period = await pick(page, 3, 'Tùy chọn ngày');
   await page.getByLabel('Từ ngày').fill('01/10/2026');
   await page.getByLabel('Từ ngày').press('Tab');
-  await expect(chips.first()).toHaveText('Thời gian: Từ 01/10/2026');
+  await expect(period.locator('.transaction-filter-value')).toHaveText('Từ 01/10/2026');
   await page.getByLabel('Đến ngày').fill('15/10/2026');
   await page.getByLabel('Đến ngày').press('Tab');
-  await expect(chips.first()).toHaveText('Thời gian: 01/10/2026 – 15/10/2026');
+  await expect(period.locator('.transaction-filter-value')).toHaveText('01/10/2026 – 15/10/2026');
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-check('on phones the filters fold behind a "Bộ lọc" toggle while chips stay visible', async ({ browser, server }) => {
+check('wide-screen filter menus stay on screen whichever side of the row they open from', async ({ browser, server }) => {
+  const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 700 });
+  await open('/spending/analytics/transactions');
+  for (let index = 0; index < 4; index += 1) {
+    const dropdown = page.locator('.transaction-filter-dropdown').nth(index);
+    await dropdown.locator('.transaction-filter-trigger').click();
+    const box = await dropdown.locator('.transaction-filter-menu').boundingBox();
+    assert.ok(box.x >= 0 && box.x + box.width <= 700, `menu ${index} stays inside the viewport (${box.x}..${box.x + box.width})`);
+    await page.keyboard.press('Escape');
+  }
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+check('on phones the filters are one chip row; menus and the full filter list open as sheets', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 390 });
   await open('/spending/analytics/transactions');
+  const chipNamed = (name) => page.locator('.transaction-filter-dropdown').filter({
+    has: page.locator('.transaction-filter-label', { hasText: name })
+  });
+  // The wallet chip sits on the left; its options open in a sheet that fits the screen.
+  await chipNamed('Ví').locator('.transaction-filter-trigger').click();
+  const listbox = page.getByRole('listbox');
+  await expect(listbox).toBeVisible();
+  const box = await listbox.boundingBox();
+  assert.ok(box.x >= 0 && box.x + box.width <= 390, 'wallet options stay on screen');
+  await listbox.getByRole('option', { name: 'ZaloPay', exact: true }).click();
+  await expect(listbox).toHaveCount(0);
+  await expect(chipNamed('Ví').locator('.transaction-filter-value')).toHaveText('ZaloPay');
+  // The full filter sheet edits the same filters and shows the live result count.
   const toggle = page.locator('.transaction-filter-toggle');
-  const controls = page.locator('.transaction-filter-controls');
-  await expect(toggle).toBeVisible();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(controls).toBeHidden();
+  await expect(toggle.locator('.transaction-filter-count')).toHaveText('1');
   await toggle.click();
-  await expect(controls).toBeVisible();
-  await pick(page, 3, 'Tháng này');
-  await page.getByRole('checkbox', { name: 'Ẩn khoản định kỳ' }).check();
-  await toggle.click();
-  await expect(controls).toBeHidden();
-  await expect(toggle.locator('.transaction-filter-count')).toHaveText('2');
-  await expect(page.locator('.transaction-filter-chip', { hasText: 'Thời gian: Tháng này' })).toBeVisible();
-  await expect(page.locator('.transaction-filter-chip', { hasText: 'Ẩn khoản định kỳ' })).toBeVisible();
-  await page.getByRole('button', { name: 'Xóa tất cả' }).click();
-  await expect(page.locator('.transaction-filter-chip')).toHaveCount(0);
+  const sheet = page.getByTestId('history-filter-sheet');
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: 'Tháng này', exact: true }).click();
+  await sheet.getByRole('switch', { name: 'Ẩn khoản định kỳ' }).check();
+  await expect(sheet.locator('.transaction-sheet-apply')).toHaveText(/^Xem \d+ giao dịch$/);
+  await sheet.locator('.transaction-sheet-apply').click();
+  await expect(sheet).toHaveCount(0);
+  await expect(toggle.locator('.transaction-filter-count')).toHaveText('3');
+  // Active chips come first in the sideways row, right after the clear button.
+  const firstChips = page.locator('.transaction-filter-controls > *');
+  await expect(firstChips.nth(0)).toHaveText('Xóa bộ lọc (3)');
+  await expect(firstChips.nth(1)).toContainText('ZaloPay');
+  await page.getByRole('button', { name: /Xóa bộ lọc/ }).click();
   await expect(toggle.locator('.transaction-filter-count')).toHaveCount(0);
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   assert.equal(overflows, false, 'no sideways scrolling on a phone');
@@ -211,22 +235,30 @@ check('on phones the filters fold behind a "Bộ lọc" toggle while chips stay 
   await context.close();
 });
 
-check('"Cần chú ý" turns into a red warning when something is overdue or over budget', async ({ browser, server }) => {
+check('"Cần chú ý" grades each alert and puts the worst first', async ({ browser, server }) => {
   for (const theme of ['green', 'dark']) {
     const { context, page, errors, open } = await newPage(browser, server, { theme });
     await open('/spending/plan/overview');
-    const card = page.locator('.plan-top-alerts-card');
+    const card = page.getByTestId('plan-attention');
     await expect(card).toHaveClass(/is-critical/);
-    await expect(card.locator('.top-alerts-count')).toHaveText('6');
-    const look = await card.evaluate((node) => ({
-      background: getComputedStyle(node).backgroundImage,
-      bell: getComputedStyle(node.querySelector('.top-alerts-bell-box')).backgroundColor
-    }));
-    assert.match(look.background, /linear-gradient/, `${theme}: the card has a red gradient`);
-    const [r, g, b] = look.bell.match(/\d+/g).map(Number);
-    assert.ok(r > 180 && g < 90 && b < 110, `${theme}: the bell is solid red (${look.bell})`);
-    // Most urgent items come first.
-    await expect(card.locator('.top-alert-pill-item').first()).toHaveClass(/plan-alert--(danger|today)/);
+    await expect(card.locator('.plan-attention-count')).toHaveText('6');
+    const bell = await card.locator('.plan-attention-bell').evaluate((node) => getComputedStyle(node).backgroundColor);
+    const [r, g, b] = bell.match(/\d+/g).map(Number);
+    assert.ok(r > 180 && g < 90 && b < 110, `${theme}: the bell is solid red (${bell})`);
+    // The frame no longer floods red; severity lives on the cards.
+    const frame = await card.evaluate((node) => getComputedStyle(node).backgroundImage);
+    assert.equal(frame, 'none', `${theme}: no red gradient on the frame`);
+    const cards = card.locator('.plan-alert-card');
+    await expect(cards.first()).toHaveClass(/is-critical/);
+    // Desktop shows one full row of cards; "show more" counts exactly the hidden ones.
+    const shown = await cards.count();
+    assert.ok(shown >= 2 && shown < 6, `${theme}: ${shown} cards fill one row`);
+    const more = card.locator('.plan-attention-more');
+    await expect(more).toHaveText(`Xem thêm ${6 - shown} việc`);
+    await more.click();
+    await expect(cards).toHaveCount(6);
+    const tops = await cards.evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
+    assert.equal(new Set(tops.slice(0, shown)).size, 1, `${theme}: the first row is one line`);
     assert.deepEqual(errors, []);
     await context.close();
   }

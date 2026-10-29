@@ -349,6 +349,8 @@ button.transaction-inspection-row:hover {
   --history-hover: var(--color-brand-50);
   --history-border: var(--color-border);
   display: grid;
+  /* minmax(0, …): the sideways chip row must scroll, not widen the page. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 .transaction-history-header h2 { margin: 0; color: var(--color-text); font-size: clamp(23px, 3vw, 30px); }
@@ -465,23 +467,23 @@ button.transaction-inspection-row:hover {
   font-size: 12px;
 }
 .transaction-filter-dropdown.is-compact .transaction-filter-value { max-width: 160px; }
-.transaction-filter-prefix { color: var(--color-text-secondary); font-weight: 600; }
 /* A dropdown that is narrowing the list says so on the control itself. */
 .transaction-filter-dropdown.is-filtering .transaction-filter-trigger {
   border-color: var(--color-action-bg);
   background: var(--color-brand-50);
   color: var(--color-link);
 }
-.transaction-filter-dropdown.is-filtering .transaction-filter-prefix,
+.transaction-filter-dropdown.is-filtering .transaction-filter-trigger { font-weight: 700; }
 .transaction-filter-dropdown.is-filtering .transaction-filter-trigger svg { color: var(--color-link); }
 .transaction-filter-controls[hidden] { display: none !important; }
 .transaction-filter-toggle {
-  display: inline-flex;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
   flex: 0 0 auto;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 14px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 1px solid var(--history-border);
   border-radius: var(--radius-full);
   background: var(--history-control);
@@ -489,9 +491,8 @@ button.transaction-inspection-row:hover {
   font: 600 13px var(--font-sans, system-ui, sans-serif);
   cursor: pointer;
 }
-.transaction-filter-toggle.has-filters { border-color: var(--color-action-bg); color: var(--color-link); }
-.transaction-filter-toggle-chevron { transition: transform var(--dur-fast); }
-.transaction-filter-toggle[aria-expanded="true"] .transaction-filter-toggle-chevron { transform: rotate(180deg); }
+.transaction-filter-toggle.has-filters { border-color: var(--color-action-bg); background: var(--color-brand-50); color: var(--color-link); }
+.transaction-filter-toggle .transaction-filter-count { position: absolute; top: -5px; right: -5px; }
 .transaction-filter-count {
   min-width: 20px;
   height: 20px;
@@ -503,49 +504,18 @@ button.transaction-inspection-row:hover {
   text-align: center;
 }
 .transaction-filter-bar.is-compact .transaction-history-search { flex: 1 1 0; min-width: 0; }
-.transaction-filter-bar.is-compact .transaction-filter-controls { flex: 1 1 100%; justify-content: flex-start; }
-.transaction-active-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 0 2px;
+.transaction-filter-bar.is-compact .transaction-filter-controls {
+  flex: 1 1 100%;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  /* Room for focus rings, and the row runs to the panel edge to hint that it scrolls. */
+  margin: -4px -10px -4px -4px;
+  padding: 4px 10px 4px 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
 }
-.transaction-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  min-height: 32px;
-  padding: 4px 9px 4px 12px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-full);
-  background: var(--color-brand-50);
-  color: var(--color-link);
-  font: 600 12px/1.3 var(--font-sans, system-ui, sans-serif);
-  cursor: pointer;
-  transition: background-color var(--dur-fast), border-color var(--dur-fast);
-}
-.transaction-filter-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.transaction-filter-chip > svg { flex: 0 0 auto; opacity: .8; }
-.transaction-filter-chip:hover { background: var(--color-brand-100); border-color: var(--color-action-bg); }
-.transaction-filter-chip-clear {
-  padding: 6px 4px;
-  border: 0;
-  background: none;
-  color: var(--color-text-secondary);
-  font: 600 12px var(--font-sans, system-ui, sans-serif);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.transaction-filter-chip-clear:hover { color: var(--color-text); }
-.transaction-filter-chip:focus-visible,
-.transaction-filter-chip-clear:focus-visible,
-.transaction-filter-toggle:focus-visible {
-  outline: 2px solid var(--color-brand-700);
-  outline-offset: 2px;
-}
+.transaction-filter-bar.is-compact .transaction-filter-controls::-webkit-scrollbar { display: none; }
 .transaction-filter-menu {
   position: absolute;
   top: calc(100% + 7px);
@@ -568,6 +538,16 @@ button.transaction-inspection-row:hover {
   min-width: max(100%, 190px);
   max-width: min(320px, calc(100vw - 32px));
 }
+.transaction-filter-menu.is-sheet {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.transaction-filter-menu.is-sheet .transaction-filter-option { min-height: 48px; font-size: 15px; }
 .transaction-filter-option {
   display: flex;
   align-items: center;
@@ -596,14 +576,16 @@ button.transaction-inspection-row:hover {
   display: inline-flex;
   align-items: center;
   justify-self: start;
-  gap: 10px;
-  min-height: 44px;
-  padding: 7px 14px 7px 8px;
+  flex: 0 0 auto;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 13px;
   border: 1px solid var(--history-border);
   border-radius: var(--radius-full);
   background: var(--history-control);
-  color: var(--color-text-secondary);
-  font: 600 12px var(--font-sans, system-ui, sans-serif);
+  color: var(--color-text);
+  font: 500 12px var(--font-sans, system-ui, sans-serif);
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-fast);
 }
@@ -613,29 +595,11 @@ button.transaction-inspection-row:hover {
   background: var(--color-brand-50);
   color: var(--color-link);
 }
+.transaction-history-checkbox.is-active { font-weight: 700; }
 .transaction-history-checkbox input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.transaction-history-check { display: none; flex: 0 0 auto; }
+.transaction-history-checkbox.is-active .transaction-history-check { display: block; }
 .transaction-history-checkbox:focus-within { outline: 2px solid var(--color-brand-700); outline-offset: 2px; }
-.transaction-history-switch {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 20px;
-  padding: 2px;
-  border-radius: var(--radius-full);
-  background: var(--color-border-strong);
-  transition: background-color var(--dur-fast);
-}
-.transaction-history-switch > span {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--dur-fast);
-}
-.transaction-history-checkbox.is-active .transaction-history-switch { background: var(--color-brand-700); }
-.transaction-history-checkbox.is-active .transaction-history-switch > span { transform: translateX(12px); }
 .transaction-history-clear,
 .transaction-history-more {
   display: inline-flex;
@@ -652,8 +616,16 @@ button.transaction-inspection-row:hover {
   transition: background-color var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-fast), transform var(--dur-fast);
 }
 .transaction-history-clear {
-  justify-self: end;
-  border-radius: var(--radius-md);
+  flex: 0 0 auto;
+  gap: 5px;
+  min-height: 40px;
+  padding: 8px 13px;
+  border-color: var(--color-danger-border);
+  border-radius: var(--radius-full);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 12px;
+  white-space: nowrap;
 }
 .transaction-history-more {
   justify-self: center;
@@ -661,7 +633,7 @@ button.transaction-inspection-row:hover {
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm);
 }
-.transaction-history-clear:hover,
+.transaction-history-clear:hover { border-color: var(--color-danger); }
 .transaction-history-more:hover {
   border-color: var(--color-border-strong);
   background: var(--history-hover);
@@ -670,8 +642,6 @@ button.transaction-inspection-row:hover {
 }
 .transaction-history-clear:active,
 .transaction-history-more:active { transform: translateY(0); }
-.transaction-history-clear:disabled { opacity: .48; cursor: default; }
-.transaction-history-clear:disabled:hover { border-color: var(--history-border); background: var(--history-control); box-shadow: none; transform: none; }
 .transaction-history-error { display: flex; align-items: center; gap: 12px; margin: 0; color: var(--color-danger); }
 .transaction-history-error button { min-height: 40px; padding: 6px 12px; border: 1px solid currentColor; border-radius: var(--radius-sm); background: var(--color-surface); color: inherit; cursor: pointer; }
 .transaction-history-summary {
@@ -850,9 +820,7 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .transaction-history button,
-  .transaction-inspection-row,
-  .transaction-history-switch,
-  .transaction-history-switch > span { transition: none; }
+  .transaction-inspection-row { transition: none; }
   .transaction-history-clear:hover,
   .transaction-history-more:hover,
   button.transaction-inspection-row:hover { transform: none; }
@@ -864,4 +832,65 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
   .transaction-filter-bar,
   .transaction-filter-custom-dates,
   .transaction-history-more { display: none !important; }
+}
+
+/* Full filter sheet (phones): every filter as tappable options, apply/reset in the footer. */
+.transaction-sheet-group { margin: 0 0 16px; padding: 0; border: 0; min-width: 0; }
+.transaction-sheet-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font: 700 12px var(--font-sans, system-ui, sans-serif);
+}
+.transaction-sheet-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.transaction-sheet-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--history-border, var(--color-border));
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--menu-text);
+  font: 500 13px var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+}
+.transaction-sheet-option.is-selected {
+  border-color: var(--color-action-bg);
+  background: var(--color-brand-50);
+  color: var(--color-link);
+  font-weight: 700;
+}
+.transaction-filter-full-sheet .transaction-filter-custom-dates { margin: -6px 0 16px; padding: 0; }
+.transaction-sheet-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  border-top: 1px solid var(--menu-border);
+  font: 600 14px var(--font-sans, system-ui, sans-serif);
+  color: var(--menu-text);
+}
+.transaction-sheet-switch input { width: 22px; height: 22px; accent-color: var(--color-action-bg); }
+.transaction-sheet-reset,
+.transaction-sheet-apply {
+  min-height: 46px;
+  border-radius: var(--radius-md);
+  font: 700 14px var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+}
+.transaction-sheet-reset {
+  flex: 1;
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--menu-text);
+}
+.transaction-sheet-reset:disabled { color: var(--color-text-muted); cursor: default; }
+.transaction-sheet-apply {
+  flex: 2;
+  border: 0;
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
 }

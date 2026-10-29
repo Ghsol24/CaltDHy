@@ -323,7 +323,7 @@ function blendCssColor(color, background) {
       await row.locator('.recurring-dots-action-btn').click();
       await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
       await expect(modal.getByRole('switch', { name: /Có kỳ hạn/ })).toBeChecked();
-      await expect(modal.locator('#rec-end-date')).toHaveValue('2030-01-15');
+      await expect(modal.locator('#rec-end-date')).toHaveValue('15/01/2030');
       await modal.locator('.recurring-term-toggle').click();
       await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
       await expect(modal).toHaveCount(0);
@@ -350,7 +350,7 @@ function blendCssColor(color, background) {
       await expect(row.locator('.recurring-due-pill-box')).toContainText('Đã kết thúc');
       await row.locator('.recurring-dots-action-btn').click();
       await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
-      await expect(modal.locator('#rec-end-date')).toHaveValue('2030-01-15');
+      await expect(modal.locator('#rec-end-date')).toHaveValue('15/01/2030');
       await modal.locator('.recurring-term-toggle').click();
       await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
       await expect(row).not.toHaveClass(/is-ended/);
@@ -1037,20 +1037,21 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?from=/);
     await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(1);
     await expect(mobilePage.locator('.transaction-ledger-table')).toBeVisible();
-    // On phones the history filters fold behind a "Bộ lọc" toggle; active ones stay visible as chips.
+    // On phones the history filters are one chip row; each chip opens its options in a sheet.
+    const historyFilter = (name) => mobilePage.locator('.transaction-filter-dropdown').filter({
+      has: mobilePage.locator('.transaction-filter-label', { hasText: name })
+    });
     const openHistoryFilters = async () => {
-      const toggle = mobilePage.locator('.transaction-filter-toggle');
-      if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
       await expect(mobilePage.locator('.transaction-filter-controls')).toBeVisible();
     };
-    await expect(mobilePage.locator('.transaction-filter-chip', { hasText: 'Dịch vụ' })).toBeVisible();
+    await expect(mobilePage.locator('.transaction-filter-dropdown.is-filtering', { hasText: 'Dịch vụ' })).toBeVisible();
     await openHistoryFilters();
-    const categoryFilter = mobilePage.locator('.transaction-filter-dropdown').nth(1);
+    const categoryFilter = historyFilter('Danh mục');
     await expect(categoryFilter.locator('.transaction-filter-value')).toContainText('Dịch vụ');
     await categoryFilter.locator('.transaction-filter-trigger').click();
-    await expect(categoryFilter.getByRole('listbox')).toBeVisible();
-    await categoryFilter.getByRole('option', { name: 'Dịch vụ' }).click();
-    await expect(categoryFilter.getByRole('listbox')).toHaveCount(0);
+    await expect(mobilePage.getByRole('listbox')).toBeVisible();
+    await mobilePage.getByRole('option', { name: 'Dịch vụ' }).click();
+    await expect(mobilePage.getByRole('listbox')).toHaveCount(0);
     await analyticsNav.getByRole('button', { name: 'Chi tiêu' }).click();
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();
@@ -1158,17 +1159,17 @@ function blendCssColor(color, background) {
       await mobilePage.reload();
       await expect(mobilePage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
       await openHistoryFilters();
-      const periodFilter = mobilePage.locator('.transaction-filter-dropdown').nth(3);
+      const periodFilter = historyFilter('Thời gian');
       await periodFilter.locator('.transaction-filter-trigger').click();
-      await periodFilter.getByRole('option', { name: 'Tùy chọn ngày' }).click();
+      await mobilePage.getByRole('option', { name: 'Tùy chọn ngày' }).click();
       await expect(mobilePage.locator('.transaction-filter-custom-dates .calt-date-input')).toHaveCount(2);
-      const walletFilter = mobilePage.locator('.transaction-filter-dropdown').nth(2);
+      const walletFilter = historyFilter('Ví');
       const walletTrigger = walletFilter.locator('.transaction-filter-trigger');
       await walletTrigger.click();
-      await expect(walletFilter.getByRole('listbox')).toBeVisible();
+      await expect(mobilePage.getByRole('listbox')).toBeVisible();
       const styles = await mobilePage.locator('.transaction-history').evaluate((history) => {
-        const trigger = history.querySelectorAll('.transaction-filter-trigger')[2];
-        const menu = history.querySelector('.transaction-filter-menu');
+        const trigger = history.querySelector('.transaction-filter-trigger[aria-expanded="true"]');
+        const menu = document.querySelector('.transaction-filter-menu');
         const icon = history.querySelector('.transaction-inspection-icon svg');
         const swatch = document.createElement('span');
         swatch.style.backgroundColor = 'var(--menu-bg)';
@@ -1178,8 +1179,8 @@ function blendCssColor(color, background) {
         return {
           menuBackground: getComputedStyle(menu).backgroundColor,
           surfaceBackground,
-          menuBorderRadius: getComputedStyle(menu).borderRadius,
-          triggerExpanded: trigger.getAttribute('aria-expanded'),
+          menuBorderRadius: getComputedStyle(menu.closest('.calt-sheet') || menu).borderRadius,
+          triggerExpanded: trigger?.getAttribute('aria-expanded'),
           iconFill: icon?.getAttribute('fill'),
           clearIconFill: history.querySelector('.transaction-history-clear svg')?.getAttribute('fill'),
           clearRadius: getComputedStyle(history.querySelector('.transaction-history-clear')).borderRadius,
@@ -1193,8 +1194,8 @@ function blendCssColor(color, background) {
       assert.ok(styles.clearRadius !== '0px', `${theme}: nút xóa bộ lọc phải bo góc`);
       assert.equal(styles.pageOverflows, false, `${theme}: lịch sử không được tràn ngang`);
       assert.equal(styles.menuBackground, styles.surfaceBackground, `${theme}: menu cần màu nền theo theme`);
-      await walletFilter.getByRole('option', { selected: true }).press('Escape');
-      await expect(walletFilter.getByRole('listbox')).toHaveCount(0);
+      await mobilePage.getByRole('option', { selected: true }).press('Escape');
+      await expect(mobilePage.getByRole('listbox')).toHaveCount(0);
       await expect(walletTrigger).toBeFocused();
     }
     await mobilePage.getByPlaceholder('Tìm mô tả hoặc danh mục').fill('Internet');
