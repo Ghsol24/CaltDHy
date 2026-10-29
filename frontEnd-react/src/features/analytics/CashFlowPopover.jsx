@@ -86,7 +86,7 @@ export function CashFlowPopover({ id, name, triggersRef, onClose, children }) {
     const panel = panelRef.current;
     const trigger = triggersRef.current[name];
     const first = panel?.querySelector('input[type="radio"]:checked')
-      || panel?.querySelector('input[type="date"]') || panel?.querySelector(FOCUSABLE);
+      || panel?.querySelector('.calt-date-grid [tabindex="0"]') || panel?.querySelector(FOCUSABLE);
     first?.focus({ preventScroll: true });
 
     const handlePointer = (event) => {

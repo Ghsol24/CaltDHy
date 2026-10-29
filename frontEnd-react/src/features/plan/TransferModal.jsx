@@ -6,6 +6,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
+import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { sortWalletsByBalance } from '../../utils/walletSort';
 
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
@@ -337,24 +338,13 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
               <label htmlFor="transfer-date" className="modal-section-label">
                 <span>Ngày chuyển</span>
               </label>
-              <div className="modal-input-icon-wrap">
-                <span className="modal-input-prefix-icon calendar" aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                </span>
-                <input
-                  id="transfer-date"
-                  type="date"
-                  className="modal-pro-input with-prefix"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  required
-                />
-              </div>
+              <CustomDatePicker
+                id="transfer-date"
+                inputClassName="modal-pro-input"
+                value={date}
+                onChange={setDate}
+                required
+              />
             </div>
 
             {/* Note with Character Count */}

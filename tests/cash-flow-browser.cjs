@@ -93,7 +93,7 @@ async function check(name, work) {
   async function selectMode(mode, month) {
     await closePopover(); await period.click();
     await popover.locator(`input[type=radio][value="${mode}"]`).locator('..').click();
-    if (month) await page.getByTestId('cashflow-month-input').fill(month);
+    if (month) await page.getByTestId('cashflow-month-input').locator(`[data-month="${month}"]`).click();
     await closePopover(); await expect(chart).toHaveAttribute('data-mode', mode);
   }
   async function selectSeries(series) {
@@ -224,8 +224,8 @@ async function check(name, work) {
   await check('local date magnifier opens income or expense details without changing the period', async () => {
     await selectSeries('expense');
     await page.getByTestId('cashflow-date-trigger').click();
-    await expect(page.getByTestId('cashflow-date-input')).toHaveValue('2026-10-05');
-    await page.getByTestId('cashflow-date-input').fill('2026-10-01');
+    await expect(page.getByTestId('cashflow-date-input')).toHaveAttribute('data-value', '2026-10-05');
+    await page.getByTestId('cashflow-date-input').locator('[data-iso="2026-10-01"]').click();
     await page.getByTestId('cashflow-date-open').click();
     await expect(drawer).toBeVisible();
     await expect(drawer.locator('.day-drawer-summary strong')).toContainText(currency(448000));
@@ -233,7 +233,7 @@ async function check(name, work) {
     await expect(chart).toHaveAttribute('data-mode', 'daily');
     await selectSeries('income');
     await page.getByTestId('cashflow-date-trigger').click();
-    await page.getByTestId('cashflow-date-input').fill('2026-10-02');
+    await page.getByTestId('cashflow-date-input').locator('[data-iso="2026-10-02"]').click();
     await page.getByTestId('cashflow-date-open').click();
     await expect(drawer.locator('.day-drawer-summary strong')).toContainText(currency(7000000));
     await expect(drawer.locator('.day-drawer-tabs button.is-active')).toHaveText('Thu nhập');

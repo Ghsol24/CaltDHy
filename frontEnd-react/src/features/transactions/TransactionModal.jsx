@@ -14,6 +14,7 @@ import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
 import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
+import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const EMPTY_EXPENSE_CATS = [];
@@ -605,12 +606,11 @@ export function TransactionModal() {
               <label htmlFor="txn-date-input" className="txn-label">
                 <span>{t('transaction.date')}</span>
               </label>
-              <input
+              <CustomDatePicker
                 id="txn-date-input"
-                type="date"
-                className="txn-input"
+                inputClassName="txn-input"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={setDate}
                 required
               />
             </div>

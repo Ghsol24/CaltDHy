@@ -1,14 +1,18 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 
 export function TransactionFilterDropdown({ label, options, value, onChange, compact = false, active = false }) {
   const id = useId();
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
+  const menuRef = useRef(null);
   const optionRefs = useRef([]);
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value));
   const selected = options[selectedIndex];
+  // Filters wrap onto several rows, so a menu can start anywhere across the screen.
+  const menuStyle = useAnchoredPlacement(rootRef, menuRef, isOpen, { prefer: compact ? 'right' : 'left' });
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -78,7 +82,8 @@ export function TransactionFilterDropdown({ label, options, value, onChange, com
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
     </button>
-    {isOpen && <div className="transaction-filter-menu" id={`${id}-list`} role="listbox" aria-labelledby={`${id}-label`}>
+    {isOpen && <div ref={menuRef} className="transaction-filter-menu" id={`${id}-list`} role="listbox"
+      aria-labelledby={`${id}-label`} style={menuStyle || undefined}>
       {options.map((option, index) => <button key={option.value} ref={(element) => { optionRefs.current[index] = element; }}
         type="button" className={`transaction-filter-option${option.value === value ? ' is-selected' : ''}`}
         role="option" aria-selected={option.value === value} tabIndex={focusedIndex === index ? 0 : -1}

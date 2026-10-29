@@ -1885,19 +1885,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   color: var(--color-text-muted);
 }
 
-.jar-date-input {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--color-text);
-  color-scheme: light;
-}
-html.dark-theme .jar-date-input { color-scheme: dark; }
-
 .jar-currency-badge {
   display: inline-flex;
   align-items: center;
@@ -2320,25 +2307,6 @@ html.dark-theme .jar-date-input { color-scheme: dark; }
 .dropdown-item-check {
   color: var(--color-link);
   flex-shrink: 0;
-}
-
-/* Modal Date Input with SVG Prefix */
-.modal-date-input-wrap {
-  position: relative;
-  width: 100%;
-}
-
-.date-input-prefix-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-link);
-  pointer-events: none;
-}
-
-.modal-themed-date-input {
-  padding-left: 36px !important;
 }
 
 .modal-themed-input,

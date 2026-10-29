@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
+import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 
 /**
  * CustomSelect - Premium SaaS Accessible Dropdown Component
@@ -55,6 +56,7 @@ export function CustomSelect({
 
   const selectedIndex = normalizedOptions.findIndex((opt) => opt.value === value);
   const selectedOption = selectedIndex >= 0 ? normalizedOptions[selectedIndex] : null;
+  const placementStyle = useAnchoredPlacement(containerRef, menuRef, isOpen, { prefer: align });
 
   // Close on click outside
   useEffect(() => {
@@ -219,7 +221,8 @@ export function CustomSelect({
           className={`calt-custom-select-menu calt-custom-select-menu--align-${align}`}
           role="listbox"
           tabIndex={-1}
-          style={menuWidth ? { width: menuWidth, minWidth: menuWidth } : undefined}
+          style={menuWidth || placementStyle
+            ? { ...(menuWidth ? { width: menuWidth, minWidth: menuWidth } : {}), ...placementStyle } : undefined}
           aria-activedescendant={highlightedIndex >= 0 ? `${triggerId}-opt-${highlightedIndex}` : undefined}
         >
           {normalizedOptions.map((opt, idx) => {

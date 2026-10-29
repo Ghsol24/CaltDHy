@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatDisplayDate, isoFromParts, parseIsoDate, parseTypedDate } from '../src/utils/datePicker.js';
+import { formatDisplayDate, isoFromParts, isoMonth, parseIsoDate, parseIsoMonth, parseTypedDate, shiftIsoMonth } from '../src/utils/datePicker.js';
 
 test('typed dates accept Vietnamese day-first input and ISO input', () => {
   assert.equal(parseTypedDate('28/10/2026'), '2026-10-28');
@@ -36,4 +36,16 @@ test('ISO parsing and display formatting round-trip', () => {
   assert.equal(formatDisplayDate(''), '');
   assert.equal(isoFromParts(2026, 0, 31), '2026-01-31');
   assert.equal(isoFromParts(1850, 0, 1), null);
+});
+
+test('month values parse, build and shift across year boundaries', () => {
+  assert.deepEqual(parseIsoMonth('2026-10'), { year: 2026, month: 9 });
+  assert.equal(parseIsoMonth('2026-13'), null);
+  assert.equal(parseIsoMonth('2026-1'), null);
+  assert.equal(parseIsoMonth(''), null);
+  assert.equal(isoMonth(2026, 0), '2026-01');
+  assert.equal(isoMonth(2026, 12), '2027-01');
+  assert.equal(shiftIsoMonth('2026-11', 2), '2027-01');
+  assert.equal(shiftIsoMonth('2026-01', -1), '2025-12');
+  assert.equal(shiftIsoMonth('2026-10', -12), '2025-10');
 });

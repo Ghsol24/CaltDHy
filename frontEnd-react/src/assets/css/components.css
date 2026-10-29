@@ -7844,21 +7844,6 @@ html.green-theme {
   padding-right: 64px;
 }
 
-input[type="date"].modal-pro-input {
-  cursor: pointer;
-  color: var(--modal-input-text);
-}
-
-input[type="date"].modal-pro-input::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.15s ease;
-}
-
-input[type="date"].modal-pro-input::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
-}
-
 .modal-input-clear-btn {
   position: absolute;
   right: 12px;

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { CalendarPanel, MonthPanel } from '../../components/ui/CustomDatePicker';
 import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon, TrendOutlineIcon } from '../../components/ui/AppIcons';
 import { CashFlowPopover } from './CashFlowPopover';
 import { formatCurrency, formatDate, getLocalDateString } from '../../utils/formatters';
@@ -94,13 +95,10 @@ export function CashFlowPanel({
             </label>)}
           </fieldset>
           <div className="cashflow-month-control">
-            <label htmlFor={`${id}-month`}>{text(periodMode === 'daily' ? 'monthToView' : 'endMonth')}</label>
-            <input type="month" id={`${id}-month`} data-testid="cashflow-month-input" value={activeMonth}
-              min="0001-01" max={latestMonth} onChange={(event) => {
-                const month = event.target.value;
-                if (/^\d{4}-(0[1-9]|1[0-2])$/.test(month) && Number(month.slice(0, 4)) > 0
-                  && (!latestMonth || month <= latestMonth)) onMonthChange(month);
-              }} />
+            <p className="cashflow-field-label" id={`${id}-month-label`}>{text(periodMode === 'daily' ? 'monthToView' : 'endMonth')}</p>
+            <div data-testid="cashflow-month-input" role="group" aria-labelledby={`${id}-month-label`}>
+              <MonthPanel id={`${id}-month`} value={activeMonth} max={latestMonth || undefined} onSelect={onMonthChange} />
+            </div>
           </div>
         </>}
         {popover === 'display' && <>
@@ -144,10 +142,10 @@ export function CashFlowPanel({
           onOpenDay(inspectedDate, isIncomeOnly ? 'income' : 'expense');
         }}>
           <p>{text('daySearchHelp')}</p>
-          <label htmlFor={`${id}-date-input`}>{t('analytics.pickDay')}</label>
-          <input type="date" id={`${id}-date-input`} data-testid="cashflow-date-input" required value={inspectedDate}
-            min={dateMin} max={dateMax}
-            onChange={(event) => setInspectedDate(event.target.value)} />
+          <p className="cashflow-field-label" id={`${id}-date-label`}>{t('analytics.pickDay')}</p>
+          <div data-testid="cashflow-date-input" data-value={inspectedDate} role="group" aria-labelledby={`${id}-date-label`}>
+            <CalendarPanel id={`${id}-date`} value={inspectedDate} min={dateMin} max={dateMax} onSelect={setInspectedDate} />
+          </div>
           <button type="submit" data-testid="cashflow-date-open" className="cashflow-primary-button">{text('openDay')}</button>
           <button type="button" className="cashflow-text-button" onClick={() => { setPopover(null); onViewHistory(); }}>
             {t('analytics.viewHistory')}

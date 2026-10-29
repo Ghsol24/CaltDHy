@@ -38,3 +38,22 @@ export function formatDisplayDate(iso, order = 'dmy') {
   return order === 'ymd' ? `${parts.year}/${mm}/${dd}` : `${dd}/${mm}/${parts.year}`;
 }
 
+
+const ISO_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+/** "YYYY-MM" → { year, month } (month is 0-based), or null. */
+export function parseIsoMonth(value) {
+  const match = ISO_MONTH.exec(value || '');
+  if (!match || Number(match[1]) < 1) return null;
+  return { year: Number(match[1]), month: Number(match[2]) - 1 };
+}
+
+export function isoMonth(year, monthIndex) {
+  const date = new Date(year, monthIndex, 1);
+  return `${String(date.getFullYear()).padStart(4, '0')}-${pad(date.getMonth() + 1)}`;
+}
+
+export function shiftIsoMonth(value, months) {
+  const parts = parseIsoMonth(value);
+  return parts ? isoMonth(parts.year, parts.month + months) : value;
+}

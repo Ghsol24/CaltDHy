@@ -547,7 +547,7 @@ export function AnalyticsView() {
     onHover: (_event, elements, chart) => {
       chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
     },
-    animation: prefersReducedMotion ? false : { duration: 250, easing: 'easeOutQuart' },
+    animation: prefersReducedMotion ? false : { duration: 550, easing: 'easeOutQuart' },
     resizeDelay: 150,
     interaction: isCompactChart ? { mode: 'nearest', intersect: false, axis: 'x' } : undefined,
     plugins: {

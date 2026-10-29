@@ -3958,12 +3958,6 @@ html.green-theme .q-btn-months { color: #475569; }
   }
 }
 
-/* ── Fix #6: Style native calendar picker icon to match dark theme ── */
-input[type="date"].jar-form-input::-webkit-calendar-picker-indicator {
-  filter: invert(1) opacity(0.6);
-  cursor: pointer;
-}
-
 /* ── Progressive disclosure toggler ── */
 .jar-form-toggle-wrapper {
   margin: 4px 0 10px;
