@@ -13,9 +13,9 @@
 .jar-transfer-presets > button { min-height: 32px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text-secondary); font: 500 12px/1.4 var(--font-sans); cursor: pointer; }
 .jar-transfer-presets > button:hover, .jar-transfer-presets > button.is-selected, .jar-transfer-presets > .jar-transfer-preset-goal { border-color: var(--color-border-strong); background: var(--color-brand-50); color: var(--color-link); }
 .jar-transfer-wallet-box { min-width: 0; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface-muted); }
-.jar-transfer-select-wrap { position: relative; min-width: 0; }
-.jar-transfer-select-wrap > select { display: block; width: 100%; min-width: 0; min-height: 43px; padding: 10px 34px 10px 11px; border: 1px solid var(--color-border-strong); border-radius: 8px; appearance: none; background: var(--color-surface); color: var(--color-text); font: 500 14px/1.4 var(--font-sans); text-overflow: ellipsis; cursor: pointer; }
-.jar-transfer-select-wrap > svg { position: absolute; top: 50%; right: 11px; transform: translateY(-50%); color: var(--color-text-secondary); pointer-events: none; }
+.jar-transfer-wallet-select { min-width: 0; }
+.jar-transfer-wallet-select .custom-wallet-trigger { min-height: 52px; }
+.jar-transfer-wallet-select .custom-wallet-trigger[aria-invalid="true"] { border-color: var(--color-danger) !important; }
 .jar-transfer-wallet-box p { margin: 8px 0 0; color: var(--color-text-secondary); font-size: 12px; line-height: 1.55; }
 .jar-transfer-no-wallet > button { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--color-link); font: 600 13px/1.5 var(--font-sans); text-align: left; cursor: pointer; }
 .jar-transfer-preview { min-width: 0; padding: 14px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-brand-50); }

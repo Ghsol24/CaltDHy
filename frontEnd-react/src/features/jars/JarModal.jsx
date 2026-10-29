@@ -4,6 +4,7 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { getUserErrorMessage } from '../../utils/userErrors';
+import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { JarDialog } from './JarDialog';
 import { jarsManagementText } from './jarsManagementCopy';
 import './jars-management.css';
@@ -118,8 +119,8 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
           </div>
           <div className="jm-field">
             <label htmlFor={`${id}-date`}>{text('date')} <span className="jm-optional">{text('optional')}</span></label>
-            <input id={`${id}-date`} className="jm-input" type="date" value={targetDate}
-              onChange={(event) => setTargetDate(event.target.value)} disabled={isSubmitting} />
+            <CustomDatePicker id={`${id}-date`} inputClassName="jm-input" value={targetDate}
+              onChange={setTargetDate} disabled={isSubmitting} />
           </div>
         </div>
         {isEditing ? (

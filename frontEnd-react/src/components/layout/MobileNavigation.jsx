@@ -67,6 +67,7 @@ export function MobileSectionNavigation() {
   const items = SECTION_ITEMS[activeView];
   const activeTab = activeView === 'plan' ? planSubTab : activeView === 'analytics' ? analyticsSubTab : jarsSubTab;
   const scrollerRef = useRef(null);
+  const centeredViewRef = useRef(null);
   const [scrollEdges, setScrollEdges] = useState({ left: false, right: false });
 
   useLayoutEffect(() => {
@@ -79,13 +80,24 @@ export function MobileSectionNavigation() {
       setScrollEdges((current) => current.left === left && current.right === right ? current : { left, right });
     };
 
+    // Slide the selected tab to the middle of the bar so the tabs on either
+    // side of it come into view without the user having to swipe for them.
     const activeItem = scroller.querySelector('[aria-current="page"]');
     if (activeItem) {
       const viewport = scroller.getBoundingClientRect();
       const selected = activeItem.getBoundingClientRect();
-      if (selected.left < viewport.left) scroller.scrollLeft -= viewport.left - selected.left + 8;
-      if (selected.right > viewport.right) scroller.scrollLeft += selected.right - viewport.right + 8;
+      const maxScroll = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      const centered = scroller.scrollLeft + (selected.left - viewport.left) - (viewport.width - selected.width) / 2;
+      const target = Math.round(Math.min(maxScroll, Math.max(0, centered)));
+      if (Math.abs(target - scroller.scrollLeft) > 1) {
+        const firstLayoutOfView = centeredViewRef.current !== activeView;
+        const reduceMotion = typeof window.matchMedia === 'function'
+          && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (firstLayoutOfView || reduceMotion || typeof scroller.scrollTo !== 'function') scroller.scrollLeft = target;
+        else scroller.scrollTo({ left: target, behavior: 'smooth' });
+      }
     }
+    centeredViewRef.current = activeView;
     updateEdges();
 
     scroller.addEventListener('scroll', updateEdges, { passive: true });

@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 
-export function TransactionFilterDropdown({ label, options, value, onChange, compact = false }) {
+export function TransactionFilterDropdown({ label, options, value, onChange, compact = false, active = false }) {
   const id = useId();
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
@@ -65,7 +65,7 @@ export function TransactionFilterDropdown({ label, options, value, onChange, com
     }
   };
 
-  return <div className={`transaction-filter-dropdown${isOpen ? ' is-open' : ''}${compact ? ' is-compact' : ''}`}
+  return <div className={`transaction-filter-dropdown${isOpen ? ' is-open' : ''}${compact ? ' is-compact' : ''}${active ? ' is-filtering' : ''}`}
     ref={rootRef} onKeyDown={onKeyDown}>
     <span className="transaction-filter-label" id={`${id}-label`}>{label}</span>
     <button ref={triggerRef} type="button" className="transaction-filter-trigger"

@@ -7,6 +7,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { getUserErrorMessage } from '../../utils/userErrors.js';
 import { JarOutlineIcon } from '../../components/ui/AppIcons';
+import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { JarDialog } from './JarDialog';
 import { getJarTransactionCopy } from './jarTransactionCopy';
 import '../../assets/css/jar-transaction.css';
@@ -29,7 +30,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
   const [amount, setAmount] = useState('');
   const [selectedWalletId, setSelectedWalletId] = useState('');
   const [reason, setReason] = useState('');
-  const [amountTouched, setAmountTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [walletTouched, setWalletTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -51,7 +52,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
     setAction(initialAction === 'withdraw' ? 'withdraw' : 'deposit');
     setAmount(Number.isSafeInteger(initialAmount) && initialAmount > 0 ? formatInputNumber(initialAmount) : '');
     setReason('');
-    setAmountTouched(false);
+    setSubmitAttempted(false);
     setWalletTouched(false);
     setErrorMsg('');
     const defaultWallet = activeWallets.find((wallet) => wallet.isDefault) || activeWallets[0];
@@ -80,14 +81,15 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
   else if (!isDeposit && enteredAmount > currentBalance) amountError = copy.withdrawTooMuch(money(currentBalance));
   else if (isDeposit && selectedWallet && walletAfter < walletMinimum) amountError = copy.walletInsufficient;
   const walletError = selectedWallet ? '' : copy.chooseWallet;
-  const showAmountError = amountTouched || amount.length > 0;
+  // An empty amount is not an error until the person tries to confirm: moving
+  // on to pick a wallet must not paint the amount field red.
+  const showAmountError = submitAttempted || amount.length > 0;
   const showWalletError = walletTouched || Boolean(selectedWalletId && !selectedWallet);
   const canSubmit = !isSubmitting && !amountError && !walletError;
 
   const setEnteredAmount = (value) => {
     if (submittingRef.current) return;
     setAmount(formatInputNumber(value));
-    setAmountTouched(true);
     setErrorMsg('');
   };
   const requestClose = () => {
@@ -96,7 +98,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (submittingRef.current) return;
-    setAmountTouched(true);
+    setSubmitAttempted(true);
     setWalletTouched(true);
     setErrorMsg('');
     if (amountError) {
@@ -157,7 +159,6 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
               value={amount} placeholder="0" required disabled={isSubmitting}
               aria-invalid={Boolean(showAmountError && amountError)}
               aria-describedby={showAmountError && amountError ? `${amountId}-error` : undefined}
-              onBlur={() => setAmountTouched(true)}
               onChange={(event) => { setAmount(formatInputNumber(event.target.value)); setErrorMsg(''); }} />
             <span>VND</span>
           </div>
@@ -175,20 +176,15 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
         </div>
 
         <div className={`jar-transfer-wallet-box${showWalletError && walletError ? ' is-invalid' : ''}`}>
-          <label htmlFor={walletId}>{isDeposit ? copy.sourceWallet : copy.destinationWallet} <span>{copy.required}</span></label>
+          <label id={`${walletId}-label`} htmlFor={walletId}>{isDeposit ? copy.sourceWallet : copy.destinationWallet} <span>{copy.required}</span></label>
           {activeWallets.length > 0 ? <>
-            <div className="jar-transfer-select-wrap">
-              <select id={walletId} ref={walletInputRef} value={selectedWallet ? selectedWalletId : ''}
-                required disabled={isSubmitting} aria-invalid={Boolean(showWalletError && walletError)}
-                aria-describedby={`${walletId}-hint${showWalletError && walletError ? ` ${walletId}-error` : ''}`}
-                onChange={(event) => { setSelectedWalletId(event.target.value); setWalletTouched(true); setErrorMsg(''); }}>
-                <option value="" disabled>{copy.chooseWallet}</option>
-                {activeWallets.map((wallet) => <option key={wallet.id} value={wallet.id}>
-                  {wallet.name}{wallet.isDefault ? ` · ${copy.defaultWallet}` : ''} · {money(wallet.currentBalance ?? wallet.initialBalance ?? 0)}
-                </option>)}
-              </select>
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-            </div>
+            <CustomWalletDropdown id={walletId} inputRef={walletInputRef} className="jar-transfer-wallet-select"
+              wallets={activeWallets} value={selectedWallet ? selectedWalletId : ''}
+              placeholder={copy.chooseWallet} defaultLabel={copy.defaultWallet} balanceLabel={copy.balance}
+              formatBalance={money} disabled={isSubmitting} invalid={Boolean(showWalletError && walletError)}
+              describedBy={`${walletId}-hint${showWalletError && walletError ? ` ${walletId}-error` : ''}`}
+              ariaLabel={`${isDeposit ? copy.sourceWallet : copy.destinationWallet}: ${selectedWallet?.name || copy.chooseWallet}`}
+              onChange={(nextId) => { setSelectedWalletId(nextId); setWalletTouched(true); setErrorMsg(''); }} />
             <p id={`${walletId}-hint`}>{isDeposit ? copy.depositHint : copy.withdrawHint}</p>
             {showWalletError && walletError && <p id={`${walletId}-error`} className="jar-transfer-error" role="alert">{walletError}</p>}
           </> : <div className="jar-transfer-no-wallet" role="status">

@@ -180,6 +180,20 @@
   /* ── Scrollbar ── */
   --scrollbar-thumb: #C8D8CF;
   --scrollbar-hover: #9BB8A7;
+
+  /* ── Floating menus (dropdowns, popovers, listboxes) ──
+     One source for every menu so each theme paints them consistently.
+     They resolve against the theme's own --color-* values. */
+  --menu-bg: var(--color-surface);
+  --menu-border: var(--color-border);
+  --menu-shadow: 0 14px 34px rgba(16, 27, 54, 0.14), 0 2px 8px rgba(16, 27, 54, 0.06);
+  --menu-text: var(--color-text);
+  --menu-text-muted: var(--color-text-secondary);
+  --menu-item-hover-bg: var(--color-surface-muted);
+  --menu-item-selected-bg: var(--color-brand-100);
+  --menu-item-selected-text: var(--color-link);
+  --menu-danger-text: var(--color-danger);
+  --menu-danger-hover-bg: var(--color-danger-bg);
 }
 
 /* ============================================================
@@ -271,6 +285,12 @@ html.dark-theme {
 
   --scrollbar-thumb: #26293A;
   --scrollbar-hover: #3D425A;
+
+  /* Menus sit one step above cards in dark mode. */
+  --menu-bg: #1A1C29;
+  --menu-border: rgba(255, 255, 255, 0.12);
+  --menu-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.3);
+  --menu-item-hover-bg: rgba(255, 255, 255, 0.07);
 }
 
 /* ── 2. LIGHT THEME (Minimalist Modern SaaS — Clean Slate & Indigo / Mint Accent) ── */

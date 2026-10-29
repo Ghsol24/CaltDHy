@@ -57,16 +57,177 @@
   color: var(--color-warning);
 }
 .plan-feature-view .top-alert-dot-tile .dot-indicator { background: var(--color-warning); }
-.plan-feature-view .plan-alert--danger .dot-indicator,
-.plan-feature-view .plan-alert--today .dot-indicator { background: var(--color-danger); }
+.plan-feature-view .top-alerts-view-all-link { min-height: 44px; }
+
+/* ── "Cần chú ý" severity ──
+   critical: something is overdue, due today or over budget → red gradient.
+   warning:  only upcoming / near-limit items → amber.
+   calm:     nothing to act on → stays quiet. */
+.plan-feature-view {
+  --alert-critical-strong: #DC2626;
+  --alert-critical-text: #991B1B;
+  --alert-critical-tint: rgba(220, 38, 38, 0.16);
+  --alert-critical-wash: rgba(239, 68, 68, 0.05);
+  --alert-critical-border: rgba(220, 38, 38, 0.38);
+  --alert-critical-glow: rgba(220, 38, 38, 0.32);
+  --alert-critical-badge: #DC2626;
+  --alert-warning-badge: #B45309;
+  --alert-warning-strong: #D97706;
+  --alert-warning-text: #92400E;
+  --alert-warning-tint: rgba(245, 158, 11, 0.18);
+  --alert-warning-border: rgba(217, 119, 6, 0.38);
+}
+
+html.dark-theme .plan-feature-view {
+  --alert-critical-strong: #FF4757;
+  --alert-critical-text: #FF8A95;
+  --alert-critical-tint: rgba(255, 71, 87, 0.24);
+  --alert-critical-wash: rgba(255, 71, 87, 0.05);
+  --alert-critical-border: rgba(255, 71, 87, 0.5);
+  --alert-critical-glow: rgba(255, 71, 87, 0.28);
+  --alert-critical-badge: #E11D48;
+  --alert-warning-strong: #F59E0B;
+  --alert-warning-text: #FBBF24;
+  --alert-warning-tint: rgba(245, 158, 11, 0.2);
+  --alert-warning-border: rgba(245, 158, 11, 0.45);
+}
+
+html.cream-theme .plan-feature-view {
+  --alert-critical-strong: #B91C1C;
+  --alert-critical-badge: #B91C1C;
+  --alert-critical-text: #8F1414;
+  --alert-warning-text: #7C4A03;
+}
+
+.plan-feature-view .plan-overview-container .plan-top-alerts-card.is-critical {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--alert-critical-border);
+  background:
+    linear-gradient(100deg, var(--alert-critical-tint) 0%, var(--alert-critical-wash) 55%, transparent 100%),
+    var(--color-surface);
+  box-shadow: inset 4px 0 0 var(--alert-critical-strong), 0 10px 28px -16px var(--alert-critical-glow);
+}
+
+.plan-feature-view .plan-overview-container .plan-top-alerts-card.is-warning {
+  border-color: var(--alert-warning-border);
+  background:
+    linear-gradient(100deg, var(--alert-warning-tint) 0%, transparent 60%),
+    var(--color-surface);
+  box-shadow: inset 4px 0 0 var(--alert-warning-strong);
+}
+
+.plan-feature-view .plan-top-alerts-card.is-critical .top-alerts-bell-box {
+  color: #FFFFFF;
+  background: var(--alert-critical-strong);
+  box-shadow: 0 0 0 4px var(--alert-critical-tint);
+  animation: planAlertBell 900ms ease-in-out 1;
+}
+
+.plan-feature-view .plan-top-alerts-card.is-warning .top-alerts-bell-box {
+  color: #FFFFFF;
+  background: var(--alert-warning-strong);
+}
+
+.plan-feature-view .plan-top-alerts-card.is-calm .top-alerts-bell-box {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.plan-feature-view .plan-top-alerts-card.is-critical .top-alerts-title { color: var(--alert-critical-text); }
+.plan-feature-view .plan-top-alerts-card.is-warning .top-alerts-title { color: var(--alert-warning-text); }
+.plan-feature-view .plan-top-alerts-card.is-critical .top-alerts-subtext,
+.plan-feature-view .plan-top-alerts-card.is-warning .top-alerts-subtext { color: var(--color-text); font-weight: 600; }
+
+.plan-feature-view .top-alerts-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-feature-view .top-alerts-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--alert-warning-badge);
+  color: #FFFFFF;
+  font: 800 12px/22px var(--font-sans);
+  text-align: center;
+}
+
+.plan-feature-view .plan-top-alerts-card.is-critical .top-alerts-count { background: var(--alert-critical-badge); }
+
+/* Pills keep a solid surface so their text stays readable on the gradient. */
+.plan-feature-view .plan-top-alerts-card.is-critical .top-alert-pill-item,
+.plan-feature-view .plan-top-alerts-card.is-warning .top-alert-pill-item {
+  background: var(--color-surface);
+}
+
+.plan-feature-view .plan-alert--danger,
+.plan-feature-view .plan-alert--today {
+  border-color: var(--alert-critical-border);
+  box-shadow: inset 3px 0 0 var(--alert-critical-strong);
+}
+
+.plan-feature-view .plan-alert--high-warning,
+.plan-feature-view .plan-alert--warning,
+.plan-feature-view .plan-alert--soon {
+  border-color: var(--alert-warning-border);
+  box-shadow: inset 3px 0 0 var(--alert-warning-strong);
+}
+
+.plan-feature-view .plan-alert--high-warning .top-alert-name,
+.plan-feature-view .plan-alert--warning .top-alert-name,
+.plan-feature-view .plan-alert--soon .top-alert-name { color: var(--alert-warning-text); }
+
 .plan-feature-view .plan-alert--danger .top-alert-name,
-.plan-feature-view .plan-alert--today .top-alert-name { color: var(--color-danger); }
+.plan-feature-view .plan-alert--today .top-alert-name { color: var(--alert-critical-text); }
+
+.plan-feature-view .plan-alert--danger .dot-indicator,
+.plan-feature-view .plan-alert--today .dot-indicator {
+  background: var(--alert-critical-strong);
+  box-shadow: 0 0 0 0 var(--alert-critical-glow);
+  animation: planAlertPulse 1.8s ease-out infinite;
+}
+
 .plan-feature-view .plan-alert--danger .cal-header,
 .plan-feature-view .plan-alert--today .cal-header {
-  color: var(--color-danger);
-  background: var(--color-danger-bg);
+  color: #FFFFFF;
+  background: var(--alert-critical-badge);
 }
-.plan-feature-view .top-alerts-view-all-link { min-height: 44px; }
+
+.plan-feature-view .top-alert-pill-item.plan-alert--danger .top-alert-calendar-tile,
+.plan-feature-view .top-alert-pill-item.plan-alert--today .top-alert-calendar-tile {
+  background: var(--color-surface);
+  border-color: var(--alert-critical-border);
+}
+
+.plan-feature-view .plan-top-alerts-card.is-critical .top-alert-pill-item:hover,
+.plan-feature-view .plan-top-alerts-card.is-warning .top-alert-pill-item:hover {
+  border-color: currentColor;
+}
+
+@keyframes planAlertBell {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-12deg); }
+  30% { transform: rotate(10deg); }
+  45% { transform: rotate(-8deg); }
+  60% { transform: rotate(5deg); }
+  75% { transform: rotate(-2deg); }
+}
+
+@keyframes planAlertPulse {
+  0% { box-shadow: 0 0 0 0 var(--alert-critical-glow); }
+  70% { box-shadow: 0 0 0 7px rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-feature-view .plan-top-alerts-card.is-critical .top-alerts-bell-box,
+  .plan-feature-view .plan-alert--danger .dot-indicator,
+  .plan-feature-view .plan-alert--today .dot-indicator { animation: none; }
+}
 
 .plan-feature-view .metric-icon--purple,
 .plan-feature-view .dropdown-icon--purple {

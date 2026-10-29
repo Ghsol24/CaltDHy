@@ -1355,8 +1355,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgba(var(--accent-rgb, 79, 70, 229), 0.12);
-  color: var(--color-link);
+  /* Solid menu surface keeps the badge readable on top of the selected row. */
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  color: var(--menu-item-selected-text);
 }
 
 .custom-wallet-balance {
@@ -1394,10 +1396,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
   border-radius: var(--radius-md, 12px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--menu-shadow);
   max-height: 240px;
   overflow-y: auto;
   z-index: 1000;
@@ -1433,11 +1435,11 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .custom-wallet-item:hover,
 .custom-wallet-item.is-highlighted {
-  background: var(--surface-subtle);
+  background: var(--menu-item-hover-bg);
 }
 
 .custom-wallet-item.is-active {
-  background: rgba(var(--accent-rgb, 79, 70, 229), 0.1);
+  background: var(--menu-item-selected-bg);
 }
 
 .custom-wallet-item-left {
@@ -1482,6 +1484,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-mono, monospace);
   font-size: 11.5px;
   color: var(--text-secondary);
+}
+
+.custom-wallet-balance-label {
+  font-family: var(--font-sans);
 }
 
 .custom-wallet-item--none {
@@ -2247,10 +2253,10 @@ html.dark-theme .jar-date-input { color-scheme: dark; }
   right: 0;
   max-height: 240px;
   overflow-y: auto;
-  background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border, #E2E8F0);
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
   border-radius: var(--radius-md, 12px);
-  box-shadow: var(--shadow-dialog, 0 12px 30px rgba(0, 0, 0, 0.12));
+  box-shadow: var(--menu-shadow);
   z-index: 200;
   padding: 6px;
   display: flex;
@@ -2267,7 +2273,7 @@ html.dark-theme .jar-date-input { color-scheme: dark; }
   border: none;
   background: transparent;
   border-radius: var(--radius-sm, 8px);
-  color: var(--text-primary, #173126);
+  color: var(--menu-text);
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
@@ -2277,12 +2283,12 @@ html.dark-theme .jar-date-input { color-scheme: dark; }
 }
 
 .modal-dropdown-item:hover {
-  background: var(--color-brand-50, var(--surface-subtle, #F1F5F9));
+  background: var(--menu-item-hover-bg);
 }
 
 .modal-dropdown-item.is-selected {
-  background: var(--color-brand-50, rgba(99, 102, 241, 0.1));
-  color: var(--color-link);
+  background: var(--menu-item-selected-bg);
+  color: var(--menu-item-selected-text);
   font-weight: 700;
 }
 

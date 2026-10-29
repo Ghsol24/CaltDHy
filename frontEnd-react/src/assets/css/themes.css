@@ -21,7 +21,6 @@ html.dark-theme .guide-vent {
   animation: ventGlow 4s ease-in-out infinite;
 }
 
-
 /* ============================================================
    LIGHT THEME — Minimalist Modern SaaS
    ============================================================ */
@@ -543,7 +542,6 @@ html.light-theme .user-chip {
   border: 1px solid #E2E8F0;
 }
 
-
 /* ============================================================
    THEME SELECTOR — inside Settings modal
    ============================================================ */
@@ -638,8 +636,6 @@ html.light-theme .user-chip {
   opacity: 1;
   transform: scale(1);
 }
-
-
 
 /* ============================================================
    CREAM THEME — Warm Parchment
@@ -968,7 +964,6 @@ html.cream-theme .numpad-display__value { text-shadow: 0 0 12px rgba(45,122,62,.
 html.cream-theme .nk { background: #EDE4D8; color: #2C1D10; box-shadow: 0 2px 6px rgba(100,60,20,.1), inset 0 1px 0 rgba(255,255,255,.7); }
 html.cream-theme .nk:active { color: #2D7A3E; box-shadow: inset 0 2px 6px rgba(100,60,20,.14); }
 html.cream-theme .nk--submit { background: #2D7A3E; color: #fff; box-shadow: 0 4px 12px rgba(45,122,62,.35); }
-
 
 /* ============================================================
    GREEN (MINT / SAGE) THEME — Fresh Emerald
@@ -1313,7 +1308,6 @@ html.light-theme .theme-card[aria-pressed="true"] { border-color: #4F46E5; }
 html.light-theme .theme-card[aria-pressed="true"] .theme-card__name { color: #4F46E5; }
 html.light-theme .theme-card[aria-pressed="true"] .theme-card__check-icon { color: #4F46E5; }
 
-
 /* ============================================================
    LIGHT THEME OVERRIDES — Trend & Category Switches
    ============================================================ */
@@ -1480,8 +1474,6 @@ html.green-theme .trend-panel {
   border-color: #B2DFC8;
 }
 
-
-
 /* ============================================================
    LIGHT THEME — Guide overrides
    ============================================================ */
@@ -1579,7 +1571,6 @@ html.green-theme .guide-feature,
 html.green-theme .guide-tip-card { background: #E3F2E9; border-color: #B2DFC8; }
 html.green-theme .btn-help { background: #E3F2E9; border-color: #B2DFC8; }
 
-
 /* ============================================================
    PHASE 1 — UI ELEVATION OVERRIDES FOR LIGHT THEMES
    Tăng độ tương phản nhẹ: viền & bóng đổ cho card/panel
@@ -1618,7 +1609,6 @@ html.green-theme {
   --sh-raise: 0 4px 12px rgba(16,120,80,.07), 0 1px 3px rgba(16,120,80,.04);
   --sh-float: 0 14px 44px rgba(16,120,80,.13), 0 2px 8px rgba(16,120,80,.06);
 }
-
 
 /* ============================================================
    PHASE 1 — JAR DELETE CONFIRM OVERLAY — THEME-AWARE TOKENS
@@ -1662,7 +1652,6 @@ html.green-theme {
   --c-confirm-cancel-border: rgba(14, 46, 30, 0.12);
   --c-confirm-cancel-txt:    #4D7A68;
 }
-
 
 /* ============================================================
    PHASE 1 — INSTALLMENT SECTION PANEL — DYNAMIC STATUS COLORS
@@ -1919,7 +1908,6 @@ html.light-theme .jar-btn-submit,
 html.light-theme .jar-detail-btn-deposit,
 html.light-theme .financial-tips-ack-btn,
 html.light-theme .jars-hero-cta-btn,
-html.light-theme .jars-recom-action-btn,
 html.light-theme .btn-add-txn {
   background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
   color: #FFFFFF !important;
@@ -1931,7 +1919,6 @@ html.light-theme .jar-btn-submit:hover:not(:disabled),
 html.light-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.light-theme .financial-tips-ack-btn:hover:not(:disabled),
 html.light-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.light-theme .jars-recom-action-btn:hover:not(:disabled),
 html.light-theme .btn-add-txn:hover:not(:disabled) {
   background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
   box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45) !important;
@@ -1957,7 +1944,6 @@ html.light-theme .financial-tips-card {
   background: #FAFBFD !important;
   border: 1px solid #E2E8F0 !important;
 }
-
 
 /* ── 2. CREAM THEME (Warm Terracotta & Paper) ── */
 html.cream-theme .txn-modal-card,
@@ -2147,7 +2133,6 @@ html.cream-theme .jar-btn-submit,
 html.cream-theme .jar-detail-btn-deposit,
 html.cream-theme .financial-tips-ack-btn,
 html.cream-theme .jars-hero-cta-btn,
-html.cream-theme .jars-recom-action-btn,
 html.cream-theme .btn-add-txn {
   background: linear-gradient(135deg, #C0531E 0%, #D96024 100%) !important;
   color: #FFFFFF !important;
@@ -2159,7 +2144,6 @@ html.cream-theme .jar-btn-submit:hover:not(:disabled),
 html.cream-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.cream-theme .financial-tips-ack-btn:hover:not(:disabled),
 html.cream-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.cream-theme .jars-recom-action-btn:hover:not(:disabled),
 html.cream-theme .btn-add-txn:hover:not(:disabled) {
   background: linear-gradient(135deg, #A84414 0%, #C0531E 100%) !important;
   box-shadow: 0 6px 18px rgba(192, 83, 30, 0.45) !important;
@@ -2185,7 +2169,6 @@ html.cream-theme .financial-tips-card {
   background: #FAF3EA !important;
   border: 1px solid #E0D4C4 !important;
 }
-
 
 /* ── 3. GREEN THEME (Eco Nature Emerald) ── */
 html.green-theme .txn-modal-card,
@@ -2375,7 +2358,6 @@ html.green-theme .jar-btn-submit,
 html.green-theme .jar-detail-btn-deposit,
 html.green-theme .financial-tips-ack-btn,
 html.green-theme .jars-hero-cta-btn,
-html.green-theme .jars-recom-action-btn,
 html.green-theme .btn-add-txn {
   background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
   color: #FFFFFF !important;
@@ -2387,7 +2369,6 @@ html.green-theme .jar-btn-submit:hover:not(:disabled),
 html.green-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.green-theme .financial-tips-ack-btn:hover:not(:disabled),
 html.green-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.green-theme .jars-recom-action-btn:hover:not(:disabled),
 html.green-theme .btn-add-txn:hover:not(:disabled) {
   background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
   box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45) !important;
@@ -2413,7 +2394,6 @@ html.green-theme .financial-tips-card {
   background: #F0FDF4 !important;
   border: 1px solid #B2DFC8 !important;
 }
-
 
 /* ── 4. DARK THEME (Obsidian Cobalt Panel) ── */
 html.dark-theme .txn-modal-card,
@@ -2603,7 +2583,6 @@ html.dark-theme .jar-btn-submit,
 html.dark-theme .jar-detail-btn-deposit,
 html.dark-theme .financial-tips-ack-btn,
 html.dark-theme .jars-hero-cta-btn,
-html.dark-theme .jars-recom-action-btn,
 html.dark-theme .btn-add-txn {
   background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%) !important;
   color: #FFFFFF !important;
@@ -2615,7 +2594,6 @@ html.dark-theme .jar-btn-submit:hover:not(:disabled),
 html.dark-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.dark-theme .financial-tips-ack-btn:hover:not(:disabled),
 html.dark-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.dark-theme .jars-recom-action-btn:hover:not(:disabled),
 html.dark-theme .btn-add-txn:hover:not(:disabled) {
   background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%) !important;
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55) !important;
@@ -2648,21 +2626,8 @@ html.light-theme .custom-wallet-trigger {
   background: #FFFFFF !important;
   border-color: #CBD5E1 !important;
 }
-html.light-theme .custom-wallet-trigger:hover,
-html.light-theme .custom-wallet-item:hover {
+html.light-theme .custom-wallet-trigger:hover {
   background: #F1F5F9 !important;
-}
-html.light-theme .custom-wallet-menu {
-  background: #FFFFFF !important;
-  border-color: #CBD5E1 !important;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16) !important;
-}
-html.light-theme .custom-wallet-item.is-active {
-  background: rgba(79, 70, 229, 0.08) !important;
-}
-html.light-theme .custom-wallet-badge {
-  background: rgba(79, 70, 229, 0.12) !important;
-  color: #4F46E5 !important;
 }
 
 /* Cream Theme */
@@ -2670,21 +2635,8 @@ html.cream-theme .custom-wallet-trigger {
   background: #F5EDE0 !important;
   border-color: #D8CCBE !important;
 }
-html.cream-theme .custom-wallet-trigger:hover,
-html.cream-theme .custom-wallet-item:hover {
+html.cream-theme .custom-wallet-trigger:hover {
   background: #EDE4D8 !important;
-}
-html.cream-theme .custom-wallet-menu {
-  background: #FDF8F2 !important;
-  border-color: #D8CCBE !important;
-  box-shadow: 0 16px 36px rgba(100, 60, 20, 0.18) !important;
-}
-html.cream-theme .custom-wallet-item.is-active {
-  background: rgba(192, 83, 30, 0.10) !important;
-}
-html.cream-theme .custom-wallet-badge {
-  background: rgba(192, 83, 30, 0.12) !important;
-  color: #C0531E !important;
 }
 
 /* Green Theme */
@@ -2692,21 +2644,8 @@ html.green-theme .custom-wallet-trigger {
   background: #FFFFFF !important;
   border-color: #B2DFC8 !important;
 }
-html.green-theme .custom-wallet-trigger:hover,
-html.green-theme .custom-wallet-item:hover {
+html.green-theme .custom-wallet-trigger:hover {
   background: #E2F2E9 !important;
-}
-html.green-theme .custom-wallet-menu {
-  background: #FFFFFF !important;
-  border-color: #B2DFC8 !important;
-  box-shadow: 0 16px 36px rgba(14, 46, 30, 0.18) !important;
-}
-html.green-theme .custom-wallet-item.is-active {
-  background: rgba(5, 150, 105, 0.10) !important;
-}
-html.green-theme .custom-wallet-badge {
-  background: rgba(5, 150, 105, 0.14) !important;
-  color: #047857 !important;
 }
 
 /* Dark Theme */
@@ -2714,19 +2653,6 @@ html.dark-theme .custom-wallet-trigger {
   background: #1A1C29 !important;
   border-color: #26293A !important;
 }
-html.dark-theme .custom-wallet-trigger:hover,
-html.dark-theme .custom-wallet-item:hover {
+html.dark-theme .custom-wallet-trigger:hover {
   background: #26293A !important;
-}
-html.dark-theme .custom-wallet-menu {
-  background: #1A1C29 !important;
-  border-color: #26293A !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8) !important;
-}
-html.dark-theme .custom-wallet-item.is-active {
-  background: rgba(37, 99, 235, 0.2) !important;
-}
-html.dark-theme .custom-wallet-badge {
-  background: rgba(37, 99, 235, 0.25) !important;
-  color: #60A5FA !important;
 }

@@ -1037,6 +1037,14 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?from=/);
     await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(1);
     await expect(mobilePage.locator('.transaction-ledger-table')).toBeVisible();
+    // On phones the history filters fold behind a "Bộ lọc" toggle; active ones stay visible as chips.
+    const openHistoryFilters = async () => {
+      const toggle = mobilePage.locator('.transaction-filter-toggle');
+      if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+      await expect(mobilePage.locator('.transaction-filter-controls')).toBeVisible();
+    };
+    await expect(mobilePage.locator('.transaction-filter-chip', { hasText: 'Dịch vụ' })).toBeVisible();
+    await openHistoryFilters();
     const categoryFilter = mobilePage.locator('.transaction-filter-dropdown').nth(1);
     await expect(categoryFilter.locator('.transaction-filter-value')).toContainText('Dịch vụ');
     await categoryFilter.locator('.transaction-filter-trigger').click();
@@ -1138,6 +1146,7 @@ function blendCssColor(color, background) {
     });
     assert.equal(historyTabVisible, true, 'Tab Lịch sử đang chọn phải tự hiện trong thanh tab con');
     await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(2);
+    await openHistoryFilters();
     const recurringHistoryFilter = mobilePage.getByRole('checkbox', { name: 'Ẩn khoản định kỳ' });
     await recurringHistoryFilter.check();
     await expect(recurringHistoryFilter).toBeChecked();
@@ -1148,10 +1157,11 @@ function blendCssColor(color, background) {
       await mobilePage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
       await mobilePage.reload();
       await expect(mobilePage.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+      await openHistoryFilters();
       const periodFilter = mobilePage.locator('.transaction-filter-dropdown').nth(3);
       await periodFilter.locator('.transaction-filter-trigger').click();
       await periodFilter.getByRole('option', { name: 'Tùy chọn ngày' }).click();
-      await expect(mobilePage.locator('.transaction-filter-custom-dates input[type="date"]')).toHaveCount(2);
+      await expect(mobilePage.locator('.transaction-filter-custom-dates .calt-date-input')).toHaveCount(2);
       const walletFilter = mobilePage.locator('.transaction-filter-dropdown').nth(2);
       const walletTrigger = walletFilter.locator('.transaction-filter-trigger');
       await walletTrigger.click();
@@ -1161,7 +1171,7 @@ function blendCssColor(color, background) {
         const menu = history.querySelector('.transaction-filter-menu');
         const icon = history.querySelector('.transaction-inspection-icon svg');
         const swatch = document.createElement('span');
-        swatch.style.backgroundColor = 'var(--color-surface)';
+        swatch.style.backgroundColor = 'var(--menu-bg)';
         history.append(swatch);
         const surfaceBackground = getComputedStyle(swatch).backgroundColor;
         swatch.remove();
@@ -1170,7 +1180,6 @@ function blendCssColor(color, background) {
           surfaceBackground,
           menuBorderRadius: getComputedStyle(menu).borderRadius,
           triggerExpanded: trigger.getAttribute('aria-expanded'),
-          dateColorScheme: getComputedStyle(history.querySelector('input[type="date"]')).colorScheme,
           iconFill: icon?.getAttribute('fill'),
           clearIconFill: history.querySelector('.transaction-history-clear svg')?.getAttribute('fill'),
           clearRadius: getComputedStyle(history.querySelector('.transaction-history-clear')).borderRadius,
@@ -1184,13 +1193,13 @@ function blendCssColor(color, background) {
       assert.ok(styles.clearRadius !== '0px', `${theme}: nút xóa bộ lọc phải bo góc`);
       assert.equal(styles.pageOverflows, false, `${theme}: lịch sử không được tràn ngang`);
       assert.equal(styles.menuBackground, styles.surfaceBackground, `${theme}: menu cần màu nền theo theme`);
-      assert.equal(styles.dateColorScheme, theme === 'dark' ? 'dark' : 'light', `${theme}: ô ngày cần đúng bảng màu`);
       await walletFilter.getByRole('option', { selected: true }).press('Escape');
       await expect(walletFilter.getByRole('listbox')).toHaveCount(0);
       await expect(walletTrigger).toBeFocused();
     }
     await mobilePage.getByPlaceholder('Tìm mô tả hoặc danh mục').fill('Internet');
     await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(1);
+    await openHistoryFilters();
     await mobilePage.getByRole('button', { name: 'Xóa bộ lọc' }).click();
     await expect(mobilePage.locator('.transaction-inspection-row')).toHaveCount(2);
     await analyticsNav.getByRole('button', { name: 'Dòng tiền' }).click();

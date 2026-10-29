@@ -14,6 +14,13 @@ export function CustomWalletDropdown({
   name,
   ariaLabel,
   className = '',
+  // Optional i18n and form wiring. Defaults keep existing call sites unchanged.
+  defaultLabel = 'Mặc định',
+  balanceLabel = 'Số dư:',
+  formatBalance = formatCurrency,
+  invalid = false,
+  describedBy,
+  inputRef,
 }) {
   const generatedId = useId();
   const triggerId = explicitId || generatedId;
@@ -48,6 +55,13 @@ export function CustomWalletDropdown({
     return () => {
       document.removeEventListener('pointerdown', handleOutsideClick);
     };
+  }, [isOpen]);
+
+  // Keep the opened list on screen inside scrolling dialogs.
+  useEffect(() => {
+    if (!isOpen || !menuRef.current?.scrollIntoView) return undefined;
+    const frame = requestAnimationFrame(() => menuRef.current?.scrollIntoView({ block: 'nearest' }));
+    return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
   // Scroll highlighted item into view
@@ -119,7 +133,11 @@ export function CustomWalletDropdown({
     >
       {/* Trigger Button */}
       <button
-        ref={triggerRef}
+        ref={(node) => {
+          triggerRef.current = node;
+          if (typeof inputRef === 'function') inputRef(node);
+          else if (inputRef) inputRef.current = node;
+        }}
         id={triggerId}
         name={name}
         type="button"
@@ -130,6 +148,8 @@ export function CustomWalletDropdown({
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
         aria-label={ariaLabel || (selectedWallet ? selectedWallet.name : placeholder)}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
       >
         <div className="custom-wallet-selected-info">
           {selectedWallet ? (
@@ -140,10 +160,10 @@ export function CustomWalletDropdown({
               <div className="custom-wallet-text-group">
                 <span className="custom-wallet-name">
                   {selectedWallet.name}
-                  {selectedWallet.isDefault && <span className="custom-wallet-badge">Mặc định</span>}
+                  {selectedWallet.isDefault && <span className="custom-wallet-badge">{defaultLabel}</span>}
                 </span>
                 <span className="custom-wallet-balance">
-                  Số dư: {formatCurrency(selectedWallet.currentBalance ?? selectedWallet.initialBalance ?? 0)}
+                  <span className="custom-wallet-balance-label">{balanceLabel}</span> {formatBalance(selectedWallet.currentBalance ?? selectedWallet.initialBalance ?? 0)}
                 </span>
               </div>
             </>
@@ -243,10 +263,10 @@ export function CustomWalletDropdown({
                   <div className="custom-wallet-item-details">
                     <div className="custom-wallet-item-name-row">
                       <strong className="custom-wallet-item-name">{item.name}</strong>
-                      {item.isDefault && <span className="custom-wallet-badge">Mặc định</span>}
+                      {item.isDefault && <span className="custom-wallet-badge">{defaultLabel}</span>}
                     </div>
                     <span className="custom-wallet-item-balance">
-                      Số dư: <strong>{formatCurrency(balance)}</strong>
+                      <span className="custom-wallet-balance-label">{balanceLabel}</span> <strong>{formatBalance(balance)}</strong>
                     </span>
                   </div>
                 </div>

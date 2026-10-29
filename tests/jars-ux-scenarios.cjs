@@ -42,7 +42,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     await expect(page.locator('.jars-page-root')).toBeVisible();
     let trigger;
     if (kind === 'create') trigger = page.locator('.jars-hero-cta-btn');
-    else if (kind === 'history') trigger = page.locator('#jars-section-history > .jars-section-header-row .jars-section-action-link');
+    else if (kind === 'history') trigger = page.locator('#jars-section-history .jar-activity-view-all');
     else {
       await expect(card()).toBeVisible();
       trigger = kind === 'edit' ? card().locator('.jar-btn-detail-icon')
@@ -115,10 +115,10 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
   await check('jars UX transfers are confirmed once and create/edit preserve wallet and existing balances', async () => {
     await configure('green', 'vi', 1440, 1000);
     await page.goto('/spending/jars/goals');
-    await expect(page.locator('.jar-next-step-card')).toHaveAttribute('data-suggestion-amount', '250000');
+    await expect(page.locator('.jar-next-strip')).toHaveAttribute('data-suggestion-amount', '250000');
     const beforeJar = await Jar.findById(health._id).lean();
     const beforeWallet = await getWalletBalance(user._id, wallet._id);
-    await page.locator('.jar-next-step-cta').click();
+    await page.locator('.jar-next-strip-cta').click();
     await expect(dialog).toBeVisible();
     assert.equal(digits(await amountInput().inputValue()), 250000, 'Milestone CTA prefills its exact amount');
     assert.equal((await Jar.findById(health._id)).current, beforeJar.current, 'Opening a suggestion never moves money');

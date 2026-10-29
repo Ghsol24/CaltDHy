@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
@@ -10,11 +10,16 @@ import { summarizeTransactions, transactionTotal } from '../../utils/transaction
 import { historyDateRange } from '../../utils/historyDatePresets';
 import { TransactionFilterDropdown } from './TransactionFilterDropdown';
 import { TransactionRows } from './TransactionRows';
+import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { formatDisplayDate } from '../../utils/datePicker';
+import { getHistoryFilterCopy } from './historyFilterCopy';
 
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function TransactionHistoryView() {
-  const { t, label } = useTranslation();
+  const { t, label, lang } = useTranslation();
+  const chipCopy = getHistoryFilterCopy(lang);
   const [searchParams, setSearchParams] = useSearchParams();
   const seedDate = searchParams.get('date');
   const seedFrom = searchParams.get('from');
@@ -31,6 +36,11 @@ export function TransactionHistoryView() {
   const [walletId, setWalletId] = useState('all');
   const [excludeRecurring, setExcludeRecurring] = useState(searchParams.get('excludeRecurring') === '1');
   const [visibleCount, setVisibleCount] = useState(50);
+  const isCompact = useMediaQuery('(max-width: 640px)');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const controlsId = useId();
+  const chipsRef = useRef(null);
+  const searchRef = useRef(null);
   const transactions = useTransactionStore((state) => state.transactions);
   const loadError = useTransactionStore((state) => state.error);
   const reloadTransactions = useTransactionStore((state) => state.fetchTransactions);
@@ -80,6 +90,52 @@ export function TransactionHistoryView() {
     setEndDate(range.to);
   };
 
+  const dropParams = (...keys) => {
+    if (!keys.some((key) => searchParams.has(key))) return;
+    const next = new URLSearchParams(searchParams);
+    keys.forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  };
+
+  // Every condition currently narrowing the list, shown as a removable chip
+  // right where it takes effect (instead of hiding it inside the dropdowns).
+  const activeFilters = (() => {
+    const dateOrder = String(lang).startsWith('zh') ? 'ymd' : 'dmy';
+    const showDate = (iso) => formatDisplayDate(iso, dateOrder);
+    const chips = [];
+    if (query.trim()) chips.push({ id: 'query', text: chipCopy.searchChip(query.trim()), remove: () => setQuery('') });
+    if (type !== 'all') chips.push({ id: 'type', text: `${t('history.filterType')}: ${t(`type.${type}`)}`,
+      remove: () => { setType('all'); dropParams('type'); } });
+    if (category !== 'all') chips.push({ id: 'category', text: `${t('history.filterCategory')}: ${label(category)}`,
+      remove: () => { setCategory('all'); dropParams('category'); } });
+    if (walletId !== 'all') {
+      const wallet = [...wallets, ...archivedWallets].find((item) => item.id === walletId);
+      chips.push({ id: 'wallet', text: `${t('history.filterWallet')}: ${wallet?.name || walletId}`, remove: () => setWalletId('all') });
+    }
+    if (datePreset !== 'all' && (datePreset !== 'custom' || startDate || endDate)) {
+      let period;
+      if (datePreset !== 'custom') period = t(`history.${datePreset}`);
+      else if (startDate && endDate) period = startDate === endDate ? showDate(startDate) : `${showDate(startDate)} – ${showDate(endDate)}`;
+      else period = startDate ? chipCopy.rangeFrom(showDate(startDate)) : chipCopy.rangeTo(showDate(endDate));
+      chips.push({ id: 'period', text: `${t('history.filterPeriod')}: ${period}`,
+        remove: () => { setDatePreset('all'); setStartDate(''); setEndDate(''); dropParams('date', 'from', 'to'); } });
+    }
+    if (excludeRecurring) chips.push({ id: 'recurring', text: t('history.excludeRecurring'),
+      remove: () => { setExcludeRecurring(false); dropParams('excludeRecurring'); } });
+    return chips;
+  })();
+  const filterCount = activeFilters.filter((chip) => chip.id !== 'query').length;
+
+  const removeChip = (chip, index) => {
+    chip.remove();
+    // Keep keyboard focus on the chip row instead of dropping it on <body>.
+    requestAnimationFrame(() => {
+      const remaining = chipsRef.current?.querySelectorAll('.transaction-filter-chip');
+      const target = remaining?.[Math.min(index, remaining.length - 1)];
+      (target || searchRef.current)?.focus();
+    });
+  };
+
   const manageSource = (source) => navigateTo(source === 'jars' ? 'jars' : 'plan',
     source === 'jars' ? 'history' : 'recurring');
 
@@ -90,7 +146,7 @@ export function TransactionHistoryView() {
       </div>
     </header>
 
-    <div className="transaction-filter-bar">
+    <div className={`transaction-filter-bar${isCompact ? ' is-compact' : ''}`}>
       <label className="transaction-history-search">
         <span className="transaction-filter-sr-only">{t('common.search')}</span>
         <span className="transaction-history-search-control">
@@ -98,21 +154,30 @@ export function TransactionHistoryView() {
             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
           </svg>
-          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)}
+          <input ref={searchRef} type="search" value={query} onChange={(event) => setQuery(event.target.value)}
             placeholder={t('history.searchPlaceholder')} />
         </span>
       </label>
-      <div className="transaction-filter-controls">
-        <TransactionFilterDropdown compact label={t('history.filterType')} value={type} onChange={setType}
+      {isCompact && <button type="button" className={`transaction-filter-toggle${filterCount ? ' has-filters' : ''}`}
+        aria-expanded={filtersOpen} aria-controls={controlsId} onClick={() => setFiltersOpen((open) => !open)}>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+        <span>{chipCopy.filters}</span>
+        {filterCount > 0 && <span className="transaction-filter-count">{filterCount}</span>}
+        <svg className="transaction-filter-toggle-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </button>}
+      <div id={controlsId} className="transaction-filter-controls" hidden={isCompact && !filtersOpen}>
+        <TransactionFilterDropdown compact active={type !== 'all'} label={t('history.filterType')} value={type} onChange={setType}
           options={[{ value: 'all', label: t('history.allTypes') },
             ...['expense', 'income', 'transfer', 'wallet_created'].map((value) => ({ value, label: t(`type.${value}`) }))]} />
-        <TransactionFilterDropdown compact label={t('history.filterCategory')} value={category} onChange={setCategory}
+        <TransactionFilterDropdown compact active={category !== 'all'} label={t('history.filterCategory')} value={category} onChange={setCategory}
           options={[{ value: 'all', label: t('history.allCategories') },
             ...categories.map((value) => ({ value, label: label(value) }))]} />
-        <TransactionFilterDropdown compact label={t('history.filterWallet')} value={walletId} onChange={setWalletId}
+        <TransactionFilterDropdown compact active={walletId !== 'all'} label={t('history.filterWallet')} value={walletId} onChange={setWalletId}
           options={[{ value: 'all', label: t('history.allWallets') },
             ...[...wallets, ...archivedWallets].map((wallet) => ({ value: wallet.id, label: wallet.name }))]} />
-        <TransactionFilterDropdown compact label={t('history.filterPeriod')} value={datePreset}
+        <TransactionFilterDropdown compact active={datePreset !== 'all'} label={t('history.filterPeriod')} value={datePreset}
           onChange={chooseDatePreset} options={[
             { value: 'all', label: t('history.allTime') },
             { value: 'thisMonth', label: t('history.thisMonth') },
@@ -136,11 +201,27 @@ export function TransactionHistoryView() {
       </div>
     </div>
 
+    {activeFilters.length > 0 && <div ref={chipsRef} className="transaction-active-filters" role="group"
+      aria-label={chipCopy.activeFilters}>
+      {activeFilters.map((chip, index) => <button key={chip.id} type="button" className="transaction-filter-chip"
+        aria-label={chipCopy.removeFilter(chip.text)} onClick={() => removeChip(chip, index)}>
+        <span>{chip.text}</span>
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+      </button>)}
+      {isCompact && activeFilters.length > 1 && <button type="button" className="transaction-filter-chip-clear"
+        onClick={() => { clearFilters(); requestAnimationFrame(() => searchRef.current?.focus()); }}>{chipCopy.clearAll}</button>}
+    </div>}
+
     {datePreset === 'custom' && <div className="transaction-filter-custom-dates">
-      <label><span>{t('history.fromDate')}</span><input type="date" value={startDate}
-        onChange={(event) => setStartDate(event.target.value)} /></label>
-      <label><span>{t('history.toDate')}</span><input type="date" value={endDate}
-        onChange={(event) => setEndDate(event.target.value)} /></label>
+      <div className="transaction-filter-date-field">
+        <label htmlFor="history-date-from">{t('history.fromDate')}</label>
+        <CustomDatePicker id="history-date-from" value={startDate} max={endDate || undefined} onChange={setStartDate} />
+      </div>
+      <div className="transaction-filter-date-field">
+        <label htmlFor="history-date-to">{t('history.toDate')}</label>
+        <CustomDatePicker id="history-date-to" value={endDate} min={startDate || undefined} onChange={setEndDate} />
+      </div>
     </div>}
 
     {invalidRange && <p role="alert" className="transaction-history-error">{t('history.invalidRange')}</p>}
@@ -149,7 +230,9 @@ export function TransactionHistoryView() {
       <button type="button" onClick={() => { void reloadTransactions(); void reloadWallets(); }}>{t('common.tryAgain')}</button>
     </div>}
     <div className="transaction-history-summary" aria-live="polite">
-      <strong>{t('history.entries', { count: summary.count })}</strong>
+      <strong>{activeFilters.length > 0
+        ? chipCopy.entriesFiltered({ count: summary.count, total: historyRows.length })
+        : t('history.entries', { count: summary.count })}</strong>
       <span>{t('type.expense')}: {formatCurrency(summary.expense)}</span>
       <span>{t('type.income')}: {formatCurrency(summary.income)}</span>
     </div>
