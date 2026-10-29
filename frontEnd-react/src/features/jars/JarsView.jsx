@@ -12,7 +12,7 @@ import { JarDetailModal } from './JarDetailModal';
 import { JarHistoryModal } from './JarHistoryModal';
 import { FinancialTipsModal } from './FinancialTipsModal';
 import { JarGlassGraphic } from './JarGlassGraphic';
-import { formatCurrency, formatPercent, getLocalDateString } from '../../utils/formatters';
+import { formatCurrency, formatDate, formatPercent, getLocalDateString } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CustomSelect } from '../../components/ui/CustomSelect';
