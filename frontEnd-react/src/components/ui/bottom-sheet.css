@@ -1,0 +1,96 @@
+/* Shared bottom sheet. Colours come from the --menu-* and --color-* tokens. */
+.calt-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1200);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--color-overlay, rgba(15, 23, 42, 0.45));
+  animation: caltSheetFade 160ms ease-out;
+}
+
+.calt-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(82dvh, 720px);
+  border: 1px solid var(--menu-border);
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  background: var(--menu-bg);
+  color: var(--menu-text);
+  box-shadow: var(--shadow-dialog, var(--menu-shadow));
+  animation: caltSheetUp 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.calt-sheet-handle {
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: var(--color-border-strong);
+}
+
+.calt-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px 6px 18px;
+}
+
+.calt-sheet-header h3 {
+  margin: 0;
+  font: 700 16px/1.35 var(--font-sans);
+  color: var(--menu-text);
+}
+
+.calt-sheet-close {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.calt-sheet-close:hover { background: var(--menu-item-hover-bg); }
+
+.calt-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 18px 16px;
+}
+
+.calt-sheet-footer {
+  display: flex;
+  gap: 10px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--menu-border);
+}
+
+.calt-sheet button:focus-visible {
+  outline: 2px solid var(--color-brand-700, var(--color-link));
+  outline-offset: 2px;
+}
+
+@keyframes caltSheetUp {
+  from { transform: translateY(24px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes caltSheetFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calt-sheet, .calt-sheet-backdrop { animation: none; }
+}
