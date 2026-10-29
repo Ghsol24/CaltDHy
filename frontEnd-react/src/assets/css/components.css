@@ -9019,6 +9019,12 @@ html.green-theme {
   min-width: 0;
 }
 
+/* Wallet + due share a footer row on phones (plan-mobile.css); on wide screens the
+   wrapper disappears so both stay cells of the card grid. */
+.recurring-row-footer { display: contents; }
+.recurring-row-footer > * { min-width: 0; }
+.sort-compact-icon { display: none; }
+
 .recurring-row-card:hover {
   border-color: var(--color-brand-700, #4F46E5);
   box-shadow: var(--shadow-sm);

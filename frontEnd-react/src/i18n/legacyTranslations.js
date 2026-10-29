@@ -78,6 +78,7 @@ const entries = [
   ['Thiết lập hạn mức', 'Set limits', '设置限额'],
   ['"Thiết lập hạn mức"', '“Set limits”', '“设置限额”'],
   ['Thêm khoản định kỳ', 'Add recurring item', '添加周期项目'],
+  ['Thêm', 'Add', '添加'],
   ['Đánh giá & Khuyến nghị', 'Assessment & recommendations', '评估与建议'],
   ['Chưa đủ dữ liệu để đánh giá kế hoạch', 'Not enough data to assess the plan', '数据不足，无法评估计划'],
   ['Kế hoạch tháng đã sẵn sàng', 'Monthly plan is ready', '月度计划已准备就绪'],
