@@ -98,6 +98,27 @@ describe('Backend Integration Test Suite (Real MongoDB & Real Middleware)', () =
         assert.equal(res.body.data?.amount, 65000);
     });
 
+    it('4b. Từ chối giao dịch có ngày trong tương lai, vẫn nhận hôm nay', async () => {
+        const { getVietnamTodayString } = require('../utils/localDate');
+        const today = getVietnamTodayString();
+        const tomorrow = new Date(`${today}T00:00:00.000Z`);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        const payload = { type: 'expense', desc: 'Ngày tương lai', amount: 1000, category: 'Ăn uống', walletId };
+
+        const future = await client.post('/api/spending').set('X-CSRF-Token', csrf)
+            .send({ ...payload, date: tomorrow.toISOString().slice(0, 10) });
+        assert.equal(future.status, 400);
+        assert.match(future.body.message, /tương lai/);
+
+        const present = await client.post('/api/spending').set('X-CSRF-Token', csrf)
+            .send({ ...payload, date: today });
+        assert.equal(present.status, 201);
+
+        // Hoàn tác để không làm lệch số dư mà các test sau kiểm tra.
+        const removed = await client.delete(`/api/spending/${present.body.data.id}`).set('X-CSRF-Token', csrf);
+        assert.equal(removed.status, 200);
+    });
+
     it('5. Cập nhật profile kèm avatar > 100KB (bắt lỗi giới hạn body size)', async () => {
         // Chuỗi base64 ~150KB (> default 100KB của body-parser)
         const avatar150KB = 'data:image/png;base64,' + 'A'.repeat(150 * 1024);

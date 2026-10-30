@@ -52,6 +52,7 @@ export function TransactionModal() {
   const [category, setCategory] = useState('');
   const [walletId, setWalletId] = useState('');
   const [date, setDate] = useState(() => getLocalDateString());
+  const maxDate = getLocalDateString();
   const [desc, setDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -299,6 +300,10 @@ export function TransactionModal() {
     }
     if (!selectedPeriod || !date) {
       setErrorMsg(t('transaction.dateRequired'));
+      return;
+    }
+    if (date > maxDate && date !== editingTransaction?.date?.slice?.(0, 10)) {
+      setErrorMsg(t('transaction.dateFuture'));
       return;
     }
 
@@ -611,6 +616,7 @@ export function TransactionModal() {
                 inputClassName="txn-input"
                 value={date}
                 onChange={setDate}
+                max={maxDate}
                 required
               />
             </div>

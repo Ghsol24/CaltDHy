@@ -148,7 +148,9 @@ async function recordTransactionRevision(req, before, after) {
     });
 }
 
-function validateTransactionPayload({ type, amount, category, date }) {
+// `unchangedDate` lets an edit keep a legacy future date (created before this rule)
+// so notes/amounts of old records stay editable; any other future date is rejected.
+function validateTransactionPayload({ type, amount, category, date }, { unchangedDate = null } = {}) {
     if (!type || amount === undefined || amount === null || !category || !date) {
         return 'Vui lòng điền đầy đủ các thông tin bắt buộc.';
     }
@@ -156,6 +158,9 @@ function validateTransactionPayload({ type, amount, category, date }) {
     if (!isValidVNDAmount(amount)) return 'Số tiền phải là số nguyên lớn hơn 0 (VNĐ không có phần thập phân).';
     if (typeof category !== 'string' || !category.trim()) return 'Danh mục không hợp lệ.';
     if (!parseTransactionDate(date)) return 'Định dạng ngày không hợp lệ (YYYY-MM-DD).';
+    if (date > getVietnamTodayString() && date !== unchangedDate) {
+        return 'Không thể ghi giao dịch cho ngày trong tương lai. Vui lòng chọn hôm nay hoặc một ngày đã qua.';
+    }
     return null;
 }
 
@@ -732,7 +737,10 @@ router.put('/:id', financialRequest(async (req, res) => {
         }
 
         const { type, desc, amount, category, date, walletId, toWalletId, fee, jarId, installmentId } = req.body;
-        const validationError = validateTransactionPayload({ type, amount, category, date });
+        const validationError = validateTransactionPayload(
+            { type, amount, category, date },
+            { unchangedDate: currentTx.toJSON().date }
+        );
         if (validationError) return res.status(400).json({ success: false, message: validationError });
 
         const effectiveType = type || currentTx.type;

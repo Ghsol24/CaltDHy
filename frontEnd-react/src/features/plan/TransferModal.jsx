@@ -343,6 +343,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 inputClassName="modal-pro-input"
                 value={date}
                 onChange={setDate}
+                max={getLocalDateString()}
                 required
               />
             </div>
