@@ -556,7 +556,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                     <label htmlFor="rec-amount" className="txn-label">
                       <span>Số tiền mỗi kỳ</span>
                     </label>
-                    <div className="txn-amount-box modal-themed-amount-box">
+                    <div className="txn-amount-box">
                       <input
                         id="rec-amount"
                         type="text"

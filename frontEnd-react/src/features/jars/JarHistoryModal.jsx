@@ -87,7 +87,7 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
           <div className="jm-history-search-row">
             <CustomSelect options={[{ value: 'all', label: text('allJars') }, ...jars.map((jar) => ({ value: jar.id, label: jar.name }))]}
               value={selectedJarId} onChange={setSelectedJarId} ariaLabel={text('filterJar')} className="jm-history-jar-select" />
-            <label className="jm-history-search" htmlFor={`${id}-search`}>
+            <label className="jm-history-search input-shell" htmlFor={`${id}-search`}>
               <span className="jm-visually-hidden">{text('search')}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
               <input id={`${id}-search`} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={text('search')} />

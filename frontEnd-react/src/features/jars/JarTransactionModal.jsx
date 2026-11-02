@@ -154,7 +154,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
 
         <div className="jar-transfer-field">
           <label htmlFor={amountId}>{isDeposit ? copy.depositAmountLabel : copy.withdrawAmountLabel}</label>
-          <div className={`jar-transfer-amount-box${showAmountError && amountError ? ' is-invalid' : ''}`}>
+          <div className={`jar-transfer-amount-box input-shell${showAmountError && amountError ? ' is-invalid' : ''}`}>
             <input id={amountId} ref={amountInputRef} type="text" inputMode="numeric" autoComplete="off"
               value={amount} placeholder="0" required disabled={isSubmitting}
               aria-invalid={Boolean(showAmountError && amountError)}

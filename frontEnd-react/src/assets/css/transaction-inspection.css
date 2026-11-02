@@ -764,9 +764,7 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
 .day-drawer button:focus-visible,
 .transaction-history button:focus-visible,
 .transaction-inspection-row:focus-visible,
-.transaction-history input:focus-visible,
-.transaction-filter-option:focus-visible,
-.analytics-day-picker input:focus-visible {
+.transaction-filter-option:focus-visible {
   outline: 2px solid var(--color-brand-700);
   outline-offset: 2px;
 }

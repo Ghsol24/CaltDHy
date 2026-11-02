@@ -35,7 +35,7 @@
 .jar-dialog-close:hover { color: var(--primary); background: var(--primary-light); }
 .jar-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 22px 26px; }
 .jar-dialog-footer { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 16px 26px; border-top: 1px solid var(--border); flex-shrink: 0; }
-.jar-dialog button:focus-visible, .jar-dialog input:focus-visible, .jar-dialog textarea:focus-visible, .jar-dialog select:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.jar-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .jar-dialog button:disabled { opacity: .55; cursor: not-allowed; }
 .jar-dialog input, .jar-dialog select, .jar-dialog textarea { max-width: 100%; min-width: 0; }
 .jar-dialog-footer button { min-height: 44px; white-space: normal; }

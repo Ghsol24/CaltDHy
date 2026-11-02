@@ -2309,13 +2309,11 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   flex-shrink: 0;
 }
 
-.modal-themed-input,
-.modal-themed-amount-box {
+.modal-themed-input {
   transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
 
-.modal-themed-input:focus,
-.modal-themed-amount-box:focus-within {
+.modal-themed-input:focus {
   border-color: var(--color-brand-700, #4F46E5) !important;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
 }

@@ -27,6 +27,7 @@
 .jar-transfer-preview-grid strong { color: var(--color-text); font: 650 18px/1.4 var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .jar-transfer-preview-grid small { color: var(--color-text-secondary); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
 .jar-transfer-note > textarea { display: block; min-width: 0; width: 100%; min-height: 72px; max-height: 160px; padding: 10px 12px; border: 1px solid var(--color-border-strong); border-radius: 9px; resize: vertical; background: var(--color-surface); color: var(--color-text); font: 400 14px/1.5 var(--font-sans); }
+.jar-transfer-note > textarea:focus-visible { border-color: var(--color-link); }
 .jar-transfer-note > textarea::placeholder { color: var(--color-text-muted); }
 .jar-transfer-form .jar-transfer-error, .jar-transfer-preview-grid strong.is-invalid { color: var(--color-danger); }
 .jar-transfer-form .jar-transfer-error { margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
@@ -36,7 +37,7 @@
 .jar-transfer-cancel { background: var(--color-surface); color: var(--color-text); }
 .jar-transfer-submit { border-color: var(--color-action-bg); background: var(--color-action-bg); color: var(--color-on-action); }
 .jar-transfer-submit:hover:not(:disabled) { background: var(--color-action-hover-bg); }
-.jar-transfer-form :focus-visible, .jar-transfer-cancel:focus-visible, .jar-transfer-submit:focus-visible { outline: 2px solid var(--color-link); outline-offset: 3px; }
+.jar-transfer-form button:focus-visible, .jar-transfer-cancel:focus-visible, .jar-transfer-submit:focus-visible { outline: 2px solid var(--color-link); outline-offset: 3px; }
 .jar-transfer-form :disabled, .jar-transfer-cancel:disabled, .jar-transfer-submit:disabled { opacity: 0.55; cursor: not-allowed; }
 @media (max-width: 430px) {
   .jar-transfer-form { gap: 16px; }
@@ -46,8 +47,6 @@
   .jar-transfer-cancel, .jar-transfer-submit { padding-inline: 11px; font-size: 13px; }
 }
 
-/* The surrounding amount box carries the focus ring. */
-.jar-dialog .jar-transfer-amount-box > input:focus-visible { outline: none; }
 @media (max-width: 600px) {
   .jar-transfer-presets > button { min-height: 44px; }
 }

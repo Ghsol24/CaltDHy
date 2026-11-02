@@ -237,6 +237,26 @@ html.light-theme .nk:active {
   outline-offset: 0;
 }
 
+/* Text fields: one soft halo instead of the two-band ring above, which
+   otherwise stacks on top of the field's own border. :where() keeps this at
+   the same specificity as the ring so any component :focus rule still wins. */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select):focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+/* Text fields never draw an outline on focus — only border + box-shadow — so
+   no component rule can add a second, offset ring around a field. */
+:where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), textarea, select):focus-visible {
+  outline: none !important;
+}
+
+/* A wrapper that draws the focus state itself (border + :focus-within ring)
+   around a borderless field gets the class `input-shell`; the field inside
+   then draws nothing, leaving a single ring on the wrapper. */
+:where(.input-shell) :where(input, textarea, select):focus-visible {
+  box-shadow: none;
+}
+
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible),
 input:focus:not(:focus-visible),

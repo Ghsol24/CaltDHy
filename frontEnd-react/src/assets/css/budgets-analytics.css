@@ -1200,12 +1200,13 @@ html.green-theme .budget-category-card.is-period-overdue {
   font-variant-numeric: tabular-nums;
   color: var(--color-text, #101B36);
   outline: none;
-  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease;
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
 
 .expanded-amount-input:focus {
   border-color: var(--color-brand-700, #008B57);
   background: var(--color-surface, var(--surface));
+  box-shadow: var(--focus-ring);
 }
 
 .expanded-input-suffix {
@@ -1310,6 +1311,7 @@ html.green-theme .budget-category-card.is-period-overdue {
 .add-cat-name-input:focus {
   border-color: var(--color-brand-700, #008B57);
   background: var(--color-surface, var(--surface));
+  box-shadow: var(--focus-ring);
 }
 
 .add-cat-mode-select {
@@ -1350,6 +1352,7 @@ html.green-theme .budget-category-card.is-period-overdue {
 .add-cat-amount-input:focus {
   border-color: var(--color-brand-700, #008B57);
   background: var(--color-surface, var(--surface));
+  box-shadow: var(--focus-ring);
 }
 
 .btn-add-cat-submit {

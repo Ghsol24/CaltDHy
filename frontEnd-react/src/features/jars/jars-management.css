@@ -7,7 +7,7 @@
 .jm-optional { font-size: 12px; font-weight: 400; color: var(--color-text-muted); }
 .jm-input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 46px; border: 1px solid var(--color-border); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; line-height: 1.4; color: var(--color-text); background: var(--color-surface); }
 .jm-input::placeholder, .jm-history-search input::placeholder { color: var(--color-text-muted); opacity: 1; }
-.jm-input:focus-visible, .jm-history-search:focus-within { border-color: var(--color-brand-600); outline: 2px solid var(--color-brand-600); outline-offset: 2px; }
+.jm-input:focus-visible, .jm-history-search:focus-within { border-color: var(--color-brand-600); box-shadow: var(--focus-ring); outline: none; }
 .jm-input[aria-invalid="true"] { border-color: var(--color-danger); }
 .jm-money-input { font-family: var(--font-mono, monospace); font-weight: 650; }
 .jm-two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

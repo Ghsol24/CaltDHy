@@ -273,7 +273,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 <label htmlFor="transfer-amount" className="modal-section-label">
                   <span>Số tiền chuyển</span>
                 </label>
-                <div className="modal-pro-amount-box">
+                <div className="modal-pro-amount-box input-shell">
                   <div className="amount-prefix-badge banknote" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="6" width="20" height="12" rx="2" />
@@ -311,7 +311,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                   </label>
                   <span className="modal-label-optional">Tùy chọn</span>
                 </div>
-                <div className="modal-pro-amount-box">
+                <div className="modal-pro-amount-box input-shell">
                   <div className="amount-prefix-badge tag" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
