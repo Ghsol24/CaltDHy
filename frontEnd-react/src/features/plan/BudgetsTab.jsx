@@ -4,13 +4,134 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { BudgetEditModal } from './BudgetEditModal';
 import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '../../utils/formatters';
-import { getCategoryIcon } from '../../utils/categories';
 import { isBudgetMonthOverdue } from '../../utils/budgetPeriod';
 import { CategoryOutlineIcon, BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
-import { useTranslation } from '../../i18n/useTranslation';
+import { useBudgetCopy } from './budgetCopy';
+import { PageTitleIcon } from '../../components/ui/NavIcons';
+
+// Colour follows how much of a limit is used, never the category itself.
+const WARN_PERCENT = 80;
+// How far (in percentage points) spending may run ahead of the calendar before
+// the month is flagged as "spending faster than planned".
+const PACE_TOLERANCE = 10;
+
+function monthStartDate(monthStr) {
+  const [year, month] = monthStr.split('-').map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+function getMonthTimeline(monthStr, todayMonthStr) {
+  const [year, month] = monthStr.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (monthStr !== todayMonthStr) return { isCurrent: false, daysInMonth };
+  const day = new Date().getDate();
+  return {
+    isCurrent: true,
+    day,
+    daysInMonth,
+    daysLeft: daysInMonth - day + 1,
+    elapsedPercent: (day / daysInMonth) * 100
+  };
+}
+
+function toneFor(percent, isOver) {
+  if (isOver) return 'over';
+  return percent >= WARN_PERCENT ? 'warn' : 'ok';
+}
+
+function roundDownToThousand(value) {
+  return value >= 1000 ? Math.floor(value / 1000) * 1000 : Math.floor(value);
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+function LimitedRow({ item, editable, isPastMonth, onEdit, t }) {
+  const tone = toneFor(item.percent, item.isOver);
+  const overAmount = item.isOver ? item.spent - item.limit : 0;
+  const Tag = editable ? 'button' : 'div';
+  const interactiveProps = editable ? { type: 'button', onClick: () => onEdit(item.category) } : {};
+
+  return (
+    <Tag
+      className={`bdash-row tone-${tone}${item.isOver ? ' is-over' : ''}${isPastMonth ? ' is-period-overdue' : ''}`}
+      {...interactiveProps}
+    >
+      <span className="bdash-row__icon" aria-hidden="true">
+        <CategoryOutlineIcon name={item.category} size={18} />
+      </span>
+      <span className="bdash-row__name">
+        <span className="bdash-row__name-text" title={item.category}>{item.category}</span>
+        {item.isOver && (
+          <span
+            className="bdash-row__alert"
+            role="img"
+            aria-label={t('budgets.overWarning', { amount: formatCurrency(overAmount) })}
+            title={t('budgets.overWarning', { amount: formatCurrency(overAmount) })}
+          >
+            <AlertTriangleOutlineIcon size={15} color="currentColor" />
+          </span>
+        )}
+        {isPastMonth && <span className="bdash-period-badge">{t('budgets.periodOverdue')}</span>}
+      </span>
+      <span className="bdash-row__track">
+        <span className="bdash-bar">
+          <span className={`bdash-bar__fill tone-${tone}`} style={{ width: `${Math.min(100, item.percent)}%` }} />
+        </span>
+      </span>
+      <span className={`bdash-row__pct tone-${tone}`}>{formatPercent(item.percent)}</span>
+      <span className="bdash-row__amounts">
+        <b>{formatCurrency(item.spent)}</b> / {formatCurrency(item.limit)}
+      </span>
+      <span className={`bdash-row__remaining tone-${tone}`}>
+        {item.isOver ? (
+          t('budgets.overAmount', { amount: formatCurrency(overAmount) })
+        ) : (
+          <>
+            <span className="bdash-row__remaining-full">{t('budgets.remainingAmount', { amount: formatCurrency(item.remaining) })}</span>
+            <span className="bdash-row__remaining-plain">{formatCurrency(item.remaining)}</span>
+          </>
+        )}
+      </span>
+      {editable && (
+        <>
+          <span className="bdash-row__chevron" aria-hidden="true"><ChevronIcon /></span>
+          <span className="bdash-sr-only">{t('budgets.editRowHint')}</span>
+        </>
+      )}
+    </Tag>
+  );
+}
+
+function UnsetRow({ item, editable, onEdit, t }) {
+  const Tag = editable ? 'button' : 'div';
+  const interactiveProps = editable ? { type: 'button', onClick: () => onEdit(item.category) } : {};
+
+  return (
+    <Tag className="bdash-row bdash-row--unset" {...interactiveProps}>
+      <span className="bdash-row__icon" aria-hidden="true">
+        <CategoryOutlineIcon name={item.category} size={18} />
+      </span>
+      <span className="bdash-row__name">
+        <span className="bdash-row__name-text" title={item.category}>{item.category}</span>
+      </span>
+      <span className="bdash-row__note">{t('budgets.unsetNote', { amount: formatCurrency(item.spent) })}</span>
+      {editable && (
+        <span className="bdash-row__action">
+          {t('budgets.setLimitAction')} <span aria-hidden="true">→</span>
+        </span>
+      )}
+    </Tag>
+  );
+}
 
 export function BudgetsTab() {
-  const { t } = useTranslation();
+  const t = useBudgetCopy();
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const { transactions, budgets, budgetMonth, expenseCategories, fetchBudgets } = useTransactionStore();
@@ -65,90 +186,117 @@ export function BudgetsTab() {
 
   const handlePrevMonth = () => {
     const [y, m] = currentMonthStr.split('-').map(Number);
-    const date = new Date(y, m - 2, 1);
-    setSelectedMonth(getLocalMonthString(date));
+    setSelectedMonth(getLocalMonthString(new Date(y, m - 2, 1)));
   };
 
   const handleNextMonth = () => {
     const [y, m] = currentMonthStr.split('-').map(Number);
-    const date = new Date(y, m, 1);
-    setSelectedMonth(getLocalMonthString(date));
+    setSelectedMonth(getLocalMonthString(new Date(y, m, 1)));
   };
 
   const handleResetToCurrentMonth = () => {
     setSelectedMonth(getLocalMonthString());
   };
 
-  // Compute monthly stats for selected month
-  const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
+  const monthlyStats = useMemo(
+    () => calculateMonthlyStats(transactions, currentMonthStr),
+    [transactions, currentMonthStr]
+  );
 
-  // Gather categories to display
-  const allCategoryNames = useMemo(() => {
+  const budgetModel = useMemo(() => {
     const activeNames = (expenseCategories || []).map((c) => c.name);
-    const set = new Set([
-      ...activeNames,
-      ...Object.keys(monthlyStats.byCategory || {})
-    ]);
-    return Array.from(set);
-  }, [expenseCategories, monthlyStats.byCategory]);
+    const names = Array.from(new Set([...activeNames, ...Object.keys(monthlyStats.byCategory || {})]));
 
-  let totalBudgetLimit = 0;
-  let totalBudgetSpent = 0;
-  let hasAnyLimit = false;
+    let totalLimit = 0;
+    let totalSpent = 0;
+    let hasAnyLimit = false;
 
-  const categoryBudgets = allCategoryNames.map((catName) => {
-    const rawLimit = budgets && budgets[catName] !== undefined ? Number(budgets[catName]) : null;
-    const limit = rawLimit && rawLimit > 0 ? rawLimit : null;
-    const spent = monthlyStats.byCategory[catName] || 0;
-    const status = getBudgetStatus(spent, limit || 0);
+    const items = names.map((category) => {
+      const rawLimit = budgets && budgets[category] !== undefined ? Number(budgets[category]) : null;
+      const limit = rawLimit && rawLimit > 0 ? rawLimit : null;
+      const spent = monthlyStats.byCategory[category] || 0;
+      const status = getBudgetStatus(spent, limit || 0);
 
-    if (limit !== null) {
-      totalBudgetLimit += limit;
-      totalBudgetSpent += spent;
-      hasAnyLimit = true;
-    }
+      if (limit !== null) {
+        totalLimit += limit;
+        totalSpent += spent;
+        hasAnyLimit = true;
+      }
 
+      return {
+        category,
+        limit,
+        spent,
+        hasLimit: limit !== null,
+        percent: limit ? status.percent : 0,
+        remaining: limit ? status.remaining : null,
+        isOver: limit ? status.isOver : false
+      };
+    });
+
+    // Limited categories first (most used first), then unlimited by spending.
+    items.sort((a, b) => {
+      if (a.hasLimit && !b.hasLimit) return -1;
+      if (!a.hasLimit && b.hasLimit) return 1;
+      if (a.hasLimit && b.hasLimit) return b.percent - a.percent;
+      return b.spent - a.spent;
+    });
+
+    // Spending in categories without a limit is not part of the totals above,
+    // so it is disclosed separately instead of silently disappearing.
+    const unbudgeted = items.filter((item) => !item.hasLimit && item.spent > 0);
     return {
-      category: catName,
-      limit,
-      spent,
-      percent: limit ? status.percent : 0,
-      remaining: limit ? status.remaining : null,
-      status: status.status,
-      isOver: limit ? status.isOver : false,
-      hasLimit: limit !== null,
-      icon: getCategoryIcon(catName, 'expense')
+      limited: items.filter((item) => item.hasLimit),
+      unbudgeted,
+      unbudgetedTotal: unbudgeted.reduce((sum, item) => sum + item.spent, 0),
+      totalLimit,
+      totalSpent,
+      hasAnyLimit
     };
-  });
+  }, [expenseCategories, monthlyStats, budgets]);
 
-  // Sort: Categories with limits first (danger -> warning -> normal), then without limits
-  categoryBudgets.sort((a, b) => {
-    if (a.hasLimit && !b.hasLimit) return -1;
-    if (!a.hasLimit && b.hasLimit) return 1;
-    if (a.hasLimit && b.hasLimit) {
-      return b.percent - a.percent;
-    }
-    return b.spent - a.spent;
-  });
+  const { limited, unbudgeted, unbudgetedTotal, totalLimit, totalSpent, hasAnyLimit } = budgetModel;
+  const timeline = useMemo(() => getMonthTimeline(currentMonthStr, localCurrentMonth), [currentMonthStr, localCurrentMonth]);
 
-  const totalBudgetRemaining = hasAnyLimit ? totalBudgetLimit - totalBudgetSpent : null;
-  const overallPercent = hasAnyLimit && totalBudgetLimit > 0
-    ? Math.round((totalBudgetSpent / totalBudgetLimit) * 100)
+  const remaining = totalLimit - totalSpent;
+  const isOverallOver = hasAnyLimit && remaining < 0;
+  const usedRaw = hasAnyLimit && totalLimit > 0 ? (totalSpent * 100) / totalLimit : 0;
+  const usedPercent = Math.round(usedRaw);
+  const heroTone = toneFor(usedPercent, isOverallOver);
+  const showToday = timeline.isCurrent && hasAnyLimit;
+  const pace = showToday && !isOverallOver
+    ? (usedRaw > timeline.elapsedPercent + PACE_TOLERANCE ? 'fast' : 'ok')
     : null;
+  const todayAlign = !showToday ? 'center' : timeline.elapsedPercent < 14 ? 'start' : timeline.elapsedPercent > 86 ? 'end' : 'center';
+  const canEdit = !isPastMonth && !isMonthPending && !loadError;
 
-  // Hướng A: Chỉ hiển thị các danh mục đã đặt hạn mức HOẶC đã có phát sinh chi tiêu trong tháng
-  const visibleCategories = useMemo(() => {
-    return categoryBudgets.filter((item) => item.hasLimit || item.spent > 0);
-  }, [categoryBudgets]);
+  let heroLabel = t('budgets.heroRemaining');
+  if (isOverallOver) heroLabel = t('budgets.heroOver');
+  else if (isPastMonth) heroLabel = t('budgets.heroLeftover');
+  else if (timeline.isCurrent) heroLabel = t('budgets.heroRemainingThisMonth');
 
-  // Danh mục CHƯA đặt hạn mức nhưng vẫn phát sinh chi tiêu trong tháng.
-  // Khoản này không được cộng vào totalBudgetLimit/totalBudgetSpent ở trên,
-  // nên "Đã chi trong tháng" / "Đã vượt ngân sách" phía trên KHÔNG phải là tổng
-  // chi tiêu thật của cả tháng — cần công khai phần chênh lệch này cho người dùng thấy.
-  const unbudgetedCategories = useMemo(() => {
-    return categoryBudgets.filter((item) => !item.hasLimit && item.spent > 0);
-  }, [categoryBudgets]);
-  const unbudgetedTotal = unbudgetedCategories.reduce((sum, item) => sum + item.spent, 0);
+  const heroStats = [];
+  if (showToday) {
+    heroStats.push({
+      key: 'daily',
+      label: t('budgets.dailyCapLabel'),
+      value: formatCurrency(roundDownToThousand(Math.max(0, remaining) / timeline.daysLeft)),
+      tone: remaining <= 0 ? 'over' : null
+    });
+    heroStats.push({
+      key: 'days',
+      label: t('budgets.daysLeftLabel'),
+      value: t('budgets.daysLeftValue', { count: timeline.daysLeft })
+    });
+  }
+  if (hasAnyLimit && unbudgetedTotal > 0) {
+    heroStats.push({
+      key: 'outside',
+      label: t('budgets.unbudgetedLabel'),
+      value: formatCurrency(unbudgetedTotal),
+      note: unbudgeted.map((item) => item.category).join(', ')
+    });
+  }
 
   const handleOpenEdit = (category = null) => {
     if (isPastMonth || isMonthPending || loadError) return;
@@ -156,132 +304,76 @@ export function BudgetsTab() {
     setIsEditModalOpen(true);
   };
 
-  // Display human readable month label
-  const monthDateObj = new Date(`${currentMonthStr}-01`);
-  const monthDisplayLabel = formatDate(monthDateObj, 'month');
+  const monthDisplayLabel = formatDate(monthStartDate(currentMonthStr), 'month');
+  const paceDetail = t('budgets.paceDetail', {
+    used: formatPercent(usedPercent),
+    elapsed: formatPercent(Math.round(timeline.elapsedPercent || 0))
+  });
 
   return (
     <div className="budgets-tab-container" role="region" aria-label="Quản lý ngân sách">
-      {/* ── Page Header: Title, Subtitle, and Primary Action ── */}
-      <div className="budgets-page-header">
-        <div className="budgets-header-titles">
-          <h2 className="budgets-view-title">Ngân sách</h2>
-          <p className="budgets-view-subtitle">
-            Đặt hạn mức cho từng danh mục
-          </p>
+      {/* ── Header: title, month, one action ── */}
+      <div className="budgets-page-header bdash-header">
+        <div className="page-title-lead bdash-header__title">
+          <PageTitleIcon name="budgets" />
+          <div className="budgets-header-titles">
+            <h2 className="budgets-view-title">Ngân sách</h2>
+            <p className="budgets-view-subtitle">{t('budgets.subtitle')}</p>
+          </div>
         </div>
 
-        {isPastMonth ? (
-          <div
-            className="budget-closed-indicator"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              backgroundColor: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(8px)',
-              color: 'var(--muted)',
-              fontSize: '13px',
-              fontWeight: 500,
-              userSelect: 'none'
-            }}
-            title="Kỳ ngân sách của tháng này đã kết thúc. Chỉ hỗ trợ xem lại lịch sử."
-          >
-            {/* Transparent elegant stroke-only lock SVG */}
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ opacity: 0.5 }}
-              aria-hidden="true"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span>Đã đóng kỳ</span>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className="btn-setup-budget-primary"
-            onClick={() => handleOpenEdit(null)}
-            disabled={isMonthPending || loadError}
-            aria-label="Thiết lập hạn mức ngân sách"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Thiết lập hạn mức</span>
-          </button>
-        )}
-      </div>
-
-      {/* ── Month Selector Bar ── */}
-      <div className="budgets-month-bar">
-        <div className="budget-month-selector" role="group" aria-label="Chọn tháng ngân sách">
-          <button
-            type="button"
-            className="month-nav-btn"
-            onClick={handlePrevMonth}
-            aria-label="Xem tháng trước"
-            title="Tháng trước"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-
-          <div className="month-current-display" aria-live="polite">
-            <span className="month-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="4" rx="2" />
-                <line x1="16" x2="16" y1="2" y2="6" />
-                <line x1="8" x2="8" y1="2" y2="6" />
-                <line x1="3" x2="21" y1="10" y2="10" />
+        <div className="bdash-header__month">
+          <div className="budget-month-selector" role="group" aria-label="Chọn tháng ngân sách">
+            <button type="button" className="month-nav-btn" onClick={handlePrevMonth} aria-label="Xem tháng trước" title="Tháng trước">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
               </svg>
-            </span>
-            <strong className="month-name-text">{monthDisplayLabel}</strong>
+            </button>
+            <div className="month-current-display" aria-live="polite">
+              <span className="month-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2" />
+                  <line x1="16" x2="16" y1="2" y2="6" />
+                  <line x1="8" x2="8" y1="2" y2="6" />
+                  <line x1="3" x2="21" y1="10" y2="10" />
+                </svg>
+              </span>
+              <strong className="month-name-text">{monthDisplayLabel}</strong>
+            </div>
+            <button type="button" className="month-nav-btn" onClick={handleNextMonth} aria-label="Xem tháng sau" title="Tháng sau">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+            {currentMonthStr !== localCurrentMonth && (
+              <button type="button" className="month-today-btn" onClick={handleResetToCurrentMonth} aria-label="Quay về tháng hiện tại">
+                Về tháng này
+              </button>
+            )}
           </div>
+        </div>
 
-          <button
-            type="button"
-            className="month-nav-btn"
-            onClick={handleNextMonth}
-            aria-label="Xem tháng sau"
-            title="Tháng sau"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-
-          {currentMonthStr !== getLocalMonthString() && (
+        <div className="bdash-header__action">
+          {isPastMonth ? (
+            <span className="bdash-closed" title={t('budgets.closedPeriodHint')}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span>Đã đóng kỳ</span>
+            </span>
+          ) : (
             <button
               type="button"
-              className="month-today-btn"
-              onClick={handleResetToCurrentMonth}
-              aria-label="Quay về tháng hiện tại"
+              className="bdash-edit-btn"
+              onClick={() => handleOpenEdit(null)}
+              disabled={isMonthPending || loadError}
             >
-              Về tháng này
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                <path d="m15 5 4 4" />
+              </svg>
+              <span>{hasAnyLimit ? t('budgets.editLimits') : t('budgets.setupLimits')}</span>
             </button>
           )}
         </div>
@@ -293,297 +385,153 @@ export function BudgetsTab() {
           <button type="button" className="btn btn--secondary" onClick={() => setRetryCount((count) => count + 1)}>{t('common.tryAgain')}</button>
         </div>
       ) : (
-      <div className={`budget-month-data ${isMonthPending && !showSkeleton ? 'is-pending' : ''}`} aria-busy={isMonthPending}>
-      {isMonthPending && !showSkeleton && <div className="budget-pending-overlay" role="status">{t('common.loading')}</div>}
-      {/* ── 4 Equal Cells Summary Card ── */}
-      <div className="budget-overview-card">
-        <div className="budget-overview-grid">
-          {showSkeleton ? Array.from({ length: 4 }, (_, index) => (
-            <div className="budget-skeleton-summary" key={index} aria-hidden="true">
+        <div className={`budget-month-data ${isMonthPending && !showSkeleton ? 'is-pending' : ''}`} aria-busy={isMonthPending}>
+          {isMonthPending && !showSkeleton && <div className="budget-pending-overlay" role="status">{t('common.loading')}</div>}
+
+          {/* ── Hero: the one number that matters, plus pace through the month ── */}
+          {showSkeleton ? (
+            <section className="bdash-hero is-skeleton" aria-hidden="true">
               <span className="budget-skeleton-line is-label" />
               <span className="budget-skeleton-line is-value" />
-            </div>
-          )) : <>
-          {/* Cell 1: Tổng hạn mức */}
-          <div className="budget-ov-item">
-            <span className="budget-ov-label">Tổng hạn mức</span>
-            <strong className={`budget-ov-value ${!hasAnyLimit ? 'is-unset-text' : 'is-brand'}`}>
-              {hasAnyLimit ? formatCurrency(totalBudgetLimit) : 'Chưa thiết lập'}
-            </strong>
-          </div>
-
-          <div className="budget-ov-divider" aria-hidden="true" />
-
-          {/* Cell 2: Đã chi (chỉ tính danh mục có hạn mức) */}
-          <div className="budget-ov-item">
-            <span
-              className="budget-ov-label"
-              title="Chỉ cộng chi tiêu của các danh mục đã đặt hạn mức bên dưới — không phải tổng chi tiêu cả tháng"
-            >
-              Đã chi (có hạn mức)
-            </span>
-            <strong className="budget-ov-value text-danger">
-              {formatCurrency(totalBudgetSpent)}
-            </strong>
-          </div>
-
-          <div className="budget-ov-divider" aria-hidden="true" />
-
-          {/* Cell 3: Còn lại khả dụng */}
-          <div className="budget-ov-item">
-            <span className="budget-ov-label">
-              {hasAnyLimit && totalBudgetRemaining !== null && totalBudgetRemaining < 0
-                ? 'Đã vượt ngân sách'
-                : 'Còn lại khả dụng'}
-            </span>
-            <strong
-              className={`budget-ov-value ${
-                !hasAnyLimit
-                  ? 'is-dash'
-                  : totalBudgetRemaining !== null && totalBudgetRemaining < 0
-                  ? 'text-danger'
-                  : 'text-brand'
-              }`}
-            >
-              {hasAnyLimit && totalBudgetRemaining !== null
-                ? formatCurrency(Math.abs(totalBudgetRemaining))
-                : '—'}
-            </strong>
-          </div>
-
-          <div className="budget-ov-divider" aria-hidden="true" />
-
-          {/* Cell 4: Tỷ lệ đã dùng */}
-          <div className="budget-ov-item">
-            <span className="budget-ov-label">Tỷ lệ đã dùng</span>
-            <strong
-              className={`budget-ov-value ${
-                !hasAnyLimit
-                  ? 'is-dash'
-                  : overallPercent !== null && overallPercent >= 100
-                  ? 'text-danger'
-                  : overallPercent !== null && overallPercent >= 80
-                  ? 'text-warning'
-                  : 'text-brand'
-              }`}
-            >
-              {hasAnyLimit && overallPercent !== null ? formatPercent(overallPercent) : '—'}
-            </strong>
-          </div>
-          </>}
-        </div>
-
-        {/* Global Progress Bar */}
-        {!showSkeleton && hasAnyLimit && overallPercent !== null && (
-          <div className="budget-global-progress-bar-bg" aria-hidden="true">
-            <div
-              className={`budget-global-progress-bar-fill ${
-                overallPercent >= 100
-                  ? 'fill-danger'
-                  : overallPercent >= 80
-                  ? 'fill-warning'
-                  : 'fill-brand'
-              }`}
-              style={{ width: `${Math.min(100, overallPercent)}%` }}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* ── Disclosure: chi tiêu ở các danh mục CHƯA đặt hạn mức ── */}
-      {!showSkeleton && unbudgetedTotal > 0 && (
-        <div className="budget-unbudgeted-note" role="status">
-          <span className="budget-unbudgeted-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-          </span>
-          <p className="budget-unbudgeted-text">
-            Số liệu ở trên chỉ tính {categoryBudgets.filter((c) => c.hasLimit).length} danh mục đã đặt hạn mức.
-            Ngoài ra bạn đã chi thêm{' '}
-            <strong>{formatCurrency(unbudgetedTotal)}</strong> ở{' '}
-            {unbudgetedCategories.length} danh mục chưa đặt hạn mức
-            {' '}({unbudgetedCategories.map((c) => c.category).join(', ')})
-            {' '}— khoản này chưa được tính vào &quot;Đã vượt ngân sách&quot; ở trên.
-          </p>
-        </div>
-      )}
-
-      {/* ── Category Breakdown Grid Section ── */}
-      <div className="budget-categories-list-section">
-        <div className="budget-section-header-row">
-          <h3 className="budget-section-heading">
-            {t('budgets.categoryDetailTitle', { month: monthDisplayLabel })}
-          </h3>
-          {!isPastMonth && (
-            <button
-              type="button"
-              className="btn-edit-all-budgets"
-              onClick={() => handleOpenEdit(null)}
-              disabled={isMonthPending}
-              aria-label="Chỉnh sửa toàn bộ hạn mức ngân sách"
-              title="Chỉnh sửa toàn bộ hạn mức"
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                <path d="m15 5 4 4" />
-              </svg>
-              <span>Chỉnh sửa toàn bộ</span>
-            </button>
-          )}
-        </div>
-
-        {/* First-use informational alert (When zero visible categories exist in the active month) */}
-        {!showSkeleton && visibleCategories.length === 0 && (
-          <div className="budget-empty-alert" role="status">
-            <div className="alert-bulb-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <BulbOutlineIcon size={20} color="currentColor" />
-            </div>
-            <p className="alert-bulb-text">
-              Tháng này chưa có danh mục nào được đặt hạn mức hoặc phát sinh chi tiêu. Hãy bấm nút <strong>"Thiết lập hạn mức"</strong> để bắt đầu quản lý ngân sách!
-            </p>
-          </div>
-        )}
-
-        {/* 4 Columns Category Cards Grid */}
-        <div className="budget-categories-grid">
-          {showSkeleton ? Array.from({ length: Math.max(4, Math.min(8, visibleCategories.length)) }, (_, index) => (
-            <div className="budget-category-card budget-skeleton-card" key={index} aria-hidden="true">
-              <span className="budget-skeleton-line is-heading" />
-              <span className="budget-skeleton-line is-label" />
-              <span className="budget-skeleton-line is-value" />
-            </div>
-          )) : visibleCategories.map((item) => {
-            const hasLimit = item.hasLimit;
-            const isDanger = item.status === 'danger' || (hasLimit && item.percent >= 100);
-            const isOverLimit = hasLimit && item.isOver;
-            const isPeriodOverdue = hasLimit && isPastMonth;
-            const isWarning = item.status === 'warning' || (hasLimit && item.percent >= 80 && item.percent < 100);
-            const barWidth = hasLimit ? Math.min(100, item.percent) : 0;
-            const overAmount = isOverLimit ? item.spent - item.limit : 0;
-
-            // Semantic status label per spec:
-            // unset: Chưa đặt hạn mức
-            // limited, <80%: Còn lại: ...
-            // limited, 80-100%: Sắp chạm hạn mức
-            // limited, >100%: Vượt hạn mức: ...
-            let statusBadgeText = 'Chưa đặt hạn mức';
-            let statusBadgeCls = 'badge-unset';
-
-            if (hasLimit) {
-              if (item.percent >= 100) {
-                statusBadgeText = isOverLimit
-                  ? `Vượt hạn mức +${formatCurrency(overAmount)}`
-                  : `Đã chạm hạn mức (${formatPercent(item.percent)})`;
-                statusBadgeCls = 'badge-danger';
-              } else if (item.percent >= 80) {
-                statusBadgeText = `Sắp chạm hạn mức (${formatPercent(item.percent)})`;
-                statusBadgeCls = 'badge-warning';
-              } else {
-                statusBadgeText = `Còn lại: ${formatCurrency(item.remaining || 0)}`;
-                statusBadgeCls = 'badge-brand';
-              }
-            }
-
-            return (
-              <div
-                key={item.category}
-                className={`budget-category-card ${
-                  isDanger ? `is-danger${isOverLimit ? ' is-overdue-danger' : ''}` : isWarning ? 'is-warning' : hasLimit ? 'is-limited' : 'is-unset'
-                }${isPeriodOverdue ? ' is-period-overdue' : ''}`}
-                role="button"
-                tabIndex={isPastMonth ? -1 : 0}
-                style={{ cursor: isPastMonth ? 'default' : 'pointer' }}
-                onClick={isPastMonth ? undefined : () => handleOpenEdit(item.category)}
-                onKeyDown={(e) => {
-                  if (isPastMonth) return;
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleOpenEdit(item.category);
-                  }
-                }}
-                aria-label={isPastMonth ? `Ngân sách ${item.category}` : `Thiết lập hạn mức cho ${item.category}`}
-                title={isPastMonth ? 'Kỳ ngân sách đã kết thúc' : `Bấm để thiết lập hạn mức cho ${item.category}`}
-              >
-                {/* Header: 40px Emoji tile & Category Title */}
-                <div className="budget-card-top">
-                  <div className="budget-card-lead">
-                    <div className="budget-card-emoji-tile" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <CategoryOutlineIcon name={item.category} size={20} />
-                    </div>
-                    <div className="budget-card-titles">
-                      <h4 className="budget-card-name" title={item.category}>
-                        {item.category}
-                      </h4>
-                      <span className="budget-card-spent">
-                        Đã chi: <strong>{formatCurrency(item.spent)}</strong>
-                      </span>
-                    </div>
-                  </div>
-                  {isOverLimit && (
-                    <span
-                      className="budget-overdue-indicator"
-                      aria-label={`Cảnh báo vượt hạn mức ${formatCurrency(overAmount)}`}
-                      title={`Vượt hạn mức ${formatCurrency(overAmount)}`}
-                    >
-                      <AlertTriangleOutlineIcon size={17} color="currentColor" />
-                    </span>
-                  )}
+              <span className="budget-skeleton-line is-meter" />
+            </section>
+          ) : hasAnyLimit ? (
+            <section className={`bdash-hero tone-${heroTone}`} aria-labelledby="bdash-hero-label">
+              <div className="bdash-hero__top">
+                <div className="bdash-hero__headline">
+                  <span id="bdash-hero-label" className="bdash-hero__label">{heroLabel}</span>
+                  <strong className="bdash-hero__value">{formatCurrency(Math.abs(remaining))}</strong>
                 </div>
-
-                {/* Body: Semantic status label */}
-                <div className="budget-card-body">
-                  <span className={`budget-card-status-badge ${statusBadgeCls}`}>
-                    {statusBadgeText}
+                {pace && (
+                  <span className={`bdash-chip is-${pace}`} title={paceDetail}>
+                    <i aria-hidden="true" />
+                    {pace === 'fast' ? t('budgets.paceFast') : t('budgets.paceOk')}
+                    <span className="bdash-sr-only"> — {paceDetail}</span>
                   </span>
-                  {isPeriodOverdue && (
-                    <span className="budget-card-period-overdue-badge">
-                      {t('budgets.periodOverdue')}
-                    </span>
-                  )}
-                  {hasLimit && (
-                    <span className="budget-card-limit-val">
-                      Hạn mức: {formatCurrency(item.limit)}
-                    </span>
-                  )}
-                </div>
-
-                {/* Bottom: Progress track */}
-                <div className="budget-card-track" aria-hidden="true">
-                  <div
-                    className={`budget-card-fill ${
-                      !hasLimit
-                        ? 'fill-unset'
-                        : isDanger
-                        ? `fill-danger${isOverLimit ? ' is-overdue-danger' : ''}`
-                        : isWarning
-                        ? 'fill-warning'
-                        : 'fill-brand'
-                    }`}
-                    style={{ width: `${hasLimit ? barWidth : 0}%` }}
-                  />
-                </div>
+                )}
               </div>
-            );
-          })}
+
+              <div className="bdash-hero__meter-labels">
+                <span>{t('budgets.spentShort')} <b>{formatCurrency(totalSpent)}</b> · {formatPercent(usedPercent)}</span>
+                <span>{t('budgets.limitShort')} <b className="bdash-hero__limit-value">{formatCurrency(totalLimit)}</b></span>
+              </div>
+              <div
+                className="bdash-meter"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.min(100, usedPercent)}
+                aria-label={t('budgets.progressLabel', { percent: formatPercent(usedPercent) })}
+              >
+                <span className={`bdash-meter__fill tone-${heroTone}`} style={{ width: `${Math.min(100, usedRaw)}%` }} />
+                {showToday && <span className="bdash-meter__today" style={{ left: `${timeline.elapsedPercent}%` }} />}
+              </div>
+              {showToday && (
+                <div className="bdash-meter__today-row">
+                  <span className={`bdash-meter__today-label align-${todayAlign}`} style={{ left: `${timeline.elapsedPercent}%` }}>
+                    {t('budgets.todayMarker', { day: timeline.day, days: timeline.daysInMonth })}
+                  </span>
+                </div>
+              )}
+
+              {heroStats.length > 0 && (
+                <dl className={`bdash-hero__stats has-${heroStats.length}`}>
+                  {heroStats.map((stat) => (
+                    <div key={stat.key} className={`bdash-stat is-${stat.key}`}>
+                      <dt>{stat.label}</dt>
+                      <dd className={stat.tone ? `tone-${stat.tone}` : undefined}>
+                        {stat.value}
+                        {stat.note && <small title={stat.note}> · {stat.note}</small>}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </section>
+          ) : (
+            <section className="bdash-hero is-empty" aria-labelledby="bdash-hero-label">
+              <span id="bdash-hero-label" className="bdash-hero__label">
+                {timeline.isCurrent ? t('budgets.heroSpentThisMonth') : t('budgets.spentShort')}
+              </span>
+              <strong className="bdash-hero__value">{formatCurrency(monthlyStats.totalExpense)}</strong>
+              <p className="bdash-hero__hint">{t('budgets.heroNoLimitsHint')}</p>
+            </section>
+          )}
+
+          {/* ── Categories: one table on wide screens, two-line rows on phones ── */}
+          <section className="bdash-card" aria-labelledby="bdash-list-title">
+            <div className="bdash-card__head">
+              <h3 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h3>
+              {!showSkeleton && limited.length > 0 && (
+                <div className="bdash-card__meta">
+                  {showToday && (
+                    <span className="bdash-legend">
+                      <i aria-hidden="true" />
+                      {t('budgets.today')}
+                    </span>
+                  )}
+                  {limited.length > 1 && <span className="bdash-card__hint">{t('budgets.sortHint')}</span>}
+                </div>
+              )}
+            </div>
+
+            {showSkeleton ? (
+              <ul className="bdash-rows" aria-hidden="true">
+                {Array.from({ length: Math.max(3, Math.min(6, limited.length + unbudgeted.length)) }, (_, index) => (
+                  <li key={index} className="bdash-row is-skeleton">
+                    <span className="bdash-row__icon" />
+                    <span className="budget-skeleton-line is-label" />
+                    <span className="budget-skeleton-line is-value" />
+                  </li>
+                ))}
+              </ul>
+            ) : limited.length + unbudgeted.length === 0 ? (
+              <div className="bdash-empty" role="status">
+                <BulbOutlineIcon size={20} color="currentColor" />
+                <p>{t('budgets.emptyList')}</p>
+              </div>
+            ) : (
+              <div
+                className={`bdash-table${showToday ? ' has-today' : ''}`}
+                style={showToday ? { '--bdash-today': `${timeline.elapsedPercent}%` } : undefined}
+              >
+                {limited.length > 0 && (
+                  <>
+                    <div className="bdash-row bdash-row--head" aria-hidden="true">
+                      <span className="bdash-row__head-cat">{t('budgets.colCategory')}</span>
+                      <span className="bdash-row__track">{t('budgets.colProgress')}</span>
+                      <span className="bdash-row__pct">{t('budgets.colUsed')}</span>
+                      <span className="bdash-row__amounts">{t('budgets.colSpentLimit')}</span>
+                      <span className="bdash-row__remaining">{t('budgets.colRemaining')}</span>
+                    </div>
+                    <ul className="bdash-rows">
+                      {limited.map((item) => (
+                        <li key={item.category} className="bdash-item">
+                          <LimitedRow item={item} editable={canEdit} isPastMonth={isPastMonth} onEdit={handleOpenEdit} t={t} />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {unbudgeted.length > 0 && (
+                  <>
+                    <h4 className="bdash-group-title">{t('budgets.unsetGroup')}</h4>
+                    <ul className="bdash-rows">
+                      {unbudgeted.map((item) => (
+                        <li key={item.category} className="bdash-item">
+                          <UnsetRow item={item} editable={canEdit} onEdit={handleOpenEdit} t={t} />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
+          </section>
         </div>
-      </div>
-      </div>
       )}
 
-      {/* ── Modal Setup / Edit Budgets ── */}
       {isEditModalOpen && (
         <BudgetEditModal
           isOpen={isEditModalOpen}

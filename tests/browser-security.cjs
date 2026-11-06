@@ -976,16 +976,20 @@ function blendCssColor(color, background) {
     await expect(mobilePage).toHaveTitle('Ngân sách – CaltDHy');
     await mobilePage.reload();
     await expect(mobilePage.getByRole('heading', { name: 'Ngân sách', exact: true })).toBeVisible();
-    await expect(mobilePage.locator('.budget-category-card.is-overdue-danger')).toHaveCount(1);
-    await expect(mobilePage.locator('.budget-category-card.is-overdue-danger')).toContainText(/Vượt hạn mức \+50\.000\s*₫/);
-    await expect(mobilePage.locator('.budget-overdue-indicator')).toHaveAttribute('aria-label', /50\.000\s*₫/);
+    await expect(mobilePage.locator('.bdash-row.is-over')).toHaveCount(1);
+    await expect(mobilePage.locator('.bdash-row.is-over')).toContainText(/Vượt 50\.000\s*₫/);
+    await expect(mobilePage.locator('.bdash-row__alert')).toHaveAttribute('aria-label', /50\.000\s*₫/);
+    // Spending without a limit is listed separately instead of disappearing.
+    await expect(mobilePage.locator('.bdash-row--unset')).toContainText('Dịch vụ');
     assert.ok(!mobileScriptRequests.some((url) => /AnalyticsView-.*\.js/.test(url)),
       'Analytics/Chart.js không được tải trước khi người dùng mở Phân tích');
     assert.equal(await mobilePage.evaluate(() => window.__localizationObserverStarts), 0,
       'Locale vi không được khởi chạy MutationObserver dịch DOM legacy');
-    await mobilePage.getByRole('button', { name: 'Thiết lập hạn mức ngân sách' }).click();
-    const mobileBudgetDialog = mobilePage.getByRole('dialog', { name: 'Thiết lập hạn mức ngân sách tháng' });
+    await mobilePage.getByRole('button', { name: 'Sửa hạn mức', exact: true }).click();
+    const mobileBudgetDialog = mobilePage.getByRole('dialog', { name: 'Hạn mức ngân sách' });
     await expect(mobileBudgetDialog).toBeVisible();
+    // The phone bottom sheet slides in; measure it once it has settled.
+    await mobileBudgetDialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     const mobileBudgetBox = await mobileBudgetDialog.boundingBox();
     assert.ok(mobileBudgetBox && Math.abs(mobileBudgetBox.x + mobileBudgetBox.width / 2 - 195) < 2,
       'Modal ngân sách phải căn giữa trên mobile');
@@ -1000,11 +1004,11 @@ function blendCssColor(color, background) {
       await route.continue();
     });
     await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
-    await expect(mobilePage.locator('.budget-skeleton-summary')).toHaveCount(4);
-    await expect(mobilePage.locator('.budget-skeleton-summary')).toHaveCount(0, { timeout: 3000 });
+    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(1);
+    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(0, { timeout: 3000 });
     await mobilePage.unroute(delayedMonth);
     await mobilePage.getByRole('button', { name: 'Xem tháng sau' }).click();
-    await expect(mobilePage.locator('.budget-category-card.is-overdue-danger')).toHaveCount(1);
+    await expect(mobilePage.locator('.bdash-row.is-over')).toHaveCount(1);
     let releaseStaleBudget;
     const staleBudgetGate = new Promise((resolve) => { releaseStaleBudget = resolve; });
     await mobilePage.route(delayedMonth, async (route) => {
@@ -1012,14 +1016,14 @@ function blendCssColor(color, background) {
       await route.continue();
     });
     await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
-    await expect(mobilePage.locator('.budget-skeleton-summary')).toHaveCount(4);
+    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(1);
     await mobilePage.getByRole('button', { name: 'Xem tháng sau' }).click();
-    await expect(mobilePage.locator('.budget-ov-value').first()).toContainText(/100\.000\s*₫/);
+    await expect(mobilePage.locator('.bdash-hero__limit-value')).toContainText(/100\.000\s*₫/);
     const staleResponse = mobilePage.waitForResponse((response) => response.url().includes(`month=${previousMonth}`));
     releaseStaleBudget();
     await staleResponse;
     await mobilePage.waitForTimeout(200);
-    await expect(mobilePage.locator('.budget-ov-value').first()).toContainText(/100\.000\s*₫/);
+    await expect(mobilePage.locator('.bdash-hero__limit-value')).toContainText(/100\.000\s*₫/);
     await mobilePage.unroute(delayedMonth);
     await primaryNav.getByRole('button', { name: 'Phân tích' }).click();
     await mobilePage.waitForURL('**/spending/analytics/overview');
@@ -1261,7 +1265,7 @@ function blendCssColor(color, background) {
     await mobilePage.goto('/spending/plan/overview');
     for (const [menuName, dialogName, overlaySelector] of [
       [/Ví \/ Tài khoản/, 'Thêm ví / tài khoản mới', '.txn-modal-backdrop'],
-      [/Ngân sách/, 'Thiết lập hạn mức ngân sách tháng', '.modal-backdrop-overlay'],
+      [/Ngân sách/, 'Hạn mức ngân sách', '.modal-backdrop-overlay'],
       [/Khoản định kỳ/, 'Thêm khoản định kỳ', '.txn-modal-backdrop'],
     ]) {
       await mobilePage.getByRole('button', { name: 'Lập kế hoạch tài chính' }).click();
@@ -1368,38 +1372,40 @@ function blendCssColor(color, background) {
     for (const theme of ['dark', 'cream', 'green', 'light']) {
       await mobilePage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
       await mobilePage.goto('/spending/plan/budgets');
-      const overdueCard = mobilePage.locator('.budget-category-card.is-overdue-danger');
-      await expect(overdueCard).toHaveCount(1);
-      await expect(overdueCard).toContainText(/Vượt hạn mức \+50\.000\s*₫/);
-      const visual = await overdueCard.evaluate((card) => {
-        const icon = card.querySelector('.budget-overdue-indicator svg');
-        const progress = card.querySelector('.budget-card-fill.is-overdue-danger');
+      const overdueRow = mobilePage.locator('.bdash-row.is-over');
+      await expect(overdueRow).toHaveCount(1);
+      await expect(overdueRow).toContainText(/Vượt 50\.000\s*₫/);
+      const visual = await overdueRow.evaluate((row) => {
+        const alert = row.querySelector('.bdash-row__alert');
+        const icon = alert?.querySelector('svg');
+        const progress = row.querySelector('.bdash-bar__fill.tone-over');
         return {
-          borderColor: getComputedStyle(card).borderColor,
-          backgroundImage: getComputedStyle(card).backgroundImage,
-          animationName: getComputedStyle(card).animationName,
+          alertColor: alert ? getComputedStyle(alert).color : null,
+          backgroundImage: getComputedStyle(row).backgroundImage,
+          animationName: getComputedStyle(row).animationName,
           iconFill: icon ? getComputedStyle(icon).fill : null,
           progressImage: progress ? getComputedStyle(progress).backgroundImage : null
         };
       });
-      assert.notEqual(visual.backgroundImage, 'none', `${theme}: thẻ vượt hạn mức cần nền cảnh báo`);
+      assert.notEqual(visual.backgroundImage, 'none', `${theme}: dòng vượt hạn mức cần nền cảnh báo`);
       assert.notEqual(visual.progressImage, 'none', `${theme}: tiến độ vượt hạn mức cần vân tĩnh`);
       assert.equal(visual.animationName, 'none', `${theme}: cảnh báo không được nhấp nháy`);
       assert.equal(visual.iconFill, 'none', `${theme}: icon cảnh báo phải là nét rỗng`);
-      themeVisuals.set(theme, visual.borderColor);
+      themeVisuals.set(theme, visual.alertColor);
       await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
-      const periodCard = mobilePage.locator('.budget-category-card.is-period-overdue');
-      await expect(periodCard).toHaveCount(1);
-      await expect(periodCard).not.toHaveClass(/is-overdue-danger/);
-      await expect(periodCard.locator('.budget-card-period-overdue-badge')).toHaveText('Đã quá hạn');
-      const periodVisual = await periodCard.evaluate((card) => ({
-        borderColor: getComputedStyle(card).borderColor,
-        borderStartWidth: getComputedStyle(card).borderInlineStartWidth,
-        backgroundImage: getComputedStyle(card).backgroundImage
+      const periodRow = mobilePage.locator('.bdash-row.is-period-overdue');
+      await expect(periodRow).toHaveCount(1);
+      await expect(periodRow).not.toHaveClass(/(^|\s)is-over(\s|$)/);
+      const periodBadge = periodRow.locator('.bdash-period-badge');
+      await expect(periodBadge).toHaveText('Đã quá hạn');
+      // A closed month is read-only: rows are not edit buttons.
+      await expect(mobilePage.locator('button.bdash-row')).toHaveCount(0);
+      const periodVisual = await periodBadge.evaluate((badge) => ({
+        color: getComputedStyle(badge).color,
+        backgroundColor: getComputedStyle(badge).backgroundColor
       }));
-      assert.equal(periodVisual.borderStartWidth, '4px', `${theme}: kỳ đã hết cần viền cảnh báo`);
-      assert.notEqual(periodVisual.backgroundImage, 'none', `${theme}: kỳ đã hết cần nền cảnh báo`);
-      periodVisuals.set(theme, periodVisual.borderColor);
+      assert.notEqual(periodVisual.backgroundColor, 'rgba(0, 0, 0, 0)', `${theme}: nhãn kỳ đã hết cần nền riêng`);
+      periodVisuals.set(theme, periodVisual.color);
     }
     assert.ok(new Set(themeVisuals.values()).size >= 3, 'Cảnh báo phải được hiệu chỉnh theo bốn theme');
     assert.ok(new Set(periodVisuals.values()).size >= 3, 'Ngân sách quá hạn phải được hiệu chỉnh theo bốn theme');
@@ -1428,7 +1434,7 @@ function blendCssColor(color, background) {
     await mobileSettingsDialog.getByRole('button', { name: 'Đóng trung tâm cài đặt' }).click();
     await expect(mobileSettingsDialog).toHaveCount(0);
     await expect(mobileSettingsButton).toBeFocused();
-    await expect(mobilePage.locator('.budget-setup-dialog')).toHaveCount(0);
+    await expect(mobilePage.locator('.blimit-dialog')).toHaveCount(0);
 
     const localizedRoutes = [
       ['/spending/home', 'Dashboard', '首页'],
@@ -1449,10 +1455,10 @@ function blendCssColor(color, background) {
         await expect(mobilePage).toHaveTitle(`${column === 1 ? englishTitle : chineseTitle} – CaltDHy`);
         await expect(mobilePage.locator('.mobile-primary-nav')).toContainText(homeLabel);
         if (path === '/spending/plan/budgets') {
-          await expect(mobilePage.locator('.budget-section-heading')).toContainText(
-            locale === 'en' ? 'Category budget details' : '分类预算明细');
+          await expect(mobilePage.locator('.bdash-card__title')).toHaveText(
+            locale === 'en' ? 'Categories' : '分类');
           await mobilePage.getByRole('button', { name: locale === 'en' ? 'View previous month' : '查看上个月' }).click();
-          await expect(mobilePage.locator('.budget-card-period-overdue-badge')).toHaveText(
+          await expect(mobilePage.locator('.bdash-period-badge')).toHaveText(
             locale === 'en' ? 'Overdue' : '已过期');
         }
         assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false,

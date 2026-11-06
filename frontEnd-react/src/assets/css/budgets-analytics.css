@@ -2,12 +2,29 @@
    BUDGETS, ANALYTICS & SETUP DIALOG — CaltDHy v2 Mint Design
    ============================================================ */
 
-/* ── 1. BUDGETS TAB & PLAN VIEW ── */
+/* ── 1. BUDGETS TAB — shell, loading states and month switcher ── */
 .budgets-tab-container {
+  container: budgets / inline-size;
+  --bdash-ok-fill: var(--color-success, #007547);
+  --bdash-warn-fill: #D97706;
+  --bdash-over-stripes: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.3) 0 4px, transparent 4px 8px);
+  --bdash-track: color-mix(in srgb, var(--color-text, #101B36) 9%, transparent);
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
+}
+
+html.dark-theme .budgets-tab-container {
+  --bdash-warn-fill: #F59E0B;
+}
+
+html.cream-theme .budgets-tab-container {
+  --bdash-warn-fill: #B57D1A;
+}
+
+html.green-theme .budgets-tab-container {
+  --bdash-warn-fill: #C07800;
 }
 
 .budget-month-data {
@@ -47,22 +64,7 @@
   color: var(--color-danger, #E34B45);
 }
 
-.budget-skeleton-summary {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  min-height: 48px;
-}
-
-.budget-skeleton-card {
-  cursor: default;
-}
-
-.budget-skeleton-card:hover {
-  transform: none;
-}
-
+/* Skeleton shimmer (hero + rows) */
 .budget-skeleton-line {
   display: block;
   height: 14px;
@@ -74,6 +76,7 @@
 }
 
 .budget-skeleton-line.is-value { width: 85%; height: 22px; }
+
 .budget-skeleton-line.is-heading { width: 75%; height: 18px; }
 
 @keyframes budgetShimmer {
@@ -85,15 +88,7 @@
   .budget-skeleton-line { animation: none; }
 }
 
-/* Page Header: Title, Subtitle, and Primary CTA */
-.budgets-page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
+/* Page title */
 .budgets-header-titles {
   display: flex;
   flex-direction: column;
@@ -114,37 +109,7 @@
   margin: 0;
 }
 
-.btn-setup-budget-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 18px;
-  background: var(--color-brand-700, #008B57);
-  color: #FFFFFF;
-  font-family: var(--font-sans);
-  font-size: 13.5px;
-  font-weight: 600;
-  border-radius: var(--radius-sm, 8px);
-  border: 1px solid var(--color-brand-600, #009A5D);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: all var(--dur-fast) ease;
-}
-
-.btn-setup-budget-primary:hover {
-  background: var(--color-brand-600, #009A5D);
-  box-shadow: 0 4px 12px rgba(0, 139, 87, 0.2);
-  transform: translateY(-1px);
-}
-
-/* Month Selector Bar */
-.budgets-month-bar {
-  display: flex;
-  align-items: center;
-}
-
+/* Month switcher — also used by the analytics view */
 .budget-month-selector {
   display: inline-flex;
   align-items: center;
@@ -211,52 +176,7 @@
   background: var(--color-border-strong, #C9DED3);
 }
 
-/* 4-Cell Summary Card */
-.budget-overview-card {
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-lg, 16px);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.budget-overview-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  align-items: center;
-}
-
-@media (max-width: 900px) {
-  .budget-overview-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.budget-ov-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.budget-ov-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-secondary, #607086);
-}
-
-.budget-ov-value {
-  font-family: var(--font-sans);
-  font-size: 20px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text, #101B36);
-}
-
-/* Global Financial Text Color Utilities */
+/* Global financial text colour utilities */
 .text-success {
   color: var(--color-success, #008B57) !important;
 }
@@ -281,47 +201,7 @@
   color: var(--color-text-muted, #8A98A9) !important;
 }
 
-.budget-ov-value.is-brand,
-.budget-ov-value.text-brand {
-  color: var(--color-success, #008B57);
-}
-
-.budget-ov-value.text-danger {
-  color: var(--color-danger, #E34B45);
-}
-
-.budget-ov-value.text-warning {
-  color: var(--color-warning, #D9921E);
-}
-
-.budget-ov-value.is-unset-text {
-  font-size: 16px;
-  color: var(--color-text-muted, #8A98A9);
-  font-weight: 600;
-}
-
-.budget-ov-value.is-dash {
-  color: var(--color-text-muted, #8A98A9);
-}
-
-.budget-ov-divider {
-  display: none;
-}
-
-.budget-global-progress-bar-bg {
-  width: 100%;
-  height: 6px;
-  background: var(--color-brand-50, #F1FBF6);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.budget-global-progress-bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 300ms ease;
-}
-
+/* Progress fills — used by the plan overview */
 .fill-brand {
   background: var(--color-brand-700, #008B57);
 }
@@ -334,406 +214,862 @@
   background: var(--color-danger, #E34B45);
 }
 
-/* Category Detail Grid Section */
-.budget-categories-list-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.budget-section-header-row {
-  display: flex;
+/* ── 1b. BUDGET DASHBOARD — hero summary + category table ──
+   The container query switches the table to two-line rows wherever the
+   content column is narrow (phones, or tablets with the sidebar open). */
+.budgets-page-header {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: "title month . action";
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px 20px;
 }
 
-.budget-section-heading {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text, #101B36);
-  margin: 0;
+.bdash-header__title {
+  grid-area: title;
+  min-width: 0;
 }
 
-.btn-edit-all-budgets {
+.bdash-header__month {
+  grid-area: month;
+  min-width: 0;
+}
+
+.bdash-header__action {
+  grid-area: action;
+  justify-self: end;
+}
+
+.bdash-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-action-bg, #007547);
+  color: var(--color-on-action, #FFFFFF);
+  font: 600 14px/1 var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.bdash-edit-btn:hover:not(:disabled) {
+  background: var(--color-action-hover-bg, #00663E);
+}
+
+.bdash-edit-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.bdash-edit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bdash-closed {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 14px;
-  background: var(--color-surface, #FFFFFF);
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--color-link);
-  font-family: var(--font-sans);
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text-secondary, #607086);
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--dur-fast) ease;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.btn-edit-all-budgets:hover {
-  background: var(--color-brand-50, #F1FBF6);
-  border-color: var(--color-border-strong, #C9DED3);
-  color: var(--color-link);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+.bdash-closed svg {
+  opacity: 0.7;
 }
 
-/* Informational Alert */
-.budget-empty-alert {
-  background: var(--color-brand-50, #F1FBF6);
-  border: 1px solid var(--color-border-strong, #C9DED3);
-  border-radius: var(--radius-md, 12px);
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.bdash-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.alert-bulb-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.alert-bulb-text {
-  font-size: 13.5px;
-  color: var(--color-text, #101B36);
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Disclosure: spending in categories with no budget limit set */
-.budget-unbudgeted-note {
-  background: var(--color-warning-bg, #FEF3C7);
-  border: 1px solid var(--color-warning-border, #FDE68A);
-  border-radius: var(--radius-md, 12px);
-  padding: 12px 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.budget-unbudgeted-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-warning, #D9921E);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.budget-unbudgeted-text {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--color-text, #101B36);
-  margin: 0;
-}
-
-.budget-unbudgeted-text strong {
-  color: var(--color-warning, #D9921E);
-}
-
-/* 4-Columns Category Grid */
-.budget-categories-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-@media (max-width: 1199px) {
-  .budget-categories-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 899px) {
-  .budget-categories-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 599px) {
-  .budget-categories-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Category Card */
-.budget-category-card {
+.bdash-hero,
+.bdash-card {
+  position: relative;
   background: var(--color-surface, #FFFFFF);
   border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-md, 12px);
-  padding: 14px 16px;
-  min-height: 124px;
-  box-sizing: border-box;
+  border-radius: var(--radius-lg, 16px);
   box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease, border-color var(--dur-fast) ease;
 }
 
-.budget-category-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
-  border-color: var(--color-brand-700, #008B57);
+/* ── Hero ── */
+.bdash-hero {
+  padding: 22px 24px;
+  overflow: hidden;
 }
 
-.budget-category-card:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 139, 87, 0.25);
-  border-color: var(--color-brand-700, #008B57);
-}
-
-.budget-category-card.is-danger {
-  border-color: #FCA5A5;
-}
-
-.budget-category-card.is-overdue-danger {
-  border-color: #EF4444;
-  border-inline-start-width: 4px;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.075), transparent 58%), var(--color-surface, #FFFFFF);
-  box-shadow: 0 8px 22px rgba(220, 38, 38, 0.1);
-}
-
-html.dark-theme .budget-category-card.is-overdue-danger {
-  border-color: #FB7185;
-  background: linear-gradient(135deg, rgba(251, 113, 133, 0.13), transparent 60%), var(--color-surface, #171A1F);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
-}
-
-html.cream-theme .budget-category-card.is-overdue-danger {
-  border-color: #C2410C;
-  background: linear-gradient(135deg, rgba(194, 65, 12, 0.09), transparent 60%), var(--color-surface, #FFFBF5);
-  box-shadow: 0 8px 22px rgba(124, 45, 18, 0.1);
-}
-
-html.green-theme .budget-category-card.is-overdue-danger {
-  border-color: #E05252;
-  background: linear-gradient(135deg, rgba(224, 82, 82, 0.09), transparent 60%), var(--color-surface, #FFFFFF);
-  box-shadow: 0 8px 22px rgba(127, 29, 29, 0.09);
-}
-
-/* A closed month is distinct from overspending; both states can coexist. */
-.budget-category-card.is-period-overdue {
-  --period-overdue-accent: #9A3412;
-  --period-overdue-tint: rgba(194, 65, 12, 0.09);
-  --period-overdue-badge-bg: #FFEDD5;
-}
-
-html.dark-theme .budget-category-card.is-period-overdue {
-  --period-overdue-accent: #FBBF24;
-  --period-overdue-tint: rgba(251, 191, 36, 0.13);
-  --period-overdue-badge-bg: #422006;
-}
-
-html.cream-theme .budget-category-card.is-period-overdue {
-  --period-overdue-accent: #9A3412;
-  --period-overdue-tint: rgba(194, 65, 12, 0.12);
-  --period-overdue-badge-bg: #FDE6CC;
-}
-
-html.green-theme .budget-category-card.is-period-overdue {
-  --period-overdue-accent: #A74416;
-  --period-overdue-tint: rgba(167, 68, 22, 0.1);
-  --period-overdue-badge-bg: #FFE7D5;
-}
-
-.budget-category-card.is-period-overdue:not(.is-overdue-danger) {
-  border-color: var(--period-overdue-accent);
-  border-inline-start-width: 4px;
-  background: linear-gradient(135deg, var(--period-overdue-tint), transparent 62%), var(--color-surface, #FFFFFF);
-}
-
-.budget-category-card.is-warning {
-  border-color: #FDE047;
-}
-
-.budget-card-top {
+.bdash-hero__top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 10px 16px;
 }
 
-.budget-card-lead {
+.bdash-hero__headline {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
-  flex: 1;
 }
 
-.budget-overdue-indicator {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
+.bdash-hero__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-hero__value {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #101B36);
+  overflow-wrap: anywhere;
+}
+
+.bdash-hero.tone-over .bdash-hero__label,
+.bdash-hero.tone-over .bdash-hero__value {
+  color: var(--color-danger, #C53030);
+}
+
+.bdash-hero.is-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bdash-hero__hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-chip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  color: var(--color-danger, #DC2626);
-  background: transparent;
-  border: 1px solid currentColor;
-  border-radius: 50%;
+  gap: 7px;
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-.budget-overdue-indicator svg {
-  fill: none;
-}
-
-.budget-card-emoji-tile {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm, 8px);
-  background: var(--color-brand-50, #F1FBF6);
-  border: 1px solid var(--color-border, #E3ECE7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
+.bdash-chip i {
   flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
-.budget-card-titles {
+.bdash-chip.is-fast {
+  background: var(--color-warning-bg, #FEF3C7);
+  color: var(--color-warning, #A34706);
+}
+
+.bdash-chip.is-ok {
+  background: var(--color-success-bg, #E6F7EF);
+  color: var(--color-success, #007547);
+}
+
+.bdash-hero__meter-labels {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary, #607086);
 }
 
-.budget-card-name {
-  font-size: 14px;
+.bdash-hero__meter-labels b {
   font-weight: 600;
   color: var(--color-text, #101B36);
-  margin: 0 0 2px;
+}
+
+.bdash-meter {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bdash-track);
+}
+
+.bdash-meter__fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--bdash-ok-fill);
+  transition: width 300ms ease;
+}
+
+.bdash-meter__fill.tone-warn {
+  background: var(--bdash-warn-fill);
+}
+
+.bdash-meter__fill.tone-over {
+  background-color: var(--color-danger, #C53030);
+  background-image: var(--bdash-over-stripes);
+}
+
+/* "Today" splits the bar by time: fill past it means spending runs ahead. */
+.bdash-meter__today {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--color-text, #101B36);
+}
+
+/* The label sits on the card (not on the marker) so it keeps its contrast. */
+.bdash-meter__today-row {
+  position: relative;
+  height: 18px;
+  margin-top: 6px;
+}
+
+.bdash-meter__today-label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-meter__today-label.align-start {
+  transform: none;
+}
+
+.bdash-meter__today-label.align-end {
+  transform: translateX(-100%);
+}
+
+.bdash-hero__stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 20px -24px -22px;
+  border-top: 1px solid var(--color-border, #E3ECE7);
+}
+
+.bdash-hero__stats.has-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bdash-hero__stats.has-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bdash-stat {
+  min-width: 0;
+  padding: 14px 24px 16px;
+}
+
+.bdash-stat + .bdash-stat {
+  border-left: 1px solid var(--color-border, #E3ECE7);
+}
+
+.bdash-stat dt {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-stat dd {
+  margin: 3px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #101B36);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.budget-card-spent {
-  font-size: 12px;
+.bdash-stat dd small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-stat dd.tone-over {
+  color: var(--color-danger, #C53030);
+}
+
+.bdash-hero.is-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bdash-hero.is-skeleton .budget-skeleton-line.is-label,
+.bdash-row.is-skeleton .budget-skeleton-line.is-label {
+  width: 30%;
+}
+
+.bdash-hero.is-skeleton .budget-skeleton-line.is-value {
+  width: 45%;
+  height: 32px;
+}
+
+.budget-skeleton-line.is-meter {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+}
+
+/* ── Category table ── */
+.bdash-card {
+  padding-bottom: 8px;
+}
+
+.bdash-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px 8px;
+}
+
+.bdash-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text, #101B36);
+}
+
+.bdash-card__hint {
+  font-size: 12.5px;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bdash-item + .bdash-item::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 0 24px 0 74px;
+  background: var(--color-border, #E3ECE7);
+}
+
+.bdash-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px minmax(110px, 1.15fr) minmax(90px, 1.5fr) 52px minmax(168px, 1.2fr) minmax(96px, 0.8fr) 20px;
+  grid-template-areas: "icon name track pct amounts remaining chevron";
+  align-items: center;
+  column-gap: 14px;
+  width: 100%;
+  min-height: 58px;
+  margin: 0;
+  padding: 8px 24px;
+  border: 0;
+  background-color: transparent;
+  color: var(--color-text, #101B36);
+  font: inherit;
+  text-align: left;
+}
+
+button.bdash-row {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease;
+}
+
+button.bdash-row:hover {
+  background-color: color-mix(in srgb, var(--color-surface-muted, #F7FAF8) 70%, transparent);
+}
+
+button.bdash-row:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
+
+.bdash-row__icon {
+  grid-area: icon;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-row__name {
+  grid-area: name;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.bdash-row__name-text {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bdash-row__alert {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--color-danger, #C53030);
+}
+
+.bdash-row__alert svg {
+  fill: none;
+}
+
+.bdash-row__track {
+  grid-area: track;
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.bdash-bar {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bdash-track);
+}
+
+.bdash-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bdash-ok-fill);
+  transition: width 300ms ease;
+}
+
+.bdash-bar__fill.tone-warn {
+  background: var(--bdash-warn-fill);
+}
+
+/* Overspending: static stripes, never a blinking animation. */
+.bdash-bar__fill.tone-over {
+  background-color: var(--color-danger, #C53030);
+  background-image: var(--bdash-over-stripes);
+}
+
+.bdash-row__pct {
+  grid-area: pct;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bdash-row__amounts {
+  grid-area: amounts;
+  min-width: 0;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary, #607086);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.budget-card-spent strong {
-  font-variant-numeric: tabular-nums;
+.bdash-row__amounts b {
+  font-weight: 600;
   color: var(--color-text, #101B36);
 }
 
-.budget-card-pencil-btn {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: var(--radius-sm, 6px);
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted, #8A98A9);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--dur-fast) ease;
-}
-
-.budget-card-pencil-btn:hover {
-  background: var(--color-brand-50, #F1FBF6);
-  color: var(--color-link);
-}
-
-.budget-card-body {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.budget-card-status-badge {
-  font-size: 11px;
+.bdash-row__remaining {
+  grid-area: remaining;
+  font-size: 14px;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bdash-row__remaining-full {
+  display: none;
+}
+
+.bdash-row__pct.tone-warn,
+.bdash-row__remaining.tone-warn {
+  color: var(--color-warning, #A34706);
+}
+
+.bdash-row__pct.tone-over,
+.bdash-row__remaining.tone-over {
+  color: var(--color-danger, #C53030);
+}
+
+.bdash-row__chevron {
+  grid-area: chevron;
   display: inline-flex;
-  align-items: center;
+  color: var(--color-text-muted, #64748B);
+  opacity: 0.55;
+  transition: color var(--dur-fast) ease, opacity var(--dur-fast) ease, transform var(--dur-fast) ease;
 }
 
-.badge-unset {
-  background: var(--color-surface-muted, #F7FAF8);
-  color: var(--color-text-muted, #8A98A9);
+button.bdash-row:hover .bdash-row__chevron,
+button.bdash-row:focus-visible .bdash-row__chevron {
+  color: var(--color-link, #007547);
+  opacity: 1;
+  transform: translateX(2px);
 }
 
-.badge-brand {
-  background: var(--color-brand-100, #E6F7EF);
-  color: var(--color-link);
+.bdash-row.is-over {
+  background-image: linear-gradient(90deg, var(--color-danger-bg, #FFF0EF), transparent 70%);
 }
 
-.badge-warning {
-  background: #FEF3C7;
-  color: #92400E;
+/* A closed month is not the same as overspending; both can apply at once. */
+.bdash-row.is-period-overdue {
+  --period-overdue-accent: #9A3412;
+  --period-overdue-badge-bg: #FFEDD5;
 }
 
-.badge-danger {
-  background: var(--color-danger-50, #FFF0EF);
-  color: var(--color-danger, #E34B45);
+html.dark-theme .bdash-row.is-period-overdue {
+  --period-overdue-accent: #FBBF24;
+  --period-overdue-badge-bg: #422006;
 }
 
-.budget-card-period-overdue-badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: var(--radius-full);
+html.cream-theme .bdash-row.is-period-overdue {
+  --period-overdue-accent: #9A3412;
+  --period-overdue-badge-bg: #FDE6CC;
+}
+
+html.green-theme .bdash-row.is-period-overdue {
+  --period-overdue-accent: #A74416;
+  --period-overdue-badge-bg: #FFE7D5;
+}
+
+.bdash-period-badge {
+  flex-shrink: 0;
   padding: 2px 8px;
+  border-radius: 999px;
   background: var(--period-overdue-badge-bg, #FFEDD5);
   color: var(--period-overdue-accent, #9A3412);
   font-size: 11px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
-.budget-card-limit-val {
-  font-size: 11px;
+.bdash-row--head {
+  min-height: 34px;
+  padding-block: 0;
+  border-bottom: 1px solid var(--color-border, #E3ECE7);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted, #64748B);
+}
+
+.bdash-row--head .bdash-row__head-cat {
+  grid-column: icon-start / name-end;
+}
+
+.bdash-row--head :is(.bdash-row__pct, .bdash-row__amounts, .bdash-row__remaining) {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted, #64748B);
+}
+
+/* "Today" is a short tick on each bar (fill past it = spending runs ahead
+   of the calendar); the card header carries the matching legend. */
+.bdash-table.has-today .bdash-bar::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  left: var(--bdash-today);
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--color-text, #101B36);
+  opacity: 0.5;
+}
+
+.bdash-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 14px;
+}
+
+.bdash-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--color-text-secondary, #607086);
-  font-variant-numeric: tabular-nums;
 }
 
-.budget-card-track {
-  width: 100%;
-  height: 4px;
-  background: var(--color-brand-50, #F1FBF6);
-  border-radius: 99px;
-  overflow: hidden;
+.bdash-legend i {
+  width: 2px;
+  height: 12px;
+  border-radius: 1px;
+  background: var(--color-text, #101B36);
+  opacity: 0.5;
 }
 
-.budget-card-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 300ms ease;
+.bdash-row--head .bdash-row__track {
+  align-self: center;
 }
 
-.budget-card-fill.fill-danger.is-overdue-danger {
-  background-color: var(--color-danger, #DC2626);
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.24) 0,
-    rgba(255, 255, 255, 0.24) 4px,
-    transparent 4px,
-    transparent 8px
-  );
+.bdash-group-title {
+  margin: 6px 0 0;
+  padding: 14px 24px 4px;
+  border-top: 1px solid var(--color-border, #E3ECE7);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted, #64748B);
 }
 
-.fill-unset {
-  width: 0% !important;
+.bdash-row--unset {
+  grid-template-areas: "icon name note note note action action";
 }
 
-/* ── 2. MODAL C — BUDGET SETUP DIALOG SPEC ── */
+.bdash-row__note {
+  grid-area: note;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-row__action {
+  grid-area: action;
+  justify-self: end;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-link, #007547);
+}
+
+.bdash-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 24px 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text-secondary, #607086);
+}
+
+.bdash-empty svg {
+  flex-shrink: 0;
+}
+
+.bdash-empty p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--color-text, #101B36);
+}
+
+.bdash-row.is-skeleton {
+  grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1.2fr);
+  grid-template-areas: none;
+}
+
+@container budgets (max-width: 760px) {
+  .budgets-page-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title action"
+      "month month";
+  }
+
+  .bdash-header__month .budget-month-selector {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    width: 100%;
+  }
+
+  .bdash-header__month .month-current-display {
+    justify-content: center;
+  }
+
+  .bdash-header__month .month-today-btn {
+    grid-column: 1 / -1;
+  }
+
+  .bdash-card__head {
+    padding: 14px 16px 6px;
+  }
+
+  .bdash-row--head {
+    display: none;
+  }
+
+  /* Two-line rows: name + what's left, the bar, then spent / limit and %. */
+  .bdash-row {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icon name remaining"
+      "icon track track"
+      "icon amounts amounts";
+    column-gap: 12px;
+    row-gap: 0;
+    min-height: 0;
+    padding: 11px 16px 12px;
+  }
+
+  .bdash-row__icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .bdash-row__track {
+    align-self: auto;
+    padding: 7px 0 5px;
+  }
+
+  .bdash-bar {
+    height: 6px;
+  }
+
+  /* "Spent / limit" gets the full width; % shares its line on the right, so a
+     long "left"/"over" amount in the top line can't squeeze it. */
+  .bdash-row__amounts {
+    padding-right: 56px;
+    text-align: left;
+    font-size: 12px;
+  }
+
+  .bdash-row__pct {
+    grid-area: amounts;
+    justify-self: end;
+    font-size: 12px;
+  }
+
+  .bdash-row__remaining-full {
+    display: inline;
+  }
+
+  .bdash-row__remaining-plain,
+  .bdash-row__chevron {
+    display: none;
+  }
+
+  .bdash-item + .bdash-item::before {
+    margin: 0 16px 0 62px;
+  }
+
+  .bdash-card__hint {
+    display: none;
+  }
+
+  .bdash-row--unset {
+    grid-template-areas:
+      "icon name action"
+      "icon note note";
+    row-gap: 2px;
+  }
+
+  .bdash-row__note {
+    font-size: 12px;
+  }
+
+  .bdash-group-title {
+    padding: 12px 16px 2px;
+  }
+
+  .bdash-empty {
+    margin: 4px 16px 14px;
+  }
+}
+
+@container budgets (max-width: 560px) {
+  .bdash-hero {
+    padding: 16px;
+  }
+
+  .bdash-hero__value {
+    font-size: 28px;
+  }
+
+  .bdash-chip {
+    min-height: 26px;
+    font-size: 12px;
+  }
+
+  .bdash-hero__meter-labels {
+    margin-top: 14px;
+    font-size: 12px;
+  }
+
+  .bdash-hero__stats {
+    margin: 18px -16px -16px;
+  }
+
+  .bdash-hero__stats.has-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bdash-hero__stats.has-3 .bdash-stat:nth-child(3) {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid var(--color-border, #E3ECE7);
+  }
+
+  .bdash-stat {
+    padding: 11px 16px 13px;
+  }
+
+  .bdash-stat dd {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bdash-meter__fill,
+  .bdash-bar__fill,
+  .bdash-row__chevron {
+    transition: none;
+  }
+}
+
+/* ── 2. DIALOG SHELL — shared by the guide dialog (GuideModal) ── */
 .modal-backdrop-overlay {
   position: fixed;
   inset: 0;
@@ -794,24 +1130,12 @@ html.green-theme .budget-category-card.is-period-overdue {
   flex-shrink: 0;
 }
 
-.budget-dialog-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .budget-dialog-title {
   font-size: 20px;
   font-weight: 700;
   color: var(--color-text, #101B36);
   margin: 0;
   letter-spacing: -0.01em;
-}
-
-.budget-dialog-desc {
-  font-size: 13px;
-  color: var(--color-text-secondary, #607086);
-  margin: 0;
 }
 
 .budget-dialog-close-btn {
@@ -834,568 +1158,6 @@ html.green-theme .budget-category-card.is-period-overdue {
   color: var(--color-danger, #E34B45);
 }
 
-.budget-dialog-form {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.budget-dialog-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Summary Card Inside Modal */
-.budget-dialog-summary-card {
-  min-height: 88px;
-  background: var(--color-brand-50, #F1FBF6);
-  border: 1px solid var(--color-border-strong, #C9DED3);
-  border-radius: var(--radius-md, 12px);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.summary-card-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.summary-wallet-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm, 8px);
-  background: var(--color-surface, var(--surface));
-  color: var(--color-link);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-sm);
-  flex-shrink: 0;
-}
-
-.summary-texts {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.summary-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text, #101B36);
-}
-
-.summary-subtext {
-  font-size: 12px;
-  color: var(--color-text-secondary, #607086);
-}
-
-.summary-total-num {
-  font-family: var(--font-sans);
-  font-size: 20px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-link);
-}
-
-.summary-total-num.is-unset {
-  font-size: 15px;
-  color: var(--color-text-muted, #8A98A9);
-  font-weight: 600;
-}
-
-/* Tier 4: allocation vs real available money note (budget setup modal) */
-.budget-allocation-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md, 12px);
-  border: 1px solid;
-  flex-shrink: 0;
-}
-
-.budget-allocation-note.is-ok {
-  background: var(--color-success-bg, var(--color-brand-50, #F1FBF6));
-  border-color: var(--color-success-border, var(--color-border-strong, #C9DED3));
-}
-
-.budget-allocation-note.is-over {
-  background: var(--color-danger-bg, var(--color-danger-50, #FFF0EF));
-  border-color: var(--color-danger-border, var(--color-danger, #E34B45));
-}
-
-.budget-allocation-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.budget-allocation-note.is-ok .budget-allocation-icon {
-  color: var(--color-success, var(--color-brand-700, #008B57));
-}
-
-.budget-allocation-note.is-over .budget-allocation-icon {
-  color: var(--color-danger, #E34B45);
-}
-
-.budget-allocation-text {
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--color-text, #101B36);
-  margin: 0;
-}
-
-.budget-allocation-note.is-ok .budget-allocation-text strong {
-  color: var(--color-success, var(--color-brand-700, #008B57));
-}
-
-.budget-allocation-note.is-over .budget-allocation-text strong {
-  color: var(--color-danger, #E34B45);
-}
-
-/* Scrollable Category List */
-.budget-category-list-scrollable {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  max-height: 400px;
-  padding-right: 4px;
-}
-
-/* Category Row State Machine */
-.budget-editor-row {
-  background: var(--color-surface, var(--surface));
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-md, 12px);
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: all var(--dur-fast) ease;
-}
-
-.budget-editor-row.is-expanded {
-  border-color: var(--color-brand-700, #008B57);
-  background: var(--color-surface, var(--surface));
-  box-shadow: 0 0 0 3px rgba(0, 139, 87, 0.1);
-}
-
-.editor-row-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.editor-row-cat-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.editor-row-emoji-tile {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm, 8px);
-  background: var(--color-brand-50, #F1FBF6);
-  border: 1px solid var(--color-border, #E3ECE7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.editor-row-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text, #101B36);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.editor-row-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.editor-row-state-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--radius-sm, 8px);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--color-border, #E3ECE7);
-  transition: all var(--dur-fast) ease;
-}
-
-.editor-row-state-btn.state-unset {
-  background: var(--color-surface-muted, #F7FAF8);
-  color: var(--color-text-secondary, #607086);
-}
-
-.editor-row-state-btn.state-limited {
-  background: var(--color-brand-100, #E6F7EF);
-  color: var(--color-link);
-  border-color: var(--color-border-strong, #C9DED3);
-}
-
-.editor-row-state-btn:hover {
-  border-color: var(--color-brand-700, #008B57);
-}
-
-.editor-chevron {
-  transition: transform var(--dur-fast) ease;
-}
-
-.editor-chevron.is-up {
-  transform: rotate(180deg);
-}
-
-/* Delete Button & Popover */
-.editor-delete-wrapper {
-  position: relative;
-}
-
-.editor-row-delete-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm, 8px);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--color-text-muted, #8A98A9);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--dur-fast) ease;
-}
-
-.editor-row-delete-btn:hover {
-  background: var(--color-danger-50, #FFF0EF);
-  color: var(--color-danger, #E34B45);
-  border-color: #FCA5A5;
-}
-
-.delete-confirm-popover {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  width: 260px;
-  background: var(--color-surface, var(--surface));
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-md, 12px);
-  padding: 12px 14px;
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  animation: fadeIn 120ms ease;
-}
-
-.delete-popover-msg {
-  font-size: 12.5px;
-  color: var(--color-text, #101B36);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.delete-popover-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.btn-popover-cancel {
-  background: var(--color-surface-muted, #F7FAF8);
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 6px);
-  padding: 5px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-secondary, #607086);
-  cursor: pointer;
-}
-
-.btn-popover-danger {
-  background: var(--color-danger, #E34B45);
-  border: none;
-  border-radius: var(--radius-sm, 6px);
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #FFFFFF;
-  cursor: pointer;
-}
-
-/* Expanded Edit Form inside Row */
-.editor-row-expanded-form {
-  padding-top: 12px;
-  border-top: 1px dashed var(--color-border, #E3ECE7);
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.expanded-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 200px;
-}
-
-.expanded-input-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-secondary, #607086);
-}
-
-.expanded-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.expanded-amount-input {
-  width: 100%;
-  height: 42px;
-  background: var(--color-surface-muted, #F7FAF8);
-  border: 1.5px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 8px);
-  padding: 0 52px 0 14px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text, #101B36);
-  outline: none;
-  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
-}
-
-.expanded-amount-input:focus {
-  border-color: var(--color-brand-700, #008B57);
-  background: var(--color-surface, var(--surface));
-  box-shadow: var(--focus-ring);
-}
-
-.expanded-input-suffix {
-  position: absolute;
-  right: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-link);
-  background: var(--color-brand-100, #E6F7EF);
-  padding: 2px 6px;
-  border-radius: 4px;
-  pointer-events: none;
-}
-
-.expanded-helper-text {
-  font-size: 11px;
-  color: var(--color-text-muted, #8A98A9);
-}
-
-.expanded-row-buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-expanded-unset {
-  height: 40px;
-  padding: 0 14px;
-  border-radius: var(--radius-sm, 8px);
-  border: 1px solid var(--color-border, #E3ECE7);
-  background: var(--color-surface-muted, #F7FAF8);
-  color: var(--color-text-secondary, #607086);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-expanded-save {
-  height: 40px;
-  padding: 0 18px;
-  border-radius: var(--radius-sm, 8px);
-  border: none;
-  background: var(--color-brand-700, #008B57);
-  color: #FFFFFF;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--dur-fast) ease;
-}
-
-.btn-expanded-save:hover {
-  background: var(--color-brand-600, #009A5D);
-}
-
-/* Add Category Panel */
-.budget-add-category-panel {
-  background: var(--color-surface, var(--surface));
-  border: 1.5px dashed var(--color-border-strong, #C9DED3);
-  border-radius: var(--radius-md, 12px);
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.add-cat-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.add-cat-icon {
-  font-size: 16px;
-}
-
-.add-cat-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--color-link);
-}
-
-.add-cat-form-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.add-cat-name-input {
-  flex: 1.5;
-  min-width: 180px;
-  height: 42px;
-  background: var(--color-surface-muted, #F7FAF8);
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 8px);
-  padding: 0 12px;
-  font-size: 13.5px;
-  color: var(--color-text, #101B36);
-  outline: none;
-}
-
-.add-cat-name-input:focus {
-  border-color: var(--color-brand-700, #008B57);
-  background: var(--color-surface, var(--surface));
-  box-shadow: var(--focus-ring);
-}
-
-.add-cat-mode-select {
-  height: 42px;
-  background: var(--color-surface-muted, #F7FAF8);
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 8px);
-  padding: 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text, #101B36);
-  outline: none;
-  cursor: pointer;
-}
-
-.add-cat-amount-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 150px;
-}
-
-.add-cat-amount-input {
-  width: 100%;
-  height: 42px;
-  background: var(--color-surface-muted, #F7FAF8);
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 8px);
-  padding: 0 48px 0 12px;
-  font-size: 13.5px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text, #101B36);
-  outline: none;
-}
-
-.add-cat-amount-input:focus {
-  border-color: var(--color-brand-700, #008B57);
-  background: var(--color-surface, var(--surface));
-  box-shadow: var(--focus-ring);
-}
-
-.btn-add-cat-submit {
-  height: 42px;
-  padding: 0 18px;
-  border-radius: var(--radius-sm, 8px);
-  border: none;
-  background: var(--color-brand-700, #008B57);
-  color: #FFFFFF;
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--dur-fast) ease;
-}
-
-.btn-add-cat-submit:hover {
-  background: var(--color-brand-600, #009A5D);
-}
-
-.add-cat-helper-note {
-  font-size: 12px;
-  color: var(--color-text-secondary, #607086);
-  margin: 0;
-}
-
-.add-cat-error-msg {
-  font-size: 12px;
-  color: var(--color-danger, #E34B45);
-  font-weight: 600;
-}
-
-.budget-dialog-error {
-  background: var(--color-danger-50, #FFF0EF);
-  border: 1px solid #FCA5A5;
-  border-radius: var(--radius-sm, 8px);
-  padding: 10px 14px;
-  font-size: 13px;
-  color: var(--color-danger, #E34B45);
-  font-weight: 600;
-}
-
-/* Sticky Dialog Footer */
 .budget-dialog-footer {
   height: 72px;
   padding: 0 28px;
@@ -1423,10 +1185,6 @@ html.green-theme .budget-category-card.is-period-overdue {
     padding: 12px 16px;
   }
 
-  .budget-dialog-content {
-    padding: 16px;
-  }
-
   .budget-dialog-footer {
     height: auto;
     min-height: 64px;
@@ -1438,24 +1196,6 @@ html.green-theme .budget-category-card.is-period-overdue {
     flex: 1 1 140px;
     min-width: 0;
   }
-}
-
-.btn-dialog-cancel {
-  height: 42px;
-  padding: 0 20px;
-  border-radius: var(--radius-sm, 8px);
-  border: 1px solid var(--color-border, #E3ECE7);
-  background: var(--color-surface-muted, #F7FAF8);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-secondary, #607086);
-  cursor: pointer;
-  transition: background var(--dur-fast) ease;
-}
-
-.btn-dialog-cancel:hover {
-  background: var(--color-brand-50, #F1FBF6);
-  color: var(--color-text, #101B36);
 }
 
 .btn-dialog-save {
@@ -1482,6 +1222,879 @@ html.green-theme .budget-category-card.is-period-overdue {
 .btn-dialog-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── 2b. BUDGET LIMIT EDITOR — dialog on desktop, bottom sheet on phones ──
+   Limits are typed straight into flat rows; one summary band compares the
+   drafted total with the money actually available. */
+.blimit-dialog {
+  --blimit-pad: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(600px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow: hidden;
+  background: var(--color-surface, #FFFFFF);
+  color: var(--color-text, #101B36);
+  border: 1px solid var(--color-border, #E3ECE7);
+  border-radius: var(--radius-xl, 20px);
+  box-shadow: var(--shadow-dialog);
+  outline: none;
+  animation: blimitDialogIn 180ms var(--ease-smooth, ease-out);
+}
+
+.blimit-dialog.is-dragging {
+  animation: none;
+  transition: none;
+}
+
+.blimit-grabber {
+  display: none;
+}
+
+.blimit-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px var(--blimit-pad) 16px;
+}
+
+.blimit-head__text {
+  min-width: 0;
+}
+
+.blimit-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-text, #101B36);
+}
+
+.blimit-subtitle {
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-subtitle::first-letter {
+  text-transform: uppercase;
+}
+
+.blimit-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-secondary, #607086);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.blimit-close:hover {
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text, #101B36);
+}
+
+.blimit-close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.blimit-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The only scroll region: summary, rows and the add row move together. */
+.blimit-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.blimit-summary {
+  padding: 16px var(--blimit-pad) 14px;
+  background: var(--color-surface-muted, #F7FAF8);
+  border-block: 1px solid var(--color-border, #E3ECE7);
+}
+
+.blimit-summary__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 16px;
+  row-gap: 2px;
+}
+
+.blimit-summary__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-summary__label b {
+  font-weight: 600;
+  color: var(--color-text, #101B36);
+}
+
+.blimit-summary__label.is-end,
+.blimit-summary__available {
+  text-align: end;
+}
+
+.blimit-summary__total {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #101B36);
+  overflow-wrap: anywhere;
+}
+
+.blimit-summary__total.is-unset {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-muted, #64748B);
+}
+
+.blimit-summary__available {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #101B36);
+}
+
+.blimit-meter {
+  position: relative;
+  height: 6px;
+  margin: 12px 0 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text, #101B36) 9%, transparent);
+}
+
+.blimit-meter__fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--color-success, #007547);
+  transition: width 200ms ease;
+}
+
+.blimit-meter__fill.is-partial {
+  border-radius: 999px 0 0 999px;
+}
+
+/* Static stripes mark the part of the plan that has no money behind it. */
+.blimit-meter__over {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  border-radius: 0 999px 999px 0;
+  background-color: var(--color-danger, #C53030);
+  background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.32) 0 4px, transparent 4px 8px);
+}
+
+.blimit-meter__mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--color-text, #101B36);
+}
+
+.blimit-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-status svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.blimit-status strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.blimit-status.is-over svg,
+.blimit-status.is-over strong {
+  color: var(--color-danger, #C53030);
+}
+
+.blimit-status.is-ok svg,
+.blimit-status.is-ok strong {
+  color: var(--color-success, #007547);
+}
+
+.blimit-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.blimit-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px var(--blimit-pad);
+}
+
+.blimit-row + .blimit-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--blimit-pad) + 48px);
+  right: var(--blimit-pad);
+  height: 1px;
+  background: var(--color-border, #E3ECE7);
+}
+
+.blimit-row__icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.blimit-row__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text, #101B36);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.blimit-row__spent {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary, #607086);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.blimit-row__spent.is-warn {
+  color: var(--color-warning, #A34706);
+}
+
+.blimit-row__spent.is-over {
+  color: var(--color-danger, #C53030);
+}
+
+.blimit-amount {
+  position: relative;
+  flex: 0 0 168px;
+  min-width: 0;
+}
+
+.blimit-amount__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 30px 0 12px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text, #101B36);
+  font: 600 14px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  outline: none;
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.blimit-amount__input:placeholder-shown {
+  padding-right: 12px;
+}
+
+.blimit-amount__input::placeholder {
+  color: var(--color-text-muted, #64748B);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.blimit-amount__input:hover {
+  border-color: var(--color-border-strong, #C9DED3);
+}
+
+.blimit-amount__input:focus {
+  border-color: var(--color-action-bg, #007547);
+  background: var(--color-surface, #FFFFFF);
+  box-shadow: var(--focus-ring);
+}
+
+.blimit-amount__suffix {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted, #64748B);
+  pointer-events: none;
+}
+
+.blimit-row__delete-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Deleting a category is rare: keep the trash quiet until the row is in use. */
+.blimit-row__delete {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted, #64748B);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease, background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.blimit-row:hover .blimit-row__delete,
+.blimit-row:focus-within .blimit-row__delete,
+.blimit-row.is-confirming .blimit-row__delete {
+  opacity: 1;
+}
+
+.blimit-row__delete:hover,
+.blimit-row.is-confirming .blimit-row__delete {
+  background: var(--color-danger-bg, #FFF0EF);
+  color: var(--color-danger, #C53030);
+}
+
+.blimit-row__delete:focus-visible {
+  opacity: 1;
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (hover: none) {
+  .blimit-row__delete {
+    opacity: 1;
+  }
+}
+
+.blimit-confirm {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 3;
+  width: 264px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--menu-border, var(--color-border, #E3ECE7));
+  border-radius: 12px;
+  background: var(--menu-bg, var(--color-surface, #FFFFFF));
+  box-shadow: var(--menu-shadow, var(--shadow-lg));
+  animation: fadeIn 120ms ease;
+}
+
+.blimit-confirm p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text, #101B36);
+  overflow-wrap: anywhere;
+}
+
+.blimit-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.blimit-confirm__btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  font: 600 12.5px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.blimit-confirm__btn.is-ghost {
+  background: transparent;
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-confirm__btn.is-ghost:hover {
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text, #101B36);
+}
+
+.blimit-confirm__btn.is-danger {
+  background: var(--color-danger, #C53030);
+  color: #FFFFFF;
+}
+
+.blimit-confirm__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.blimit-add-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px var(--blimit-pad) 14px;
+  border: 0;
+  background: transparent;
+  color: var(--color-link, #007547);
+  font: 600 14px/1.2 var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.blimit-add-trigger__icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed var(--color-border-strong, #C9DED3);
+  border-radius: 50%;
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease;
+}
+
+.blimit-add-trigger:hover .blimit-add-trigger__icon {
+  border-color: currentColor;
+  background: var(--color-brand-50, #F1FBF6);
+}
+
+.blimit-add-trigger:focus-visible {
+  outline: none;
+}
+
+.blimit-add-trigger:focus-visible .blimit-add-trigger__icon {
+  box-shadow: var(--focus-ring);
+}
+
+.blimit-add-form {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 140px auto 32px;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px var(--blimit-pad) 14px;
+}
+
+.blimit-add-form .blimit-amount {
+  flex: none;
+}
+
+.blimit-add-form__icon {
+  color: var(--color-link, #007547);
+}
+
+.blimit-add-form__name {
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text, #101B36);
+  font: 500 14px/1 var(--font-sans);
+  outline: none;
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.blimit-add-form__name::placeholder {
+  color: var(--color-text-muted, #64748B);
+  opacity: 1;
+}
+
+.blimit-add-form__name:hover {
+  border-color: var(--color-border-strong, #C9DED3);
+}
+
+.blimit-add-form__name:focus {
+  border-color: var(--color-action-bg, #007547);
+  background: var(--color-surface, #FFFFFF);
+  box-shadow: var(--focus-ring);
+}
+
+.blimit-add-form__submit {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-action-bg, #007547);
+  color: var(--color-on-action, #FFFFFF);
+  font: 600 14px/1 var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.blimit-add-form__submit:hover {
+  background: var(--color-action-hover-bg, #00663E);
+}
+
+.blimit-add-form__cancel {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted, #64748B);
+  cursor: pointer;
+}
+
+.blimit-add-form__cancel:hover {
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text, #101B36);
+}
+
+.blimit-add-form__submit:focus-visible,
+.blimit-add-form__cancel:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.blimit-add-form__error {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-danger, #C53030);
+}
+
+.blimit-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px var(--blimit-pad) 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-danger-bg, #FFF0EF);
+  color: var(--color-danger, #C53030);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.blimit-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px var(--blimit-pad);
+  border-top: 1px solid var(--color-border, #E3ECE7);
+  background: var(--color-surface, #FFFFFF);
+}
+
+.blimit-dirty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-dirty::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-warning, #A34706);
+}
+
+.blimit-dirty:empty {
+  display: none;
+}
+
+.blimit-foot__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.blimit-btn {
+  height: 40px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 10px;
+  font: 600 14px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.blimit-btn--ghost {
+  background: transparent;
+  color: var(--color-text-secondary, #607086);
+}
+
+.blimit-btn--ghost:hover:not(:disabled) {
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text, #101B36);
+}
+
+.blimit-btn--primary {
+  padding: 0 22px;
+  background: var(--color-action-bg, #007547);
+  color: var(--color-on-action, #FFFFFF);
+}
+
+.blimit-btn--primary:hover:not(:disabled) {
+  background: var(--color-action-hover-bg, #00663E);
+}
+
+.blimit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.blimit-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@keyframes blimitDialogIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes blimitSheetIn {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@media (max-width: 600px) {
+  .blimit-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .blimit-dialog {
+    --blimit-pad: 16px;
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    border: 0;
+    border-radius: 20px 20px 0 0;
+    animation-name: blimitSheetIn;
+    animation-duration: 260ms;
+  }
+
+  .blimit-handle-zone {
+    touch-action: none;
+  }
+
+  .blimit-grabber {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 8px auto 0;
+    border-radius: 3px;
+    background: var(--color-border-strong, #C9DED3);
+  }
+
+  .blimit-head {
+    padding: 10px 16px 12px;
+  }
+
+  .blimit-close {
+    width: 40px;
+    height: 40px;
+  }
+
+  .blimit-summary {
+    padding: 14px 16px 12px;
+  }
+
+  .blimit-summary__total {
+    font-size: 24px;
+  }
+
+  .blimit-status {
+    font-size: 12.5px;
+  }
+
+  .blimit-row {
+    gap: 10px;
+    padding: 9px 6px 9px 16px;
+  }
+
+  .blimit-row + .blimit-row::before {
+    left: 60px;
+    right: 16px;
+  }
+
+  .blimit-row__icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .blimit-row__spent-extra {
+    display: none;
+  }
+
+  .blimit-amount {
+    flex-basis: 124px;
+  }
+
+  /* 16px keeps iOS Safari from zooming into the field on focus. */
+  .blimit-amount__input,
+  .blimit-add-form__name {
+    font-size: 16px;
+  }
+
+  .blimit-amount__input {
+    padding-left: 10px;
+  }
+
+  .blimit-amount__input:placeholder-shown {
+    padding-right: 10px;
+  }
+
+  .blimit-amount__suffix {
+    right: 10px;
+  }
+
+  /* Touch screens have no hover: keep the (muted) trash visible. */
+  .blimit-row__delete {
+    width: 40px;
+    height: 40px;
+    opacity: 1;
+  }
+
+  .blimit-confirm {
+    width: min(264px, calc(100vw - 32px));
+  }
+
+  .blimit-add-form {
+    grid-template-columns: minmax(0, 1fr) auto 40px;
+  }
+
+  .blimit-add-form__icon {
+    display: none;
+  }
+
+  .blimit-add-form__name,
+  .blimit-add-form__error {
+    grid-column: 1 / -1;
+  }
+
+  .blimit-add-form .blimit-amount {
+    min-width: 0;
+  }
+
+  .blimit-add-form__cancel {
+    width: 40px;
+    height: 40px;
+  }
+
+  .blimit-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 20px -12px rgba(16, 27, 54, 0.18);
+  }
+
+  .blimit-dirty {
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .blimit-foot__actions {
+    margin-left: 0;
+  }
+
+  .blimit-btn {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .blimit-btn--ghost {
+    flex: 1;
+    background: var(--color-surface-muted, #F7FAF8);
+    color: var(--color-text, #101B36);
+  }
+
+  .blimit-btn--primary {
+    flex: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blimit-dialog,
+  .blimit-confirm {
+    animation: none;
+  }
+
+  .blimit-meter__fill {
+    transition: none;
+  }
+}
+
+/* Removing a category shows an "Undo" toast: lift toasts above the editor
+   while it is open (top of the screen on phones, clear of the sheet buttons). */
+body:has(.blimit-overlay) .toast-region {
+  z-index: calc(var(--z-dialog, 1000) + 10);
+}
+
+@media (max-width: 600px) {
+  body:has(.blimit-overlay) .toast-region {
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+  }
 }
 
 /* ── 3. ANALYTICS FEATURE VIEW ── */

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CalendarPanel, MonthPanel } from '../../components/ui/CustomDatePicker';
-import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon, TrendOutlineIcon } from '../../components/ui/AppIcons';
+import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon } from '../../components/ui/AppIcons';
+import { NavIcon } from '../../components/ui/NavIcons';
 import { CashFlowPopover } from './CashFlowPopover';
 import { formatCurrency, formatDate, getLocalDateString } from '../../utils/formatters';
 import '../../assets/css/cash-flow.css';
@@ -157,7 +158,7 @@ export function CashFlowPanel({
   return <section className="analytics-section-panel cashflow-panel" id="analytics-cashflow" data-testid="cashflow-panel"
     aria-labelledby={`${id}-title`}>
     <header className="cashflow-header">
-      <h3 id={`${id}-title`}><TrendOutlineIcon size={20} />{t('nav.cashFlowTrend')}</h3>
+      <h3 id={`${id}-title`}><NavIcon name="cashFlow" size={20} />{t('nav.cashFlowTrend')}</h3>
       <div className="cashflow-controls">
         <button type="button" className="cashflow-control" data-testid="cashflow-period-trigger"
           ref={(node) => { triggersRef.current.period = node; }} onClick={() => togglePopover('period')}

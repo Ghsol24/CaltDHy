@@ -157,10 +157,10 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           if (tab !== 'budgets') await page.screenshot({ path: path.join(evidence, `route-${tab}-${theme}-${width}.png`) });
         }
         await scrollDown();
-        if (desktop) await page.locator('.sidebar-nav-group').nth(2).getByRole('button', { name: 'Lịch sử', exact: true }).click();
+        if (desktop) await page.locator('.sidebar-nav-group').nth(2).getByRole('button', { name: 'Lịch sử giao dịch', exact: true }).click();
         else {
           await page.locator('.mobile-primary-nav').getByRole('button', { name: 'Phân tích', exact: true }).click();
-          await page.locator('.mobile-section-nav').getByRole('button', { name: 'Lịch sử', exact: true }).click();
+          await page.locator('.mobile-section-nav').getByRole('button', { name: 'Lịch sử giao dịch', exact: true }).click();
         }
         await page.waitForURL('**/spending/analytics/transactions');
         layouts.push({ theme, width, route: 'analytics/transactions', ...await readableRouteHeading('#transaction-history-title', `${theme}/${width}/history`, '.transaction-history-header') });
@@ -332,7 +332,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           await expect(page.locator('.plan-feature-view')).toBeVisible();
           // The route shell can render before the fixture data reaches its store.
           if (tab === 'wallets') await expect(page.locator('.wallet-grid-name').filter({ hasText: wallet.name })).toBeVisible();
-          if (tab === 'budgets') await expect(page.locator('.budget-category-card.is-overdue-danger')).toHaveCount(2);
+          if (tab === 'budgets') await expect(page.locator('.bdash-row.is-over')).toHaveCount(2);
           if (tab === 'recurring') await expect(page.locator('.recurring-row-card')).toHaveCount(1);
           await fit(page.locator('.plan-feature-view'), `${theme}/${width} ${tab}`);
           if (width === 390) await page.screenshot({ path: path.join(evidence, `${tab}-${theme}.png`) });

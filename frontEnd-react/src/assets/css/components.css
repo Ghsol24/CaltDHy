@@ -5261,17 +5261,6 @@ html.dark-theme .sidebar-quick-record-card {
   gap: 12px;
 }
 
-.wallets-v2-main-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(16, 185, 129, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 .wallets-v2-heading {
   font-size: 22px;
   font-weight: 800;
@@ -8773,7 +8762,15 @@ html.green-theme {
   gap: 12px;
 }
 
-.recurring-page-icon {
+/* Page title + its sidebar icon (shared by every page header). */
+.page-title-lead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.page-title-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8782,7 +8779,27 @@ html.green-theme {
   height: 44px;
   border-radius: 12px;
   color: var(--color-action-bg, #10B981);
-  background: rgba(16, 185, 129, 0.12);
+  background: color-mix(in srgb, var(--color-action-bg, #10B981) 12%, transparent);
+}
+
+@media (max-width: 600px) {
+  .page-title-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .page-title-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Headings get focus after navigation for screen readers; they are not
+   controls, so they don't draw a focus ring. */
+:is(h1, h2, h3)[tabindex="-1"]:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 .recurring-route-heading {

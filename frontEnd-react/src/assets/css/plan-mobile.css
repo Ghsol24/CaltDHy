@@ -65,6 +65,7 @@
   }
   .plan-feature-view .plan-overview-header { flex-wrap: nowrap; }
   .plan-feature-view .plan-header-titles { min-width: 0; flex: 1; }
+  .plan-feature-view .plan-header-lead { min-width: 0; flex: 1; }
   .plan-feature-view .plan-create-menu-wrapper { flex-shrink: 0; }
   .plan-feature-view .plan-btn-create-primary { padding: 8px 10px; gap: 6px; }
   .plan-feature-view .plan-btn-create-primary .dropdown-chevron-icon { display: none; }
@@ -163,7 +164,6 @@
   .plan-feature-view .insight-banner-btn { max-width: 100%; white-space: normal; }
 
   /* Wallets: readable totals and balanced controls at narrow widths. */
-  .plan-feature-view .wallets-v2-main-icon { display: none; }
   .plan-feature-view .wallets-v2-header-actions { gap: 8px; flex-wrap: wrap; }
   .plan-feature-view .wallets-top-stats-card { gap: 10px; padding: 12px; }
   .plan-feature-view .stat-card-cell { grid-column: 1 / -1; }
@@ -262,7 +262,8 @@
     transform: translateY(0);
   }
 
-  /* Budget: retain month, limit, spending and status without fixed card heights. */
+  /* Budget: full-width month switcher; the hero and the category rows adapt
+     through the `budgets` container query in budgets-analytics.css. */
   .plan-feature-view .budget-month-selector {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr) 44px;
@@ -274,18 +275,6 @@
   .plan-feature-view .month-current-display { justify-content: center; padding: 0; white-space: normal; }
   .plan-feature-view .month-name-text { text-align: center; }
   .plan-feature-view .month-today-btn { grid-column: 1 / -1; }
-  .plan-feature-view .budget-overview-card { padding: 12px; }
-  .plan-feature-view .budget-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .plan-feature-view .budget-ov-value { font-size: 17px; overflow-wrap: anywhere; }
-  .plan-feature-view .budget-categories-grid { gap: 10px; }
-  .plan-feature-view .budget-category-card { min-height: 0; padding: 12px; gap: 9px; }
-  .plan-feature-view .budget-card-emoji-tile { width: 32px; height: 32px; }
-  .plan-feature-view .budget-card-name { white-space: normal; overflow-wrap: anywhere; }
-  .plan-feature-view .budget-card-body { flex-wrap: wrap; gap: 6px; }
-  .plan-feature-view :is(.budget-card-spent, .budget-card-limit-val, .budget-card-status-badge) {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
   .plan-feature-view .budget-load-error { padding: 12px; flex-wrap: wrap; }
 
   /* Recurring: one compact header plus amount, due date and assigned wallet. */
@@ -300,7 +289,6 @@
   .plan-feature-view .banner-stat-val { overflow-wrap: anywhere; font-family: var(--font-sans); }
   /* "Thêm" sits on the title row instead of taking a full-width row in the card. */
   .plan-feature-view .recurring-view-v2-container { position: relative; }
-  .plan-feature-view .recurring-page-icon { width: 36px; height: 36px; border-radius: 10px; }
   .plan-feature-view .recurring-page-header { min-height: 44px; padding-right: 96px; }
   .plan-feature-view .recurring-btn-create-primary {
     position: absolute;

@@ -8,7 +8,7 @@ const sections = [
     [['3. Ghi thu, chi', '3. Record transactions', '3. 记录交易'],
       ['Chọn Thêm giao dịch, loại giao dịch, ví, số tiền và ngày. Dùng Chuyển khoản khi tiền di chuyển giữa hai ví của bạn.', 'Choose Add transaction, then type, wallet, amount and date. Use Transfer for money moving between your own wallets.', '点击添加交易，选择类型、钱包、金额及日期。自己的两个钱包之间移动资金请选择转账。'], 'transaction'],
     [['4. Kiểm tra và điều chỉnh', '4. Review and adjust', '4. 查看并调整'],
-      ['Xem Phân tích để kiểm tra thu chi; mở Lịch sử để tìm và sửa giao dịch nhập sai.', 'Review income and expenses in Analytics; use History to find and correct an entry.', '在分析中查看收支；在历史记录中查找并修改录入错误的交易。'], 'analytics']
+      ['Xem Phân tích để kiểm tra thu chi; mở Lịch sử giao dịch để tìm và sửa giao dịch nhập sai.', 'Review income and expenses in Analytics; use Transaction history to find and correct an entry.', '在分析中查看收支；在交易记录中查找并修改录入错误的交易。'], 'analytics']
   ]],
   ['home', ['Trang chủ', 'Home', '首页'], [
     [['Tiền có thể chi còn lại', 'Available to spend', '剩余可支配金额'],
@@ -44,7 +44,7 @@ const sections = [
     [['Nạp và rút: chuyển tiền nội bộ', 'Deposit and withdraw: internal transfers', '存入与取出：内部转账'],
       ['Chọn hũ → Nạp/Rút → số tiền → ví liên kết → xác nhận. Nạp chuyển từ ví vào hũ; rút chuyển từ hũ về ví. Cả hai không phải thu nhập hay chi tiêu mới. Khi mua hàng, ghi thêm Chi tiêu từ ví.', 'Choose a jar → Deposit/Withdraw → amount → linked wallet → confirm. Deposits move wallet money into a jar; withdrawals return it. Neither is new income or expense. Record an Expense when spending the money.', '选择储蓄罐→存入或取出→金额→关联钱包→确认。存入从钱包转至罐内，取出返回钱包，都不构成新收支。实际消费时另记钱包支出。']],
     [['Theo dõi, sửa và xóa', 'Track, edit and delete', '跟踪、编辑及删除'],
-      ['Mục tiêu xem tiến độ; Danh sách hũ để thao tác; Lịch sử xem các lần nạp/rút. Sửa tên, mục tiêu hoặc thời hạn trong menu hũ. Đổi số dư bằng Nạp/Rút; rút hết về ví trước khi xóa hũ.', 'Goals shows progress; Jar list provides actions; History records deposits and withdrawals. Edit names, targets or deadlines in the jar menu. Change balances through Deposit/Withdraw; empty the jar into a wallet before deleting.', '目标页显示进度，储蓄罐列表提供操作，历史记录存取。通过罐菜单编辑名称、目标或期限。使用存入及取出调整余额；删除前先将余额全部转回钱包。'], 'jarhistory']
+      ['Mục tiêu xem tiến độ; Danh sách hũ để thao tác; Lịch sử nạp/rút ghi lại mọi lần nạp và rút. Sửa tên, mục tiêu hoặc thời hạn trong menu hũ. Đổi số dư bằng Nạp/Rút; rút hết về ví trước khi xóa hũ.', 'Goals shows progress; Jar list provides actions; Jar activity records deposits and withdrawals. Edit names, targets or deadlines in the jar menu. Change balances through Deposit/Withdraw; empty the jar into a wallet before deleting.', '目标页显示进度，储蓄罐列表提供操作，存取记录列出每次存入与取出。通过罐菜单编辑名称、目标或期限。使用存入及取出调整余额；删除前先将余额全部转回钱包。'], 'jarhistory']
   ]],
   ['settings', ['Cài đặt', 'Settings', '设置'], [
     [['Giao diện và hiển thị', 'Appearance and display', '外观与显示'],

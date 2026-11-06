@@ -14,6 +14,7 @@ import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { isInstallmentEnded } from '../../utils/installmentTerm';
+import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 const CYCLE_SUFFIXES = {
   monthly: '/ tháng',
@@ -355,12 +356,7 @@ export function RecurringTab() {
   return (
     <div className="recurring-view-v2-container" role="region" aria-label="Khoản chi định kỳ và trả góp">
       <div className="recurring-page-header">
-        <span className="recurring-page-icon" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <path d="M16 2v4M8 2v4M3 10h18" />
-          </svg>
-        </span>
+        <PageTitleIcon name="recurring" />
         <h2 className="recurring-route-heading">{t('nav.recurring')}</h2>
       </div>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}

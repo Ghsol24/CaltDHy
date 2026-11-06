@@ -38,8 +38,6 @@ import { cashFlowDays, cashFlowMonths, cashFlowMonthTotals, cashFlowSummary,
   cashFlowTopDays, cashFlowSeriesTypes, hasCashFlowData } from '../../utils/cashFlowData';
 import {
   CategoryOutlineIcon,
-  ChartOutlineIcon,
-  ClipboardOutlineIcon,
   BulbOutlineIcon,
   StarOutlineIcon,
   AlertTriangleOutlineIcon,
@@ -47,6 +45,7 @@ import {
   CheckOutlineIcon,
   ZapOutlineIcon
 } from '../../utils/categoryIcons';
+import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
 // Register Chart.js components
 ChartJS.register(
@@ -962,11 +961,14 @@ export function AnalyticsView() {
         <>
       {/* ── 1. Page Header & Comparison Segmented / Month Selector ── */}
       <div className="analytics-header-bar" id="analytics-overview">
-        <div className="analytics-title-group">
-          <h2 className="analytics-view-title">Phân tích tài chính</h2>
-          <p className="analytics-view-subtitle">
-            Nhìn rõ dòng tiền theo thời gian
-          </p>
+        <div className="page-title-lead">
+          <PageTitleIcon name="analyticsOverview" />
+          <div className="analytics-title-group">
+            <h2 className="analytics-view-title">Phân tích tài chính</h2>
+            <p className="analytics-view-subtitle">
+              Nhìn rõ dòng tiền theo thời gian
+            </p>
+          </div>
         </div>
 
         <div className="analytics-header-controls">
@@ -1146,7 +1148,7 @@ export function AnalyticsView() {
         <div className="panel-header">
           <div className="panel-titles">
             <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <ChartOutlineIcon size={18} /> Chi tiêu theo danh mục
+              <NavIcon name="spending" size={18} /> Chi tiêu theo danh mục
             </h3>
             <p className="panel-subtitle">
               {monthData.categories.length > 0
@@ -1299,7 +1301,7 @@ export function AnalyticsView() {
         <div className="panel-header">
           <div className="panel-titles">
             <h3 className="panel-main-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <ClipboardOutlineIcon size={18} /> Báo cáo tổng hợp tài chính
+              <NavIcon name="reports" size={18} /> Báo cáo tổng hợp tài chính
             </h3>
           </div>
 

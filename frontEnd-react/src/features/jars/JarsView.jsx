@@ -29,6 +29,7 @@ import {
   JarOutlineIcon
 } from '../../components/ui/AppIcons';
 import '../../assets/css/jars.css';
+import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
 const JARS_PER_PAGE = 12;
 const JARS_SCROLL_SECTIONS = Object.freeze([
@@ -476,8 +477,11 @@ export function JarsView() {
       <section id="jars-section-goals" className="jars-hero-overview-card">
         {/* Header Title Row */}
         <div className="jars-hero-top-row">
-          <div className="jars-hero-titles">
-            <h1 className="jars-hero-heading">Mục tiêu</h1>
+          <div className="page-title-lead">
+            <PageTitleIcon name="goals" />
+            <div className="jars-hero-titles">
+              <h1 className="jars-hero-heading">Mục tiêu</h1>
+            </div>
           </div>
 
           <button
@@ -834,7 +838,8 @@ export function JarsView() {
         <div className="jars-toolbar-row">
           <div className="jars-toolbar-left">
             <h2 className="jars-section-title" style={{ margin: 0 }}>
-              Các hũ của bạn
+              <NavIcon name="jarList" size={20} />
+              <span>Các hũ của bạn</span>
             </h2>
             <span className="jars-count-badge">({jars.length})</span>
           </div>
@@ -1267,7 +1272,7 @@ export function JarsView() {
 
       {/* ── SECTION 6: LỊCH SỬ HŨ ──
           Desktop shows recent activity beside the calendar (id jars-section-history
-          lives there). On phones the "Lịch sử" tab shows the longer list here. */}
+          lives there). On phones the "Lịch sử nạp/rút" tab shows the longer list here. */}
       {isMobile && jarsSubTab === 'history' && (
         <JarRecentActivity
           id="jars-section-history"

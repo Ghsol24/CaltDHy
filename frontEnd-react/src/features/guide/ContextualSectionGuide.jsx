@@ -13,6 +13,7 @@ import {
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../i18n/useTranslation';
 import { getGuideContent } from './guideContent';
+import { NavIcon } from '../../components/ui/NavIcons';
 
 const renderPointIcon = (iconKey) => {
   switch (iconKey) {
@@ -20,7 +21,7 @@ const renderPointIcon = (iconKey) => {
     case 'alert': return <AlertTriangleOutlineIcon size={16} />;
     case 'zap': return <ZapOutlineIcon size={16} />;
     case 'wallet': return <WalletOutlineIcon size={16} />;
-    case 'budget': return <ChartOutlineIcon size={16} />;
+    case 'budget': return <NavIcon name="budgets" size={16} />;
     case 'recurring': return <RefreshOutlineIcon size={16} />;
     case 'trend': return <TrendOutlineIcon size={16} />;
     case 'chart': return <ChartOutlineIcon size={16} />;

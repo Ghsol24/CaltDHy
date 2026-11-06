@@ -15,6 +15,7 @@ import { BottomSheet } from '../../components/ui/BottomSheet';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatDisplayDate } from '../../utils/datePicker';
 import { getHistoryFilterCopy } from './historyFilterCopy';
+import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -174,7 +175,8 @@ export function TransactionHistoryView() {
 
   return <section className="transaction-history" aria-labelledby="transaction-history-title">
     <header className="transaction-history-header">
-      <div>
+      <div className="page-title-lead">
+        <PageTitleIcon name="transactions" />
         <h2 id="transaction-history-title">{t('history.title')}</h2>
       </div>
     </header>

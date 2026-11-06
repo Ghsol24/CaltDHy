@@ -10,12 +10,13 @@ import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath'
 import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { CategoryOutlineIcon, ChartOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
+import { CategoryOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { getPlanCopy } from './planCopy';
 import { isInstallmentEnded } from '../../utils/installmentTerm';
 import { buildPlanAlerts } from '../../utils/planAlerts';
 import { PlanAttentionBar } from './PlanAttentionBar';
+import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
 const WALLET_TYPE_LABELS = {
   cash: 'Tiền mặt',
@@ -182,11 +183,14 @@ export function PlanOverviewTab() {
     <div className="plan-overview-container" role="region" aria-label="Tổng quan kế hoạch tài chính">
       {/* ── 1. Page Header: Title, Subtitle, and + Tạo kế hoạch Dropdown ── */}
       <div className="plan-overview-header">
-        <div className="plan-header-titles">
-          <h2 className="plan-overview-title">
-            <span className="plan-wide-copy">{copy.overview}</span>
-            <span className="plan-mobile-copy">{copy.mobileOverview}</span>
-          </h2>
+        <div className="page-title-lead plan-header-lead">
+          <PageTitleIcon name="planOverview" />
+          <div className="plan-header-titles">
+            <h2 className="plan-overview-title">
+              <span className="plan-wide-copy">{copy.overview}</span>
+              <span className="plan-mobile-copy">{copy.mobileOverview}</span>
+            </h2>
+          </div>
         </div>
 
         {/* Action Button with Dropdown */}
@@ -264,11 +268,7 @@ export function PlanOverviewTab() {
                 }}
               >
                 <div className="dropdown-item-icon-tile dropdown-icon--emerald" aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" x2="12" y1="20" y2="10" />
-                    <line x1="18" x2="18" y1="20" y2="4" />
-                    <line x1="6" x2="6" y1="20" y2="16" />
-                  </svg>
+                  <NavIcon name="budgets" size={18} />
                 </div>
                 <div className="dropdown-item-info">
                   <strong className="dropdown-item-title">Ngân sách</strong>
@@ -337,11 +337,7 @@ export function PlanOverviewTab() {
         <div className="plan-metric-card">
           <div className="metric-card-top-row">
             <div className={`metric-icon-circle ${hasAnyBudgetLimit && totalBudgetRemaining !== null && totalBudgetRemaining < 0 ? 'metric-icon--danger' : 'metric-icon--emerald'}`} aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" x2="12" y1="20" y2="10" />
-                <line x1="18" x2="18" y1="20" y2="4" />
-                <line x1="6" x2="6" y1="20" y2="16" />
-              </svg>
+              <NavIcon name="budgets" size={20} />
             </div>
             <div className="metric-titles">
               <span className="plan-metric-label">
@@ -506,7 +502,7 @@ export function PlanOverviewTab() {
             ) : topBudgetCategories.length === 0 || !hasAnyBudgetLimit ? (
               <div className="column-empty-state">
                 <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
-                  <ChartOutlineIcon size={28} color="currentColor" />
+                  <NavIcon name="budgets" size={28} />
                 </span>
                 <p>Chưa có ngân sách nào được thiết lập trong tháng này.</p>
               </div>

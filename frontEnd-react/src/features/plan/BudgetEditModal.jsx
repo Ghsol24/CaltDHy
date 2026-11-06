@@ -8,134 +8,157 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useBudgetCopy } from './budgetCopy';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
-import { CategoryOutlineIcon, SparkleOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
-import { calculateAvailableToSpend } from '../../utils/financeMath';
-import { formatCurrency, formatDate, formatInputNumber, getLocalMonthString } from '../../utils/formatters';
+import { CategoryOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
+import { calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/financeMath';
+import { formatCurrency, formatDate, formatInputNumber, formatPercent, getLocalMonthString } from '../../utils/formatters';
+
+// Limits are typed straight into each row; the draft only becomes real on "Save".
+const MAX_AMOUNT_DIGITS = 15;
+const SHEET_DISMISS_DISTANCE = 96;
+const SHEET_MEDIA_QUERY = '(max-width: 600px)';
+
+function toAmountInput(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, MAX_AMOUNT_DIGITS);
+  return digits ? formatInputNumber(digits) : '';
+}
+
+function parseAmount(value) {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  const amount = digits ? Number(digits) : 0;
+  return amount > 0 ? amount : null;
+}
+
+function serializeDraft(rows) {
+  return rows.map((row) => `${row.name}\u0000${parseAmount(row.input) ?? ''}`).join('\u0001');
+}
+
+function monthStartDate(monthStr) {
+  const [year, month] = monthStr.split('-').map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+// Category names contain spaces and symbols ("Food & Dining"), which break
+// space-separated ARIA id references, so derive a token-safe id instead.
+function safeDomId(prefix, name) {
+  const token = Array.from(name)
+    .map((ch) => (/[A-Za-z0-9_-]/.test(ch) ? ch : `_${ch.codePointAt(0).toString(16)}`))
+    .join('');
+  return `${prefix}-${token}`;
+}
+
+function TrashIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
+
+function CloseIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
+  const t = useBudgetCopy();
   const { budgets, expenseCategories, transactions, updateBudgetsAndCategories } = useTransactionStore();
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const { addToast } = useToastStore();
   const { wallets } = useWalletStore();
   const { jars } = useJarStore();
 
-  // Local draft state
-  const [categoriesDraft, setCategoriesDraft] = useState([]);
-  const [expandedCat, setExpandedCat] = useState(null);
-  const [rowAmountInputs, setRowAmountInputs] = useState(() => Object.create(null));
-  const [isDirty, setIsDirty] = useState(false);
+  // Draft rows: { name, icon, input } — `input` is the formatted amount string.
+  const [rows, setRows] = useState([]);
+  const [baseline, setBaseline] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [deletingName, setDeletingName] = useState(null);
 
-  // Delete popover confirmation state
-  const [deletingCat, setDeletingCat] = useState(null);
-
-  // New Category Panel state
+  const [isAdding, setIsAdding] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatAmount, setNewCatAmount] = useState('');
   const [newCatError, setNewCatError] = useState('');
 
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragRef = useRef(null);
+
   const modalRef = useRef(null);
-  const listContainerRef = useRef(null);
-  const triggerRef = useRef(null);
+  const addTriggerRef = useRef(null);
+  const deleteTriggerRef = useRef(null);
   const prevIsOpenRef = useRef(false);
 
   useFocusTrap(modalRef, isOpen);
   useBodyScrollLock(isOpen);
 
-  // Active month display label
   const activeMonthStr = selectedMonth || getLocalMonthString();
-  const monthDateObj = new Date(`${activeMonthStr}-01`);
-  const monthDisplay = formatDate(monthDateObj, 'month');
+  const monthDisplay = formatDate(monthStartDate(activeMonthStr), 'month');
 
   const handleRequestClose = useCallback(() => {
     if (!isSubmitting) onClose();
   }, [isSubmitting, onClose]);
 
-  // Initialize draft data ONLY when modal transitions from closed to open
+  // Build the draft only when the dialog goes from closed to open.
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current) {
-      // Save active element to restore focus on close
-      triggerRef.current = document.activeElement;
-
-      // Build unified list of categories:
-      // 1. Current expenseCategories
-      // 2. Any categories with expense transactions
-      // 3. Any categories configured in budgets object
-      // 4. Default expense categories (Housing & Bills, Food & Dining, etc.)
       const currentCats = expenseCategories && expenseCategories.length > 0 ? expenseCategories : [];
-      const knownCategoryNames = new Set(currentCats.map((c) => c.name.toLowerCase()));
-
+      const knownNames = new Set(currentCats.map((c) => c.name.toLowerCase()));
       const list = [...currentCats];
 
-      // Add categories from transactions that aren't in expenseCategories yet
-      (transactions || []).forEach((t) => {
-        if (t.type === 'expense' && t.category) {
-          const lower = t.category.toLowerCase();
-          if (!knownCategoryNames.has(lower)) {
-            knownCategoryNames.add(lower);
-            list.push({
-              name: t.category,
-              icon: getCategoryIcon(t.category, 'expense')
-            });
-          }
-        }
+      (transactions || []).forEach((tx) => {
+        if (tx.type !== 'expense' || !tx.category) return;
+        const lower = tx.category.toLowerCase();
+        if (knownNames.has(lower)) return;
+        knownNames.add(lower);
+        list.push({ name: tx.category, icon: getCategoryIcon(tx.category, 'expense') });
       });
 
-      // Add categories from budgets that aren't in list yet
       Object.keys(budgets || {}).forEach((catName) => {
         const lower = catName.toLowerCase();
-        if (!knownCategoryNames.has(lower)) {
-          knownCategoryNames.add(lower);
-          list.push({
-            name: catName,
-            icon: getCategoryIcon(catName, 'expense')
-          });
-        }
+        if (knownNames.has(lower)) return;
+        knownNames.add(lower);
+        list.push({ name: catName, icon: getCategoryIcon(catName, 'expense') });
       });
 
-      // Chỉ nạp danh mục mặc định nếu danh sách hoàn toàn rỗng (user mới chưa thiết lập danh mục nào)
+      // Seed defaults only for a brand-new user with no categories at all.
       if (list.length === 0) {
-        DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
-          list.push({
-            name: defCat.name,
-            icon: defCat.icon
-          });
-        });
+        DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => list.push({ name: defCat.name, icon: defCat.icon }));
       }
 
-      const initialList = list.map((c, idx) => {
-        const budgetVal = budgets && budgets[c.name] !== undefined ? Number(budgets[c.name]) : null;
+      const initialRows = list.map((c) => {
+        const limit = budgets && budgets[c.name] !== undefined ? Number(budgets[c.name]) : 0;
         return {
-          id: `cat_${idx}_${c.name}`,
           name: c.name,
           icon: c.icon || getCategoryIcon(c.name, 'expense'),
-          isSystem: false,
-          limit: budgetVal && budgetVal > 0 ? budgetVal : null,
-          order: idx + 1
+          input: limit > 0 ? toAmountInput(limit) : ''
         };
       });
 
-      setCategoriesDraft(initialList);
-
-      // Populate row inputs
-      const inputsMap = Object.create(null);
-      initialList.forEach((c) => {
-        inputsMap[c.name] = c.limit ? formatInputNumber(c.limit) : '';
-      });
-      setRowAmountInputs(inputsMap);
-
-      setIsDirty(false);
+      setRows(initialRows);
+      setBaseline(serializeDraft(initialRows));
       setErrorMsg('');
+      setDeletingName(null);
+      setIsAdding(false);
       setNewCatName('');
       setNewCatAmount('');
       setNewCatError('');
-      setDeletingCat(null);
+      setDragOffset(0);
 
-      // If initialCategory is specified, expand and focus it
       if (initialCategory) {
-        setExpandedCat(initialCategory);
         setTimeout(() => {
           const el = document.getElementById(`input-amount-${initialCategory}`);
           if (el) {
@@ -144,230 +167,215 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
           }
         }, 100);
       } else {
-        setExpandedCat(null);
+        // Start on the dialog itself: no keyboard pops up on phones and screen
+        // readers announce the title first.
+        modalRef.current?.focus();
       }
     }
     prevIsOpenRef.current = isOpen;
   }, [isOpen, initialCategory, budgets, expenseCategories, transactions]);
 
-  // Handle ESC key with unsaved change check
+  const cancelAdd = useCallback(() => {
+    setIsAdding(false);
+    setNewCatName('');
+    setNewCatAmount('');
+    setNewCatError('');
+    requestAnimationFrame(() => addTriggerRef.current?.focus());
+  }, []);
+
+  const closeDeleteConfirm = useCallback(() => {
+    setDeletingName(null);
+    requestAnimationFrame(() => deleteTriggerRef.current?.focus());
+  }, []);
+
+  // Escape peels back one layer at a time: confirm popover → add form → dialog.
   useEffect(() => {
-    if (!isOpen) return;
-
+    if (!isOpen) return undefined;
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        handleRequestClose();
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      if (deletingName) {
+        closeDeleteConfirm();
+        return;
       }
+      if (isAdding) {
+        cancelAdd();
+        return;
+      }
+      handleRequestClose();
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleRequestClose]);
+  }, [isOpen, deletingName, isAdding, cancelAdd, closeDeleteConfirm, handleRequestClose]);
 
-  // Compute live total summary from draft
-  const { totalLimitDraft, limitedCount } = useMemo(() => {
+  // Keep the delete confirmation fully visible and start on its safe choice.
+  useEffect(() => {
+    if (!deletingName) return;
+    const popover = modalRef.current?.querySelector('.blimit-confirm');
+    popover?.scrollIntoView({ block: 'nearest' });
+    popover?.querySelector('.blimit-confirm__btn.is-ghost')?.focus();
+  }, [deletingName]);
+
+  const spentByCategory = useMemo(
+    () => calculateMonthlyStats(transactions || [], activeMonthStr).byCategory,
+    [transactions, activeMonthStr]
+  );
+
+  const { totalLimit, limitedCount } = useMemo(() => {
     let sum = 0;
     let count = 0;
-    categoriesDraft.forEach((c) => {
-      if (typeof c.limit === 'number' && c.limit > 0) {
-        sum += c.limit;
-        count++;
+    rows.forEach((row) => {
+      const limit = parseAmount(row.input);
+      if (limit) {
+        sum += limit;
+        count += 1;
       }
     });
-    return { totalLimitDraft: sum, limitedCount: count };
-  }, [categoriesDraft]);
+    return { totalLimit: sum, limitedCount: count };
+  }, [rows]);
 
-  // Tier 4: so tổng hạn mức nháp với "Tiền có thể chi còn lại" thực tế (availableToSpend),
-  // để người dùng thấy ngay lúc THIẾT LẬP nếu hạn mức đang vượt quá số tiền họ thực sự có —
-  // thay vì chỉ phát hiện ra sau khi đã tiêu vượt (như bug đã báo cáo ở trang Ngân sách/Trang chủ).
+  // Compare the drafted total with the money that is actually available, so an
+  // unrealistic plan shows up while it is being set rather than after overspending.
   const { availableToSpend } = useMemo(
     () => calculateAvailableToSpend({ wallets, transactions, jars, currentMonthPrefix: activeMonthStr }),
     [wallets, transactions, jars, activeMonthStr]
   );
-  const unallocated = availableToSpend - totalLimitDraft;
+  const unallocated = availableToSpend - totalLimit;
+  const isOverAvailable = unallocated < 0;
 
-  // Toggle row expand / state
-  const handleToggleRow = (catName) => {
-    if (expandedCat === catName) {
-      setExpandedCat(null);
-    } else {
-      setExpandedCat(catName);
+  const meter = useMemo(() => {
+    const available = Math.max(availableToSpend, 0);
+    if (!isOverAvailable) {
+      return { fill: available > 0 ? (totalLimit / available) * 100 : 0, over: 0, mark: null };
     }
+    const scale = Math.max(totalLimit, 1);
+    const within = (available / scale) * 100;
+    return { fill: within, over: 100 - within, mark: within };
+  }, [availableToSpend, totalLimit, isOverAvailable]);
+
+  const isDirty = useMemo(() => serializeDraft(rows) !== baseline, [rows, baseline]);
+
+  const handleRowInputChange = (name, value) => {
+    const input = toAmountInput(value);
+    setRows((prev) => prev.map((row) => (row.name === name ? { ...row, input } : row)));
   };
 
-  // Switch row to "Chưa đặt hạn mức" (clears limit to null)
-  const handleSetRowUnset = (catName) => {
-    setCategoriesDraft((prev) =>
-      prev.map((c) => (c.name === catName ? { ...c, limit: null } : c))
-    );
-    setRowAmountInputs((prev) => ({ ...prev, [catName]: '' }));
-    setExpandedCat(null);
-    setIsDirty(true);
-  };
+  const handleConfirmDelete = (name) => {
+    const index = rows.findIndex((row) => row.name === name);
+    if (index < 0) return;
+    const removed = rows[index];
+    const neighbour = rows[index + 1] || rows[index - 1];
 
-  // Commit in-row amount edit
-  const handleSaveRowAmount = (catName) => {
-    const rawVal = rowAmountInputs[catName] || '';
-    const cleanNum = parseInt(rawVal.replace(/\D/g, ''), 10);
-
-    if (!cleanNum || cleanNum <= 0) {
-      // Treat as unset
-      handleSetRowUnset(catName);
-      return;
-    }
-
-    setCategoriesDraft((prev) =>
-      prev.map((c) => (c.name === catName ? { ...c, limit: cleanNum } : c))
-    );
-    setExpandedCat(null);
-    setIsDirty(true);
-  };
-
-  // Format currency on typing
-  const handleRowInputChange = (catName, value) => {
-    const rawDigits = value.replace(/\D/g, '');
-    const formatted = rawDigits ? formatInputNumber(rawDigits) : '';
-    setRowAmountInputs((prev) => ({ ...prev, [catName]: formatted }));
-    setIsDirty(true);
-  };
-
-  // Delete category popover confirm
-  const handleConfirmDelete = (cat) => {
-    const deletedItem = { ...cat };
-    const updatedDraft = categoriesDraft.filter((c) => c.name !== cat.name);
-
-    setCategoriesDraft(updatedDraft);
-    setRowAmountInputs((prev) => {
-      const copy = { ...prev };
-      delete copy[cat.name];
-      return copy;
+    setRows((prev) => prev.filter((row) => row.name !== name));
+    setDeletingName(null);
+    requestAnimationFrame(() => {
+      const next = neighbour ? document.getElementById(`input-amount-${neighbour.name}`) : null;
+      (next || addTriggerRef.current || modalRef.current)?.focus();
     });
-    setDeletingCat(null);
-    setIsDirty(true);
-
-    // Categories remain a draft until the atomic save succeeds.
 
     addToast({
       type: 'info',
-      message: `Đã bỏ "${cat.name}" khỏi bản nháp. Nhấn Lưu để xác nhận.`,
+      message: `Đã bỏ "${name}" khỏi bản nháp. Nhấn Lưu để xác nhận.`,
       action: {
         label: 'Hoàn tác',
         onClick: () => {
-          const restoredDraft = [...updatedDraft, deletedItem];
-          setCategoriesDraft(restoredDraft);
-          setRowAmountInputs((prev) => ({
-            ...prev,
-            [deletedItem.name]: deletedItem.limit ? formatInputNumber(deletedItem.limit) : ''
-          }));
-          setIsDirty(true);
-          addToast({
-            type: 'success',
-            message: `Đã khôi phục danh mục "${deletedItem.name}".`
+          setRows((prev) => {
+            if (prev.some((row) => row.name === removed.name)) return prev;
+            const at = Math.min(index, prev.length);
+            return [...prev.slice(0, at), removed, ...prev.slice(at)];
           });
+          addToast({ type: 'success', message: `Đã khôi phục danh mục "${removed.name}".` });
         }
       },
       duration: 5000
     });
   };
 
-  // Add new category
-  const handleAddNewCategory = (e) => {
-    if (e) e.preventDefault();
+  const handleAddNewCategory = () => {
     setNewCatError('');
-
     const trimmedName = newCatName.trim();
     if (!trimmedName) {
       setNewCatError('Vui lòng nhập tên danh mục mới.');
       return;
     }
-
-    const exists = categoriesDraft.some(
-      (c) => c.name.toLowerCase() === trimmedName.toLowerCase()
-    );
-    if (exists) {
+    if (rows.some((row) => row.name.toLowerCase() === trimmedName.toLowerCase())) {
       setNewCatError(`Danh mục "${trimmedName}" đã tồn tại.`);
       return;
     }
 
-    let parsedLimit = null;
-    if (newCatAmount && newCatAmount.trim() !== '') {
-      const cleanNum = parseInt(newCatAmount.replace(/\D/g, ''), 10);
-      if (cleanNum && cleanNum > 0) {
-        parsedLimit = cleanNum;
-      }
-    }
-
-    const newCategory = {
-      id: `cat_custom_${Date.now()}`,
-      name: trimmedName,
-      icon: getCategoryIcon(trimmedName, 'expense'),
-      isSystem: false,
-      limit: parsedLimit,
-      order: categoriesDraft.length + 1
-    };
-
-    const updatedDraft = [...categoriesDraft, newCategory];
-    setCategoriesDraft(updatedDraft);
-    setRowAmountInputs((prev) => ({
-      ...prev,
-      [trimmedName]: parsedLimit ? formatInputNumber(parsedLimit) : ''
-    }));
-
+    const input = toAmountInput(newCatAmount);
+    setRows((prev) => [...prev, { name: trimmedName, icon: getCategoryIcon(trimmedName, 'expense'), input }]);
+    setIsAdding(false);
     setNewCatName('');
     setNewCatAmount('');
-    setNewCatError('');
-    setIsDirty(true);
 
-    // Sync categories directly to store
-
+    // Without an amount the next step is typing one; otherwise offer another add.
     setTimeout(() => {
-      if (listContainerRef.current) {
-        listContainerRef.current.scrollTop = listContainerRef.current.scrollHeight;
-      }
-    }, 60);
+      const newInput = document.getElementById(`input-amount-${trimmedName}`);
+      newInput?.scrollIntoView({ block: 'nearest' });
+      if (!input && newInput) newInput.focus();
+      else addTriggerRef.current?.focus();
+    }, 30);
   };
 
-  // Global Save to store
   const handleGlobalSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-
-    const payload = Object.create(null);
-    categoriesDraft.forEach((c) => {
-      if (typeof c.limit === 'number' && c.limit > 0) {
-        payload[c.name] = c.limit;
-      }
-    });
-
-    const finalCategories = categoriesDraft.map((c) => ({ name: c.name, icon: c.icon }));
 
     if (activeMonthStr < getLocalMonthString()) {
       setErrorMsg('Kỳ ngân sách của tháng trước đã kết thúc. Không thể chỉnh sửa ngân sách quá khứ.');
       return;
     }
 
+    const payload = Object.create(null);
+    rows.forEach((row) => {
+      const limit = parseAmount(row.input);
+      if (limit) payload[row.name] = limit;
+    });
+    const finalCategories = rows.map((row) => ({ name: row.name, icon: row.icon }));
+
     setIsSubmitting(true);
     try {
       await updateBudgetsAndCategories(payload, finalCategories, activeMonthStr);
       setIsSubmitting(false);
       onClose();
-      addToast({
-        type: 'success',
-        message: `Đã cập nhật hạn mức ${monthDisplay}!`,
-        duration: 4000
-      });
+      addToast({ type: 'success', message: `Đã cập nhật hạn mức ${monthDisplay}!`, duration: 4000 });
     } catch (err) {
       setIsSubmitting(false);
       setErrorMsg(getUserErrorMessage(err, 'error.save'));
     }
   };
 
+  // Phones: drag the sheet header down to dismiss (the grabber promises it).
+  const handleSheetPointerDown = (e) => {
+    if (!window.matchMedia(SHEET_MEDIA_QUERY).matches || e.button > 0) return;
+    if (e.target.closest('button')) return;
+    dragRef.current = { startY: e.clientY };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+
+  const handleSheetPointerMove = (e) => {
+    if (!dragRef.current) return;
+    setDragOffset(Math.max(0, e.clientY - dragRef.current.startY));
+  };
+
+  const handleSheetPointerEnd = () => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    const shouldClose = dragOffset > SHEET_DISMISS_DISTANCE;
+    setDragOffset(0);
+    if (shouldClose) handleRequestClose();
+  };
+
+  const handleDialogMouseDown = (e) => {
+    if (deletingName && !e.target.closest('.blimit-row__delete-wrap')) setDeletingName(null);
+  };
+
   if (!isOpen) return null;
 
   return createPortal(
     <div
-      className="modal-backdrop-overlay"
+      className="modal-backdrop-overlay blimit-overlay"
       role="presentation"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleRequestClose();
@@ -375,253 +383,197 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
     >
       <div
         ref={modalRef}
-        className="budget-setup-dialog"
+        className={`blimit-dialog${dragOffset ? ' is-dragging' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="budget-dialog-title"
-        aria-describedby="budget-dialog-desc"
+        aria-labelledby="blimit-title"
+        aria-describedby="blimit-desc"
+        tabIndex={-1}
+        style={dragOffset ? { transform: `translateY(${dragOffset}px)` } : undefined}
+        onMouseDown={handleDialogMouseDown}
       >
-        {/* ── Dialog Header (Fixed) ── */}
-        <div className="budget-dialog-header">
-          <div className="budget-dialog-header-lead">
-            <div className="budget-dialog-icon-tile" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" x2="12" y1="20" y2="10" />
-                <line x1="18" x2="18" y1="20" y2="4" />
-                <line x1="6" x2="6" y1="20" y2="16" />
-              </svg>
+        <div
+          className="blimit-handle-zone"
+          onPointerDown={handleSheetPointerDown}
+          onPointerMove={handleSheetPointerMove}
+          onPointerUp={handleSheetPointerEnd}
+          onPointerCancel={handleSheetPointerEnd}
+        >
+          <span className="blimit-grabber" aria-hidden="true" />
+          <header className="blimit-head">
+            <div className="blimit-head__text">
+              <h2 id="blimit-title" className="blimit-title">{t('budgetEditor.title')}</h2>
+              <p id="blimit-desc" className="blimit-subtitle">{t('budgetEditor.subtitle', { month: monthDisplay })}</p>
             </div>
-            <div className="budget-dialog-titles">
-              <h2 id="budget-dialog-title" className="budget-dialog-title">
-                Thiết lập hạn mức ngân sách tháng
-              </h2>
-              <p id="budget-dialog-desc" className="budget-dialog-desc">
-                Đặt hạn mức tối đa hoặc tạo thêm danh mục tùy ý để kiểm soát chi tiêu.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="budget-dialog-close-btn"
-            onClick={handleRequestClose}
-            disabled={isSubmitting}
-            aria-label="Đóng hộp thoại"
-            title="Đóng"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+            <button
+              type="button"
+              className="blimit-close"
+              onClick={handleRequestClose}
+              disabled={isSubmitting}
+              aria-label="Đóng hộp thoại"
+              title={t('common.close')}
+            >
+              <CloseIcon />
+            </button>
+          </header>
         </div>
 
-        {/* ── Dialog Body ── */}
-        <form onSubmit={handleGlobalSubmit} className="budget-dialog-form" noValidate>
-          <div className="budget-dialog-content">
-            {/* 1. Monthly Total Summary Card */}
-            <div className="budget-dialog-summary-card">
-              <div className="summary-card-left">
-                <div className="summary-wallet-icon" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                    <line x1="2" x2="22" y1="10" y2="10" />
-                  </svg>
-                </div>
-                <div className="summary-texts">
-                  <span className="summary-title">Tổng hạn mức cả tháng</span>
-                  <span className="summary-subtext">({limitedCount} danh mục đang đặt hạn mức)</span>
-                </div>
-              </div>
-
-              <div className="summary-card-right">
-                <strong className={`summary-total-num ${limitedCount === 0 ? 'is-unset' : ''}`}>
-                  {limitedCount === 0 ? 'Chưa thiết lập' : formatCurrency(totalLimitDraft)}
+        <form onSubmit={handleGlobalSubmit} className="blimit-form" noValidate>
+          <div className="blimit-body">
+            {/* One summary block: total vs. money actually available. */}
+            <section className="blimit-summary" aria-label={t('budgetEditor.summaryLabel')}>
+              <div className="blimit-summary__grid">
+                <span className="blimit-summary__label">
+                  {t('budgetEditor.totalLabel')} · <b>{t('budgetEditor.categoriesCount', { count: limitedCount, total: rows.length })}</b>
+                </span>
+                <span className="blimit-summary__label is-end">{t('budgetEditor.availableLabel')}</span>
+                <strong className={`blimit-summary__total${limitedCount === 0 ? ' is-unset' : ''}`}>
+                  {limitedCount === 0 ? t('budgetEditor.notSet') : formatCurrency(totalLimit)}
                 </strong>
+                <strong className="blimit-summary__available">{formatCurrency(availableToSpend)}</strong>
               </div>
-            </div>
 
-            {/* Tier 4: đối chiếu hạn mức nháp với tiền khả dụng thực tế (chỉ gợi ý, không chặn lưu) */}
-            <div className={`budget-allocation-note ${unallocated < 0 ? 'is-over' : 'is-ok'}`} role="status">
-              <span className="budget-allocation-icon" aria-hidden="true">
-                {unallocated < 0 ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="blimit-meter" aria-hidden="true">
+                <span
+                  className={`blimit-meter__fill${meter.over > 0 ? ' is-partial' : ''}`}
+                  style={{ width: `${Math.min(100, meter.fill)}%` }}
+                />
+                {meter.over > 0 && <span className="blimit-meter__over" style={{ width: `${meter.over}%` }} />}
+                {meter.mark !== null && <span className="blimit-meter__mark" style={{ left: `${meter.mark}%` }} />}
+              </div>
+
+              <p className={`blimit-status ${isOverAvailable ? 'is-over' : 'is-ok'}`} role="status">
+                {isOverAvailable ? (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                    <path d="M12 8v4M12 16h.01" />
                   </svg>
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" />
                   </svg>
                 )}
-              </span>
-              <p className="budget-allocation-text">
-                {unallocated >= 0 ? (
-                  <>Còn <strong>{formatCurrency(unallocated)}</strong> khả dụng chưa gán vào danh mục nào (trên tổng {formatCurrency(availableToSpend)} bạn có thể chi).</>
-                ) : (
-                  <>Tổng hạn mức đang <strong>vượt {formatCurrency(Math.abs(unallocated))}</strong> so với số tiền khả dụng thực tế ({formatCurrency(availableToSpend)}) — hạn mức này sẽ khó khả thi.</>
-                )}
+                <span>
+                  {isOverAvailable ? (
+                    <>
+                      <strong>{t('budgetEditor.overAvailable', { amount: formatCurrency(Math.abs(unallocated)) })}</strong>{' '}
+                      {t('budgetEditor.overAvailableHint')}
+                    </>
+                  ) : (
+                    <>
+                      <strong>{t('budgetEditor.unallocated', { amount: formatCurrency(unallocated) })}</strong>{' '}
+                      {t('budgetEditor.unallocatedHint')}
+                    </>
+                  )}
+                </span>
               </p>
-            </div>
+            </section>
 
-            {/* 2. Scrollable Category List */}
-            <div className="budget-category-list-scrollable" ref={listContainerRef}>
-              {categoriesDraft.map((cat) => {
-                const isExpanded = expandedCat === cat.name;
-                const hasLimit = typeof cat.limit === 'number' && cat.limit > 0;
-                const isDeleting = deletingCat?.name === cat.name;
+            <ul className="blimit-list">
+              {rows.map((row) => {
+                const limit = parseAmount(row.input);
+                const spent = spentByCategory[row.name] || 0;
+                const percent = limit ? Math.round((spent * 100) / limit) : 0;
+                const tone = limit && spent > limit ? 'over' : limit && percent >= 80 ? 'warn' : 'normal';
+                const isDeleting = deletingName === row.name;
+                const spentId = safeDomId('blimit-spent', row.name);
+                const confirmId = safeDomId('blimit-confirm', row.name);
 
                 return (
-                  <div
-                    key={cat.name}
-                    className={`budget-editor-row ${isExpanded ? 'is-expanded' : ''}`}
-                  >
-                    {/* Top Row: Icon, Name, State Control, Delete */}
-                    <div className="editor-row-main">
-                      <div className="editor-row-cat-info">
-                        <div className="editor-row-emoji-tile" aria-hidden="true" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <CategoryOutlineIcon name={cat.name} size={18} />
-                        </div>
-                        <span className="editor-row-name">{cat.name}</span>
-                      </div>
+                  <li key={row.name} className={`blimit-row${isDeleting ? ' is-confirming' : ''}`}>
+                    <span className="blimit-row__icon" aria-hidden="true">
+                      <CategoryOutlineIcon name={row.name} size={18} />
+                    </span>
 
-                      <div className="editor-row-actions">
-                        {/* State control button */}
-                        <button
-                          type="button"
-                          className={`editor-row-state-btn ${hasLimit ? 'state-limited' : 'state-unset'}`}
-                          onClick={() => handleToggleRow(cat.name)}
-                          aria-expanded={isExpanded}
-                        >
-                          <span>{hasLimit ? `Hạn mức: ${formatCurrency(cat.limit)}` : 'Chưa đặt hạn mức'}</span>
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className={`editor-chevron ${isExpanded ? 'is-up' : ''}`}
-                            aria-hidden="true"
-                          >
-                            <polyline points="6 9 12 15 18 9" />
-                          </svg>
-                        </button>
-
-                        {/* Delete Category Button */}
-                        <div className="editor-delete-wrapper">
-                          <button
-                            type="button"
-                            className="editor-row-delete-btn"
-                            onClick={() => setDeletingCat(cat)}
-                            title={`Xóa danh mục ${cat.name}`}
-                            aria-label={`Xóa danh mục ${cat.name}`}
-                          >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <line x1="18" y1="6" x2="6" y2="18" />
-                              <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                          </button>
-
-                          {/* Delete Confirmation Popover */}
-                          {isDeleting && (
-                            <div className="delete-confirm-popover" role="alertdialog" aria-labelledby={`delete-title-${cat.name}`}>
-                              <p id={`delete-title-${cat.name}`} className="delete-popover-msg">
-                                Xóa <strong>"{cat.name}"</strong>? Danh mục và hạn mức nháp của nó sẽ bị xóa.
-                              </p>
-                              <div className="delete-popover-actions">
-                                <button
-                                  type="button"
-                                  className="btn-popover-cancel"
-                                  onClick={() => setDeletingCat(null)}
-                                >
-                                  Hủy
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-popover-danger"
-                                  onClick={() => handleConfirmDelete(cat)}
-                                >
-                                  Xóa danh mục
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    <div className="blimit-row__text">
+                      <span className="blimit-row__name" title={row.name}>{row.name}</span>
+                      <span id={spentId} className={`blimit-row__spent is-${tone}`}>
+                        {spent > 0 ? t('budgetEditor.spent', { amount: formatCurrency(spent) }) : t('budgetEditor.noSpending')}
+                        {tone === 'over' && <span className="blimit-row__spent-extra"> · {t('budgetEditor.overLimit')}</span>}
+                        {tone === 'warn' && <span className="blimit-row__spent-extra"> · {formatPercent(percent)}</span>}
+                      </span>
                     </div>
 
-                    {/* Expanded Edit Form */}
-                    {isExpanded && (
-                      <div className="editor-row-expanded-form">
-                        <div className="expanded-input-group">
-                          <label className="expanded-input-label" htmlFor={`input-amount-${cat.name}`}>
-                            Số tiền hạn mức tháng:
-                          </label>
-                          <div className="expanded-input-wrap">
-                            <input
-                              id={`input-amount-${cat.name}`}
-                              type="text"
-                              inputMode="numeric"
-                              className="expanded-amount-input"
-                              placeholder="Nhập số tiền"
-                              value={rowAmountInputs[cat.name] || ''}
-                              onChange={(e) => handleRowInputChange(cat.name, e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleSaveRowAmount(cat.name);
-                                }
-                              }}
-                              autoFocus
-                            />
-                            <span className="expanded-input-suffix">VNĐ</span>
-                          </div>
-                          <span className="expanded-helper-text">Ví dụ: 2.000.000</span>
-                        </div>
+                    <div className="blimit-amount">
+                      <input
+                        id={`input-amount-${row.name}`}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        className="blimit-amount__input"
+                        placeholder={t('budgetEditor.unlimited')}
+                        value={row.input}
+                        onChange={(e) => handleRowInputChange(row.name, e.target.value)}
+                        aria-label={t('budgetEditor.limitFor', { name: row.name })}
+                        aria-describedby={spentId}
+                      />
+                      {row.input && <span className="blimit-amount__suffix" aria-hidden="true">₫</span>}
+                    </div>
 
-                        <div className="expanded-row-buttons">
-                          <button
-                            type="button"
-                            className="btn-expanded-unset"
-                            onClick={() => handleSetRowUnset(cat.name)}
-                          >
-                            Xóa hạn mức
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-expanded-save"
-                            onClick={() => handleSaveRowAmount(cat.name)}
-                          >
-                            Lưu
-                          </button>
+                    <div className="blimit-row__delete-wrap">
+                      <button
+                        type="button"
+                        className="blimit-row__delete"
+                        onClick={(e) => {
+                          deleteTriggerRef.current = e.currentTarget;
+                          setDeletingName(isDeleting ? null : row.name);
+                        }}
+                        aria-label={`Xóa danh mục ${row.name}`}
+                        title={`Xóa danh mục ${row.name}`}
+                        aria-haspopup="dialog"
+                        aria-expanded={isDeleting}
+                      >
+                        <TrashIcon />
+                      </button>
+
+                      {isDeleting && (
+                        <div className="blimit-confirm" role="alertdialog" aria-labelledby={confirmId}>
+                          <p id={confirmId}>{t('budgetEditor.deleteConfirm', { name: row.name })}</p>
+                          <div className="blimit-confirm__actions">
+                            <button type="button" className="blimit-confirm__btn is-ghost" onClick={closeDeleteConfirm}>
+                              {t('common.cancel')}
+                            </button>
+                            <button type="button" className="blimit-confirm__btn is-danger" onClick={() => handleConfirmDelete(row.name)}>
+                              {t('budgetEditor.deleteAction')}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  </li>
                 );
               })}
+            </ul>
 
-              {/* 3. Add Custom Category Panel */}
-              <div className="budget-add-category-panel">
-                <div className="add-cat-header">
-                  <span className="add-cat-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <SparkleOutlineIcon size={16} color="currentColor" />
-                  </span>
-                  <strong className="add-cat-title">+ Thêm danh mục mới</strong>
-                </div>
-
-                <div className="add-cat-form-row">
+            {isAdding ? (
+              <div className="blimit-add-form" role="group" aria-label={t('budgetEditor.addCategory')}>
+                <span className="blimit-row__icon blimit-add-form__icon" aria-hidden="true"><PlusIcon /></span>
+                <input
+                  type="text"
+                  className="blimit-add-form__name"
+                  placeholder={t('budgetEditor.newCategoryName')}
+                  aria-label={t('budgetEditor.newCategoryName')}
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  maxLength={40}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddNewCategory();
+                    }
+                  }}
+                />
+                <div className="blimit-amount">
                   <input
                     type="text"
-                    className="add-cat-name-input"
-                    placeholder="Tên danh mục mới"
-                    value={newCatName}
-                    onChange={(e) => setNewCatName(e.target.value)}
-                    maxLength={40}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className="blimit-amount__input"
+                    placeholder={t('budgetEditor.newCategoryAmount')}
+                    aria-label={t('budgetEditor.newCategoryAmount')}
+                    value={newCatAmount}
+                    onChange={(e) => setNewCatAmount(toAmountInput(e.target.value))}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -629,80 +581,59 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                       }
                     }}
                   />
-
-                  <div className="add-cat-amount-wrap">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="add-cat-amount-input"
-                      placeholder="Số tiền (VNĐ)"
-                      value={newCatAmount}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/\D/g, '');
-                        setNewCatAmount(raw ? formatInputNumber(raw) : '');
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddNewCategory();
-                        }
-                      }}
-                    />
-                    <span className="expanded-input-suffix">VNĐ</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="btn-add-cat-submit"
-                    onClick={handleAddNewCategory}
-                  >
-                    + Thêm
-                  </button>
+                  {newCatAmount && <span className="blimit-amount__suffix" aria-hidden="true">₫</span>}
                 </div>
-
+                <button type="button" className="blimit-add-form__submit" onClick={handleAddNewCategory}>
+                  {t('budgetEditor.addAction')}
+                </button>
+                <button type="button" className="blimit-add-form__cancel" onClick={cancelAdd} aria-label={t('budgetEditor.cancelAdd')} title={t('budgetEditor.cancelAdd')}>
+                  <CloseIcon size={18} />
+                </button>
                 {newCatError && (
-                  <div className="add-cat-error-msg" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <p className="blimit-add-form__error" role="alert">
                     <AlertTriangleOutlineIcon size={14} color="currentColor" />
                     <span>{newCatError}</span>
-                  </div>
+                  </p>
                 )}
               </div>
-            </div>
+            ) : (
+              <button
+                ref={addTriggerRef}
+                type="button"
+                className="blimit-add-trigger"
+                onClick={() => setIsAdding(true)}
+              >
+                <span className="blimit-add-trigger__icon" aria-hidden="true"><PlusIcon /></span>
+                {t('budgetEditor.addCategory')}
+              </button>
+            )}
 
-            {/* Error Message */}
             {errorMsg && (
-              <div className="budget-dialog-error" role="alert" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div className="blimit-error" role="alert">
                 <AlertTriangleOutlineIcon size={14} color="currentColor" />
                 <span>{errorMsg}</span>
               </div>
             )}
           </div>
 
-          {/* ── Dialog Sticky Footer ── */}
-          <div className="budget-dialog-footer">
-            <button
-              type="button"
-              className="btn-dialog-cancel"
-              onClick={handleRequestClose}
-              disabled={isSubmitting}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="btn-dialog-save"
-              disabled={isSubmitting || !isDirty}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
-                  <span>Đang lưu...</span>
-                </>
-              ) : (
-                'Lưu hạn mức ngân sách'
-              )}
-            </button>
-          </div>
+          <footer className="blimit-foot">
+            <span className="blimit-dirty" aria-live="polite">{isDirty ? t('budgetEditor.unsaved') : ''}</span>
+            <div className="blimit-foot__actions">
+              <button type="button" className="blimit-btn blimit-btn--ghost" onClick={handleRequestClose} disabled={isSubmitting}>
+                {t('common.cancel')}
+              </button>
+              <button type="submit" className="blimit-btn blimit-btn--primary" disabled={isSubmitting || !isDirty}>
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
+                    <span>{t('common.saving')}</span>
+                  </>
+                ) : (
+                  t('budgetEditor.save')
+                )}
+              </button>
+            </div>
+          </footer>
         </form>
       </div>
     </div>,

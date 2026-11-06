@@ -21,6 +21,7 @@ const WALLET_TYPE_LABELS = {
 
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { BulbOutlineIcon, StarOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+import { PageTitleIcon } from '../../components/ui/NavIcons';
 export { WalletOutlineIcon };
 
 /**
@@ -538,13 +539,7 @@ export function WalletsTab() {
       <div className="wallets-v2-header">
         <div className="wallets-v2-title-box">
           <div className="wallets-v2-title-lead">
-            <div className="wallets-v2-main-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-              </svg>
-            </div>
+            <PageTitleIcon name="wallets" />
             <div>
               <h2 className="wallets-v2-heading">Ví &amp; Tài khoản</h2>
             </div>

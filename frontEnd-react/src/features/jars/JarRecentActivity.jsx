@@ -1,7 +1,7 @@
 import React, { useId } from 'react';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { HistoryOutlineIcon } from '../../components/ui/AppIcons';
+import { NavIcon } from '../../components/ui/NavIcons';
 import { getJarActivityCopy } from './jarActivityCopy';
 import './jar-activity.css';
 
@@ -18,7 +18,7 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
   return (
     <section id={id} className={`jar-activity-card${compact ? ' is-compact' : ''}`} aria-labelledby={titleId}>
       <header className="jar-activity-header">
-        <h2 id={titleId} className="jar-activity-title"><HistoryOutlineIcon size={18} />{copy.activityTitle}</h2>
+        <h2 id={titleId} className="jar-activity-title"><NavIcon name="jarHistory" size={18} />{copy.activityTitle}</h2>
         <button type="button" className="jar-activity-view-all" onClick={onViewAll}>
           {copy.viewAll}<span aria-hidden="true">→</span>
         </button>

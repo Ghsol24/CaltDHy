@@ -112,6 +112,7 @@ export const legacyAdditionalEntries = [
   ['Xóa hũ tiết kiệm', 'Delete savings jar', '删除储蓄罐'], ['Xóa hũ', 'Delete jar', '删除储蓄罐'],
   ['Không thể xóa hũ tiết kiệm.', 'Unable to delete the savings jar.', '无法删除储蓄罐。'],
   ['Danh sách hũ', 'Jar list', '储蓄罐列表'],
+  ['Các hũ của bạn', 'Your jars', '你的储蓄罐'],
   ['Tạo hũ đầu tiên', 'Create first jar', '创建第一个储蓄罐'], ['Gợi ý cho bạn', 'Suggestions for you', '为你推荐'],
   ['Đặt ngày đến hạn để nhận gợi ý tích lũy hàng tháng', 'Set a due date for monthly savings guidance', '设置截止日期以获得每月储蓄建议'],
   ['Đã đến hạn mục tiêu!', 'The goal is due!', '目标已到期！'],

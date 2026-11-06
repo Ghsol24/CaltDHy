@@ -29,7 +29,10 @@ function clearPrivateState() {
   preferencesQueue = Promise.resolve();
   try {
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('caltdhy_') && !['caltdhy_theme', 'caltdhy_lang', 'caltdhy_curr', EVENT_KEY, LOGOUT_KEY].includes(key)) {
+      // Device-level display choices (theme, language, currency, folded
+      // sidebar groups) hold no account data, so they survive sign-out.
+      if (key.startsWith('caltdhy_') && !['caltdhy_theme', 'caltdhy_lang', 'caltdhy_curr',
+        'caltdhy_sidebar_collapsed_groups', EVENT_KEY, LOGOUT_KEY].includes(key)) {
         localStorage.removeItem(key);
       }
     }
