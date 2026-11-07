@@ -243,7 +243,13 @@ async function check(name, work) {
         await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
         await expect(page.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
         await expect(modal.locator('.txn-period-notice')).toBeVisible();
-        await expect(mealCard().locator('.txn-card-amount')).toContainText(/60\.000\s*₫/);
+        // Phones show only the chosen category, with its "left after saving" line, instead of the grid.
+        const mealBudget = device === 'mobile'
+          ? modal.locator('.txn-category-summary')
+            .filter({ has: page.locator('.txn-category-summary__name', { hasText: /^Ăn uống$/ }) })
+            .locator('.txn-category-summary__line')
+          : mealCard().locator('.txn-card-amount');
+        await expect(mealBudget).toContainText(/60\.000\s*₫/);
         const noticePalette = await modal.locator('.txn-period-notice').evaluate(element => {
           const color = css => css.match(/[\d.]+/g).map(Number);
           const blend = (foreground, background) => foreground.slice(0, 3)
@@ -268,7 +274,9 @@ async function check(name, work) {
         noticeBackgrounds.add(noticePalette.background);
         assert.ok(noticePalette.contrast.every(value => value >= 4.5),
           `${theme}/${device}: historical notice contrast ${noticePalette.contrast.join(', ')} must be ≥4.5:1`);
-        const layout = await modal.evaluate(element => {
+        const layout = await modal.evaluate(async element => {
+          // On phones the dialog slides up from the bottom edge; measure where it settles.
+          await Promise.all(element.getAnimations().map(animation => animation.finished));
           const box = element.getBoundingClientRect();
           const footer = element.querySelector('.txn-modal-footer').getBoundingClientRect();
           const body = element.querySelector('.txn-modal-body');
@@ -387,11 +395,134 @@ async function check(name, work) {
     await page.setViewportSize(viewport);
     await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
     await expect(page.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
+    if (viewport.width < 600) {
+      // Phones replace the grid with one category row that opens a picker sheet.
+      await expect(modal.locator('.txn-category-summary')).toBeVisible();
+      await expect(modal.locator('.txn-category-card')).toHaveCount(0);
+      return;
+    }
     await expect(modal.locator('.txn-category-card')).toHaveCount(layoutCategories.length);
     await expect(modal.locator('.txn-card-amount')).toHaveCount(layoutCategories.length);
   }
 
+  const categorySheet = () => page.getByRole('dialog', { name: 'Chọn danh mục', exact: true });
+  const settle = locator => locator.evaluate(element =>
+    Promise.all(element.getAnimations({ subtree: true }).map(animation => animation.finished)));
+  async function openCategorySheet(count) {
+    await modal.locator('.txn-category-summary').click();
+    const sheet = categorySheet();
+    if (count === undefined) await expect(sheet.locator('.txn-cat-option').first()).toBeVisible();
+    else await expect(sheet.locator('.txn-cat-option')).toHaveCount(count);
+    await settle(sheet);
+    return sheet;
+  }
+
+  // Shared by the form row and the sheet rows: the whole name wraps inside its box and
+  // every part of the row stays inside the row.
+  function assertRowsContained(name, rows) {
+    for (const row of rows) {
+      assert.ok(row.name.height > 0 && row.textRects.length > 0, `${name}: ${row.text} has visible text`);
+      for (const text of row.textRects) {
+        assert.ok(text.left >= row.name.left - 1 && text.right <= row.name.right + 1
+          && text.top >= row.name.top - 1 && text.bottom <= row.name.bottom + 1,
+        `${name}: the full name wraps inside its box: ${row.text}`);
+      }
+      for (const child of row.children) {
+        assert.ok(child.box.left >= row.box.left - 1 && child.box.right <= row.box.right + 1
+          && child.box.top >= row.box.top - 1 && child.box.bottom <= row.box.bottom + 1,
+        `${name}: ${child.selector} stays inside ${row.text}`);
+      }
+    }
+  }
+
+  const measureRows = (rowSelector, nameSelector, childSelector) => ({ rowSelector, nameSelector, childSelector });
+  async function assertMobileCategoryLayout(name) {
+    // A resized viewport re-renders the dialog; wait for the phone layout before measuring.
+    await expect(modal.locator('.txn-category-summary')).toBeVisible();
+    await settle(modal);
+    const form = await modal.evaluate((element, rows) => {
+      const bounds = node => {
+        const { left, right, top, bottom, width, height } = node.getBoundingClientRect();
+        return { left, right, top, bottom, width, height };
+      };
+      const body = element.querySelector('.txn-modal-body');
+      const row = element.querySelector(rows.rowSelector);
+      const label = row.querySelector(rows.nameSelector);
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      const nestedScrollers = [...element.querySelectorAll('*')].filter(node => {
+        if (node === body || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
+        const previous = node.scrollTop;
+        node.scrollTop = 1;
+        const scrolls = node.scrollTop > 0;
+        node.scrollTop = previous;
+        return scrolls;
+      }).map(node => node.getAttribute('class'));
+      return { nestedScrollers,
+        rows: [{ box: bounds(row), name: bounds(label), text: label.textContent,
+          textRects: [...range.getClientRects()].map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
+          children: [...row.querySelectorAll(rows.childSelector)].map(child => ({ selector: child.getAttribute('class'), box: bounds(child) })) }],
+        bodyOverflow: body.scrollWidth - body.clientWidth,
+        documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        modal: bounds(element), footer: bounds(element.querySelector('.txn-modal-footer')),
+        viewport: { width: innerWidth, height: innerHeight } };
+    }, measureRows('.txn-category-summary', '.txn-category-summary__name',
+      '.txn-category-summary__icon, .txn-category-summary__text, .txn-field-chevron, .txn-budget-track'));
+    assert.deepEqual(form.nestedScrollers, [], `${name}: the body is the only vertical scroll region of the form`);
+    assert.ok(form.bodyOverflow <= 1 && form.documentOverflow <= 1, `${name}: no horizontal page/body overflow`);
+    assert.ok(form.modal.left >= -1 && form.modal.right <= form.viewport.width + 1, `${name}: modal fits the viewport width`);
+    assert.ok(form.footer.top >= 0 && form.footer.bottom <= form.viewport.height + 1,
+      `${name}: save actions stay visible on short screens`);
+    assertRowsContained(`${name} (form)`, form.rows);
+
+    const sheet = await openCategorySheet();
+    const picker = await sheet.evaluate((element, rows) => {
+      const bounds = node => {
+        const { left, right, top, bottom, width, height } = node.getBoundingClientRect();
+        return { left, right, top, bottom, width, height };
+      };
+      const body = element.querySelector('.txn-sheet__body');
+      const before = body.scrollTop;
+      body.scrollTop = 32;
+      const bodyCanScroll = body.scrollTop > 0;
+      body.scrollTop = before;
+      const nestedScrollers = [...element.querySelectorAll('*')].filter(node => {
+        if (node === body || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
+        const previous = node.scrollTop;
+        node.scrollTop = 1;
+        const scrolls = node.scrollTop > 0;
+        node.scrollTop = previous;
+        return scrolls;
+      }).map(node => node.getAttribute('class'));
+      const options = [...element.querySelectorAll(rows.rowSelector)].map(option => {
+        const label = option.querySelector(rows.nameSelector);
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        return { box: bounds(option), name: bounds(label), text: label.textContent,
+          textRects: [...range.getClientRects()].map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
+          children: [...option.querySelectorAll(rows.childSelector)].map(child => ({ selector: child.getAttribute('class'), box: bounds(child) })) };
+      });
+      return { sheet: bounds(element), bodyCanScroll, nestedScrollers, options,
+        bodyOverflow: body.scrollWidth - body.clientWidth, viewport: { width: innerWidth, height: innerHeight } };
+    }, measureRows('.txn-cat-option', '.txn-cat-option__name',
+      '.txn-cat-option__icon, .txn-cat-option__text, .txn-cat-option__check, .txn-budget-track'));
+    assert.ok(picker.sheet.left >= -1 && picker.sheet.right <= picker.viewport.width + 1
+      && picker.sheet.top >= -1 && picker.sheet.bottom <= picker.viewport.height + 1, `${name}: the category sheet fits the viewport`);
+    if (picker.options.length >= layoutCategories.length) {
+      assert.ok(picker.bodyCanScroll, `${name}: many categories remain reachable through the sheet body`);
+    }
+    assert.deepEqual(picker.nestedScrollers, [], `${name}: the sheet body is the only scroll region of the sheet`);
+    assert.ok(picker.bodyOverflow <= 1, `${name}: no horizontal overflow in the category sheet`);
+    assertRowsContained(`${name} (sheet)`, picker.options);
+    await page.screenshot({ path: path.join(evidenceDir, `${name.replace(/[^a-z0-9]+/gi, '-')}-picker.png`), animations: 'disabled' });
+    await sheet.locator('.txn-sheet__close').click();
+    await expect(sheet).toHaveCount(0);
+    return { form, picker };
+  }
+
   async function assertCategoryLayout(name, columns) {
+    if (columns === 1) return assertMobileCategoryLayout(name);
+    await expect(modal.locator('.txn-category-grid')).toBeVisible();
     const layout = await modal.evaluate(element => {
       const bounds = node => {
         const { left, right, top, bottom, width, height } = node.getBoundingClientRect();
@@ -481,7 +612,8 @@ async function check(name, work) {
     // CSS font pressure is deliberate fixture emulation, not a claim that Chrome's
     // minimum-font-size preference or an old Windows installation was exercised.
     const largeText = await page.addStyleTag({ content:
-      '.txn-card-name, .txn-card-amount, .txn-card-subtitle { font-size: 20px !important; }' });
+      '.txn-card-name, .txn-card-amount, .txn-card-subtitle, .txn-category-summary__name, .txn-category-summary__line,'
+      + ' .txn-cat-option__name, .txn-cat-option__meta { font-size: 20px !important; }' });
     try {
       await assertCategoryLayout('cream/390px simulated 20px text', 1);
       await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-large-text.png'), animations: 'disabled' });
@@ -495,15 +627,19 @@ async function check(name, work) {
     await modal.locator('.txn-modal-close-btn').click();
   });
 
-  await check('the final category is selectable by body scrolling and its saved value persists', async () => {
+  await check('the final category is selectable by scrolling the picker sheet and its saved value persists', async () => {
     await openCategoryLayout('cream', { width: 390, height: 568 });
     const lastName = layoutCategories.at(-1);
-    const lastCard = modal.locator('.txn-category-card').last();
-    await expect(lastCard.locator('.txn-card-name')).toHaveText(lastName);
-    await lastCard.click();
-    await expect(lastCard).toHaveAttribute('aria-checked', 'true');
-    assert.ok(await modal.locator('.txn-modal-body').evaluate(element => element.scrollTop > 0),
-      'Selecting the final category scrolls the sole modal body');
+    const sheet = await openCategorySheet(layoutCategories.length);
+    const lastOption = sheet.locator('.txn-cat-option').last();
+    await expect(lastOption.locator('.txn-cat-option__name')).toHaveText(lastName);
+    await lastOption.scrollIntoViewIfNeeded();
+    assert.ok(await sheet.locator('.txn-sheet__body').evaluate(element => element.scrollTop > 0),
+      'Reaching the final category scrolls the sheet body');
+    await lastOption.click();
+    // Picking a category applies it and closes the sheet; there is no separate confirm step.
+    await expect(sheet).toHaveCount(0);
+    await expect(modal.locator('.txn-category-summary__name')).toHaveText(lastName);
     await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-last-category-selected.png'), animations: 'disabled' });
     await modal.locator('.txn-btn-submit').click();
     await expect(modal).toHaveCount(0);
@@ -514,7 +650,7 @@ async function check(name, work) {
     assert.equal(saved.date, '2026-10-01');
     assert.equal(saved.walletId, primary.id);
     await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
-    await expect(modal.locator('.txn-category-card[aria-checked="true"] .txn-card-name')).toHaveText(lastName);
+    await expect(modal.locator('.txn-category-summary__name')).toHaveText(lastName);
     await modal.locator('.txn-modal-close-btn').click();
   });
 
@@ -525,12 +661,18 @@ async function check(name, work) {
     }));
     try {
       await openCategoryLayout('light', { width: 320, height: 480 });
-      await expect(modal.locator('.txn-category-card.is-unset')).toHaveCount(layoutCategories.length);
+      await expect(modal.locator('.txn-category-summary__line')).toHaveText('Chưa đặt hạn mức');
+      const unsetSheet = await openCategorySheet(layoutCategories.length);
+      await expect(unsetSheet.locator('.txn-cat-option__meta'))
+        .toHaveText(Array(layoutCategories.length).fill('Chưa đặt hạn mức'));
+      await unsetSheet.locator('.txn-sheet__close').click();
       await assertCategoryLayout('light/320px unset budgets', 1);
       const wallet = modal.locator('.custom-wallet-trigger');
       await wallet.click();
       const lastOption = modal.locator('.custom-wallet-item').last();
       const lastWalletName = await lastOption.locator('.custom-wallet-item-name').innerText();
+      // This step is keyboard-only: park the pointer so options scrolling under it can't steal the highlight.
+      await page.mouse.move(0, 0);
       await page.keyboard.press('End');
       await expect(lastOption).toHaveClass(/is-highlighted/);
       // Highlighting renders before the effect scrolls the option and the menu's
@@ -554,12 +696,18 @@ async function check(name, work) {
       status: 503, contentType: 'application/json', body: '{"success":false,"message":"Budget fixture unavailable"}'
     }));
     try {
-      await modal.locator('#txn-date-input').fill('2026-09-28');
+      // Phones pick dates in a bottom sheet instead of typing them.
+      await modal.locator('#txn-date-input').click();
+      const dateSheet = page.getByRole('dialog', { name: 'Chọn ngày giao dịch', exact: true });
+      await dateSheet.getByRole('button', { name: 'Tháng trước' }).click();
+      await dateSheet.locator('[data-iso="2026-09-28"]').click();
+      await expect(dateSheet).toHaveCount(0);
+      await expect(modal.locator('#txn-date-input')).toContainText('28/09/2026');
       await expect(modal.locator('.txn-budget-error')).toBeVisible();
-      await expect(modal.locator('.txn-card-income-tag')).toHaveCount(layoutCategories.length);
+      await expect(modal.locator('.txn-category-summary__line')).toHaveText('Chưa tải được hạn mức');
       await assertCategoryLayout('mobile/failed budget labels', 1);
       await modal.locator('.txn-type-btn--income').click();
-      await expect(modal.locator('.txn-category-card')).not.toHaveCount(0);
+      await expect(modal.locator('.txn-category-summary__line')).toHaveText('Danh mục thu nhập');
       await expect(modal.locator('.txn-card-amount')).toHaveCount(0);
       await assertCategoryLayout('mobile/income labels', 1);
       await modal.locator('.txn-modal-close-btn').click();

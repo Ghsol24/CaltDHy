@@ -1267,6 +1267,418 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45) !important;
 }
 
+/* ── Transaction dialog on phones: bottom sheet, compact category row, picker sheets ──
+   The category grid and the anchored calendar popover don't fit a phone, so both become
+   rows that open a sheet sliding up inside the dialog (TransactionMobileFields.jsx). */
+.txn-modal-card {
+  position: relative;
+  /* `hidden` still lets focus() scroll the card while a sheet slides in from below,
+     which leaves the form shifted up; `clip` forbids any scrolling. */
+  overflow: clip;
+}
+
+.txn-modal-card.is-dragging {
+  animation: none;
+  transition: none;
+}
+
+.txn-modal-handle-zone {
+  flex-shrink: 0;
+}
+
+.txn-modal-grabber {
+  display: none;
+}
+
+.txn-input.txn-category-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.txn-category-summary__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.txn-category-summary__icon,
+.txn-cat-option__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  border-radius: var(--radius-sm, 10px);
+}
+
+.txn-category-summary__icon {
+  background: color-mix(in srgb, var(--color-action-bg) 12%, transparent);
+  color: var(--color-link);
+}
+
+.txn-category-summary__text,
+.txn-cat-option__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Long names wrap instead of truncating, so similar categories stay distinguishable. */
+.txn-category-summary__name,
+.txn-cat-option__name {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.txn-category-summary__line,
+.txn-cat-option__meta {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.txn-category-summary__line.is-danger,
+.txn-cat-option__meta.is-danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.txn-field-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* Budget bar: solid = left after saving, faded = what this draft will use. */
+.txn-budget-track {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-neutral-bg, var(--border));
+}
+
+.txn-budget-track__fill,
+.txn-budget-track__pending {
+  height: 100%;
+  transition: width var(--dur-fast) ease;
+}
+
+.txn-budget-track__pending {
+  opacity: 0.35;
+}
+
+.txn-input.txn-date-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.txn-date-trigger > svg:first-child {
+  flex-shrink: 0;
+  color: var(--color-link);
+}
+
+.txn-date-trigger__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sheets are absolutely placed inside the dialog card, anchored to its bottom edge and
+   capped to its height, so they can never run off-screen. */
+.txn-sheet-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  background: var(--color-overlay-nested, rgba(0, 0, 0, 0.4));
+  animation: overlayFadeIn 150ms ease;
+}
+
+.txn-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100% - 32px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--color-surface, var(--surface));
+  color: var(--text-primary);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+  animation: txnSheetIn 240ms var(--ease-smooth, ease-out);
+}
+
+.txn-sheet.is-dragging {
+  animation: none;
+}
+
+.txn-sheet__handle-zone {
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.txn-sheet-grabber {
+  display: block;
+  width: 36px;
+  height: 5px;
+  margin: 8px auto 0;
+  border-radius: 3px;
+  background: var(--color-border-strong, #C9DED3);
+}
+
+.txn-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px 12px;
+}
+
+.txn-sheet__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.txn-sheet__close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.txn-sheet__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 12px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.txn-sheet-search {
+  padding: 0 4px 10px;
+}
+
+.txn-cat-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.txn-cat-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md, 12px);
+  background: transparent;
+  color: var(--text-primary);
+  text-align: start;
+  cursor: pointer;
+}
+
+.txn-cat-option:hover {
+  background: var(--menu-item-hover-bg);
+}
+
+.txn-cat-option.is-selected {
+  background: color-mix(in srgb, var(--color-action-bg) 12%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--color-action-bg);
+}
+
+.txn-cat-option:focus-visible,
+.txn-date-chip:focus-visible,
+.txn-sheet__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.txn-cat-option__icon {
+  background: var(--surface-subtle);
+  color: var(--color-icon, var(--text-secondary));
+}
+
+.txn-cat-option.is-selected .txn-cat-option__icon {
+  background: var(--color-surface, var(--surface));
+  color: var(--color-link);
+}
+
+.txn-cat-option__name {
+  font-size: 14px;
+}
+
+.txn-cat-option__meta {
+  font-size: 12px;
+}
+
+.txn-cat-option .txn-budget-track {
+  height: 4px;
+  margin-top: 4px;
+}
+
+.txn-cat-option__check {
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.txn-cat-option.is-selected .txn-cat-option__check {
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
+}
+
+.txn-sheet-empty {
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.txn-date-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 4px 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.txn-date-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font: 600 13px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.txn-date-chip.is-active {
+  border-color: var(--color-action-bg);
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
+}
+
+.txn-sheet-calendar {
+  padding: 0 4px;
+}
+
+.txn-sheet-calendar .calt-date-day {
+  height: 42px;
+  font-size: 14px;
+}
+
+/* The "Today" chip above replaces the panel's own footer link. */
+.txn-sheet-calendar .calt-date-footer {
+  display: none;
+}
+
+.txn-sheet-hint {
+  margin: 10px 4px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+@keyframes txnSheetIn {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@media (max-width: 599px) {
+  .txn-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    overflow: clip;
+  }
+
+  .txn-modal-card {
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    border-width: 1px 0 0;
+    border-radius: 20px 20px 0 0;
+    animation: txnSheetIn 260ms var(--ease-smooth, ease-out);
+  }
+
+  .txn-modal-handle-zone {
+    touch-action: none;
+  }
+
+  .txn-modal-grabber {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 8px auto 0;
+    border-radius: 3px;
+    background: var(--color-border-strong, #C9DED3);
+  }
+
+  .txn-modal-header {
+    padding: 6px 16px 12px;
+  }
+
+  .txn-modal-body {
+    gap: 14px;
+    padding: 14px 16px 16px;
+  }
+
+  .txn-amount-input {
+    padding-block: 14px;
+    font-size: 30px;
+  }
+
+  .txn-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .txn-modal-footer > button {
+    justify-content: center;
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txn-sheet,
+  .txn-sheet-layer,
+  .txn-modal-card {
+    animation: none;
+  }
+}
+
 /* ============================================================
    CUSTOM WALLET DROPDOWN (PREMIUM LUXURY SELECTION POPUP)
    ============================================================ */

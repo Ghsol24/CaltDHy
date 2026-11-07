@@ -16,8 +16,34 @@ import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getL
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useSheetDrag } from '../../hooks/useSheetDrag';
+import { CategoryPickerList, CategorySummaryButton, DateSheetContent, MobileDateField, TransactionSheet } from './TransactionMobileFields';
 
 const EMPTY_EXPENSE_CATS = [];
+// Matches the CSS breakpoint where the dialog becomes a bottom sheet.
+const PHONE_QUERY = '(max-width: 599px)';
+
+function describeBudgetMetrics(metrics, t) {
+  for (const metric of Object.values(metrics)) {
+    metric.color = metric.hasLimit ? `var(--color-${metric.status})` : 'var(--color-neutral-bg)';
+    metric.statusLabel = !metric.hasLimit ? t('transaction.limitUnset') : metric.rawRemaining <= 0n
+      ? t('transaction.limitReached') : t('transaction.limitLeft', { percent: metric.percent });
+  }
+  return metrics;
+}
+
+/** The category of the newest hand-entered transaction of this type (the list arrives newest first). */
+function recentCategoryName(transactions, type, categories) {
+  const names = new Map(categories.map((cat) => [cat.name.toLowerCase(), cat.name]));
+  let best = null;
+  for (const txn of transactions || []) {
+    if (txn.type !== type || txn.installmentId || txn.jarId || !txn.category) continue;
+    const name = names.get(String(txn.category).toLowerCase());
+    if (name && (!best || txn.date > best.date)) best = { date: txn.date, name };
+  }
+  return best?.name || '';
+}
 
 export function TransactionModal() {
   const { t, label, lang, intlLocale } = useTranslation();
@@ -59,6 +85,9 @@ export function TransactionModal() {
   const [amountError, setAmountError] = useState('');
   const [periodBudgets, setPeriodBudgets] = useState({ month: '', data: {}, error: false });
   const [budgetRetry, setBudgetRetry] = useState(0);
+  const [picker, setPicker] = useState(null); // phones: 'category' | 'date' | null
+  const isPhone = useMediaQuery(PHONE_QUERY);
+  const activePicker = isOpen && isPhone ? picker : null;
 
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
@@ -108,20 +137,24 @@ export function TransactionModal() {
     return () => { active = false; };
   }, [isOpen, type, selectedPeriod, budgetMonth, budgetRetry]);
 
+  const draftAmount = Number(String(amount).replace(/\D/g, ''));
   const categoryMetrics = useMemo(() => {
     if (type !== 'expense' || !budgetReady || budgetError) return {};
-    const draftAmount = Number(String(amount).replace(/\D/g, ''));
     const metrics = previewCategoryBudgets({ transactions, budgets: applicableBudgets,
       categories: activeExpenseCats, month: selectedPeriod, editingId: editingTransaction?.id,
       draft: { type, amount: draftAmount, category, date, fee: editingTransaction?.fee || 0 } });
-    for (const metric of Object.values(metrics)) {
-      metric.color = metric.hasLimit ? `var(--color-${metric.status})` : 'var(--color-neutral-bg)';
-      metric.statusLabel = !metric.hasLimit ? t('transaction.limitUnset') : metric.rawRemaining <= 0n
-        ? t('transaction.limitReached') : t('transaction.limitLeft', { percent: metric.percent });
-    }
-    return metrics;
-  }, [type, amount, category, date, selectedPeriod, transactions, applicableBudgets,
+    return describeBudgetMetrics(metrics, t);
+  }, [type, draftAmount, category, date, selectedPeriod, transactions, applicableBudgets,
       activeExpenseCats, editingTransaction, budgetReady, budgetError, t]);
+
+  // Phones compare "left now" with "left after saving", so they also need the budgets without the draft.
+  const baselineMetrics = useMemo(() => {
+    if (!isPhone || type !== 'expense' || !budgetReady || budgetError) return {};
+    const metrics = previewCategoryBudgets({ transactions, budgets: applicableBudgets,
+      categories: activeExpenseCats, month: selectedPeriod, editingId: editingTransaction?.id, draft: null });
+    return describeBudgetMetrics(metrics, t);
+  }, [isPhone, type, selectedPeriod, transactions, applicableBudgets, activeExpenseCats,
+      editingTransaction, budgetReady, budgetError, t]);
 
   // Sắp xếp danh mục: Ưu tiên có hạn mức trước, sau đó là chưa đặt hạn mức (giữ nguyên trật tự cấu hình)
   const sortedCategories = useMemo(() => {
@@ -182,8 +215,11 @@ export function TransactionModal() {
           targetType === 'income'
             ? activeIncomeCats
             : (sortedCategories.length > 0 ? sortedCategories : activeExpenseCats);
-        const defaultCat = addTxnInitialState?.category || initialCats[0]?.name || '';
+        // Phones show only the chosen category, so start from the one used last instead of the first in the list.
+        const recentCat = isPhone ? recentCategoryName(transactions, targetType, initialCats) : '';
+        const defaultCat = addTxnInitialState?.category || recentCat || initialCats[0]?.name || '';
         setCategory(defaultCat);
+        setPicker(null);
         setDate(getLocalDateString());
         setDesc(addTxnInitialState?.desc || '');
         setErrorMsg('');
@@ -198,18 +234,17 @@ export function TransactionModal() {
         }
       }
     }
-  }, [isOpen, editingTransaction, categories, wallets, sortedCategories, addTxnInitialState, activeIncomeCats, activeExpenseCats]);
+  }, [isOpen, editingTransaction, categories, wallets, sortedCategories, addTxnInitialState, activeIncomeCats, activeExpenseCats, isPhone, transactions]);
 
   // Preselect category if empty when categories load
   useEffect(() => {
     if (isOpen && !isEditing && !category) {
-      if (type === 'expense' && sortedCategories.length > 0) {
-        setCategory(sortedCategories[0]?.name || '');
-      } else if (type === 'income' && activeIncomeCats.length > 0) {
-        setCategory(activeIncomeCats[0]?.name || '');
+      const list = type === 'expense' ? sortedCategories : activeIncomeCats;
+      if (list.length > 0) {
+        setCategory((isPhone && recentCategoryName(transactions, type, list)) || list[0]?.name || '');
       }
     }
-  }, [isOpen, isEditing, category, type, sortedCategories, activeIncomeCats]);
+  }, [isOpen, isEditing, category, type, sortedCategories, activeIncomeCats, isPhone, transactions]);
 
   // Preselect wallet if walletId is empty when wallets load
   useEffect(() => {
@@ -236,22 +271,29 @@ export function TransactionModal() {
   const close = useCallback(() => {
     closeAddTxnModal();
     closeEditTransaction();
+    setPicker(null);
     setErrorMsg('');
     setAmountError('');
   }, [closeAddTxnModal, closeEditTransaction]);
+  const closePicker = useCallback(() => setPicker(null), []);
+  const requestDismiss = useCallback(() => {
+    if (!isSubmitting && !confirmationOpen) close();
+  }, [close, isSubmitting, confirmationOpen]);
+  const sheetDrag = useSheetDrag(requestDismiss, { enabled: isPhone && !activePicker });
 
-  // Keyboard shortcut: Escape to close modal
+  // Keyboard shortcut: Escape closes an open phone sheet first, then the modal
   useEffect(() => {
     if (!isOpen || confirmationOpen || isSubmitting) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        close();
+        if (activePicker) setPicker(null);
+        else close();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, close, confirmationOpen, isSubmitting]);
+  }, [isOpen, close, confirmationOpen, isSubmitting, activePicker]);
 
   // Switch type (expense <-> income) & preserve or reset category
   const handleTypeChange = (newType) => {
@@ -260,7 +302,7 @@ export function TransactionModal() {
     const newCategories = newType === 'expense' ? activeExpenseCats : activeIncomeCats;
     const exists = newCategories.some((c) => c.name.toLowerCase() === category.toLowerCase());
     if (!exists) {
-      setCategory(newCategories[0]?.name || '');
+      setCategory((isPhone && recentCategoryName(transactions, newType, newCategories)) || newCategories[0]?.name || '');
     }
   };
 
@@ -393,48 +435,52 @@ export function TransactionModal() {
     >
       <div
         ref={modalRef}
-        className="txn-modal-card"
+        className={`txn-modal-card${sheetDrag.offset ? ' is-dragging' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="txn-modal-title"
+        style={sheetDrag.offset ? { transform: `translateY(${sheetDrag.offset}px)` } : undefined}
       >
-        {/* Header */}
-        <div className="txn-modal-header">
-          <h2 id="txn-modal-title" className="txn-modal-title">
-            {isEditing
-              ? t('transaction.edit')
-              : addTxnInitialState?.title && type === addTxnInitialState?.type
-                ? addTxnInitialState.title
-                : type === 'income'
-                  ? t('transaction.addIncome')
-                  : t('transaction.add')}
-          </h2>
-          <button
-            type="button"
-            className="txn-modal-close-btn"
-            onClick={close}
-            disabled={isSubmitting || confirmationOpen}
-            aria-label={t('common.closeWindow')}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+        {/* Header (phones: grabber + drag down to dismiss) */}
+        <div className="txn-modal-handle-zone" inert={activePicker ? true : undefined} {...(isPhone ? sheetDrag.handlers : {})}>
+          <span className="txn-modal-grabber" aria-hidden="true" />
+          <div className="txn-modal-header">
+            <h2 id="txn-modal-title" className="txn-modal-title">
+              {isEditing
+                ? t('transaction.edit')
+                : addTxnInitialState?.title && type === addTxnInitialState?.type
+                  ? addTxnInitialState.title
+                  : type === 'income'
+                    ? t('transaction.addIncome')
+                    : t('transaction.add')}
+            </h2>
+            <button
+              type="button"
+              className="txn-modal-close-btn"
+              onClick={close}
+              disabled={isSubmitting || confirmationOpen}
+              aria-label={t('common.closeWindow')}
             >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} noValidate inert={activePicker ? true : undefined}>
           <div className="txn-modal-body txn-modal-body--transaction">
             {historicalPeriod.length > 0 && <div className="txn-period-notice" role="status">
               <strong>{t('transaction.historicalPeriod', { month: formatDate(`${historicalPeriod[0]}-01`, 'month', { locale: lang }) })}</strong>
@@ -498,13 +544,13 @@ export function TransactionModal() {
 
             {/* 3. Smart Category Selection Grid */}
             <div className="txn-field-group">
-              <label className="txn-label">
+              <label className="txn-label" id="txn-category-label">
                 <span>{t('transaction.category')}</span>
               </label>
 
               {type === 'expense' && selectedPeriod && <p className="txn-budget-period">
                 {t('transaction.budgetForPeriod', { month: formatDate(`${selectedPeriod}-01`, 'month', { locale: lang }) })}
-                {' · '}{t('transaction.budgetPreview')}
+                {!isPhone && <>{' · '}{t('transaction.budgetPreview')}</>}
               </p>}
               {type === 'expense' && !budgetReady && <p role="status" className="txn-budget-period">{t('transaction.budgetLoading')}</p>}
               {type === 'expense' && budgetError && <p role="alert" className="txn-budget-error">{t('transaction.budgetFailed')}
@@ -527,6 +573,18 @@ export function TransactionModal() {
                     {t('transaction.setupCategory')}
                   </button>
                 </div>
+              ) : isPhone ? (
+                <CategorySummaryButton
+                  labelId="txn-category-label"
+                  type={type}
+                  category={category}
+                  metric={categoryMetrics[category]}
+                  baseline={baselineMetrics[category]}
+                  hasDraft={draftAmount > 0}
+                  budgetReady={Boolean(budgetReady)}
+                  budgetError={budgetError}
+                  onOpen={() => setPicker('category')}
+                />
               ) : (
                 <div className="txn-category-grid" role="radiogroup" aria-label={t('transaction.chooseCategory')}>
                   {sortedCategories.map((cat) => {
@@ -608,17 +666,27 @@ export function TransactionModal() {
 
             {/* 5. Date Field */}
             <div className="txn-field-group">
-              <label htmlFor="txn-date-input" className="txn-label">
+              <label htmlFor="txn-date-input" id="txn-date-label" className="txn-label">
                 <span>{t('transaction.date')}</span>
               </label>
-              <CustomDatePicker
-                id="txn-date-input"
-                inputClassName="txn-input"
-                value={date}
-                onChange={setDate}
-                max={maxDate}
-                required
-              />
+              {isPhone ? (
+                <MobileDateField
+                  id="txn-date-input"
+                  labelId="txn-date-label"
+                  value={date}
+                  todayIso={maxDate}
+                  onOpen={() => setPicker('date')}
+                />
+              ) : (
+                <CustomDatePicker
+                  id="txn-date-input"
+                  inputClassName="txn-input"
+                  value={date}
+                  onChange={setDate}
+                  max={maxDate}
+                  required
+                />
+              )}
             </div>
 
             {/* 6. Description Note */}
@@ -686,12 +754,36 @@ export function TransactionModal() {
                 </>
               ) : isEditing ? (
                 t('transaction.update')
+              ) : isPhone && draftAmount > 0 && Number.isSafeInteger(draftAmount) ? (
+                t('transaction.saveWithAmount', { amount: formatCurrency(draftAmount) })
               ) : (
                 t('transaction.save')
               )}
             </button>
           </div>
         </form>
+
+        {activePicker === 'category' && (
+          <TransactionSheet title={t('transaction.chooseCategory')} onClose={closePicker}>
+            <CategoryPickerList
+              type={type}
+              categories={sortedCategories}
+              selected={category}
+              metrics={baselineMetrics}
+              onPick={(name) => { setCategory(name); closePicker(); }}
+            />
+          </TransactionSheet>
+        )}
+        {activePicker === 'date' && (
+          <TransactionSheet title={t('transaction.pickDate')} onClose={closePicker}>
+            <DateSheetContent
+              value={date}
+              todayIso={maxDate}
+              onPick={(iso) => { setDate(iso); closePicker(); }}
+              onEscape={closePicker}
+            />
+          </TransactionSheet>
+        )}
       </div>
     </div>
   );

@@ -154,13 +154,18 @@ export function CalendarPanel({
     focusGridRef.current = false;
     setFocusedIso((current) => shiftMonths(current, delta));
   };
+  // Months that hold no selectable day are dead ends, so their arrows are off.
+  const lastOfPrevMonth = new Date(viewYear, viewMonth, 0);
+  const firstOfNextMonth = new Date(viewYear, viewMonth + 1, 1);
+  const prevDisabled = Boolean(min && toIso(lastOfPrevMonth.getFullYear(), lastOfPrevMonth.getMonth(), lastOfPrevMonth.getDate()) < min);
+  const nextDisabled = Boolean(max && toIso(firstOfNextMonth.getFullYear(), firstOfNextMonth.getMonth(), 1) > max);
 
   return (
     <div className={`calt-date-panel ${className}`.trim()}>
       <div className="calt-date-header">
-        <button type="button" className="calt-date-nav" aria-label={labels.prev} onClick={() => changeMonth(-1)}><ChevronLeft /></button>
+        <button type="button" className="calt-date-nav" aria-label={labels.prev} disabled={prevDisabled} onClick={() => changeMonth(-1)}><ChevronLeft /></button>
         <strong id={titleId} className="calt-date-title" aria-live="polite">{monthTitle}</strong>
-        <button type="button" className="calt-date-nav" aria-label={labels.next} onClick={() => changeMonth(1)}><ChevronRight /></button>
+        <button type="button" className="calt-date-nav" aria-label={labels.next} disabled={nextDisabled} onClick={() => changeMonth(1)}><ChevronRight /></button>
       </div>
       <div className="calt-date-weekdays" aria-hidden="true">
         {labels.weekdays.map((weekday) => <span key={weekday}>{weekday}</span>)}
