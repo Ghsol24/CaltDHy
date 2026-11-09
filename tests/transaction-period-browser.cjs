@@ -424,7 +424,7 @@ async function check(name, work) {
     } finally { await page.setViewportSize({ width: 1440, height: 1000 }); }
   });
 
-  await check('home rows: adding focuses the amount, taps leave no stuck buttons, keyboard reaches them', async () => {
+  await check('the phone keyboard never opens by itself; desktop adding starts in the amount; no stuck buttons', async () => {
     await page.goto('/spending/home');
     await page.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().click();
     const addDialog = page.getByRole('dialog', { name: 'Thêm giao dịch mới', exact: true });
@@ -470,6 +470,18 @@ async function check(name, work) {
       const plain = await touch.locator('.home-txn-row[role="button"]').nth(1).evaluate(element => getComputedStyle(element).backgroundColor);
       assert.equal(tint, plain, 'The tapped row keeps no hover tint');
       await touch.screenshot({ path: path.join(evidenceDir, 'home-rows-after-tap-mobile.png') });
+      // Adding on a touch phone does not focus the amount either: the person taps it when ready.
+      await touch.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().tap();
+      const addSheet = touch.getByRole('dialog', { name: 'Thêm giao dịch mới', exact: true });
+      await expect(addSheet).toBeVisible();
+      await touch.waitForTimeout(150);
+      assert.equal(await touch.evaluate(() => ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)), false,
+        'Opening the add sheet must not open the phone keyboard');
+      await touch.screenshot({ path: path.join(evidenceDir, 'add-sheet-no-keyboard-mobile.png') });
+      await addSheet.locator('#txn-amount-input').tap();
+      await expect(addSheet.locator('#txn-amount-input')).toBeFocused();
+      await addSheet.locator('.txn-modal-close-btn').tap();
+      await expect(addSheet).toHaveCount(0);
     } finally { await phone.close(); }
   });
 

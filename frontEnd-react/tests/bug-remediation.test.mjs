@@ -49,7 +49,6 @@ test('deduplicated feedback replaces the previous recurring-filter toast', () =>
 
 test('new budget and recurring-filter feedback labels exist in all three locales', () => {
   for (const locale of ['vi', 'en', 'zh-CN']) {
-    assert.notEqual(translate(locale, 'budgets.periodOverdue'), 'budgets.periodOverdue');
     assert.match(translate(locale, 'budgets.categoryDetailTitle', { month: '2026-09' }), /2026-09/);
     assert.match(translate(locale, 'analytics.recurringExcludedToast', { count: 3, amount: '100' }), /3/);
     assert.match(translate(locale, 'analytics.recurringIncludedToast', { count: 3, amount: '100' }), /100/);

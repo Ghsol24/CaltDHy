@@ -24,6 +24,8 @@ import { CategoryPickerList, CategorySummaryButton, DateSheetContent, MobileDate
 const EMPTY_EXPENSE_CATS = [];
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet.
 const PHONE_QUERY = '(max-width: 599px)';
+// Touch screens, whose on-screen keyboard would cover the form if a field took focus.
+const TOUCH_QUERY = '(pointer: coarse)';
 
 function describeBudgetMetrics(metrics, t) {
   for (const metric of Object.values(metrics)) {
@@ -90,6 +92,7 @@ export function TransactionModal() {
   const [budgetRetry, setBudgetRetry] = useState(0);
   const [picker, setPicker] = useState(null); // phones: 'category' | 'date' | null
   const isPhone = useMediaQuery(PHONE_QUERY);
+  const isTouch = useMediaQuery(TOUCH_QUERY);
   const activePicker = isOpen && isPhone ? picker : null;
 
   const modalRef = useRef(null);
@@ -261,17 +264,18 @@ export function TransactionModal() {
     }
   }, [isOpen, isEditing, walletId, wallets, addTxnInitialState]);
 
-  // Adding: jump straight to the amount. Editing opens to read first, so a phone
-  // keyboard does not cover the details until a field is tapped; the focus trap
-  // still moves focus into the dialog for keyboard and screen reader users.
+  // The on-screen keyboard never opens by itself: on touch screens neither adding
+  // nor editing focuses a field, so the form stays visible until a field is tapped.
+  // With a mouse and keyboard (no on-screen keyboard), adding still starts in the
+  // amount field. The focus trap moves focus into the dialog in every case.
   useEffect(() => {
-    if (isOpen && !isEditing && amountInputRef.current) {
+    if (isOpen && !isEditing && !isTouch && amountInputRef.current) {
       const timer = setTimeout(() => {
         amountInputRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, isEditing]);
+  }, [isOpen, isEditing, isTouch]);
 
   const close = useCallback(() => {
     closeAddTxnModal();
