@@ -6,7 +6,7 @@ const pad = (value) => String(value).padStart(2, '0');
 const isoOf = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 /** Local calendar day (YYYY-MM-DD) for a history timestamp. */
-export function localDayOf(value) {
+function localDayOf(value) {
   if (!value) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const date = new Date(value);

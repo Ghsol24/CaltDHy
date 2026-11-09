@@ -126,48 +126,10 @@ export function ClockOutlineIcon({ size = 18, color = 'currentColor', className 
   );
 }
 
-export function LockOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
-
-export function ShieldOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  );
-}
-
-export function ScaleOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-      <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-      <path d="M7 21h10" />
-      <path d="M12 3v18" />
-      <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
-    </svg>
-  );
-}
-
 export function ZapOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
   return (
     <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  );
-}
-
-export function LeafOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
-      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
   );
 }
@@ -211,15 +173,6 @@ export function ArrowDownLeftOutlineIcon({ size = 18, color = 'currentColor', cl
   );
 }
 
-export function ClipboardOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    </svg>
-  );
-}
-
 export function InfoOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
   return (
     <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -236,26 +189,6 @@ export function BookOutlineIcon({ size = 18, color = 'currentColor', className =
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
       <path d="M6 6h10" />
       <path d="M6 10h10" />
-    </svg>
-  );
-}
-
-export function HomeOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
-export function RocketOutlineIcon({ size = 18, color = 'currentColor', className = '' }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
-      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
     </svg>
   );
 }
@@ -410,5 +343,3 @@ export function CategoryOutlineIcon({ name, size = 16, className = '', color = '
     </svg>
   );
 }
-
-export default CategoryOutlineIcon;

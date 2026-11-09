@@ -44,17 +44,6 @@
   line-height: 1.5;
 }
 
-.auth-page .btn-close-page {
-  position: fixed; top: 16px; left: 16px;
-  width: 38px; height: 38px; background: var(--panel);
-  border: none; border-radius: 8px; box-shadow: var(--shadow-card);
-  color: var(--muted); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; z-index: 20;
-  transition: color 150ms, transform 120ms, box-shadow 120ms;
-}
-.auth-page .btn-close-page:hover  { color: var(--accent-text); transform: scale(1.05); }
-.auth-page .btn-close-page:active { transform: translateY(1px); box-shadow: var(--shadow-pressed); }
-
 /* ── Status bar ── */
 .auth-page .status-bar {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -65,10 +54,6 @@
   transition: background 250ms ease;
 }
 .auth-page .status-bar svg { color: var(--color-icon); }
-.auth-page .status-label {
-  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
-  letter-spacing: 0; color: var(--muted);
-}
 
 /* ── Module card ── */
 .module {
@@ -101,14 +86,6 @@
 }
 .mod-title span { color: var(--accent-text); }
 
-/* ── Hint text (reset-password) ── */
-.mod-hint {
-  font-family: var(--font-sans);
-  font-size: 13px; letter-spacing: 0;
-  color: var(--muted); text-align: center;
-  margin-bottom: 24px; line-height: 1.6;
-}
-
 /* ── Floating label form groups ── */
 .fg {
   position: relative;
@@ -132,8 +109,7 @@
 }
 
 .fg:focus-within .flabel,
-.finput:not(:placeholder-shown) ~ .flabel,
-.fg--active .flabel {
+.finput:not(:placeholder-shown) ~ .flabel {
   top: 0;
   font-size: 11px;
   letter-spacing: 0;
@@ -211,39 +187,9 @@
   gap: 4px;
   align-items: center;
 }
-.pw-strength__bar {
-  flex: 1;
-  height: 3px;
-  border-radius: 99px;
-  background: var(--recessed);
-  overflow: hidden;
-}
-.pw-strength__fill {
-  height: 100%;
-  border-radius: 99px;
-  width: 0%;
-  transition: width 300ms ease, background 300ms ease;
-}
-.pw-strength__label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  letter-spacing: 0;
-  color: var(--muted);
-  white-space: nowrap;
-  min-width: 50px;
-  text-align: right;
-  transition: color 300ms ease;
-}
-.pw-weak   .pw-strength__fill { background: var(--accent); width: 33%; }
-.pw-weak   .pw-strength__label { color: var(--accent-text); }
-.pw-medium .pw-strength__fill { background: var(--warn); width: 66%; }
-.pw-medium .pw-strength__label { color: var(--warn); }
-.pw-strong .pw-strength__fill { background: var(--green); width: 100%; }
-.pw-strong .pw-strength__label { color: var(--green); }
-html.dark-theme .pw-strength__bar { background: var(--color-border); }
 
 /* ── Alert / message boxes ── */
-.form-err, .form-ok, .token-warn {
+.form-err {
   font-family: var(--font-sans); font-size: 13px;
   letter-spacing: 0; padding: 10px 14px;
   border-radius: 8px; display: none;
@@ -254,15 +200,7 @@ html.dark-theme .pw-strength__bar { background: var(--color-border); }
   color: var(--color-danger); background: var(--color-danger-bg);
   border-left: 3px solid var(--color-danger-border);
 }
-.form-ok {
-  color: var(--color-success); background: var(--color-success-bg);
-  border-left: 3px solid var(--color-success-border);
-}
-.token-warn {
-  color: var(--warning-text); background: var(--color-warning-bg);
-  border-left: 3px solid var(--color-warning-border);
-}
-.form-err.show, .form-ok.show, .token-warn.show { display: block; }
+.form-err.show { display: block; }
 @keyframes errShake {
   0%, 100% { transform: translateX(0); }
   25%       { transform: translateX(-6px); }
@@ -334,7 +272,6 @@ html.dark-theme .pw-strength__bar { background: var(--color-border); }
 .lnk:hover { color: var(--accent-text); border-color: var(--accent-text); }
 
 /* ── Utility ── */
-.u-hide { display: none !important; }
 html.dark-theme .auth-page input { color-scheme: dark; }
 
 /* ── Responsive ── */

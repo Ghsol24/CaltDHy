@@ -37,7 +37,7 @@ function configuredRate() {
   return hasUsableUsdRate() ? exchangeRateConfig.vndPerUsd : null;
 }
 
-export function getActiveLocale() {
+function getActiveLocale() {
   if (activeLocaleCache) return activeLocaleCache;
   try { activeLocaleCache = normalizeLocale(localStorage.getItem(LANG_KEY)); } catch { activeLocaleCache = 'vi'; }
   return activeLocaleCache;
@@ -47,7 +47,7 @@ export function setActiveFormattingLocale(locale) {
   activeLocaleCache = normalizeLocale(locale);
 }
 
-export function getActiveDisplayCurrency() {
+function getActiveDisplayCurrency() {
   if (activeDisplayCurrencyCache) return activeDisplayCurrencyCache;
   try {
     activeDisplayCurrencyCache = localStorage.getItem(CURRENCY_KEY) === 'USD' && configuredRate() ? 'USD' : BASE_CURRENCY;
@@ -298,28 +298,4 @@ export function getRecurringTier(item, currentMonthStr = getLocalMonthString(), 
   const tier = due.isOverdue || due.isToday || due.diffDays <= 3
     ? 'danger' : due.diffDays <= 10 ? 'warning' : 'normal';
   return { tier, isPaidThisMonth: false, ...due, shortText: due.text };
-}
-
-export function advanceNextDueDate(dateStr, cycle = 'monthly') {
-  if (!dateStr || typeof dateStr !== 'string') return dateStr;
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  const year = Number.parseInt(parts[0], 10);
-  const month = Number.parseInt(parts[1], 10) - 1;
-  const day = Number.parseInt(parts[2], 10);
-  let targetYear = year;
-  let targetMonth = month;
-  if (cycle === 'monthly' || cycle === 'quarterly') {
-    targetMonth += cycle === 'quarterly' ? 3 : 1;
-    if (targetMonth > 11) {
-      targetYear += Math.floor(targetMonth / 12);
-      targetMonth %= 12;
-    }
-  } else if (cycle === 'yearly') {
-    targetYear += 1;
-  }
-  const daysInTargetMonth = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
-  const targetDay = Math.min(day, daysInTargetMonth);
-  const pad = (number) => String(number).padStart(2, '0');
-  return `${targetYear}-${pad(targetMonth + 1)}-${pad(targetDay)}`;
 }

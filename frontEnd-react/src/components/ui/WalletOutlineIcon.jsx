@@ -96,5 +96,3 @@ export function WalletOutlineIcon({ type, size = 20, color = 'currentColor', cla
     </svg>
   );
 }
-
-export default WalletOutlineIcon;

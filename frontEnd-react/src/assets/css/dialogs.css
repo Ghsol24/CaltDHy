@@ -457,67 +457,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   margin-top: 4px;
 }
 
-/* ── UI Primitive: MoneyAmount ── */
-.money-amount {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
-  display: inline-block;
-}
-
-.money-amount--income {
-  color: var(--color-success);
-}
-
-.money-amount--expense {
-  color: var(--danger);
-}
-
-.money-amount--neutral {
-  color: var(--text-primary);
-}
-
-.money-amount--xs {
-  font-size: 11px;
-}
-
-.money-amount--sm {
-  font-size: 13px;
-}
-
-.money-amount--md {
-  font-size: 15px;
-}
-
-.money-amount--lg {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.money-amount--xl {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.money-amount--hero {
-  font-size: clamp(28px, 4vw, 36px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
 /* ── UI Primitive: SkeletonLoader ── */
-.skeleton-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.skeleton-group--inline {
-  flex-direction: row;
-  align-items: center;
-}
 
 .skeleton-item {
   background: linear-gradient(
@@ -1122,28 +1062,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
 
-.txn-select {
-  width: 100%;
-  padding: 10px 38px 10px 14px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--text-primary);
-  background-color: var(--surface);
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238A98A9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 12px 8px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
-  cursor: pointer;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-.txn-input:focus,
-.txn-select:focus {
+.txn-input:focus {
   outline: none;
   border-color: var(--color-action-bg);
   box-shadow: var(--focus-ring, 0 0 0 3px rgba(79, 70, 229, 0.15));
@@ -1299,17 +1218,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-}
-
-.txn-btn-submit--withdraw {
-  background: var(--danger, #DC2626) !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3) !important;
-}
-
-.txn-btn-submit--withdraw:hover:not(:disabled) {
-  background: #B91C1C !important;
-  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
 }
 
 .txn-btn-submit--income {
@@ -1992,8 +1900,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 /* ── Common Jar Dialog Components ── */
-.jar-detail-modal-dialog,
-.jar-history-modal-dialog,
 .financial-tips-dialog {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2008,8 +1914,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   animation: modalIn 200ms var(--ease-smooth);
 }
 
-.jar-detail-header,
-.jar-history-header,
 .financial-tips-header {
   padding: 18px 24px;
   border-bottom: 1px solid var(--border);
@@ -2019,18 +1923,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   background: var(--surface);
 }
 
-.jar-detail-title,
-.jar-history-title,
-.financial-tips-title {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.jar-detail-close-btn,
-.jar-history-close-btn,
 .financial-tips-close-btn {
   background: transparent;
   border: none;
@@ -2042,15 +1934,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   transition: all var(--dur-fast) ease;
 }
 
-.jar-detail-close-btn:hover,
-.jar-history-close-btn:hover,
 .financial-tips-close-btn:hover {
   background: var(--surface-subtle);
   color: var(--text-primary);
 }
 
 .jar-detail-body,
-.jar-history-body,
 .financial-tips-body {
   padding: 24px;
   overflow-y: auto;
@@ -2061,7 +1950,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .jar-detail-footer,
-.jar-history-footer,
 .financial-tips-footer {
   padding: 16px 24px;
   border-top: 1px solid var(--border);
@@ -2093,8 +1981,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   gap: 8px;
 }
 
-.jar-detail-history-item,
-.jar-history-item {
+.jar-detail-history-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2145,61 +2032,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   transform: translateY(-1px);
 }
 
-.jar-history-tab-group {
-  display: flex;
-  background: var(--surface-subtle);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-
-.jar-history-tab-btn {
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all var(--dur-fast) ease;
-}
-
-.jar-history-tab-btn.active {
-  background: var(--surface);
-  color: var(--color-link);
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-.jar-history-select {
-  padding: 6px 32px 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 12.5px;
-  color: var(--text-primary);
-  background-color: var(--surface);
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238A98A9' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  appearance: none;
-  -webkit-appearance: none;
-  outline: none;
-  cursor: pointer;
-}
-
-.jar-history-search-input {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 12.5px;
-  background: var(--surface);
-  color: var(--text-primary);
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .financial-tips-tab-btn {
   border: 1px solid var(--border);
   background: var(--surface-subtle);
@@ -2216,422 +2048,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   background: var(--primary);
   color: #FFFFFF;
   border-color: var(--color-action-bg);
-}
-
-/* ============================================================
-   REDESIGNED JAR MODAL (TẠO HŨ TIẾT KIỆM MỚI - DESIGN V2)
-   ============================================================ */
-
-.jar-modal-card {
-  max-width: 580px;
-  border-radius: 18px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-dialog);
-  overflow: hidden;
-}
-
-.jar-modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 24px 28px 18px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.jar-modal-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.jar-modal-title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--color-text);
-  letter-spacing: -0.02em;
-}
-
-.jar-modal-subtitle {
-  margin: 0;
-  font-size: 13px;
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
-
-.jar-modal-body {
-  padding: 22px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  overflow-y: auto;
-  max-height: calc(88vh - 150px);
-  background: var(--color-surface);
-}
-
-.jar-field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.jar-field-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-/* Name input with 0/40 counter */
-.jar-name-input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.jar-text-input {
-  width: 100%;
-  height: 48px;
-  background: var(--color-surface-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 0 54px 0 16px;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--color-text);
-  box-sizing: border-box;
-  outline: none;
-  transition: all 0.15s ease;
-}
-
-.jar-text-input:focus {
-  border-color: var(--color-action-bg);
-  box-shadow: var(--focus-ring);
-}
-
-.jar-text-input::placeholder {
-  color: var(--color-text-muted);
-}
-
-.jar-char-counter {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Adornment Input Box (Target, Initial amount, Date) */
-.jar-adornment-input-box {
-  display: flex;
-  align-items: center;
-  height: 48px;
-  background: var(--color-surface-muted);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 0 14px;
-  gap: 10px;
-  box-sizing: border-box;
-  transition: all 0.15s ease;
-}
-
-.jar-adornment-input-box:focus-within {
-  border-color: var(--color-action-bg);
-  box-shadow: var(--focus-ring);
-}
-
-.jar-input-leading-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.jar-number-input {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text);
-  font-variant-numeric: tabular-nums;
-}
-
-.jar-number-input::placeholder {
-  color: var(--color-text-muted);
-}
-
-.jar-currency-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 6px;
-  background: transparent;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  user-select: none;
-  flex-shrink: 0;
-}
-
-.jar-currency-badge svg {
-  color: var(--color-icon);
-}
-
-/* 2-Column Grid for Target and Date */
-.jar-form-grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-@media (max-width: 600px) {
-  .jar-form-grid-2col {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Realtime Summary Card: "Bạn còn cần tiết kiệm" */
-.jar-summary-card {
-  background: var(--color-brand-50);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.jar-summary-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.jar-summary-card__title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-.jar-summary-card__days-pill {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  background: var(--color-brand-100);
-  color: var(--color-link);
-}
-
-.jar-summary-card__metrics {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.jar-summary-card__left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.jar-summary-card__coin-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--color-action-bg);
-  color: var(--color-on-action);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 800;
-  flex-shrink: 0;
-}
-
-.jar-summary-card__amount {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--color-text);
-  font-variant-numeric: tabular-nums;
-  margin: 0;
-  letter-spacing: -0.01em;
-  font-family: var(--font-mono, monospace);
-}
-
-.jar-summary-card__pct {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--color-link);
-  font-variant-numeric: tabular-nums;
-  font-family: var(--font-mono, monospace);
-}
-
-.jar-summary-card__track {
-  height: 6px;
-  width: 100%;
-  background: var(--color-surface-muted);
-  border-radius: 9999px;
-  overflow: hidden;
-  margin: 4px 0 2px;
-}
-
-.jar-summary-card__fill {
-  height: 100%;
-  border-radius: 9999px;
-  background-color: var(--color-action-bg);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
-}
-
-.jar-summary-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-/* Color Presets Picker */
-.jar-color-presets {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  padding: 4px 0;
-}
-
-.jar-color-circle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  position: relative;
-  outline: none;
-  padding: 0;
-}
-
-.jar-color-circle:hover {
-  transform: scale(1.1);
-}
-
-.jar-color-circle.is-selected {
-  box-shadow: 0 0 0 2.5px var(--color-surface), 0 0 0 4.5px currentColor;
-}
-
-/* Tip / Guidance Banner */
-.jar-tip-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--color-brand-50);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  padding: 12px 18px;
-}
-
-.jar-tip-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--color-brand-100);
-  color: var(--color-link);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.jar-tip-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.jar-tip-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--color-link);
-  margin: 0;
-}
-
-.jar-tip-text {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  line-height: 1.4;
-  margin: 0;
-}
-
-/* Modal Footer Buttons */
-.jar-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 28px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-}
-
-.jar-btn-cancel {
-  padding: 10px 24px;
-  font-family: var(--font-sans);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.jar-btn-cancel:hover:not(:disabled) {
-  background: var(--color-surface-muted);
-  border-color: var(--color-border-strong);
-  color: var(--color-text);
-}
-
-.jar-btn-submit {
-  padding: 10px 26px;
-  font-family: var(--font-sans);
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--color-on-action);
-  background: var(--color-action-bg);
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.jar-btn-submit:hover:not(:disabled) {
-  background: var(--color-action-hover-bg);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-1px);
-}
-
-.jar-btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
 }
 
 /* ── Recurring Modal Custom Themed Selects & Dropdowns ── */
