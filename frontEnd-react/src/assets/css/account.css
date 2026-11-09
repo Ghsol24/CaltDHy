@@ -112,53 +112,6 @@
   color: var(--text-primary, #173126);
 }
 
-/* ── Fixed Navigation Tabs ── */
-.account-nav-tabs {
-  display: flex;
-  padding: 0 24px;
-  background: var(--surface-subtle, #F7FAF8);
-  border-bottom: 1px solid var(--border, #E2ECE6);
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.account-tab-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: transparent;
-  border: none;
-  font-family: var(--font-sans);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-secondary, #60766A);
-  cursor: pointer;
-  transition: color 0.15s ease;
-  user-select: none;
-}
-
-.account-tab-btn:hover {
-  color: var(--color-link);
-}
-
-.account-tab-btn.active {
-  color: var(--color-link);
-  font-weight: 700;
-}
-
-.account-tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2.5px;
-  background: var(--primary, #078A59);
-  border-radius: 3px 3px 0 0;
-}
-
 /* ── Scrollable Body ── */
 .account-modal-body {
   padding: 22px 24px;
@@ -183,13 +136,6 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary, #173126);
-}
-
-.account-tab-intro-sub {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  color: var(--text-muted, #7E9287);
 }
 
 /* ── Avatar Studio ── */

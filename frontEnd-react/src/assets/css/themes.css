@@ -1,27 +1,4 @@
 /* ============================================================
-   VENT GLOW ANIMATION (Dark Theme only)
-   ============================================================ */
-@keyframes ventGlow {
-  0%, 100% {
-    opacity: 0.15;
-    filter: drop-shadow(0 0 1px rgba(96, 165, 250, 0));
-  }
-  50% {
-    opacity: 0.35;
-    filter: drop-shadow(0 0 3px rgba(96, 165, 250, 0.4));
-  }
-}
-
-html:not(.light-theme):not(.cream-theme):not(.green-theme) .modal-vent,
-html:not(.light-theme):not(.cream-theme):not(.green-theme) .numpad-vent,
-html:not(.light-theme):not(.cream-theme):not(.green-theme) .guide-vent,
-html.dark-theme .modal-vent,
-html.dark-theme .numpad-vent,
-html.dark-theme .guide-vent {
-  animation: ventGlow 4s ease-in-out infinite;
-}
-
-/* ============================================================
    LIGHT THEME — Minimalist Modern SaaS
    ============================================================ */
 html.light-theme {
@@ -34,7 +11,6 @@ html.light-theme {
   --accent: #4F46E5;
   --accent-rgb: 79, 70, 229;
   --green: #16A34A;
-  --warn: #D97706;
 
   --sh-raise: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.04);
   --sh-press: inset 0 1px 3px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.02);
@@ -44,25 +20,6 @@ html.light-theme {
   /* ── Scrollbar Colors ── */
   --scrollbar-thumb: rgba(0, 0, 0, 0.18);
   --scrollbar-hover: rgba(0, 0, 0, 0.30);
-
-  /* ── Component Token Overrides ── */
-  --c-summary-bg:            var(--surface);
-  --c-summary-border:        #E2E8F0;
-  --c-summary-hover-border:  var(--accent);
-  --c-summary-shadow:        var(--sh-raise);
-  --c-card-bg:               var(--surface);
-  --c-card-border:           #E2E8F0;
-  --c-card-shadow:           var(--sh-raise);
-  --c-card-hover-shadow:     var(--sh-float);
-  --c-inst-bg:               var(--surface);
-  --c-inst-border:           #E2E8F0;
-  --c-inst-hover-bg:         var(--surface2);
-  --c-inst-hover-border:     var(--accent);
-  --c-bubble-bg:             var(--surface2);
-  --c-bubble-border:         #E2E8F0;
-  --c-bubble-shadow:         var(--sh-press);
-  --c-dashed-border:         rgba(15, 23, 42, 0.12);
-  --c-dashed-icon:           var(--muted);
 }
 
 /* Topbar */
@@ -82,12 +39,6 @@ html.light-theme .tb-logo-accent {
   text-shadow: 0 0 16px rgba(79,70,229,.4);
 }
 
-html.light-theme .led--green {
-  box-shadow: 0 0 6px 2px rgba(22,163,74,.4);
-}
-
-html.light-theme .led-label { color: var(--green); }
-
 html.light-theme .user-chip::before {
   background: linear-gradient(135deg, #4F46E5, #818CF8);
 }
@@ -99,319 +50,9 @@ html.light-theme .rail {
   box-shadow: 2px 0 12px rgba(0,0,0,.04);
 }
 
-/* Metric cards */
-html.light-theme .metric-card--balance {
-  background: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%);
-  box-shadow: 0 8px 28px rgba(79,70,229,.3), 0 2px 8px rgba(79,70,229,.15);
-}
-
-html.light-theme .metric-card--balance:hover {
-  box-shadow: 0 12px 36px rgba(79,70,229,.4), 0 4px 12px rgba(79,70,229,.2);
-}
-
-html.light-theme .metric-card--balance .metric-card__label,
-html.light-theme .metric-card--balance .metric-card__sub {
-  color: rgba(255,255,255,.75);
-}
-
-html.light-theme .metric-card--balance .metric-card__value--balance {
-  color: #FFFFFF;
-  text-shadow: none;
-}
-
-html.light-theme .metric-card--income,
-html.light-theme .metric-card--expense {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: var(--sh-raise);
-}
-
-html.light-theme .metric-card--income::after,
-html.light-theme .metric-card--expense::after {
-  opacity: 0.4;
-}
-
-html.light-theme .metric-card__screw {
-  background: radial-gradient(circle at 40% 35%, #F8FAFC, #CBD5E1, #94A3B8);
-  box-shadow: none;
-}
-
-html.light-theme .btn-add-txn {
-  background: linear-gradient(135deg, #4F46E5 0%, #818CF8 100%);
-  color: #FFFFFF;
-  box-shadow: 0 4px 16px rgba(79,70,229,.3);
-}
-
-html.light-theme .btn-add-txn:hover {
-  box-shadow: 0 8px 24px rgba(79,70,229,.45);
-}
-
-html.light-theme .btn-quick-deposit {
-  background: rgba(79,70,229,.1);
-  color: #4F46E5;
-  box-shadow: none;
-  border: 1px solid rgba(79,70,229,.2);
-}
-
-html.light-theme .btn-quick-deposit:hover {
-  box-shadow: 0 0 10px rgba(79,70,229,.3);
-}
-
-/* Chart panel */
-html.light-theme .chassis-frame--chart {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: var(--sh-raise);
-}
-
-html.light-theme .chassis-frame__screw {
-  background: radial-gradient(circle at 40% 35%, #F8FAFC, #CBD5E1, #94A3B8);
-  box-shadow: none;
-}
-
-/* Transaction feed */
-html.light-theme .main-content { background: #F5F7FA; }
-
-html.light-theme .txn-slot {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-left: 3px solid transparent;
-  box-shadow: var(--sh-raise);
-}
-
-html.light-theme .txn-slot[data-type="income"] {
-  border-left-color: #16A34A;
-}
-
-html.light-theme .txn-slot[data-type="expense"] {
-  border-left-color: rgba(220,38,38,.4);
-}
-
-html.light-theme .txn-slot:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,.09);
-}
-
-html.light-theme .txn-slot[data-type="income"]:hover {
-  border-left-color: #16A34A;
-  box-shadow: 0 6px 20px rgba(0,0,0,.09), inset 3px 0 0 #16A34A;
-}
-
-html.light-theme .txn-slot[data-type="expense"]:hover {
-  border-left-color: #DC2626;
-  box-shadow: 0 6px 20px rgba(0,0,0,.09), inset 3px 0 0 #DC2626;
-}
-
-html.light-theme .txn-cat-pill {
-  background: #F1F5F9;
-  color: #64748B;
-}
-
-html.light-theme .filter-btn {
-  background: #F1F5F9;
-  color: #64748B;
-  box-shadow: none;
-  border: 1px solid #E2E8F0;
-}
-
-html.light-theme .filter-btn--active {
-  background: #4F46E5;
-  color: #FFFFFF;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(79,70,229,.3);
-}
-
-/* Budget cards */
-html.light-theme .budget-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-left: 3px solid transparent;
-  box-shadow: var(--sh-raise);
-}
-
-html.light-theme .budget-card--ok   { border-left-color: #16A34A; }
-html.light-theme .budget-card--warn { border-left-color: #D97706; }
-html.light-theme .budget-card--over { border-left-color: #DC2626; }
-
-html.light-theme .budget-card__remaining { color: #16A34A; }
-html.light-theme .budget-card__remaining.over { color: #DC2626; }
-
-html.light-theme .budget-bar { background: #E2E8F0; }
-
-html.light-theme .budget-bar__fill--ok {
-  background: #16A34A;
-  box-shadow: none;
-}
-
-html.light-theme .budget-bar__fill--warn {
-  background: #D97706;
-  box-shadow: none;
-}
-
-html.light-theme .budget-bar__fill--over {
-  background: #DC2626;
-  box-shadow: none;
-}
-
-html.light-theme .budget-card__pct {
-  background: #F1F5F9;
-  color: #64748B;
-}
-
 /* Modals */
 html.light-theme .modal-overlay {
   background: var(--color-overlay);
-}
-
-html.light-theme .modal-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 24px 64px rgba(0,0,0,.16);
-  background-image: none;
-}
-
-html.light-theme .modal-title { color: #0F172A; }
-
-html.light-theme .modal-card__screw {
-  background: radial-gradient(circle at 40% 35%, #F8FAFC, #CBD5E1, #94A3B8);
-  box-shadow: none;
-}
-
-html.light-theme .modal-vent,
-html.light-theme .numpad-vent,
-html.light-theme .guide-vent {
-  background: #E2E8F0;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-html.light-theme .form-group:focus-within .form-label {
-  color: #0052FF;
-}
-
-html.light-theme .form-input,
-html.light-theme .form-select,
-html.light-theme .budget-form-input {
-  background: #F8FAFC;
-  color: #0F172A;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.07);
-  border: 1px solid #E2E8F0;
-}
-
-html.light-theme .form-input:focus,
-html.light-theme .form-select:focus,
-html.light-theme .budget-form-input:focus {
-  box-shadow: 0 0 0 3px rgba(79,70,229,.15);
-  border-color: #4F46E5;
-}
-
-html.light-theme .btn-save {
-  background: linear-gradient(135deg, #4F46E5, #818CF8);
-  color: #FFFFFF;
-  box-shadow: 0 3px 12px rgba(79,70,229,.3);
-}
-
-/* Custom Category Type overrides for Light Theme */
-html.light-theme .btn-new-cat-type {
-  background: rgba(0,0,0,.03);
-  color: #64748B;
-  border-color: #E2E8F0;
-}
-html.light-theme .btn-new-cat-type:hover {
-  background: rgba(0,0,0,.05);
-  color: #0F172A;
-  border-color: #CBD5E1;
-}
-html.light-theme .btn-new-cat-type.is-expense {
-  background: rgba(255,107,129,.1);
-  color: #FF6B81;
-  border-color: rgba(255,107,129,.35);
-}
-html.light-theme .btn-new-cat-type.is-income {
-  background: rgba(79,70,229,.1);
-  color: #4F46E5;
-  border-color: rgba(79,70,229,.35);
-}
-html.light-theme .budget-add-cat__type-dropdown {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 10px 30px rgba(0,0,0,.1);
-}
-html.light-theme .budget-type-option:hover {
-  background: rgba(0,0,0,.03);
-  color: #0F172A;
-}
-html.light-theme .budget-type-option--expense.selected {
-  background: rgba(255,107,129,.08);
-  color: #FF6B81;
-  border-left-color: #FF6B81;
-}
-html.light-theme .budget-type-option--income.selected {
-  background: rgba(79,70,229,.08);
-  color: #4F46E5;
-  border-left-color: #4F46E5;
-}
-
-html.light-theme .btn-save:hover {
-  box-shadow: 0 6px 20px rgba(79,70,229,.45);
-}
-
-html.light-theme .btn-cancel {
-  background: #F1F5F9;
-  color: #64748B;
-  box-shadow: none;
-  border: 1px solid #E2E8F0;
-}
-
-html.light-theme .type-btn {
-  background: #F1F5F9;
-  color: #64748B;
-  box-shadow: none;
-  border: 1px solid #E2E8F0;
-}
-
-html.light-theme .type-btn--active-expense {
-  background: #FEF2F2;
-  color: #DC2626;
-  border-color: #DC2626;
-  box-shadow: 0 0 0 3px rgba(220,38,38,.1);
-}
-
-html.light-theme .type-btn--active-income {
-  background: #F0FDF4;
-  color: #16A34A;
-  border-color: #16A34A;
-  box-shadow: 0 0 0 3px rgba(22,163,74,.1);
-}
-
-/* Settings */
-html.light-theme .lang-btn {
-  background: #F1F5F9;
-  color: #64748B;
-  border: 1px solid #E2E8F0;
-  box-shadow: none;
-}
-
-html.light-theme .lang-btn--active {
-  border-color: #4F46E5;
-  color: #4F46E5;
-  box-shadow: 0 0 0 2px rgba(79,70,229,.15);
-}
-
-/* FAB */
-html.light-theme .fab {
-  background: linear-gradient(135deg, #4F46E5, #818CF8);
-  box-shadow: 0 6px 22px rgba(79,70,229,.4), 0 2px 6px rgba(79,70,229,.2);
-  outline-color: rgba(79,70,229,.2);
-}
-
-html.light-theme .fab:hover {
-  box-shadow: 0 12px 32px rgba(79,70,229,.5), 0 4px 10px rgba(79,70,229,.25);
-}
-
-html.light-theme .fab::after {
-  background: #FFFFFF;
-  color: #0F172A;
-  box-shadow: 0 4px 16px rgba(0,0,0,.1);
-  border-top: 1px solid #E2E8F0;
 }
 
 /* Toast */
@@ -422,119 +63,7 @@ html.light-theme .toast {
   border-top: none;
 }
 
-html.light-theme .undo-toast {
-  background: #FFFFFF;
-  border-left-color: #4F46E5;
-  box-shadow: 0 10px 36px rgba(0,0,0,.12);
-  border-top: 1px solid #E2E8F0;
-}
-
-html.light-theme .undo-toast__label { color: #0F172A; }
-
-html.light-theme .undo-toast__btn {
-  color: #4F46E5;
-  background: rgba(79,70,229,.08);
-  border-color: rgba(79,70,229,.3);
-}
-
-/* Section labels */
-html.light-theme .section-label { color: #64748B; }
-
-/* Theme toggle button */
-html.light-theme .btn-theme {
-  background: #F1F5F9;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
-}
-
-/* Settings button */
-html.light-theme .btn-settings {
-  background: #F1F5F9;
-  color: #64748B;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
-}
-
-/* Set budgets button */
-html.light-theme .btn-set-budgets {
-  background: #F1F5F9;
-  color: #64748B;
-  border-color: #E2E8F0;
-  box-shadow: none;
-}
-
-html.light-theme .btn-set-budgets:hover {
-  color: #4F46E5;
-  border-color: #4F46E5;
-}
-
-/* Add custom cat button */
-html.light-theme .btn-add-cat {
-  color: #16A34A;
-  background: rgba(22,163,74,.08);
-  border-color: rgba(22,163,74,.3);
-}
-
-html.light-theme .budget-add-cat {
-  background: #F8FAFC;
-  box-shadow: none;
-  border: 1px solid rgba(79, 70, 229, 0.08);
-}
-
 /* Light theme: type toggle for new category */
-html.light-theme .btn-new-cat-type { background: #F1F5F9; color: #64748B; border: 1.5px solid #E2E8F0; }
-html.light-theme .btn-new-cat-type:hover { background: #E8EBF2; color: #0F172A; border-color: #4F46E5; }
-html.light-theme .btn-new-cat-type.is-income { background: rgba(22,163,74,.1); color: #16A34A; border-color: rgba(22,163,74,.5); }
-html.light-theme .btn-new-cat-type.is-expense { background: rgba(255,75,114,.08); color: #DC2626; border-color: rgba(255,75,114,.4); }
-html.light-theme .budget-add-cat__type-dropdown { background: #FFFFFF; border-color: #E2E8F0; box-shadow: 0 8px 24px rgba(0,0,0,.1); }
-html.light-theme .budget-type-option:hover { background: #F1F5F9; color: #0F172A; }
-html.light-theme .budget-type-option--income.selected { background: rgba(22,163,74,.08); color: #16A34A; border-left-color: #16A34A; }
-html.light-theme .budget-type-option--expense.selected { background: rgba(220,38,38,.07); color: #DC2626; border-left-color: #DC2626; }
-
-html.light-theme .numpad-device {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  background-image: none;
-}
-
-html.light-theme .numpad-display {
-  background: #F1F5F9;
-  box-shadow: inset 0 1px 4px rgba(0,0,0,.08);
-}
-
-html.light-theme .numpad-display__value,
-html.light-theme .numpad-display__unit,
-html.light-theme .numpad-display__label {
-  color: #16A34A;
-}
-
-html.light-theme .numpad-display__value {
-  text-shadow: 0 0 12px rgba(22,163,74,.3);
-}
-
-html.light-theme .nk {
-  background: #F1F5F9;
-  color: #0F172A;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05), inset 0 1px 0 rgba(255,255,255,.8);
-}
-
-html.light-theme .nk:active {
-  color: #16A34A;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,.12);
-}
-
-html.light-theme .nk--submit {
-  background: #16A34A;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(22,163,74,.35);
-}
-
-html.light-theme .btn-logout {
-  background: #F1F5F9;
-  color: #64748B;
-  box-shadow: none;
-  border: 1px solid #E2E8F0;
-}
-
-html.light-theme .btn-logout:hover { color: #DC2626; }
 
 html.light-theme .user-chip {
   background: #F1F5F9;
@@ -650,7 +179,6 @@ html.cream-theme {
   --accent:   #C0531E;
   --accent-rgb: 192, 83, 30;
   --green:    #2D7A3E;
-  --warn:     #B57D1A;
 
   --sh-raise: 0 2px 8px rgba(100,60,20,.10), 0 6px 20px rgba(100,60,20,.07);
   --sh-press: inset 0 1px 5px rgba(100,60,20,.12), inset 0 0 0 1px rgba(100,60,20,.05);
@@ -660,25 +188,6 @@ html.cream-theme {
   /* ── Scrollbar Colors ── */
   --scrollbar-thumb: rgba(100, 60, 20, 0.20);
   --scrollbar-hover: rgba(100, 60, 20, 0.36);
-
-  /* ── Component Token Overrides ── */
-  --c-summary-bg:            var(--surface);
-  --c-summary-border:        #EDE4D8;
-  --c-summary-hover-border:  var(--accent);
-  --c-summary-shadow:        var(--sh-raise);
-  --c-card-bg:               var(--surface);
-  --c-card-border:           #EDE4D8;
-  --c-card-shadow:           var(--sh-raise);
-  --c-card-hover-shadow:     var(--sh-float);
-  --c-inst-bg:               var(--surface);
-  --c-inst-border:           #EDE4D8;
-  --c-inst-hover-bg:         var(--surface2);
-  --c-inst-hover-border:     var(--accent);
-  --c-bubble-bg:             var(--surface2);
-  --c-bubble-border:         #EDE4D8;
-  --c-bubble-shadow:         var(--sh-press);
-  --c-dashed-border:         rgba(44, 29, 16, 0.12);
-  --c-dashed-icon:           var(--muted);
 }
 
 html.cream-theme body { background: var(--bg); color: var(--txt); }
@@ -715,255 +224,17 @@ html.cream-theme .user-chip::before {
   background: linear-gradient(135deg, #C0531E, #E07848);
 }
 
-html.cream-theme .btn-logout {
-  background: #EDE4D8;
-  color: var(--muted);
-  border: 1px solid #D8CCBE;
-  box-shadow: none;
-}
-
-html.cream-theme .btn-logout:hover { color: #C0531E; }
-
-html.cream-theme .btn-theme {
-  background: #EDE4D8;
-  box-shadow: 0 1px 4px rgba(100,60,20,.1);
-}
-
-html.cream-theme .btn-settings {
-  background: #EDE4D8;
-  color: var(--muted);
-  box-shadow: 0 1px 4px rgba(100,60,20,.1);
-}
-
 html.cream-theme .rail {
   background: #FDF8F2;
   border-right: 1px solid #E0D4C4;
   box-shadow: 2px 0 14px rgba(100,60,20,.06);
 }
 
-html.cream-theme .metric-card--balance {
-  background: linear-gradient(135deg, #C0531E 0%, #E07848 100%);
-  box-shadow: 0 8px 28px rgba(192,83,30,.3), 0 2px 8px rgba(192,83,30,.15);
-}
-
-html.cream-theme .metric-card--balance:hover {
-  box-shadow: 0 12px 36px rgba(192,83,30,.4), 0 4px 12px rgba(192,83,30,.2);
-}
-
-html.cream-theme .metric-card--balance .metric-card__label,
-html.cream-theme .metric-card--balance .metric-card__sub { color: rgba(255,255,255,.78); }
-
-html.cream-theme .metric-card--balance .metric-card__value--balance {
-  color: #fff;
-  text-shadow: none;
-}
-
-html.cream-theme .metric-card--income,
-html.cream-theme .metric-card--expense {
-  background: #FDF8F2;
-  border: 1px solid #E0D4C4;
-  box-shadow: var(--sh-raise);
-}
-
-html.cream-theme .metric-card__screw { background: radial-gradient(circle at 40% 35%, #FEF3C7, #F59E0B, #B45309); box-shadow: none; }
-html.cream-theme .chassis-frame__screw { background: radial-gradient(circle at 40% 35%, #FEF3C7, #F59E0B, #B45309); box-shadow: none; }
-
-html.cream-theme .btn-add-txn {
-  background: linear-gradient(135deg, #C0531E 0%, #E07848 100%);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(192,83,30,.32);
-}
-
-html.cream-theme .btn-add-txn:hover {
-  box-shadow: 0 8px 26px rgba(192,83,30,.48);
-}
-
-html.cream-theme .chassis-frame--chart {
-  background: #FDF8F2;
-  border: 1px solid #E0D4C4;
-  box-shadow: var(--sh-raise);
-}
-
-html.cream-theme .main-content { background: #F5EDE0; }
-
-html.cream-theme .txn-slot {
-  background: #FDF8F2;
-  border: 1px solid #E0D4C4;
-  border-left: 3px solid transparent;
-  box-shadow: var(--sh-raise);
-}
-
-html.cream-theme .txn-slot[data-type="income"]  { border-left-color: #2D7A3E; }
-html.cream-theme .txn-slot[data-type="expense"] { border-left-color: rgba(192,83,30,.5); }
-html.cream-theme .txn-slot[data-type="income"]:hover  { box-shadow: 0 6px 20px rgba(100,60,20,.1), inset 3px 0 0 #2D7A3E; }
-html.cream-theme .txn-slot[data-type="expense"]:hover { box-shadow: 0 6px 20px rgba(100,60,20,.1), inset 3px 0 0 #C0531E; }
-html.cream-theme .txn-slot:hover { box-shadow: 0 6px 20px rgba(100,60,20,.1); border-left-color: transparent; }
-
-html.cream-theme .txn-cat-pill { background: #EDE4D8; color: var(--muted); }
-
-html.cream-theme .filter-btn {
-  background: #EDE4D8;
-  color: var(--muted);
-  border: 1px solid #D8CCBE;
-  box-shadow: none;
-}
-
-html.cream-theme .filter-btn--active {
-  background: #C0531E;
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(192,83,30,.3);
-}
-
-html.cream-theme .budget-card {
-  background: #FDF8F2;
-  border: 1px solid #E0D4C4;
-  border-left: 3px solid transparent;
-  box-shadow: var(--sh-raise);
-}
-
-html.cream-theme .budget-card--ok   { border-left-color: #2D7A3E; }
-html.cream-theme .budget-card--warn { border-left-color: #B57D1A; }
-html.cream-theme .budget-card--over { border-left-color: #C0531E; }
-html.cream-theme .budget-card__remaining { color: #2D7A3E; }
-html.cream-theme .budget-card__remaining.over { color: #C0531E; }
-html.cream-theme .budget-bar { background: #E0D4C4; }
-html.cream-theme .budget-bar__fill--ok   { background: #2D7A3E; box-shadow: none; }
-html.cream-theme .budget-bar__fill--warn { background: #B57D1A; box-shadow: none; }
-html.cream-theme .budget-bar__fill--over { background: #C0531E; box-shadow: none; }
-html.cream-theme .budget-card__pct { background: #EDE4D8; color: var(--muted); }
-
 html.cream-theme .modal-overlay { background: var(--color-overlay); }
-html.cream-theme .modal-card {
-  background: #FDF8F2;
-  border: 1px solid #E0D4C4;
-  box-shadow: 0 24px 64px rgba(100,60,20,.18);
-  background-image: none;
-}
-html.cream-theme .modal-title { color: #2C1D10; }
-html.cream-theme .modal-card__screw { background: radial-gradient(circle at 40% 35%, #FEF3C7, #F59E0B, #B45309); box-shadow: none; }
-html.cream-theme .modal-vent,
-html.cream-theme .numpad-vent,
-html.cream-theme .guide-vent {
-  background: #E0D4C4;
-  box-shadow: inset 0 1px 2px rgba(100, 60, 20, 0.15);
-}
-
-html.cream-theme .form-group:focus-within .form-label { color: #C0531E; }
-html.cream-theme .form-input,
-html.cream-theme .form-select,
-html.cream-theme .budget-form-input {
-  background: #F5EDE0;
-  color: #2C1D10;
-  border: 1px solid #D8CCBE;
-  box-shadow: inset 0 1px 3px rgba(100,60,20,.08);
-}
-html.cream-theme .form-input:focus,
-html.cream-theme .form-select:focus,
-html.cream-theme .budget-form-input:focus {
-  border-color: #C0531E;
-  box-shadow: 0 0 0 3px rgba(192,83,30,.15);
-}
-
-html.cream-theme .btn-save {
-  background: linear-gradient(135deg, #C0531E, #E07848);
-  color: #fff;
-  box-shadow: 0 3px 12px rgba(192,83,30,.3);
-}
-html.cream-theme .btn-save:hover { box-shadow: 0 6px 20px rgba(192,83,30,.45); }
-
-html.cream-theme .btn-cancel { background: #EDE4D8; color: var(--muted); border: 1px solid #D8CCBE; box-shadow: none; }
-html.cream-theme .type-btn  { background: #EDE4D8; color: var(--muted); border: 1px solid #D8CCBE; box-shadow: none; }
-html.cream-theme .type-btn--active-expense { background: #FEF0E8; color: #C0531E; border-color: #C0531E; box-shadow: 0 0 0 3px rgba(192,83,30,.1); }
-html.cream-theme .type-btn--active-income  { background: #EAF4EC; color: #2D7A3E; border-color: #2D7A3E; box-shadow: 0 0 0 3px rgba(45,122,62,.1); }
-
-html.cream-theme .lang-btn { background: #EDE4D8; color: var(--muted); border: 1px solid #D8CCBE; box-shadow: none; }
-html.cream-theme .lang-btn--active { border-color: #C0531E; color: #C0531E; box-shadow: 0 0 0 2px rgba(192,83,30,.15); }
 
 /* Custom Category Type overrides for Cream Theme */
-html.cream-theme .btn-new-cat-type {
-  background: rgba(44, 29, 16, 0.04);
-  color: var(--muted);
-  border-color: #D8CCBE;
-}
-html.cream-theme .btn-new-cat-type:hover {
-  background: rgba(44, 29, 16, 0.07);
-  color: var(--txt);
-  border-color: #C0531E;
-}
-html.cream-theme .btn-new-cat-type.is-expense {
-  background: rgba(192,83,30,.1);
-  color: #C0531E;
-  border-color: rgba(192,83,30,.35);
-}
-html.cream-theme .btn-new-cat-type.is-income {
-  background: rgba(45,122,62,.1);
-  color: #2D7A3E;
-  border-color: rgba(45,122,62,.35);
-}
-html.cream-theme .budget-add-cat__type-dropdown {
-  background: #FDF8F2;
-  border: 1px solid #D8CCBE;
-  box-shadow: 0 10px 30px rgba(100,60,20,.12);
-}
-html.cream-theme .budget-type-option:hover {
-  background: rgba(44, 29, 16, 0.04);
-  color: var(--txt);
-}
-html.cream-theme .budget-type-option--expense.selected {
-  background: rgba(192,83,30,.08);
-  color: #C0531E;
-  border-left-color: #C0531E;
-}
-html.cream-theme .budget-type-option--income.selected {
-  background: rgba(45,122,62,.08);
-  color: #2D7A3E;
-  border-left-color: #2D7A3E;
-}
-
-html.cream-theme .fab {
-  background: linear-gradient(135deg, #C0531E, #E07848);
-  box-shadow: 0 6px 22px rgba(192,83,30,.4), 0 2px 6px rgba(192,83,30,.2);
-}
-html.cream-theme .fab:hover { box-shadow: 0 12px 32px rgba(192,83,30,.5), 0 4px 10px rgba(192,83,30,.25); }
-html.cream-theme .fab::after { background: #FDF8F2; color: #2C1D10; box-shadow: 0 4px 16px rgba(100,60,20,.12); border-top: 1px solid #E0D4C4; }
 
 html.cream-theme .toast { background: #2C1D10; color: #FDF8F2; box-shadow: 0 10px 32px rgba(100,60,20,.22); }
-html.cream-theme .undo-toast { background: #FDF8F2; border-left-color: #C0531E; box-shadow: 0 10px 36px rgba(100,60,20,.14); border-top: 1px solid #E0D4C4; }
-html.cream-theme .undo-toast__label { color: #2C1D10; }
-html.cream-theme .undo-toast__btn { color: #C0531E; background: rgba(192,83,30,.08); border-color: rgba(192,83,30,.3); }
-
-html.cream-theme .section-label { color: var(--muted); }
-
-html.cream-theme .btn-set-budgets { background: #EDE4D8; color: var(--muted); border-color: #D8CCBE; box-shadow: none; }
-html.cream-theme .btn-set-budgets:hover { color: #C0531E; border-color: #C0531E; }
-
-html.cream-theme .btn-add-cat { color: #2D7A3E; background: rgba(45,122,62,.08); border-color: rgba(45,122,62,.3); }
-html.cream-theme .budget-add-cat {
-  background: #FAF3EA;
-  box-shadow: none;
-  border: 1px solid rgba(192, 83, 30, 0.08);
-}
-
-/* Cream theme: type toggle for new category */
-html.cream-theme .btn-new-cat-type { background: #EDE4D8; color: var(--muted); border: 1.5px solid #D8CCBE; }
-html.cream-theme .btn-new-cat-type:hover { background: #E4D9CC; color: #2C1D10; border-color: #C0531E; }
-html.cream-theme .btn-new-cat-type.is-income { background: rgba(45,122,62,.1); color: #2D7A3E; border-color: rgba(45,122,62,.5); }
-html.cream-theme .btn-new-cat-type.is-expense { background: rgba(192,83,30,.1); color: #C0531E; border-color: rgba(192,83,30,.5); }
-html.cream-theme .budget-add-cat__type-dropdown { background: #FDF8F2; border-color: #E0D4C4; box-shadow: 0 8px 24px rgba(100,60,20,.1); }
-html.cream-theme .budget-type-option:hover { background: #EDE4D8; color: #2C1D10; }
-html.cream-theme .budget-type-option--income.selected { background: rgba(45,122,62,.08); color: #2D7A3E; border-left-color: #2D7A3E; }
-html.cream-theme .budget-type-option--expense.selected { background: rgba(192,83,30,.08); color: #C0531E; border-left-color: #C0531E; }
-
-html.cream-theme .numpad-device { background: #FDF8F2; border: 1px solid #E0D4C4; background-image: none; }
-html.cream-theme .numpad-display { background: #EDE4D8; box-shadow: inset 0 1px 4px rgba(100,60,20,.1); }
-html.cream-theme .numpad-display__value,
-html.cream-theme .numpad-display__unit,
-html.cream-theme .numpad-display__label { color: #2D7A3E; }
-html.cream-theme .numpad-display__value { text-shadow: 0 0 12px rgba(45,122,62,.3); }
-html.cream-theme .nk { background: #EDE4D8; color: #2C1D10; box-shadow: 0 2px 6px rgba(100,60,20,.1), inset 0 1px 0 rgba(255,255,255,.7); }
-html.cream-theme .nk:active { color: #2D7A3E; box-shadow: inset 0 2px 6px rgba(100,60,20,.14); }
-html.cream-theme .nk--submit { background: #2D7A3E; color: #fff; box-shadow: 0 4px 12px rgba(45,122,62,.35); }
 
 /* ============================================================
    GREEN (MINT / SAGE) THEME — Fresh Emerald
@@ -978,7 +249,6 @@ html.green-theme {
   --accent:   #059669;
   --accent-rgb: 5, 150, 105;
   --green:    #10B981;
-  --warn:     #C07800;
 
   --sh-raise: 0 2px 8px rgba(16,120,80,.08), 0 6px 20px rgba(16,120,80,.05);
   --sh-press: inset 0 1px 5px rgba(16,120,80,.10), inset 0 0 0 1px rgba(16,120,80,.03);
@@ -988,25 +258,6 @@ html.green-theme {
   /* ── Scrollbar Colors ── */
   --scrollbar-thumb: rgba(5, 150, 105, 0.22);
   --scrollbar-hover: rgba(5, 150, 105, 0.38);
-
-  /* ── Component Token Overrides ── */
-  --c-summary-bg:            var(--surface);
-  --c-summary-border:        #E3F2E9;
-  --c-summary-hover-border:  var(--accent);
-  --c-summary-shadow:        var(--sh-raise);
-  --c-card-bg:               var(--surface);
-  --c-card-border:           #E3F2E9;
-  --c-card-shadow:           var(--sh-raise);
-  --c-card-hover-shadow:     var(--sh-float);
-  --c-inst-bg:               var(--surface);
-  --c-inst-border:           #E3F2E9;
-  --c-inst-hover-bg:         var(--surface2);
-  --c-inst-hover-border:     var(--accent);
-  --c-bubble-bg:             var(--surface2);
-  --c-bubble-border:         #E3F2E9;
-  --c-bubble-shadow:         var(--sh-press);
-  --c-dashed-border:         rgba(14, 46, 30, 0.12);
-  --c-dashed-icon:           var(--muted);
 }
 
 html.green-theme body { background: var(--bg); color: var(--txt); }
@@ -1040,260 +291,20 @@ html.green-theme .user-chip::before {
   background: linear-gradient(135deg, #059669, #34D399);
 }
 
-html.green-theme .btn-logout {
-  background: #E3F2E9;
-  color: #4D7A68;
-  border: 1px solid #B2DFC8;
-  box-shadow: none;
-}
-
-html.green-theme .btn-logout:hover { color: #059669; }
-
-html.green-theme .btn-theme {
-  background: #E3F2E9;
-  box-shadow: 0 1px 4px rgba(16,120,80,.1);
-}
-
-html.green-theme .btn-settings {
-  background: #E3F2E9;
-  color: #4D7A68;
-  box-shadow: 0 1px 4px rgba(16,120,80,.1);
-}
-
 html.green-theme .rail {
   background: #FFFFFF;
   border-right: 1px solid #B2DFC8;
   box-shadow: 2px 0 14px rgba(16,120,80,.06);
 }
 
-html.green-theme .metric-card--balance {
-  background: linear-gradient(135deg, #059669 0%, #34D399 100%);
-  box-shadow: 0 8px 28px rgba(5,150,105,.32), 0 2px 8px rgba(5,150,105,.16);
-}
-
-html.green-theme .metric-card--balance:hover {
-  box-shadow: 0 12px 36px rgba(5,150,105,.42), 0 4px 12px rgba(5,150,105,.2);
-}
-
-html.green-theme .metric-card--balance .metric-card__label,
-html.green-theme .metric-card--balance .metric-card__sub { color: rgba(255,255,255,.78); }
-
-html.green-theme .metric-card--balance .metric-card__value--balance {
-  color: #fff;
-  text-shadow: none;
-}
-
-html.green-theme .metric-card--income,
-html.green-theme .metric-card--expense {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  box-shadow: var(--sh-raise);
-}
-
-html.green-theme .metric-card__screw { background: radial-gradient(circle at 40% 35%, #E8F5E9, #81C784, #2E7D32); box-shadow: none; }
-html.green-theme .chassis-frame__screw { background: radial-gradient(circle at 40% 35%, #E8F5E9, #81C784, #2E7D32); box-shadow: none; }
-
-html.green-theme .btn-add-txn {
-  background: linear-gradient(135deg, #059669 0%, #34D399 100%);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(5,150,105,.3);
-}
-
-html.green-theme .btn-add-txn:hover {
-  box-shadow: 0 8px 26px rgba(5,150,105,.48);
-}
-
-html.green-theme .chassis-frame--chart {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  box-shadow: var(--sh-raise);
-}
-
-html.green-theme .main-content { background: #F0F9F4; }
-
-html.green-theme .txn-slot {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  border-left: 3px solid transparent;
-  box-shadow: var(--sh-raise);
-}
-
-html.green-theme .txn-slot[data-type="income"]  { border-left-color: #059669; }
-html.green-theme .txn-slot[data-type="expense"] { border-left-color: rgba(214,62,62,.5); }
-html.green-theme .txn-slot[data-type="income"]:hover  { box-shadow: 0 6px 20px rgba(16,120,80,.1), inset 3px 0 0 #059669; }
-html.green-theme .txn-slot[data-type="expense"]:hover { box-shadow: 0 6px 20px rgba(214,62,62,.12), inset 3px 0 0 #D63E3E; }
-html.green-theme .txn-slot:hover { box-shadow: 0 6px 20px rgba(16,120,80,.1); border-left-color: transparent; }
-
 /* ── Green theme: Expense amount text = coral-red for clear Income vs Expense distinction ── */
-html.green-theme .txn-amount.neg,
-html.green-theme .txn-amount--neg,
-html.green-theme .metric-card__value--expense { color: #D63E3E; }
-
-html.green-theme .txn-cat-pill { background: #E3F2E9; color: #4D7A68; }
-
-html.green-theme .filter-btn {
-  background: #E3F2E9;
-  color: #4D7A68;
-  border: 1px solid #B2DFC8;
-  box-shadow: none;
-}
-
-html.green-theme .filter-btn--active {
-  background: #059669;
-  color: #fff;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(5,150,105,.32);
-}
-
-html.green-theme .budget-card {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  border-left: 3px solid transparent;
-  box-shadow: var(--sh-raise);
-}
-
-html.green-theme .budget-card--ok   { border-left-color: #059669; }
-html.green-theme .budget-card--warn { border-left-color: #C07800; }
-html.green-theme .budget-card--over { border-left-color: #D63E3E; }
-html.green-theme .budget-card__remaining { color: #059669; }
-html.green-theme .budget-card__remaining.over { color: #D63E3E; }
-html.green-theme .budget-bar { background: #B2DFC8; }
-html.green-theme .budget-bar__fill--ok   { background: #059669; box-shadow: none; }
-html.green-theme .budget-bar__fill--warn { background: #C07800; box-shadow: none; }
-html.green-theme .budget-bar__fill--over { background: #D63E3E; box-shadow: none; }
-html.green-theme .budget-card__pct { background: #E3F2E9; color: #4D7A68; }
+html.green-theme .txn-amount.neg { color: #D63E3E; }
 
 html.green-theme .modal-overlay { background: var(--color-overlay); }
-html.green-theme .modal-card {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  box-shadow: 0 24px 64px rgba(16,120,80,.18);
-  background-image: none;
-}
-html.green-theme .modal-title { color: #0E2E1E; }
-html.green-theme .modal-card__screw { background: radial-gradient(circle at 40% 35%, #E8F5E9, #81C784, #2E7D32); box-shadow: none; }
-html.green-theme .modal-vent,
-html.green-theme .numpad-vent,
-html.green-theme .guide-vent {
-  background: #B2DFC8;
-  box-shadow: inset 0 1px 2px rgba(14, 46, 30, 0.15);
-}
-
-html.green-theme .form-group:focus-within .form-label { color: #059669; }
-html.green-theme .form-input,
-html.green-theme .form-select,
-html.green-theme .budget-form-input {
-  background: #F0F9F4;
-  color: #0E2E1E;
-  border: 1px solid #B2DFC8;
-  box-shadow: inset 0 1px 3px rgba(16,120,80,.06);
-}
-html.green-theme .form-input:focus,
-html.green-theme .form-select:focus,
-html.green-theme .budget-form-input:focus {
-  border-color: #059669;
-  box-shadow: 0 0 0 3px rgba(5,150,105,.18);
-}
-
-html.green-theme .btn-save {
-  background: linear-gradient(135deg, #059669, #34D399);
-  color: #fff;
-  box-shadow: 0 3px 12px rgba(5,150,105,.3);
-}
-html.green-theme .btn-save:hover { box-shadow: 0 6px 20px rgba(5,150,105,.45); }
-
-html.green-theme .btn-cancel { background: #E3F2E9; color: #4D7A68; border: 1px solid #B2DFC8; box-shadow: none; }
-html.green-theme .type-btn  { background: #E3F2E9; color: #4D7A68; border: 1px solid #B2DFC8; box-shadow: none; }
-html.green-theme .type-btn--active-expense { background: #FEF0F0; color: #D63E3E; border-color: #D63E3E; box-shadow: 0 0 0 3px rgba(214,62,62,.1); }
-html.green-theme .type-btn--active-income  { background: #E8FFF5; color: #059669; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,.1); }
-
-html.green-theme .lang-btn { background: #E3F2E9; color: #4D7A68; border: 1px solid #B2DFC8; box-shadow: none; }
-html.green-theme .lang-btn--active { border-color: #059669; color: #059669; box-shadow: 0 0 0 2px rgba(5,150,105,.18); }
 
 /* Custom Category Type overrides for Green Theme */
-html.green-theme .btn-new-cat-type {
-  background: rgba(16, 120, 80, 0.04);
-  color: #4D7A68;
-  border-color: #B2DFC8;
-}
-html.green-theme .btn-new-cat-type:hover {
-  background: rgba(16, 120, 80, 0.07);
-  color: #0E2E1E;
-  border-color: #059669;
-}
-html.green-theme .btn-new-cat-type.is-expense {
-  background: rgba(214,62,62,.1);
-  color: #D63E3E;
-  border-color: rgba(214,62,62,.35);
-}
-html.green-theme .btn-new-cat-type.is-income {
-  background: rgba(5,150,105,.1);
-  color: #059669;
-  border-color: rgba(5,150,105,.35);
-}
-html.green-theme .budget-add-cat__type-dropdown {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  box-shadow: 0 10px 30px rgba(16,120,80,.12);
-}
-html.green-theme .budget-type-option:hover {
-  background: rgba(16, 120, 80, 0.04);
-  color: #0E2E1E;
-}
-html.green-theme .budget-type-option--expense.selected {
-  background: rgba(214,62,62,.08);
-  color: #D63E3E;
-  border-left-color: #D63E3E;
-}
-html.green-theme .budget-type-option--income.selected {
-  background: rgba(5,150,105,.08);
-  color: #059669;
-  border-left-color: #059669;
-}
-
-html.green-theme .fab {
-  background: linear-gradient(135deg, #059669, #34D399);
-  box-shadow: 0 6px 22px rgba(5,150,105,.42), 0 2px 6px rgba(5,150,105,.2);
-}
-html.green-theme .fab:hover { box-shadow: 0 12px 32px rgba(5,150,105,.52), 0 4px 10px rgba(5,150,105,.26); }
-html.green-theme .fab::after { background: #FFFFFF; color: #0E2E1E; box-shadow: 0 4px 16px rgba(16,120,80,.12); border-top: 1px solid #B2DFC8; }
 
 html.green-theme .toast { background: #0E2E1E; color: #F0F9F4; box-shadow: 0 10px 32px rgba(16,120,80,.22); }
-html.green-theme .undo-toast { background: #FFFFFF; border-left-color: #059669; box-shadow: 0 10px 36px rgba(16,120,80,.14); border-top: 1px solid #B2DFC8; }
-html.green-theme .undo-toast__label { color: #0E2E1E; }
-html.green-theme .undo-toast__btn { color: #059669; background: rgba(5,150,105,.08); border-color: rgba(5,150,105,.3); }
-
-html.green-theme .section-label { color: #4D7A68; }
-
-html.green-theme .btn-set-budgets { background: #E3F2E9; color: #4D7A68; border-color: #B2DFC8; box-shadow: none; }
-html.green-theme .btn-set-budgets:hover { color: #059669; border-color: #059669; }
-
-html.green-theme .btn-add-cat { color: #059669; background: rgba(5,150,105,.08); border-color: rgba(5,150,105,.3); }
-html.green-theme .budget-add-cat {
-  background: #F7FCFA;
-  box-shadow: none;
-  border: 1px solid rgba(5, 150, 105, 0.08);
-}
-
-/* Green theme: type toggle for new category */
-html.green-theme .btn-new-cat-type { background: #E3F2E9; color: #4D7A68; border: 1.5px solid #B2DFC8; }
-html.green-theme .btn-new-cat-type:hover { background: #d4eddf; color: #0E2E1E; border-color: #059669; }
-html.green-theme .btn-new-cat-type.is-income { background: rgba(5,150,105,.1); color: #059669; border-color: #059669; }
-html.green-theme .btn-new-cat-type.is-expense { background: rgba(214,62,62,.08); color: #D63E3E; border-color: rgba(214,62,62,.4); }
-html.green-theme .budget-add-cat__type-dropdown { background: #FFFFFF; border-color: #B2DFC8; box-shadow: 0 8px 24px rgba(16,120,80,.12); }
-html.green-theme .budget-type-option:hover { background: #E3F2E9; color: #059669; }
-html.green-theme .budget-type-option--income.selected { background: rgba(5,150,105,.1); color: #059669; border-left-color: #059669; }
-html.green-theme .budget-type-option--expense.selected { background: rgba(214,62,62,.07); color: #D63E3E; border-left-color: #D63E3E; }
-
-html.green-theme .numpad-device { background: #FFFFFF; border: 1px solid #B2DFC8; background-image: none; }
-html.green-theme .numpad-display { background: #E3F2E9; box-shadow: inset 0 1px 4px rgba(16,120,80,.08); }
-html.green-theme .numpad-display__value,
-html.green-theme .numpad-display__unit,
-html.green-theme .numpad-display__label { color: #059669; }
-html.green-theme .numpad-display__value { text-shadow: 0 0 12px rgba(5,150,105,.3); }
-html.green-theme .nk { background: #E3F2E9; color: #0E2E1E; box-shadow: 0 2px 6px rgba(16,120,80,.1), inset 0 1px 0 rgba(255,255,255,.7); }
-html.green-theme .nk:active { color: #059669; box-shadow: inset 0 2px 6px rgba(16,120,80,.14); }
-html.green-theme .nk--submit { background: #059669; color: #fff; box-shadow: 0 4px 12px rgba(5,150,105,.35); }
 
 /* ── Theme card accent colors per theme ── */
 html.cream-theme .theme-card[aria-pressed="true"] { border-color: #C0531E; }
@@ -1309,172 +320,6 @@ html.light-theme .theme-card[aria-pressed="true"] .theme-card__name { color: #4F
 html.light-theme .theme-card[aria-pressed="true"] .theme-card__check-icon { color: #4F46E5; }
 
 /* ============================================================
-   LIGHT THEME OVERRIDES — Trend & Category Switches
-   ============================================================ */
-html.light-theme .btn-chart-toggle {
-  background: #F1F5F9;
-  color: #64748B;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
-}
-html.light-theme .btn-chart-toggle:hover {
-  color: #4F46E5;
-}
-
-html.light-theme .trend-select {
-  background-color: #F1F5F9;
-  color: #0F172A;
-  border: 1px solid #E2E8F0;
-  box-shadow: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-}
-
-html.light-theme .trend-select:focus {
-  border-color: #4F46E5;
-  box-shadow: 0 0 0 3px rgba(79,70,229,.15);
-}
-
-html.light-theme .trend-type-group {
-  background: #F1F5F9;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.06);
-}
-
-html.light-theme .trend-type-btn {
-  color: #64748B;
-}
-
-html.light-theme .trend-type-btn:hover {
-  color: #0F172A;
-}
-
-html.light-theme .trend-type-btn.active {
-  background: #FFFFFF;
-  color: #4F46E5;
-  box-shadow: 0 1px 3px rgba(0,0,0,.1);
-}
-
-html.light-theme .chassis-frame--trend {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  box-shadow: var(--sh-raise);
-}
-
-html.light-theme .trend-panel {
-  background: #FAFAFB;
-  border-color: #E2E8F0;
-}
-
-/* ============================================================
-   CREAM THEME OVERRIDES — Trend & Category Switches
-   ============================================================ */
-html.cream-theme .btn-chart-toggle {
-  background: #EDE4D8;
-  color: var(--muted);
-  box-shadow: 0 1px 3px rgba(100,60,20,.08);
-}
-html.cream-theme .btn-chart-toggle:hover {
-  color: #C0531E;
-}
-
-html.cream-theme .trend-select {
-  background-color: #EDE4D8;
-  color: #2C1D10;
-  border: 1px solid #E0D4C4;
-  box-shadow: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23584133' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-}
-
-html.cream-theme .trend-select:focus {
-  border-color: #C0531E;
-  box-shadow: 0 0 0 3px rgba(192,83,30,.15);
-}
-
-html.cream-theme .trend-type-group {
-  background: #EDE4D8;
-  box-shadow: inset 0 1px 3px rgba(100,60,20,.06);
-}
-
-html.cream-theme .trend-type-btn {
-  color: var(--muted);
-}
-
-html.cream-theme .trend-type-btn:hover {
-  color: #2C1D10;
-}
-
-html.cream-theme .trend-type-btn.active {
-  background: #FFFFFF;
-  color: #C0531E;
-  box-shadow: 0 1px 3px rgba(100,60,20,.1);
-}
-
-html.cream-theme .chassis-frame--trend {
-  background: #FFFFFF;
-  border: 1px solid #E0D4C4;
-  box-shadow: var(--sh-raise);
-}
-
-html.cream-theme .trend-panel {
-  background: #FDF8F2;
-  border-color: #E0D4C4;
-}
-
-/* ============================================================
-   GREEN THEME OVERRIDES — Trend & Category Switches
-   ============================================================ */
-html.green-theme .btn-chart-toggle {
-  background: #E3F2E9;
-  color: #4D7A68;
-  box-shadow: 0 1px 3px rgba(16,120,80,.08);
-}
-html.green-theme .btn-chart-toggle:hover {
-  color: #059669;
-  background: #C8E8D4;
-}
-
-html.green-theme .trend-select {
-  background-color: #E3F2E9;
-  color: #0E2E1E;
-  border: 1px solid #B2DFC8;
-  box-shadow: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234D7A68' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-}
-
-html.green-theme .trend-select:focus {
-  border-color: #059669;
-  box-shadow: 0 0 0 3px rgba(5,150,105,.15);
-}
-
-html.green-theme .trend-type-group {
-  background: #E3F2E9;
-  box-shadow: inset 0 1px 3px rgba(16,120,80,.06);
-}
-
-html.green-theme .trend-type-btn {
-  color: #4D7A68;
-}
-
-html.green-theme .trend-type-btn:hover {
-  color: #0E2E1E;
-}
-
-html.green-theme .trend-type-btn.active {
-  background: #FFFFFF;
-  color: #059669;
-  box-shadow: 0 1px 3px rgba(16,120,80,.1);
-}
-
-html.green-theme .chassis-frame--trend {
-  background: #FFFFFF;
-  border: 1px solid #B2DFC8;
-  box-shadow: var(--sh-raise);
-}
-
-html.green-theme .trend-panel {
-  background: #F7FCFA;
-  border-color: #B2DFC8;
-}
-
-/* ============================================================
    LIGHT THEME — Guide overrides
    ============================================================ */
 html.light-theme .guide-panel {
@@ -1482,94 +327,12 @@ html.light-theme .guide-panel {
   border-color: #E2E8F0;
   box-shadow: 0 40px 100px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.04);
 }
-html.light-theme .guide-header {
-  background: linear-gradient(180deg, rgba(0,0,0,.018) 0%, transparent 100%);
-  border-bottom-color: #E2E8F0;
-}
-html.light-theme .guide-tab {
-  color: #64748B;
-  background: #FFFFFF;
-  border-color: #E2E8F0;
-}
-html.light-theme .guide-tab:hover {
-  background: #F8FAFC;
-  border-color: #CBD5E1;
-  color: #1E293B;
-}
-html.light-theme .guide-tab.active {
-  color: #FF4B72;
-  background: rgba(255, 75, 114, .06);
-  border-color: #FF4B72;
-}
-html.light-theme .guide-tabs {
-  border-bottom-color: #E2E8F0;
-  background: #F1F5F9;
-}
-html.light-theme .guide-card,
-html.light-theme .guide-step,
-html.light-theme .guide-feature,
-html.light-theme .guide-settings-table,
-html.light-theme .guide-tip-card { background: #F8FAFC; border-color: #E2E8F0; }
-html.light-theme .guide-footer { background: #F8FAFC; border-top-color: #E2E8F0; }
-html.light-theme .guide-footer__close { background: #FFFFFF; border-color: #E2E8F0; }
-html.light-theme .guide-kbd { background: #F1F5F9; border-color: #CBD5E1; color: #1E293B; }
-html.light-theme .btn-help { background: #F1F5F9; border-color: #CBD5E1; color: #64748B; }
 
 /* Cream overrides */
 html.cream-theme .guide-panel { background: #FDF8F2; border-color: #E0D4C4; }
-html.cream-theme .guide-footer { background: #F5EDE0; }
-html.cream-theme .guide-tab {
-  color: var(--muted);
-  background: #FDF8F2;
-  border-color: #E0D4C4;
-}
-html.cream-theme .guide-tab:hover {
-  background: #FDF8F2;
-  border-color: #C5B5A5;
-  color: #5C4A3E;
-}
-html.cream-theme .guide-tab.active {
-  color: #B57D1A;
-  background: rgba(217, 119, 6, .06);
-  border-color: #B57D1A;
-}
-html.cream-theme .guide-tabs {
-  border-bottom-color: #E0D4C4;
-  background: #F5EDE0;
-}
-html.cream-theme .guide-card,
-html.cream-theme .guide-step,
-html.cream-theme .guide-feature,
-html.cream-theme .guide-tip-card { background: #F5EDE0; border-color: #E0D4C4; }
-html.cream-theme .btn-help { background: #F5EDE0; border-color: #E0D4C4; }
 
 /* Green overrides */
 html.green-theme .guide-panel { background: #FFFFFF; border-color: #B2DFC8; }
-html.green-theme .guide-footer { background: #F0F9F4; }
-html.green-theme .guide-tab {
-  color: #4D7A68;
-  background: #FFFFFF;
-  border-color: #B2DFC8;
-}
-html.green-theme .guide-tab:hover {
-  background: #FFFFFF;
-  border-color: #88C9A5;
-  color: #2A5E42;
-}
-html.green-theme .guide-tab.active {
-  color: #059669;
-  background: rgba(5, 150, 105, .06);
-  border-color: #059669;
-}
-html.green-theme .guide-tabs {
-  border-bottom-color: #B2DFC8;
-  background: #E3F2E9;
-}
-html.green-theme .guide-card,
-html.green-theme .guide-step,
-html.green-theme .guide-feature,
-html.green-theme .guide-tip-card { background: #E3F2E9; border-color: #B2DFC8; }
-html.green-theme .btn-help { background: #E3F2E9; border-color: #B2DFC8; }
 
 /* ============================================================
    PHASE 1 — UI ELEVATION OVERRIDES FOR LIGHT THEMES
@@ -1579,33 +342,18 @@ html.green-theme .btn-help { background: #E3F2E9; border-color: #B2DFC8; }
 
 /* ── Light Theme — cải thiện border & shadow ── */
 html.light-theme {
-  --c-summary-border:        #CBD5E1;
-  --c-card-border:           #CBD5E1;
-  --c-inst-border:           #CBD5E1;
-  --c-bubble-border:         #CBD5E1;
-  --c-dashed-border:         rgba(15, 23, 42, 0.22);
   --sh-raise: 0 4px 10px rgba(15,23,42,.05), 0 1px 3px rgba(15,23,42,.04);
   --sh-float: 0 14px 36px rgba(15,23,42,.10), 0 2px 8px rgba(15,23,42,.05);
 }
 
 /* ── Cream Theme — cải thiện border & shadow ── */
 html.cream-theme {
-  --c-summary-border:        #D8CCBE;
-  --c-card-border:           #D8CCBE;
-  --c-inst-border:           #D8CCBE;
-  --c-bubble-border:         #D8CCBE;
-  --c-dashed-border:         rgba(44, 29, 16, 0.22);
   --sh-raise: 0 4px 12px rgba(100,60,20,.09), 0 1px 3px rgba(100,60,20,.05);
   --sh-float: 0 14px 44px rgba(100,60,20,.16), 0 2px 8px rgba(100,60,20,.08);
 }
 
 /* ── Green Theme — cải thiện border & shadow ── */
 html.green-theme {
-  --c-summary-border:        #B2DFC8;
-  --c-card-border:           #B2DFC8;
-  --c-inst-border:           #B2DFC8;
-  --c-bubble-border:         #B2DFC8;
-  --c-dashed-border:         rgba(14, 46, 30, 0.22);
   --sh-raise: 0 4px 12px rgba(16,120,80,.07), 0 1px 3px rgba(16,120,80,.04);
   --sh-float: 0 14px 44px rgba(16,120,80,.13), 0 2px 8px rgba(16,120,80,.06);
 }
@@ -1615,106 +363,10 @@ html.green-theme {
    Màu nền/chữ của lớp phủ xóa hũ thích ứng theo theme
    ============================================================ */
 
-/* Dark/default theme (giữ nguyên tone tối như cũ) */
-:root {
-  --c-confirm-bg:            rgba(10, 10, 14, 0.90);
-  --c-confirm-blur:          blur(14px);
-  --c-confirm-txt:           rgba(255, 255, 255, 0.92);
-  --c-confirm-cancel-bg:     rgba(255, 255, 255, 0.07);
-  --c-confirm-cancel-border: rgba(255, 255, 255, 0.14);
-  --c-confirm-cancel-txt:    rgba(255, 255, 255, 0.72);
-}
-
-/* Light themes — kính trắng sang trọng */
-html.light-theme,
-html.cream-theme,
-html.green-theme {
-  --c-confirm-bg:            rgba(255, 255, 255, 0.94);
-  --c-confirm-blur:          blur(16px);
-  --c-confirm-txt:           #0F172A;
-  --c-confirm-cancel-bg:     rgba(15, 23, 42, 0.05);
-  --c-confirm-cancel-border: rgba(15, 23, 42, 0.12);
-  --c-confirm-cancel-txt:    #475569;
-}
-
-html.cream-theme {
-  --c-confirm-bg:            rgba(253, 248, 242, 0.95);
-  --c-confirm-txt:           #2C1D10;
-  --c-confirm-cancel-bg:     rgba(44, 29, 16, 0.05);
-  --c-confirm-cancel-border: rgba(44, 29, 16, 0.12);
-  --c-confirm-cancel-txt:    #584133;
-}
-
-html.green-theme {
-  --c-confirm-bg:            rgba(242, 253, 246, 0.95);
-  --c-confirm-txt:           #0E2E1E;
-  --c-confirm-cancel-bg:     rgba(14, 46, 30, 0.05);
-  --c-confirm-cancel-border: rgba(14, 46, 30, 0.12);
-  --c-confirm-cancel-txt:    #4D7A68;
-}
-
 /* ============================================================
    PHASE 1 — INSTALLMENT SECTION PANEL — DYNAMIC STATUS COLORS
    Màu khung "Thanh toán định kỳ" thay đổi theo trạng thái tháng
    ============================================================ */
-
-/* Dark (mặc định): viền đỏ nhạt khi pending, xanh khi completed */
-:root {
-  --c-inst-panel-bg:                var(--surface, #14141A);
-  --c-inst-panel-border:            rgba(255,255,255,.06);
-  --c-inst-panel-bg-pending:        rgba(239, 68, 68, 0.08);
-  --c-inst-panel-border-pending:    rgba(239, 68, 68, 0.30);
-  --c-inst-panel-bg-completed:      rgba(34, 197, 94, 0.08);
-  --c-inst-panel-border-completed:  rgba(34, 197, 94, 0.30);
-}
-
-html.light-theme {
-  --c-inst-panel-bg:                #FFFFFF;
-  --c-inst-panel-border:            #CBD5E1;
-  --c-inst-panel-bg-pending:        #FFF5F5;
-  --c-inst-panel-border-pending:    #FCA5A5;
-  --c-inst-panel-bg-completed:      #F0FDF4;
-  --c-inst-panel-border-completed:  #86EFAC;
-}
-
-html.cream-theme {
-  --c-inst-panel-bg:                #FDF8F2;
-  --c-inst-panel-border:            #D8CCBE;
-  --c-inst-panel-bg-pending:        #FFF3EE;
-  --c-inst-panel-border-pending:    #F4A88A;
-  --c-inst-panel-bg-completed:      #F2FDF6;
-  --c-inst-panel-border-completed:  #86C89E;
-}
-
-html.green-theme {
-  --c-inst-panel-bg:                #FFFFFF;
-  --c-inst-panel-border:            #B2DFC8;
-  --c-inst-panel-bg-pending:        #FFF5F5;
-  --c-inst-panel-border-pending:    #FCA5A5;
-  --c-inst-panel-bg-completed:      #F0FDF4;
-  --c-inst-panel-border-completed:  #6EE7B7;
-}
-
-/* Cũng cần token cho panel jar section */
-:root {
-  --c-jar-panel-bg:     var(--surface, #14141A);
-  --c-jar-panel-border: rgba(255,255,255,.06);
-}
-
-html.light-theme {
-  --c-jar-panel-bg:     #FAFBFF;
-  --c-jar-panel-border: #CBD5E1;
-}
-
-html.cream-theme {
-  --c-jar-panel-bg:     #FDF8F2;
-  --c-jar-panel-border: #D8CCBE;
-}
-
-html.green-theme {
-  --c-jar-panel-bg:     #F7FDF9;
-  --c-jar-panel-border: #B2DFC8;
-}
 
 /* ============================================================
    THEME-SPECIFIC UX/UI POLISH: MODALS, BUTTONS & FORM CONTROLS
@@ -1722,9 +374,6 @@ html.green-theme {
 
 /* ── 1. LIGHT THEME (Modern SaaS Indigo) ── */
 html.light-theme .txn-modal-card,
-html.light-theme .jar-modal-card,
-html.light-theme .jar-detail-modal-dialog,
-html.light-theme .jar-history-modal-dialog,
 html.light-theme .financial-tips-dialog {
   background: #FFFFFF !important;
   border-color: #E2E8F0 !important;
@@ -1732,51 +381,37 @@ html.light-theme .financial-tips-dialog {
 }
 
 html.light-theme .txn-modal-header,
-html.light-theme .jar-modal-header,
-html.light-theme .jar-detail-header,
-html.light-theme .jar-history-header,
 html.light-theme .financial-tips-header,
 html.light-theme .txn-modal-footer,
-html.light-theme .jar-modal-footer,
 html.light-theme .jar-detail-footer,
 html.light-theme .financial-tips-footer {
   background: #FFFFFF !important;
   border-color: #F1F5F9 !important;
 }
 
-html.light-theme .txn-modal-title,
-html.light-theme .jar-modal-title,
-html.light-theme .jar-detail-title,
-html.light-theme .financial-tips-title {
+html.light-theme .txn-modal-title {
   color: #0F172A !important;
 }
 
 html.light-theme .txn-modal-close-btn,
-html.light-theme .jar-detail-close-btn,
-html.light-theme .jar-history-close-btn,
 html.light-theme .financial-tips-close-btn {
   color: #64748B !important;
 }
 html.light-theme .txn-modal-close-btn:hover,
-html.light-theme .jar-detail-close-btn:hover,
-html.light-theme .jar-history-close-btn:hover,
 html.light-theme .financial-tips-close-btn:hover {
   background: #F1F5F9 !important;
   color: #0F172A !important;
 }
 
 /* Light Theme: Type Switchers & Tabs */
-html.light-theme .txn-type-toggle,
-html.light-theme .jar-history-tab-group {
+html.light-theme .txn-type-toggle {
   background: #F1F5F9 !important;
   border: 1px solid #E2E8F0 !important;
 }
-html.light-theme .txn-type-btn,
-html.light-theme .jar-history-tab-btn {
+html.light-theme .txn-type-btn {
   color: #475569 !important;
 }
-html.light-theme .txn-type-btn:hover:not(.active),
-html.light-theme .jar-history-tab-btn:hover:not(.active) {
+html.light-theme .txn-type-btn:hover:not(.active) {
   color: #0F172A !important;
   background: rgba(255, 255, 255, 0.7) !important;
 }
@@ -1792,7 +427,6 @@ html.light-theme .txn-type-btn--income.active {
   border-color: #A7F3D0 !important;
   box-shadow: 0 1px 3px rgba(5, 150, 105, 0.12) !important;
 }
-html.light-theme .jar-history-tab-btn.active,
 html.light-theme .financial-tips-tab-btn.active {
   background: #FFFFFF !important;
   color: #4F46E5 !important;
@@ -1801,11 +435,6 @@ html.light-theme .financial-tips-tab-btn.active {
 
 /* Light Theme: Inputs & Custom Styled Selects */
 html.light-theme .txn-input,
-html.light-theme .txn-select,
-html.light-theme .jar-text-input,
-html.light-theme .jar-adornment-input-box,
-html.light-theme .jar-history-select,
-html.light-theme .jar-history-search-input,
 html.light-theme .financial-tips-input {
   background: #FFFFFF !important;
   border: 1px solid #CBD5E1 !important;
@@ -1821,12 +450,7 @@ html.light-theme .txn-amount-suffix {
   color: #475569 !important;
 }
 html.light-theme .txn-input:focus,
-html.light-theme .txn-select:focus,
 html.light-theme .txn-amount-input:focus,
-html.light-theme .jar-text-input:focus,
-html.light-theme .jar-adornment-input-box:focus-within,
-html.light-theme .jar-history-select:focus,
-html.light-theme .jar-history-search-input:focus,
 html.light-theme .financial-tips-input:focus {
   border-color: #4F46E5 !important;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
@@ -1861,31 +485,8 @@ html.light-theme .txn-card-check-badge {
   color: #FFFFFF !important;
 }
 
-/* Light Theme: Quick Chips */
-html.light-theme .jar-tx-chip-btn {
-  background: #F1F5F9 !important;
-  border: 1px solid #E2E8F0 !important;
-  color: #475569 !important;
-}
-html.light-theme .jar-tx-chip-btn:hover {
-  background: #EEF2FF !important;
-  border-color: #818CF8 !important;
-  color: #4F46E5 !important;
-}
-html.light-theme .jar-tx-chip-btn--accent {
-  background: rgba(79, 70, 229, 0.1) !important;
-  border-color: #818CF8 !important;
-  color: #4F46E5 !important;
-}
-html.light-theme .jar-tx-chip-btn--accent:hover {
-  background: #4F46E5 !important;
-  border-color: #4F46E5 !important;
-  color: #FFFFFF !important;
-}
-
 /* Light Theme: Action Buttons */
 html.light-theme .txn-btn-cancel,
-html.light-theme .jar-btn-cancel,
 html.light-theme .jar-detail-btn-edit,
 html.light-theme .jar-detail-btn-withdraw,
 html.light-theme .jar-btn-withdraw {
@@ -1894,7 +495,6 @@ html.light-theme .jar-btn-withdraw {
   color: #334155 !important;
 }
 html.light-theme .txn-btn-cancel:hover:not(:disabled),
-html.light-theme .jar-btn-cancel:hover:not(:disabled),
 html.light-theme .jar-detail-btn-edit:hover:not(:disabled),
 html.light-theme .jar-detail-btn-withdraw:hover:not(:disabled),
 html.light-theme .jar-btn-withdraw:hover:not(:disabled) {
@@ -1904,52 +504,31 @@ html.light-theme .jar-btn-withdraw:hover:not(:disabled) {
 }
 
 html.light-theme .txn-btn-submit,
-html.light-theme .jar-btn-submit,
 html.light-theme .jar-detail-btn-deposit,
 html.light-theme .financial-tips-ack-btn,
-html.light-theme .jars-hero-cta-btn,
-html.light-theme .btn-add-txn {
+html.light-theme .jars-hero-cta-btn {
   background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
   color: #FFFFFF !important;
   border-color: transparent !important;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32) !important;
 }
 html.light-theme .txn-btn-submit:hover:not(:disabled),
-html.light-theme .jar-btn-submit:hover:not(:disabled),
 html.light-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.light-theme .financial-tips-ack-btn:hover:not(:disabled),
-html.light-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.light-theme .btn-add-txn:hover:not(:disabled) {
+html.light-theme .jars-hero-cta-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
   box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45) !important;
 }
 
-html.light-theme .txn-btn-submit--withdraw {
-  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%) !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32) !important;
-}
-html.light-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%) !important;
-  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
-}
-
-html.light-theme .jar-tx-summary-card,
 html.light-theme .jar-detail-stats-banner,
 html.light-theme .jar-detail-roadmap-box,
-html.light-theme .jar-detail-history-item,
-html.light-theme .jar-history-item,
-html.light-theme .financial-tips-card {
+html.light-theme .jar-detail-history-item {
   background: #FAFBFD !important;
   border: 1px solid #E2E8F0 !important;
 }
 
 /* ── 2. CREAM THEME (Warm Terracotta & Paper) ── */
 html.cream-theme .txn-modal-card,
-html.cream-theme .jar-modal-card,
-html.cream-theme .jar-detail-modal-dialog,
-html.cream-theme .jar-history-modal-dialog,
 html.cream-theme .financial-tips-dialog {
   background: #FDF8F2 !important;
   border-color: #E0D4C4 !important;
@@ -1957,51 +536,37 @@ html.cream-theme .financial-tips-dialog {
 }
 
 html.cream-theme .txn-modal-header,
-html.cream-theme .jar-modal-header,
-html.cream-theme .jar-detail-header,
-html.cream-theme .jar-history-header,
 html.cream-theme .financial-tips-header,
 html.cream-theme .txn-modal-footer,
-html.cream-theme .jar-modal-footer,
 html.cream-theme .jar-detail-footer,
 html.cream-theme .financial-tips-footer {
   background: #FDF8F2 !important;
   border-color: #EDE4D8 !important;
 }
 
-html.cream-theme .txn-modal-title,
-html.cream-theme .jar-modal-title,
-html.cream-theme .jar-detail-title,
-html.cream-theme .financial-tips-title {
+html.cream-theme .txn-modal-title {
   color: #2C1D10 !important;
 }
 
 html.cream-theme .txn-modal-close-btn,
-html.cream-theme .jar-detail-close-btn,
-html.cream-theme .jar-history-close-btn,
 html.cream-theme .financial-tips-close-btn {
   color: #8C7564 !important;
 }
 html.cream-theme .txn-modal-close-btn:hover,
-html.cream-theme .jar-detail-close-btn:hover,
-html.cream-theme .jar-history-close-btn:hover,
 html.cream-theme .financial-tips-close-btn:hover {
   background: #EDE4D8 !important;
   color: #2C1D10 !important;
 }
 
 /* Cream Theme: Type Switchers & Tabs */
-html.cream-theme .txn-type-toggle,
-html.cream-theme .jar-history-tab-group {
+html.cream-theme .txn-type-toggle {
   background: #EDE4D8 !important;
   border: 1px solid #E0D4C4 !important;
 }
-html.cream-theme .txn-type-btn,
-html.cream-theme .jar-history-tab-btn {
+html.cream-theme .txn-type-btn {
   color: #6E5849 !important;
 }
-html.cream-theme .txn-type-btn:hover:not(.active),
-html.cream-theme .jar-history-tab-btn:hover:not(.active) {
+html.cream-theme .txn-type-btn:hover:not(.active) {
   color: #2C1D10 !important;
   background: rgba(255, 255, 255, 0.7) !important;
 }
@@ -2017,7 +582,6 @@ html.cream-theme .txn-type-btn--income.active {
   border-color: #C3E6CB !important;
   box-shadow: 0 1px 3px rgba(45, 122, 62, 0.15) !important;
 }
-html.cream-theme .jar-history-tab-btn.active,
 html.cream-theme .financial-tips-tab-btn.active {
   background: #FDF8F2 !important;
   color: #C0531E !important;
@@ -2026,11 +590,6 @@ html.cream-theme .financial-tips-tab-btn.active {
 
 /* Cream Theme: Inputs & Custom Styled Selects */
 html.cream-theme .txn-input,
-html.cream-theme .txn-select,
-html.cream-theme .jar-text-input,
-html.cream-theme .jar-adornment-input-box,
-html.cream-theme .jar-history-select,
-html.cream-theme .jar-history-search-input,
 html.cream-theme .financial-tips-input {
   background: #F5EDE0 !important;
   border: 1px solid #D8CCBE !important;
@@ -2046,12 +605,7 @@ html.cream-theme .txn-amount-suffix {
   color: #6E5849 !important;
 }
 html.cream-theme .txn-input:focus,
-html.cream-theme .txn-select:focus,
 html.cream-theme .txn-amount-input:focus,
-html.cream-theme .jar-text-input:focus,
-html.cream-theme .jar-adornment-input-box:focus-within,
-html.cream-theme .jar-history-select:focus,
-html.cream-theme .jar-history-search-input:focus,
 html.cream-theme .financial-tips-input:focus {
   border-color: #C0531E !important;
   box-shadow: 0 0 0 3px rgba(192, 83, 30, 0.18) !important;
@@ -2086,31 +640,8 @@ html.cream-theme .txn-card-check-badge {
   color: #FFFFFF !important;
 }
 
-/* Cream Theme: Quick Chips */
-html.cream-theme .jar-tx-chip-btn {
-  background: #F5EDE0 !important;
-  border: 1px solid #E0D4C4 !important;
-  color: #584133 !important;
-}
-html.cream-theme .jar-tx-chip-btn:hover {
-  background: #EDE4D8 !important;
-  border-color: #C0531E !important;
-  color: #C0531E !important;
-}
-html.cream-theme .jar-tx-chip-btn--accent {
-  background: rgba(192, 83, 30, 0.12) !important;
-  border-color: #C0531E !important;
-  color: #C0531E !important;
-}
-html.cream-theme .jar-tx-chip-btn--accent:hover {
-  background: #C0531E !important;
-  border-color: #C0531E !important;
-  color: #FFFFFF !important;
-}
-
 /* Cream Theme: Action Buttons */
 html.cream-theme .txn-btn-cancel,
-html.cream-theme .jar-btn-cancel,
 html.cream-theme .jar-detail-btn-edit,
 html.cream-theme .jar-detail-btn-withdraw,
 html.cream-theme .jar-btn-withdraw {
@@ -2119,7 +650,6 @@ html.cream-theme .jar-btn-withdraw {
   color: #584133 !important;
 }
 html.cream-theme .txn-btn-cancel:hover:not(:disabled),
-html.cream-theme .jar-btn-cancel:hover:not(:disabled),
 html.cream-theme .jar-detail-btn-edit:hover:not(:disabled),
 html.cream-theme .jar-detail-btn-withdraw:hover:not(:disabled),
 html.cream-theme .jar-btn-withdraw:hover:not(:disabled) {
@@ -2129,52 +659,31 @@ html.cream-theme .jar-btn-withdraw:hover:not(:disabled) {
 }
 
 html.cream-theme .txn-btn-submit,
-html.cream-theme .jar-btn-submit,
 html.cream-theme .jar-detail-btn-deposit,
 html.cream-theme .financial-tips-ack-btn,
-html.cream-theme .jars-hero-cta-btn,
-html.cream-theme .btn-add-txn {
+html.cream-theme .jars-hero-cta-btn {
   background: linear-gradient(135deg, #C0531E 0%, #D96024 100%) !important;
   color: #FFFFFF !important;
   border-color: transparent !important;
   box-shadow: 0 4px 14px rgba(192, 83, 30, 0.32) !important;
 }
 html.cream-theme .txn-btn-submit:hover:not(:disabled),
-html.cream-theme .jar-btn-submit:hover:not(:disabled),
 html.cream-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.cream-theme .financial-tips-ack-btn:hover:not(:disabled),
-html.cream-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.cream-theme .btn-add-txn:hover:not(:disabled) {
+html.cream-theme .jars-hero-cta-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #A84414 0%, #C0531E 100%) !important;
   box-shadow: 0 6px 18px rgba(192, 83, 30, 0.45) !important;
 }
 
-html.cream-theme .txn-btn-submit--withdraw {
-  background: linear-gradient(135deg, #D63E3E 0%, #E55353 100%) !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(214, 62, 62, 0.32) !important;
-}
-html.cream-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
-  background: linear-gradient(135deg, #B82E2E 0%, #D63E3E 100%) !important;
-  box-shadow: 0 6px 18px rgba(214, 62, 62, 0.45) !important;
-}
-
-html.cream-theme .jar-tx-summary-card,
 html.cream-theme .jar-detail-stats-banner,
 html.cream-theme .jar-detail-roadmap-box,
-html.cream-theme .jar-detail-history-item,
-html.cream-theme .jar-history-item,
-html.cream-theme .financial-tips-card {
+html.cream-theme .jar-detail-history-item {
   background: #FAF3EA !important;
   border: 1px solid #E0D4C4 !important;
 }
 
 /* ── 3. GREEN THEME (Eco Nature Emerald) ── */
 html.green-theme .txn-modal-card,
-html.green-theme .jar-modal-card,
-html.green-theme .jar-detail-modal-dialog,
-html.green-theme .jar-history-modal-dialog,
 html.green-theme .financial-tips-dialog {
   background: #FFFFFF !important;
   border-color: #B2DFC8 !important;
@@ -2182,51 +691,37 @@ html.green-theme .financial-tips-dialog {
 }
 
 html.green-theme .txn-modal-header,
-html.green-theme .jar-modal-header,
-html.green-theme .jar-detail-header,
-html.green-theme .jar-history-header,
 html.green-theme .financial-tips-header,
 html.green-theme .txn-modal-footer,
-html.green-theme .jar-modal-footer,
 html.green-theme .jar-detail-footer,
 html.green-theme .financial-tips-footer {
   background: #FFFFFF !important;
   border-color: #E2F2E9 !important;
 }
 
-html.green-theme .txn-modal-title,
-html.green-theme .jar-modal-title,
-html.green-theme .jar-detail-title,
-html.green-theme .financial-tips-title {
+html.green-theme .txn-modal-title {
   color: #0E2E1E !important;
 }
 
 html.green-theme .txn-modal-close-btn,
-html.green-theme .jar-detail-close-btn,
-html.green-theme .jar-history-close-btn,
 html.green-theme .financial-tips-close-btn {
   color: #6B9582 !important;
 }
 html.green-theme .txn-modal-close-btn:hover,
-html.green-theme .jar-detail-close-btn:hover,
-html.green-theme .jar-history-close-btn:hover,
 html.green-theme .financial-tips-close-btn:hover {
   background: #E2F2E9 !important;
   color: #0E2E1E !important;
 }
 
 /* Green Theme: Type Switchers & Tabs */
-html.green-theme .txn-type-toggle,
-html.green-theme .jar-history-tab-group {
+html.green-theme .txn-type-toggle {
   background: #E2F2E9 !important;
   border: 1px solid #B2DFC8 !important;
 }
-html.green-theme .txn-type-btn,
-html.green-theme .jar-history-tab-btn {
+html.green-theme .txn-type-btn {
   color: #3D6A56 !important;
 }
-html.green-theme .txn-type-btn:hover:not(.active),
-html.green-theme .jar-history-tab-btn:hover:not(.active) {
+html.green-theme .txn-type-btn:hover:not(.active) {
   color: #0E2E1E !important;
   background: rgba(255, 255, 255, 0.7) !important;
 }
@@ -2242,7 +737,6 @@ html.green-theme .txn-type-btn--income.active {
   border-color: #A7F3D0 !important;
   box-shadow: 0 1px 3px rgba(4, 120, 87, 0.12) !important;
 }
-html.green-theme .jar-history-tab-btn.active,
 html.green-theme .financial-tips-tab-btn.active {
   background: #FFFFFF !important;
   color: #059669 !important;
@@ -2251,11 +745,6 @@ html.green-theme .financial-tips-tab-btn.active {
 
 /* Green Theme: Inputs & Custom Styled Selects */
 html.green-theme .txn-input,
-html.green-theme .txn-select,
-html.green-theme .jar-text-input,
-html.green-theme .jar-adornment-input-box,
-html.green-theme .jar-history-select,
-html.green-theme .jar-history-search-input,
 html.green-theme .financial-tips-input {
   background: #FFFFFF !important;
   border: 1px solid #B2DFC8 !important;
@@ -2271,12 +760,7 @@ html.green-theme .txn-amount-suffix {
   color: #3D6A56 !important;
 }
 html.green-theme .txn-input:focus,
-html.green-theme .txn-select:focus,
 html.green-theme .txn-amount-input:focus,
-html.green-theme .jar-text-input:focus,
-html.green-theme .jar-adornment-input-box:focus-within,
-html.green-theme .jar-history-select:focus,
-html.green-theme .jar-history-search-input:focus,
 html.green-theme .financial-tips-input:focus {
   border-color: #059669 !important;
   box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.18) !important;
@@ -2311,31 +795,8 @@ html.green-theme .txn-card-check-badge {
   color: #FFFFFF !important;
 }
 
-/* Green Theme: Quick Chips */
-html.green-theme .jar-tx-chip-btn {
-  background: #E2F2E9 !important;
-  border: 1px solid #B2DFC8 !important;
-  color: #3D6A56 !important;
-}
-html.green-theme .jar-tx-chip-btn:hover {
-  background: #D1FAE5 !important;
-  border-color: #059669 !important;
-  color: #059669 !important;
-}
-html.green-theme .jar-tx-chip-btn--accent {
-  background: rgba(5, 150, 105, 0.14) !important;
-  border-color: #059669 !important;
-  color: #047857 !important;
-}
-html.green-theme .jar-tx-chip-btn--accent:hover {
-  background: #059669 !important;
-  border-color: #059669 !important;
-  color: #FFFFFF !important;
-}
-
 /* Green Theme: Action Buttons */
 html.green-theme .txn-btn-cancel,
-html.green-theme .jar-btn-cancel,
 html.green-theme .jar-detail-btn-edit,
 html.green-theme .jar-detail-btn-withdraw,
 html.green-theme .jar-btn-withdraw {
@@ -2344,7 +805,6 @@ html.green-theme .jar-btn-withdraw {
   color: #3D6A56 !important;
 }
 html.green-theme .txn-btn-cancel:hover:not(:disabled),
-html.green-theme .jar-btn-cancel:hover:not(:disabled),
 html.green-theme .jar-detail-btn-edit:hover:not(:disabled),
 html.green-theme .jar-detail-btn-withdraw:hover:not(:disabled),
 html.green-theme .jar-btn-withdraw:hover:not(:disabled) {
@@ -2354,52 +814,31 @@ html.green-theme .jar-btn-withdraw:hover:not(:disabled) {
 }
 
 html.green-theme .txn-btn-submit,
-html.green-theme .jar-btn-submit,
 html.green-theme .jar-detail-btn-deposit,
 html.green-theme .financial-tips-ack-btn,
-html.green-theme .jars-hero-cta-btn,
-html.green-theme .btn-add-txn {
+html.green-theme .jars-hero-cta-btn {
   background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
   color: #FFFFFF !important;
   border-color: transparent !important;
   box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32) !important;
 }
 html.green-theme .txn-btn-submit:hover:not(:disabled),
-html.green-theme .jar-btn-submit:hover:not(:disabled),
 html.green-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.green-theme .financial-tips-ack-btn:hover:not(:disabled),
-html.green-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.green-theme .btn-add-txn:hover:not(:disabled) {
+html.green-theme .jars-hero-cta-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
   box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45) !important;
 }
 
-html.green-theme .txn-btn-submit--withdraw {
-  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%) !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32) !important;
-}
-html.green-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%) !important;
-  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
-}
-
-html.green-theme .jar-tx-summary-card,
 html.green-theme .jar-detail-stats-banner,
 html.green-theme .jar-detail-roadmap-box,
-html.green-theme .jar-detail-history-item,
-html.green-theme .jar-history-item,
-html.green-theme .financial-tips-card {
+html.green-theme .jar-detail-history-item {
   background: #F0FDF4 !important;
   border: 1px solid #B2DFC8 !important;
 }
 
 /* ── 4. DARK THEME (Obsidian Cobalt Panel) ── */
 html.dark-theme .txn-modal-card,
-html.dark-theme .jar-modal-card,
-html.dark-theme .jar-detail-modal-dialog,
-html.dark-theme .jar-history-modal-dialog,
 html.dark-theme .financial-tips-dialog {
   background: #12131C !important;
   border-color: #26293A !important;
@@ -2407,51 +846,37 @@ html.dark-theme .financial-tips-dialog {
 }
 
 html.dark-theme .txn-modal-header,
-html.dark-theme .jar-modal-header,
-html.dark-theme .jar-detail-header,
-html.dark-theme .jar-history-header,
 html.dark-theme .financial-tips-header,
 html.dark-theme .txn-modal-footer,
-html.dark-theme .jar-modal-footer,
 html.dark-theme .jar-detail-footer,
 html.dark-theme .financial-tips-footer {
   background: #12131C !important;
   border-color: #1A1C29 !important;
 }
 
-html.dark-theme .txn-modal-title,
-html.dark-theme .jar-modal-title,
-html.dark-theme .jar-detail-title,
-html.dark-theme .financial-tips-title {
+html.dark-theme .txn-modal-title {
   color: #F3F4F6 !important;
 }
 
 html.dark-theme .txn-modal-close-btn,
-html.dark-theme .jar-detail-close-btn,
-html.dark-theme .jar-history-close-btn,
 html.dark-theme .financial-tips-close-btn {
   color: #8F9CAE !important;
 }
 html.dark-theme .txn-modal-close-btn:hover,
-html.dark-theme .jar-detail-close-btn:hover,
-html.dark-theme .jar-history-close-btn:hover,
 html.dark-theme .financial-tips-close-btn:hover {
   background: #1A1C29 !important;
   color: #F3F4F6 !important;
 }
 
 /* Dark Theme: Type Switchers & Tabs */
-html.dark-theme .txn-type-toggle,
-html.dark-theme .jar-history-tab-group {
+html.dark-theme .txn-type-toggle {
   background: #1A1C29 !important;
   border: 1px solid #26293A !important;
 }
-html.dark-theme .txn-type-btn,
-html.dark-theme .jar-history-tab-btn {
+html.dark-theme .txn-type-btn {
   color: #8F9CAE !important;
 }
-html.dark-theme .txn-type-btn:hover:not(.active),
-html.dark-theme .jar-history-tab-btn:hover:not(.active) {
+html.dark-theme .txn-type-btn:hover:not(.active) {
   color: #F3F4F6 !important;
   background: rgba(255, 255, 255, 0.05) !important;
 }
@@ -2467,7 +892,6 @@ html.dark-theme .txn-type-btn--income.active {
   border-color: rgba(16, 185, 129, 0.4) !important;
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2) !important;
 }
-html.dark-theme .jar-history-tab-btn.active,
 html.dark-theme .financial-tips-tab-btn.active {
   background: #26293A !important;
   color: #60A5FA !important;
@@ -2476,11 +900,6 @@ html.dark-theme .financial-tips-tab-btn.active {
 
 /* Dark Theme: Inputs & Custom Styled Selects */
 html.dark-theme .txn-input,
-html.dark-theme .txn-select,
-html.dark-theme .jar-text-input,
-html.dark-theme .jar-adornment-input-box,
-html.dark-theme .jar-history-select,
-html.dark-theme .jar-history-search-input,
 html.dark-theme .financial-tips-input {
   background: #1A1C29 !important;
   border: 1px solid #26293A !important;
@@ -2496,12 +915,7 @@ html.dark-theme .txn-amount-suffix {
   color: #8F9CAE !important;
 }
 html.dark-theme .txn-input:focus,
-html.dark-theme .txn-select:focus,
 html.dark-theme .txn-amount-input:focus,
-html.dark-theme .jar-text-input:focus,
-html.dark-theme .jar-adornment-input-box:focus-within,
-html.dark-theme .jar-history-select:focus,
-html.dark-theme .jar-history-search-input:focus,
 html.dark-theme .financial-tips-input:focus {
   border-color: #3B82F6 !important;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3) !important;
@@ -2536,31 +950,8 @@ html.dark-theme .txn-card-check-badge {
   color: #FFFFFF !important;
 }
 
-/* Dark Theme: Quick Chips */
-html.dark-theme .jar-tx-chip-btn {
-  background: #1A1C29 !important;
-  border: 1px solid #26293A !important;
-  color: #8F9CAE !important;
-}
-html.dark-theme .jar-tx-chip-btn:hover {
-  background: #26293A !important;
-  border-color: #3B82F6 !important;
-  color: #60A5FA !important;
-}
-html.dark-theme .jar-tx-chip-btn--accent {
-  background: rgba(37, 99, 235, 0.2) !important;
-  border-color: #3B82F6 !important;
-  color: #60A5FA !important;
-}
-html.dark-theme .jar-tx-chip-btn--accent:hover {
-  background: #2563EB !important;
-  border-color: #2563EB !important;
-  color: #FFFFFF !important;
-}
-
 /* Dark Theme: Action Buttons */
 html.dark-theme .txn-btn-cancel,
-html.dark-theme .jar-btn-cancel,
 html.dark-theme .jar-detail-btn-edit,
 html.dark-theme .jar-detail-btn-withdraw,
 html.dark-theme .jar-btn-withdraw {
@@ -2569,7 +960,6 @@ html.dark-theme .jar-btn-withdraw {
   color: #8F9CAE !important;
 }
 html.dark-theme .txn-btn-cancel:hover:not(:disabled),
-html.dark-theme .jar-btn-cancel:hover:not(:disabled),
 html.dark-theme .jar-detail-btn-edit:hover:not(:disabled),
 html.dark-theme .jar-detail-btn-withdraw:hover:not(:disabled),
 html.dark-theme .jar-btn-withdraw:hover:not(:disabled) {
@@ -2579,43 +969,25 @@ html.dark-theme .jar-btn-withdraw:hover:not(:disabled) {
 }
 
 html.dark-theme .txn-btn-submit,
-html.dark-theme .jar-btn-submit,
 html.dark-theme .jar-detail-btn-deposit,
 html.dark-theme .financial-tips-ack-btn,
-html.dark-theme .jars-hero-cta-btn,
-html.dark-theme .btn-add-txn {
+html.dark-theme .jars-hero-cta-btn {
   background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%) !important;
   color: #FFFFFF !important;
   border-color: transparent !important;
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4) !important;
 }
 html.dark-theme .txn-btn-submit:hover:not(:disabled),
-html.dark-theme .jar-btn-submit:hover:not(:disabled),
 html.dark-theme .jar-detail-btn-deposit:hover:not(:disabled),
 html.dark-theme .financial-tips-ack-btn:hover:not(:disabled),
-html.dark-theme .jars-hero-cta-btn:hover:not(:disabled),
-html.dark-theme .btn-add-txn:hover:not(:disabled) {
+html.dark-theme .jars-hero-cta-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%) !important;
   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55) !important;
 }
 
-html.dark-theme .txn-btn-submit--withdraw {
-  background: linear-gradient(135deg, #DC2626 0%, #FF4757 100%) !important;
-  color: #FFFFFF !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4) !important;
-}
-html.dark-theme .txn-btn-submit--withdraw:hover:not(:disabled) {
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%) !important;
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.55) !important;
-}
-
-html.dark-theme .jar-tx-summary-card,
 html.dark-theme .jar-detail-stats-banner,
 html.dark-theme .jar-detail-roadmap-box,
-html.dark-theme .jar-detail-history-item,
-html.dark-theme .jar-history-item,
-html.dark-theme .financial-tips-card {
+html.dark-theme .jar-detail-history-item {
   background: #1A1C29 !important;
   border: 1px solid #26293A !important;
 }

@@ -1,7 +1,7 @@
 import { getCalendarDateParts, getRecurringTier } from './formatters.js';
 
 /** Spending at or above this share of the limit counts as "way over" (critical). */
-export const SEVERE_OVERSPEND_PERCENT = 150;
+const SEVERE_OVERSPEND_PERCENT = 150;
 export const ALERT_TIERS = ['critical', 'high', 'watch'];
 const TIER_RANK = { critical: 0, high: 1, watch: 2 };
 

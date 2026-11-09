@@ -1,5 +1,5 @@
 // Pure geometry for menus anchored to a trigger (kept free of React so it can be unit tested).
-export const VIEWPORT_EDGE = 16;
+const VIEWPORT_EDGE = 16;
 export const ANCHOR_GAP = 6;
 
 /**

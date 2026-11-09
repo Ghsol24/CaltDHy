@@ -100,7 +100,6 @@
   --accent: var(--primary);
   --accent-rgb: 7, 138, 89;
   --green: var(--primary);
-  --warn: var(--warning);
   --sh-raise: var(--shadow-md);
   --sh-press: 0 1px 2px rgba(23, 49, 38, 0.04);
   --sh-accent: 0 4px 12px rgba(7, 138, 89, 0.2);
@@ -153,29 +152,6 @@
   --z-dialog-nested: 1200;
   --z-dropdown: 300;
   --z-toast: 400;
-
-  /* ── Component Defaults ── */
-  --c-summary-bg: var(--surface);
-  --c-summary-border: var(--border);
-  --c-summary-hover-border: var(--primary-border);
-  --c-summary-shadow: var(--shadow-sm);
-
-  --c-card-bg: var(--surface-card);
-  --c-card-border: var(--border);
-  --c-card-shadow: var(--shadow-sm);
-  --c-card-hover-shadow: var(--shadow-md);
-
-  --c-inst-bg: var(--surface-subtle);
-  --c-inst-border: var(--border);
-  --c-inst-hover-bg: var(--primary-light);
-  --c-inst-hover-border: var(--primary-border);
-
-  --c-bubble-bg: var(--surface);
-  --c-bubble-border: var(--border);
-  --c-bubble-shadow: var(--shadow-sm);
-
-  --c-dashed-border: var(--border);
-  --c-dashed-icon: var(--text-muted);
 
   /* ── Scrollbar ── */
   --scrollbar-thumb: #C8D8CF;
@@ -258,7 +234,6 @@ html.dark-theme {
   --accent: #2563EB;
   --accent-rgb: 37, 99, 235;
   --green: #10B981;
-  --warn: #F59E0B;
   --border: var(--color-border);
   --txt: var(--color-text);
   --muted: var(--color-text-secondary);
@@ -273,15 +248,6 @@ html.dark-theme {
   --sh-accent: 0 0 20px rgba(37, 99, 235, 0.35), 0 2px 6px rgba(37, 99, 235, 0.15);
   --sh-float: 0 20px 48px rgba(0, 0, 0, 0.80), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
-
-  --c-summary-bg: rgba(255, 255, 255, 0.02);
-  --c-summary-border: rgba(255, 255, 255, 0.06);
-  --c-summary-hover-border: rgba(255, 255, 255, 0.14);
-  --c-card-bg: rgba(20, 20, 24, 0.65);
-  --c-card-border: rgba(255, 255, 255, 0.07);
-  --c-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
-  --c-inst-bg: rgba(20, 20, 24, 0.50);
-  --c-bubble-bg: rgba(255, 255, 255, 0.03);
 
   --scrollbar-thumb: #26293A;
   --scrollbar-hover: #3D425A;

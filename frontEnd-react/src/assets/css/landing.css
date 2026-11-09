@@ -7,15 +7,10 @@
    Landing-only decorative tokens
    ============================================================ */
 .landing-page {
-  --btn-radius: var(--r-md, 8px);
-  --btn-font: var(--font-sans);
-  --btn-weight: 600;
   --chassis: var(--bg);
   --panel: var(--surface);
   --recessed: var(--surface-subtle);
   --accent: var(--color-action-bg);
-  --accent-dark: var(--primary-hover);
-  --accent-glow: color-mix(in srgb, var(--color-link) 35%, transparent);
   --border-shadow: rgba(0, 0, 0, 0.04);
   --border-light: rgba(255, 255, 255, 0.8);
   --led-green: var(--color-success);
@@ -36,11 +31,6 @@
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%       { transform: translate(-30px, 20px) scale(1.05); }
   66%       { transform: translate(20px, -25px) scale(.95); }
-}
-
-@keyframes deviceFloat {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50%       { transform: translateY(-10px) rotate(.3deg); }
 }
 
 @keyframes heroFadeUp {
@@ -1036,7 +1026,6 @@ body.dark-theme .idx-screw {
   width: 100%;
 }
 
-.idx-lang-btn--disabled,
 .idx-lang-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -1044,16 +1033,9 @@ body.dark-theme .idx-screw {
   pointer-events: auto;
 }
 
-.idx-lang-btn--disabled:hover,
 .idx-lang-btn:disabled:hover {
   color: var(--text-muted) !important;
   border-color: transparent !important;
-}
-
-.idx-lang-wrap:hover .lang-btn-tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0);
 }
 
 /* Theme toggle */

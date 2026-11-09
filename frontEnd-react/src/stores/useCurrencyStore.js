@@ -2,10 +2,7 @@ import { create } from 'zustand';
 import { exchangeRateConfig, hasUsableUsdRate } from '../utils/exchangeRate';
 import { setActiveFormattingCurrency } from '../utils/formatters';
 
-export { exchangeRateConfig, hasUsableUsdRate } from '../utils/exchangeRate';
-
-export const BASE_CURRENCY = 'VND';
-export const DISPLAY_CURRENCIES = Object.freeze(['VND', 'USD']);
+const BASE_CURRENCY = 'VND';
 const KEY = 'caltdhy_curr';
 
 function getInitialCurrency() {
