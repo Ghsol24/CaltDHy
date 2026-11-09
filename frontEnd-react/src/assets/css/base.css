@@ -181,6 +181,47 @@ select:focus:not(:focus-visible) {
 
 
 /* ============================================================
+   SKIP LINK — first stop for keyboard users, hidden until focused
+   ============================================================ */
+/* Centred in the topbar so it never covers the logo; on phones the topbar is
+   full, so it drops just below it instead. */
+.skip-link {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: var(--z-toast);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-action-bg);
+  color: var(--color-on-action);
+  font: 600 14px/1.4 var(--font-sans);
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: var(--shadow-lg);
+  transform: translate(-50%, calc(-100% - 40px));
+}
+
+.skip-link:focus {
+  transform: translate(-50%, 0);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent), var(--shadow-lg);
+}
+
+@media (max-width: 768px) {
+  .skip-link {
+    top: 56px;
+    transform: translate(-50%, calc(-100% - 96px));
+  }
+}
+
+/* The skip-link target is the whole content region: it takes focus but
+   doesn't draw a ring around the page. */
+#main-content:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+
+/* ============================================================
    UTILITY — Additional helpers
    ============================================================ */
 .u-sr-only {

@@ -357,7 +357,7 @@ export function RecurringTab() {
     <div className="recurring-view-v2-container" role="region" aria-label="Khoản chi định kỳ và trả góp">
       <div className="recurring-page-header">
         <PageTitleIcon name="recurring" />
-        <h2 className="recurring-route-heading">{t('nav.recurring')}</h2>
+        <h1 className="recurring-route-heading">{t('nav.recurring')}</h1>
       </div>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
       <div className="recurring-top-bar-card">

@@ -177,7 +177,7 @@ export function TransactionHistoryView() {
     <header className="transaction-history-header">
       <div className="page-title-lead">
         <PageTitleIcon name="transactions" />
-        <h2 id="transaction-history-title">{t('history.title')}</h2>
+        <h1 id="transaction-history-title">{t('history.title')}</h1>
       </div>
     </header>
 

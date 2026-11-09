@@ -50,7 +50,7 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  z-index: 1100;
+  z-index: var(--z-popover);
   width: min(300px, calc(100vw - 32px));
   box-sizing: border-box;
   padding: 12px;

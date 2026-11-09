@@ -649,7 +649,7 @@ export function AccountModal() {
               </div>
             </aside>
 
-            <main ref={contentRef} className="account-modal-body settings-center-content">
+            <div ref={contentRef} className="account-modal-body settings-center-content">
             {/* ── TAB 1: HỒ SƠ ── */}
             {activeTab === 'profile' && (
               <form onSubmit={handleSaveProfile} className="account-tab-pane">
@@ -1117,7 +1117,7 @@ export function AccountModal() {
                 </div>
               </div>
             )}
-            </main>
+            </div>
           </div>
         </div>
       </div>

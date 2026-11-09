@@ -1043,7 +1043,19 @@ export function JarsView() {
                   {/* Jar Name & Amounts */}
                   <div className="jar-info-section">
                     <h3 className="jar-name-title" title={jar.name}>
-                      {jar.name}
+                      {/* The whole card opens the detail on click; this button is the
+                          keyboard and screen-reader route to the same action. */}
+                      <button
+                        type="button"
+                        className="jar-open-detail-btn"
+                        aria-label={`Xem chi tiết hũ ${jar.name}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDetail(jar);
+                        }}
+                      >
+                        {jar.name}
+                      </button>
                     </h3>
                     <div className="jar-amounts-row">
                       <strong className="jar-current-amount">{formatCurrency(currentAmt)}</strong>
@@ -1157,7 +1169,17 @@ export function JarsView() {
                     </span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <strong style={{ fontSize: '14px', color: '#0F172A' }}>{jar.name}</strong>
+                        <button
+                          type="button"
+                          className="jar-open-detail-btn"
+                          aria-label={`Xem chi tiết hũ ${jar.name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDetail(jar);
+                          }}
+                        >
+                          <strong style={{ fontSize: '14px', color: 'var(--color-text)' }}>{jar.name}</strong>
+                        </button>
                         <span
                           style={{
                             fontSize: '10px',

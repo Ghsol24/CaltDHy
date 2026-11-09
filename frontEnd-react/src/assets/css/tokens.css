@@ -143,15 +143,20 @@
   --sp-8: 32px;
   --sp-10: 40px;
 
-  /* ── Z-Index Layers ── */
+  /* ── Z-Index Layers (low → high) ──
+     Global layers use these tokens, never raw numbers. Small values (1–100)
+     that only order siblings inside one component may stay local. */
   --z-base: 1;
   --z-fab: 90;
   --z-header: 100;
   --z-modal: 200;
-  --z-dialog: 1000;
-  --z-dialog-nested: 1200;
-  --z-dropdown: 300;
+  --z-dropdown: 300;            /* page-level menus */
   --z-toast: 400;
+  --z-dialog: 1000;
+  --z-popover: 1100;            /* menus, selects, date pickers — may open inside a dialog */
+  --z-dialog-nested: 1200;
+  --z-system-notice: 1250;      /* PWA update notice */
+  --z-blocking-overlay: 1300;   /* full-screen sign-in overlay */
 
   /* ── Scrollbar ── */
   --scrollbar-thumb: #C8D8CF;

@@ -90,7 +90,7 @@
   pointer-events: none;
   transition: opacity 300ms ease, transform 300ms cubic-bezier(.34, 1.2, .64, 1);
   white-space: nowrap;
-  z-index: 200;
+  z-index: var(--z-toast);
   border-top: 1px solid rgba(255,255,255,.07);
 }
 
@@ -6430,7 +6430,7 @@ html.green-theme .cal-weekday.cal-danger {
 .calt-custom-select-menu {
   position: absolute;
   top: calc(100% + 6px);
-  z-index: 1050;
+  z-index: var(--z-popover);
   min-width: 100%;
   width: max-content;
   max-width: min(340px, 90vw);

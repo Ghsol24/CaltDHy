@@ -541,7 +541,7 @@ export function WalletsTab() {
           <div className="wallets-v2-title-lead">
             <PageTitleIcon name="wallets" />
             <div>
-              <h2 className="wallets-v2-heading">Ví &amp; Tài khoản</h2>
+              <h1 className="wallets-v2-heading">Ví &amp; Tài khoản</h1>
             </div>
           </div>
         </div>

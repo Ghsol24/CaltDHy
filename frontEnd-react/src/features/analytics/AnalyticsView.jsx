@@ -964,7 +964,7 @@ export function AnalyticsView() {
         <div className="page-title-lead">
           <PageTitleIcon name="analyticsOverview" />
           <div className="analytics-title-group">
-            <h2 className="analytics-view-title">Phân tích tài chính</h2>
+            <h1 className="analytics-view-title">Phân tích tài chính</h1>
             <p className="analytics-view-subtitle">
               Nhìn rõ dòng tiền theo thời gian
             </p>

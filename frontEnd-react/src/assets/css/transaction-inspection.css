@@ -302,7 +302,7 @@ button.transaction-inspection-row:hover {
   gap: 20px;
 }
 /* Same title size as the other pages, so the icon box lines up everywhere. */
-.transaction-history-header h2 { margin: 0; color: var(--color-text); font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+.transaction-history-header :is(h1, h2) { margin: 0; color: var(--color-text); font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
 .transaction-history-header p { margin: 6px 0 0; color: var(--color-text-secondary); }
 .transaction-filter-bar {
   position: relative;

@@ -186,10 +186,10 @@ export function PlanOverviewTab() {
         <div className="page-title-lead plan-header-lead">
           <PageTitleIcon name="planOverview" />
           <div className="plan-header-titles">
-            <h2 className="plan-overview-title">
+            <h1 className="plan-overview-title">
               <span className="plan-wide-copy">{copy.overview}</span>
               <span className="plan-mobile-copy">{copy.mobileOverview}</span>
-            </h2>
+            </h1>
           </div>
         </div>
 

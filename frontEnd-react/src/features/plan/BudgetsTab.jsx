@@ -337,7 +337,7 @@ export function BudgetsTab() {
         <div className="page-title-lead bdash-header__title">
           <PageTitleIcon name="budgets" />
           <div className="budgets-header-titles">
-            <h2 className="budgets-view-title">Ngân sách</h2>
+            <h1 className="budgets-view-title">Ngân sách</h1>
             <p className="budgets-view-subtitle">{t('budgets.subtitle')}</p>
           </div>
         </div>

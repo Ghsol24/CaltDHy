@@ -12,7 +12,7 @@
   --signature-glow: rgba(0, 242, 254, .24);
   position: fixed;
   inset: 0;
-  z-index: 1300;
+  z-index: var(--z-blocking-overlay);
   display: grid;
   align-items: safe center;
   justify-items: center;

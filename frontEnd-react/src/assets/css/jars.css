@@ -858,6 +858,37 @@ html.dark-theme .jars-view-btn.active {
   border-color: var(--jar-accent-color, #5356F1);
 }
 
+/* Jar name = the card's keyboard entry point. It looks like plain text; the
+   focus ring is drawn around the whole card/row instead of the name. */
+.jar-open-detail-btn {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  white-space: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+@supports selector(:has(*)) {
+  .jar-open-detail-btn:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Drawn inside the card edge so neighbouring cards or a clipping parent
+     can never hide part of the ring. */
+  :is(.jar-premium-card, .jar-list-mode-row):has(.jar-open-detail-btn:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
 .jar-card-top-row {
   display: flex;
   align-items: center;
