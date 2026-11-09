@@ -469,11 +469,14 @@ function blendCssColor(color, background) {
       await auditPage.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().click();
       const dialog = auditPage.getByRole('dialog', { name: 'Thêm giao dịch mới' });
       await expect(dialog).toBeVisible();
-      const icon = dialog.locator('.txn-card-icon svg').first();
+      // Phones show the chosen category as a summary row instead of a card grid.
+      const icon = dialog.locator('.txn-card-icon svg, .txn-category-summary__icon svg').first();
       await expect(icon).toHaveCSS('stroke', /rgb\((?!0, 0, 0)/);
-      const footer = await dialog.locator('.txn-modal-footer').boundingBox();
-      assert.ok(footer && footer.y >= 0 && footer.y + footer.height <= 844,
-        'Các nút lưu/hủy phải nằm trong viewport mobile');
+      // The phone sheet slides up; measure once it has settled.
+      await expect.poll(async () => {
+        const footer = await dialog.locator('.txn-modal-footer').boundingBox();
+        return Boolean(footer && footer.y >= 0 && footer.y + footer.height <= 844);
+      }, { message: 'Các nút lưu/hủy phải nằm trong viewport mobile', timeout: 2000 }).toBe(true);
       await expect(dialog.locator('.txn-btn-submit')).toBeVisible();
       await auditPage.setViewportSize({ width: 390, height: 430 });
       await dialog.locator('.txn-input').first().focus();
@@ -514,9 +517,11 @@ function blendCssColor(color, background) {
       }
       await jarPage.setViewportSize({ width: 390, height: 430 });
       await jarPage.locator('.jm-input').first().focus();
-      const compactFooter = await jarPage.locator('.jar-dialog-footer').boundingBox();
-      assert.ok(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430,
-        'Các nút tạo Hũ phải còn truy cập được khi bàn phím thu hẹp viewport');
+      // The first frame after a resize still has the old layout; wait for it to settle.
+      await expect.poll(async () => {
+        const compactFooter = await jarPage.locator('.jar-dialog-footer').boundingBox();
+        return Boolean(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430);
+      }, { message: 'Các nút tạo Hũ phải còn truy cập được khi bàn phím thu hẹp viewport', timeout: 2000 }).toBe(true);
     } finally {
       await jarPage.close();
     }
@@ -998,33 +1003,56 @@ function blendCssColor(color, background) {
     await mobilePage.keyboard.press('Escape');
     await expect(mobileBudgetDialog).toHaveCount(0);
 
-    const delayedMonth = (url) => url.pathname === '/api/spending/budget' && url.searchParams.get('month') === previousMonth;
-    await mobilePage.route(delayedMonth, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      await route.continue();
-    });
+    const monthName = (month) => new Intl.DateTimeFormat('vi-VN', { year: 'numeric', month: 'long' })
+      .format(new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1, 1));
+    const shiftMonth = (month, delta) => {
+      const date = new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1 + delta, 1);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const monthLabel = mobilePage.locator('.month-name-text');
+    const previousLine = mobilePage.locator('.bdash-hero__previous-text');
+    // Switching to a closed month never flashes a skeleton: its limits are
+    // prefetched, or the month on screen stays whole until they arrive.
     await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
-    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(1);
-    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(0, { timeout: 3000 });
-    await mobilePage.unroute(delayedMonth);
+    await expect(monthLabel).toHaveText(monthName(previousMonth));
+    await expect(mobilePage.locator('.bdash-hero__limit-value')).toContainText(/200\.000\s*₫/);
+    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(0);
     await mobilePage.getByRole('button', { name: 'Xem tháng sau' }).click();
     await expect(mobilePage.locator('.bdash-row.is-over')).toHaveCount(1);
+    await expect(mobilePage.locator('.bdash-hero__limit-value')).toContainText(/100\.000\s*₫/);
+    // A month still loading keeps the shown month on screen with a spinner, and
+    // its late answer cannot replace the month the person went back to.
+    const nextMonth = shiftMonth(fixtureMonth, 1);
+    const farMonth = shiftMonth(fixtureMonth, 2);
+    const shownByNextMonth = new RegExp(monthName(fixtureMonth), 'i'); // its "month before" line
     let releaseStaleBudget;
     const staleBudgetGate = new Promise((resolve) => { releaseStaleBudget = resolve; });
-    await mobilePage.route(delayedMonth, async (route) => {
+    const gatedMonth = (url) => url.pathname === '/api/spending/budget' && url.searchParams.get('month') === farMonth;
+    await mobilePage.route(gatedMonth, async (route) => {
       await staleBudgetGate;
       await route.continue();
     });
-    await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
-    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(1);
     await mobilePage.getByRole('button', { name: 'Xem tháng sau' }).click();
-    await expect(mobilePage.locator('.bdash-hero__limit-value')).toContainText(/100\.000\s*₫/);
-    const staleResponse = mobilePage.waitForResponse((response) => response.url().includes(`month=${previousMonth}`));
+    await expect(monthLabel).toHaveText(monthName(nextMonth));
+    await expect(previousLine).toContainText(shownByNextMonth);
+    await mobilePage.getByRole('button', { name: 'Xem tháng sau' }).click();
+    await expect(monthLabel).toHaveText(monthName(farMonth));
+    await expect(mobilePage.locator('.month-icon.is-loading')).toHaveCount(1);
+    await expect(mobilePage.locator('.bdash-hero.is-skeleton')).toHaveCount(0);
+    await expect(previousLine).toContainText(shownByNextMonth);
+    await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
+    await expect(monthLabel).toHaveText(monthName(nextMonth));
+    await expect(mobilePage.locator('.month-icon.is-loading')).toHaveCount(0);
+    const staleResponse = mobilePage.waitForResponse((response) => response.url().includes(`month=${farMonth}`));
     releaseStaleBudget();
     await staleResponse;
     await mobilePage.waitForTimeout(200);
-    await expect(mobilePage.locator('.bdash-hero__limit-value')).toContainText(/100\.000\s*₫/);
-    await mobilePage.unroute(delayedMonth);
+    await expect(monthLabel).toHaveText(monthName(nextMonth));
+    await expect(previousLine).toContainText(shownByNextMonth);
+    await mobilePage.unroute(gatedMonth);
+    // The selected month is shared with Analytics: return to this month first.
+    await mobilePage.getByRole('button', { name: 'Về tháng này', exact: true }).click();
+    await expect(monthLabel).toHaveText(monthName(fixtureMonth));
     await primaryNav.getByRole('button', { name: 'Phân tích' }).click();
     await mobilePage.waitForURL('**/spending/analytics/overview');
     const analyticsNav = mobilePage.getByRole('navigation', { name: 'Điều hướng Phân tích' });
@@ -1368,7 +1396,6 @@ function blendCssColor(color, background) {
       'Trang desktop không được tràn ngang khi dựng đồng thời mọi khu vực');
 
     const themeVisuals = new Map();
-    const periodVisuals = new Map();
     for (const theme of ['dark', 'cream', 'green', 'light']) {
       await mobilePage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
       await mobilePage.goto('/spending/plan/budgets');
@@ -1393,22 +1420,17 @@ function blendCssColor(color, background) {
       assert.equal(visual.iconFill, 'none', `${theme}: icon cảnh báo phải là nét rỗng`);
       themeVisuals.set(theme, visual.alertColor);
       await mobilePage.getByRole('button', { name: 'Xem tháng trước' }).click();
-      const periodRow = mobilePage.locator('.bdash-row.is-period-overdue');
-      await expect(periodRow).toHaveCount(1);
-      await expect(periodRow).not.toHaveClass(/(^|\s)is-over(\s|$)/);
-      const periodBadge = periodRow.locator('.bdash-period-badge');
-      await expect(periodBadge).toHaveText('Đã quá hạn');
-      // A closed month is read-only: rows are not edit buttons.
+      // A closed month is a result, not an alarm: no per-row "overdue" badge, a
+      // "closed" chip in the header, and rows are read-only (not edit buttons).
+      const closedRow = mobilePage.locator('.bdash-rows .bdash-row');
+      await expect(closedRow).toHaveCount(1);
+      await expect(closedRow).not.toHaveClass(/(^|\s)is-over(\s|$)/);
+      await expect(closedRow).toContainText(/Dư /);
+      await expect(mobilePage.locator('.bdash-period-badge')).toHaveCount(0);
+      await expect(mobilePage.locator('.bdash-closed')).toHaveText('Đã đóng kỳ');
       await expect(mobilePage.locator('button.bdash-row')).toHaveCount(0);
-      const periodVisual = await periodBadge.evaluate((badge) => ({
-        color: getComputedStyle(badge).color,
-        backgroundColor: getComputedStyle(badge).backgroundColor
-      }));
-      assert.notEqual(periodVisual.backgroundColor, 'rgba(0, 0, 0, 0)', `${theme}: nhãn kỳ đã hết cần nền riêng`);
-      periodVisuals.set(theme, periodVisual.color);
     }
     assert.ok(new Set(themeVisuals.values()).size >= 3, 'Cảnh báo phải được hiệu chỉnh theo bốn theme');
-    assert.ok(new Set(periodVisuals.values()).size >= 3, 'Ngân sách quá hạn phải được hiệu chỉnh theo bốn theme');
 
     await mobilePage.setViewportSize({ width: 390, height: 844 });
     const mobileSettingsButton = mobilePage.locator('.tb-settings-btn');
@@ -1458,8 +1480,8 @@ function blendCssColor(color, background) {
           await expect(mobilePage.locator('.bdash-card__title')).toHaveText(
             locale === 'en' ? 'Categories' : '分类');
           await mobilePage.getByRole('button', { name: locale === 'en' ? 'View previous month' : '查看上个月' }).click();
-          await expect(mobilePage.locator('.bdash-period-badge')).toHaveText(
-            locale === 'en' ? 'Overdue' : '已过期');
+          await expect(mobilePage.locator('.bdash-closed')).toHaveText(
+            locale === 'en' ? 'Period closed' : '周期已关闭');
         }
         assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false,
           `${locale} ${path}: nội dung không được tràn ngang trên mobile`);

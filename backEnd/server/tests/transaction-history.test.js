@@ -152,6 +152,64 @@ describe('Transaction change history on a temporary replica set', { concurrency:
         assert.equal((await getAllWalletBalances(c.userId))[newWallet], 1000);
     });
 
+    it('restores a deleted transaction under its original ID and keeps its history attached', async () => {
+        const c = await client(), outsider = await client('Restore outsider'), w = await wallet(c);
+        const body = spending(w, 100), tx = await create(c, body), url = '/api/spending/' + tx.id;
+        assert.equal((await c.send('put', url, { ...body, amount: 150, desc: 'Edited' })).status, 200);
+        assert.equal((await c.send('post', url + '/restore', {})).status, 409, 'A live transaction has nothing to restore');
+        assert.equal((await c.send('delete', url)).status, 200);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1000);
+        assert.equal((await outsider.send('post', url + '/restore', {})).status, 404);
+
+        const key = crypto.randomUUID();
+        const restored = await c.send('post', url + '/restore', {}, key);
+        assert.equal(restored.status, 200, JSON.stringify(restored.body));
+        assert.deepEqual((await c.send('post', url + '/restore', {}, key)).body, restored.body);
+        assert.equal(restored.body.data.id, tx.id);
+        assert.equal(restored.body.data.amount, 150);
+        assert.equal(restored.body.data.desc, 'Edited');
+        assert.equal(restored.body.data.date, body.date, 'An old date is kept: restoring is an undo, not a new entry');
+        assert.equal(restored.body.data.walletId, w);
+        assert.equal(await Transaction.countDocuments({ userId: c.userId }), 1);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 850);
+
+        const history = (await c.agent.get(url + '/history')).body.data;
+        assert.deepEqual(history.map(entry => entry.action), ['restore', 'delete', 'update']);
+        assert.equal(history[0].before, null);
+        assert.deepEqual(history[0].after, history[1].before);
+        assert.equal(history[0].actorName, 'History test');
+        assert.equal((await c.send('post', url + '/restore', {})).status, 409, 'A second restore must not duplicate it');
+
+        assert.equal((await c.send('delete', url)).status, 200);
+        assert.equal((await c.send('post', url + '/restore', {})).status, 200);
+        assert.equal((await c.agent.get(url + '/history')).body.data.length, 5);
+        assert.equal((await c.send('post', '/api/spending/not-an-id/restore', {})).status, 400);
+        assert.equal((await c.send('post', '/api/spending/' + new mongoose.Types.ObjectId() + '/restore', {})).status, 404);
+    });
+
+    it('refuses restores that would overdraw or use a closed wallet, leaving no trace', async () => {
+        const c = await client(), w = await wallet(c, 100);
+        const lunch = await create(c, spending(w, 80));
+        assert.equal((await c.send('delete', '/api/spending/' + lunch.id)).status, 200);
+        await create(c, spending(w, 50));
+        const key = crypto.randomUUID();
+        const overdrawn = await c.send('post', '/api/spending/' + lunch.id + '/restore', {}, key);
+        assert.equal(overdrawn.status, 409, JSON.stringify(overdrawn.body));
+        assert.equal(await Transaction.exists({ _id: lunch.id }), null);
+        assert.equal(await TransactionRevision.countDocuments({ transactionId: lunch.id, action: 'restore' }), 0);
+        assert.equal(await Receipt.countDocuments({ userId: c.userId, key }), 0);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 50);
+
+        const closed = await wallet(c, 0);
+        const gift = await create(c, spending(closed, 30, { type: 'income' }));
+        assert.equal((await c.send('delete', '/api/spending/' + gift.id)).status, 200);
+        await Wallet.updateOne({ _id: closed }, { archived: true });
+        const refused = await c.send('post', '/api/spending/' + gift.id + '/restore', {});
+        assert.equal(refused.status, 409, JSON.stringify(refused.body));
+        assert.match(refused.body.message, /ví của giao dịch đã đóng/);
+        assert.equal(await Transaction.exists({ _id: gift.id }), null);
+    });
+
     it('does not record creations or unchanged saves, but records note-only edits', async () => {
         const c = await client(), w = await wallet(c), body = spending(w, 100);
         const tx = await create(c, body), url = '/api/spending/' + tx.id;

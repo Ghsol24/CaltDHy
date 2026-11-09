@@ -1,5 +1,26 @@
 import { formatCurrency, formatDate } from './formatters.js';
-import { transactionEditImpact } from './transactionEditing.js';
+import { requiresHistoricalConfirmation, transactionEditImpact } from './transactionEditing.js';
+
+/** Body of the delete confirmation: what is removed, then any previous-month impact. */
+export function deleteConfirmMessage(transaction, { t, label, wallets, locale, intlLocale, currentMonth }) {
+  const walletName = (id) => (id ? wallets.find((wallet) => wallet.id === id)?.name : null);
+  const walletText = transaction.type === 'transfer'
+    ? [walletName(transaction.walletId), walletName(transaction.toWalletId)].filter(Boolean).join(' → ')
+    : walletName(transaction.walletId) || walletName(transaction.toWalletId);
+  const details = [
+    transaction.date ? formatDate(transaction.date, 'compact', { locale }) : null,
+    walletText,
+    Number(transaction.fee) > 0 ? t('history.fee', { amount: formatCurrency(transaction.fee) }) : null
+  ].filter(Boolean).join(' · ');
+  const summary = [t('home.deleteMessage', {
+    type: t(`type.${transaction.type}`).toLocaleLowerCase(intlLocale),
+    name: transaction.desc || label(transaction.category),
+    amount: formatCurrency(transaction.amount)
+  }), details].filter(Boolean).join('\n');
+  return requiresHistoricalConfirmation(transaction, null, currentMonth)
+    ? `${summary}\n\n${historicalImpactMessage(transaction, null, { t, wallets, locale })}`
+    : summary;
+}
 
 export function historicalImpactMessage(before, after, { t, wallets, locale }) {
   const impact = transactionEditImpact(before, after);

@@ -266,15 +266,20 @@
      through the `budgets` container query in budgets-analytics.css. */
   .plan-feature-view .budget-month-selector {
     display: grid;
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    grid-template-columns: 44px minmax(0, 1fr) auto 44px;
+    grid-template-areas: "prev label today next";
     width: 100%;
     height: auto;
     padding: 4px;
     gap: 4px;
   }
-  .plan-feature-view .month-current-display { justify-content: center; padding: 0; white-space: normal; }
+  .plan-feature-view .month-nav-btn--prev { grid-area: prev; }
+  .plan-feature-view .month-nav-btn--next { grid-area: next; }
+  .plan-feature-view .month-current-display { grid-area: label; justify-content: center; padding: 0; min-width: 0; }
   .plan-feature-view .month-name-text { text-align: center; }
-  .plan-feature-view .month-today-btn { grid-column: 1 / -1; }
+  /* "This month" shares the switcher row in every month instead of adding a row. */
+  .plan-feature-view .month-today-btn { grid-area: today; grid-column: auto; white-space: nowrap; }
+  .plan-feature-view .month-today-btn.is-idle { display: none; }
   .plan-feature-view .budget-load-error { padding: 12px; flex-wrap: wrap; }
 
   /* Recurring: one compact header plus amount, due date and assigned wallet. */

@@ -516,6 +516,36 @@ export const apiMessages = {
     "Unable to delete the transaction.",
     "无法删除交易。"
   ],
+  "Đã khôi phục giao dịch!": [
+    "Đã khôi phục giao dịch!",
+    "Transaction restored.",
+    "交易已恢复！"
+  ],
+  "Lỗi khi khôi phục giao dịch.": [
+    "Lỗi khi khôi phục giao dịch.",
+    "Unable to restore the transaction.",
+    "无法恢复交易。"
+  ],
+  "Giao dịch này vẫn còn trong sổ, không cần khôi phục.": [
+    "Giao dịch này vẫn còn trong sổ, không cần khôi phục.",
+    "This transaction still exists, so there is nothing to restore.",
+    "该交易仍然存在，无需恢复。"
+  ],
+  "Không tìm thấy giao dịch đã xóa để khôi phục.": [
+    "Không tìm thấy giao dịch đã xóa để khôi phục.",
+    "No deleted transaction was found to restore.",
+    "未找到可恢复的已删除交易。"
+  ],
+  "Không thể khôi phục giao dịch của Hũ hoặc Khoản định kỳ tại đây.": [
+    "Không thể khôi phục giao dịch của Hũ hoặc Khoản định kỳ tại đây.",
+    "Jar and recurring transactions cannot be restored here.",
+    "无法在此恢复储蓄罐或周期项目的交易。"
+  ],
+  "Không thể khôi phục vì ví của giao dịch đã đóng hoặc không còn tồn tại.": [
+    "Không thể khôi phục vì ví của giao dịch đã đóng hoặc không còn tồn tại.",
+    "Unable to restore: the transaction's wallet is closed or no longer exists.",
+    "无法恢复：该交易的钱包已关闭或不存在。"
+  ],
   "Kỳ ngân sách của tháng trước đã kết thúc. Không thể chỉnh sửa ngân sách quá khứ.": [
     "Kỳ ngân sách của tháng trước đã kết thúc. Không thể chỉnh sửa ngân sách quá khứ.",
     "This past budget period is closed and cannot be edited.",

@@ -157,6 +157,7 @@ async function check(name, work) {
 
   await check('reopening shows an audit with the amount before/after and actor; note-only save needs no confirmation', async () => {
     await openPast();
+    await expect(modal.locator('.txn-revisions-summary')).toContainText('Đã sửa 1 lần');
     await modal.locator('.txn-revisions-toggle').click();
     await expect(modal.locator('.txn-revision-entry')).toHaveCount(1);
     await expect(modal.locator('.txn-revision-entry')).toContainText(actorName);
@@ -352,6 +353,136 @@ async function check(name, work) {
     assert.equal(revision.actorName, actorName);
     assert.equal(revision.before.amount, 5000);
     assert.equal(revision.after, null);
+  });
+
+  await check('history edit dialog deletes an entry and undo restores the same ID with its history', async () => {
+    const created = (await mutate('post', '/api/spending', {
+      type: 'expense', amount: 12000, category: 'Ăn uống', date: '2026-10-02',
+      walletId: primary.id, desc: 'Nhập nhầm'
+    })).data;
+    const targetId = created.id || created._id;
+    // Screenshots wait for finite entrance animations (sheet slide, fade) to finish.
+    const settle = () => page.evaluate(() => Promise.all(document.getAnimations()
+      .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+      .map(animation => animation.finished.catch(() => null))));
+    const focusedField = () => page.evaluate(() => ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName));
+    await page.goto('/spending/analytics/transactions');
+    const firstHistory = page.waitForResponse(response => response.url().includes(`/api/spending/${targetId}/history`));
+    await historyRow('Nhập nhầm').click();
+    await expect(modal).toBeVisible();
+    await firstHistory;
+    await expect(modal.locator('.txn-revisions-summary')).toHaveCount(0, { message: 'A never-edited entry shows no history line' });
+    await page.waitForTimeout(120);
+    assert.equal(await focusedField(), false, 'Editing opens to read: no text field is focused');
+    const deleteButton = modal.getByRole('button', { name: 'Xóa giao dịch này', exact: true });
+    await expect(deleteButton).toContainText('Xóa');
+    await settle();
+    await page.screenshot({ path: path.join(evidenceDir, 'delete-button-desktop.png') });
+    await deleteButton.click();
+    const message = confirmation.locator('.confirm-dialog-message');
+    await expect(message).toContainText('chi tiêu “Nhập nhầm”');
+    await expect(message).toContainText('Ví chính');
+    await expect(message).not.toContainText('tháng', { message: 'A current-month delete has no impact paragraph' });
+    await settle();
+    await page.screenshot({ path: path.join(evidenceDir, 'delete-confirm-desktop.png') });
+    await confirmation.locator('.confirm-dialog-btn').last().click();
+    await expect(modal).toHaveCount(0);
+    await expect(historyRow('Nhập nhầm')).toHaveCount(0);
+    assert.ok(!(await ledger()).some(tx => (tx.id || tx._id) === targetId));
+
+    await page.locator('.toast-item__action-btn', { hasText: 'Hoàn tác' }).click();
+    await expect(page.locator('.toast-item__message', { hasText: 'Đã khôi phục giao dịch Nhập nhầm.' })).toBeVisible();
+    await expect(historyRow('Nhập nhầm')).toHaveCount(1);
+    assert.ok((await ledger()).some(tx => (tx.id || tx._id) === targetId), 'Undo keeps the original ID');
+    const actions = (await backend('./models/TransactionRevision').find({ transactionId: targetId })
+      .sort({ occurredAt: 1, _id: 1 })).map(entry => entry.action);
+    assert.deepEqual(actions, ['delete', 'restore']);
+
+    await historyRow('Nhập nhầm').click();
+    await expect(modal.locator('.txn-revisions-summary')).toContainText('Đã sửa 2 lần');
+    await expect(modal.locator('.txn-revisions-toggle')).toHaveText('Xem lịch sử');
+    await modal.locator('.txn-revisions-toggle').click();
+    await expect(modal.locator('.txn-revisions-toggle')).toHaveText('Ẩn lịch sử');
+    await expect(modal.locator('.txn-revision-action.is-restore')).toContainText('Đã khôi phục giao dịch');
+    await expect(modal.locator('.txn-revision-action.is-delete')).toContainText('Đã xóa giao dịch');
+    await modal.locator('.txn-modal-close-btn').click();
+    await expect(modal).toHaveCount(0);
+
+    // Phones: icon-only square on the left, Cancel/Update keep the rest of the row.
+    await page.setViewportSize({ width: 390, height: 844 });
+    try {
+      await historyRow('Nhập nhầm').click();
+      await expect(modal).toBeVisible();
+      const box = await deleteButton.boundingBox();
+      assert.ok(box && Math.round(box.width) === 48 && box.height >= 44, JSON.stringify(box));
+      await expect(deleteButton.locator('.txn-btn-delete__label')).toBeHidden();
+      await page.waitForTimeout(120);
+      assert.equal(await focusedField(), false, 'No phone keyboard opens when editing');
+      await settle();
+      await page.screenshot({ path: path.join(evidenceDir, 'delete-button-mobile.png') });
+      await modal.locator('.txn-modal-close-btn').click();
+    } finally { await page.setViewportSize({ width: 1440, height: 1000 }); }
+  });
+
+  await check('the phone keyboard never opens by itself; desktop adding starts in the amount; no stuck buttons', async () => {
+    await page.goto('/spending/home');
+    await page.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().click();
+    const addDialog = page.getByRole('dialog', { name: 'Thêm giao dịch mới', exact: true });
+    await expect(addDialog).toBeVisible();
+    await expect(addDialog.locator('#txn-amount-input')).toBeFocused();
+    await addDialog.locator('.txn-modal-close-btn').click();
+    await expect(addDialog).toHaveCount(0);
+
+    // Keyboard: tab from "View all" onto the first row, then into its buttons.
+    const firstRow = page.locator('.home-txn-row[role="button"]').first();
+    await page.locator('.home-txns-view-all-btn').focus();
+    await page.keyboard.press('Tab');
+    await expect(firstRow).toBeFocused();
+    await expect(firstRow.locator('.home-txn-actions')).toBeVisible();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await expect(firstRow.locator('.home-txn-btn-action--delete')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(confirmation).toBeVisible();
+    await expect(modal).toHaveCount(0, { message: 'Enter on the delete button must not also open the row' });
+    await page.keyboard.press('Escape');
+    await expect(confirmation).toHaveCount(0);
+
+    // Touch phone: a tap opens the sheet; afterwards the row shows no stuck buttons or tint.
+    const phone = await browser.newContext({ baseURL, locale: 'vi-VN', serviceWorkers: 'block', timezoneId: 'Asia/Ho_Chi_Minh',
+      viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, storageState: await context.storageState() });
+    try {
+      const touch = await phone.newPage();
+      await touch.goto('/spending/home');
+      const row = touch.locator('.home-txn-row[role="button"]').first();
+      await row.tap();
+      const sheet = touch.getByRole('dialog', { name: 'Chỉnh sửa giao dịch', exact: true });
+      await expect(sheet).toBeVisible();
+      await touch.waitForTimeout(120);
+      assert.equal(await touch.evaluate(() => ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)), false,
+        'Tapping a row must not open the phone keyboard');
+      await sheet.locator('.txn-modal-close-btn').tap();
+      await expect(sheet).toHaveCount(0);
+      // Visually hidden (1px, clipped) rather than display:none, so measure what is painted.
+      const actionsBox = await row.locator('.home-txn-actions').boundingBox();
+      assert.ok(!actionsBox || actionsBox.width <= 1, `Edit/delete stay hidden after a tap: ${JSON.stringify(actionsBox)}`);
+      const tint = await row.evaluate(element => getComputedStyle(element).backgroundColor);
+      const plain = await touch.locator('.home-txn-row[role="button"]').nth(1).evaluate(element => getComputedStyle(element).backgroundColor);
+      assert.equal(tint, plain, 'The tapped row keeps no hover tint');
+      await touch.screenshot({ path: path.join(evidenceDir, 'home-rows-after-tap-mobile.png') });
+      // Adding on a touch phone does not focus the amount either: the person taps it when ready.
+      await touch.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().tap();
+      const addSheet = touch.getByRole('dialog', { name: 'Thêm giao dịch mới', exact: true });
+      await expect(addSheet).toBeVisible();
+      await touch.waitForTimeout(150);
+      assert.equal(await touch.evaluate(() => ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)), false,
+        'Opening the add sheet must not open the phone keyboard');
+      await touch.screenshot({ path: path.join(evidenceDir, 'add-sheet-no-keyboard-mobile.png') });
+      await addSheet.locator('#txn-amount-input').tap();
+      await expect(addSheet.locator('#txn-amount-input')).toBeFocused();
+      await addSheet.locator('.txn-modal-close-btn').tap();
+      await expect(addSheet).toHaveCount(0);
+    } finally { await phone.close(); }
   });
 
   await check('both transfer dropdowns sort current signed balances descending and exclude the source', async () => {

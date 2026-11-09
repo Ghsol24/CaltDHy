@@ -2,28 +2,21 @@ import React from 'react';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
-import { useConfirmStore } from '../../stores/useConfirmStore';
-import { useToastStore } from '../../stores/useToastStore';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { CategoryOutlineIcon, ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
-import { formatCurrency, formatRelativeDate, getLocalMonthString } from '../../utils/formatters';
-import { requiresHistoricalConfirmation } from '../../utils/transactionEditing';
-import { historicalImpactMessage } from '../../utils/transactionMessages';
+import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
+import { isLockedTransaction, useDeleteTransaction } from '../transactions/useDeleteTransaction';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export const RecentTransactions = React.memo(function RecentTransactions() {
-  const { t, label, lang, intlLocale } = useTranslation();
+  const { t, label } = useTranslation();
   const transactions = useTransactionStore((s) => s.transactions);
-  const deleteTransaction = useTransactionStore((s) => s.deleteTransaction);
-  const undoDeleteTransaction = useTransactionStore((s) => s.undoDeleteTransaction);
   const openEditTransaction = useTransactionStore((s) => s.openEditTransaction);
+  const requestDelete = useDeleteTransaction();
 
   const wallets = useWalletStore((s) => s.wallets);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
-  const confirm = useConfirmStore((s) => s.confirm);
-  const addToast = useToastStore((s) => s.addToast);
-  const [deletingTxnId, setDeletingTxnId] = React.useState(null);
 
   // Create a map of walletId -> wallet object
   const walletMap = React.useMemo(() => {
@@ -43,40 +36,15 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
       .slice(0, 5);
   }, [transactions]);
 
-  // Delete transaction with safe confirmation dialog & undo toast
+  // Same confirm → delete → undo flow as the edit dialog.
   const handleDelete = (e, txn) => {
     e.stopPropagation();
-    if (txn.systemGenerated || txn.jarId || txn.installmentId) return;
-    const isIncome = txn.type === 'income';
-    const typeLabel = t(isIncome ? 'type.income' : 'type.expense').toLocaleLowerCase(intlLocale);
-    confirm({
-      title: t('home.deleteTitle'),
-      message: t('home.deleteMessage', { type: typeLabel, name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })
-        + (requiresHistoricalConfirmation(txn, null, getLocalMonthString())
-          ? '\n\n' + historicalImpactMessage(txn, null, { t, wallets, locale: lang }) : ''),
-      confirmText: t('home.deleteTitle'),
-      cancelText: t('home.keep'),
-      confirmVariant: 'danger',
-      onConfirm: async () => {
-        setDeletingTxnId(txn.id);
-        try {
-          await deleteTransaction(txn.id);
-          addToast({
-            type: 'info',
-            message: t('home.deleted', { name: txn.desc || label(txn.category) }),
-            action: { label: t('transaction.undo'), onClick: () => undoDeleteTransaction(txn) },
-            duration: 5000,
-          });
-        } finally {
-          setDeletingTxnId(null);
-        }
-      },
-    });
+    void requestDelete(txn);
   };
 
   const handleEdit = (e, txn) => {
     e.stopPropagation();
-    if (txn.systemGenerated || txn.jarId || txn.installmentId) return;
+    if (isLockedTransaction(txn)) return;
     openEditTransaction(txn);
   };
 
@@ -110,7 +78,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
             {recentList.map((txn, index) => {
               const isIncome = txn.type === 'income';
               const isTransfer = txn.type === 'transfer';
-              const isLocked = Boolean(txn.systemGenerated || txn.jarId || txn.installmentId);
+              const isLocked = isLockedTransaction(txn);
               
               const walletName = txn.walletId && walletMap[txn.walletId]
                 ? walletMap[txn.walletId].name
@@ -124,11 +92,16 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
               return (
                 <div
                   key={txn.id || index}
-                  className={`home-txn-row ${deletingTxnId === txn.id ? 'is-deleting' : ''}`}
-                  onClick={isLocked || deletingTxnId === txn.id ? undefined : () => openEditTransaction(txn)}
+                  className="home-txn-row"
+                  onClick={isLocked ? undefined : () => openEditTransaction(txn)}
                   role={isLocked ? undefined : 'button'}
-                  tabIndex={isLocked || deletingTxnId === txn.id ? undefined : 0}
-                  onKeyDown={isLocked || deletingTxnId === txn.id ? undefined : (e) => e.key === 'Enter' && openEditTransaction(txn)}
+                  tabIndex={isLocked ? undefined : 0}
+                  onKeyDown={isLocked ? undefined : (e) => {
+                    // Keys pressed on the edit/delete buttons inside belong to those buttons.
+                    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+                    e.preventDefault();
+                    openEditTransaction(txn);
+                  }}
                   aria-label={t('home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
                 >
                   {/* Left Icon */}

@@ -8,6 +8,7 @@ import { useToastStore } from './useToastStore';
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../utils/categories';
 import { getLocalDateString, getLocalMonthString } from '../utils/formatters';
 import { moneyInteger, MAX_MONEY } from '../utils/moneyPrecision';
+import { isMonthString, withBudgetEdit } from '../utils/budgetPeriod';
 
 const getStoredTxns = () => [];
 
@@ -20,7 +21,31 @@ const getStoredIncomeCategories = () => DEFAULT_INCOME_CATEGORIES;
 const saveStoredExpenseCategories = () => undefined;
 
 const _saveStoredIncomeCategories = () => undefined;
-let latestBudgetRequestId = 0;
+
+// Limits are cached per month for the session (logout resets the store), so the
+// budget page can switch months without waiting. A month is refetched in the
+// background once it is older than this.
+const BUDGET_FRESH_MS = 60_000;
+// One request per month while it is in flight, shared by page loads and prefetches.
+const budgetRequests = new Map();
+// Bumped by every limit save: a read that started before a save must not overwrite it.
+let budgetMutationSeq = 0;
+
+// Server categories, plus any category the month has a limit for, else the defaults.
+function mergeExpenseCategories(baseNames, current, budgetMap) {
+  const serverCats = baseNames?.length
+    ? baseNames.map((name) => ({ name, icon: getCategoryIcon(name, 'expense') }))
+    : current?.length ? current : DEFAULT_EXPENSE_CATEGORIES;
+  const known = new Set(serverCats.map((c) => c.name.toLowerCase()));
+  const merged = [...serverCats];
+  Object.keys(budgetMap || {}).forEach((name) => {
+    if (!known.has(name.toLowerCase())) {
+      known.add(name.toLowerCase());
+      merged.push({ name, icon: getCategoryIcon(name, 'expense') });
+    }
+  });
+  return merged.length ? merged : DEFAULT_EXPENSE_CATEGORIES.map(({ name, icon }) => ({ name, icon }));
+}
 
 const normalizeTxn = (t) => ({
   id: t._id || t.id,
@@ -48,6 +73,9 @@ return ({
   transactions: getStoredTxns(),
   budgets: {},
   budgetMonth: null,
+  // { 'YYYY-MM': { data, fetchedAt } }; `budgets` above stays the selected month's.
+  budgetsByMonth: {},
+  budgetCategoryBase: null, // { names, fetchedAt } from the server category list
   expenseCategories: getStoredExpenseCategories(),
   incomeCategories: getStoredIncomeCategories(),
   categories: [],
@@ -65,7 +93,8 @@ return ({
   setExpenseCategories: async (cats) => {
     const epoch = sessionEpoch();
     await spendingService.updateCategories(cats.map(c => c.name));
-    scopedSet(epoch, storeSet)({ expenseCategories: cats });
+    scopedSet(epoch, storeSet)({ expenseCategories: cats,
+      budgetCategoryBase: { names: cats.map((c) => c.name), fetchedAt: Date.now() } });
   },
 
   deleteExpenseCategory: async (catName) => {
@@ -159,67 +188,87 @@ return ({
     } catch (error) { set({ isLoading: false, hasLoadedTransactions: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
+  /** Fills the month cache only; never changes what other screens show. */
+  loadBudgetMonth: async (month, { force = false } = {}) => {
+    const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
+    const get = scopedGet(epoch, storeGet);
+    if (!isMonthString(month)) return { success: false };
+    const cached = get().budgetsByMonth[month];
+    if (!force && cached && Date.now() - cached.fetchedAt < BUDGET_FRESH_MS) {
+      return { success: true, data: cached.data };
+    }
+    const key = `${epoch}:${month}`;
+    if (budgetRequests.has(key)) return budgetRequests.get(key);
+    const request = (async () => {
+      const seq = budgetMutationSeq;
+      try {
+        const base = get().budgetCategoryBase;
+        const refreshCategories = !base || Date.now() - base.fetchedAt >= BUDGET_FRESH_MS;
+        const [budgetRes, catRes] = await Promise.all([
+          spendingService.getBudgets(month),
+          refreshCategories ? spendingService.getCategories().catch(() => null) : null
+        ]);
+        if (!budgetRes?.success || !budgetRes.data) return { success: false };
+        const update = {};
+        if (catRes?.success && Array.isArray(catRes.data)) {
+          update.budgetCategoryBase = { names: catRes.data, fetchedAt: Date.now() };
+        }
+        // A save during this read already put the newer limits in the cache.
+        if (seq === budgetMutationSeq) {
+          update.budgetsByMonth = { ...get().budgetsByMonth, [month]: { data: budgetRes.data, fetchedAt: Date.now() } };
+        }
+        set(update);
+        return { success: true, data: get().budgetsByMonth[month]?.data || budgetRes.data };
+      } catch (error) {
+        return { success: false, error: getUserErrorMessage(error, 'error.generic') };
+      } finally {
+        budgetRequests.delete(key);
+      }
+    })();
+    budgetRequests.set(key, request);
+    return request;
+  },
+
+  /** Warm the cache for months the person is likely to open next. */
+  prefetchBudgetMonths: (months) => {
+    for (const month of months) void storeGet().loadBudgetMonth(month);
+  },
+
+  /**
+   * Make `month` the shared `budgets` (when it is the selected month): instantly
+   * from the cache when possible, then again once the network confirms it.
+   */
   fetchBudgets: async (month = null) => {
-    const requestId = ++latestBudgetRequestId;
     const epoch = sessionEpoch();
     const set = scopedSet(epoch, storeSet);
     const get = scopedGet(epoch, storeGet);
     const targetMonth = (typeof month === 'string' && month.trim())
       ? month.trim()
       : (useSpendingStore.getState().selectedMonth || getLocalMonthString());
+    const isSelected = () => targetMonth === useSpendingStore.getState().selectedMonth;
+    const apply = () => {
+      const entry = get().budgetsByMonth[targetMonth];
+      if (!entry || !isSelected()) return;
+      if (get().budgetMonth === targetMonth && get().budgets === entry.data) return;
+      const merged = mergeExpenseCategories(get().budgetCategoryBase?.names, get().expenseCategories, entry.data);
+      saveStoredExpenseCategories(merged);
+      set({ budgets: entry.data, budgetMonth: targetMonth, expenseCategories: merged });
+    };
 
     try {
-      const [budgetRes, catRes] = await Promise.all([
-        spendingService.getBudgets(targetMonth),
-        spendingService.getCategories().catch(() => null)
-      ]);
-
-      if (budgetRes?.success && budgetRes.data) {
-        const budgetMap = budgetRes.data;
-        const budgetCatNames = Object.keys(budgetMap);
-        const serverCustomCats = catRes?.success && Array.isArray(catRes.data) ? catRes.data : null;
-
-        // Hợp nhất danh mục từ server customCats, các key của budgets và default categories
-        const serverCats = (serverCustomCats && serverCustomCats.length > 0)
-          ? serverCustomCats.map((name) => ({ name, icon: getCategoryIcon(name, 'expense') }))
-          : (get().expenseCategories && get().expenseCategories.length > 0)
-          ? get().expenseCategories
-          : DEFAULT_EXPENSE_CATEGORIES;
-
-        const known = new Set(serverCats.map((c) => c.name.toLowerCase()));
-        const merged = [...serverCats];
-
-        budgetCatNames.forEach((name) => {
-          if (!known.has(name.toLowerCase())) {
-            known.add(name.toLowerCase());
-            merged.push({ name, icon: getCategoryIcon(name, 'expense') });
-          }
-        });
-
-        // Chỉ fallback về danh mục mặc định nếu danh sách sau khi merge hoàn toàn rỗng (user mới chưa có dữ liệu)
-        if (merged.length === 0) {
-          DEFAULT_EXPENSE_CATEGORIES.forEach((defCat) => {
-            merged.push({ name: defCat.name, icon: defCat.icon });
-          });
-        }
-
-        if (requestId === latestBudgetRequestId && targetMonth === useSpendingStore.getState().selectedMonth) {
-          saveStoredExpenseCategories(merged);
-          set({ budgets: budgetMap, budgetMonth: targetMonth, expenseCategories: merged });
-        }
-        return { success: true, data: budgetMap };
-      }
+      apply();
+      const result = await get().loadBudgetMonth(targetMonth);
+      if (result.success) apply();
+      else if (isSelected()) set({ isLoading: false, error: result.error || getUserErrorMessage(null, 'error.generic') });
+      return result.success ? { success: true, data: result.data } : { success: false, error: result.error };
     } catch (error) {
-      if (requestId === latestBudgetRequestId && targetMonth === useSpendingStore.getState().selectedMonth) {
-        set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') });
-      }
       return { success: false, error: getUserErrorMessage(error, 'error.generic') };
     }
-    return { success: false };
   },
 
   updateBudgets: async (budgetsObj, month = null) => {
-    latestBudgetRequestId += 1;
+    budgetMutationSeq += 1;
     const epoch = sessionEpoch();
     const set = scopedSet(epoch, storeSet);
     const targetMonth = (typeof month === 'string' && month.trim())
@@ -229,7 +278,9 @@ return ({
     try {
       const res = await spendingService.updateBudgets(budgetsObj, targetMonth);
       if (res.success) {
-        set({ budgets: budgetsObj, budgetMonth: targetMonth, isLoading: false });
+        budgetMutationSeq += 1;
+        set((state) => ({ budgets: budgetsObj, budgetMonth: targetMonth, isLoading: false,
+          budgetsByMonth: withBudgetEdit(state.budgetsByMonth, targetMonth, budgetsObj) }));
         return { success: true, data: budgetsObj };
       } else {
         throw new Error(getUserErrorMessage(res, 'error.generic'));
@@ -238,7 +289,7 @@ return ({
   },
 
   updateBudgetsAndCategories: async (budgetsObj, expenseCats, month = null) => {
-    latestBudgetRequestId += 1;
+    budgetMutationSeq += 1;
     const epoch = sessionEpoch();
     const set = scopedSet(epoch, storeSet);
     const targetMonth = (typeof month === 'string' && month.trim())
@@ -250,12 +301,17 @@ return ({
     }
     try {
       await spendingService.updateBudgets(budgetsObj, targetMonth, expenseCats?.map(c => c.name));
-      set({
+      budgetMutationSeq += 1;
+      set((state) => ({
         budgets: budgetsObj,
         budgetMonth: targetMonth,
-        ...(expenseCats ? { expenseCategories: expenseCats } : {}),
+        budgetsByMonth: withBudgetEdit(state.budgetsByMonth, targetMonth, budgetsObj),
+        ...(expenseCats ? {
+          expenseCategories: expenseCats,
+          budgetCategoryBase: { names: expenseCats.map((c) => c.name), fetchedAt: Date.now() }
+        } : {}),
         isLoading: false
-      });
+      }));
       return { success: true, data: budgetsObj };
     } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
@@ -332,16 +388,27 @@ return ({
     } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
-  undoDeleteTransaction: async (txn) => {
+  // Undo a delete. The server rebuilds the entry under its original ID, so its
+  // change history stays attached; callers show the success/failure toast.
+  restoreTransaction: async (id) => {
     const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
     const get = scopedGet(epoch, storeGet);
-    if (!txn) return;
-    const { id: _unusedId, ...dataToRestore } = txn;
-    await get().addTransaction(dataToRestore);
-    useToastStore.getState().addToast({
-      type: 'success',
-      message: `Đã khôi phục giao dịch ${txn.desc || txn.category || ''}.`
-    });
+    const res = await spendingService.restoreTransaction(id);
+    if (!res.success || !res.data) {
+      throw new Error(getUserErrorMessage(res, 'transaction.restoreFailed'));
+    }
+    const restored = normalizeTxn(res.data);
+    const updated = [...get().transactions.filter((t) => t.id !== restored.id), restored];
+    saveStoredTxns(updated);
+    set({ transactions: updated });
+    get().updateSpendingMetrics(updated);
+
+    const walletStore = useWalletStore.getState();
+    if (walletStore?.syncWalletBalances) {
+      walletStore.syncWalletBalances();
+    }
+    return { success: true, data: restored };
   },
 
   undoAddTransaction: async (txnId) => {
@@ -362,11 +429,13 @@ return ({
     set({ isLoading: true });
     try {
       await spendingService.resetFinancialData();
+      budgetMutationSeq += 1; // reads started before the reset must not refill the cache
       saveStoredTxns([]);
       set((state) => ({
         transactions: [],
         budgets: {},
         budgetMonth: null,
+        budgetsByMonth: {},
         financialResetVersion: state.financialResetVersion + 1,
         isLoading: false
       }));

@@ -6,6 +6,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { spendingService } from '../../services/spendingService';
 import { TransactionRevisionHistory } from './TransactionRevisionHistory';
+import { isLockedTransaction, useDeleteTransaction } from './useDeleteTransaction';
 import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMonth } from '../../utils/transactionEditing';
 import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
@@ -23,6 +24,8 @@ import { CategoryPickerList, CategorySummaryButton, DateSheetContent, MobileDate
 const EMPTY_EXPENSE_CATS = [];
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet.
 const PHONE_QUERY = '(max-width: 599px)';
+// Touch screens, whose on-screen keyboard would cover the form if a field took focus.
+const TOUCH_QUERY = '(pointer: coarse)';
 
 function describeBudgetMetrics(metrics, t) {
   for (const metric of Object.values(metrics)) {
@@ -72,6 +75,8 @@ export function TransactionModal() {
 
   const isOpen = Boolean(isAddTxnOpen || editingTransaction);
   const isEditing = Boolean(editingTransaction);
+  const requestDelete = useDeleteTransaction();
+  const canDelete = isEditing && !isLockedTransaction(editingTransaction);
 
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
@@ -87,6 +92,7 @@ export function TransactionModal() {
   const [budgetRetry, setBudgetRetry] = useState(0);
   const [picker, setPicker] = useState(null); // phones: 'category' | 'date' | null
   const isPhone = useMediaQuery(PHONE_QUERY);
+  const isTouch = useMediaQuery(TOUCH_QUERY);
   const activePicker = isOpen && isPhone ? picker : null;
 
   const modalRef = useRef(null);
@@ -258,15 +264,18 @@ export function TransactionModal() {
     }
   }, [isOpen, isEditing, walletId, wallets, addTxnInitialState]);
 
-  // Auto focus amount input when opened
+  // The on-screen keyboard never opens by itself: on touch screens neither adding
+  // nor editing focuses a field, so the form stays visible until a field is tapped.
+  // With a mouse and keyboard (no on-screen keyboard), adding still starts in the
+  // amount field. The focus trap moves focus into the dialog in every case.
   useEffect(() => {
-    if (isOpen && amountInputRef.current) {
+    if (isOpen && !isEditing && !isTouch && amountInputRef.current) {
       const timer = setTimeout(() => {
         amountInputRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, isEditing, isTouch]);
 
   const close = useCallback(() => {
     closeAddTxnModal();
@@ -276,6 +285,11 @@ export function TransactionModal() {
     setAmountError('');
   }, [closeAddTxnModal, closeEditTransaction]);
   const closePicker = useCallback(() => setPicker(null), []);
+  // Deletes the saved entry (not the draft); the modal closes only once it is gone.
+  const handleDelete = () => {
+    if (!canDelete || isSubmitting || confirmationOpen) return;
+    void requestDelete(editingTransaction, { onDeleted: close });
+  };
   const requestDismiss = useCallback(() => {
     if (!isSubmitting && !confirmationOpen) close();
   }, [close, isSubmitting, confirmationOpen]);
@@ -733,7 +747,24 @@ export function TransactionModal() {
           </div>
 
           {/* 7. Footer CTA Actions */}
-          <div className="txn-modal-footer">
+          <div className={`txn-modal-footer${canDelete ? ' txn-modal-footer--with-delete' : ''}`}>
+            {canDelete && (
+              <button
+                type="button"
+                className="txn-btn-delete"
+                onClick={handleDelete}
+                disabled={isSubmitting}
+                aria-label={t('transaction.deleteAria')}
+                title={t('transaction.deleteAria')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                <span className="txn-btn-delete__label">{t('common.delete')}</span>
+              </button>
+            )}
             <button
               type="button"
               className="txn-btn-cancel"
