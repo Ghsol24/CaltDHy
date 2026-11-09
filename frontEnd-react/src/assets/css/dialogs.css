@@ -1211,6 +1211,47 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   transform: translateY(0) scale(0.98);
 }
 
+/* Delete (edit mode only): a quiet outline icon, set apart on the left, that turns red on intent. */
+.txn-btn-delete {
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
+  background: transparent;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  user-select: none;
+}
+
+.txn-btn-delete:focus-visible,
+.txn-btn-delete:active:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-danger-50);
+  border-color: var(--color-danger);
+}
+
+@media (hover: hover) {
+  .txn-btn-delete:hover:not(:disabled) {
+    color: var(--color-danger);
+    background: var(--color-danger-50);
+    border-color: var(--color-danger);
+  }
+}
+
+.txn-btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .txn-btn-submit {
   padding: 10px 24px;
   font-family: var(--font-sans);
@@ -1668,6 +1709,21 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   .txn-modal-footer > button {
     justify-content: center;
     min-height: 48px;
+  }
+
+  /* Delete shrinks to an icon-only square so Cancel/Update keep their widths. */
+  .txn-modal-footer--with-delete {
+    grid-template-columns: 48px 1fr 2fr;
+  }
+
+  .txn-btn-delete {
+    width: 48px;
+    padding: 0;
+    margin-right: 0;
+  }
+
+  .txn-btn-delete__label {
+    display: none;
   }
 }
 

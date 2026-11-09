@@ -6,6 +6,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { spendingService } from '../../services/spendingService';
 import { TransactionRevisionHistory } from './TransactionRevisionHistory';
+import { isLockedTransaction, useDeleteTransaction } from './useDeleteTransaction';
 import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMonth } from '../../utils/transactionEditing';
 import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
@@ -72,6 +73,8 @@ export function TransactionModal() {
 
   const isOpen = Boolean(isAddTxnOpen || editingTransaction);
   const isEditing = Boolean(editingTransaction);
+  const requestDelete = useDeleteTransaction();
+  const canDelete = isEditing && !isLockedTransaction(editingTransaction);
 
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
@@ -276,6 +279,11 @@ export function TransactionModal() {
     setAmountError('');
   }, [closeAddTxnModal, closeEditTransaction]);
   const closePicker = useCallback(() => setPicker(null), []);
+  // Deletes the saved entry (not the draft); the modal closes only once it is gone.
+  const handleDelete = () => {
+    if (!canDelete || isSubmitting || confirmationOpen) return;
+    void requestDelete(editingTransaction, { onDeleted: close });
+  };
   const requestDismiss = useCallback(() => {
     if (!isSubmitting && !confirmationOpen) close();
   }, [close, isSubmitting, confirmationOpen]);
@@ -733,7 +741,24 @@ export function TransactionModal() {
           </div>
 
           {/* 7. Footer CTA Actions */}
-          <div className="txn-modal-footer">
+          <div className={`txn-modal-footer${canDelete ? ' txn-modal-footer--with-delete' : ''}`}>
+            {canDelete && (
+              <button
+                type="button"
+                className="txn-btn-delete"
+                onClick={handleDelete}
+                disabled={isSubmitting}
+                aria-label={t('transaction.deleteAria')}
+                title={t('transaction.deleteAria')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                <span className="txn-btn-delete__label">{t('common.delete')}</span>
+              </button>
+            )}
             <button
               type="button"
               className="txn-btn-cancel"

@@ -332,16 +332,27 @@ return ({
     } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); throw error; }
   },
 
-  undoDeleteTransaction: async (txn) => {
+  // Undo a delete. The server rebuilds the entry under its original ID, so its
+  // change history stays attached; callers show the success/failure toast.
+  restoreTransaction: async (id) => {
     const epoch = sessionEpoch();
+    const set = scopedSet(epoch, storeSet);
     const get = scopedGet(epoch, storeGet);
-    if (!txn) return;
-    const { id: _unusedId, ...dataToRestore } = txn;
-    await get().addTransaction(dataToRestore);
-    useToastStore.getState().addToast({
-      type: 'success',
-      message: `Đã khôi phục giao dịch ${txn.desc || txn.category || ''}.`
-    });
+    const res = await spendingService.restoreTransaction(id);
+    if (!res.success || !res.data) {
+      throw new Error(getUserErrorMessage(res, 'transaction.restoreFailed'));
+    }
+    const restored = normalizeTxn(res.data);
+    const updated = [...get().transactions.filter((t) => t.id !== restored.id), restored];
+    saveStoredTxns(updated);
+    set({ transactions: updated });
+    get().updateSpendingMetrics(updated);
+
+    const walletStore = useWalletStore.getState();
+    if (walletStore?.syncWalletBalances) {
+      walletStore.syncWalletBalances();
+    }
+    return { success: true, data: restored };
   },
 
   undoAddTransaction: async (txnId) => {

@@ -27,6 +27,8 @@ export const spendingService = {
     return await api.delete(`/api/spending/${id}`);
   },
 
+  restoreTransaction: async (id) => api.post(`/api/spending/${encodeURIComponent(id)}/restore`, {}),
+
   getBudgets: async (month = null) => {
     const url = month ? `/api/spending/budget?month=${encodeURIComponent(month)}` : '/api/spending/budget';
     return await api.get(url);

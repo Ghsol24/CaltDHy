@@ -23,12 +23,17 @@ const snapshotSchema = new mongoose.Schema({
 const transactionRevisionSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, immutable: true },
     transactionId: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
-    action: { type: String, enum: ['update', 'delete'], required: true, immutable: true },
+    // 'restore' brings back a deleted transaction under its original ID, so its earlier
+    // revisions stay attached. It has no `before`: the transaction did not exist.
+    action: { type: String, enum: ['update', 'delete', 'restore'], required: true, immutable: true },
     actorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, immutable: true },
     actorName: { type: String, required: true, immutable: true },
     occurredAt: { type: Date, default: Date.now, required: true, immutable: true },
     changedFields: { type: [String], required: true, immutable: true },
-    before: { type: snapshotSchema, required: true, immutable: true },
+    before: {
+        type: snapshotSchema, default: null, immutable: true,
+        required() { return this.action !== 'restore'; }
+    },
     after: { type: snapshotSchema, default: null, immutable: true }
 }, {
     toJSON: {

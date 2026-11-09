@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { requiresHistoricalConfirmation, transactionEditImpact, previewCategoryBudgets } from '../src/utils/transactionEditing.js';
 import { calculateMonthlyStats, calculateWalletBalances } from '../src/utils/financeMath.js';
 import { translate } from '../src/i18n/translations.js';
-import { historicalImpactMessage } from '../src/utils/transactionMessages.js';
+import { deleteConfirmMessage, historicalImpactMessage } from '../src/utils/transactionMessages.js';
 
 const original = { id: 'september', type: 'expense', amount: 30000, fee: 2000,
   date: '2026-09-28', walletId: 'bank', category: 'Food', desc: 'Lunch' };
@@ -54,6 +54,27 @@ test('backdated creation does not promise an edit revision, while edits and dele
   assert.ok(!historicalImpactMessage(null, original, options).includes('transaction.changeRecorded'));
   assert.ok(historicalImpactMessage(original, { ...original, amount: 40000 }, options).includes('transaction.changeRecorded'));
   assert.ok(historicalImpactMessage(original, null, options).includes('transaction.changeRecorded'));
+});
+
+test('delete confirmation names the real type, date and wallets, and adds past-month impact only when needed', () => {
+  const wallets = [{ id: 'bank', name: 'Techcombank' }, { id: 'cash', name: 'Tiền mặt' }];
+  const options = { t: (key, values) => translate('vi', key, values), label: (value) => value,
+    wallets, locale: 'vi', intlLocale: 'vi-VN', currentMonth: '2026-10' };
+  const current = { ...original, date: '2026-10-05', fee: 0 };
+  const expense = deleteConfirmMessage(current, options);
+  assert.match(expense, /chi tiêu “Lunch”/);
+  assert.match(expense, /Techcombank/);
+  assert.match(expense, /05\/10/);
+  assert.doesNotMatch(expense, /tháng/, 'A current-month delete needs no impact paragraph');
+
+  const transfer = deleteConfirmMessage({ ...current, type: 'transfer', toWalletId: 'cash', desc: 'Nạp ví' }, options);
+  assert.match(transfer, /chuyển khoản “Nạp ví”/, 'Transfers must not be described as spending');
+  assert.match(transfer, /Techcombank → Tiền mặt/);
+
+  const past = deleteConfirmMessage(original, options);
+  assert.match(past, /Phí/);
+  assert.match(past, /tháng 9 năm 2026/);
+  assert.ok(past.includes(translate('vi', 'transaction.changeRecorded')));
 });
 
 test('budget preview uses the supplied period, replaces the edited expense once, and keeps fees', () => {

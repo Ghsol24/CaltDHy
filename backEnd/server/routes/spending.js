@@ -130,16 +130,17 @@ function transactionSnapshot(transaction) {
     };
 }
 
+// before + after = update, before only = delete, after only = restore.
 async function recordTransactionRevision(req, before, after) {
-    const changedFields = Object.keys(before).filter(field => field !== 'id' &&
-        (!after || before[field] !== after[field]));
+    const changedFields = Object.keys(before || after).filter(field => field !== 'id' &&
+        (!before || !after || before[field] !== after[field]));
     if (!changedFields.length) return;
     // Mongoose's transactionAsyncLocalStorage joins the financialRequest session.
     // A failed balance check or retry rolls back both this audit and the ledger edit.
     await TransactionRevision.create({
         userId: req.user.id,
-        transactionId: before.id,
-        action: after ? 'update' : 'delete',
+        transactionId: (before || after).id,
+        action: !before ? 'restore' : after ? 'update' : 'delete',
         actorId: req.user.id,
         actorName: req.user.name,
         changedFields,
@@ -851,6 +852,66 @@ router.delete('/:id', financialRequest(async (req, res) => {
         if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
         console.error('[finance] route_failed');
         res.status(500).json({ success: false, message: 'Lỗi khi xóa giao dịch.' });
+    }
+}));
+
+// =============================================
+// POST /api/spending/:id/restore - Khôi phục giao dịch đã xóa
+// =============================================
+// Dựng lại từ bản chụp trong nhật ký xóa gần nhất và giữ nguyên ID, để lịch sử chỉnh sửa
+// trước đó vẫn gắn với giao dịch. Ngày cũ được giữ nguyên: đây là hoàn tác, không phải ghi mới.
+router.post('/:id/restore', financialRequest(async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'ID giao dịch không hợp lệ.' });
+        }
+        if (await Transaction.exists({ _id: id, userId: req.user.id })) {
+            return res.status(409).json({ success: false, message: 'Giao dịch này vẫn còn trong sổ, không cần khôi phục.' });
+        }
+
+        const latest = await TransactionRevision.findOne({ userId: req.user.id, transactionId: id })
+            .sort({ occurredAt: -1, _id: -1 });
+        if (!latest || latest.action !== 'delete' || !latest.before) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch đã xóa để khôi phục.' });
+        }
+        const snapshot = latest.before.toObject();
+        // Xóa đã bị chặn cho các giao dịch này; kiểm tra lại để không dựng lại side-effect của Hũ/Định kỳ.
+        if (snapshot.jarId || snapshot.installmentId || snapshot.systemGenerated) {
+            return res.status(400).json({ success: false, message: 'Không thể khôi phục giao dịch của Hũ hoặc Khoản định kỳ tại đây.' });
+        }
+        const date = parseTransactionDate(snapshot.date);
+        if (!date) {
+            return res.status(409).json({ success: false, message: 'Lỗi khi khôi phục giao dịch.' });
+        }
+        const walletError = await validateTransactionWallets({
+            type: snapshot.type, walletId: snapshot.walletId, toWalletId: snapshot.toWalletId, userId: req.user.id
+        });
+        if (walletError) {
+            return res.status(409).json({ success: false, message: 'Không thể khôi phục vì ví của giao dịch đã đóng hoặc không còn tồn tại.' });
+        }
+
+        const restored = await Transaction.create({
+            _id: id,
+            userId: req.user.id,
+            type: snapshot.type,
+            desc: snapshot.desc || '',
+            amount: snapshot.amount,
+            category: snapshot.category,
+            date,
+            walletId: snapshot.walletId || null,
+            toWalletId: snapshot.toWalletId || null,
+            fee: snapshot.fee || 0,
+            ...(typeof snapshot.period === 'string' ? { period: snapshot.period } : {})
+        });
+        await Category.ensureCategorySafe(req.user.id, restored.category);
+        await recordTransactionRevision(req, null, transactionSnapshot(restored));
+
+        res.json({ success: true, message: 'Đã khôi phục giao dịch!', data: restored.toJSON() });
+    } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
+        res.status(500).json({ success: false, message: 'Lỗi khi khôi phục giao dịch.' });
     }
 }));
 

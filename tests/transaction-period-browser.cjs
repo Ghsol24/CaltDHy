@@ -354,6 +354,65 @@ async function check(name, work) {
     assert.equal(revision.after, null);
   });
 
+  await check('history edit dialog deletes an entry and undo restores the same ID with its history', async () => {
+    const created = (await mutate('post', '/api/spending', {
+      type: 'expense', amount: 12000, category: 'Ăn uống', date: '2026-10-02',
+      walletId: primary.id, desc: 'Nhập nhầm'
+    })).data;
+    const targetId = created.id || created._id;
+    // Screenshots wait for finite entrance animations (sheet slide, fade) to finish.
+    const settle = () => page.evaluate(() => Promise.all(document.getAnimations()
+      .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+      .map(animation => animation.finished.catch(() => null))));
+    await page.goto('/spending/analytics/transactions');
+    await historyRow('Nhập nhầm').click();
+    await expect(modal).toBeVisible();
+    const deleteButton = modal.getByRole('button', { name: 'Xóa giao dịch này', exact: true });
+    await expect(deleteButton).toContainText('Xóa');
+    await settle();
+    await page.screenshot({ path: path.join(evidenceDir, 'delete-button-desktop.png') });
+    await deleteButton.click();
+    const message = confirmation.locator('.confirm-dialog-message');
+    await expect(message).toContainText('chi tiêu “Nhập nhầm”');
+    await expect(message).toContainText('Ví chính');
+    await expect(message).not.toContainText('tháng', { message: 'A current-month delete has no impact paragraph' });
+    await settle();
+    await page.screenshot({ path: path.join(evidenceDir, 'delete-confirm-desktop.png') });
+    await confirmation.locator('.confirm-dialog-btn').last().click();
+    await expect(modal).toHaveCount(0);
+    await expect(historyRow('Nhập nhầm')).toHaveCount(0);
+    assert.ok(!(await ledger()).some(tx => (tx.id || tx._id) === targetId));
+
+    await page.locator('.toast-item__action-btn', { hasText: 'Hoàn tác' }).click();
+    await expect(page.locator('.toast-item__message', { hasText: 'Đã khôi phục giao dịch Nhập nhầm.' })).toBeVisible();
+    await expect(historyRow('Nhập nhầm')).toHaveCount(1);
+    assert.ok((await ledger()).some(tx => (tx.id || tx._id) === targetId), 'Undo keeps the original ID');
+    const actions = (await backend('./models/TransactionRevision').find({ transactionId: targetId })
+      .sort({ occurredAt: 1, _id: 1 })).map(entry => entry.action);
+    assert.deepEqual(actions, ['delete', 'restore']);
+
+    await historyRow('Nhập nhầm').click();
+    await modal.locator('.txn-revisions-toggle').click();
+    await expect(modal.locator('.txn-revision-action.is-restore')).toContainText('Đã khôi phục giao dịch');
+    await expect(modal.locator('.txn-revision-action.is-delete')).toContainText('Đã xóa giao dịch');
+    await modal.locator('.txn-modal-close-btn').click();
+    await expect(modal).toHaveCount(0);
+
+    // Phones: icon-only square on the left, Cancel/Update keep the rest of the row.
+    await page.setViewportSize({ width: 390, height: 844 });
+    try {
+      await historyRow('Nhập nhầm').click();
+      await expect(modal).toBeVisible();
+      const box = await deleteButton.boundingBox();
+      assert.ok(box && Math.round(box.width) === 48 && box.height >= 44, JSON.stringify(box));
+      await expect(deleteButton.locator('.txn-btn-delete__label')).toBeHidden();
+      await page.locator('#txn-amount-input').blur();
+      await settle();
+      await page.screenshot({ path: path.join(evidenceDir, 'delete-button-mobile.png') });
+      await modal.locator('.txn-modal-close-btn').click();
+    } finally { await page.setViewportSize({ width: 1440, height: 1000 }); }
+  });
+
   await check('both transfer dropdowns sort current signed balances descending and exclude the source', async () => {
     await page.goto('/spending/plan/wallets');
     await page.getByRole('button', { name: 'Chuyển tiền', exact: true }).first().click();

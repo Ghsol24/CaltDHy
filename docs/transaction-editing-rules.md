@@ -7,6 +7,8 @@
 - Nhật ký lưu trước/sau, người sửa và thời điểm cho sửa/xóa thành công. Giao dịch cũ không cần chuyển đổi dữ liệu: lần sửa đầu tiên sẽ ghi bản trước khi sửa. Không thể tạo lại lịch sử thay đổi trước khi tính năng được bật.
 - Nhật ký được lưu cùng giao dịch cơ sở dữ liệu với thao tác tài chính, nên thao tác thất bại không để lại nhật ký thành công. Yêu cầu lặp lại cùng mã không tạo nhật ký trùng; lưu không đổi không tạo bản mới.
 - `GET /api/spending/:id/history?page=1&limit=20` chỉ cho chủ dữ liệu truy cập, kể cả giao dịch đã xóa. Giới hạn tối đa 100 bản mỗi trang. Trong hộp sửa, mở **Lịch sử chỉnh sửa** để xem các bản trước/sau.
+- Nút **Xóa** nằm trong hộp sửa giao dịch, nên dùng được ở Trang chủ, Lịch sử và Phân tích; mọi nơi dùng chung `useDeleteTransaction` (xác nhận, xóa, thông báo **Hoàn tác**).
+- Hoàn tác gọi `POST /api/spending/:id/restore`: dựng lại giao dịch từ bản chụp của lần xóa gần nhất, **giữ nguyên ID** để lịch sử chỉnh sửa cũ vẫn gắn liền, và ghi một mục `restore` (không có `before`). Ngày cũ được giữ, kể cả tháng trước. Từ chối khi giao dịch vẫn còn, ví đã đóng hoặc không còn, giao dịch thuộc Hũ/Khoản định kỳ, hoặc khôi phục làm số dư không hợp lệ.
 - Bản xuất dữ liệu bao gồm `transactionRevisions`. Đặt lại dữ liệu tài chính và dọn tài khoản phải xóa cả nhật ký chứa thông tin tài chính.
 - Giao dịch do Hũ/Khoản định kỳ tạo tiếp tục được quản lý tại tính năng nguồn.
 

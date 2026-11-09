@@ -11253,7 +11253,9 @@ html.green-theme .cal-weekday.cal-danger {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 999;
+  /* Shares the bottom-right corner with toasts: stay just below them so an
+     action such as "Undo" is never covered. Still above pages and dropdowns. */
+  z-index: calc(var(--z-toast, 400) - 1);
   max-width: 380px;
   width: calc(100vw - 48px);
   animation: floatSlideUp 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;

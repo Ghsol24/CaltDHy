@@ -56,8 +56,14 @@ export function TransactionRevisionHistory({ transactionId, wallets }) {
       {state.entries.map((entry) => <article key={entry.id} className="txn-revision-entry">
         <header><strong>{entry.actorName || t('transaction.accountOwner')}</strong>
           <time dateTime={entry.occurredAt}>{formatDateTime(entry.occurredAt, { locale: lang })}</time></header>
-        <ul>{entry.changedFields.filter((field) => FIELD_KEYS[field]).map((field) =>
-          <li key={field}><span>{t(FIELD_KEYS[field])}</span><span>{valueLabel(field, entry.before)} → {valueLabel(field, entry.after)}</span></li>)}</ul>
+        {/* A delete or undo touches every field; one line says what happened instead of "x → —" rows. */}
+        {entry.action === 'delete' || entry.action === 'restore'
+          ? <ul><li className={`txn-revision-action is-${entry.action}`}>
+            <span>{t(entry.action === 'delete' ? 'transaction.revisionDeleted' : 'transaction.revisionRestored')}</span>
+            <span>{valueLabel('amount', entry.before || entry.after)}</span>
+          </li></ul>
+          : <ul>{entry.changedFields.filter((field) => FIELD_KEYS[field]).map((field) =>
+            <li key={field}><span>{t(FIELD_KEYS[field])}</span><span>{valueLabel(field, entry.before)} → {valueLabel(field, entry.after)}</span></li>)}</ul>}
       </article>)}
       {state.loading && <p role="status">{t('transaction.historyLoading')}</p>}
       {state.error && <p role="alert">{t('transaction.historyFailed')} <button type="button"
