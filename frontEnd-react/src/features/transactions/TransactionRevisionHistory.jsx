@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { spendingService } from '../../services/spendingService';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatters';
@@ -9,28 +9,30 @@ const FIELD_KEYS = {
   toWalletId: 'transaction.receivingWallet', desc: 'transaction.note'
 };
 
+/**
+ * "Edited 2 times · View history". Most entries were never changed, so nothing is
+ * shown for them: the first page loads with the dialog and its total decides.
+ */
 export function TransactionRevisionHistory({ transactionId, wallets }) {
   const { t, label, lang } = useTranslation();
   const [open, setOpen] = useState(false);
   const [request, setRequest] = useState(0);
   const [page, setPage] = useState(1);
-  const loaded = useRef({ page: 0, request: 0 });
-  const [state, setState] = useState({ loading: false, error: false, entries: [], totalPages: 1 });
+  const [state, setState] = useState({ status: 'loading', entries: [], total: 0, totalPages: 1 });
   useEffect(() => {
-    if (!open || (loaded.current.page === page && loaded.current.request === request)) return undefined;
     let active = true;
-    setState((previous) => ({ ...previous, loading: true, error: false }));
+    setState((previous) => ({ ...previous, status: 'loading' }));
     spendingService.getTransactionHistory(transactionId, page).then((response) => {
-      if (!response.success) throw new Error('history');
+      if (!response?.success || !Array.isArray(response.data)) throw new Error('history');
       if (active) {
-        loaded.current = { page, request };
-        setState((previous) => ({ loading: false, error: false,
+        setState((previous) => ({ status: 'ready',
           entries: page === 1 ? response.data : [...previous.entries, ...response.data],
+          total: response.pagination?.total ?? response.data.length,
           totalPages: response.pagination?.totalPages || 1 }));
       }
-    }).catch(() => { if (active) setState((previous) => ({ ...previous, loading: false, error: true })); });
+    }).catch(() => { if (active) setState((previous) => ({ ...previous, status: 'error' })); });
     return () => { active = false; };
-  }, [open, transactionId, page, request]);
+  }, [transactionId, page, request]);
 
   const valueLabel = (field, snapshot) => {
     const value = snapshot?.[field];
@@ -44,14 +46,28 @@ export function TransactionRevisionHistory({ transactionId, wallets }) {
     return String(value);
   };
 
-  return <section className="txn-revisions">
-    <button type="button" className="txn-revisions-toggle" aria-expanded={open}
-      aria-controls="txn-revisions-content" onClick={() => setOpen((previous) => !previous)}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 3v6h6M12 7v5l3 2" /></svg>
-      {t('transaction.revisionHistory')}
-      <span aria-hidden="true">{open ? '−' : '+'}</span>
-    </button>
+  const retry = <button type="button" className="txn-revisions-retry"
+    onClick={() => setRequest((previous) => previous + 1)}>{t('common.tryAgain')}</button>;
+  const icon = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 3v6h6M12 7v5l3 2" /></svg>;
+
+  if (state.entries.length === 0) {
+    if (state.status === 'error') {
+      return <p className="txn-revisions-summary">{icon}<span>{t('transaction.historyFailed')}</span>{retry}</p>;
+    }
+    return null;
+  }
+
+  return <section className="txn-revisions" aria-label={t('transaction.revisionHistory')}>
+    <p className="txn-revisions-summary">
+      {icon}
+      <span>{state.total === 1 ? t('transaction.revisionSummaryOne') : t('transaction.revisionSummary', { count: state.total })}</span>
+      <span aria-hidden="true">·</span>
+      <button type="button" className="txn-revisions-toggle" aria-expanded={open}
+        aria-controls="txn-revisions-content" onClick={() => setOpen((previous) => !previous)}>
+        {open ? t('transaction.revisionHide') : t('transaction.revisionShow')}
+      </button>
+    </p>
     {open && <div id="txn-revisions-content" className="txn-revisions-content" aria-live="polite">
       {state.entries.map((entry) => <article key={entry.id} className="txn-revision-entry">
         <header><strong>{entry.actorName || t('transaction.accountOwner')}</strong>
@@ -65,11 +81,9 @@ export function TransactionRevisionHistory({ transactionId, wallets }) {
           : <ul>{entry.changedFields.filter((field) => FIELD_KEYS[field]).map((field) =>
             <li key={field}><span>{t(FIELD_KEYS[field])}</span><span>{valueLabel(field, entry.before)} → {valueLabel(field, entry.after)}</span></li>)}</ul>}
       </article>)}
-      {state.loading && <p role="status">{t('transaction.historyLoading')}</p>}
-      {state.error && <p role="alert">{t('transaction.historyFailed')} <button type="button"
-        onClick={() => setRequest((previous) => previous + 1)}>{t('common.tryAgain')}</button></p>}
-      {!state.loading && !state.error && state.entries.length === 0 && <p>{t('transaction.historyEmpty')}</p>}
-      {!state.loading && !state.error && page < state.totalPages && <button type="button"
+      {state.status === 'loading' && <p role="status">{t('transaction.historyLoading')}</p>}
+      {state.status === 'error' && <p role="alert">{t('transaction.historyFailed')} {retry}</p>}
+      {state.status === 'ready' && page < state.totalPages && <button type="button"
         onClick={() => setPage((previous) => previous + 1)}>{t('history.loadMore')}</button>}
     </div>}
   </section>;

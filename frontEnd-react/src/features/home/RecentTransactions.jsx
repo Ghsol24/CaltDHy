@@ -96,7 +96,12 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                   onClick={isLocked ? undefined : () => openEditTransaction(txn)}
                   role={isLocked ? undefined : 'button'}
                   tabIndex={isLocked ? undefined : 0}
-                  onKeyDown={isLocked ? undefined : (e) => e.key === 'Enter' && openEditTransaction(txn)}
+                  onKeyDown={isLocked ? undefined : (e) => {
+                    // Keys pressed on the edit/delete buttons inside belong to those buttons.
+                    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+                    e.preventDefault();
+                    openEditTransaction(txn);
+                  }}
                   aria-label={t('home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
                 >
                   {/* Left Icon */}

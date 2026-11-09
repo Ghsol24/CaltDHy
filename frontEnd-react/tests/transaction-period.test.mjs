@@ -98,7 +98,8 @@ test('new period feedback has translations in every supported locale', () => {
     for (const key of ['historicalPeriod', 'historicalHint', 'confirmHistorical', 'confirmSave', 'historicalImpact',
       'monthIncomeImpact', 'monthExpenseImpact', 'walletImpact', 'changeRecorded', 'budgetForPeriod',
       'budgetPreview', 'budgetLoading', 'budgetFailed', 'budgetUnavailable', 'revisionHistory',
-      'historyLoading', 'historyFailed', 'historyEmpty', 'accountOwner', 'previousWallet',
+      'historyLoading', 'historyFailed', 'revisionSummary', 'revisionSummaryOne', 'revisionShow',
+      'revisionHide', 'accountOwner', 'previousWallet',
       'receivingWallet', 'fee', 'amountRange', 'dateRequired']) {
       assert.notEqual(translate(locale, `transaction.${key}`), `transaction.${key}`);
     }

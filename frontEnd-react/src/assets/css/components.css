@@ -3907,7 +3907,16 @@ html.dark-theme .jars-global-progress-fill {
   border-bottom: none;
 }
 
-.home-txn-row:hover {
+/* Touch screens keep :hover after a tap, which left the row tinted and its
+   edit/delete buttons stuck open. Hover styling is for pointers only;
+   a tap gets brief :active feedback and opens the edit sheet. */
+@media (hover: hover) {
+  .home-txn-row:hover {
+    background: var(--color-brand-50, var(--surface-subtle));
+  }
+}
+
+.home-txn-row:active {
   background: var(--color-brand-50, var(--surface-subtle));
 }
 
@@ -3984,13 +3993,40 @@ html.dark-theme .jars-global-progress-fill {
 }
 
 .home-txn-actions {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.home-txn-row:hover .home-txn-actions {
-  display: flex;
+/* Visually hidden, never display:none: Chrome checks the next Tab stop after the
+   row has lost focus, so display:none buttons could not be reached by keyboard.
+   Kept in the tree, screen readers on phones can reach them too. */
+.home-txn-actions:not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pointer hover, or keyboard focus on the row, shows them in place. */
+@media (hover: hover) {
+  .home-txn-row:hover .home-txn-actions {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+.home-txn-row:focus-visible .home-txn-actions {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
 }
 
 .home-txn-btn-action {
@@ -4040,6 +4076,8 @@ html.dark-theme .jars-global-progress-fill {
   flex-shrink: 0;
 }
 
+/* Deliberately not limited to (hover: hover): a locked row opens nothing, so on
+   phones the tap-held hover is the only sign of why ("Hũ" / "Định kỳ"). */
 .home-txn-row:hover .home-txn-locked-hint {
   display: inline-flex;
 }

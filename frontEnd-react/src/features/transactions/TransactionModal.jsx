@@ -261,15 +261,17 @@ export function TransactionModal() {
     }
   }, [isOpen, isEditing, walletId, wallets, addTxnInitialState]);
 
-  // Auto focus amount input when opened
+  // Adding: jump straight to the amount. Editing opens to read first, so a phone
+  // keyboard does not cover the details until a field is tapped; the focus trap
+  // still moves focus into the dialog for keyboard and screen reader users.
   useEffect(() => {
-    if (isOpen && amountInputRef.current) {
+    if (isOpen && !isEditing && amountInputRef.current) {
       const timer = setTimeout(() => {
         amountInputRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, isEditing]);
 
   const close = useCallback(() => {
     closeAddTxnModal();
