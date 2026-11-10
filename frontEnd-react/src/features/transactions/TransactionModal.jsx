@@ -11,6 +11,7 @@ import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMont
 import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
 import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
@@ -21,6 +22,7 @@ import { BREAKPOINTS, useMediaQuery } from '../../hooks/useMediaQuery';
 import { useSheetDrag } from '../../hooks/useSheetDrag';
 import { CategoryPickerList, CategorySummaryButton, DateSheetContent, MobileDateField, TransactionSheet } from './TransactionMobileFields';
 
+import { Icon } from '../../components/ui/AppIcons';
 const EMPTY_EXPENSE_CATS = [];
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet.
 const PHONE_QUERY = `(max-width: ${BREAKPOINTS.phone}px)`;
@@ -101,6 +103,7 @@ export function TransactionModal() {
   const prevEditIdRef = useRef(null);
 
   useFocusTrap(modalRef, isOpen && !confirmationOpen);
+  useBodyScrollLock(isOpen);
 
   // Fetch wallets if list is empty
   useEffect(() => {
@@ -475,20 +478,7 @@ export function TransactionModal() {
               disabled={isSubmitting || confirmationOpen}
               aria-label={t('common.closeWindow')}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </button>
           </div>
         </div>
@@ -546,11 +536,7 @@ export function TransactionModal() {
               </div>
               {amountError && (
                 <div className="txn-amount-error-inline" role="alert">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
+                  <Icon name="alertCircle" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   <span>{amountError}</span>
                 </div>
               )}
@@ -726,21 +712,7 @@ export function TransactionModal() {
             {/* Error Message */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+                <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -757,11 +729,7 @@ export function TransactionModal() {
                 aria-label={t('transaction.deleteAria')}
                 title={t('transaction.deleteAria')}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
+                <Icon name="trash" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <span className="txn-btn-delete__label">{t('common.delete')}</span>
               </button>
             )}

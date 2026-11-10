@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../../i18n/useTranslation';
 
+import { Button } from './Button';
 /**
  * EmptyState Primitive Component
  * Hiển thị trạng thái rỗng thân thiện, có icon/minh họa, title, description và action CTA tùy chọn.
@@ -48,13 +49,9 @@ export function EmptyState({
       {description && <p className="empty-state__desc">{description}</p>}
 
       {actionLabel && typeof onAction === 'function' && (
-        <button
-          type="button"
-          className="btn btn--primary empty-state__action"
-          onClick={onAction}
-        >
+        <Button variant="primary" className="empty-state__action" onClick={onAction}>
           {actionLabel}
-        </button>
+        </Button>
       )}
     </div>
   );

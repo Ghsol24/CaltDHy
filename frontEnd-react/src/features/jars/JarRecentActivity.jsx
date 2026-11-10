@@ -5,6 +5,7 @@ import { NavIcon } from '../../components/ui/NavIcons';
 import { getJarActivityCopy } from './jarActivityCopy';
 import './jar-activity.css';
 
+import { Icon } from '../../components/ui/AppIcons';
 /** Jar deposits/withdrawals, newest first; optionally narrowed to one calendar day. */
 export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewAll, limit = 6, compact = false }) {
   const { lang } = useTranslation();
@@ -28,8 +29,7 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
         <div className="jar-activity-filter">
           <button type="button" className="jar-activity-day-chip" aria-label={copy.clearDay(shortDay)} onClick={onClearDay}>
             <span>{copy.dayChip(shortDay)}</span>
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4"
-              strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <Icon name="closeAlt" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </button>
         </div>
       )}

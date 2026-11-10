@@ -6,13 +6,13 @@ import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { ALERT_TIERS, countAlertTiers } from '../../utils/planAlerts';
 import './plan-attention.css';
 
+import { Icon } from '../../components/ui/AppIcons';
 const MIN_CARD_WIDTH = 240;
 const CARD_GAP = 12;
 const MOBILE_VISIBLE = 2;
 
 const Chevron = ({ className }) => (
-  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
-    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+  <Icon name="chevronRight" className={className} width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
 );
 
 function badgeText(alert, copy) {

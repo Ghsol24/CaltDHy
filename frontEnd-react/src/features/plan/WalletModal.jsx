@@ -1,13 +1,12 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from '../../components/ui/Dialog';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 
+import { Icon } from '../../components/ui/AppIcons';
 const PRESET_COLORS = [
   '#078A59', // Brand Mint Emerald
   '#2563EB', // Royal Blue
@@ -25,7 +24,7 @@ const getWalletIconByType = (_walletType) => {
   return '';
 };
 
-export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
+export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusRef }) {
   const { createWallet, updateWallet } = useWalletStore();
   const { addToast } = useToastStore();
 
@@ -44,8 +43,6 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
   const modalRef = useRef(null);
   const nameInputRef = useRef(null);
 
-  useFocusTrap(modalRef, isOpen);
-  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -163,28 +160,22 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
     }
   };
 
-  return createPortal(
-    <div
-      className="txn-modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) onClose();
-      }}
+  return (
+    <Dialog
+      isOpen
+      onClose={onClose}
+      returnFocusRef={returnFocusRef}
+      busy={isSubmitting}
+      panelRef={modalRef}
+      overlayClassName="txn-modal-backdrop"
+      className="txn-modal-card modal-pro-card"
+      labelledBy="wallet-modal-title"
     >
-      <div
-        ref={modalRef}
-        className="txn-modal-card modal-pro-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="wallet-modal-title"
-      >
         {/* Header */}
         <div className="txn-modal-header modal-pro-header">
           <div className="modal-pro-header-left">
             <div className="modal-header-icon-badge" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-              </svg>
+              <Icon name="edit" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <div className="modal-pro-header-titles">
               <h2 id="wallet-modal-title" className="txn-modal-title modal-pro-title">
@@ -199,20 +190,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
             disabled={isSubmitting}
             aria-label="Đóng cửa sổ"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </button>
         </div>
 
@@ -254,10 +232,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
               </label>
               <div className="modal-input-icon-wrap">
                 <span className="modal-input-prefix-icon tag" aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                    <line x1="7" y1="7" x2="7.01" y2="7" />
-                  </svg>
+                  <Icon name="tag" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </span>
                 <input
                   id="wallet-name"
@@ -314,9 +289,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                 />
                 <div className="amount-currency-pill" title="Đơn vị tiền tệ">
                   <span>VNĐ</span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
+                  <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
               </div>
               <p className="modal-field-hint">Nhập số dư hiện có khi tạo ví</p>
@@ -404,9 +377,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                     />
                     <span className={`option-custom-checkbox ${isDefault ? 'checked' : ''}`}>
                       {isDefault && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                       )}
                     </span>
                   </div>
@@ -448,18 +419,13 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                     />
                     <span className={`option-custom-checkbox ${isExcludedFromTotal ? 'checked' : ''}`}>
                       {isExcludedFromTotal && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                       )}
                     </span>
                   </div>
 
                   <div className="option-icon-symbol lock" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                    <Icon name="lock" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </div>
 
                   <div className="option-content">
@@ -473,21 +439,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
             {/* Error Message */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+                <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -515,17 +467,13 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null }) {
                 </>
               ) : (
                 <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   <span>{isEditing ? 'Cập nhật ví' : 'Tạo ví mới'}</span>
                 </>
               )}
             </button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
+    </Dialog>
   );
 }

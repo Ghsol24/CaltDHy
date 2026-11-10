@@ -492,7 +492,7 @@ html.green-theme .budgets-tab-container {
   left: 0;
   border-radius: 999px;
   background: var(--bdash-ok-fill);
-  transition: width 300ms ease;
+  transition: width var(--dur-slower) ease;
 }
 
 .bdash-meter__fill.tone-warn {
@@ -747,7 +747,7 @@ button.bdash-row:focus-visible {
   height: 100%;
   border-radius: inherit;
   background: var(--bdash-ok-fill);
-  transition: width 300ms ease;
+  transition: width var(--dur-slower) ease;
 }
 
 .bdash-bar__fill.tone-warn {
@@ -1212,7 +1212,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .budget-dialog-close-btn:hover {
@@ -1232,7 +1232,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   flex-shrink: 0;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .modal-backdrop-overlay {
     padding: 12px;
   }
@@ -1273,7 +1273,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .btn-dialog-save:hover:not(:disabled) {
@@ -1455,7 +1455,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   left: 0;
   border-radius: 999px;
   background: var(--color-success, #007547);
-  transition: width 200ms ease;
+  transition: width var(--dur-base) ease;
 }
 
 .blimit-meter__fill.is-partial {
@@ -1978,7 +1978,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   to { transform: none; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .blimit-overlay {
     align-items: flex-end;
     padding: 0;
@@ -2152,7 +2152,7 @@ body:has(.blimit-overlay) .toast-region {
   z-index: calc(var(--z-dialog, 1000) + 10);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   body:has(.blimit-overlay) .toast-region {
     top: calc(12px + env(safe-area-inset-top, 0px));
     bottom: auto;
@@ -2219,7 +2219,7 @@ body:has(.blimit-overlay) .toast-region {
   color: var(--color-text-secondary, #607086);
   border-radius: var(--radius-sm, 8px);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .analytics-segment-btn.active {
@@ -2254,7 +2254,7 @@ body:has(.blimit-overlay) .toast-region {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .analytics-kpi-grid {
     grid-template-columns: 1fr;
   }
@@ -2459,7 +2459,7 @@ body:has(.blimit-overlay) .toast-region {
   font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .btn-add-txn-empty:hover {
@@ -2594,7 +2594,7 @@ body:has(.blimit-overlay) .toast-region {
 .cat-progress-fill {
   height: 100%;
   border-radius: 99px;
-  transition: width 300ms ease;
+  transition: width var(--dur-slower) ease;
 }
 
 /* Trend Controls & Empty State */
@@ -2643,7 +2643,7 @@ body:has(.blimit-overlay) .toast-region {
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   #analytics-cashflow {
     padding: 16px;
     gap: 16px;
@@ -2690,7 +2690,7 @@ body:has(.blimit-overlay) .toast-region {
   background: var(--color-surface, #FFFFFF);
   color: var(--color-text, #101B36);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .btn-report-action:hover {
@@ -2737,7 +2737,7 @@ body:has(.blimit-overlay) .toast-region {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .report-summary-grid {
     grid-template-columns: 1fr;
   }

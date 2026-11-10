@@ -2,9 +2,9 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 import { BottomSheet } from '../../components/ui/BottomSheet';
 
+import { Icon } from '../../components/ui/AppIcons';
 const CheckIcon = () => (
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
-    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+  <Icon name="checkAlt" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 );
 
 /**
@@ -105,8 +105,7 @@ export function TransactionFilterDropdown({ label, options, value, onChange, act
       aria-expanded={isOpen} aria-controls={isOpen ? `${id}-list` : undefined}
       onClick={() => isOpen ? setIsOpen(false) : openMenu()}>
       <span className="transaction-filter-value">{shown}</span>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
-        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      <Icon name="chevronDownAlt" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </button>
     {isOpen && (sheet
       ? <BottomSheet open onClose={close} title={label} className="transaction-filter-sheet">{list}</BottomSheet>

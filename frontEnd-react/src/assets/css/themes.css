@@ -80,7 +80,7 @@ html.light-theme .user-chip {
   border-radius: var(--radius-lg);
   padding: 14px 10px 12px;
   cursor: pointer;
-  transition: border-color 200ms, transform 150ms ease, box-shadow 200ms;
+  transition: border-color var(--dur-base), transform var(--dur-fast) ease, box-shadow var(--dur-base);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -112,7 +112,7 @@ html.light-theme .user-chip {
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 1px 2px rgba(255,255,255,.3);
-  transition: transform 200ms cubic-bezier(.34,1.56,.64,1);
+  transition: transform var(--dur-base) cubic-bezier(.34,1.56,.64,1);
 }
 
 .theme-card:hover .theme-card__swatch {
@@ -132,7 +132,7 @@ html.light-theme .user-chip {
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--text-secondary);
-  transition: color 150ms;
+  transition: color var(--dur-fast);
   line-height: 1;
 }
 
@@ -149,7 +149,7 @@ html.light-theme .user-chip {
   height: 14px;
   color: var(--color-active-text);
   opacity: 0;
-  transition: opacity 200ms, transform 200ms cubic-bezier(.34,1.56,.64,1);
+  transition: opacity var(--dur-base), transform var(--dur-base) cubic-bezier(.34,1.56,.64,1);
   transform: scale(.6);
 }
 

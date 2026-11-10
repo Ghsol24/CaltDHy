@@ -1,17 +1,16 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from '../../components/ui/Dialog';
 import { walletService } from '../../services/walletService';
 import { formatCurrency } from '../../utils/formatters';
-import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
+import { Icon, AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { useTranslation } from '../../i18n/useTranslation';
 
-export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess = null }) {
+import { Button } from '../../components/ui/Button';
+export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess = null, returnFocusRef }) {
   const { t } = useTranslation();
   const { wallets, archiveWallet } = useWalletStore();
   const { addToast } = useToastStore();
@@ -23,9 +22,6 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const modalRef = useRef(null);
-  useFocusTrap(modalRef, isOpen);
-  useBodyScrollLock(isOpen && Boolean(wallet));
 
   // Lọc các ví khả dụng khác (không phải ví đang đóng)
   const availableTargetWallets = useMemo(() => {
@@ -120,17 +116,17 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
     }
   };
 
-  return createPortal(
-    <div
-      className="modal-overlay open"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="archive-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) onClose();
-      }}
+  return (
+    <Dialog
+      isOpen
+      onClose={onClose}
+      returnFocusRef={returnFocusRef}
+      busy={isSubmitting}
+      overlayClassName="modal-overlay open"
+      className="modal-container archive-wallet-modal"
+      labelledBy="archive-modal-title"
+      panelProps={{ style: { maxWidth: '540px' } }}
     >
-      <div className="modal-container archive-wallet-modal" ref={modalRef} style={{ maxWidth: '540px' }}>
         {/* Header */}
         <div className="modal-header" style={{ paddingBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -147,21 +143,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                 color: 'var(--color-warning, #d97706)'
               }}
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect width="20" height="5" x="2" y="3" rx="1" />
-                <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-                <path d="M10 12h4" />
-              </svg>
+              <Icon name="archive" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <div>
               <h3 id="archive-modal-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 600 }}>
@@ -179,10 +161,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
             disabled={isSubmitting}
             aria-label="Đóng cửa sổ"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </button>
         </div>
 
@@ -226,11 +205,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     gap: '10px'
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
+                  <Icon name="alertCircle" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div>
                     <strong>Đây là ví mặc định:</strong> Bạn không thể đóng ví mặc định. Vui lòng vào phần chỉnh sửa một ví khác và chọn làm mặc định trước.
                   </div>
@@ -252,11 +227,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                     gap: '10px'
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
+                  <Icon name="alertCircle" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div>
                     <strong>Không thể đóng ví:</strong> Bạn phải duy trì ít nhất một ví hoạt động trong hệ thống.
                   </div>
@@ -274,10 +245,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasBalance || hasDebt ? '10px' : '0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="20" height="14" x="2" y="5" rx="2" />
-                      <line x1="2" y1="10" x2="22" y2="10" />
-                    </svg>
+                    <Icon name="creditCard" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     <span style={{ fontWeight: 600, fontSize: '0.92rem' }}>Số dư hiện tại</span>
                   </div>
                   <div
@@ -307,9 +275,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                       marginTop: '6px'
                     }}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Icon name="check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     <span>{t('wallet.readyToArchive', { amount: formatCurrency(0) })}</span>
                   </div>
                 )}
@@ -400,9 +366,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                       marginTop: '6px'
                     }}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Icon name="check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     <span>Không có khoản chi định kỳ nào bị gián đoạn.</span>
                   </div>
                 ) : (
@@ -472,33 +436,13 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
         {/* Footer */}
         <div className="modal-footer" style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle, rgba(0,0,0,0.08))', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Hủy
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleConfirmArchive}
-            disabled={!canSubmit}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: canSubmit ? 'var(--color-warning, #d97706)' : undefined,
-              borderColor: canSubmit ? 'var(--color-warning, #d97706)' : undefined
-            }}
-          >
-            {isSubmitting && <span className="btn-spinner" style={{ width: '14px', height: '14px' }} />}
+          </Button>
+          <Button variant="warning" onClick={handleConfirmArchive} disabled={!canSubmit} loading={isSubmitting}>
             <span>Xác nhận Lưu trữ & Đóng ví</span>
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>,
-    document.body
+    </Dialog>
   );
 }

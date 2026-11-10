@@ -269,7 +269,7 @@ html.cream-theme {
 }
 
 /* Mobile: two stacked cards, the rest opens in a bottom sheet. */
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .plan-attention { gap: 10px; padding: 12px; }
   .plan-attention-bell { width: 34px; height: 34px; border-radius: 10px; }
   .plan-attention-heading h3 { font-size: var(--font-md); }

@@ -5,6 +5,8 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
+import { Icon } from './AppIcons';
+import { Button } from './Button';
 export function ConfirmDialog() {
   const { t } = useTranslation();
   const {
@@ -69,35 +71,9 @@ export function ConfirmDialog() {
             aria-hidden="true"
           >
             {confirmVariant === 'danger' ? (
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
+              <Icon name="alertTriangle" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             ) : (
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
+              <Icon name="info" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             )}
           </div>
           <h3 id="confirm-dialog-title" className="confirm-dialog-title">
@@ -114,26 +90,17 @@ export function ConfirmDialog() {
         {error && <p className="confirm-dialog-error" role="alert">{getUserErrorMessage(error, 'dialog.actionFailed')}</p>}
 
         <div className="confirm-dialog-actions">
-          <button
-            type="button"
-            className="btn btn--secondary confirm-dialog-btn"
-            onClick={handleCancel}
-            disabled={isConfirming}
-          >
+          <Button variant="secondary" className="confirm-dialog-btn" onClick={handleCancel} disabled={isConfirming}>
             {cancelText || t('common.cancel')}
-          </button>
-          <button
-            type="button"
-            className={`btn ${
-              confirmVariant === 'danger' ? 'btn--danger' : 'btn--primary'
-            } confirm-dialog-btn`}
+          </Button>
+          <Button
+            variant={confirmVariant === 'danger' ? 'danger' : 'primary'}
+            className="confirm-dialog-btn"
             onClick={handleConfirm}
-            disabled={isConfirming}
-            aria-busy={isConfirming}
+            loading={isConfirming}
           >
-            {isConfirming && <span className="btn-spinner" aria-hidden="true" />}
             {isConfirming ? t('common.processing') : (confirmText || t('common.confirm'))}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

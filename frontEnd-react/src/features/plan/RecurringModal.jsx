@@ -17,6 +17,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { isInstallmentEnded, isValidInstallmentEndDate } from '../../utils/installmentTerm';
 
+import { Icon } from '../../components/ui/AppIcons';
 const CYCLE_OPTIONS = [
   { value: 'monthly', label: 'Hàng tháng' },
   { value: 'quarterly', label: 'Hàng quý (3 tháng)' },
@@ -369,20 +370,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             disabled={isSubmitting}
             aria-label="Đóng cửa sổ"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </button>
         </div>
 
@@ -391,10 +379,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             {/* ── Section 1: Định danh & Phân loại ── */}
             <div className="recurring-form-section">
               <div className="recurring-section-header">
-                <svg className="section-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                  <line x1="7" y1="7" x2="7.01" y2="7" />
-                </svg>
+                <Icon name="tag" className="section-header-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <span className="section-header-title">Định danh & Phân loại</span>
               </div>
 
@@ -438,9 +423,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                         <CategoryOutlineIcon name={category} size={16} className="dropdown-outline-icon text-brand" />
                         <span className="dropdown-btn-text">{categoryDisplayName}</span>
                       </div>
-                      <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
+                      <Icon name="chevronDown" className="dropdown-chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </button>
 
                     {isCategoryDropdownOpen && (
@@ -466,9 +449,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                                   <span className="dropdown-item-label">{labelDisplay}</span>
                                 </div>
                                 {isSelected && (
-                                  <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
+                                  <Icon name="check" className="dropdown-item-check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                 )}
                               </button>
                             );
@@ -487,10 +468,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                                 setTimeout(() => newCatInputRef.current?.focus(), 50);
                               }}
                             >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <line x1="5" y1="12" x2="19" y2="12" />
-                              </svg>
+                              <Icon name="plus" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Thêm danh mục mới</span>
                             </button>
                           ) : (
@@ -542,10 +520,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             {/* ── Section 2: Thiết lập dòng tiền & Chu kỳ ── */}
             <div className="recurring-form-section">
               <div className="recurring-section-header">
-                <svg className="section-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect width="20" height="14" x="2" y="5" rx="2" />
-                  <line x1="2" y1="10" x2="22" y2="10" />
-                </svg>
+                <Icon name="creditCard" className="section-header-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <span className="section-header-title">Thiết lập dòng tiền & Chu kỳ</span>
               </div>
 
@@ -591,9 +566,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                           <WalletOutlineIcon type={selectedWallet?.type} size={16} color="currentColor" className="dropdown-outline-icon text-brand" />
                           <span className="dropdown-btn-text">{selectedWallet?.name || 'Chọn ví'}</span>
                         </div>
-                        <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
+                        <Icon name="chevronDown" className="dropdown-chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </button>
 
                       {isWalletDropdownOpen && (
@@ -620,9 +593,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                                   </div>
                                 </div>
                                 {isSelected && (
-                                  <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
+                                  <Icon name="check" className="dropdown-item-check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                 )}
                               </button>
                             );
@@ -660,9 +631,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                           </svg>
                           <span className="dropdown-btn-text">{selectedCycleLabel}</span>
                         </div>
-                        <svg className="dropdown-chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
+                        <Icon name="chevronDown" className="dropdown-chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </button>
 
                       {isCycleDropdownOpen && (
@@ -685,9 +654,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                                   <span className="dropdown-item-label">{opt.label}</span>
                                 </div>
                                 {isSelected && (
-                                  <svg className="dropdown-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
+                                  <Icon name="check" className="dropdown-item-check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                 )}
                               </button>
                             );
@@ -781,21 +748,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             {/* Error Message */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+                <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}

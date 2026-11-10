@@ -43,7 +43,7 @@
 .jar-dialog .jar-detail-footer { border: 0; padding: 0; width: 100%; flex-wrap: wrap; gap: 10px; }
 .jar-dialog .jar-detail-history-item { gap: 12px; overflow-wrap: anywhere; }
 .jar-dialog .jar-detail-history-item > div { min-width: 0; }
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .jar-dialog-backdrop { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
   .jar-dialog { border-radius: 18px; }
   .jar-dialog-header { padding: 18px 18px 16px; gap: 10px; }

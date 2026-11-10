@@ -31,7 +31,7 @@
   font-family: var(--font-sans);
   font-size: var(--font-sm);
   animation: slideInToast 200ms var(--ease-smooth);
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 @keyframes slideInToast {
@@ -119,7 +119,7 @@
   font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .toast-item__action-btn:hover {
@@ -346,7 +346,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .confirm-dialog-btn:disabled {
@@ -357,12 +357,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .is-deleting {
   opacity: 0.4;
   pointer-events: none;
-  transition: opacity 200ms ease;
+  transition: opacity var(--dur-base) ease;
 }
 
 .recurring-row-card.is-processing {
   opacity: 0.75;
-  transition: opacity 200ms ease;
+  transition: opacity var(--dur-base) ease;
 }
 
 /* Button variants */
@@ -378,16 +378,17 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 8px 16px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
+/* Used by <Button> (components/ui/Button.jsx): btn + btn--{variant} [+ btn--sm]. */
 .btn--primary {
   background: var(--primary);
-  color: #ffffff;
+  color: var(--color-on-action);
   border-color: var(--primary-hover);
 }
 
-.btn--primary:hover {
+.btn--primary:hover:not(:disabled) {
   background: var(--primary-hover);
 }
 
@@ -397,18 +398,44 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-color: var(--border);
 }
 
-.btn--secondary:hover {
+.btn--secondary:hover:not(:disabled) {
   background: var(--border);
 }
 
 .btn--danger {
   background: var(--danger);
-  color: #ffffff;
+  color: var(--color-on-action);
   border-color: var(--danger);
 }
 
-.btn--danger:hover {
-  background: #a83833;
+.btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
+.btn--warning {
+  background: var(--color-warning);
+  color: var(--color-on-action);
+  border-color: var(--color-warning);
+}
+
+.btn--warning:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-warning) 85%, #000);
+}
+
+.btn--sm {
+  padding: 6px 12px;
+  font-size: var(--font-sm);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading isn't "unavailable": keep the spinner and label fully visible. */
+.btn[aria-busy="true"] {
+  cursor: progress;
+  opacity: 1;
 }
 
 /* ── UI Primitive: EmptyState ── */
@@ -598,7 +625,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .txn-modal-close-btn:hover {
@@ -647,7 +674,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-weight: 600;
   color: var(--text-secondary, #60766A);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .txn-type-btn:hover:not(.active) {
@@ -776,7 +803,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-md, 12px);
   color: var(--color-icon, var(--text-secondary));
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   text-align: center;
   user-select: none;
 }
@@ -908,7 +935,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-card-progress-fill {
   height: 100%;
   border-radius: 2px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width var(--dur-slower) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Income card tag */
@@ -925,7 +952,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: 6px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .txn-category-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
@@ -1041,7 +1068,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: none;
   border-radius: var(--radius-sm, 8px);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease, filter var(--dur-fast) ease;
 }
 
 .txn-empty-cta-btn:hover {
@@ -1140,7 +1167,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   user-select: none;
 }
 
@@ -1206,7 +1233,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-md);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1590,7 +1617,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   to { transform: none; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .txn-modal-backdrop {
     align-items: flex-end;
     padding: 0;
@@ -1695,7 +1722,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md, 10px);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   text-align: left;
   gap: 12px;
   user-select: none;
@@ -1828,7 +1855,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 8px 12px;
   border-radius: var(--radius-sm, 8px);
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   gap: 10px;
   user-select: none;
 }
@@ -1941,7 +1968,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .financial-tips-close-btn:hover {
@@ -2012,7 +2039,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .jar-detail-btn-edit:hover:not(:disabled),
@@ -2032,7 +2059,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .jar-detail-btn-deposit:hover,
@@ -2051,7 +2078,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 6px 14px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .financial-tips-tab-btn.active {
@@ -2103,7 +2130,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   outline: none;
 }
 
@@ -2255,7 +2282,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .dropdown-add-cat-btn:hover {

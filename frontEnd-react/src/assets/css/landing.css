@@ -109,7 +109,7 @@ body.dark-theme .bg-orb--2 {
   background: radial-gradient(circle at 40% 35%, #d0d5dc, #b0b6c0);
   box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25), inset 1px 1px 1px rgba(255, 255, 255, 0.5);
   z-index: 5;
-  transition: transform 300ms ease;
+  transition: transform var(--dur-slower) ease;
   cursor: default;
 }
 
@@ -190,7 +190,7 @@ body.dark-theme .bg-orb--2 {
   color: var(--color-link);
   text-shadow: 0 0 30px rgba(255, 75, 114, .35), 0 0 60px rgba(255, 75, 114, .15);
   display: inline-block;
-  transition: text-shadow 300ms ease;
+  transition: text-shadow var(--dur-slower) ease;
 }
 
 .brand-name:hover span {
@@ -224,7 +224,7 @@ body.dark-theme .bg-orb--2 {
   flex-direction: column;
   gap: 2px;
   /* 3D tilt on hover */
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform var(--dur-base) ease, box-shadow var(--dur-base) ease;
   transform-style: preserve-3d;
   cursor: default;
 }
@@ -316,7 +316,7 @@ body.dark-theme .bg-orb--2 {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-accent);
   cursor: pointer;
-  transition: transform 150ms cubic-bezier(.34, 1.56, .64, 1), box-shadow 150ms ease;
+  transition: transform var(--dur-fast) cubic-bezier(.34, 1.56, .64, 1), box-shadow var(--dur-fast) ease;
   position: relative;
   overflow: hidden;
 }
@@ -358,7 +358,7 @@ body.dark-theme .bg-orb--2 {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   cursor: pointer;
-  transition: transform 150ms cubic-bezier(.34, 1.56, .64, 1), color 150ms ease, box-shadow 150ms ease;
+  transition: transform var(--dur-fast) cubic-bezier(.34, 1.56, .64, 1), color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
 
 .btn-signup:hover {
@@ -397,7 +397,7 @@ body.dark-theme .bg-orb--2 {
   animation: none;
   /* Subtle 3D tilt */
   transform: rotateX(2deg) rotateY(-4deg);
-  transition: transform 400ms ease;
+  transition: transform var(--dur-slow) ease;
 }
 
 .device-wrap:hover .device-bezel {
@@ -840,7 +840,7 @@ body.dark-theme .vent-slot {
   align-items: center;
   justify-content: center;
   z-index: 20;
-  transition: color 150ms, transform 120ms;
+  transition: color var(--dur-fast), transform var(--dur-quick);
 }
 
 .idx-settings-btn:hover {
@@ -1004,7 +1004,7 @@ body.dark-theme .idx-screw {
   border-radius: 8px;
   cursor: pointer;
   box-shadow: var(--shadow-pressed);
-  transition: border-color 150ms, color 150ms;
+  transition: border-color var(--dur-fast), color var(--dur-fast);
 }
 
 .idx-lang-btn:hover {
@@ -1063,7 +1063,7 @@ body.dark-theme .idx-screw {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: border-color 150ms, color 150ms;
+  transition: border-color var(--dur-fast), color var(--dur-fast);
 }
 
 .idx-theme-btn:hover {
@@ -1106,7 +1106,7 @@ body.dark-theme .idx-screw {
   box-shadow: 0 4px 14px rgba(255, 75, 114, .4), 0 1px 4px rgba(255, 75, 114, .2);
   position: relative;
   overflow: hidden;
-  transition: transform 120ms;
+  transition: transform var(--dur-quick);
 }
 
 .idx-done-btn::before {

@@ -98,9 +98,12 @@
   --radius-full: 9999px;
 
   /* ── Animation Durations & Easings ── */
-  --dur-fast: 150ms;
+  --dur-quick: 120ms;   /* press feedback */
+  --dur-fast: 150ms;    /* hover, colour changes */
+  --dur-base: 200ms;
   --dur-mid: 250ms;
-  --dur-slow: 400ms;
+  --dur-slower: 300ms;
+  --dur-slow: 400ms;    /* larger panels */
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ── Font Family Tokens ── */
@@ -138,9 +141,10 @@
      CSS variables can't be used inside @media, so these are the agreed
      numbers. JS reads the same values from BREAKPOINTS in
      hooks/useMediaQuery.js.
-       480  small phone      600  phone        768  tablet
-       900  sidebar ↔ bottom navigation        1024 laptop     1280 desktop
-     The matching min-width is the next pixel (481, 601, 769, 901, …).
+       480  small phone      599  phone (narrower than 600px)
+       768  tablet           900  sidebar ↔ bottom navigation
+       1024 laptop           1280 desktop
+     The matching min-width is the next pixel (481, 600, 769, 901, …).
      Other values in the codebase are component-specific tweaks. */
 
   /* ── Z-Index Layers (low → high) ──

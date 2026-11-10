@@ -17,11 +17,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { LOCALE_META, SUPPORTED_LOCALES } from '../../i18n/translations';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import {
-  CloseOutlineIcon,
-  CheckOutlineIcon,
-  AlertTriangleOutlineIcon
-} from '../../components/ui/AppIcons';
+import { Icon, CloseOutlineIcon, CheckOutlineIcon, AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
 
 // Bộ sưu tập avatar preset (biểu tượng tài chính & phong cách cao cấp, tuyệt đối không có khỉ)
 const AVATAR_PRESETS = [
@@ -555,9 +551,7 @@ export function AccountModal() {
                   onClick={showSettingsHome}
                   aria-label={t('settings.backToSettings')}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
+                  <Icon name="chevronLeftAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </button>
               )}
               <div className="account-header-icon" aria-hidden="true">
@@ -607,7 +601,7 @@ export function AccountModal() {
                   <span className="settings-user-email">{user?.email || ''}</span>
                   <span className="settings-user-profile-hint">{t('settings.viewEditProfile')}</span>
                 </span>
-                <svg className="settings-user-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                <Icon name="chevronRightAlt" className="settings-user-chevron" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </button>
 
               {isMobile && (
@@ -1147,7 +1141,7 @@ export function AccountModal() {
               <li>Lịch sử thống kê và phân tích dòng tiền</li>
             </ul>
 
-            <p style={{ margin: 0, fontSize: '12px', color: '#DC2626', fontWeight: 600 }}>
+            <p className="account-danger-note">
               Hành động này không thể hoàn tác! Tài khoản đăng nhập của bạn sẽ không bị ảnh hưởng.
             </p>
 

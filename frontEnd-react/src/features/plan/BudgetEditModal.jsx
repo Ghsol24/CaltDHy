@@ -15,6 +15,7 @@ import { calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/fi
 import { formatCurrency, formatDate, formatInputNumber, formatPercent, getLocalMonthString } from '../../utils/formatters';
 import { BREAKPOINTS } from '../../hooks/useMediaQuery';
 
+import { Icon } from '../../components/ui/AppIcons';
 // Limits are typed straight into each row; the draft only becomes real on "Save".
 const MAX_AMOUNT_DIGITS = 15;
 const SHEET_DISMISS_DISTANCE = 96;
@@ -61,9 +62,7 @@ function TrashIcon() {
 
 function CloseIcon({ size = 20 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
+    <Icon name="closeAlt" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   );
 }
 

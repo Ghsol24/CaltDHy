@@ -5,9 +5,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { authService } from '../services/authService';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
-import {
-  AlertTriangleOutlineIcon
-} from '../components/ui/AppIcons';
+import { Icon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 
 function getPasswordStrength(pw, t) {
@@ -149,7 +147,7 @@ export const SignupPage = () => {
             )}
 
             {error && (
-              <div id="formErr" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+              <div id="formErr" className="form-err form-err--icon show" role="alert">
                 <AlertTriangleOutlineIcon size={14} /> {error}
               </div>
             )}
@@ -167,9 +165,7 @@ export const SignupPage = () => {
           </div>
 
           <Link to="/" className="btn-ghost">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <Icon name="chevronLeft" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             {t('auth.backHome')}
           </Link>
 

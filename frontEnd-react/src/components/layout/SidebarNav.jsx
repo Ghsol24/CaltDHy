@@ -3,6 +3,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { NavIcon } from '../ui/NavIcons';
 
+import { Icon } from '../../components/ui/AppIcons';
 // Which sidebar groups the viewer folded away. A per-browser convenience:
 // if storage is blocked every group simply starts open.
 const COLLAPSED_GROUPS_KEY = 'caltdhy_sidebar_collapsed_groups';
@@ -182,9 +183,7 @@ export function SidebarNav() {
                       <span className="sidebar-group-dot" aria-hidden="true" />
                       <span>{group.groupLabel}</span>
                     </span>
-                    <svg className="sidebar-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
+                    <Icon name="chevronDownAlt" className="sidebar-group-chevron" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
                   </button>
                   {gIdx === 0 && (
                     <button
@@ -229,10 +228,7 @@ export function SidebarNav() {
           <div className="sidebar-quick-record-card">
             <div className="quick-record-header">
               <div className="quick-record-icon-box" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                </svg>
+                <Icon name="edit" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </div>
               <div className="quick-record-text">
                 <strong className="quick-record-title">{t('nav.quickRecord')}</strong>

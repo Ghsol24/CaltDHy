@@ -17,6 +17,7 @@ import { formatDisplayDate } from '../../utils/datePicker';
 import { getHistoryFilterCopy } from './historyFilterCopy';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 
+import { Icon } from '../../components/ui/AppIcons';
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function TransactionHistoryView() {
@@ -143,8 +144,7 @@ export function TransactionHistoryView() {
       valueText={periodText || undefined} /> },
     { id: 'recurring', active: excludeRecurring, node: <label className={`transaction-history-checkbox${excludeRecurring ? ' is-active' : ''}`}>
       <input type="checkbox" checked={excludeRecurring} onChange={(event) => changeRecurring(event.target.checked)} />
-      <svg className="transaction-history-check" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-        strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+      <Icon name="checkAlt" className="transaction-history-check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
       <span>{t('history.excludeRecurring')}</span>
     </label> }
   ];
@@ -203,10 +203,7 @@ export function TransactionHistoryView() {
       <div ref={controlsRef} className="transaction-filter-controls" role="group" aria-label={chipCopy.activeFilters}>
         {hasActiveFilters && <button type="button" className="transaction-history-clear"
           onClick={() => { clearFilters(); requestAnimationFrame(() => searchRef.current?.focus()); }}>
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>{t('history.clear')}{filterCount > 0 && ` (${filterCount})`}
+          <Icon name="closeAlt" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />{t('history.clear')}{filterCount > 0 && ` (${filterCount})`}
         </button>}
         {orderedChips.map((chip) => <React.Fragment key={chip.id}>{chip.node}</React.Fragment>)}
       </div>
@@ -247,8 +244,7 @@ export function TransactionHistoryView() {
       onEdit={openEditTransaction} onManage={manageSource} showDate variant="ledger" />}
     {visibleCount < filtered.length && <button type="button" className="transaction-history-more"
       onClick={() => setVisibleCount((count) => count + 50)}>{t('history.loadMore')}
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
-        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      <Icon name="chevronDownAlt" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </button>}
   </section>;
 }
@@ -260,8 +256,7 @@ function FilterOptionGroup({ title, options, value, onChange }) {
     <div className="transaction-sheet-options">
       {options.map((option) => <button key={option.value} type="button" aria-pressed={option.value === value}
         className={`transaction-sheet-option${option.value === value ? ' is-selected' : ''}`} onClick={() => onChange(option.value)}>
-        {option.value === value && <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4"
-          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>}
+        {option.value === value && <Icon name="checkAlt" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />}
         {option.label}
       </button>)}
     </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { normalizeLocale, translate } from '../../i18n/translations';
 import '../../assets/css/error-feedback.css';
 
+import { Button } from './Button';
 export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -43,8 +44,8 @@ export class ErrorBoundary extends React.Component {
           <h2 id="display-error-title">{t('error.displayTitle')}</h2>
           <p>{t('error.displayBody')}</p>
           <div className="display-error__actions">
-            <button type="button" className="btn btn--primary" onClick={this.handleReset}>{t('common.tryAgain')}</button>
-            <button type="button" className="btn btn--secondary" onClick={() => window.location.reload()}>{t('error.reload')}</button>
+            <Button variant="primary" onClick={this.handleReset}>{t('common.tryAgain')}</Button>
+            <Button variant="secondary" onClick={() => window.location.reload()}>{t('error.reload')}</Button>
           </div>
         </section>
       );

@@ -8,6 +8,7 @@ import { formatDisplayDate, parseIsoDate } from '../../utils/datePicker';
 import { moneyNumber } from '../../utils/moneyPrecision.js';
 import { useTranslation } from '../../i18n/useTranslation';
 
+import { Icon } from '../../components/ui/AppIcons';
 /*
  * Phone-only pieces of the transaction dialog. On narrow screens the category grid and
  * the anchored calendar popover do not fit, so both become rows that open a sheet
@@ -66,8 +67,7 @@ export function TransactionSheet({ title, onClose, children }) {
           <div className="txn-sheet__head">
             <h3 id={titleId} className="txn-sheet__title">{title}</h3>
             <button type="button" className="txn-sheet__close" onClick={onClose} aria-label={t('common.closeWindow')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              <Icon name="closeAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </button>
           </div>
         </div>

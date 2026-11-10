@@ -47,6 +47,6 @@
   .jar-transfer-cancel, .jar-transfer-submit { padding-inline: 11px; font-size: var(--font-sm); }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .jar-transfer-presets > button { min-height: 44px; }
 }

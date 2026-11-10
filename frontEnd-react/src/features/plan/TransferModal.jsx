@@ -2,13 +2,14 @@ import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { Dialog } from '../../components/ui/Dialog';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { sortWalletsByBalance } from '../../utils/walletSort';
 
+import { Icon } from '../../components/ui/AppIcons';
 export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const { wallets, transferMoney, fetchWallets } = useWalletStore();
   const { addToast } = useToastStore();
@@ -26,7 +27,6 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
 
-  useFocusTrap(modalRef, isOpen);
 
   useEffect(() => {
     if (isOpen && wallets.length === 0) {
@@ -145,19 +145,16 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const toWallet = wallets.find((w) => w.id === toWalletId);
 
   return (
-    <div
-      className="txn-modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+    <Dialog
+      isOpen
+      onClose={onClose}
+      busy={isSubmitting}
+      portal={false}
+      panelRef={modalRef}
+      overlayClassName="txn-modal-backdrop"
+      className="txn-modal-card"
+      labelledBy="transfer-modal-title"
     >
-      <div
-        ref={modalRef}
-        className="txn-modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="transfer-modal-title"
-      >
         {/* Header */}
         <div className="txn-modal-header modal-pro-header">
           <div className="modal-pro-header-left">
@@ -181,20 +178,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
             onClick={onClose}
             aria-label="Đóng cửa sổ"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </button>
         </div>
 
@@ -302,21 +286,14 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                   <label htmlFor="transfer-fee" className="modal-section-label">
                     <span>Phí giao dịch</span>
                     <span className="modal-info-tooltip" title="Chi phí chuyển khoản hoặc phí dịch vụ phát sinh" aria-label="Thông tin thêm">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="16" x2="12" y2="12" />
-                        <line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg>
+                      <Icon name="info" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </span>
                   </label>
                   <span className="modal-label-optional">Tùy chọn</span>
                 </div>
                 <div className="modal-pro-amount-box input-shell">
                   <div className="amount-prefix-badge tag" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                      <line x1="7" y1="7" x2="7.01" y2="7" />
-                    </svg>
+                    <Icon name="tag" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </div>
                   <input
                     id="transfer-fee"
@@ -380,21 +357,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
             {/* Error Message */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+                <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -422,16 +385,13 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 </>
               ) : (
                 <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   <span>Xác nhận chuyển tiền</span>
                 </>
               )}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Dialog>
   );
 }

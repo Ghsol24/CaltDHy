@@ -5,6 +5,7 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useTranslation } from '../../i18n/useTranslation';
 import './bottom-sheet.css';
 
+import { Icon } from './AppIcons';
 /**
  * Mobile bottom sheet: slides up over a dimmed page instead of pushing content down.
  * Escape, the backdrop and the close button all call `onClose`; focus is trapped while
@@ -38,8 +39,7 @@ export function BottomSheet({ open, onClose, title, children, footer, className 
         <header className="calt-sheet-header">
           <h3 id={titleId}>{title}</h3>
           <button type="button" className="calt-sheet-close" onClick={onClose} aria-label={t('common.close')}>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            <Icon name="closeAlt" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </button>
         </header>
         <div className="calt-sheet-body">{children}</div>

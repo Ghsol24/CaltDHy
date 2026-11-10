@@ -4,10 +4,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router';
 import { authService } from '../services/authService';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
-import {
-  AlertTriangleOutlineIcon,
-  CheckOutlineIcon
-} from '../components/ui/AppIcons';
+import { Icon, AlertTriangleOutlineIcon, CheckOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 
 export const ResetPasswordPage = () => {
@@ -125,7 +122,7 @@ export const ResetPasswordPage = () => {
               />
 
               {forgotError && (
-                <div id="forgotError" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+                <div id="forgotError" className="form-err form-err--icon show" role="alert">
                   <AlertTriangleOutlineIcon size={14} /> {forgotError}
                 </div>
               )}
@@ -166,7 +163,7 @@ export const ResetPasswordPage = () => {
               />
 
               {resetError && (
-                <div id="resetError" className="form-err show" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} role="alert">
+                <div id="resetError" className="form-err form-err--icon show" role="alert">
                   <AlertTriangleOutlineIcon size={14} /> {resetError}
                 </div>
               )}
@@ -189,9 +186,7 @@ export const ResetPasswordPage = () => {
           </div>
 
           <Link to="/login" className="btn-ghost">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <Icon name="chevronLeft" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
             {t('auth.backLogin')}
           </Link>
         </IndustrialPanel>

@@ -23,7 +23,7 @@
   padding: 24px;
   position: relative;
   overflow-x: hidden;
-  transition: background 250ms ease, color 250ms ease;
+  transition: background var(--dur-mid) ease, color var(--dur-mid) ease;
   /* ── Cross-platform font rendering ── */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -49,7 +49,7 @@
   background: var(--panel); border: 1px solid var(--border);
   border-radius: var(--radius-full); padding: 8px 14px;
   box-shadow: var(--shadow-sm); z-index: 10;
-  transition: background 250ms ease;
+  transition: background var(--dur-mid) ease;
 }
 .auth-page .status-bar svg { color: var(--color-icon); }
 
@@ -62,7 +62,7 @@
   box-shadow: var(--shadow-dialog);
   padding: 36px 40px; width: 100%; max-width: 440px;
   animation: moduleIn 220ms var(--ease-smooth) both;
-  transition: background 250ms ease, box-shadow 250ms ease;
+  transition: background var(--dur-mid) ease, box-shadow var(--dur-mid) ease;
 }
 @keyframes moduleIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -100,7 +100,7 @@
   letter-spacing: 0;
   color: var(--text-secondary);
   pointer-events: none;
-  transition: top 200ms ease, font-size 200ms ease, color 200ms ease, letter-spacing 200ms ease;
+  transition: top var(--dur-base) ease, font-size var(--dur-base) ease, color var(--dur-base) ease, letter-spacing var(--dur-base) ease;
   z-index: 1;
   background: transparent;
   padding: 0 4px;
@@ -121,7 +121,7 @@
   padding: 18px 16px 10px;
   font-family: var(--font-sans); font-size: var(--font-sm); color: var(--text-primary);
   box-shadow: none; outline: none;
-  transition: box-shadow 200ms ease, border-color 200ms ease;
+  transition: box-shadow var(--dur-base) ease, border-color var(--dur-base) ease;
   appearance: none;
   border: 1px solid var(--border);
 }
@@ -152,7 +152,7 @@
   background: none; border: none; cursor: pointer; color: var(--text-secondary);
   display: flex; align-items: center; justify-content: center;
   min-width: 44px; min-height: 44px;
-  transition: color 150ms ease, transform 200ms ease;
+  transition: color var(--dur-fast) ease, transform var(--dur-base) ease;
 }
 .eye-btn:hover { color: var(--accent-text); }
 
@@ -163,7 +163,7 @@
   top: 50%;
   transform: translateY(-50%);
   opacity: 0;
-  transition: opacity 200ms ease;
+  transition: opacity var(--dur-base) ease;
   color: var(--color-success);
   pointer-events: none;
 }
@@ -174,7 +174,7 @@
 .forgot-lnk {
   font-family: var(--font-sans); font-size: var(--font-sm);
   letter-spacing: 0; color: var(--accent-text); text-decoration: none;
-  transition: color 150ms ease;
+  transition: color var(--dur-fast) ease;
 }
 .forgot-lnk:hover { text-decoration: underline; }
 
@@ -199,6 +199,11 @@
   border-left: 3px solid var(--color-danger-border);
 }
 .form-err.show { display: block; }
+.form-err--icon.show { display: flex; align-items: center; gap: 6px; }
+.form-err--warning {
+  color: var(--color-warning); background: var(--color-warning-bg);
+  border-left-color: var(--color-warning-border);
+}
 @keyframes errShake {
   0%, 100% { transform: translateX(0); }
   25%       { transform: translateX(-6px); }
@@ -211,7 +216,7 @@
   font-family: var(--font-sans); font-size: var(--font-sm); font-weight: 700;
   letter-spacing: 0;
   border: none; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
-  cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease;
+  cursor: pointer; transition: transform var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
   position: relative; overflow: hidden; margin-top: 8px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
@@ -251,7 +256,7 @@
   box-shadow: none; cursor: pointer; text-decoration: none;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   text-align: center;
-  transition: transform 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  transition: transform var(--dur-quick) ease, color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
 }
 .btn-ghost:hover { color: var(--accent-text); border-color: var(--color-border-strong); }
 .btn-ghost:active { transform: translateY(1px); }
@@ -265,7 +270,7 @@
 .lnk {
   color: var(--text-primary); font-weight: 700; text-decoration: none;
   border-bottom: 1px solid var(--border); padding-bottom: 1px;
-  transition: color 150ms ease, border-color 150ms ease;
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
 }
 .lnk:hover { color: var(--accent-text); border-color: var(--accent-text); }
 

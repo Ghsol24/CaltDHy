@@ -9,6 +9,7 @@ import { JarDialog } from './JarDialog';
 import { jarsManagementText } from './jarsManagementCopy';
 import './jars-management.css';
 
+import { Icon } from '../../components/ui/AppIcons';
 const PRESET_COLORS = [
   ['#059669', 'emerald'], ['#3B82F6', 'blue'], ['#7C3AED', 'purple'],
   ['#F97316', 'orange'], ['#EF4444', 'red'], ['#0891B2', 'teal'],
@@ -145,7 +146,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
                 <input type="radio" name={`${id}-color`} value={hex} checked={color === hex}
                   onChange={() => setColor(hex)} aria-label={text(colorName)} />
                 <span className="jm-color-swatch" style={{ '--jm-swatch': hex }} aria-hidden="true">
-                  {color === hex && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="m5 12 4 4L19 6" /></svg>}
+                  {color === hex && <Icon name="checkAlt" fill="none" stroke="currentColor" strokeWidth="3" />}
                 </span>
               </label>
             ))}

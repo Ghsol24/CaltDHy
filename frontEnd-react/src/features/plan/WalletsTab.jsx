@@ -20,8 +20,9 @@ const WALLET_TYPE_LABELS = {
 };
 
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { BulbOutlineIcon, StarOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
+import { Icon, BulbOutlineIcon, StarOutlineIcon, CheckOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
+import { Button, IconButton } from '../../components/ui/Button';
 export { WalletOutlineIcon };
 
 /**
@@ -58,20 +59,7 @@ function WalletFilterDropdown({ value, options, onChange, label, className = '' 
         aria-label={label || selectedOption.label}
       >
         <span className="wallet-dropdown-selected-label">{selectedOption.label}</span>
-        <svg
-          className={`wallet-dropdown-chevron ${isOpen ? 'is-rotated' : ''}`}
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <Icon name="chevronDown" className={`wallet-dropdown-chevron ${isOpen ? 'is-rotated' : ''}`} width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </button>
 
       {isOpen && (
@@ -92,20 +80,7 @@ function WalletFilterDropdown({ value, options, onChange, label, className = '' 
               >
                 <span className="wallet-dropdown-option-label">{opt.label}</span>
                 {isSelected && (
-                  <svg
-                    className="wallet-dropdown-check"
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icon name="check" className="wallet-dropdown-check" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 )}
               </button>
             );
@@ -290,6 +265,9 @@ export function WalletsTab() {
   // 3-dots action menu popover
   const [openMenuWalletId, setOpenMenuWalletId] = useState(null);
   const menuRef = useRef(null);
+  // The ⋮ button that opened the wallet menu: dialogs opened from that menu
+  // hand focus back to it, since the menu item itself is gone by then.
+  const menuTriggerRef = useRef(null);
 
   // Phân bổ số dư: chế độ xem ('balance' | 'txCount') và popover dropdown
   const [distributionMode, setDistributionMode] = useState('balance');
@@ -554,12 +532,7 @@ export function WalletsTab() {
             disabled={wallets.length < 2}
             title={wallets.length < 2 ? 'Cần ít nhất 2 ví để chuyển tiền' : 'Chuyển tiền giữa các ví'}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M17 1l4 4-4 4" />
-              <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-              <path d="M7 23l-4-4 4-4" />
-              <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-            </svg>
+            <Icon name="transfer" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <span>Chuyển tiền</span>
           </button>
 
@@ -568,10 +541,7 @@ export function WalletsTab() {
             className="wallets-btn-create-primary"
             onClick={handleCreateNew}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Icon name="plus" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             <span>Thêm ví / tài khoản</span>
           </button>
         </div>
@@ -594,10 +564,7 @@ export function WalletsTab() {
             <div className="stat-cell-divider" aria-hidden="true" />
             <div className="stat-card-cell">
               <div className="stat-cell-icon-wrap" style={{ background: '#3B82F618', color: '#3B82F6' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
-                  <path d="M22 12A10 10 0 0 0 12 2v10z" />
-                </svg>
+                <Icon name="pieChart" width="20" height="20" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </div>
               <div className="stat-cell-info">
                 <span className="stat-cell-label">Tổng tài sản (tất cả ví)</span>
@@ -711,14 +678,7 @@ export function WalletsTab() {
                   onClick={() => setViewMode('list')}
                   title="Hiển thị dạng danh sách"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="8" y1="6" x2="21" y2="6" />
-                    <line x1="8" y1="12" x2="21" y2="12" />
-                    <line x1="8" y1="18" x2="21" y2="18" />
-                    <line x1="3" y1="6" x2="3.01" y2="6" />
-                    <line x1="3" y1="12" x2="3.01" y2="12" />
-                    <line x1="3" y1="18" x2="3.01" y2="18" />
-                  </svg>
+                  <Icon name="list" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <span>Danh sách</span>
                 </button>
               </div>
@@ -806,19 +766,14 @@ export function WalletsTab() {
 
                         {/* 3-dots Popover Menu */}
                         <div className="wallet-grid-action-col" ref={isMenuOpen ? menuRef : null}>
-                          <button
-                            type="button"
+                          <IconButton
                             className="wallet-dots-btn"
-                            onClick={() => setOpenMenuWalletId(isMenuOpen ? null : w.id)}
-                            aria-label={`Tùy chọn ví ${w.name}`}
+                            label={`Tùy chọn ví ${w.name}`}
+                            onClick={(e) => { menuTriggerRef.current = e.currentTarget; setOpenMenuWalletId(isMenuOpen ? null : w.id); }}
                             aria-expanded={isMenuOpen}
                           >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="12" cy="5" r="1" />
-                              <circle cx="12" cy="19" r="1" />
-                            </svg>
-                          </button>
+                            <Icon name="moreVertical" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </IconButton>
 
                           {isMenuOpen && (
                             <div className="wallet-actions-popover" role="menu">
@@ -835,10 +790,7 @@ export function WalletsTab() {
                                   });
                                 }}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <line x1="12" y1="5" x2="12" y2="19" />
-                                  <polyline points="19 12 12 19 5 12" />
-                                </svg>
+                                <Icon name="arrowDown" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <span>Nạp tiền vào ví</span>
                               </button>
 
@@ -855,10 +807,7 @@ export function WalletsTab() {
                                   });
                                 }}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <line x1="12" y1="19" x2="12" y2="5" />
-                                  <polyline points="5 12 12 5 19 12" />
-                                </svg>
+                                <Icon name="arrowUp" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <span>Rút tiền từ ví</span>
                               </button>
 
@@ -868,12 +817,7 @@ export function WalletsTab() {
                                 role="menuitem"
                                 onClick={() => handleTransfer(w.id)}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <path d="M17 1l4 4-4 4" />
-                                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                                  <path d="M7 23l-4-4 4-4" />
-                                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                                </svg>
+                                <Icon name="transfer" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <span>Chuyển tiền từ ví này</span>
                               </button>
 
@@ -883,10 +827,7 @@ export function WalletsTab() {
                                 role="menuitem"
                                 onClick={() => handleEdit(w)}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                  <path d="m15 5 4 4" />
-                                </svg>
+                                <Icon name="pencil" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <span>Chỉnh sửa ví</span>
                               </button>
 
@@ -899,11 +840,7 @@ export function WalletsTab() {
                                 role="menuitem"
                                 onClick={() => handleArchive(w)}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <rect width="20" height="5" x="2" y="3" rx="1" />
-                                  <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-                                  <path d="M10 12h4" />
-                                </svg>
+                                <Icon name="archive" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <span>Lưu trữ / Đóng ví</span>
                               </button>
 
@@ -913,10 +850,7 @@ export function WalletsTab() {
                                 role="menuitem"
                                 onClick={() => handleDelete(w)}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                  <polyline points="3 6 5 6 21 6" />
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                </svg>
+                                <Icon name="trash" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <span>Xóa vĩnh viễn</span>
                               </button>
                             </div>
@@ -950,10 +884,7 @@ export function WalletsTab() {
                       {/* Card Footer: Transactions Count & Last Updated */}
                       <div className="wallet-grid-card-footer">
                         <div className="wallet-grid-footer-item">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                          </svg>
+                          <Icon name="clock" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           <span>{txCount} giao dịch</span>
                         </div>
 
@@ -1022,10 +953,7 @@ export function WalletsTab() {
                           <span className="wallet-h-meta-date">Cập nhật: Hôm nay</span>
                           <span className="meta-bullet">•</span>
                           <span className="wallet-h-meta-txns">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
+                            <Icon name="clock" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             <span>{txCount} giao dịch</span>
                           </span>
                         </div>
@@ -1041,19 +969,14 @@ export function WalletsTab() {
 
                       {/* 3-Dots Action Menu */}
                       <div className="wallet-h-action-col" ref={isMenuOpen ? menuRef : null}>
-                        <button
-                          type="button"
+                        <IconButton
                           className="wallet-dots-btn"
-                          onClick={() => setOpenMenuWalletId(isMenuOpen ? null : w.id)}
-                          aria-label={`Tùy chọn ví ${w.name}`}
+                          label={`Tùy chọn ví ${w.name}`}
+                          onClick={(e) => { menuTriggerRef.current = e.currentTarget; setOpenMenuWalletId(isMenuOpen ? null : w.id); }}
                           aria-expanded={isMenuOpen}
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="1" />
-                            <circle cx="12" cy="5" r="1" />
-                            <circle cx="12" cy="19" r="1" />
-                          </svg>
-                        </button>
+                          <Icon name="moreVertical" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </IconButton>
 
                         {isMenuOpen && (
                           <div className="wallet-actions-popover" role="menu">
@@ -1070,10 +993,7 @@ export function WalletsTab() {
                                 });
                               }}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <polyline points="19 12 12 19 5 12" />
-                              </svg>
+                              <Icon name="arrowDown" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Nạp tiền vào ví</span>
                             </button>
 
@@ -1090,10 +1010,7 @@ export function WalletsTab() {
                                 });
                               }}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <line x1="12" y1="19" x2="12" y2="5" />
-                                <polyline points="5 12 12 5 19 12" />
-                              </svg>
+                              <Icon name="arrowUp" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Rút tiền từ ví</span>
                             </button>
 
@@ -1103,12 +1020,7 @@ export function WalletsTab() {
                               role="menuitem"
                               onClick={() => handleTransfer(w.id)}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <path d="M17 1l4 4-4 4" />
-                                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                                <path d="M7 23l-4-4 4-4" />
-                                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                              </svg>
+                              <Icon name="transfer" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Chuyển tiền từ ví này</span>
                             </button>
 
@@ -1118,10 +1030,7 @@ export function WalletsTab() {
                               role="menuitem"
                               onClick={() => handleEdit(w)}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                <path d="m15 5 4 4" />
-                              </svg>
+                              <Icon name="pencil" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Chỉnh sửa ví</span>
                             </button>
 
@@ -1134,11 +1043,7 @@ export function WalletsTab() {
                               role="menuitem"
                               onClick={() => handleArchive(w)}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <rect width="20" height="5" x="2" y="3" rx="1" />
-                                <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-                                <path d="M10 12h4" />
-                              </svg>
+                              <Icon name="archive" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Lưu trữ / Đóng ví</span>
                             </button>
 
@@ -1148,10 +1053,7 @@ export function WalletsTab() {
                               role="menuitem"
                               onClick={() => handleDelete(w)}
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
+                              <Icon name="trash" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <span>Xóa vĩnh viễn</span>
                             </button>
                           </div>
@@ -1170,18 +1072,13 @@ export function WalletsTab() {
               onClick={handleCreateNew}
             >
               <div className="add-dashed-icon-circle">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
+                <Icon name="plus" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </div>
               <div className="add-dashed-text-group">
                 <strong className="add-dashed-title">Thêm ví / tài khoản mới</strong>
                 <span className="add-dashed-subtitle">Tạo Ví/Tài khoản mới</span>
               </div>
-              <svg className="add-dashed-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <Icon name="chevronRight" className="add-dashed-chevron" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </button>
           </div>
 
@@ -1196,12 +1093,7 @@ export function WalletsTab() {
                 onClick={() => handleTransfer(null)}
               >
                 <div className="quick-action-icon-box" style={{ background: '#10B98118', color: '#10B981' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M17 1l4 4-4 4" />
-                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                    <path d="M7 23l-4-4 4-4" />
-                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                  </svg>
+                  <Icon name="transfer" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Chuyển tiền</strong>
@@ -1221,10 +1113,7 @@ export function WalletsTab() {
                 }
               >
                 <div className="quick-action-icon-box" style={{ background: '#06B6D418', color: '#06B6D4' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <polyline points="19 12 12 19 5 12" />
-                  </svg>
+                  <Icon name="arrowDown" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Nạp tiền</strong>
@@ -1244,10 +1133,7 @@ export function WalletsTab() {
                 }
               >
                 <div className="quick-action-icon-box" style={{ background: '#F9731618', color: '#F97316' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="12" y1="19" x2="12" y2="5" />
-                    <polyline points="5 12 12 5 19 12" />
-                  </svg>
+                  <Icon name="arrowUp" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Rút tiền</strong>
@@ -1261,10 +1147,7 @@ export function WalletsTab() {
                 onClick={handleGoToFullHistory}
               >
                 <div className="quick-action-icon-box" style={{ background: '#8B5CF618', color: '#8B5CF6' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
+                  <Icon name="clock" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
                 <div className="quick-action-content">
                   <strong className="quick-action-title">Lịch sử giao dịch</strong>
@@ -1299,26 +1182,9 @@ export function WalletsTab() {
                   aria-haspopup="listbox"
                   title="Thay đổi cách tính tỷ lệ"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="18" y1="20" x2="18" y2="10" />
-                    <line x1="12" y1="20" x2="12" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="14" />
-                  </svg>
+                  <Icon name="barChart" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <span>{distributionMode === 'balance' ? 'Tỷ lệ theo số dư' : 'Tỷ lệ theo giao dịch'}</span>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={`donut-dropdown-chevron ${isDistDropdownOpen ? 'is-open' : ''}`}
-                    aria-hidden="true"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
+                  <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={`donut-dropdown-chevron ${isDistDropdownOpen ? 'is-open' : ''}`} />
                 </button>
 
                 {isDistDropdownOpen && (
@@ -1419,9 +1285,7 @@ export function WalletsTab() {
                           </div>
 
                           <div className="donut-row-chevron" aria-hidden="true">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="9 18 15 12 9 6" />
-                            </svg>
+                            <Icon name="chevronRight" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                           </div>
                         </div>
                       );
@@ -1431,11 +1295,7 @@ export function WalletsTab() {
 
                 {donutSlices.length > 0 && (
                   <div className="donut-table-footer">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="16" x2="12" y2="12" />
-                      <line x1="12" y1="8" x2="12.01" y2="8" />
-                    </svg>
+                    <Icon name="info" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     <span>Tổng {donutSlices.length} danh mục</span>
                   </div>
                 )}
@@ -1455,11 +1315,7 @@ export function WalletsTab() {
                     role="button"
                     aria-label="Chỉ hiển thị giao dịch LUÂN CHUYỂN TIỀN GIỮA CÁC VÍ với nhau."
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+                    <Icon name="alertCircle" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </span>
                   <div className="wallet-activity-tooltip-popup" role="tooltip">
                     Chỉ hiển thị giao dịch <strong>LUÂN CHUYỂN TIỀN GIỮA CÁC VÍ</strong> với nhau.
@@ -1472,9 +1328,7 @@ export function WalletsTab() {
                 onClick={handleGoToFullHistory}
               >
                 <span>Xem tất cả</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
+                <Icon name="chevronRight" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </button>
             </div>
 
@@ -1501,12 +1355,7 @@ export function WalletsTab() {
                           color: isIncoming ? '#10B981' : '#3B82F6'
                         }}
                       >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M17 1l4 4-4 4" />
-                          <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                          <path d="M7 23l-4-4 4-4" />
-                          <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                        </svg>
+                        <Icon name="transfer" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </div>
 
                       <div className="activity-flow-info">
@@ -1596,11 +1445,7 @@ export function WalletsTab() {
                   color: 'var(--text-secondary, #6b7280)'
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect width="20" height="5" x="2" y="3" rx="1" />
-                  <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
-                  <path d="M10 12h4" />
-                </svg>
+                <Icon name="archive" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </div>
               <div style={{ textAlign: 'left' }}>
                 <strong style={{ fontSize: '0.95rem' }}>Ví đã lưu trữ ({archivedWallets.length})</strong>
@@ -1609,24 +1454,7 @@ export function WalletsTab() {
                 </div>
               </div>
             </div>
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                transform: isArchivedSectionExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s ease',
-                color: 'var(--text-secondary, #6b7280)'
-              }}
-              aria-hidden="true"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <Icon name="chevronDown" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isArchivedSectionExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease', color: 'var(--text-secondary, #6b7280)' }} />
           </button>
 
           {isArchivedSectionExpanded && (
@@ -1679,22 +1507,20 @@ export function WalletsTab() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
+                  <Button
+                    size="sm"
                     onClick={() => handleUnarchive(aw)}
                     disabled={Boolean(unarchivingId)}
-                    aria-busy={unarchivingId === aw.id}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', padding: '6px 12px' }}
+                    loading={unarchivingId === aw.id}
                   >
-                    {unarchivingId === aw.id ? <span className="btn-spinner" aria-hidden="true" /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {unarchivingId !== aw.id && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                       <path d="M21 3v5h-5" />
                       <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
                       <path d="M8 21H3v-5" />
                     </svg>}
                     <span>Mở lại ví</span>
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -1710,6 +1536,7 @@ export function WalletsTab() {
           setEditingWallet(null);
         }}
         walletToEdit={editingWallet}
+        returnFocusRef={menuTriggerRef}
       />
 
       <TransferModal
@@ -1728,6 +1555,7 @@ export function WalletsTab() {
           setWalletToArchive(null);
         }}
         wallet={walletToArchive}
+        returnFocusRef={menuTriggerRef}
       />
     </div>
   );

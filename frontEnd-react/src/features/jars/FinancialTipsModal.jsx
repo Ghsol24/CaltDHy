@@ -1,13 +1,11 @@
-import React, { useState, useRef } from 'react';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import React, { useState } from 'react';
+import { Dialog } from '../../components/ui/Dialog';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { TargetOutlineIcon, ChartOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) {
   const { t } = useTranslation();
-  const modalRef = useRef(null);
-  useFocusTrap(modalRef, isOpen);
 
   const [topic, setTopic] = useState(initialTopic); // 'smart' | '50-30-20'
   const [customIncome, setCustomIncome] = useState('15000000');
@@ -25,20 +23,14 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
   };
 
   return (
-    <div
-      className="modal-backdrop-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="presentation"
+    <Dialog
+      isOpen
+      onClose={onClose}
+      portal={false}
+      overlayClassName="modal-backdrop-overlay"
+      className="financial-tips-dialog"
+      label="Kiến thức tài chính"
     >
-      <div
-        className="financial-tips-dialog"
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Kiến thức tài chính"
-      >
         {/* Header */}
         <div className="financial-tips-header">
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -215,7 +207,6 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
             Đã hiểu
           </button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

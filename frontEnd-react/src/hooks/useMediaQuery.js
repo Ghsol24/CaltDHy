@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 // component never ends up half in phone layout and half in tablet layout.
 export const BREAKPOINTS = Object.freeze({
   smallPhone: 480,
-  phone: 600,
+  phone: 599, // phones are narrower than 600px; 600px and up is tablet
   tablet: 768,
   nav: 900, // sidebar ↔ bottom navigation
   laptop: 1024,

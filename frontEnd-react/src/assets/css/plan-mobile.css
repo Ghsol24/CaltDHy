@@ -45,7 +45,7 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .plan-feature-view .plan-wide-copy { display: none; }
   .plan-feature-view .plan-mobile-copy { display: inline; }
 
@@ -345,8 +345,8 @@
   }
   .plan-feature-view .recurring-row-logo-col { grid-area: logo; }
   .plan-feature-view .recurring-row-logo-col .brand-icon-tile {
-    width: 40px !important;
-    height: 40px !important;
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
   }
   .plan-feature-view .recurring-row-logo-col .brand-icon-tile svg { width: 26px; height: 26px; }

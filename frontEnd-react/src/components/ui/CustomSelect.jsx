@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 
+import { Icon } from './AppIcons';
 /**
  * CustomSelect - Premium SaaS Accessible Dropdown Component
  * Conforms to WAI-ARIA 1.2 Listbox pattern.
@@ -197,20 +198,7 @@ export function CustomSelect({
         </span>
 
         {/* Outline Chevron */}
-        <svg
-          className={`calt-custom-select-chevron ${isOpen ? 'rotate-180' : ''}`}
-          width={size === 'sm' ? 13 : 15}
-          height={size === 'sm' ? 13 : 15}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <Icon name="chevronDown" className={`calt-custom-select-chevron ${isOpen ? 'rotate-180' : ''}`} width={size === 'sm' ? 13 : 15} height={size === 'sm' ? 13 : 15} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </button>
 
       {/* Popover Menu */}
@@ -256,20 +244,7 @@ export function CustomSelect({
                 </div>
 
                 {isSelected && (
-                  <svg
-                    className="calt-custom-select-check"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icon name="check" className="calt-custom-select-check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 )}
               </div>
             );

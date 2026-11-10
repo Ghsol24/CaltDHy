@@ -21,16 +21,11 @@ import { JarActivityCalendar } from './JarActivityCalendar';
 import { JarRecentActivity } from './JarRecentActivity';
 import { JarNextStepStrip } from './JarNextStepStrip';
 import { collectJarEvents, compareWithPreviousMonth, monthOf, monthTotals, summariseDays } from './jarActivity';
-import {
-  TargetOutlineIcon,
-  TrophyOutlineIcon,
-  AlertTriangleOutlineIcon,
-  CheckOutlineIcon,
-  JarOutlineIcon
-} from '../../components/ui/AppIcons';
+import { Icon, TargetOutlineIcon, TrophyOutlineIcon, AlertTriangleOutlineIcon, CheckOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
 import '../../assets/css/jars.css';
 import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
+import { Button } from '../../components/ui/Button';
 const JARS_PER_PAGE = 12;
 const JARS_SCROLL_SECTIONS = Object.freeze([
   ['jars-section-goals', 'goals'],
@@ -438,36 +433,9 @@ export function JarsView() {
     <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
       {/* ── ERROR STATE BANNER ── */}
       {error && (
-        <div
-          style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid #EF4444',
-            borderRadius: '12px',
-            padding: '12px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            color: '#DC2626',
-            fontSize: '13px'
-          }}
-        >
+        <div className="jars-load-error" role="alert">
           <span>{getUserErrorMessage(error, 'error.load')}</span>
-          <button
-            type="button"
-            onClick={fetchData}
-            style={{
-              background: '#EF4444',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Thử lại
-          </button>
+          <Button variant="danger" size="sm" onClick={fetchData}>Thử lại</Button>
         </div>
       )}
 
@@ -489,20 +457,7 @@ export function JarsView() {
             className="jars-hero-cta-btn"
             onClick={handleCreateNew}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             <span>Tạo hũ mới</span>
           </button>
         </div>
@@ -514,10 +469,7 @@ export function JarsView() {
             <div className="jars-metric-top">
               <span className="jars-metric-label">Đã tích lũy</span>
               <div className="jars-metric-icon-box jars-metric-icon-box--blue">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="14" x="2" y="5" rx="2" />
-                  <line x1="2" x2="22" y1="10" y2="10" />
-                </svg>
+                <Icon name="creditCard" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </div>
             </div>
             <strong className="jars-metric-value">{formatCurrency(totalCurrent)}</strong>
@@ -574,10 +526,7 @@ export function JarsView() {
             <div className="jars-metric-top">
               <span className="jars-metric-label">Tỷ lệ hoàn thành</span>
               <div className="jars-metric-icon-box jars-metric-icon-box--teal">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
-                  <path d="M22 12A10 10 0 0 0 12 2v10z" />
-                </svg>
+                <Icon name="pieChart" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </div>
             </div>
             <strong className="jars-metric-value">{formatPercent(totalPercent)}</strong>
@@ -889,14 +838,7 @@ export function JarsView() {
                 aria-label="Chế độ danh sách"
                 title="Chế độ xem danh sách"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="8" y1="6" x2="21" y2="6" />
-                  <line x1="8" y1="12" x2="21" y2="12" />
-                  <line x1="8" y1="18" x2="21" y2="18" />
-                  <line x1="3" y1="6" x2="3.01" y2="6" />
-                  <line x1="3" y1="12" x2="3.01" y2="12" />
-                  <line x1="3" y1="18" x2="3.01" y2="18" />
-                </svg>
+                <Icon name="list" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" />
               </button>
             </div>
           </div>
@@ -964,13 +906,7 @@ export function JarsView() {
                 >
                   {/* Top Category Tag + Menu */}
                   <div className="jar-card-top-row" onClick={(e) => e.stopPropagation()}>
-                    <span
-                      className="jar-category-badge"
-                      style={{
-                        background: `${accentColor}18`,
-                        color: accentColor
-                      }}
-                    >
+                    <span className="jar-category-badge">
                       {jar.category || 'MỤC TIÊU'}
                     </span>
 
@@ -1064,11 +1000,8 @@ export function JarsView() {
 
                     <div className="jar-progress-track">
                       <div
-                        className="jar-progress-fill"
-                        style={{
-                          width: `${Math.max(percent > 0 ? 3 : 0, percent)}%`,
-                          background: isCompleted ? '#10B981' : accentColor
-                        }}
+                        className={`jar-progress-fill${isCompleted ? ' is-complete' : ''}`}
+                        style={{ width: `${Math.max(percent > 0 ? 3 : 0, percent)}%` }}
                       />
                     </div>
                   </div>
@@ -1118,20 +1051,7 @@ export function JarsView() {
                       aria-label={`Chỉnh sửa hũ ${jar.name}`}
                       title="Chỉnh sửa hũ"
                     >
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
-                      </svg>
+                      <Icon name="pencil" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </button>
                   </div>
                 </div>
@@ -1161,14 +1081,15 @@ export function JarsView() {
                 <div
                   key={jar.id}
                   className="jar-list-mode-row"
+                  style={{ '--jar-accent-color': accentColor }}
                   onClick={() => handleOpenDetail(jar)}
                 >
                   <div className="jar-list-left">
-                    <span style={{ width: '36px', height: '36px', borderRadius: '8px', background: `${accentColor}18`, color: accentColor, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span className="jar-list-icon" aria-hidden="true">
                       <JarOutlineIcon size={20} color="currentColor" />
                     </span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="jar-list-text">
+                      <div className="jar-list-title-row">
                         <button
                           type="button"
                           className="jar-open-detail-btn"
@@ -1178,41 +1099,25 @@ export function JarsView() {
                             handleOpenDetail(jar);
                           }}
                         >
-                          <strong style={{ fontSize: '14px', color: 'var(--color-text)' }}>{jar.name}</strong>
+                          <strong className="jar-list-name">{jar.name}</strong>
                         </button>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            background: `${accentColor}18`,
-                            color: accentColor
-                          }}
-                        >
+                        <span className="jar-list-badge">
                           {jar.category || 'MỤC TIÊU'}
                         </span>
                       </div>
-                      <span style={{ fontSize: '12px', color: '#64748B' }}>
+                      <span className="jar-list-sub">
                         Còn thiếu: {formatCurrency(remaining)}
                       </span>
                     </div>
                   </div>
 
                   <div className="jar-list-center">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <div className="jar-list-progress-head">
                       <span><strong>{formatCurrency(currentAmt)}</strong> / {formatCurrency(targetAmt)}</span>
-                      <strong style={{ color: accentColor }}>{formatPercent(percent)}</strong>
+                      <strong className="jar-list-percent">{formatPercent(percent)}</strong>
                     </div>
-                    <div style={{ height: '6px', background: '#F1F5F9', borderRadius: '99px', overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          width: `${Math.max(percent > 0 ? 3 : 0, percent)}%`,
-                          height: '100%',
-                          background: accentColor,
-                          borderRadius: '99px'
-                        }}
-                      />
+                    <div className="jar-list-track">
+                      <div className="jar-list-fill" style={{ width: `${Math.max(percent > 0 ? 3 : 0, percent)}%` }} />
                     </div>
                   </div>
 
@@ -1220,7 +1125,6 @@ export function JarsView() {
                     <button
                       type="button"
                       className="jar-btn-deposit"
-                      style={{ padding: '6px 12px', fontSize: '12px' }}
                       onClick={() => handleDeposit(jar)}
                     >
                       + Nạp
@@ -1228,7 +1132,6 @@ export function JarsView() {
                     <button
                       type="button"
                       className="jar-btn-withdraw"
-                      style={{ padding: '6px 12px', fontSize: '12px' }}
                       onClick={() => handleWithdraw(jar)}
                       disabled={currentAmt <= 0}
                     >
@@ -1241,20 +1144,7 @@ export function JarsView() {
                       aria-label={`Chỉnh sửa hũ ${jar.name}`}
                       title="Chỉnh sửa hũ"
                     >
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
-                      </svg>
+                      <Icon name="pencil" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </button>
                   </div>
                 </div>
@@ -1332,11 +1222,7 @@ export function JarsView() {
         {/* Tip 2 */}
         <div className="jars-tip-card" onClick={() => handleOpenTips('50-30-20')} style={{ cursor: 'pointer' }}>
           <div className="jars-tip-icon-box jars-tip-icon-box--success">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
-            </svg>
+            <Icon name="barChart" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" />
           </div>
           <div className="jars-tip-body">
             <h3 className="jars-tip-title">Quy tắc 50/30/20</h3>

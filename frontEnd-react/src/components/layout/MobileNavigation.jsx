@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 
+import { Icon } from '../../components/ui/AppIcons';
 const PRIMARY_ITEMS = [
   { id: 'home', labelKey: 'nav.home', icon: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></> },
   { id: 'plan', labelKey: 'nav.plan', icon: <><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></> },
@@ -128,8 +129,8 @@ export function MobileSectionNavigation() {
           return <button key={item.id} type="button" className={`mobile-section-nav__item ${isActive ? 'is-active' : ''}`} onClick={() => activate(item)} aria-current={isActive ? 'page' : undefined}>{t(item.labelKey)}</button>;
         })}
       </div>
-      {scrollEdges.left && <span className="mobile-section-nav__hint mobile-section-nav__hint--left" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg></span>}
-      {scrollEdges.right && <span className="mobile-section-nav__hint mobile-section-nav__hint--right" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg></span>}
+      {scrollEdges.left && <span className="mobile-section-nav__hint mobile-section-nav__hint--left" aria-hidden="true"><Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></span>}
+      {scrollEdges.right && <span className="mobile-section-nav__hint mobile-section-nav__hint--right" aria-hidden="true"><Icon name="chevronRight" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></span>}
     </nav>
   );
 }

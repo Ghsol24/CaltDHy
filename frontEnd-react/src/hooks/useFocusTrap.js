@@ -1,55 +1,73 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export const useFocusTrap = (modalRef, isOpen) => {
+// Open traps, newest last. Only the top one reacts to Tab and Escape, so a
+// confirm dialog opened over a modal doesn't fight the modal for focus.
+const openTraps = [];
+
+const isVisible = (el) => el.getClientRects().length > 0;
+
+/**
+ * Keeps keyboard focus inside `containerRef` while `isOpen`.
+ *
+ * - focuses `initialFocusRef` (or the first focusable, or the container) on open
+ * - Tab / Shift+Tab wrap inside; focus that escaped is pulled back in
+ * - Escape calls `onEscape` unless an inner control already handled it
+ * - restores focus to the opener on close; when the opener is gone (e.g. a
+ *   menu item whose menu closed), to `returnFocusRef` instead
+ */
+export function useFocusTrap(containerRef, isOpen, { onEscape, initialFocusRef, returnFocusRef, restoreFocus = true } = {}) {
+  // Latest callback without re-running the effect (which would move focus again).
+  const escapeRef = useRef(onEscape);
+  escapeRef.current = onEscape;
+
   useEffect(() => {
-    if (!isOpen || !modalRef.current) return;
+    const container = containerRef.current;
+    if (!isOpen || !container) return undefined;
 
-    const modalEl = modalRef.current;
+    const trap = {};
+    openTraps.push(trap);
     const previousFocus = document.activeElement;
+    const focusables = () => [...container.querySelectorAll(FOCUSABLE_SELECTOR)].filter(isVisible);
+    const focus = (el) => el?.focus({ preventScroll: true });
 
-    const getFocusables = () => {
-      return Array.from(modalEl.querySelectorAll(FOCUSABLE_SELECTOR)).filter(
-        (el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement
-      );
-    };
-
-    const focusables = getFocusables();
-    if (focusables.length > 0) {
-      focusables[0].focus();
+    if (!container.contains(document.activeElement)) {
+      focus(initialFocusRef?.current || focusables()[0] || container);
     }
 
-    const handleKeyDown = (e) => {
-      if (e.key !== 'Tab') return;
-
-      const currentFocusables = getFocusables();
-      if (currentFocusables.length === 0) return;
-
-      const first = currentFocusables[0];
-      const last = currentFocusables[currentFocusables.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+    const handleKeyDown = (event) => {
+      if (openTraps[openTraps.length - 1] !== trap || event.defaultPrevented) return;
+      if (event.key === 'Escape' && escapeRef.current) {
+        event.preventDefault();
+        escapeRef.current(event);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) {
+        event.preventDefault();
+        focus(container);
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      const atEdge = event.shiftKey ? active === first || active === container : active === last;
+      if (!container.contains(active) || atEdge) {
+        event.preventDefault();
+        focus(event.shiftKey ? last : first);
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      if (previousFocus && typeof previousFocus.focus === 'function') {
-        previousFocus.focus();
-      }
+      openTraps.splice(openTraps.indexOf(trap), 1);
+      if (!restoreFocus) return;
+      const opener = previousFocus?.isConnected && previousFocus !== document.body ? previousFocus : returnFocusRef?.current;
+      if (opener?.isConnected && typeof opener.focus === 'function') opener.focus({ preventScroll: true });
     };
-  }, [isOpen, modalRef]);
-};
+  }, [isOpen, containerRef, initialFocusRef, returnFocusRef, restoreFocus]);
+}

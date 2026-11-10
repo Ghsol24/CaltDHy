@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useId } from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletOutlineIcon';
 
+import { Icon } from './AppIcons';
 export function CustomWalletDropdown({
   wallets = [],
   value = '',
@@ -175,20 +176,7 @@ export function CustomWalletDropdown({
         </div>
 
         {/* Animated Chevron */}
-        <svg
-          className={`custom-wallet-chevron ${isOpen ? 'rotate-180' : ''}`}
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <Icon name="chevronDown" className={`custom-wallet-chevron ${isOpen ? 'rotate-180' : ''}`} width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </button>
 
       {/* Dropdown Menu Popover */}
@@ -223,20 +211,7 @@ export function CustomWalletDropdown({
                     <span className="custom-wallet-item-none-title">{noneLabel}</span>
                   </div>
                   {isSelected && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="custom-wallet-check"
-                      aria-hidden="true"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="custom-wallet-check" />
                   )}
                 </div>
               );
@@ -272,20 +247,7 @@ export function CustomWalletDropdown({
                 </div>
 
                 {isSelected && (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="custom-wallet-check"
-                    aria-hidden="true"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="custom-wallet-check" />
                 )}
               </div>
             );

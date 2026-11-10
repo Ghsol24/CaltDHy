@@ -9,6 +9,8 @@ import { CategoryOutlineIcon, BulbOutlineIcon, AlertTriangleOutlineIcon } from '
 import { useBudgetCopy } from './budgetCopy';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 
+import { Icon } from '../../components/ui/AppIcons';
+import { Button } from '../../components/ui/Button';
 // Colour follows how much of a limit is used, never the category itself.
 const WARN_PERCENT = 80;
 // How far (in percentage points) spending may run ahead of the calendar before
@@ -56,9 +58,7 @@ const capitalize = (text) => (text ? text.charAt(0).toLocaleUpperCase() + text.s
 
 function ChevronIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m9 18 6-6-6-6" />
-    </svg>
+    <Icon name="chevronRightAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
   );
 }
 
@@ -348,18 +348,11 @@ export function BudgetsTab() {
             <button type="button" className="month-nav-btn month-nav-btn--prev" onClick={handlePrevMonth}
               onPointerEnter={() => warmMonths(-1)} onFocus={() => warmMonths(-1)}
               aria-label={t('budgets.prevMonth')} title={t('budgets.prevMonth')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
+              <Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </button>
             <div className="month-current-display" aria-live="polite">
               <span className={`month-icon${isSwitching ? ' is-loading' : ''}`} aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="18" height="18" x="3" y="4" rx="2" />
-                  <line x1="16" x2="16" y1="2" y2="6" />
-                  <line x1="8" x2="8" y1="2" y2="6" />
-                  <line x1="3" x2="21" y1="10" y2="10" />
-                </svg>
+                <Icon name="calendar" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <span className="month-spinner" />
               </span>
               <strong className="month-name-text">{monthDisplayLabel}</strong>
@@ -367,9 +360,7 @@ export function BudgetsTab() {
             <button type="button" className="month-nav-btn month-nav-btn--next" onClick={handleNextMonth}
               onPointerEnter={() => warmMonths(1)} onFocus={() => warmMonths(1)}
               aria-label={t('budgets.nextMonth')} title={t('budgets.nextMonth')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <Icon name="chevronRight" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </button>
             {/* Always rendered so the switcher never changes size; idle on the current month. */}
             <button type="button" className={`month-today-btn${onCurrentMonth ? ' is-idle' : ''}`}
@@ -383,10 +374,7 @@ export function BudgetsTab() {
         <div className="bdash-header__action">
           {isPastMonth ? (
             <span className="bdash-closed" title={t('budgets.closedPeriodHint')}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
+              <Icon name="lock" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               <span>{t('budgets.closed')}</span>
             </span>
           ) : (
@@ -396,10 +384,7 @@ export function BudgetsTab() {
               onClick={() => handleOpenEdit(null)}
               disabled={!canEdit}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                <path d="m15 5 4 4" />
-              </svg>
+              <Icon name="pencil" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               <span>{model?.hasAnyLimit ? t('budgets.editLimits') : t('budgets.setupLimits')}</span>
             </button>
           )}
@@ -417,7 +402,7 @@ export function BudgetsTab() {
         {loadError ? (
           <div className="budget-load-error" role="alert">
             <span>{t('budgets.loadFailed')}</span>
-            <button type="button" className="btn btn--secondary" onClick={() => setRetryCount((count) => count + 1)}>{t('common.tryAgain')}</button>
+            <Button variant="secondary" onClick={() => setRetryCount((count) => count + 1)}>{t('common.tryAgain')}</Button>
           </div>
         ) : (
           <>

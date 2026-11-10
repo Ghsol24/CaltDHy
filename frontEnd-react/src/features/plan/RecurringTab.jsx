@@ -16,6 +16,7 @@ import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { isInstallmentEnded } from '../../utils/installmentTerm';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 
+import { Icon } from '../../components/ui/AppIcons';
 const CYCLE_SUFFIXES = {
   monthly: '/ tháng',
   quarterly: '/ quý',
@@ -394,20 +395,7 @@ export function RecurringTab() {
           onClick={handleOpenCreate}
           aria-label="Thêm khoản định kỳ mới"
         >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <Icon name="plus" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           <span className="plan-wide-copy">Thêm khoản định kỳ</span>
           <span className="plan-mobile-copy">Thêm</span>
         </button>
@@ -476,20 +464,7 @@ export function RecurringTab() {
               <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16" />
             </svg>
             <span className="sort-label-text">{currentSortLabel}</span>
-            <svg
-              className={`sort-chevron-icon ${isSortDropdownOpen ? 'is-open' : ''}`}
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <Icon name="chevronDown" className={`sort-chevron-icon ${isSortDropdownOpen ? 'is-open' : ''}`} width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </button>
 
           {isSortDropdownOpen && (
@@ -507,9 +482,7 @@ export function RecurringTab() {
                   aria-selected={sortBy === opt.value}
                 >
                   {sortBy === opt.value && (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Icon name="check" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   )}
                   <span>{opt.label}</span>
                 </button>
@@ -598,12 +571,7 @@ export function RecurringTab() {
 
                   <div className="recurring-meta-row">
                     <span className="recurring-meta-item">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <rect width="18" height="18" x="3" y="4" rx="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
+                      <Icon name="calendar" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <span>Ngày thanh toán: <strong>{dayOfMonth} hàng tháng</strong></span>
                     </span>
 
@@ -622,10 +590,7 @@ export function RecurringTab() {
 
                     {noteLabel && (
                       <span className="recurring-meta-item recurring-meta-note">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                          <line x1="7" y1="7" x2="7.01" y2="7" />
-                        </svg>
+                        <Icon name="tag" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <span>{noteLabel}</span>
                       </span>
                     )}
@@ -650,9 +615,7 @@ export function RecurringTab() {
                         {pendingAction === 'wallet' ? <span className="btn-spinner" /> : <WalletOutlineIcon type={assignedWallet?.type} size={16} color="currentColor" />}
                       </span>
                       <span className="wallet-chip-name">{walletLabel}</span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
+                      <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </button>
 
                     {isWalletMenuOpen && (
@@ -682,9 +645,7 @@ export function RecurringTab() {
                               <span className="wallet-popover-bal">{formatCurrency(w.currentBalance ?? 0)}</span>
                             </div>
                             {String(w.id) === String(assignedWallet?.id) && (
-                              <svg className="wallet-check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
+                              <Icon name="check" className="wallet-check-icon" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                             )}
                           </button>
                         ))}
@@ -711,9 +672,7 @@ export function RecurringTab() {
                     ) : tierInfo.tier === 'paid' ? (
                       <>
                         <div className="due-pill-top">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
+                          <Icon name="check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                           <strong>{tierInfo.text}</strong>
                         </div>
                         <span className="due-pill-sub">
@@ -724,16 +683,9 @@ export function RecurringTab() {
                       <>
                         <div className="due-pill-top">
                           {tierInfo.tier === 'danger' ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <circle cx="12" cy="12" r="10" />
-                              <line x1="12" y1="8" x2="12" y2="12" />
-                              <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
+                            <Icon name="alertCircle" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
+                            <Icon name="clock" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           )}
                           <strong>{tierInfo.text}</strong>
                         </div>
@@ -768,11 +720,7 @@ export function RecurringTab() {
                       aria-label={`Tùy chọn cho khoản ${item.name}`}
                       title="Tùy chọn"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="12" cy="5" r="1" />
-                        <circle cx="12" cy="19" r="1" />
-                      </svg>
+                      <Icon name="moreVertical" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </button>
 
                     {isMenuOpen && (
@@ -785,9 +733,7 @@ export function RecurringTab() {
                           disabled={isEnded}
                           title={isEnded ? 'Gia hạn ngày kết thúc để tiếp tục thanh toán' : undefined}
                         >
-                          <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
+                          <Icon name="check" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           <span>{isPaidThisMonth ? 'Đánh dấu đã trả kỳ tới' : 'Đánh dấu đã trả kỳ này'}</span>
                         </button>
                         <button
@@ -796,10 +742,7 @@ export function RecurringTab() {
                           role="menuitem"
                           onClick={() => handleOpenEdit(item)}
                         >
-                          <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                            <path d="m15 5 4 4" />
-                          </svg>
+                          <Icon name="pencil" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           <span>Chỉnh sửa khoản định kỳ</span>
                         </button>
                         <button
@@ -829,10 +772,7 @@ export function RecurringTab() {
                           role="menuitem"
                           onClick={() => handleDelete(item)}
                         >
-                          <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
+                          <Icon name="trash" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           <span>Xóa khoản định kỳ</span>
                         </button>
                       </div>
@@ -850,12 +790,7 @@ export function RecurringTab() {
         <div className="summary-bottom-header-row">
           <div className="summary-bottom-title-lead">
             <div className="summary-bottom-icon-box" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="4" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
+              <Icon name="calendar" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <div className="summary-bottom-titles">
               <h3 className="summary-bottom-title">Tổng quan khoản định kỳ</h3>

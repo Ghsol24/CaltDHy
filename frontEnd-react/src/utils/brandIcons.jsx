@@ -9,7 +9,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-netflix ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Netflix"
           aria-hidden="true"
         >
@@ -27,7 +27,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-spotify ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Spotify"
           aria-hidden="true"
         >
@@ -45,7 +45,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-youtube ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="YouTube"
           aria-hidden="true"
         >
@@ -60,7 +60,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-fpt ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="FPT"
           aria-hidden="true"
         >
@@ -76,7 +76,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-apple ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Apple"
           aria-hidden="true"
         >
@@ -94,7 +94,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-chatgpt ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="ChatGPT"
           aria-hidden="true"
         >
@@ -110,7 +110,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-adobe ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Adobe"
           aria-hidden="true"
         >
@@ -125,7 +125,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-canva ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Canva"
           aria-hidden="true"
         >
@@ -141,7 +141,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-electric ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Tiền điện"
           aria-hidden="true"
         >
@@ -155,7 +155,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-water ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Tiền nước"
           aria-hidden="true"
         >
@@ -169,7 +169,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-rent ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Tiền nhà"
           aria-hidden="true"
         >
@@ -184,7 +184,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-installment ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Trả góp"
           aria-hidden="true"
         >
@@ -199,7 +199,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-gym ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           title="Thể thao"
           aria-hidden="true"
         >
@@ -213,7 +213,7 @@ export function BrandLogoIcon({ brandKey, size = 48, className = '' }) {
       return (
         <div
           className={`brand-icon-tile brand-generic ${className}`}
-          style={{ width: size, height: size }}
+          style={{ '--brand-icon-size': `${size}px` }}
           aria-hidden="true"
         >
           <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
