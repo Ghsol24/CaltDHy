@@ -1,0 +1,180 @@
+/* Hũ — phần dùng chung của các hộp thoại hũ
+   (tách từ assets/css/dialogs.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── Common Jar Dialog Components ── */
+.financial-tips-dialog {
+  background: var(--color-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 18px);
+  box-shadow: var(--dialog-card-shadow);
+  width: 94vw;
+  max-width: 580px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalIn 200ms var(--ease-smooth);
+  border-color: var(--color-border);
+}
+
+.financial-tips-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface);
+  border-color: var(--dialog-divider);
+}
+
+.financial-tips-close-btn {
+  background: transparent;
+  border: none;
+  font-size: var(--font-xl);
+  color: var(--dialog-close-text);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.financial-tips-close-btn:hover {
+  background: var(--control-track-bg);
+  color: var(--color-text);
+}
+
+.jar-detail-body,
+.financial-tips-body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--surface);
+}
+
+.jar-detail-footer,
+.financial-tips-footer {
+  padding: 16px 24px;
+  border-top: 1px solid;
+  border-color: var(--dialog-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface);
+  gap: 10px;
+}
+.jar-detail-stats-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--jar-detail-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 18px 22px;
+  gap: 16px;
+}
+
+.jar-detail-roadmap-box {
+  background: var(--jar-detail-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jar-detail-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--jar-detail-panel-bg);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  transition: background var(--dur-fast) ease;
+}
+
+.jar-detail-btn-edit,
+.jar-detail-btn-withdraw {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--btn-secondary-text);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.jar-detail-btn-edit:hover:not(:disabled),
+.jar-detail-btn-withdraw:hover:not(:disabled) {
+  background: var(--control-muted-bg);
+  color: var(--color-text);
+}
+.jar-detail-btn-edit:hover:not(:disabled),
+.jar-detail-btn-withdraw:hover:not(:disabled) {
+  border-color: var(--btn-secondary-hover-border);
+}
+
+.jar-detail-btn-deposit,
+.financial-tips-ack-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--btn-primary-bg);
+  color: #FFFFFF;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--btn-primary-shadow);
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.jar-detail-btn-deposit:hover,
+.financial-tips-ack-btn:hover {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.jar-detail-btn-deposit,
+.financial-tips-ack-btn {
+  border-color: transparent;
+}
+.jar-detail-btn-deposit:hover:not(:disabled),
+.financial-tips-ack-btn:hover:not(:disabled) {
+  background: var(--btn-primary-hover-bg);
+  box-shadow: var(--btn-primary-hover-shadow);
+}
+
+.financial-tips-tab-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: var(--font-sm);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.financial-tips-tab-btn.active {
+  background: var(--segment-active-bg);
+  color: var(--color-accent);
+  border-color: var(--color-action-bg);
+  box-shadow: var(--segment-active-shadow);
+}
+
+.financial-tips-input {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  color: var(--color-text);
+}
+.financial-tips-input:focus {
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
+}

@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { authService } from '../services/authService';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { useTranslation } from '../i18n/useTranslation';
+import './auth.css';
 
 export function VerifyEmailPage() {
   const { t } = useTranslation();

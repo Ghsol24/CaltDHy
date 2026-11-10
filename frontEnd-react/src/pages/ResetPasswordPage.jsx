@@ -6,6 +6,7 @@ import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, AlertTriangleOutlineIcon, CheckOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
+import './auth.css';
 
 export const ResetPasswordPage = () => {
   const { t } = useTranslation();

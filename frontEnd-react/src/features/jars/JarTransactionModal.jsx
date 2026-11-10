@@ -10,7 +10,7 @@ import { JarOutlineIcon } from '../../components/ui/AppIcons';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { JarDialog } from './JarDialog';
 import { getJarTransactionCopy } from './jarTransactionCopy';
-import '../../assets/css/jar-transaction.css';
+import './jar-transaction.css';
 
 const QUICK_AMOUNTS = [50000, 100000, 250000, 500000];
 const amountNumber = (value) => Number(String(value).replace(/\D/g, ''));

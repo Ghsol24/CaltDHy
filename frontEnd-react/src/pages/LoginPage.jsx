@@ -7,6 +7,7 @@ import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, ClockOutlineIcon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
+import './auth.css';
 
 export const LoginPage = () => {
   const { t } = useTranslation();

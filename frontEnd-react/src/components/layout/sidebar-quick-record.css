@@ -1,0 +1,76 @@
+/* Thanh bên — thẻ Ghi nhanh
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── 5. Sidebar Quick Record Widget Card ── */
+.sidebar-quick-record-card {
+  background: var(--quick-record-bg);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px;
+  margin: 16px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-color: var(--card-outline);
+}
+
+
+.quick-record-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quick-record-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366F1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quick-record-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.quick-record-title {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+}
+
+.quick-record-btn {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #CBD5E1);
+  border-radius: var(--radius-sm, 6px);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-link);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  text-align: center;
+}
+
+.quick-record-btn:hover {
+  border-color: var(--color-brand-700, #4F46E5);
+  color: var(--color-link);
+  background: var(--color-brand-50, #EEF2FF);
+}
+
+/* Responsive adjustments for Plan Overview */
+@media (max-width: 960px) {
+  .plan-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .plan-columns-container {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1123,3 +1123,14 @@ body.dark-theme .idx-screw {
 .idx-done-btn:active {
   transform: translateY(2px);
 }
+
+/* ── Landing page wrapper (trước nằm trong spa-overrides.css, thay thế body styles từ landing.css) ── */
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+}

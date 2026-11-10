@@ -1,0 +1,283 @@
+/* CustomSelect / CustomWalletDropdown / CustomDatePicker — phần dùng chung
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ============================================================
+   CALTDHY UNIVERSAL CUSTOM SELECT COMPONENT
+   Accessible, multi-theme, high-performance dropdown control
+   ============================================================ */
+.calt-custom-select {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.calt-custom-select--full {
+  width: 100%;
+  display: block;
+}
+
+.calt-custom-select.is-open {
+  z-index: 60;
+}
+
+.calt-custom-select.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* ── Trigger Button ── */
+.calt-custom-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  color: var(--text-primary);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--dur-fast) ease,
+              background-color var(--dur-fast) ease,
+              box-shadow var(--dur-fast) ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.calt-custom-select-trigger:hover:not(:disabled) {
+  border-color: var(--border-focus, var(--color-action-bg, var(--primary)));
+  background: var(--surface-subtle);
+}
+
+.calt-custom-select-trigger:focus-visible,
+.calt-custom-select.is-open .calt-custom-select-trigger {
+  border-color: var(--border-focus, var(--color-action-bg, var(--primary)));
+  box-shadow: var(--focus-ring, 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent));
+}
+
+/* ── Trigger Sizes ── */
+.calt-custom-select--sm .calt-custom-select-trigger {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: var(--font-xs);
+  border-radius: var(--radius-sm, 8px);
+  gap: 6px;
+}
+
+.calt-custom-select--md .calt-custom-select-trigger {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: var(--font-base);
+  border-radius: var(--radius-md, 10px);
+  gap: 8px;
+}
+
+.calt-custom-select--lg .calt-custom-select-trigger {
+  min-height: 48px;
+  padding: 10px 16px;
+  font-size: var(--font-md);
+  border-radius: var(--radius-lg, 12px);
+  gap: 10px;
+}
+
+/* ── Trigger Variants ── */
+.calt-custom-select--subtle .calt-custom-select-trigger {
+  border-width: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.calt-custom-select--pill .calt-custom-select-trigger {
+  border-radius: 9999px;
+}
+
+.calt-custom-select--ghost .calt-custom-select-trigger {
+  background: transparent;
+  border-color: transparent;
+}
+.calt-custom-select--ghost .calt-custom-select-trigger:hover:not(:disabled) {
+  background: var(--surface-subtle);
+  border-color: var(--border);
+}
+
+/* ── Trigger Content ── */
+.calt-custom-select-trigger-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calt-custom-select-prefix-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-link, var(--primary));
+  font-size: var(--font-base);
+}
+
+.calt-custom-select-prefix-label {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.calt-custom-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calt-custom-select-placeholder {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.calt-custom-select-chevron {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: transform var(--dur-fast) ease;
+}
+
+.calt-custom-select-chevron.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* ── Popover Menu ── */
+.calt-custom-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: var(--z-popover);
+  min-width: 100%;
+  width: max-content;
+  max-width: min(340px, 90vw);
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--menu-shadow);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: caltDropdownFade 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes caltDropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.calt-custom-select-menu--align-left {
+  left: 0;
+  right: auto;
+}
+
+.calt-custom-select-menu--align-right {
+  right: 0;
+  left: auto;
+}
+
+/* ── Menu Option Items ── */
+.calt-custom-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--menu-text);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--dur-fast) ease,
+              color var(--dur-fast) ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.calt-custom-select--sm + .calt-custom-select-menu .calt-custom-select-item {
+  padding: 6px 9px;
+  font-size: var(--font-xs);
+}
+
+.calt-custom-select-item:hover,
+.calt-custom-select-item.is-highlighted {
+  background: var(--menu-item-hover-bg);
+}
+
+.calt-custom-select-item.is-selected {
+  background: var(--menu-item-selected-bg);
+  color: var(--menu-item-selected-text);
+  font-weight: 600;
+}
+
+.calt-custom-select-item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.calt-custom-select-item-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calt-custom-select-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-link, var(--primary));
+}
+
+.calt-custom-select-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calt-custom-select-item-badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--color-link, var(--primary));
+  flex-shrink: 0;
+}
+
+.calt-custom-select-check {
+  color: var(--color-link, var(--primary));
+  flex-shrink: 0;
+}
+
+/* Theme colours for this menu come from the --menu-* tokens in tokens.css.
+   The old per-theme overrides painted the green (light) theme's menu almost
+   black with dark text, which made every option unreadable. */

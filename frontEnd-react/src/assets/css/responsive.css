@@ -2,38 +2,6 @@
    RESPONSIVE
    ============================================================ */
 /* ============================================================
-   RESPONSIVE — Intermediate Desktop / Laptop (769px – 1100px)
-   Targets older Windows laptops (1366×768, 1280×800) and
-   any browser window narrowed to a mid-range width.
-   ============================================================ */
-@media (min-width: 769px) and (max-width: 1100px) {
-
-  .topbar {
-    padding: 0 20px;
-  }
-}
-
-/* ============================================================
-   RESPONSIVE — Mobile (≤768px)
-   ============================================================ */
-@media (max-width: 768px) {
-
-  .topbar {
-    padding: 0 16px;
-    position: relative;
-  }
-
-  .tb-badge {
-    display: none;
-  }
-
-  .tb-right {
-    gap: 6px;
-  }
-}
-
-
-/* ============================================================
    RESPONSIVE — Guide panel
    ============================================================ */
 @media (max-width: 860px) {

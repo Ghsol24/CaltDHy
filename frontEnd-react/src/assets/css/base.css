@@ -152,19 +152,6 @@ select:focus:not(:focus-visible) {
 /* Scrollbar theme overrides are now managed via --scrollbar-thumb and --scrollbar-hover CSS tokens */
 
 /* ============================================================
-   WINDOWS DPI / SCALE-FACTOR COMPENSATION
-   On Windows with 125%/150% display scale, browsers report a
-   smaller viewport. Use min-width guards to avoid layout breaks
-   at the edge of the intermediate breakpoint.
-   ============================================================ */
-@media (min-width: 1101px) and (max-width: 1280px) {
-  .topbar {
-    padding: 0 24px;
-  }
-}
-
-
-/* ============================================================
    ACCESSIBILITY — prefers-reduced-motion
    Người dùng có thể tắt animation qua system settings.
    ============================================================ */

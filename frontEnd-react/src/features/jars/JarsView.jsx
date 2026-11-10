@@ -22,7 +22,7 @@ import { JarRecentActivity } from './JarRecentActivity';
 import { JarNextStepStrip } from './JarNextStepStrip';
 import { collectJarEvents, compareWithPreviousMonth, monthOf, monthTotals, summariseDays } from './jarActivity';
 import { Icon, TargetOutlineIcon, TrophyOutlineIcon, AlertTriangleOutlineIcon, CheckOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
-import '../../assets/css/jars.css';
+import './jars.css';
 import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Button } from '../../components/ui/Button';

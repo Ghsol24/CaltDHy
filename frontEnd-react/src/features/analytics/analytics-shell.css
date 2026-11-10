@@ -1,0 +1,100 @@
+/* Phân tích — khung trang
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ============================================================
+   ANALYTICS FEATURE VIEW (CaltDHy Light Mint v2)
+   ============================================================ */
+.analytics-feature-view {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.analytics-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.analytics-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analytics-view-title {
+  font-size: var(--font-3xl);
+  font-weight: 800;
+  color: var(--text-primary, #173126);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.analytics-view-subtitle {
+  font-size: var(--font-sm);
+  color: var(--text-secondary, #60766A);
+  margin: 0;
+}
+
+.month-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 6px);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary, var(--text-secondary));
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.month-nav-btn:hover {
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text, var(--text-primary));
+}
+
+.month-current-display {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* Stat Cards Grid */
+
+.pill-positive {
+  background: var(--color-brand-100, var(--primary-light));
+  color: var(--color-link);
+}
+
+.pill-danger {
+  background: var(--color-danger-50, #FFF0EF);
+  color: var(--color-danger, #C94B45);
+}
+
+/* Category Breakdown Grid */
+
+.doughnut-center-label {
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-weight: 500;
+}
+
+.cat-progress-track {
+  height: 5px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.cat-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--dur-slower) ease;
+}

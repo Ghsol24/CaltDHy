@@ -1,0 +1,62 @@
+/* In ấn (@media print)
+   (tách từ assets/css/budgets-analytics.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── 6. PRINT STYLES (@media print) ── */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .topbar,
+  .app-sidebar-nav,
+  .analytics-header-controls,
+  .report-action-bar,
+  .btn-add-txn-empty,
+  .toast-region {
+    display: none !important;
+  }
+
+  .app-body-container {
+    display: block !important;
+    min-height: auto !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .analytics-feature-view {
+    gap: 16px !important;
+  }
+
+  .analytics-section-panel {
+    box-shadow: none !important;
+    border: 1px solid #CCCCCC !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .report-table-wrapper {
+    border: 1px solid #CCCCCC !important;
+    box-shadow: none !important;
+  }
+
+  .report-table th {
+    background: #EEEEEE !important;
+    color: #000000 !important;
+  }
+
+  .report-table td {
+    color: #000000 !important;
+  }
+}

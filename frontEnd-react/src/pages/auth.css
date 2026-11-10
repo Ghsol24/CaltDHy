@@ -282,3 +282,15 @@
 @media (min-width: 481px) and (max-width: 768px) {
   .module { padding: 36px 36px 32px; }
 }
+
+/* ── Auth page wrapper (trước nằm trong spa-overrides.css, thay thế body styles từ auth.css) ── */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}

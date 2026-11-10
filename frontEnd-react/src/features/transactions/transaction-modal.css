@@ -1,0 +1,1138 @@
+/* Hộp thoại giao dịch (desktop và sheet trên điện thoại)
+   (tách từ assets/css/dialogs.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── Transaction Modal (CaltDHy v2) ── */
+.txn-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: overlayFadeIn 150ms ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.txn-modal-card {
+  background: var(--color-surface);
+  border: 1px solid var(--border, #E2ECE6);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--dialog-card-shadow);
+  width: 100%;
+  max-width: 500px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: modalIn 200ms var(--ease-smooth);
+  overflow: hidden;
+}
+
+.txn-modal-card > form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.txn-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border, #E2ECE6);
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-color: var(--dialog-divider);
+}
+
+.txn-modal-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.txn-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--dialog-close-text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.txn-modal-close-btn:hover {
+  background: var(--control-track-bg);
+  color: var(--color-text);
+}
+
+.txn-modal-body {
+  padding: 20px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Keep the form's content at its natural height; the body owns vertical scrolling. */
+.txn-modal-body--transaction > * {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+/* Type Toggle Switcher */
+.txn-type-toggle {
+  display: flex;
+  background: var(--control-track-bg);
+  padding: 4px;
+  border-radius: var(--radius-md, 12px);
+  gap: 4px;
+  border: 1px solid var(--color-border);
+}
+
+.txn-type-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--segment-text);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.txn-type-btn:hover:not(.active) {
+  color: var(--color-text);
+  background: var(--segment-hover-bg);
+}
+
+.txn-type-btn--expense.active {
+  background: var(--segment-expense-bg);
+  color: var(--segment-expense-text);
+  border-color: var(--segment-expense-border);
+  box-shadow: var(--segment-expense-shadow);
+}
+
+.txn-type-btn--income.active {
+  background: var(--segment-income-bg);
+  color: var(--segment-income-text);
+  border-color: var(--segment-income-border);
+  box-shadow: var(--segment-income-shadow);
+}
+
+/* Field Groups */
+.txn-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.txn-label {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary, #173126);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.txn-label-optional {
+  font-size: var(--font-xs);
+  font-weight: 400;
+  color: var(--text-muted, #8FA297);
+}
+
+/* Amount Input Box */
+.txn-amount-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.txn-amount-input {
+  width: 100%;
+  padding: 12px 70px 12px 16px;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-4xl);
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--field-bg);
+  border: 1.5px solid var(--field-border);
+  border-radius: var(--radius-md, 12px);
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  font-variant-numeric: tabular-nums;
+}
+
+.txn-amount-input:focus {
+  outline: none;
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
+}
+
+/* Error state - chỉ hiển thị khi có class has-error */
+.txn-amount-box.has-error .txn-amount-input {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.txn-amount-error-inline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: #EF4444;
+  margin-top: 5px;
+  padding-left: 2px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.txn-amount-suffix {
+  position: absolute;
+  right: 14px;
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--segment-text);
+  background: var(--control-muted-bg);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm, 6px);
+  pointer-events: none;
+}
+
+/* Category Grid */
+.txn-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  flex-shrink: 0;
+  gap: 10px;
+  padding: 2px 2px 6px 2px;
+}
+
+/* Smart Category Card */
+.txn-category-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 8px 10px 8px;
+  min-width: 0;
+  min-height: 98px;
+  background: var(--category-card-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+  color: var(--color-icon, var(--text-secondary));
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  text-align: center;
+  user-select: none;
+}
+
+.txn-category-card > * {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.txn-category-card:focus-visible {
+  outline: 2px solid var(--color-action-bg);
+  outline-offset: 2px;
+}
+
+.txn-category-card:hover {
+  background: var(--category-card-hover-bg);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+
+/* Selected state */
+.txn-category-card.active {
+  background: var(--category-card-active-bg);
+  border-color: var(--field-focus-border);
+  color: var(--color-active-text, var(--text-primary));
+  box-shadow: var(--category-card-active-shadow);
+}
+
+/* Thu nhập: thẻ đang chọn, huy hiệu tick và nút Lưu dùng họ màu success của theme. */
+.txn-category-card.active--income {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  box-shadow: 0 0 0 1px var(--color-success), 0 4px 12px color-mix(in srgb, var(--color-success) 18%, transparent);
+}
+
+/* Check Badge on top right of selected card */
+.txn-card-check-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent-solid);
+  color: #FFFFFF;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.txn-card-check-badge--income {
+  background: var(--color-income-solid);
+}
+
+/* Icon */
+.txn-card-icon {
+  font-size: var(--font-2xl);
+  line-height: 1;
+  margin-bottom: 5px;
+  color: inherit;
+}
+
+/* Category Name */
+.txn-card-name {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--category-card-text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  margin-bottom: 2px;
+}
+
+.txn-category-card.active .txn-card-name {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.txn-category-card.active--income .txn-card-name {
+  color: var(--color-success);
+}
+
+/* Remaining Amount */
+.txn-card-amount {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  margin-bottom: 3px;
+}
+
+/* Subtitle: "Còn lại 88%", "Hết hạn mức", "Chưa đặt hạn mức" */
+.txn-card-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  color: var(--text-muted, #718096);
+  margin-bottom: 6px;
+}
+
+/* Mini Progress Bar */
+.txn-card-progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--color-neutral-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: auto;
+}
+
+.txn-card-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width var(--dur-slower) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Income card tag */
+.txn-card-income-tag {
+  margin-top: auto;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+@media (max-width: 599px) {
+  .txn-category-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .txn-category-card {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 12px;
+    row-gap: 6px;
+    min-height: 0;
+    padding: 14px;
+    text-align: start;
+  }
+
+  .txn-category-card > * {
+    margin: 0;
+  }
+
+  .txn-card-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    min-height: 40px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+  }
+
+  .txn-card-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .txn-card-name {
+    grid-column: 2;
+    grid-row: 1;
+    padding-inline-end: 20px;
+    font-size: var(--font-base);
+    font-weight: 600;
+  }
+
+  .txn-card-amount,
+  .txn-card-income-tag {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .txn-card-amount {
+    font-size: var(--font-base);
+  }
+
+  .txn-card-subtitle {
+    grid-column: 1 / -1;
+    font-size: var(--font-xs);
+  }
+
+  .txn-card-progress-track {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
+}
+
+/* Empty Categories State */
+.txn-empty-categories {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1.5px dashed rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+}
+
+.txn-empty-icon {
+  font-size: var(--font-5xl);
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.txn-empty-title {
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--text-primary, #FFFFFF);
+  margin-bottom: 4px;
+}
+
+.txn-empty-desc {
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  color: var(--text-muted, #A0AEC0);
+  margin-bottom: 12px;
+  max-width: 240px;
+}
+
+.txn-empty-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: #FFFFFF;
+  background: var(--primary, #FF4757);
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease, filter var(--dur-fast) ease;
+}
+
+.txn-empty-cta-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Standard Inputs & Custom Styled Selects */
+.txn-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  color: var(--color-text);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+/* iOS Safari zooms the whole page when a focused field is under 16px, which
+   happens in the transaction and recurring forms on phones and tablets. */
+@media (max-width: 900px), (pointer: coarse) {
+  .txn-input {
+    font-size: var(--font-lg);
+    text-overflow: ellipsis;
+  }
+}
+
+.txn-input:focus {
+  outline: none;
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
+}
+
+.txn-error-banner {
+  background: var(--danger-bg, #FEE2E2);
+  color: var(--danger-text, #991B1B);
+  border: 1px solid var(--danger, #C94B45);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 12px;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modal Footer */
+.txn-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+  border-color: var(--dialog-divider);
+}
+
+@media (max-width: 480px) {
+  .txn-modal-backdrop {
+    padding: 8px;
+  }
+
+  .txn-modal-card {
+    max-height: 100%;
+  }
+
+  .txn-modal-header {
+    padding: 14px 16px;
+  }
+
+  .txn-modal-body {
+    padding: 16px;
+  }
+
+  .txn-modal-footer {
+    flex-wrap: wrap;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .txn-modal-footer > button {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
+
+.txn-btn-cancel {
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--btn-secondary-text);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  user-select: none;
+}
+
+.txn-btn-cancel:hover:not(:disabled) {
+  background: var(--control-muted-bg);
+  color: var(--color-text);
+  transform: translateY(-1px);
+  border-color: var(--btn-secondary-hover-border);
+}
+
+.txn-btn-cancel:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Delete (edit mode only): a quiet outline icon, set apart on the left, that turns red on intent. */
+.txn-btn-delete {
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
+  background: transparent;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  user-select: none;
+}
+
+.txn-btn-delete:focus-visible,
+.txn-btn-delete:active:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-danger-50);
+  border-color: var(--color-danger);
+}
+
+@media (hover: hover) {
+  .txn-btn-delete:hover:not(:disabled) {
+    color: var(--color-danger);
+    background: var(--color-danger-50);
+    border-color: var(--color-danger);
+  }
+}
+
+.txn-btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.txn-btn-submit {
+  padding: 10px 24px;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: #FFFFFF;
+  background: var(--btn-primary-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: var(--btn-primary-shadow);
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.txn-btn-submit:hover:not(:disabled) {
+  background: var(--btn-primary-hover-bg);
+  box-shadow: var(--btn-primary-hover-shadow);
+  transform: translateY(-1px);
+}
+
+.txn-btn-submit:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.txn-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.txn-btn-submit--income {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-income-solid) 86%, black) 0%, var(--color-income-solid) 100%);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-income-solid) 35%, transparent);
+}
+
+.txn-btn-submit--income:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-income-solid) 86%, black);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-income-solid) 45%, transparent);
+}
+
+/* ── Transaction dialog on phones: bottom sheet, compact category row, picker sheets ──
+   The category grid and the anchored calendar popover don't fit a phone, so both become
+   rows that open a sheet sliding up inside the dialog (TransactionMobileFields.jsx). */
+.txn-modal-card {
+  position: relative;
+  /* `hidden` still lets focus() scroll the card while a sheet slides in from below,
+     which leaves the form shifted up; `clip` forbids any scrolling. */
+  overflow: clip;
+  border-color: var(--color-border);
+}
+
+.txn-modal-card.is-dragging {
+  animation: none;
+  transition: none;
+  transform: translateY(var(--sheet-drag-offset, 0px));
+}
+
+.txn-modal-handle-zone {
+  flex-shrink: 0;
+}
+
+.txn-modal-grabber {
+  display: none;
+}
+
+.txn-input.txn-category-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.txn-category-summary__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.txn-category-summary__icon,
+.txn-cat-option__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  border-radius: var(--radius-sm, 10px);
+}
+
+.txn-category-summary__icon {
+  background: color-mix(in srgb, var(--color-action-bg) 12%, transparent);
+  color: var(--color-link);
+}
+
+.txn-category-summary__text,
+.txn-cat-option__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Long names wrap instead of truncating, so similar categories stay distinguishable. */
+.txn-category-summary__name,
+.txn-cat-option__name {
+  font-family: var(--font-sans);
+  font-size: var(--font-md);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.txn-category-summary__line,
+.txn-cat-option__meta {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.txn-category-summary__line.is-danger,
+.txn-cat-option__meta.is-danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.txn-field-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* Budget bar: solid = left after saving, faded = what this draft will use. */
+.txn-budget-track {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-neutral-bg, var(--border));
+}
+
+.txn-budget-track__fill,
+.txn-budget-track__pending {
+  height: 100%;
+  transition: width var(--dur-fast) ease;
+}
+
+.txn-budget-track__pending {
+  opacity: 0.35;
+}
+
+.txn-input.txn-date-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.txn-date-trigger > svg:first-child {
+  flex-shrink: 0;
+  color: var(--color-link);
+}
+
+.txn-date-trigger__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sheets are absolutely placed inside the dialog card, anchored to its bottom edge and
+   capped to its height, so they can never run off-screen. */
+.txn-sheet-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  background: var(--color-overlay-nested, rgba(0, 0, 0, 0.4));
+  animation: overlayFadeIn 150ms ease;
+}
+
+.txn-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100% - 32px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--color-surface, var(--surface));
+  color: var(--text-primary);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+  animation: txnSheetIn 240ms var(--ease-smooth, ease-out);
+}
+
+.txn-sheet.is-dragging {
+  animation: none;
+}
+
+.txn-sheet__handle-zone {
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.txn-sheet-grabber {
+  display: block;
+  width: 36px;
+  height: 5px;
+  margin: 8px auto 0;
+  border-radius: 3px;
+  background: var(--color-border-strong, #C9DED3);
+}
+
+.txn-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px 12px;
+}
+
+.txn-sheet__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.txn-sheet__close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.txn-sheet__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 12px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.txn-sheet-search {
+  padding: 0 4px 10px;
+}
+
+.txn-cat-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.txn-cat-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-md, 12px);
+  background: transparent;
+  color: var(--text-primary);
+  text-align: start;
+  cursor: pointer;
+}
+
+.txn-cat-option:hover {
+  background: var(--menu-item-hover-bg);
+}
+
+.txn-cat-option.is-selected {
+  background: color-mix(in srgb, var(--color-action-bg) 12%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--color-action-bg);
+}
+
+.txn-cat-option:focus-visible,
+.txn-date-chip:focus-visible,
+.txn-sheet__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.txn-cat-option__icon {
+  background: var(--surface-subtle);
+  color: var(--color-icon, var(--text-secondary));
+}
+
+.txn-cat-option.is-selected .txn-cat-option__icon {
+  background: var(--color-surface, var(--surface));
+  color: var(--color-link);
+}
+
+.txn-cat-option__name {
+  font-size: var(--font-base);
+}
+
+.txn-cat-option__meta {
+  font-size: var(--font-xs);
+}
+
+.txn-cat-option .txn-budget-track {
+  height: 4px;
+  margin-top: 4px;
+}
+
+.txn-cat-option__check {
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.txn-cat-option.is-selected .txn-cat-option__check {
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
+}
+
+.txn-sheet-empty {
+  margin: 16px 0;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.txn-date-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 4px 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.txn-date-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-primary);
+  font: 600 13px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.txn-date-chip.is-active {
+  border-color: var(--color-action-bg);
+  background: var(--color-action-bg);
+  color: var(--color-on-action, #fff);
+}
+
+.txn-sheet-calendar {
+  padding: 0 4px;
+}
+
+.txn-sheet-calendar .calt-date-day {
+  height: 42px;
+  font-size: var(--font-base);
+}
+
+/* The "Today" chip above replaces the panel's own footer link. */
+.txn-sheet-calendar .calt-date-footer {
+  display: none;
+}
+
+.txn-sheet-hint {
+  margin: 10px 4px 0;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+@keyframes txnSheetIn {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@media (max-width: 599px) {
+  .txn-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    overflow: clip;
+  }
+
+  .txn-modal-card {
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    border-width: 1px 0 0;
+    border-radius: 20px 20px 0 0;
+    animation: txnSheetIn 260ms var(--ease-smooth, ease-out);
+  }
+
+  .txn-modal-handle-zone {
+    touch-action: none;
+  }
+
+  .txn-modal-grabber {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 8px auto 0;
+    border-radius: 3px;
+    background: var(--color-border-strong, #C9DED3);
+  }
+
+  .txn-modal-header {
+    padding: 6px 16px 12px;
+  }
+
+  .txn-modal-body {
+    gap: 14px;
+    padding: 14px 16px 16px;
+  }
+
+  .txn-amount-input {
+    padding-block: 14px;
+    font-size: 30px;
+  }
+
+  .txn-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .txn-modal-footer > button {
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  /* Delete shrinks to an icon-only square so Cancel/Update keep their widths. */
+  .txn-modal-footer--with-delete {
+    grid-template-columns: 48px 1fr 2fr;
+  }
+
+  .txn-btn-delete {
+    width: 48px;
+    padding: 0;
+    margin-right: 0;
+  }
+
+  .txn-btn-delete__label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txn-sheet,
+  .txn-sheet-layer,
+  .txn-modal-card {
+    animation: none;
+  }
+}

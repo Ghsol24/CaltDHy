@@ -1,0 +1,382 @@
+/* Hướng dẫn: hộp thoại hướng dẫn tổng và hướng dẫn theo mục
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ============================================================
+   MASTER GUIDE MODAL & CONTEXTUAL SECTION GUIDE
+   ============================================================ */
+/* Shares the element with .budget-setup-dialog, so the pair is needed to win. */
+.budget-setup-dialog.guide-modal-dialog {
+  max-width: 680px;
+  width: 92vw;
+  max-height: 88vh;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.guide-modal-dialog .budget-dialog-header,
+.guide-modal-dialog .guide-modal-footer {
+  flex-shrink: 0;
+}
+
+.guide-header-icon {
+  font-size: var(--font-2xl);
+}
+
+.guide-tabs-bar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 24px 0 24px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border, var(--border));
+  background: var(--color-surface, var(--surface));
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+
+.guide-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.guide-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
+  background: transparent;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.guide-tab-btn:hover {
+  color: var(--color-text, var(--text-primary));
+}
+
+.guide-tab-btn.active {
+  color: var(--color-link);
+  border-bottom-color: var(--color-link);
+  font-weight: 700;
+}
+
+.guide-modal-body {
+  min-height: 0;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.guide-tab-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide-hero-banner {
+  background: linear-gradient(135deg, var(--color-brand-100, rgba(0, 204, 119, 0.12)) 0%, var(--color-surface-muted, rgba(0, 204, 119, 0.04)) 100%);
+  border: 1px solid var(--color-border-strong, rgba(0, 204, 119, 0.25));
+  border-radius: var(--radius-md, 12px);
+  padding: 16px 18px;
+}
+
+.guide-hero-banner h4 {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+  margin: 0 0 4px 0;
+}
+
+.guide-hero-banner p {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, var(--text-secondary));
+  margin: 0;
+  line-height: 1.45;
+}
+
+.guide-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.guide-action-link {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--color-link);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  transition: gap var(--dur-fast) ease;
+}
+
+.guide-action-link:hover {
+  text-decoration: underline;
+  gap: 6px;
+}
+
+.guide-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--color-surface-muted, var(--surface-subtle));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 18px;
+}
+
+.guide-section-block h3,
+.guide-section-block h5 {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+  margin: 0;
+}
+
+.guide-modal-dialog .guide-action-link {
+  align-self: flex-start;
+  min-height: 32px;
+}
+
+@media (max-width: 599px) {
+  .guide-modal-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 32px); }
+  .guide-modal-dialog .budget-dialog-header { padding: 16px; gap: 10px; }
+  .guide-modal-dialog .budget-dialog-title { font-size: var(--font-xl); }
+  .guide-tabs-bar { padding: 8px 12px 0; }
+  .guide-tab-btn { min-height: 44px; padding: 10px; }
+  .guide-modal-body { padding: 16px; }
+  .guide-section-block { padding: 14px; }
+  .guide-modal-dialog .guide-action-link { min-height: 44px; }
+}
+
+.guide-section-block p {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, var(--text-secondary));
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   FLOATING ONBOARDING & CONTEXTUAL SECTION GUIDE
+   ============================================================ */
+.floating-guide-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  /* Shares the bottom-right corner with toasts: stay just below them so an
+     action such as "Undo" is never covered. Still above pages and dropdowns. */
+  z-index: calc(var(--z-toast, 400) - 1);
+  max-width: 380px;
+  width: calc(100vw - 48px);
+  animation: floatSlideUp 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.floating-guide-widget.is-collapsed {
+  width: auto;
+  max-width: none;
+}
+
+.floating-guide-disclosure-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-strong, var(--border));
+  border-radius: 999px;
+  background: var(--color-surface, var(--surface));
+  color: var(--color-link);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  font-size: var(--font-xs);
+  font-weight: 750;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) ease, background-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+
+.floating-guide-disclosure-btn:hover {
+  border-color: var(--color-brand-600, var(--primary-hover));
+  background: var(--color-surface-muted, var(--surface-subtle));
+  transform: translateY(-1px);
+}
+
+.floating-guide-disclosure-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-brand-600, var(--primary)) 38%, transparent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .floating-guide-widget {
+    position: static;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin-top: 16px;
+    overflow: visible;
+    animation: none;
+  }
+
+  .floating-guide-widget.is-collapsed {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+@keyframes floatSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.floating-guide-card {
+  background: var(--color-surface, var(--surface));
+  border: 1px solid var(--color-border-strong, var(--border));
+  border-radius: var(--radius-lg, 18px);
+  padding: 16px 18px;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.20), 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.floating-guide-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.floating-guide-title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.floating-guide-badge {
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--color-link);
+  text-transform: uppercase;
+}
+
+.floating-guide-title {
+  font-size: var(--font-md);
+  font-weight: 800;
+  color: var(--color-text, var(--text-primary));
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.floating-guide-close-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border, var(--border));
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-xs);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  flex-shrink: 0;
+}
+
+.floating-guide-close-btn:hover {
+  background: var(--color-danger-50, #FEE2E2);
+  color: var(--color-danger, #DC2626);
+  border-color: var(--color-danger, #DC2626);
+}
+
+.floating-guide-points {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.floating-point-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, var(--text-secondary));
+  line-height: 1.45;
+}
+
+.floating-point-icon {
+  font-size: var(--font-base);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.floating-point-text strong {
+  color: var(--color-text, var(--text-primary));
+  font-weight: 700;
+}
+
+.floating-guide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border, var(--border));
+}
+
+.floating-guide-more-btn {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--color-link);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.floating-guide-more-btn:hover {
+  text-decoration: underline;
+}
+
+.floating-guide-ack-btn {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: #FFFFFF;
+  background: var(--color-brand-700, var(--primary));
+  border: 1px solid var(--color-brand-600, var(--primary-hover));
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+
+.floating-guide-ack-btn:hover {
+  background: var(--color-brand-600, var(--primary-hover));
+  transform: translateY(-1px);
+}

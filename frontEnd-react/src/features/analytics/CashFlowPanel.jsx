@@ -4,7 +4,7 @@ import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon }
 import { NavIcon } from '../../components/ui/NavIcons';
 import { CashFlowPopover } from './CashFlowPopover';
 import { formatCurrency, formatDate, getLocalDateString } from '../../utils/formatters';
-import '../../assets/css/cash-flow.css';
+import './cash-flow.css';
 
 const PERIOD_OPTIONS = [
   { value: 'daily', label: 'oneMonth', detail: 'byDay' },

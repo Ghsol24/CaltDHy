@@ -1,0 +1,417 @@
+/* Kế hoạch — hộp thoại khoản định kỳ
+   (tách từ assets/css/dialogs.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── Recurring Modal Custom Themed Selects & Dropdowns ── */
+.recurring-modal-dialog {
+  max-width: 540px;
+}
+
+.recurring-modal-header-lead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-header-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-link);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-custom-dropdown-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.modal-custom-dropdown-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface-subtle, #EDF5F0);
+  border: 1px solid var(--border, #E2ECE6);
+  border-radius: var(--radius-md, 10px);
+  color: var(--text-primary, #173126);
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  outline: none;
+}
+
+.modal-custom-dropdown-btn:hover,
+.modal-custom-dropdown-btn.is-open {
+  background: var(--color-surface, #ffffff);
+  border-color: var(--color-brand-700, #4F46E5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.dropdown-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dropdown-outline-icon {
+  color: var(--color-link);
+  flex-shrink: 0;
+}
+
+.dropdown-btn-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-chevron-icon {
+  color: var(--text-muted, #8A98A9);
+  transition: transform var(--dur-fast) ease;
+  flex-shrink: 0;
+}
+
+.modal-custom-dropdown-btn.is-open .dropdown-chevron-icon {
+  transform: rotate(180deg);
+}
+
+.modal-custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--menu-shadow);
+  z-index: var(--z-popover);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm, 8px);
+  color: var(--menu-text);
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-fast) ease;
+}
+
+.modal-dropdown-item:hover {
+  background: var(--menu-item-hover-bg);
+}
+
+.modal-dropdown-item.is-selected {
+  background: var(--menu-item-selected-bg);
+  color: var(--menu-item-selected-text);
+  font-weight: 700;
+}
+
+.dropdown-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wallet-dropdown-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dropdown-item-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-item-sub {
+  font-size: var(--font-xs);
+  font-family: var(--font-mono);
+  color: var(--text-muted, #8A98A9);
+}
+
+.dropdown-item-check {
+  color: var(--color-link);
+  flex-shrink: 0;
+}
+
+.modal-themed-input {
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.modal-dropdown-scroll-list {
+  max-height: 190px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-dropdown-footer-action {
+  padding-top: 6px;
+  margin-top: 4px;
+  border-top: 1px solid var(--color-border, #E2E8F0);
+}
+
+.dropdown-add-cat-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px dashed var(--color-border, #CBD5E1);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--color-link);
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.dropdown-add-cat-btn:hover {
+  background: var(--color-brand-50, rgba(99, 102, 241, 0.08));
+  border-color: var(--color-brand-700, #4F46E5);
+}
+
+.dropdown-add-cat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  background: var(--surface-subtle, #F8FAFC);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.dropdown-add-cat-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-brand-700, #4F46E5);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  color: var(--text-primary, #173126);
+  outline: none;
+}
+
+.dropdown-add-cat-btns {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.dropdown-cat-confirm-btn {
+  padding: 4px 12px;
+  background: var(--color-brand-700, #4F46E5);
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropdown-cat-cancel-btn {
+  padding: 4px 8px;
+  background: transparent;
+  color: var(--text-muted, #8A98A9);
+  border: none;
+  font-size: var(--font-xs);
+  cursor: pointer;
+}
+
+/* ── Recurring Modal Grouped Sections (Senior UX Layout) ── */
+.recurring-modal-dialog {
+  max-width: 560px;
+}
+
+.recurring-modal-body-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.recurring-form-section {
+  background: var(--surface-subtle, var(--color-brand-50));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.recurring-form-section:focus-within {
+  border-color: var(--color-brand-700, var(--primary));
+  box-shadow: 0 0 0 1px var(--color-brand-700, var(--primary));
+}
+
+.recurring-section-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-link);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--color-border, var(--border));
+}
+
+.section-header-icon {
+  flex-shrink: 0;
+  color: var(--color-link);
+}
+
+.section-header-title {
+  color: var(--color-link);
+}
+
+.recurring-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recurring-form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.recurring-term-control {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recurring-term-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+}
+
+.recurring-term-toggle:hover,
+.recurring-term-toggle:focus-within {
+  border-color: var(--color-link);
+}
+
+.recurring-term-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-xs);
+  line-height: 1.35;
+}
+
+.recurring-term-copy strong {
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-weight: 650;
+}
+
+.recurring-term-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.recurring-term-switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex: 0 0 42px;
+  border-radius: 99px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-neutral-bg);
+  transition: background var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.recurring-term-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-fast) ease;
+}
+
+.recurring-term-toggle input:checked + .recurring-term-switch {
+  background: var(--color-brand-700);
+  border-color: var(--color-brand-700);
+}
+
+.recurring-term-toggle input:checked + .recurring-term-switch::after {
+  transform: translateX(18px);
+}
+
+.recurring-term-toggle input:focus-visible + .recurring-term-switch {
+  outline: 2px solid var(--color-link);
+  outline-offset: 3px;
+}
+
+.recurring-term-date-field {
+  max-width: calc(50% - 6px);
+}
+
+.recurring-term-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-xs);
+}
+
+@media (max-width: 520px) {
+  .recurring-form-grid-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .recurring-term-date-field {
+    max-width: none;
+  }
+}

@@ -1,0 +1,123 @@
+/* EmptyState và SkeletonLoader
+   (tách từ assets/css/dialogs.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── UI Primitive: EmptyState ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.empty-state__icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-state__title {
+  font-family: var(--font-sans);
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.empty-state__desc {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  max-width: 360px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.empty-state__action {
+  margin-top: 4px;
+}
+
+/* ── UI Primitive: SkeletonLoader ── */
+
+.skeleton-item {
+  background: linear-gradient(
+    90deg,
+    var(--surface-subtle) 25%,
+    var(--border) 37%,
+    var(--surface-subtle) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeletonShimmer 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-text--title {
+  height: 20px;
+  width: 60%;
+}
+
+.skeleton-text--body {
+  height: 14px;
+  width: 85%;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-avatar--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.skeleton-avatar--xs {
+  width: 24px;
+  height: 24px;
+}
+
+.skeleton-card {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}

@@ -1,0 +1,695 @@
+/* Trang chủ (HomeView): tiêu đề, thẻ số dư, giao dịch gần đây, cột phải
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ============================================================
+   CALTDHY v2 — HOME & PLAN FEATURE VIEWS STYLES
+   ============================================================ */
+
+/* ============================================================
+   CALTDHY v2 — HOME DASHBOARD (PIXEL-PERFECT MATCHING IMAGE 2)
+   ============================================================ */
+
+/* ── Home Container (Full-Width Edge-to-Edge) ── */
+.home-dashboard-v2-container {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Top Header Row ── */
+.home-dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+.home-dashboard-title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-dashboard-greeting {
+  font-family: var(--font-display, var(--font-sans));
+  font-size: clamp(26px, 2.5vw, 32px);
+  font-weight: 800;
+  color: var(--color-text, var(--text-primary));
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.home-dashboard-updated {
+  font-size: var(--font-base);
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-weight: 400;
+  margin: 0;
+}
+
+.home-btn-add-txn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-brand-700, #078A59);
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--color-brand-600, #056C46);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(7, 138, 89, 0.25);
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  white-space: nowrap;
+}
+
+.home-btn-add-txn:hover {
+  background: var(--color-brand-600, #056C46);
+  box-shadow: 0 4px 14px rgba(7, 138, 89, 0.35);
+  transform: translateY(-1px);
+}
+
+.home-btn-add-plus {
+  font-size: var(--font-xl);
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── 2-Column Grid (Full-Width Responsive) ── */
+.home-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.85fr);
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .home-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* ── Left Column: Hero Card (Vibrant Jewel Emerald FinTech Card) ── */
+.home-col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.home-hero-balance-card {
+  background: var(--home-hero-bg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  padding: 26px 28px 22px 28px;
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--home-hero-shadow);
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+
+.home-hero-balance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.35), 0 6px 14px -2px rgba(0, 0, 0, 0.18);
+}
+
+.hero-card-pattern {
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.hero-card-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.hero-card-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.hero-card-main-amount {
+  font-family: var(--font-display, var(--font-sans));
+  font-size: clamp(34px, 3.2vw, 42px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
+  line-height: 1.1;
+  margin-bottom: 6px;
+  font-feature-settings: 'tnum';
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.hero-card-subtext {
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 20px 0;
+  line-height: 1.45;
+}
+
+.hero-card-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-stat-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-stat-label {
+  font-size: var(--font-xs);
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 500;
+}
+
+.hero-stat-val {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+.hero-stat-val--income {
+  color: #86EFAC;
+}
+
+.hero-stat-val--expense {
+  color: #FCA5A5;
+}
+
+/* ── Left Column: Recent Transactions ── */
+.home-recent-txns-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-txns-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.home-txns-title {
+  font-size: var(--font-xl);
+  font-weight: 800;
+  color: var(--color-text, var(--text-primary));
+  margin: 0;
+}
+
+.home-txns-view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-link);
+  font: 700 12px var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+  transition: background-color var(--dur-fast), border-color var(--dur-fast);
+}
+.home-txns-view-all-btn:hover {
+  background: var(--color-brand-50);
+  border-color: var(--color-action-bg);
+}
+.home-txns-view-all-btn:focus-visible {
+  outline: 2px solid var(--color-brand-700);
+  outline-offset: 2px;
+}
+
+.home-txns-card-container {
+  background: var(--color-surface, var(--surface));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.home-txns-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-txn-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border, var(--border));
+  cursor: pointer;
+  transition: background var(--dur-quick) ease;
+}
+
+.home-txn-row:last-child {
+  border-bottom: none;
+}
+
+/* Touch screens keep :hover after a tap, which left the row tinted and its
+   edit/delete buttons stuck open. Hover styling is for pointers only;
+   a tap gets brief :active feedback and opens the edit sheet. */
+@media (hover: hover) {
+  .home-txn-row:hover {
+    background: var(--color-brand-50, var(--surface-subtle));
+  }
+}
+
+.home-txn-row:active {
+  background: var(--color-brand-50, var(--surface-subtle));
+}
+
+.home-txn-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--color-surface-muted, var(--surface-subtle));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-2xl);
+  flex-shrink: 0;
+}
+
+.home-txn-icon-box.is-income {
+  background: var(--color-brand-100, rgba(0, 204, 119, 0.15));
+}
+
+.home-txn-icon-box.is-transfer {
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.home-txn-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.home-txn-name {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-txn-meta {
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, var(--text-secondary));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-txn-amount-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.home-txn-amount {
+  font-family: var(--font-mono);
+  font-size: var(--font-md);
+  font-weight: 800;
+  text-align: right;
+  letter-spacing: -0.01em;
+}
+
+.home-txn-amount.is-income {
+  color: var(--color-success);
+}
+
+.home-txn-amount.is-expense {
+  color: var(--color-danger, #D9383A);
+}
+
+.home-txn-amount.is-transfer {
+  color: #2563EB;
+}
+
+.home-txn-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Visually hidden, never display:none: Chrome checks the next Tab stop after the
+   row has lost focus, so display:none buttons could not be reached by keyboard.
+   Kept in the tree, screen readers on phones can reach them too. */
+.home-txn-actions:not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pointer hover, or keyboard focus on the row, shows them in place. */
+@media (hover: hover) {
+  .home-txn-row:hover .home-txn-actions {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+.home-txn-row:focus-visible .home-txn-actions {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+.home-txn-btn-action {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, var(--border));
+  background: var(--color-surface, var(--surface));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary, var(--text-secondary));
+  transition: background-color var(--dur-quick) ease, border-color var(--dur-quick) ease, color var(--dur-quick) ease, box-shadow var(--dur-quick) ease, transform var(--dur-quick) ease, opacity var(--dur-quick) ease;
+}
+
+.home-txn-btn-action:hover {
+  background: var(--color-brand-50, var(--surface-subtle));
+  color: var(--color-text, var(--text-primary));
+}
+
+.home-txn-btn-action--delete:hover {
+  background: var(--color-danger-50, #FEE2E2);
+  color: var(--color-danger, #DC2626);
+  border-color: var(--color-danger, #FECACA);
+}
+
+/* Nhãn cho giao dịch do Hũ/Khoản định kỳ tự sinh — không cho sửa/xóa trực
+   tiếp ở đây vì sẽ làm lệch số dư giữa Transaction và Jar/Installment. */
+.home-txn-locked-hint {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
+  background: var(--color-surface-subtle, var(--surface-subtle));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.home-txn-locked-hint svg {
+  color: var(--color-text-secondary, var(--text-secondary));
+  flex-shrink: 0;
+}
+
+/* Deliberately not limited to (hover: hover): a locked row opens nothing, so on
+   phones the tap-held hover is the only sign of why ("Hũ" / "Định kỳ"). */
+.home-txn-row:hover .home-txn-locked-hint {
+  display: inline-flex;
+}
+
+/* ── Right Column: Sidebar Panel ── */
+.home-sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Card 1: Plan Progress Card */
+.home-plan-card {
+  background: var(--color-surface, var(--surface));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 20px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-plan-card-title {
+  font-size: var(--font-xl);
+  font-weight: 800;
+  color: var(--color-text, var(--text-primary));
+  margin: 0;
+}
+
+.home-plan-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.home-plan-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-plan-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-base);
+}
+
+.home-plan-item-name {
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-weight: 500;
+}
+
+.home-plan-item-amounts {
+  color: var(--color-text, var(--text-primary));
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: var(--font-sm);
+}
+
+.home-plan-progress-track {
+  height: 8px;
+  background: var(--color-surface-muted, #E5E7EB);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.home-plan-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width var(--dur-slower) ease;
+}
+
+.home-plan-progress-fill.is-healthy {
+  background: var(--home-progress-healthy-fill);
+}
+
+.home-plan-progress-fill.is-warning {
+  background: var(--color-warning, #E67E22);
+}
+
+.home-plan-progress-fill.is-danger {
+  background: var(--color-danger, #D9383A);
+}
+
+.home-plan-progress-fill.is-jar {
+  background: #10B981;
+}
+
+.home-plan-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  gap: 8px;
+  background: var(--color-surface-muted, #F4F6F5);
+  border-radius: 14px;
+  border: 1px dashed var(--color-border, #E2ECE6);
+}
+
+.home-plan-empty-icon {
+  font-size: var(--font-4xl);
+}
+
+.home-plan-empty-text {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, #60766A);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.home-plan-empty-btn {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--color-link);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background var(--dur-quick) ease;
+}
+
+.home-plan-empty-btn:hover {
+  background: var(--color-brand-100, rgba(0, 204, 119, 0.1));
+}
+
+/* Card 2: Warning / Callout Card */
+.home-callout-warning-card {
+  background: var(--home-callout-bg);
+  border: 1px solid var(--home-callout-border);
+  border-radius: 20px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.home-callout-warning-card.is-info {
+  background: var(--home-callout-info-bg);
+  border-color: var(--home-callout-info-border);
+}
+
+.home-callout-warning-card.is-success {
+  background: var(--home-callout-success-bg);
+  border-color: var(--home-callout-success-border);
+}
+
+.home-callout-warning-card.is-danger {
+  background: var(--home-callout-danger-bg);
+  border-color: var(--home-callout-danger-border);
+}
+
+
+.home-callout-title {
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--color-text, #1F2937);
+  margin: 0;
+}
+
+.home-callout-body {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, #4B5563);
+  margin: 0 0 8px 0;
+  line-height: 1.45;
+}
+
+.home-callout-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--color-link);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: gap var(--dur-quick) ease;
+}
+
+.home-callout-link-btn:hover {
+  gap: 8px;
+  text-decoration: underline;
+}
+
+/* Card 3: 2 Mini Stat Cards */
+.home-mini-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.home-mini-stat-card {
+  background: var(--color-surface, var(--surface));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-quick) ease, box-shadow var(--dur-quick) ease, border-color var(--dur-quick) ease;
+}
+
+.home-mini-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-brand-700, #B7E4C7);
+}
+
+.home-mini-stat-label {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-weight: 500;
+}
+
+.home-mini-stat-val {
+  font-size: var(--font-5xl);
+  font-weight: 800;
+  color: var(--color-text, var(--text-primary));
+  line-height: 1.1;
+  font-family: var(--font-mono);
+}

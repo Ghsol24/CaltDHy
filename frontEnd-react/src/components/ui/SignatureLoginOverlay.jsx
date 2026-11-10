@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useSignatureLoginStore } from '../../stores/useSignatureLoginStore';
-import '../../assets/css/signature-loader.css';
+import './signature-loader.css';
 
 const CONNECT_MS = 1000;
 const VERIFY_MS = 1400;

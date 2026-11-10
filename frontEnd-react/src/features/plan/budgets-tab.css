@@ -1,0 +1,59 @@
+/* Kế hoạch — tab Ngân sách (phần dùng chung với Phân tích)
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── Budgets Tab Styles ── */
+.budgets-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.budget-month-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--border, #E2ECE6);
+  border-radius: var(--radius-md, 12px);
+  padding: 6px 12px;
+}
+
+.month-nav-btn {
+  background: transparent;
+  border: none;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-secondary, #60766A);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm, 4px);
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.month-nav-btn:hover {
+  background: var(--surface-subtle, #EDF5F0);
+  color: var(--text-primary, #173126);
+}
+
+.month-current-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.month-name-text {
+  font-size: var(--font-base);
+  color: var(--text-primary, #173126);
+}
+
+.month-today-btn {
+  background: var(--primary-light, #E6F4EA);
+  border: none;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-link);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+}

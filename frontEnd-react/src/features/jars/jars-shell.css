@@ -1,0 +1,41 @@
+/* Hũ — khung trang (phần nạp sẵn cùng ứng dụng)
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ============================================================
+   JARS FEATURE VIEW (CaltDHy Light Mint v2)
+   ============================================================ */
+
+.jars-global-progress-track {
+  height: 8px;
+  background: var(--color-surface-muted, var(--surface-subtle));
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.jars-global-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-brand-700, #008B57) 0%, var(--color-brand-600, #10B981) 100%);
+  border-radius: var(--radius-full);
+  transition: width var(--dur-slow) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Jar Cards Grid */
+
+.jar-amounts-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.jar-progress-track {
+  height: 7px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.jar-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--dur-slower) ease;
+}

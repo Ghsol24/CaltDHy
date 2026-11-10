@@ -1,0 +1,157 @@
+/* Khung hộp thoại dùng chung (hướng dẫn, thiết lập ngân sách)
+   (tách từ assets/css/budgets-analytics.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── 2. DIALOG SHELL — shared by the guide dialog (GuideModal) ── */
+.modal-backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dialog);
+  padding: 24px;
+  box-sizing: border-box;
+  animation: fadeIn 150ms ease;
+}
+
+.budget-setup-dialog {
+  position: relative;
+  margin: 0;
+  width: min(840px, 100%);
+  max-height: calc(100dvh - 48px);
+  background: var(--color-surface, #FFFFFF);
+  border-radius: var(--radius-xl, 20px);
+  box-shadow: var(--shadow-dialog);
+  border: 1px solid var(--color-border, #E3ECE7);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Dialog Header */
+.budget-dialog-header {
+  height: 88px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border, #E3ECE7);
+  background: var(--color-surface, #FFFFFF);
+  flex-shrink: 0;
+}
+
+.budget-dialog-header-lead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.budget-dialog-icon-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-brand-100, #E6F7EF);
+  color: var(--color-link);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.budget-dialog-title {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  color: var(--color-text, #101B36);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.budget-dialog-close-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-sm, 8px);
+  border: none;
+  background: var(--color-surface-muted, #F7FAF8);
+  color: var(--color-text-secondary, #607086);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.budget-dialog-close-btn:hover {
+  background: var(--color-danger-50, #FFF0EF);
+  color: var(--color-danger, #E34B45);
+}
+
+.budget-dialog-footer {
+  height: 72px;
+  padding: 0 28px;
+  border-top: 1px solid var(--color-border, #E3ECE7);
+  background: var(--color-surface, #FFFFFF);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 599px) {
+  .modal-backdrop-overlay {
+    padding: 12px;
+  }
+
+  .budget-setup-dialog {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .budget-dialog-header {
+    height: auto;
+    min-height: 68px;
+    padding: 12px 16px;
+  }
+
+  .budget-dialog-footer {
+    height: auto;
+    min-height: 64px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    flex-wrap: wrap;
+  }
+
+  .budget-dialog-footer > button {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
+
+.btn-dialog-save {
+  height: 42px;
+  padding: 0 24px;
+  border-radius: var(--radius-sm, 8px);
+  border: none;
+  background: var(--color-brand-700, #008B57);
+  color: #FFFFFF;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.btn-dialog-save:hover:not(:disabled) {
+  background: var(--color-brand-600, #009A5D);
+  box-shadow: 0 4px 12px rgba(0, 139, 87, 0.25);
+}
+
+.btn-dialog-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

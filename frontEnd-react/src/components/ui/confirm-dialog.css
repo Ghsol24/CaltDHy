@@ -1,0 +1,286 @@
+/* Hộp thoại xác nhận và lịch sử sửa giao dịch
+   (tách từ assets/css/dialogs.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ── Confirm Dialog ── */
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
+  /* Confirmation may be opened from another modal (for example Settings). */
+  z-index: var(--z-dialog-nested);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: overlayFadeIn 150ms ease;
+}
+
+/* A second dialog should dim its parent without stacking two full backdrops. */
+body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .modal-overlay.open, .day-drawer-backdrop) .confirm-dialog-backdrop {
+  background: var(--color-overlay-nested);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.confirm-dialog-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 440px;
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  animation: modalIn 180ms var(--ease-smooth);
+}
+
+.confirm-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.confirm-dialog-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.confirm-dialog-icon--danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.confirm-dialog-icon--primary {
+  background: var(--primary-light);
+  color: var(--color-link);
+}
+
+.confirm-dialog-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.confirm-dialog-message {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.txn-period-notice {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.txn-budget-period {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-xs);
+  line-height: 1.5;
+}
+
+.txn-budget-error {
+  color: var(--color-danger);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.txn-budget-error button,
+.txn-revisions-content button {
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+  color: var(--color-link);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Edit history is secondary: a quiet one-line summary, shown only for edited entries. */
+.txn-revisions {
+  flex-shrink: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.txn-revisions-summary {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  font-size: var(--font-sm);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.txn-revisions-summary svg { flex-shrink: 0; }
+
+.txn-revisions-toggle,
+.txn-revisions-retry {
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-link);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.txn-revisions-content {
+  padding: 4px 12px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary);
+}
+.txn-revisions-content p { margin: 8px 0 0; line-height: 1.5; }
+.txn-revision-entry + .txn-revision-entry { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.txn-revision-entry header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; line-height: 1.5; }
+.txn-revision-entry strong { color: var(--color-text); overflow-wrap: anywhere; }
+.txn-revision-entry ul { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.txn-revision-entry li { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(0, 2fr); gap: 8px; line-height: 1.5; }
+.txn-revision-entry li > span:last-child { color: var(--color-text); overflow-wrap: anywhere; }
+.txn-revisions-toggle:focus-visible,
+.txn-revisions-retry:focus-visible,
+.txn-budget-error button:focus-visible,
+.txn-revisions-content button:focus-visible { outline: 2px solid var(--color-link); outline-offset: -2px; }
+
+.confirm-dialog-error {
+  margin: 0;
+  color: var(--danger, #d43d3d);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.confirm-dialog-btn {
+  padding: 9px 18px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.confirm-dialog-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.is-deleting {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity var(--dur-base) ease;
+}
+
+.recurring-row-card.is-processing {
+  opacity: 0.75;
+  transition: opacity var(--dur-base) ease;
+}
+
+/* Button variants */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+/* Used by <Button> (components/ui/Button.jsx): btn + btn--{variant} [+ btn--sm]. */
+.btn--primary {
+  background: var(--primary);
+  color: var(--color-on-action);
+  border-color: var(--primary-hover);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn--secondary {
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: var(--color-on-action);
+  border-color: var(--danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
+.btn--warning {
+  background: var(--color-warning);
+  color: var(--color-on-action);
+  border-color: var(--color-warning);
+}
+
+.btn--warning:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-warning) 85%, #000);
+}
+
+.btn--sm {
+  padding: 6px 12px;
+  font-size: var(--font-sm);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading isn't "unavailable": keep the spinner and label fully visible. */
+.btn[aria-busy="true"] {
+  cursor: progress;
+  opacity: 1;
+}

@@ -8,6 +8,7 @@ import { useLangStore } from '../stores/useLangStore';
 import { useCurrencyStore } from '../stores/useCurrencyStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { translate } from '../i18n/translations';
+import './landing.css';
 
 const LANDING_KEYS = [
   'eyebrow', 'tagline', 'totalBalance', 'transactions', 'vsLastMo',

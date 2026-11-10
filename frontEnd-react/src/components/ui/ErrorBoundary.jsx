@@ -1,6 +1,6 @@
 import React from 'react';
 import { normalizeLocale, translate } from '../../i18n/translations';
-import '../../assets/css/error-feedback.css';
+import './error-feedback.css';
 
 import { Button } from './Button';
 export class ErrorBoundary extends React.Component {

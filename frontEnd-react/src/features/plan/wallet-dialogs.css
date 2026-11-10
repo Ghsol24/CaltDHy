@@ -1,0 +1,584 @@
+/* Kế hoạch — hộp thoại Ví và Chuyển tiền ("pro")
+   (tách từ assets/css/components.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
+
+/* ============================================================
+   WALLET & TRANSFER MODALS (PRO MODERN REDESIGN)
+   ============================================================ */
+
+
+/* ── Modal Card Override for Pro Modals ── */
+.txn-modal-card.modal-pro-card {
+  max-width: 560px;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+
+/* ── Header ── */
+.modal-pro-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 16px 24px;
+  border-bottom: 1px solid var(--dialog-divider);
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.modal-pro-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.modal-header-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--modal-header-badge-bg);
+  color: var(--modal-header-badge-color);
+  border: 1px solid var(--modal-header-badge-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-pro-header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-pro-title {
+  margin: 0;
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+/* ── Body ── */
+.modal-pro-body {
+  padding: 20px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  max-height: calc(100vh - 160px);
+  max-height: calc(100dvh - 160px);
+  box-sizing: border-box;
+}
+
+.modal-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--modal-pro-label);
+  margin-bottom: 8px;
+}
+
+/* ── Section 1: Wallet Type Cards ── */
+.wallet-type-grid-pro {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .wallet-type-grid-pro {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.wallet-type-card-pro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 6px 12px;
+  background: var(--modal-card-bg);
+  border: 1.5px solid var(--modal-card-border);
+  border-radius: 14px;
+  color: var(--modal-card-text);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.wallet-type-card-pro:hover {
+  border-color: var(--modal-card-hover-border);
+}
+
+.wallet-type-card-pro.active {
+  background: var(--modal-card-active-bg);
+  border-color: var(--modal-card-active-border);
+  color: var(--modal-card-active-text);
+  box-shadow: 0 0 0 3px var(--modal-card-active-ring);
+}
+
+.wallet-type-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallet-type-card-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Section 2: Input with Prefix Icon & Clear Button ── */
+.modal-input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-input-prefix-icon {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--modal-input-icon);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.modal-pro-input {
+  width: 100%;
+  height: 48px;
+  background: var(--modal-input-bg);
+  border: 1.5px solid var(--modal-input-border);
+  border-radius: 12px;
+  font-size: var(--font-md);
+  font-weight: 500;
+  color: var(--modal-input-text);
+  padding: 0 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.modal-pro-input:focus {
+  border-color: var(--modal-input-focus-border);
+  box-shadow: 0 0 0 3px var(--modal-input-focus-ring);
+}
+
+.modal-pro-input.with-prefix {
+  padding-left: 44px;
+}
+
+.modal-pro-input.with-clear {
+  padding-right: 40px;
+}
+
+.modal-pro-input.with-counter {
+  padding-right: 64px;
+}
+
+.modal-input-clear-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--modal-pro-hint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color var(--dur-fast) ease;
+}
+
+.modal-input-clear-btn:hover {
+  color: var(--modal-pro-title);
+}
+
+.modal-input-char-counter {
+  position: absolute;
+  right: 14px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--modal-pro-hint);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Section 3: Amount Box (Pro) ── */
+.modal-pro-amount-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  background: var(--modal-input-bg);
+  border: 1.5px solid var(--modal-input-border);
+  border-radius: 12px;
+  padding: 0 12px;
+  gap: 10px;
+  box-sizing: border-box;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.modal-pro-amount-box:focus-within {
+  border-color: var(--modal-input-focus-border);
+  box-shadow: 0 0 0 3px var(--modal-input-focus-ring);
+}
+
+.amount-prefix-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--modal-badge-bg);
+  color: var(--modal-badge-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.amount-prefix-badge.tag {
+  background: var(--modal-badge-tag-bg);
+  color: var(--modal-badge-tag-color);
+}
+
+.modal-pro-amount-input,
+.modal-pro-amount-input:focus,
+.modal-pro-amount-input:focus-visible,
+.modal-pro-amount-input:active {
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-variant-numeric: tabular-nums;
+  color: var(--modal-input-text);
+  line-height: 1;
+  -webkit-appearance: none;
+}
+
+.modal-pro-amount-input::placeholder {
+  color: var(--modal-pro-hint);
+  opacity: 0.6;
+}
+
+.amount-currency-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: var(--modal-pill-bg);
+  border: 1px solid var(--modal-pill-border);
+  border-radius: 8px;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--modal-pill-text);
+  flex-shrink: 0;
+}
+
+.modal-pro-amount-suffix {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--modal-pro-hint);
+  padding-right: 2px;
+  flex-shrink: 0;
+}
+
+.modal-field-hint {
+  margin: 6px 0 0 2px;
+  font-size: var(--font-xs);
+  color: var(--modal-pro-hint);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* ── Section 4: Color Presets ── */
+.wallet-color-presets-pro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 4px 2px;
+}
+
+.wallet-color-dot-pro {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2.5px solid var(--modal-pro-bg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  outline: none;
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+
+.wallet-color-dot-pro:hover {
+  transform: scale(1.1);
+}
+
+.wallet-color-dot-pro.active {
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2.5px var(--modal-card-active-border);
+}
+
+/* ── Section 5: Option Cards ── */
+.wallet-options-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallet-option-card-pro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 15px;
+  background: var(--modal-option-bg);
+  border: 1.5px solid var(--modal-option-border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  user-select: none;
+}
+
+.wallet-option-card-pro:hover {
+  border-color: var(--modal-card-hover-border);
+}
+
+.wallet-option-card-pro.active {
+  background: var(--modal-option-active-bg);
+  border-color: var(--modal-option-active-border);
+}
+
+.option-check-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 1px;
+}
+
+.option-native-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.option-custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--modal-checkbox-border);
+  background: var(--modal-pro-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.option-custom-checkbox.checked {
+  background: var(--modal-checkbox-checked-bg);
+  border-color: var(--modal-checkbox-checked-bg);
+  color: #FFFFFF;
+}
+
+.option-icon-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 1px;
+}
+
+.option-icon-symbol.sparkle {
+  color: #8B5CF6;
+}
+
+.option-icon-symbol.lock {
+  color: var(--modal-pro-hint);
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-title {
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--modal-pro-label);
+}
+
+.option-desc {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--modal-pro-hint);
+  line-height: 1.4;
+}
+
+/* ── Transfer Route Preview Banner ── */
+.transfer-route-banner-pro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--modal-banner-bg);
+  border: 1px solid var(--modal-banner-border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  gap: 14px;
+}
+
+.transfer-route-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.transfer-route-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--modal-banner-label);
+}
+
+.transfer-route-wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: var(--modal-pro-label);
+}
+
+.transfer-route-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transfer-route-balance {
+  font-size: var(--font-xs);
+  color: var(--modal-pro-hint);
+  font-variant-numeric: tabular-nums;
+}
+
+.transfer-route-divider-pro {
+  color: var(--modal-banner-divider);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Two Columns Layout (Transfer Selects & Amount/Fee) ── */
+.modal-two-cols-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-two-cols-row > .txn-field-group {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .modal-two-cols-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.modal-label-row .modal-section-label {
+  margin-bottom: 0;
+}
+
+.modal-label-optional {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--modal-card-active-text);
+}
+
+.modal-info-tooltip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--modal-pro-hint);
+  cursor: help;
+  margin-left: 4px;
+}
+
+/* ── Pro Modal Footer & Buttons ── */
+.modal-pro-footer {
+  padding: 16px 24px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--dialog-divider);
+}
+
+.modal-btn-cancel-pro {
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.modal-btn-submit-pro {
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 12px;
+  border-style: none;
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.modal-btn-submit-pro:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.modal-btn-submit-pro:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.modal-btn-submit-pro:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
