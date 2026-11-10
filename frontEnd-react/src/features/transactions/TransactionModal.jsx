@@ -17,13 +17,13 @@ import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getL
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { useTranslation } from '../../i18n/useTranslation';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { BREAKPOINTS, useMediaQuery } from '../../hooks/useMediaQuery';
 import { useSheetDrag } from '../../hooks/useSheetDrag';
 import { CategoryPickerList, CategorySummaryButton, DateSheetContent, MobileDateField, TransactionSheet } from './TransactionMobileFields';
 
 const EMPTY_EXPENSE_CATS = [];
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet.
-const PHONE_QUERY = '(max-width: 599px)';
+const PHONE_QUERY = `(max-width: ${BREAKPOINTS.phone}px)`;
 // Touch screens, whose on-screen keyboard would cover the form if a field took focus.
 const TOUCH_QUERY = '(pointer: coarse)';
 

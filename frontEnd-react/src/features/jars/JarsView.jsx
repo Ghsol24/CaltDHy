@@ -90,7 +90,7 @@ export function JarsView() {
   const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
   const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
-  const isMobile = useIsMobile(900);
+  const isMobile = useIsMobile();
 
   // Modals state
   const [isJarModalOpen, setIsJarModalOpen] = useState(false);
@@ -1182,7 +1182,7 @@ export function JarsView() {
                         </button>
                         <span
                           style={{
-                            fontSize: '10px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             padding: '2px 6px',
                             borderRadius: '4px',
@@ -1193,7 +1193,7 @@ export function JarsView() {
                           {jar.category || 'MỤC TIÊU'}
                         </span>
                       </div>
-                      <span style={{ fontSize: '11.5px', color: '#64748B' }}>
+                      <span style={{ fontSize: '12px', color: '#64748B' }}>
                         Còn thiếu: {formatCurrency(remaining)}
                       </span>
                     </div>

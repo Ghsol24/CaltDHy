@@ -92,7 +92,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                   <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '13px', marginBottom: '2px' }}>
                     S - Cụ thể (Specific)
                   </strong>
-                  <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                     Thay vì "tiết kiệm tiền", hãy đặt tên hũ rõ ràng: "Quỹ khẩn cấp 6 tháng", "Mua xe máy mới", "Du lịch Đà Lạt".
                   </span>
                 </div>
@@ -101,7 +101,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                   <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '13px', marginBottom: '2px' }}>
                     M - Đo lường được (Measurable)
                   </strong>
-                  <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                     {t('jars.measurableTip', { amount: formatCurrency(15000000) })}
                   </span>
                 </div>
@@ -110,7 +110,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                   <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '13px', marginBottom: '2px' }}>
                     T - Có thời hạn (Time-bound)
                   </strong>
-                  <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                     Gán ngày đến hạn (Target Date) giúp CaltDHy tính toán chính xác mỗi tháng bạn cần nạp bao nhiêu tiền để về đích đúng hẹn.
                   </span>
                 </div>
@@ -170,31 +170,31 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                 {/* 3 Columns Output */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '11px', color: '#3B82F6', fontWeight: 700, display: 'block' }}>50% Thiết yếu</span>
-                    <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ fontSize: '12px', color: '#3B82F6', fontWeight: 700, display: 'block' }}>50% Thiết yếu</span>
+                    <strong style={{ fontSize: '14px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                       {formatCurrency(needs50)}
                     </strong>
-                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                       Nhà cửa, ăn uống, hóa đơn
                     </span>
                   </div>
 
                   <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 700, display: 'block' }}>30% Mong muốn</span>
-                    <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 700, display: 'block' }}>30% Mong muốn</span>
+                    <strong style={{ fontSize: '14px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                       {formatCurrency(wants30)}
                     </strong>
-                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                       Giải trí, mua sắm, ăn ngoài
                     </span>
                   </div>
 
                   <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '11px', color: '#10B981', fontWeight: 700, display: 'block' }}>20% Tích lũy hũ</span>
-                    <strong style={{ fontSize: '13.5px', color: '#10B981', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ fontSize: '12px', color: '#10B981', fontWeight: 700, display: 'block' }}>20% Tích lũy hũ</span>
+                    <strong style={{ fontSize: '14px', color: '#10B981', fontFamily: 'var(--font-mono)' }}>
                       {formatCurrency(savings20)}
                     </strong>
-                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                       Nạp vào các hũ chi tiêu
                     </span>
                   </div>

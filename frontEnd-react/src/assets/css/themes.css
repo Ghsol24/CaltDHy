@@ -4,18 +4,10 @@
 html.light-theme {
   --bg: var(--color-canvas);
   --surface: #FFFFFF;
-  --surface2: #F4F4F5;
-  --recessed: #F8F8FA;
-  --txt: #0F172A;
-  --muted: #475569;
-  --accent: #4F46E5;
-  --accent-rgb: 79, 70, 229;
-  --green: #16A34A;
+  --surface-recessed: #F8F8FA;
 
-  --sh-raise: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.04);
-  --sh-press: inset 0 1px 3px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.02);
-  --sh-accent: 0 4px 12px rgba(79,70,229,.2), 0 1px 4px rgba(79,70,229,.1);
-  --sh-float: 0 12px 32px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+  --shadow-press: inset 0 1px 3px rgba(0,0,0,.05), inset 0 0 0 1px rgba(0,0,0,.02);
+  --shadow-brand: 0 4px 12px rgba(79,70,229,.2), 0 1px 4px rgba(79,70,229,.1);
 
   /* ── Scrollbar Colors ── */
   --scrollbar-thumb: rgba(0, 0, 0, 0.18);
@@ -83,9 +75,9 @@ html.light-theme .user-chip {
 
 .theme-card {
   position: relative;
-  background: var(--surface2);
+  background: var(--surface-subtle);
   border: 2px solid transparent;
-  border-radius: var(--r-lg);
+  border-radius: var(--radius-lg);
   padding: 14px 10px 12px;
   cursor: pointer;
   transition: border-color 200ms, transform 150ms ease, box-shadow 200ms;
@@ -108,8 +100,8 @@ html.light-theme .user-chip {
 }
 
 .theme-card[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: var(--recessed);
+  border-color: var(--primary);
+  background: var(--surface-recessed);
 }
 
 /* Large colour swatch circle */
@@ -129,17 +121,17 @@ html.light-theme .user-chip {
 
 .theme-card[aria-pressed="true"] .theme-card__swatch {
   transform: scale(1.05);
-  box-shadow: 0 0 0 3px var(--accent), 0 4px 12px rgba(0,0,0,.2);
+  box-shadow: 0 0 0 3px var(--primary), 0 4px 12px rgba(0,0,0,.2);
 }
 
 /* Theme name label */
 .theme-card__name {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text-secondary);
   transition: color 150ms;
   line-height: 1;
 }
@@ -172,25 +164,17 @@ html.light-theme .user-chip {
 html.cream-theme {
   --bg:       var(--color-canvas);
   --surface:  #FDF8F2;
-  --surface2: #EDE4D8;
-  --recessed: #FAF3EA;
-  --txt:      #2C1D10;
-  --muted:    #584133;
-  --accent:   #C0531E;
-  --accent-rgb: 192, 83, 30;
-  --green:    #2D7A3E;
+  --surface-recessed: #FAF3EA;
 
-  --sh-raise: 0 2px 8px rgba(100,60,20,.10), 0 6px 20px rgba(100,60,20,.07);
-  --sh-press: inset 0 1px 5px rgba(100,60,20,.12), inset 0 0 0 1px rgba(100,60,20,.05);
-  --sh-accent: 0 4px 16px rgba(192,83,30,.28), 0 1px 4px rgba(192,83,30,.15);
-  --sh-float: 0 12px 44px rgba(100,60,20,.16), 0 2px 10px rgba(100,60,20,.08);
+  --shadow-press: inset 0 1px 5px rgba(100,60,20,.12), inset 0 0 0 1px rgba(100,60,20,.05);
+  --shadow-brand: 0 4px 16px rgba(192,83,30,.28), 0 1px 4px rgba(192,83,30,.15);
 
   /* ── Scrollbar Colors ── */
   --scrollbar-thumb: rgba(100, 60, 20, 0.20);
   --scrollbar-hover: rgba(100, 60, 20, 0.36);
 }
 
-html.cream-theme body { background: var(--bg); color: var(--txt); }
+html.cream-theme body { background: var(--bg); color: var(--text-primary); }
 
 html.cream-theme .topbar {
   background: #FDF8F2;
@@ -210,12 +194,12 @@ html.cream-theme .tb-logo-accent {
 
 html.cream-theme .tb-badge {
   background: #EDE4D8;
-  color: var(--muted);
+  color: var(--text-secondary);
 }
 
 html.cream-theme .user-chip {
   background: #EDE4D8;
-  color: var(--muted);
+  color: var(--text-secondary);
   border: 1px solid #D8CCBE;
   box-shadow: none;
 }
@@ -242,25 +226,17 @@ html.cream-theme .toast { background: #2C1D10; color: #FDF8F2; box-shadow: 0 10p
 html.green-theme {
   --bg:       var(--color-canvas);
   --surface:  #FFFFFF;
-  --surface2: #E3F2E9;
-  --recessed: #F7FCFA;
-  --txt:      #0E2E1E;
-  --muted:    #345D4C;
-  --accent:   #059669;
-  --accent-rgb: 5, 150, 105;
-  --green:    #10B981;
+  --surface-recessed: #F7FCFA;
 
-  --sh-raise: 0 2px 8px rgba(16,120,80,.08), 0 6px 20px rgba(16,120,80,.05);
-  --sh-press: inset 0 1px 5px rgba(16,120,80,.10), inset 0 0 0 1px rgba(16,120,80,.03);
-  --sh-accent: 0 4px 16px rgba(5,150,105,.25), 0 1px 4px rgba(5,150,105,.12);
-  --sh-float: 0 12px 44px rgba(16,120,80,.12), 0 2px 10px rgba(16,120,80,.06);
+  --shadow-press: inset 0 1px 5px rgba(16,120,80,.10), inset 0 0 0 1px rgba(16,120,80,.03);
+  --shadow-brand: 0 4px 16px rgba(5,150,105,.25), 0 1px 4px rgba(5,150,105,.12);
 
   /* ── Scrollbar Colors ── */
   --scrollbar-thumb: rgba(5, 150, 105, 0.22);
   --scrollbar-hover: rgba(5, 150, 105, 0.38);
 }
 
-html.green-theme body { background: var(--bg); color: var(--txt); }
+html.green-theme body { background: var(--bg); color: var(--text-primary); }
 
 html.green-theme .topbar {
   background: #FFFFFF;
@@ -342,20 +318,14 @@ html.green-theme .guide-panel { background: #FFFFFF; border-color: #B2DFC8; }
 
 /* ── Light Theme — cải thiện border & shadow ── */
 html.light-theme {
-  --sh-raise: 0 4px 10px rgba(15,23,42,.05), 0 1px 3px rgba(15,23,42,.04);
-  --sh-float: 0 14px 36px rgba(15,23,42,.10), 0 2px 8px rgba(15,23,42,.05);
 }
 
 /* ── Cream Theme — cải thiện border & shadow ── */
 html.cream-theme {
-  --sh-raise: 0 4px 12px rgba(100,60,20,.09), 0 1px 3px rgba(100,60,20,.05);
-  --sh-float: 0 14px 44px rgba(100,60,20,.16), 0 2px 8px rgba(100,60,20,.08);
 }
 
 /* ── Green Theme — cải thiện border & shadow ── */
 html.green-theme {
-  --sh-raise: 0 4px 12px rgba(16,120,80,.07), 0 1px 3px rgba(16,120,80,.04);
-  --sh-float: 0 14px 44px rgba(16,120,80,.13), 0 2px 8px rgba(16,120,80,.06);
 }
 
 /* ============================================================

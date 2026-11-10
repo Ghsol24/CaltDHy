@@ -182,7 +182,7 @@ export const JarGlassGraphic = React.memo(function JarGlassGraphic({
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           borderRadius: '99px',
           padding: '2px 7px',
-          fontSize: '11px',
+          fontSize: '12px',
           fontWeight: 800,
           fontFamily: 'var(--font-mono, monospace)',
           letterSpacing: '-0.02em',

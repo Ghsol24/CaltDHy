@@ -816,7 +816,7 @@ export function AccountModal() {
                 {/* Change Password Form */}
                 <form onSubmit={handleChangePassword} className="account-card-panel" style={{ gap: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span className="account-panel-label" style={{ fontSize: '13.5px', color: 'var(--text-primary, #173126)' }}>
+                    <span className="account-panel-label" style={{ fontSize: '14px', color: 'var(--text-primary, #173126)' }}>
                       Đổi mật khẩu
                     </span>
                     <span style={{ fontSize: '12px', color: 'var(--text-muted, #7E9287)' }}>
@@ -933,7 +933,7 @@ export function AccountModal() {
                     </div>
                     <span className="account-session-badge">Đang hoạt động</span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-muted, #7E9287)', lineHeight: 1.4 }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted, #7E9287)', lineHeight: 1.4 }}>
                     Hệ thống tự động vô hiệu hóa các phiên đăng nhập cũ trên thiết bị khác mỗi khi bạn thay đổi mật khẩu.
                   </p>
                 </div>

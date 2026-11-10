@@ -1,14 +1,14 @@
 .analytics-unusual-days p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .transaction-filter-custom-dates label {
   display: grid;
   gap: 6px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
 }
 
@@ -58,7 +58,7 @@
   border-radius: var(--radius-md);
   background: var(--color-warning-bg);
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .analytics-unusual-row {
@@ -120,14 +120,14 @@
 }
 
 .day-drawer-eyebrow {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: var(--color-active-text);
 }
 
 .day-drawer h2 {
   margin: 5px 0 0;
-  font-size: 20px;
+  font-size: var(--font-2xl);
 }
 
 .day-drawer-close {
@@ -173,12 +173,12 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 
 .day-drawer-summary strong {
   color: var(--color-text);
-  font-size: 23px;
+  font-size: var(--font-4xl);
   font-variant-numeric: tabular-nums;
 }
 
@@ -197,7 +197,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 
 .day-drawer-list {
@@ -267,7 +267,7 @@ button.transaction-inspection-row:hover {
 .transaction-inspection-icon.is-expense { background: var(--color-danger-bg); color: var(--color-danger); }
 .transaction-inspection-icon.is-income { background: var(--color-success-bg); color: var(--color-success); }
 .transaction-inspection-main { display: grid; flex: 1; gap: 5px; min-width: 0; }
-.transaction-inspection-main strong { overflow-wrap: anywhere; font-size: 13px; }
+.transaction-inspection-main strong { overflow-wrap: anywhere; font-size: var(--font-sm); }
 .transaction-inspection-meta { display: flex; flex-wrap: wrap; gap: 4px 9px; color: var(--color-text-secondary); }
 .transaction-inspection-meta time { color: var(--color-text-muted); }
 .transaction-inspection-wallet {
@@ -282,7 +282,7 @@ button.transaction-inspection-row:hover {
   background: var(--color-surface-muted);
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 .transaction-inspection-wallet svg { flex: 0 0 auto; }
 .transaction-inspection-main small { color: var(--color-text-muted); }
@@ -302,7 +302,7 @@ button.transaction-inspection-row:hover {
   gap: 20px;
 }
 /* Same title size as the other pages, so the icon box lines up everywhere. */
-.transaction-history-header :is(h1, h2) { margin: 0; color: var(--color-text); font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+.transaction-history-header :is(h1, h2) { margin: 0; color: var(--color-text); font-size: var(--font-3xl); font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
 .transaction-history-header p { margin: 6px 0 0; color: var(--color-text-secondary); }
 .transaction-filter-bar {
   position: relative;
@@ -363,7 +363,8 @@ button.transaction-inspection-row:hover {
   transform: translateY(-50%);
   pointer-events: none;
 }
-.transaction-history-search-control input { padding-left: 42px !important; }
+/* Beats `.transaction-filter-bar input[type="search"]` without !important. */
+.transaction-filter-bar .transaction-history-search-control input[type="search"] { padding-left: 42px; }
 .transaction-filter-custom-dates {
   display: flex;
   flex-wrap: wrap;
@@ -413,7 +414,7 @@ button.transaction-inspection-row:hover {
   min-height: 40px;
   padding: 8px 12px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .transaction-filter-dropdown.is-compact .transaction-filter-value { max-width: 160px; }
 /* A dropdown that is narrowing the list says so on the control itself. */
@@ -472,6 +473,7 @@ button.transaction-inspection-row:hover {
   left: 0;
   z-index: 10;
   max-height: min(280px, 42vh);
+  max-height: min(280px, 42dvh);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 5px;
@@ -496,7 +498,7 @@ button.transaction-inspection-row:hover {
   border-radius: 0;
   box-shadow: none;
 }
-.transaction-filter-menu.is-sheet .transaction-filter-option { min-height: 48px; font-size: 15px; }
+.transaction-filter-menu.is-sheet .transaction-filter-option { min-height: 48px; font-size: var(--font-md); }
 .transaction-filter-option {
   display: flex;
   align-items: center;
@@ -573,7 +575,7 @@ button.transaction-inspection-row:hover {
   border-radius: var(--radius-full);
   background: var(--color-danger-bg);
   color: var(--color-danger);
-  font-size: 12px;
+  font-size: var(--font-xs);
   white-space: nowrap;
 }
 .transaction-history-more {
@@ -599,7 +601,7 @@ button.transaction-inspection-row:hover {
   align-items: center;
   gap: 8px 18px;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .transaction-history-summary strong { color: var(--color-text); }
 
@@ -622,7 +624,7 @@ button.transaction-inspection-row:hover {
   border-bottom: 1px solid var(--history-border);
   background: var(--color-surface-muted);
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .02em;
 }
@@ -649,8 +651,8 @@ html.dark-theme button.transaction-ledger-row:hover {
 .transaction-ledger-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .transaction-ledger-row .transaction-inspection-icon { width: 36px; height: 36px; flex-basis: 36px; }
 .transaction-ledger-main { display: grid; gap: 4px; min-width: 0; }
-.transaction-ledger-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-.transaction-ledger-main small { color: var(--color-text-muted); font-size: 11px; }
+.transaction-ledger-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-sm); }
+.transaction-ledger-main small { color: var(--color-text-muted); font-size: var(--font-xs); }
 .transaction-ledger-category {
   justify-self: start;
   max-width: 100%;
@@ -658,14 +660,14 @@ html.dark-theme button.transaction-ledger-row:hover {
   border-radius: var(--radius-full);
   background: var(--color-brand-50);
   color: var(--color-link);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.transaction-ledger-date { color: var(--color-text-secondary); font-size: 12px; white-space: nowrap; }
-.transaction-ledger-row .transaction-inspection-amount { justify-self: end; margin: 0; font-size: 13px; }
+.transaction-ledger-date { color: var(--color-text-secondary); font-size: var(--font-xs); white-space: nowrap; }
+.transaction-ledger-row .transaction-inspection-amount { justify-self: end; margin: 0; font-size: var(--font-sm); }
 .transaction-ledger-row .transaction-inspection-wallet { justify-self: start; }
 
 html.dark-theme .transaction-history {
@@ -741,13 +743,13 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
   .transaction-ledger-row .transaction-inspection-amount { grid-area: amount; }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 640px) {
   .transaction-filter-bar { padding: 10px; }
   .transaction-filter-controls { gap: 7px; }
   .transaction-filter-dropdown.is-compact .transaction-filter-trigger { min-height: 42px; }
   .transaction-inspection-row { gap: 10px; padding: 12px; }
   .transaction-inspection-icon { flex-basis: 38px; width: 38px; height: 38px; }
-  .transaction-inspection-amount { font-size: 12px; }
+  .transaction-inspection-amount { font-size: var(--font-xs); }
   .analytics-unusual-row { align-items: stretch; flex-direction: column; }
   .day-drawer-actions > button { flex-basis: 100%; }
 }
@@ -759,7 +761,7 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
   .transaction-inspection-row:not(.transaction-ledger-row) { flex-wrap: wrap; }
   .transaction-inspection-row:not(.transaction-ledger-row) .transaction-inspection-amount { flex-basis: 100%; text-align: right; }
   .transaction-ledger-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .transaction-ledger-row .transaction-inspection-amount { font-size: 12px; }
+  .transaction-ledger-row .transaction-inspection-amount { font-size: var(--font-xs); }
 }
 
 @media (prefers-reduced-motion: reduce) {

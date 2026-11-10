@@ -83,7 +83,12 @@
   --shadow-lg: 0 10px 15px -3px rgba(16, 27, 54, 0.08), 0 4px 6px -4px rgba(16, 27, 54, 0.04);
   --shadow-card: 0 1px 2px rgba(16, 27, 54, 0.04), 0 6px 20px rgba(16, 27, 54, 0.04);
   --shadow-dialog: 0 24px 60px rgba(16, 27, 54, 0.24);
+  --shadow-press: 0 1px 2px rgba(23, 49, 38, 0.04);    /* pressed button */
+  --shadow-brand: 0 4px 12px rgba(7, 138, 89, 0.2);    /* brand-coloured glow */
   --focus-ring: 0 0 0 3px rgba(0, 139, 87, 0.26);
+
+  /* ── Surfaces with no alias above ── */
+  --surface-recessed: var(--surface-subtle);           /* inset fields, wells */
 
   /* ── Radii Tokens ── */
   --radius-sm: 8px;
@@ -91,25 +96,6 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
-
-  /* ── Legacy Aliases for Seamless Backward Compatibility ── */
-  --txt: var(--text-primary);
-  --muted: var(--text-secondary);
-  --surface2: var(--surface-subtle);
-  --recessed: var(--surface-subtle);
-  --accent: var(--primary);
-  --accent-rgb: 7, 138, 89;
-  --green: var(--primary);
-  --sh-raise: var(--shadow-md);
-  --sh-press: 0 1px 2px rgba(23, 49, 38, 0.04);
-  --sh-accent: 0 4px 12px rgba(7, 138, 89, 0.2);
-  --sh-float: var(--shadow-lg);
-
-  --r-xs: 4px;
-  --r-sm: var(--radius-sm);
-  --r-md: var(--radius-md);
-  --r-lg: var(--radius-lg);
-  --r-xl: 20px;
 
   /* ── Animation Durations & Easings ── */
   --dur-fast: 150ms;
@@ -122,16 +108,21 @@
   --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* ── Font Scale ── */
-  --font-2xs: 10px;
-  --font-xs:  11px;
-  --font-sm:  12px;
-  --font-md:  13px;
-  --font-base: 14px;
-  --font-lg:  16px;
-  --font-xl:  18px;
-  --font-2xl: 22px;
-  --font-3xl: 32px;
+  /* ── Font Scale ──
+     Every font-size uses one of these. 12px is the floor for readable text;
+     only decorative glyphs and the miniature phone mock-up on the landing
+     page go smaller. Large display numbers (26–38px) stay page-specific. */
+  --font-xs:   12px;  /* captions, badges, meta */
+  --font-sm:   13px;  /* secondary text, table cells */
+  --font-base: 14px;  /* body, controls */
+  --font-md:   15px;
+  --font-lg:   16px;  /* form fields on touch devices, card titles */
+  --font-xl:   18px;
+  --font-2xl:  20px;
+  --font-3xl:  22px;  /* page titles */
+  --font-4xl:  24px;
+  --font-5xl:  28px;
+  --font-6xl:  32px;
 
   /* ── Spacing Scale ── */
   --sp-1: 4px;
@@ -143,13 +134,22 @@
   --sp-8: 32px;
   --sp-10: 40px;
 
+  /* ── Breakpoints (max-width) ──
+     CSS variables can't be used inside @media, so these are the agreed
+     numbers. JS reads the same values from BREAKPOINTS in
+     hooks/useMediaQuery.js.
+       480  small phone      600  phone        768  tablet
+       900  sidebar ↔ bottom navigation        1024 laptop     1280 desktop
+     The matching min-width is the next pixel (481, 601, 769, 901, …).
+     Other values in the codebase are component-specific tweaks. */
+
   /* ── Z-Index Layers (low → high) ──
-     Global layers use these tokens, never raw numbers. Small values (1–100)
-     that only order siblings inside one component may stay local. */
-  --z-base: 1;
-  --z-fab: 90;
-  --z-header: 100;
-  --z-modal: 200;
+     Page chrome and overlays use these tokens, never raw numbers. Values of
+     100 or less that only lift an open menu above neighbouring cards inside
+     the page may stay local. */
+  --z-section-nav: 18;          /* sticky section tabs on phones */
+  --z-header: 20;               /* sticky topbar */
+  --z-bottom-nav: 80;           /* fixed bottom navigation on phones */
   --z-dropdown: 300;            /* page-level menus */
   --z-toast: 400;
   --z-dialog: 1000;
@@ -236,22 +236,15 @@ html.dark-theme {
   --primary-hover: var(--color-action-hover-bg);
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
-  --accent: #2563EB;
-  --accent-rgb: 37, 99, 235;
-  --green: #10B981;
   --border: var(--color-border);
-  --txt: var(--color-text);
-  --muted: var(--color-text-secondary);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.75);
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-dialog: 0 24px 64px rgba(0, 0, 0, 0.85);
-  --sh-raise: 0 8px 30px rgba(0, 0, 0, 0.60), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --sh-press: inset 0 2px 8px rgba(0, 0, 0, 0.70), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  --sh-accent: 0 0 20px rgba(37, 99, 235, 0.35), 0 2px 6px rgba(37, 99, 235, 0.15);
-  --sh-float: 0 20px 48px rgba(0, 0, 0, 0.80), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-press: inset 0 2px 8px rgba(0, 0, 0, 0.70), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --shadow-brand: 0 0 20px rgba(37, 99, 235, 0.35), 0 2px 6px rgba(37, 99, 235, 0.15);
   --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
 
   --scrollbar-thumb: #26293A;
@@ -317,8 +310,6 @@ html.light-theme {
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --border: var(--color-border);
-  --txt: var(--color-text);
-  --muted: var(--color-text-secondary);
 
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
@@ -384,8 +375,6 @@ html.cream-theme {
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --border: var(--color-border);
-  --txt: var(--color-text);
-  --muted: var(--color-text-secondary);
 
   --shadow-sm: 0 1px 3px rgba(100, 60, 20, 0.06);
   --shadow-md: 0 4px 12px rgba(100, 60, 20, 0.08);
@@ -451,8 +440,6 @@ html.green-theme {
   --primary-light: var(--color-brand-100);
   --primary-border: var(--color-border-strong);
   --border: var(--color-border);
-  --txt: var(--color-text);
-  --muted: var(--color-text-secondary);
 
   --shadow-sm: 0 1px 3px rgba(16, 120, 80, 0.06);
   --shadow-md: 0 4px 12px rgba(16, 120, 80, 0.08);

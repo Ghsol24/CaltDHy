@@ -23,7 +23,7 @@ import { formatCompactCurrency, formatCurrency, formatDate, formatDateTime, form
 import { getCategoryIcon } from '../../utils/categories';
 import { getBudgetStatus } from '../../utils/financeMath';
 import { filterTrendTransactions, summarizeRecurringExpenses } from '../../utils/analyticsFilters';
-import { useIsMobile } from '../../hooks/useMediaQuery';
+import { BREAKPOINTS, useIsMobile } from '../../hooks/useMediaQuery';
 import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
@@ -111,8 +111,8 @@ export function AnalyticsView() {
   const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const isMobile = useIsMobile(900);
-  const isCompactChart = useIsMobile(599);
+  const isMobile = useIsMobile();
+  const isCompactChart = useIsMobile(BREAKPOINTS.phone);
   const navigate = useNavigate();
 
   const cashFlowActive = !isMobile || analyticsSubTab === 'cash-flow';

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useIsMobile } from '../../hooks/useMediaQuery';
+import { BREAKPOINTS, useIsMobile } from '../../hooks/useMediaQuery';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), a[href], [tabindex="0"]';
@@ -9,7 +9,7 @@ const ANCHOR_GAP = 8;
 
 /** Keep scrolling updates inside the floating menu, away from the financial panel. */
 export function CashFlowPopover({ id, name, triggersRef, onClose, children }) {
-  const isMobile = useIsMobile(599);
+  const isMobile = useIsMobile(BREAKPOINTS.phone);
   const panelRef = useRef(null);
   const contentRef = useRef(null);
   const schedulePositionRef = useRef(null);

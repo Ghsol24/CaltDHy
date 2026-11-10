@@ -75,9 +75,10 @@
   width: 75%;
   max-width: 960px;
   max-height: 88vh;
+  max-height: 88dvh;
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, .08);
-  border-radius: var(--r-xl);
+  border-radius: var(--radius-xl);
   box-shadow:
     0 40px 100px rgba(0, 0, 0, .85),
     0 0 0 1px rgba(255, 255, 255, .04),
@@ -97,7 +98,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.12) 40%, rgba(var(--accent-rgb), .2) 60%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.12) 40%, color-mix(in srgb, var(--primary) 20%, transparent) 60%, transparent 100%);
   z-index: 1;
 }
 

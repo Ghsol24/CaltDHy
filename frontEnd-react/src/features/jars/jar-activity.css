@@ -428,7 +428,7 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
   color: var(--color-text-secondary);
 }
 
-.jar-activity-more { padding: 4px 0 0; font-size: 12px; }
+.jar-activity-more { padding: 4px 0 0; font-size: var(--font-xs); }
 
 /* ── Next milestone strip ── */
 .jar-next-strip {
@@ -549,7 +549,7 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
 @media (max-width: 600px) {
   .jar-cal-card,
   .jar-activity-card { padding: 16px; }
-  .jar-cal-amount-total { font-size: 24px; }
+  .jar-cal-amount-total { font-size: var(--font-4xl); }
   .jar-next-strip { padding: 14px; }
   .jar-next-strip-actions { width: 100%; }
   .jar-next-strip-cta { flex: 1 1 auto; }

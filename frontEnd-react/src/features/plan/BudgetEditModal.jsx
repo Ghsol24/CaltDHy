@@ -13,11 +13,12 @@ import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categor
 import { CategoryOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/financeMath';
 import { formatCurrency, formatDate, formatInputNumber, formatPercent, getLocalMonthString } from '../../utils/formatters';
+import { BREAKPOINTS } from '../../hooks/useMediaQuery';
 
 // Limits are typed straight into each row; the draft only becomes real on "Save".
 const MAX_AMOUNT_DIGITS = 15;
 const SHEET_DISMISS_DISTANCE = 96;
-const SHEET_MEDIA_QUERY = '(max-width: 600px)';
+const SHEET_MEDIA_QUERY = `(max-width: ${BREAKPOINTS.phone}px)`;
 
 function toAmountInput(value) {
   const digits = String(value ?? '').replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, MAX_AMOUNT_DIGITS);

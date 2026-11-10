@@ -9,8 +9,7 @@
 .landing-page {
   --chassis: var(--bg);
   --panel: var(--surface);
-  --recessed: var(--surface-subtle);
-  --accent: var(--color-action-bg);
+  --surface-recessed: var(--surface-subtle);
   --border-shadow: rgba(0, 0, 0, 0.04);
   --border-light: rgba(255, 255, 255, 0.8);
   --led-green: var(--color-success);
@@ -41,6 +40,7 @@
 .landing-page {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: var(--font-sans);
   background-color: var(--chassis);
   color: var(--text-primary);
@@ -168,7 +168,7 @@ body.dark-theme .bg-orb--2 {
 
 .brand-eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 500;
   letter-spacing: 0.2em;
   color: var(--text-muted);
@@ -198,7 +198,7 @@ body.dark-theme .bg-orb--2 {
 }
 
 .brand-tagline {
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 400;
   line-height: 1.6;
   color: var(--text-muted);
@@ -217,7 +217,7 @@ body.dark-theme .bg-orb--2 {
 
 .metric-badge {
   background: var(--panel);
-  border-radius: var(--r-md);
+  border-radius: var(--radius-md);
   padding: 10px 16px;
   box-shadow: var(--shadow-card);
   display: flex;
@@ -236,20 +236,20 @@ body.dark-theme .bg-orb--2 {
 
 .metric-value {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .metric-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
-/* Accent color modifier — replaces inline style="color:var(--accent)" */
+/* Accent color modifier — replaces inline style="color:var(--primary)" */
 .metric-value--accent {
   color: var(--color-link);
 }
@@ -267,7 +267,7 @@ body.dark-theme .bg-orb--2 {
 .vent-slot {
   height: 3px;
   border-radius: 2px;
-  background: var(--recessed);
+  background: var(--surface-recessed);
   box-shadow: inset 1px 1px 2px var(--border-shadow), inset -1px -1px 2px var(--border-light);
 }
 
@@ -304,16 +304,16 @@ body.dark-theme .bg-orb--2 {
   justify-content: center;
   gap: 8px;
   padding: 16px 40px;
-  background: var(--accent);
+  background: var(--primary);
   color: #ffffff;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-decoration: none;
   border: none;
-  border-radius: var(--r-md);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-accent);
   cursor: pointer;
   transition: transform 150ms cubic-bezier(.34, 1.56, .64, 1), box-shadow 150ms ease;
@@ -349,13 +349,13 @@ body.dark-theme .bg-orb--2 {
   background: var(--chassis);
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   text-decoration: none;
   border: none;
-  border-radius: var(--r-md);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   cursor: pointer;
   transition: transform 150ms cubic-bezier(.34, 1.56, .64, 1), color 150ms ease, box-shadow 150ms ease;
@@ -387,7 +387,7 @@ body.dark-theme .bg-orb--2 {
   max-width: 420px;
   aspect-ratio: 4/3;
   background: var(--panel);
-  border-radius: var(--r-xl);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-float);
   padding: 20px;
   display: flex;
@@ -455,7 +455,7 @@ body.dark-theme .bg-orb--2 {
   font-size: 10px;
   color: var(--text-muted);
   letter-spacing: 0.1em;
-  background: var(--recessed);
+  background: var(--surface-recessed);
   padding: 4px 12px;
   border-radius: var(--r-full);
   box-shadow: var(--shadow-pressed);
@@ -498,7 +498,7 @@ body.dark-theme .bg-orb--2 {
 .device-screen {
   flex: 1;
   background: #1a1e23;
-  border-radius: var(--r-lg);
+  border-radius: var(--radius-lg);
   box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.05);
   padding: 18px;
   display: flex;
@@ -583,7 +583,7 @@ body.dark-theme .bg-orb--2 {
 
 .screen-metric {
   background: rgba(255, 255, 255, 0.04);
-  border-radius: var(--r-md);
+  border-radius: var(--radius-md);
   padding: 8px 10px;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -599,7 +599,7 @@ body.dark-theme .bg-orb--2 {
 
 .sm-value {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
 }
 
@@ -861,7 +861,7 @@ body.dark-theme .vent-slot {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: var(--z-dialog);
   padding: 24px;
 }
 
@@ -945,7 +945,7 @@ body.dark-theme .idx-screw {
 /* Modal title */
 .idx-modal-title {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -965,7 +965,7 @@ body.dark-theme .idx-screw {
   flex: 1;
   height: 2px;
   border-radius: 1px;
-  background: var(--recessed);
+  background: var(--surface-recessed);
   box-shadow: var(--shadow-pressed);
 }
 
@@ -976,7 +976,7 @@ body.dark-theme .idx-screw {
 
 .idx-group-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -994,11 +994,11 @@ body.dark-theme .idx-screw {
   flex: 1;
   padding: 10px 0;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
-  background: var(--recessed);
+  background: var(--surface-recessed);
   color: var(--text-muted);
   border: 2px solid transparent;
   border-radius: 8px;
@@ -1034,8 +1034,8 @@ body.dark-theme .idx-screw {
 }
 
 .idx-lang-btn:disabled:hover {
-  color: var(--text-muted) !important;
-  border-color: transparent !important;
+  color: var(--text-muted);
+  border-color: transparent;
 }
 
 /* Theme toggle */
@@ -1049,11 +1049,11 @@ body.dark-theme .idx-screw {
   min-height: 44px;
   padding: 10px 0;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
-  background: var(--recessed);
+  background: var(--surface-recessed);
   color: var(--text-muted);
   border: 2px solid transparent;
   border-radius: 8px;
@@ -1094,11 +1094,11 @@ body.dark-theme .idx-screw {
   margin-top: 8px;
   padding: 12px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
-  background: var(--accent);
+  background: var(--primary);
   color: #fff;
   border: none;
   border-radius: 8px;

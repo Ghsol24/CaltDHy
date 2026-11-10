@@ -100,15 +100,15 @@ html, body {
 
 /* Đồng bộ hóa transition cho cảm giác nhả chuột mượt mà nhưng nhấn sập tức thì */
 .btn-primary {
-  transition: transform 120ms cubic-bezier(.25, .8, .25, 1), box-shadow 120ms cubic-bezier(.25, .8, .25, 1), background-color 150ms, color 150ms, filter 150ms !important;
+  transition: transform 120ms cubic-bezier(.25, .8, .25, 1), box-shadow 120ms cubic-bezier(.25, .8, .25, 1), background-color 150ms, color 150ms, filter 150ms;
 }
 
 /* Khi nhấn sập (:active), triệt tiêu hoàn toàn transition để lún sập tức thời */
 .btn-primary:active {
-  transition: none !important;
-  transform: translateY(2px) scale(0.97) !important;
-  box-shadow: var(--sh-press) !important;
-  filter: brightness(0.92) !important;
+  transition: none;
+  transform: translateY(2px) scale(0.97);
+  box-shadow: var(--shadow-press);
+  filter: brightness(0.92);
 }
 
 
@@ -117,7 +117,7 @@ html, body {
    ============================================================ */
 *:focus-visible {
   outline: 2px solid transparent;
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary);
   outline-offset: 0;
 }
 
@@ -203,7 +203,7 @@ select:focus:not(:focus-visible) {
 
 .skip-link:focus {
   transform: translate(-50%, 0);
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent), var(--shadow-lg);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary), var(--shadow-lg);
 }
 
 @media (max-width: 768px) {
@@ -249,6 +249,7 @@ select:focus:not(:focus-visible) {
 
 .route-loading {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 /* ── Page Skeleton Loading ── */

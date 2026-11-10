@@ -105,7 +105,7 @@ export const ResetPasswordPage = () => {
           title={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')}
           titleHighlight=""
         >
-          <p id="modHint" style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginBottom: '20px' }}>
+          <p id="modHint" style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '20px' }}>
             {isResetMode
               ? t('auth.resetHint')
               : t('auth.forgotHint')}

@@ -23,14 +23,14 @@
   box-shadow: var(--shadow-dialog);
   overflow: hidden;
   outline: none;
-  font-size: 14px;
+  font-size: var(--font-base);
   line-height: 1.5;
 }
 .jar-dialog *, .jar-dialog *::before, .jar-dialog *::after { box-sizing: border-box; }
 .jar-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 26px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .jar-dialog-header > div { min-width: 0; }
-.jar-dialog-header h2 { margin: 0; font-size: 21px; font-weight: 750; line-height: 1.35; overflow-wrap: anywhere; }
-.jar-dialog-header p { margin: 6px 0 0; font-size: 13px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.jar-dialog-header h2 { margin: 0; font-size: var(--font-3xl); font-weight: 750; line-height: 1.35; overflow-wrap: anywhere; }
+.jar-dialog-header p { margin: 6px 0 0; font-size: var(--font-sm); color: var(--text-secondary); overflow-wrap: anywhere; }
 .jar-dialog-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 12px; background: var(--surface-subtle); color: var(--text-secondary); cursor: pointer; }
 .jar-dialog-close:hover { color: var(--primary); background: var(--primary-light); }
 .jar-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 22px 26px; }
@@ -47,8 +47,8 @@
   .jar-dialog-backdrop { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
   .jar-dialog { border-radius: 18px; }
   .jar-dialog-header { padding: 18px 18px 16px; gap: 10px; }
-  .jar-dialog-header h2 { font-size: 20px; }
+  .jar-dialog-header h2 { font-size: var(--font-2xl); }
   .jar-dialog-body { padding: 18px; }
   .jar-dialog-footer { padding: 14px 18px; }
-  .jar-dialog input, .jar-dialog select, .jar-dialog textarea { font-size: 16px; }
+  .jar-dialog input, .jar-dialog select, .jar-dialog textarea { font-size: var(--font-lg); }
 }

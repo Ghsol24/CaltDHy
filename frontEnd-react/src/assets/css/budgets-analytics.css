@@ -82,7 +82,7 @@ html.green-theme .budgets-tab-container {
 }
 
 .budgets-view-title {
-  font-size: 24px;
+  font-size: var(--font-4xl);
   font-weight: 700;
   color: var(--color-text, #101B36);
   margin: 0;
@@ -90,7 +90,7 @@ html.green-theme .budgets-tab-container {
 }
 
 .budgets-view-subtitle {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #607086);
   margin: 0;
 }
@@ -140,7 +140,7 @@ html.green-theme .budgets-tab-container {
   position: relative;
   display: inline-flex;
   align-items: center;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 /* Only a slow month shows the spinner: it fades in after 150ms. */
@@ -166,7 +166,7 @@ html.green-theme .budgets-tab-container {
 @keyframes bdashSpin { to { transform: rotate(360deg); } }
 
 .month-name-text {
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--color-text, #101B36);
 }
@@ -174,7 +174,7 @@ html.green-theme .budgets-tab-container {
 .month-today-btn {
   background: var(--color-brand-100, #E6F7EF);
   border: none;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-link);
   padding: 4px 8px;
@@ -292,7 +292,7 @@ html.green-theme .budgets-tab-container {
   border-radius: 999px;
   background: var(--color-surface-muted, #F7FAF8);
   color: var(--color-text-secondary, #607086);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   white-space: nowrap;
   user-select: none;
@@ -345,7 +345,7 @@ html.green-theme .budgets-tab-container {
 }
 
 .bdash-hero__label {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--color-text-secondary, #607086);
 }
@@ -373,7 +373,7 @@ html.green-theme .budgets-tab-container {
 
 .bdash-hero__hint {
   margin: 8px 0 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.5;
   color: var(--color-text-secondary, #607086);
 }
@@ -385,7 +385,7 @@ html.green-theme .budgets-tab-container {
   min-height: 30px;
   padding: 4px 12px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -425,7 +425,7 @@ html.green-theme .budgets-tab-container {
   gap: 6px;
   min-height: 24px;
   margin: 10px 0 0;
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   line-height: 1.4;
   color: var(--color-text-secondary, #607086);
 }
@@ -469,7 +469,7 @@ html.green-theme .budgets-tab-container {
   justify-content: space-between;
   gap: 4px 12px;
   margin: 18px 0 8px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary, #607086);
 }
@@ -527,7 +527,7 @@ html.green-theme .budgets-tab-container {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 500;
   white-space: nowrap;
   color: var(--color-text-secondary, #607086);
@@ -562,7 +562,7 @@ html.green-theme .budgets-tab-container {
 }
 
 .bdash-stat dt {
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--color-text-secondary, #607086);
   /* One line in every month (labels differ by period), so the card height is fixed. */
@@ -573,7 +573,7 @@ html.green-theme .budgets-tab-container {
 
 .bdash-stat dd {
   margin: 3px 0 0;
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text, #101B36);
@@ -583,7 +583,7 @@ html.green-theme .budgets-tab-container {
 }
 
 .bdash-stat dd small {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--color-text-secondary, #607086);
 }
@@ -629,13 +629,13 @@ html.green-theme .budgets-tab-container {
 
 .bdash-card__title {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--color-text, #101B36);
 }
 
 .bdash-card__hint {
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #607086);
 }
 
@@ -707,7 +707,7 @@ button.bdash-row:focus-visible {
 
 .bdash-row__name-text {
   min-width: 0;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -762,7 +762,7 @@ button.bdash-row:focus-visible {
 
 .bdash-row__pct {
   grid-area: pct;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -771,7 +771,7 @@ button.bdash-row:focus-visible {
 .bdash-row__amounts {
   grid-area: amounts;
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary, #607086);
@@ -787,7 +787,7 @@ button.bdash-row:focus-visible {
 
 .bdash-row__remaining {
   grid-area: remaining;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -831,7 +831,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   min-height: 34px;
   padding-block: 0;
   border-bottom: 1px solid var(--color-border, #E3ECE7);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-text-muted, #64748B);
 }
@@ -841,7 +841,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 .bdash-row--head :is(.bdash-row__pct, .bdash-row__amounts, .bdash-row__remaining) {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-text-muted, #64748B);
 }
@@ -873,7 +873,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--color-text-secondary, #607086);
 }
@@ -897,7 +897,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   margin: 6px 0 0;
   padding: 14px 24px 4px;
   border-top: 1px solid var(--color-border, #E3ECE7);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-text-muted, #64748B);
 }
@@ -914,14 +914,14 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 .bdash-row__note {
   grid-area: note;
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #607086);
 }
 
 .bdash-row__action {
   grid-area: action;
   justify-self: end;
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   white-space: nowrap;
   color: var(--color-link, #007547);
@@ -944,7 +944,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
 .bdash-empty p {
   margin: 0;
-  font-size: 13.5px;
+  font-size: var(--font-base);
   line-height: 1.5;
   color: var(--color-text, #101B36);
 }
@@ -1033,13 +1033,13 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   .bdash-row__amounts {
     padding-right: 56px;
     text-align: left;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .bdash-row__pct {
     grid-area: amounts;
     justify-self: end;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .bdash-row__remaining-full {
@@ -1067,7 +1067,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   }
 
   .bdash-row__note {
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .bdash-group-title {
@@ -1093,17 +1093,17 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   }
 
   .bdash-hero__value {
-    font-size: 28px;
+    font-size: var(--font-5xl);
   }
 
   .bdash-chip {
     min-height: 26px;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .bdash-hero__meter-labels {
     margin-top: 14px;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .bdash-hero__stats {
@@ -1115,7 +1115,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   }
 
   .bdash-stat dd {
-    font-size: 15px;
+    font-size: var(--font-md);
   }
 }
 
@@ -1193,7 +1193,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 .budget-dialog-title {
-  font-size: 20px;
+  font-size: var(--font-2xl);
   font-weight: 700;
   color: var(--color-text, #101B36);
   margin: 0;
@@ -1267,7 +1267,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   border: none;
   background: var(--color-brand-700, #008B57);
   color: #FFFFFF;
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -1329,7 +1329,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
 .blimit-title {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.01em;
@@ -1338,7 +1338,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
 .blimit-subtitle {
   margin: 3px 0 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.4;
   color: var(--color-text-secondary, #607086);
 }
@@ -1403,7 +1403,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 .blimit-summary__label {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 500;
   color: var(--color-text-secondary, #607086);
 }
@@ -1429,13 +1429,13 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 .blimit-summary__total.is-unset {
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--color-text-muted, #64748B);
 }
 
 .blimit-summary__available {
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-text, #101B36);
@@ -1487,7 +1487,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   align-items: flex-start;
   gap: 7px;
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.45;
   color: var(--color-text-secondary, #607086);
 }
@@ -1557,7 +1557,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 .blimit-row__name {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-text, #101B36);
   white-space: nowrap;
@@ -1566,7 +1566,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 .blimit-row__spent {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary, #607086);
   white-space: nowrap;
@@ -1609,7 +1609,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
 .blimit-amount__input::placeholder {
   color: var(--color-text-muted, #64748B);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   opacity: 1;
 }
@@ -1629,7 +1629,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   top: 50%;
   right: 12px;
   transform: translateY(-50%);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--color-text-muted, #64748B);
   pointer-events: none;
@@ -1699,7 +1699,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
 .blimit-confirm p {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.45;
   color: var(--color-text, #101B36);
   overflow-wrap: anywhere;
@@ -1869,7 +1869,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-danger, #C53030);
 }
@@ -1883,7 +1883,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   border-radius: 10px;
   background: var(--color-danger-bg, #FFF0EF);
   color: var(--color-danger, #C53030);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
 }
 
@@ -1902,7 +1902,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #607086);
 }
 
@@ -2021,11 +2021,11 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   }
 
   .blimit-summary__total {
-    font-size: 24px;
+    font-size: var(--font-4xl);
   }
 
   .blimit-status {
-    font-size: 12.5px;
+    font-size: var(--font-sm);
   }
 
   .blimit-row {
@@ -2054,7 +2054,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
   /* 16px keeps iOS Safari from zooming into the field on focus. */
   .blimit-amount__input,
   .blimit-add-form__name {
-    font-size: 16px;
+    font-size: var(--font-lg);
   }
 
   .blimit-amount__input {
@@ -2112,7 +2112,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
   .blimit-dirty {
     justify-content: center;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .blimit-foot__actions {
@@ -2121,7 +2121,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 
   .blimit-btn {
     height: 48px;
-    font-size: 15px;
+    font-size: var(--font-md);
   }
 
   .blimit-btn--ghost {
@@ -2182,7 +2182,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .analytics-view-title {
-  font-size: 24px;
+  font-size: var(--font-4xl);
   font-weight: 700;
   color: var(--color-text, #101B36);
   margin: 0;
@@ -2190,7 +2190,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .analytics-view-subtitle {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #607086);
   margin: 0;
 }
@@ -2214,7 +2214,7 @@ body:has(.blimit-overlay) .toast-region {
   border: none;
   background: transparent;
   padding: 6px 14px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--color-text-secondary, #607086);
   border-radius: var(--radius-sm, 8px);
@@ -2254,7 +2254,7 @@ body:has(.blimit-overlay) .toast-region {
   }
 }
 
-@media (max-width: 599px) {
+@media (max-width: 600px) {
   .analytics-kpi-grid {
     grid-template-columns: 1fr;
   }
@@ -2287,7 +2287,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .kpi-card-label {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--color-text-secondary, #607086);
 }
@@ -2323,19 +2323,19 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .kpi-card-amount {
-  font-size: 22px;
+  font-size: var(--font-3xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text, #101B36);
 }
 
 .kpi-card-meta {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-muted, #8A98A9);
 }
 
 .kpi-status-pill {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 3px 9px;
   border-radius: var(--radius-full);
@@ -2395,14 +2395,14 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .panel-main-title {
-  font-size: 17px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--color-text, #101B36);
   margin: 0;
 }
 
 .panel-subtitle {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #607086);
   margin: 0;
 }
@@ -2435,14 +2435,14 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .empty-heading-caps {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary, #607086);
 }
 
 .empty-body-desc {
-  font-size: 13.5px;
+  font-size: var(--font-base);
   color: var(--color-text-secondary, #607086);
   max-width: 460px;
   margin: 0;
@@ -2456,7 +2456,7 @@ body:has(.blimit-overlay) .toast-region {
   border: none;
   border-radius: var(--radius-sm, 8px);
   padding: 10px 20px;
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--dur-fast) ease;
@@ -2505,12 +2505,12 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .doughnut-center-label {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #607086);
 }
 
 .doughnut-center-val {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 800;
   color: var(--color-text, #101B36);
   font-variant-numeric: tabular-nums;
@@ -2553,7 +2553,7 @@ body:has(.blimit-overlay) .toast-region {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 .cat-text-info {
@@ -2563,13 +2563,13 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .cat-title-text {
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-text, #101B36);
 }
 
 .cat-pct-badge {
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: var(--color-text-secondary, #607086);
   background: rgba(0, 0, 0, 0.05);
@@ -2578,7 +2578,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .cat-amount-text {
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text, #101B36);
@@ -2637,13 +2637,13 @@ body:has(.blimit-overlay) .toast-region {
 .trend-week-nav__range {
   min-width: 0;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 600px) {
   #analytics-cashflow {
     padding: 16px;
     gap: 16px;
@@ -2683,7 +2683,7 @@ body:has(.blimit-overlay) .toast-region {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   border-radius: var(--radius-sm, 8px);
   border: 1px solid var(--color-border, #E3ECE7);
@@ -2719,7 +2719,7 @@ body:has(.blimit-overlay) .toast-region {
   background: var(--color-brand-50, #F1FBF6);
   border: 1px solid var(--color-brand-100, #E6F7EF);
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-link);
 }
@@ -2761,7 +2761,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .report-summary-card__title {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-text-secondary, #607086);
   text-transform: uppercase;
@@ -2769,7 +2769,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .report-summary-card__amount {
-  font-size: 20px;
+  font-size: var(--font-2xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text, #101B36);
@@ -2781,7 +2781,7 @@ body:has(.blimit-overlay) .toast-region {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #607086);
 }
 
@@ -2791,7 +2791,7 @@ body:has(.blimit-overlay) .toast-region {
   gap: 4px;
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   border: 1px solid transparent;
@@ -2847,7 +2847,7 @@ body:has(.blimit-overlay) .toast-region {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--color-text, #101B36);
 }
@@ -2862,7 +2862,7 @@ body:has(.blimit-overlay) .toast-region {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--color-text, #101B36);
   line-height: 1.5;
 }
@@ -2875,7 +2875,7 @@ body:has(.blimit-overlay) .toast-region {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: var(--font-xs);
   border: 1px solid transparent;
 }
 
@@ -2910,14 +2910,14 @@ body:has(.blimit-overlay) .toast-region {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 13px;
+  font-size: var(--font-sm);
   min-width: 820px;
 }
 
 .report-table th {
   background: var(--color-surface-muted, #F7FAF8);
   color: var(--color-text-secondary, #607086);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2955,7 +2955,7 @@ body:has(.blimit-overlay) .toast-region {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: var(--font-lg);
   flex-shrink: 0;
 }
 
@@ -2976,7 +2976,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .table-delta-sub {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--color-text-muted, #8A98A9);
 }
 
@@ -3005,7 +3005,7 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .table-pct-val {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   width: 32px;
@@ -3020,7 +3020,7 @@ body:has(.blimit-overlay) .toast-region {
   gap: 4px;
   padding: 3px 9px;
   border-radius: var(--radius-full);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   white-space: nowrap;
   border: 1px solid transparent;
@@ -3052,7 +3052,7 @@ body:has(.blimit-overlay) .toast-region {
 
 /* Advice Text in Table */
 .table-advice-cell {
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.4;
   max-width: 240px;
 }

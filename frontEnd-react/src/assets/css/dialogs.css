@@ -29,7 +29,7 @@
   border: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   animation: slideInToast 200ms var(--ease-smooth);
   transition: all var(--dur-fast) ease;
 }
@@ -96,7 +96,7 @@
 
 .toast-item__message {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.4;
@@ -116,7 +116,7 @@
   border: 1px solid var(--primary-border);
   border-radius: var(--radius-sm);
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--dur-fast) ease;
@@ -222,7 +222,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .confirm-dialog-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -230,7 +230,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .confirm-dialog-message {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-base);
   color: var(--text-secondary);
   line-height: 1.5;
   white-space: pre-line;
@@ -244,7 +244,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-md);
   color: var(--color-warning);
   background: var(--color-warning-bg);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -252,13 +252,13 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-budget-period {
   margin: 0 0 10px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.5;
 }
 
 .txn-budget-error {
   color: var(--color-danger);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.5;
 }
 
@@ -286,7 +286,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   flex-wrap: wrap;
   align-items: center;
   gap: 2px 6px;
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   line-height: 1.4;
   color: var(--color-text-secondary);
 }
@@ -310,7 +310,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--surface-subtle);
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary);
 }
 .txn-revisions-content p { margin: 8px 0 0; line-height: 1.5; }
@@ -328,7 +328,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .confirm-dialog-error {
   margin: 0;
   color: var(--danger, #d43d3d);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.5;
 }
 
@@ -342,7 +342,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .confirm-dialog-btn {
   padding: 9px 18px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -372,7 +372,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   justify-content: center;
   gap: 6px;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   border-radius: var(--radius-md);
   padding: 8px 16px;
@@ -438,7 +438,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .empty-state__title {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 6px 0;
@@ -446,7 +446,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .empty-state__desc {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--text-secondary);
   max-width: 360px;
   margin: 0 0 20px 0;
@@ -583,7 +583,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-modal-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-primary, #173126);
 }
@@ -643,7 +643,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-sm, 8px);
   background: transparent;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-secondary, #60766A);
   cursor: pointer;
@@ -678,7 +678,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-label {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-primary, #173126);
   display: flex;
@@ -687,7 +687,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-label-optional {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 400;
   color: var(--text-muted, #8FA297);
 }
@@ -703,7 +703,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   width: 100%;
   padding: 12px 70px 12px 16px;
   font-family: var(--font-mono, monospace);
-  font-size: 24px;
+  font-size: var(--font-4xl);
   font-weight: 700;
   color: var(--text-primary, #173126);
   background: var(--surface, #FFFFFF);
@@ -721,8 +721,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 /* Error state - chỉ hiển thị khi có class has-error */
 .txn-amount-box.has-error .txn-amount-input {
-  border-color: #EF4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
 .txn-amount-error-inline {
@@ -730,7 +730,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   align-items: center;
   gap: 5px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 500;
   color: #EF4444;
   margin-top: 5px;
@@ -742,7 +742,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   position: absolute;
   right: 14px;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: var(--text-secondary, #A0AEC0);
   background: rgba(255, 255, 255, 0.06);
@@ -799,17 +799,17 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 /* Selected state */
 .txn-category-card.active {
-  background: rgba(var(--accent-rgb, 79, 70, 229), 0.1);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
   border-color: var(--color-action-bg);
   color: var(--color-active-text, var(--text-primary));
-  box-shadow: 0 0 0 1px var(--primary), 0 4px 12px rgba(var(--accent-rgb, 79, 70, 229), 0.15);
+  box-shadow: 0 0 0 1px var(--primary), 0 4px 12px color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 .txn-category-card.active--income {
-  background: rgba(16, 185, 129, 0.1) !important;
-  border-color: #10B981 !important;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10B981;
   color: var(--color-success);
-  box-shadow: 0 0 0 1px #10B981, 0 4px 12px rgba(16, 185, 129, 0.18) !important;
+  box-shadow: 0 0 0 1px #10B981, 0 4px 12px rgba(16, 185, 129, 0.18);
 }
 
 /* Check Badge on top right of selected card */
@@ -822,7 +822,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: 50%;
   background: var(--primary);
   color: #FFFFFF;
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -831,12 +831,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-card-check-badge--income {
-  background: #10B981 !important;
+  background: #10B981;
 }
 
 /* Icon */
 .txn-card-icon {
-  font-size: 20px;
+  font-size: var(--font-2xl);
   line-height: 1;
   margin-bottom: 5px;
   color: inherit;
@@ -845,7 +845,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Category Name */
 .txn-card-name {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   line-height: 1.4;
   color: var(--text-secondary, #A0AEC0);
@@ -863,7 +863,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Remaining Amount */
 .txn-card-amount {
   font-family: var(--font-mono, monospace);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -876,7 +876,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Subtitle: "Còn lại 88%", "Hết hạn mức", "Chưa đặt hạn mức" */
 .txn-card-subtitle {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 500;
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -914,7 +914,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Income card tag */
 .txn-card-income-tag {
   margin-top: auto;
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -925,7 +925,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: 6px;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 600px) {
   .txn-category-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
@@ -967,7 +967,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
     grid-column: 2;
     grid-row: 1;
     padding-inline-end: 20px;
-    font-size: 14px;
+    font-size: var(--font-base);
     font-weight: 600;
   }
 
@@ -979,12 +979,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   }
 
   .txn-card-amount {
-    font-size: 14px;
+    font-size: var(--font-base);
   }
 
   .txn-card-subtitle {
     grid-column: 1 / -1;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .txn-card-progress-track {
@@ -1007,14 +1007,14 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-empty-icon {
-  font-size: 28px;
+  font-size: var(--font-5xl);
   margin-bottom: 8px;
   opacity: 0.8;
 }
 
 .txn-empty-title {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-primary, #FFFFFF);
   margin-bottom: 4px;
@@ -1022,7 +1022,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-empty-desc {
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-muted, #A0AEC0);
   margin-bottom: 12px;
   max-width: 240px;
@@ -1034,10 +1034,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   gap: 6px;
   padding: 7px 14px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: #FFFFFF;
-  background: var(--accent, #FF4757);
+  background: var(--primary, #FF4757);
   border: none;
   border-radius: var(--radius-sm, 8px);
   cursor: pointer;
@@ -1054,7 +1054,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   width: 100%;
   padding: 10px 14px;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-base);
   color: var(--text-primary);
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -1066,7 +1066,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
    happens in the transaction and recurring forms on phones and tablets. */
 @media (max-width: 900px), (pointer: coarse) {
   .txn-input {
-    font-size: 16px;
+    font-size: var(--font-lg);
     text-overflow: ellipsis;
   }
 }
@@ -1083,7 +1083,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: 1px solid var(--danger, #C94B45);
   border-radius: var(--radius-sm, 8px);
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -1133,7 +1133,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-btn-cancel {
   padding: 10px 20px;
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-secondary);
   background: var(--surface-subtle);
@@ -1164,7 +1164,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   min-height: 40px;
   padding: 0 14px;
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-text-secondary, var(--text-secondary));
   background: transparent;
@@ -1198,7 +1198,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-btn-submit {
   padding: 10px 24px;
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: #ffffff;
   background: var(--primary);
@@ -1230,14 +1230,14 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-btn-submit--income {
-  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
-  border-color: transparent !important;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35) !important;
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
 }
 
 .txn-btn-submit--income:hover:not(:disabled) {
-  background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
-  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45) !important;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45);
 }
 
 /* ── Transaction dialog on phones: bottom sheet, compact category row, picker sheets ──
@@ -1307,7 +1307,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-category-summary__name,
 .txn-cat-option__name {
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-primary);
@@ -1317,7 +1317,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-category-summary__line,
 .txn-cat-option__meta {
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -1429,7 +1429,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-sheet__title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 17px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1507,11 +1507,11 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-cat-option__name {
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 .txn-cat-option__meta {
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 
 .txn-cat-option .txn-budget-track {
@@ -1534,7 +1534,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-sheet-empty {
   margin: 16px 0;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--text-muted);
   text-align: center;
 }
@@ -1571,7 +1571,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-sheet-calendar .calt-date-day {
   height: 42px;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 /* The "Today" chip above replaces the panel's own footer link. */
@@ -1581,7 +1581,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-sheet-hint {
   margin: 10px 4px 0;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
 }
 
@@ -1590,7 +1590,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   to { transform: none; }
 }
 
-@media (max-width: 599px) {
+@media (max-width: 600px) {
   .txn-modal-backdrop {
     align-items: flex-end;
     padding: 0;
@@ -1724,7 +1724,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--font-xl);
   line-height: 1;
   flex-shrink: 0;
   color: var(--color-link);
@@ -1739,7 +1739,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .custom-wallet-name {
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
@@ -1751,7 +1751,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .custom-wallet-badge {
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
@@ -1763,7 +1763,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .custom-wallet-balance {
   font-family: var(--font-mono, monospace);
-  font-size: 11.5px;
+  font-size: var(--font-xs);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -1773,7 +1773,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .custom-wallet-none-text,
 .custom-wallet-placeholder {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -1854,7 +1854,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--font-xl);
   line-height: 1;
   flex-shrink: 0;
   color: var(--color-link);
@@ -1875,14 +1875,14 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .custom-wallet-item-name {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .custom-wallet-item-balance {
   font-family: var(--font-mono, monospace);
-  font-size: 11.5px;
+  font-size: var(--font-xs);
   color: var(--text-secondary);
 }
 
@@ -1898,7 +1898,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .custom-wallet-item-none-title {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -1917,6 +1917,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   width: 94vw;
   max-width: 580px;
   max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1935,7 +1936,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .financial-tips-close-btn {
   background: transparent;
   border: none;
-  font-size: 18px;
+  font-size: var(--font-xl);
   color: var(--text-muted);
   cursor: pointer;
   padding: 4px 8px;
@@ -2008,7 +2009,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: 1px solid var(--border);
   background: var(--surface-subtle);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--dur-fast) ease;
@@ -2027,7 +2028,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: none;
   background: var(--primary);
   color: #FFFFFF;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
@@ -2046,7 +2047,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   background: var(--surface-subtle);
   color: var(--text-secondary);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 6px 14px;
   border-radius: 8px;
   cursor: pointer;
@@ -2099,7 +2100,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-md, 10px);
   color: var(--text-primary, #173126);
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--dur-fast) ease;
@@ -2170,7 +2171,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-sm, 8px);
   color: var(--menu-text);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   cursor: pointer;
   text-align: left;
@@ -2207,7 +2208,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .dropdown-item-sub {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-family: var(--font-mono);
   color: var(--text-muted, #8A98A9);
 }
@@ -2222,8 +2223,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .modal-themed-input:focus {
-  border-color: var(--color-brand-700, #4F46E5) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+  border-color: var(--color-brand-700, #4F46E5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .modal-dropdown-scroll-list {
@@ -2251,7 +2252,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border-radius: var(--radius-sm, 6px);
   color: var(--color-link);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--dur-fast) ease;
@@ -2278,7 +2279,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   border: 1px solid var(--color-brand-700, #4F46E5);
   border-radius: 6px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-primary, #173126);
   outline: none;
 }
@@ -2296,7 +2297,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   color: #ffffff;
   border: none;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
 }
@@ -2306,7 +2307,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   background: transparent;
   color: var(--text-muted, #8A98A9);
   border: none;
-  font-size: 11px;
+  font-size: var(--font-xs);
   cursor: pointer;
 }
 
@@ -2343,7 +2344,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   align-items: center;
   gap: 7px;
   color: var(--color-link);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -2403,13 +2404,13 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   gap: 2px;
   min-width: 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--font-xs);
   line-height: 1.35;
 }
 
 .recurring-term-copy strong {
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 650;
 }
 
@@ -2466,7 +2467,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .recurring-term-hint {
   color: var(--color-text-muted);
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 
 @media (max-width: 520px) {

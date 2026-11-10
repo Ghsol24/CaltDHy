@@ -144,7 +144,7 @@ export function JarDetailModal({
                 }}
               />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
               <span>
                 {isCompleted ? (
                   <strong style={{ color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -172,25 +172,25 @@ export function JarDetailModal({
                 <TargetOutlineIcon size={15} />
                 <span>Kế hoạch tích lũy gợi ý</span>
               </div>
-              <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 Còn <strong style={{ color: 'var(--text-primary)' }}>{daysRemaining} ngày</strong> nữa để về đích. Bạn có thể phân bổ:
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '2px' }}>
                 <div style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi ngày</span>
-                  <strong style={{ fontSize: '12.5px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi ngày</span>
+                  <strong style={{ fontSize: '13px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
                     {formatCurrency(dailyNeeded)}
                   </strong>
                 </div>
                 <div style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi tuần</span>
-                  <strong style={{ fontSize: '12.5px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi tuần</span>
+                  <strong style={{ fontSize: '13px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
                     {formatCurrency(weeklyNeeded)}
                   </strong>
                 </div>
                 <div style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi tháng</span>
-                  <strong style={{ fontSize: '12.5px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi tháng</span>
+                  <strong style={{ fontSize: '13px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
                     {formatCurrency(monthlyNeeded)}
                   </strong>
                 </div>
@@ -207,7 +207,7 @@ export function JarDetailModal({
             </div>
 
             {history.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px', background: 'var(--surface-subtle)', borderRadius: '10px' }}>
+              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'var(--surface-subtle)', borderRadius: '10px' }}>
                 Hũ này chưa có giao dịch nạp hoặc rút nào.
               </div>
             ) : (
@@ -237,10 +237,10 @@ export function JarDetailModal({
                           {isDeposit ? '+' : '−'}
                         </span>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {entry.reason || (isDeposit ? 'Nạp tiền vào hũ' : 'Rút tiền từ hũ')}
                           </span>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                             {entry.date ? formatDate(entry.date, 'full') : '--'}
                           </span>
                         </div>
@@ -249,7 +249,7 @@ export function JarDetailModal({
                       <strong
                         style={{
                           fontFamily: 'var(--font-mono, monospace)',
-                          fontSize: '13.5px',
+                          fontSize: '14px',
                           fontWeight: 700,
                           color: isDeposit ? '#10B981' : '#EF4444'
                         }}

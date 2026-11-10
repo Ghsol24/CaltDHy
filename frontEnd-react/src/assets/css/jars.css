@@ -40,7 +40,7 @@
 }
 
 .jars-section-title {
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--color-text, #1E293B);
   margin: 0;
@@ -50,7 +50,7 @@
 }
 
 .jars-section-action-link {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: #5356F1;
   background: none;
@@ -99,7 +99,7 @@
 }
 
 .jars-hero-heading {
-  font-size: 22px;
+  font-size: var(--font-3xl);
   font-weight: 800;
   color: var(--color-text, #0F172A);
   margin: 0;
@@ -112,7 +112,7 @@
   border: none;
   border-radius: 10px;
   padding: 10px 18px;
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -195,7 +195,7 @@ html.dark-theme .jars-hero-cta-btn:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 .jars-metric-icon-box--blue {
@@ -240,14 +240,14 @@ html.dark-theme .jars-metric-icon-box--teal {
 }
 
 .jars-metric-label {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #64748B);
   font-weight: 500;
 }
 
 .jars-metric-value {
   font-family: var(--font-mono, monospace);
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 800;
   color: var(--color-text, #0F172A);
   letter-spacing: -0.02em;
@@ -257,7 +257,7 @@ html.dark-theme .jars-metric-icon-box--teal {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 11.5px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-success);
 }
@@ -297,7 +297,7 @@ html.dark-theme .jars-metric-icon-box--teal {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--color-text-secondary, #64748B);
 }
@@ -441,7 +441,7 @@ html.dark-theme .jars-global-progress-track {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 700;
 }
 
@@ -473,7 +473,7 @@ html.dark-theme .jars-global-progress-track {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--color-text, #0F172A);
 }
@@ -490,7 +490,7 @@ html.dark-theme .jars-global-progress-track {
   gap: 4px;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   width: fit-content;
 }
@@ -519,7 +519,7 @@ html.dark-theme .jars-global-progress-track {
   border: none;
   border-radius: 6px;
   padding: 5px 12px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
   cursor: pointer;
   margin-top: 4px;
@@ -553,13 +553,13 @@ html.dark-theme .jars-global-progress-track {
 }
 
 .jars-status-subtext {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #64748B);
   line-height: 1.4;
 }
 
 .jars-status-empty-text {
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   color: var(--color-text-muted, #94A3B8);
   font-style: normal;
 }
@@ -779,7 +779,7 @@ html.green-theme .jars-status-track {
 }
 
 .jars-count-badge {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--color-text-secondary, #64748B);
 }
@@ -884,7 +884,7 @@ html.dark-theme .jars-view-btn.active {
   /* Drawn inside the card edge so neighbouring cards or a clipping parent
      can never hide part of the ring. */
   :is(.jar-premium-card, .jar-list-mode-row):has(.jar-open-detail-btn:focus-visible) {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--primary);
     outline-offset: -2px;
   }
 }
@@ -896,7 +896,7 @@ html.dark-theme .jars-view-btn.active {
 }
 
 .jar-category-badge {
-  font-size: 10px;
+  font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -959,7 +959,7 @@ html.dark-theme .jars-view-btn.active {
   background: transparent;
   padding: 9px 12px;
   text-align: left;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--menu-text);
   border-radius: 8px;
@@ -1023,7 +1023,7 @@ html.dark-theme .jars-view-btn.active {
 }
 
 .jar-name-title {
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 800;
   color: var(--color-text, #0F172A);
   margin: 0;
@@ -1040,14 +1040,14 @@ html.dark-theme .jars-view-btn.active {
 
 .jar-current-amount {
   font-family: var(--font-mono, monospace);
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 800;
   color: var(--color-text, #0F172A);
 }
 
 .jar-target-amount {
   font-family: var(--font-mono, monospace);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--color-text-secondary, #64748B);
 }
@@ -1070,7 +1070,7 @@ html.dark-theme .jars-view-btn.active {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11.5px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #64748B);
 }
 
@@ -1084,9 +1084,11 @@ html.dark-theme .jars-view-btn.active {
   border: 1px dashed var(--color-border, #CBD5E1);
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 11.5px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #64748B);
   line-height: 1.4;
+  /* Two even lines instead of one word left alone when the hint wraps. */
+  text-wrap: balance;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1142,7 +1144,7 @@ html.dark-theme .jar-smart-hint-box strong {
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -1187,7 +1189,7 @@ html.dark-theme .jar-btn-deposit:hover {
   border: 1px solid var(--color-border, #CBD5E1);
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -1267,7 +1269,7 @@ html.dark-theme .jar-btn-detail-icon:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: var(--font-4xl);
   transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
@@ -1278,14 +1280,14 @@ html.dark-theme .jar-btn-detail-icon:hover {
 }
 
 .jar-card-add-title {
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 700;
   color: var(--color-text, #0F172A);
   margin: 0;
 }
 
 .jar-card-add-desc {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #64748B);
   margin: 0;
   max-width: 200px;
@@ -1457,7 +1459,7 @@ html.green-theme .jar-card-add-desc {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 800;
   transition: all 0.2s ease;
 }
@@ -1535,13 +1537,13 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
 }
 
 .jar-list-mode-add-title {
-  font-size: 13.5px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: inherit;
 }
 
 .jar-list-mode-add-desc {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-muted, #94A3B8);
   margin-left: 6px;
 }
@@ -1556,7 +1558,7 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
 
 .jars-pagination__summary {
   color: var(--color-text-secondary, #64748B);
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
 }
 
@@ -1692,21 +1694,21 @@ html.green-theme .jars-tip-link {
 }
 
 .jars-tip-title {
-  font-size: 14.5px;
+  font-size: var(--font-md);
   font-weight: 700;
   color: var(--color-text, #0F172A);
   margin: 0;
 }
 
 .jars-tip-desc {
-  font-size: 12.5px;
+  font-size: var(--font-sm);
   color: var(--color-text-secondary, #64748B);
   line-height: 1.5;
   margin: 0;
 }
 
 .jars-tip-link {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: var(--color-brand-700, #5356F1);
   background: none;

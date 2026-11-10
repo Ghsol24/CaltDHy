@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { BottomSheet } from '../../components/ui/BottomSheet';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { BREAKPOINTS, useIsMobile } from '../../hooks/useMediaQuery';
 import { SparkleOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatPercent } from '../../utils/formatters';
 import { ALERT_TIERS, countAlertTiers } from '../../utils/planAlerts';
@@ -59,7 +59,7 @@ function useColumnCount(listRef, enabled) {
  * expands in place; mobile shows the two most severe and opens the rest in a sheet.
  */
 export function PlanAttentionBar({ alerts, hasPlanData, copy, label, onOpen }) {
-  const isMobile = useMediaQuery('(max-width: 600px)');
+  const isMobile = useIsMobile(BREAKPOINTS.phone);
   const listRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
