@@ -15,7 +15,7 @@
 .jar-transfer-wallet-box { min-width: 0; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface-muted); }
 .jar-transfer-wallet-select { min-width: 0; }
 .jar-transfer-wallet-select .custom-wallet-trigger { min-height: 52px; }
-.jar-transfer-wallet-select .custom-wallet-trigger[aria-invalid="true"] { border-color: var(--color-danger) !important; }
+.jar-transfer-wallet-select .custom-wallet-trigger[aria-invalid="true"] { border-color: var(--color-danger); }
 .jar-transfer-wallet-box p { margin: 8px 0 0; color: var(--color-text-secondary); font-size: var(--font-xs); line-height: 1.55; }
 .jar-transfer-no-wallet > button { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--color-link); font: 600 13px/1.5 var(--font-sans); text-align: left; cursor: pointer; }
 .jar-transfer-preview { min-width: 0; padding: 14px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-brand-50); }

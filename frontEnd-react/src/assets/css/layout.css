@@ -13,7 +13,7 @@
   top: 0;
   z-index: var(--z-header);
   /* Glass-inspired top highlight */
-  background-image: linear-gradient(180deg, rgba(255,255,255,.035) 0%, transparent 100%);
+  background-image: var(--topbar-sheen);
 }
 
 /* Animated accent underline */
@@ -24,7 +24,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--primary) 40%, transparent) 30%, color-mix(in srgb, var(--primary) 15%, transparent) 70%, transparent 100%);
+  background: var(--topbar-accent-line);
 }
 
 .tb-brand {
@@ -43,7 +43,7 @@
 
 .tb-logo-accent {
   color: var(--color-link);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--primary) 50%, transparent);
+  text-shadow: var(--topbar-logo-glow);
 }
 
 /* Logo as home-nav link */
@@ -92,7 +92,7 @@
   background: var(--surface-recessed);
   padding: 6px 14px 6px 8px;
   border-radius: 99px;
-  box-shadow: var(--shadow-press);
+  box-shadow: var(--user-chip-shadow);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -135,34 +135,7 @@
 /* ============================================================
    RAIL (left sidebar)
    ============================================================ */
-.rail {
-  background: var(--surface);
-  border-right: 1px solid rgba(255, 255, 255, .05);
-  padding: 28px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* Prevent Windows scrollbar from eating sidebar width */
-  scrollbar-gutter: stable;
-  /* Subtle gradient accent on right border */
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--primary) 8%, transparent), 2px 0 20px rgba(0,0,0,.2);
-  scrollbar-width: thin;
-  scrollbar-color: var(--surface-subtle) transparent;
-}
 
-.rail::-webkit-scrollbar {
-  width: 4px;
-}
-
-.rail::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 99px;
-}
-.rail::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
 
 /* Loi 2.3: Hieu ung chuyen tab muot ma Dashboard <-> Analytics */
 @keyframes viewFadeIn {
@@ -208,29 +181,4 @@
   transform: scale(0.9);
 }
 
-/* ── Light theme ── */
-html.light-theme .month-nav-btn {
-  color: #64748B;
-}
-html.light-theme .month-nav-btn:hover {
-  color: #4F46E5;
-  background: #E2E8F0;
-}
 
-/* ── Cream theme ── */
-html.cream-theme .month-nav-btn {
-  color: #7D6C58;
-}
-html.cream-theme .month-nav-btn:hover {
-  color: #C0531E;
-  background: rgba(192,83,30,.08);
-}
-
-/* ── Green theme ── */
-html.green-theme .month-nav-btn {
-  color: #4D7A68;
-}
-html.green-theme .month-nav-btn:hover {
-  color: #059669;
-  background: rgba(5,150,105,.08);
-}

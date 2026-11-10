@@ -274,9 +274,6 @@
 }
 .lnk:hover { color: var(--accent-text); border-color: var(--accent-text); }
 
-/* ── Utility ── */
-html.dark-theme .auth-page input { color-scheme: dark; }
-
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .module { padding: 32px 24px 28px; }

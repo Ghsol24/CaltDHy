@@ -1,15 +1,4 @@
 .signature-login {
-  --signature-bg: #090A0F;
-  --signature-text: #F5F8FF;
-  --signature-muted: #A8B5CE;
-  --signature-bar-start: #2563EB;
-  --signature-bar-end: #00F2FE;
-  --signature-bar-side: #1646B5;
-  --signature-logo-start: #2563EB;
-  --signature-logo-end: #2EC7FF;
-  --signature-particle: #D8F9FF;
-  --signature-track: rgba(190, 216, 255, .18);
-  --signature-glow: rgba(0, 242, 254, .24);
   position: fixed;
   inset: 0;
   z-index: var(--z-blocking-overlay);
@@ -29,47 +18,6 @@
   isolation: isolate;
 }
 
-html.light-theme .signature-login {
-  --signature-bg: #FAFAFB;
-  --signature-text: #101B36;
-  --signature-muted: #64748B;
-  --signature-bar-start: #10B981;
-  --signature-bar-end: #6366F1;
-  --signature-bar-side: #8386D6;
-  --signature-logo-start: #293CB6;
-  --signature-logo-end: #6366F1;
-  --signature-particle: #2563EB;
-  --signature-track: rgba(70, 89, 147, .17);
-  --signature-glow: rgba(99, 102, 241, .10);
-}
-
-html.cream-theme .signature-login {
-  --signature-bg: #F5EDE0;
-  --signature-text: #382415;
-  --signature-muted: #806953;
-  --signature-bar-start: #C0531E;
-  --signature-bar-end: #D97706;
-  --signature-bar-side: #A34018;
-  --signature-logo-start: #B74719;
-  --signature-logo-end: #D97706;
-  --signature-particle: #E8AB29;
-  --signature-track: rgba(140, 77, 37, .2);
-  --signature-glow: rgba(217, 119, 6, .15);
-}
-
-html.green-theme .signature-login {
-  --signature-bg: #F0F9F4;
-  --signature-text: #103528;
-  --signature-muted: #607F71;
-  --signature-bar-start: #047857;
-  --signature-bar-end: #10B981;
-  --signature-bar-side: #035D45;
-  --signature-logo-start: #047857;
-  --signature-logo-end: #10B981;
-  --signature-particle: #11DDA1;
-  --signature-track: rgba(4, 120, 87, .19);
-  --signature-glow: rgba(16, 185, 129, .16);
-}
 
 .signature-login:focus { outline: none; }
 .signature-login.is-exiting { opacity: 0; pointer-events: none; }

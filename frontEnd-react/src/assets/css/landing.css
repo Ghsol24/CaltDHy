@@ -688,7 +688,7 @@ body.dark-theme .bg-orb--2 {
 }
 
 .txn-amount.neg {
-  color: var(--color-danger);
+  color: var(--txn-amount-neg-text);
 }
 
 .txn-amount.pos {

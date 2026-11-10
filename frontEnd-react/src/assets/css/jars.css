@@ -107,7 +107,7 @@
 }
 
 .jars-hero-cta-btn {
-  background: var(--color-brand-700, #5356F1);
+  background: var(--btn-primary-bg);
   color: #FFFFFF;
   border: none;
   border-radius: 10px;
@@ -119,11 +119,12 @@
   gap: 8px;
   cursor: pointer;
   transition: background-color var(--dur-base) ease, border-color var(--dur-base) ease, color var(--dur-base) ease, box-shadow var(--dur-base) ease, transform var(--dur-base) ease, opacity var(--dur-base) ease;
-  box-shadow: 0 4px 12px rgba(83, 86, 241, 0.25);
+  box-shadow: var(--btn-primary-shadow);
+  border-color: transparent;
 }
 
 .jars-hero-cta-btn:hover {
-  background: var(--color-brand-600, #4345D9);
+  background: var(--jars-cta-hover-bg);
   box-shadow: 0 6px 16px rgba(83, 86, 241, 0.35);
   transform: translateY(-1px);
 }
@@ -131,33 +132,11 @@
 .jars-hero-cta-btn:active {
   transform: translateY(0);
 }
-
-html.cream-theme .jars-hero-cta-btn {
-  background: #C0531E;
-  box-shadow: 0 4px 12px rgba(192, 83, 30, 0.25);
+.jars-hero-cta-btn:hover:not(:disabled) {
+  background: var(--btn-primary-hover-bg);
+  box-shadow: var(--btn-primary-hover-shadow);
 }
 
-html.cream-theme .jars-hero-cta-btn:hover {
-  background: #A84414;
-}
-
-html.green-theme .jars-hero-cta-btn {
-  background: #059669;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-}
-
-html.green-theme .jars-hero-cta-btn:hover {
-  background: #047857;
-}
-
-html.dark-theme .jars-hero-cta-btn {
-  background: #2563EB;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
-}
-
-html.dark-theme .jars-hero-cta-btn:hover {
-  background: #1D4ED8;
-}
 
 /* 4 Metric Cards Row */
 .jars-hero-metrics-grid {
@@ -199,45 +178,27 @@ html.dark-theme .jars-hero-cta-btn:hover {
 }
 
 .jars-metric-icon-box--blue {
-  background: #EEF2FF;
-  color: #5356F1;
+  background: var(--jars-metric-blue-bg);
+  color: var(--jars-metric-blue-text);
 }
 
 .jars-metric-icon-box--purple {
-  background: #F3E8FF;
-  color: #9333EA;
+  background: var(--jars-metric-purple-bg);
+  color: var(--jars-metric-purple-text);
 }
 
 .jars-metric-icon-box--orange {
-  background: #FEF3C7;
-  color: #D97706;
+  background: var(--jars-metric-orange-bg);
+  color: var(--jars-metric-orange-text);
 }
 
 .jars-metric-icon-box--teal {
-  background: #CCFBF1;
-  color: #0D9488;
+  background: var(--jars-metric-teal-bg);
+  color: var(--jars-metric-teal-text);
 }
 
 /* Metric Icon Boxes Theme Overrides */
-html.dark-theme .jars-metric-icon-box--blue {
-  background: rgba(83, 86, 241, 0.18);
-  color: #818CF8;
-}
 
-html.dark-theme .jars-metric-icon-box--purple {
-  background: rgba(147, 51, 234, 0.18);
-  color: #C084FC;
-}
-
-html.dark-theme .jars-metric-icon-box--orange {
-  background: rgba(217, 119, 6, 0.18);
-  color: #FBBF24;
-}
-
-html.dark-theme .jars-metric-icon-box--teal {
-  background: rgba(13, 148, 136, 0.18);
-  color: #2DD4BF;
-}
 
 .jars-metric-label {
   font-size: var(--font-xs);
@@ -303,50 +264,23 @@ html.dark-theme .jars-metric-icon-box--teal {
 }
 
 .jars-global-progress-labels strong {
-  color: var(--color-brand-700, #5356F1);
+  color: var(--color-accent);
 }
 
 .jars-global-progress-track {
   height: 8px;
-  background: var(--color-surface-muted, #F1F5F9);
+  background: var(--jars-progress-track);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .jars-global-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #5356F1 0%, #7C3AED 100%);
+  background: var(--jars-progress-fill);
   border-radius: 99px;
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-html.cream-theme .jars-global-progress-labels strong {
-  color: #C0531E;
-}
-
-html.cream-theme .jars-global-progress-fill {
-  background: linear-gradient(90deg, #C0531E 0%, #D96024 100%);
-}
-
-html.green-theme .jars-global-progress-labels strong {
-  color: #059669;
-}
-
-html.green-theme .jars-global-progress-fill {
-  background: linear-gradient(90deg, #059669 0%, #10B981 100%);
-}
-
-html.dark-theme .jars-global-progress-labels strong {
-  color: #60A5FA;
-}
-
-html.dark-theme .jars-global-progress-fill {
-  background: linear-gradient(90deg, #2563EB 0%, #60A5FA 100%);
-}
-
-html.dark-theme .jars-global-progress-track {
-  background: rgba(255, 255, 255, 0.1);
-}
 
 /* ============================================================
    SECTIONS 2 & 3: BIỂU ĐỒ & GỢI Ý (2 COLUMNS)
@@ -369,21 +303,11 @@ html.dark-theme .jars-global-progress-track {
 
 /* Footer Metrics Strip */
 
-/* Section 2 Theme Overrides: Dark Theme */
-
-/* Section 2 Theme Overrides: Cream Theme */
-
-/* Section 2 Theme Overrides: Green Theme */
 
 /* Section 3: Gợi ý cho bạn */
 
 /* 2 Financial Notes Grid */
 
-/* Section 3 Theme Overrides: Dark Theme */
-
-/* Section 3 Theme Overrides: Cream Theme */
-
-/* Section 3 Theme Overrides: Green Theme */
 
 /* ============================================================
    SECTION 4: TỔNG QUAN TIẾN ĐỘ
@@ -406,15 +330,16 @@ html.dark-theme .jars-global-progress-track {
 }
 
 .jars-status-card {
-  background: var(--color-surface, #FFFFFF);
+  background: var(--color-surface);
   border: 1px solid var(--color-border, #E2E8F0);
   border-radius: var(--radius-lg, 16px);
   padding: 18px 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--jars-status-card-shadow);
   display: flex;
   flex-direction: column;
   gap: 12px;
   transition: transform var(--dur-base) ease, border-color var(--dur-base) ease, box-shadow var(--dur-base) ease;
+  border-color: var(--jars-status-card-border);
 }
 
 .jars-status-card:hover {
@@ -422,19 +347,19 @@ html.dark-theme .jars-global-progress-track {
 }
 
 .jars-status-card--closest {
-  border-color: rgba(99, 102, 241, 0.3);
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.04) 0%, var(--color-surface, #FFFFFF) 100%);
+  border-color: var(--jars-status-closest-border);
+  background: var(--jars-status-closest-bg);
 }
 
 .jars-status-card--ontrack {
-  border-color: rgba(16, 185, 129, 0.35);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.04) 0%, var(--color-surface, #FFFFFF) 100%);
+  border-color: var(--jars-status-ontrack-border);
+  background: var(--jars-status-ontrack-bg);
 }
 
 .jars-status-card--attention {
-  border: 1.5px solid rgba(245, 158, 11, 0.45);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, var(--color-surface, #FFFFFF) 100%);
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.06);
+  border: 1.5px solid var(--jars-status-attention-outline);
+  background: var(--jars-status-attention-bg);
+  box-shadow: var(--jars-status-attention-shadow);
 }
 
 .jars-status-card-header {
@@ -452,15 +377,15 @@ html.dark-theme .jars-global-progress-track {
 }
 
 .jars-status-card--closest .jars-status-card-header {
-  color: var(--color-brand-600, #4F46E5);
+  color: var(--jars-status-closest-text);
 }
 
 .jars-status-card--ontrack .jars-status-card-header {
-  color: var(--color-success, #059669);
+  color: var(--jars-status-ontrack-text);
 }
 
 .jars-status-card--attention .jars-status-card-header {
-  color: var(--color-warning, #D97706);
+  color: var(--jars-status-attention-text);
 }
 
 .jars-status-card-body {
@@ -475,7 +400,7 @@ html.dark-theme .jars-global-progress-track {
   justify-content: space-between;
   font-size: var(--font-base);
   font-weight: 700;
-  color: var(--color-text, #0F172A);
+  color: var(--jars-strong-text);
 }
 
 .jars-status-jar-percent {
@@ -496,18 +421,18 @@ html.dark-theme .jars-global-progress-track {
 }
 
 .jars-status-tag--attention {
-  background: var(--color-warning-bg, #FEF3C7);
-  color: var(--color-warning, #D97706);
+  background: var(--jars-status-attention-tag-bg);
+  color: var(--jars-status-attention-text);
 }
 
 .jars-status-tag--ontrack {
-  background: var(--color-success-bg, #DCFCE7);
-  color: var(--color-success, #059669);
+  background: var(--jars-status-ontrack-tag-bg);
+  color: var(--jars-status-ontrack-text);
 }
 
 .jars-status-tag--safe {
-  background: var(--color-success-bg, #DCFCE7);
-  color: var(--color-success, #059669);
+  background: var(--jars-status-ontrack-tag-bg);
+  color: var(--jars-status-ontrack-text);
 }
 
 .jars-status-action-btn {
@@ -533,7 +458,7 @@ html.dark-theme .jars-global-progress-track {
 
 .jars-status-track {
   height: 6px;
-  background: var(--color-surface-muted, #F1F5F9);
+  background: var(--jars-status-track);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -554,7 +479,7 @@ html.dark-theme .jars-global-progress-track {
 
 .jars-status-subtext {
   font-size: var(--font-xs);
-  color: var(--color-text-secondary, #64748B);
+  color: var(--jars-secondary-text);
   line-height: 1.4;
 }
 
@@ -565,193 +490,33 @@ html.dark-theme .jars-global-progress-track {
 }
 
 /* ── Section 4 Theme Overrides: Dark Theme ── */
-html.dark-theme .jars-status-card {
-  background: var(--color-surface, #12131C);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+
+.jars-status-card--closest .jars-status-jar-percent {
+  color: var(--jars-status-closest-text);
 }
 
-html.dark-theme .jars-status-card--closest {
-  border-color: rgba(99, 102, 241, 0.35);
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.12) 0%, rgba(18, 19, 28, 0.95) 100%);
+.jars-status-card--closest .jars-status-fill--closest {
+  background: var(--jars-status-closest-fill);
 }
 
-html.dark-theme .jars-status-card--closest .jars-status-card-header,
-html.dark-theme .jars-status-card--closest .jars-status-jar-percent {
-  color: #818CF8;
+
+.jars-status-card--ontrack .jars-status-fill--ontrack {
+  background: var(--jars-status-ontrack-fill);
 }
 
-html.dark-theme .jars-status-card--closest .jars-status-fill--closest {
-  background: #6366F1;
-}
-
-html.dark-theme .jars-status-card--ontrack {
-  border-color: rgba(16, 185, 129, 0.35);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(18, 19, 28, 0.95) 100%);
-}
-
-html.dark-theme .jars-status-card--ontrack .jars-status-card-header {
-  color: #34D399;
-}
-
-html.dark-theme .jars-status-card--ontrack .jars-status-fill--ontrack {
-  background: #10B981;
-}
-
-html.dark-theme .jars-status-card--attention {
-  border: 1.5px solid rgba(245, 158, 11, 0.5);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.1) 0%, rgba(18, 19, 28, 0.95) 100%);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-}
-
-html.dark-theme .jars-status-card--attention .jars-status-card-header {
-  color: #FBBF24;
-}
-
-html.dark-theme .jars-status-jar-row {
-  color: #F1F5F9;
-}
-
-html.dark-theme .jars-status-track {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-html.dark-theme .jars-status-subtext {
-  color: #94A3B8;
-}
-
-html.dark-theme .jars-status-tag--attention {
-  background: rgba(245, 158, 11, 0.18);
-  color: #FBBF24;
-}
-
-html.dark-theme .jars-status-tag--ontrack,
-html.dark-theme .jars-status-tag--safe {
-  background: rgba(16, 185, 129, 0.18);
-  color: #34D399;
-}
 
 /* ── Section 4 Theme Overrides: Cream Theme ── */
-html.cream-theme .jars-status-card {
-  background: var(--color-surface, #FDF8F2);
-  border-color: rgba(140, 117, 100, 0.2);
+
+
+.jars-status-card--attention .jars-status-action-btn {
+  background: var(--jars-status-action-bg);
 }
 
-html.cream-theme .jars-status-card--closest {
-  border-color: rgba(192, 83, 30, 0.3);
-  background: linear-gradient(180deg, rgba(192, 83, 30, 0.05) 0%, var(--color-surface, #FDF8F2) 100%);
+.jars-status-card--attention .jars-status-action-btn:hover {
+  background: var(--jars-status-action-hover-bg);
 }
 
-html.cream-theme .jars-status-card--closest .jars-status-card-header,
-html.cream-theme .jars-status-card--closest .jars-status-jar-percent {
-  color: #C0531E;
-}
-
-html.cream-theme .jars-status-card--closest .jars-status-fill--closest {
-  background: #C0531E;
-}
-
-html.cream-theme .jars-status-card--ontrack {
-  border-color: rgba(30, 126, 52, 0.3);
-  background: linear-gradient(180deg, rgba(30, 126, 52, 0.05) 0%, var(--color-surface, #FDF8F2) 100%);
-}
-
-html.cream-theme .jars-status-card--ontrack .jars-status-card-header {
-  color: #1E7E34;
-}
-
-html.cream-theme .jars-status-card--ontrack .jars-status-fill--ontrack {
-  background: #1E7E34;
-}
-
-html.cream-theme .jars-status-tag--ontrack,
-html.cream-theme .jars-status-tag--safe {
-  background: rgba(30, 126, 52, 0.12);
-  color: #1E7E34;
-}
-
-html.cream-theme .jars-status-card--attention {
-  border-color: rgba(180, 83, 9, 0.35);
-  background: linear-gradient(180deg, rgba(180, 83, 9, 0.05) 0%, var(--color-surface, #FDF8F2) 100%);
-}
-
-html.cream-theme .jars-status-card--attention .jars-status-card-header {
-  color: #B45309;
-}
-
-html.cream-theme .jars-status-tag--attention {
-  background: rgba(181, 125, 26, 0.14);
-  color: #B45309;
-}
-
-html.cream-theme .jars-status-card--attention .jars-status-action-btn {
-  background: #B45309;
-}
-
-html.cream-theme .jars-status-card--attention .jars-status-action-btn:hover {
-  background: #944204;
-}
-
-html.cream-theme .jars-status-track {
-  background: rgba(140, 117, 100, 0.16);
-}
-
-/* ── Section 4 Theme Overrides: Green Theme ── */
-html.green-theme .jars-status-card {
-  background: var(--color-surface, #FFFFFF);
-  border-color: rgba(75, 114, 96, 0.22);
-}
-
-html.green-theme .jars-status-card--closest {
-  border-color: rgba(2, 132, 199, 0.3);
-  background: linear-gradient(180deg, rgba(2, 132, 199, 0.05) 0%, var(--color-surface, #FFFFFF) 100%);
-}
-
-html.green-theme .jars-status-card--closest .jars-status-card-header,
-html.green-theme .jars-status-card--closest .jars-status-jar-percent {
-  color: #0284C7;
-}
-
-html.green-theme .jars-status-card--closest .jars-status-fill--closest {
-  background: #0284C7;
-}
-
-html.green-theme .jars-status-card--ontrack {
-  border-color: rgba(4, 120, 87, 0.35);
-  background: linear-gradient(180deg, rgba(4, 120, 87, 0.06) 0%, var(--color-surface, #FFFFFF) 100%);
-}
-
-html.green-theme .jars-status-card--ontrack .jars-status-card-header {
-  color: #047857;
-}
-
-html.green-theme .jars-status-card--ontrack .jars-status-fill--ontrack {
-  background: #059669;
-}
-
-html.green-theme .jars-status-tag--ontrack,
-html.green-theme .jars-status-tag--safe {
-  background: #D1FAE5;
-  color: #047857;
-}
-
-html.green-theme .jars-status-card--attention {
-  border-color: rgba(217, 119, 6, 0.35);
-  background: linear-gradient(180deg, rgba(217, 119, 6, 0.05) 0%, var(--color-surface, #FFFFFF) 100%);
-}
-
-html.green-theme .jars-status-card--attention .jars-status-card-header {
-  color: #D97706;
-}
-
-html.green-theme .jars-status-tag--attention {
-  background: #FEF3C7;
-  color: #D97706;
-}
-
-html.green-theme .jars-status-track {
-  background: rgba(75, 114, 96, 0.16);
-}
 
 /* ============================================================
    SECTION 5: CÁC HŨ CỦA BẠN (TOOLBAR & CARDS)
@@ -815,21 +580,10 @@ html.green-theme .jars-status-track {
 }
 
 .jars-view-btn.active {
-  background: var(--color-brand-700, #5356F1);
+  background: var(--color-accent-solid);
   color: #FFFFFF;
 }
 
-html.cream-theme .jars-view-btn.active {
-  background: #C0531E;
-}
-
-html.green-theme .jars-view-btn.active {
-  background: #059669;
-}
-
-html.dark-theme .jars-view-btn.active {
-  background: #2563EB;
-}
 
 /* Jar Cards Grid */
 .jars-grid-container {
@@ -1080,53 +834,25 @@ html.dark-theme .jars-view-btn.active {
 
 /* Smart Monthly Target Box */
 .jar-smart-hint-box {
-  background: var(--color-surface-muted, #F8FAFC);
+  background: var(--jar-hint-bg);
   border: 1px dashed var(--color-border, #CBD5E1);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: var(--font-xs);
-  color: var(--color-text-secondary, #64748B);
+  color: var(--jars-secondary-text);
   line-height: 1.4;
   /* Two even lines instead of one word left alone when the hint wraps. */
   text-wrap: balance;
   display: flex;
   align-items: center;
   gap: 6px;
+  border-color: var(--jar-hint-border);
 }
 
 .jar-smart-hint-box strong {
-  color: var(--color-brand-700, #5356F1);
+  color: var(--jars-link-text);
 }
 
-html.cream-theme .jar-smart-hint-box {
-  background: rgba(140, 117, 100, 0.06);
-  border-color: rgba(140, 117, 100, 0.16);
-  color: #584133;
-}
-
-html.cream-theme .jar-smart-hint-box strong {
-  color: #C0531E;
-}
-
-html.green-theme .jar-smart-hint-box {
-  background: rgba(75, 114, 96, 0.06);
-  border-color: rgba(75, 114, 96, 0.16);
-  color: #3D6A56;
-}
-
-html.green-theme .jar-smart-hint-box strong {
-  color: #059669;
-}
-
-html.dark-theme .jar-smart-hint-box {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #94A3B8;
-}
-
-html.dark-theme .jar-smart-hint-box strong {
-  color: #818CF8;
-}
 
 /* Jar Footer 3 Actions */
 .jar-card-footer-actions {
@@ -1139,7 +865,7 @@ html.dark-theme .jar-smart-hint-box strong {
 
 .jar-btn-deposit {
   flex: 1;
-  background: var(--color-brand-700, #5356F1);
+  background: var(--color-accent-solid);
   color: #FFFFFF;
   border: none;
   border-radius: 8px;
@@ -1155,38 +881,15 @@ html.dark-theme .jar-smart-hint-box strong {
 }
 
 .jar-btn-deposit:hover {
-  background: var(--color-brand-600, #4345D9);
+  background: var(--jars-cta-hover-bg);
 }
 
-html.cream-theme .jar-btn-deposit {
-  background: #C0531E;
-}
-
-html.cream-theme .jar-btn-deposit:hover {
-  background: #A84414;
-}
-
-html.green-theme .jar-btn-deposit {
-  background: #059669;
-}
-
-html.green-theme .jar-btn-deposit:hover {
-  background: #047857;
-}
-
-html.dark-theme .jar-btn-deposit {
-  background: #2563EB;
-}
-
-html.dark-theme .jar-btn-deposit:hover {
-  background: #1D4ED8;
-}
 
 .jar-btn-withdraw {
   flex: 1;
-  background: transparent;
-  color: var(--color-text, #334155);
-  border: 1px solid var(--color-border, #CBD5E1);
+  background: var(--field-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--field-border);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: var(--font-sm);
@@ -1199,8 +902,9 @@ html.dark-theme .jar-btn-deposit:hover {
 }
 
 .jar-btn-withdraw:hover:not(:disabled) {
-  background: var(--color-surface-muted, #F1F5F9);
-  border-color: #94A3B8;
+  background: var(--control-muted-bg);
+  border-color: var(--btn-secondary-hover-border);
+  color: var(--color-text);
 }
 
 .jar-btn-withdraw:disabled {
@@ -1224,21 +928,16 @@ html.dark-theme .jar-btn-deposit:hover {
 }
 
 .jar-btn-detail-icon:hover {
-  color: var(--color-brand-600, #5356F1);
-  border-color: var(--color-brand-600, #5356F1);
-  background: var(--color-surface-muted, #EEF2FF);
+  color: var(--jar-detail-icon-hover-text);
+  border-color: var(--jar-detail-icon-hover-border);
+  background: var(--jar-detail-icon-hover-bg);
 }
 
-html.dark-theme .jar-btn-detail-icon:hover {
-  color: #818CF8;
-  border-color: #818CF8;
-  background: rgba(99, 102, 241, 0.15);
-}
 
 /* Card "+ Tạo hũ mới" (Dashed) */
 .jar-card-add-new {
-  background: var(--color-surface, #FFFFFF);
-  border: 1.5px dashed var(--color-border, #CBD5E1);
+  background: var(--jar-add-bg);
+  border: 1.5px dashed var(--jar-add-border);
   border-radius: var(--radius-lg, 16px);
   padding: 24px;
   display: flex;
@@ -1255,17 +954,18 @@ html.dark-theme .jar-btn-detail-icon:hover {
 }
 
 .jar-card-add-new:hover {
-  border-color: var(--color-brand-600, #5356F1);
-  background: rgba(83, 86, 241, 0.03);
+  border-color: var(--jar-add-hover-border);
+  background: var(--jar-add-hover-bg);
   transform: translateY(-2px);
+  box-shadow: var(--jar-add-hover-shadow);
 }
 
 .jar-card-add-icon-circle {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--color-surface-muted, #EEF2FF);
-  color: var(--color-brand-600, #5356F1);
+  background: var(--jar-add-icon-bg);
+  color: var(--jar-add-icon-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1275,109 +975,24 @@ html.dark-theme .jar-btn-detail-icon:hover {
 
 .jar-card-add-new:hover .jar-card-add-icon-circle {
   transform: scale(1.08);
-  background: var(--color-brand-600, #5356F1);
+  background: var(--jar-add-icon-hover-bg);
   color: #FFFFFF;
 }
 
 .jar-card-add-title {
   font-size: var(--font-md);
   font-weight: 700;
-  color: var(--color-text, #0F172A);
+  color: var(--jars-strong-text);
   margin: 0;
 }
 
 .jar-card-add-desc {
   font-size: var(--font-xs);
-  color: var(--color-text-secondary, #64748B);
+  color: var(--jars-secondary-text);
   margin: 0;
   max-width: 200px;
 }
 
-/* ── Add Card Theme Overrides ── */
-html.dark-theme .jar-card-add-new {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1.5px dashed rgba(255, 255, 255, 0.12);
-}
-
-html.dark-theme .jar-card-add-new:hover {
-  border-color: rgba(99, 102, 241, 0.6);
-  background: rgba(99, 102, 241, 0.06);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
-html.dark-theme .jar-card-add-icon-circle {
-  background: rgba(255, 255, 255, 0.05);
-  color: #94A3B8;
-}
-
-html.dark-theme .jar-card-add-new:hover .jar-card-add-icon-circle {
-  background: #5356F1;
-  color: #FFFFFF;
-}
-
-html.dark-theme .jar-card-add-title {
-  color: #F1F5F9;
-}
-
-html.dark-theme .jar-card-add-desc {
-  color: #94A3B8;
-}
-
-html.cream-theme .jar-card-add-new {
-  background: var(--color-surface, #FDF8F2);
-  border: 1.5px dashed var(--color-border, #E0D4C4);
-}
-
-html.cream-theme .jar-card-add-new:hover {
-  border-color: #C0531E;
-  background: rgba(192, 83, 30, 0.04);
-}
-
-html.cream-theme .jar-card-add-icon-circle {
-  background: rgba(192, 83, 30, 0.08);
-  color: #C0531E;
-}
-
-html.cream-theme .jar-card-add-new:hover .jar-card-add-icon-circle {
-  background: #C0531E;
-  color: #FFFFFF;
-}
-
-html.cream-theme .jar-card-add-title {
-  color: #2C1D10;
-}
-
-html.cream-theme .jar-card-add-desc {
-  color: #584133;
-}
-
-html.green-theme .jar-card-add-new {
-  background: var(--color-surface, #FFFFFF);
-  border: 1.5px dashed var(--color-border, #B2DFC8);
-}
-
-html.green-theme .jar-card-add-new:hover {
-  border-color: #059669;
-  background: rgba(5, 150, 105, 0.04);
-}
-
-html.green-theme .jar-card-add-icon-circle {
-  background: rgba(5, 150, 105, 0.08);
-  color: #059669;
-}
-
-html.green-theme .jar-card-add-new:hover .jar-card-add-icon-circle {
-  background: #059669;
-  color: #FFFFFF;
-}
-
-html.green-theme .jar-card-add-title {
-  color: #0E2E1E;
-}
-
-html.green-theme .jar-card-add-desc {
-  color: #3D6A56;
-}
 
 /* List Mode View */
 .jars-list-mode-container {
@@ -1428,8 +1043,8 @@ html.green-theme .jar-card-add-desc {
 
 /* List Mode "+ Tạo hũ mới" Row (Dashed) */
 .jar-list-mode-add-row {
-  background: var(--color-surface, #FFFFFF);
-  border: 1.5px dashed var(--color-border, #CBD5E1);
+  background: var(--jar-add-bg);
+  border: 1.5px dashed var(--jar-add-border);
   border-radius: 12px;
   padding: 14px 20px;
   display: flex;
@@ -1440,13 +1055,13 @@ html.green-theme .jar-card-add-desc {
   width: 100%;
   font: inherit;
   transition: transform var(--dur-base) ease, background-color var(--dur-base) ease, border-color var(--dur-base) ease, color var(--dur-base) ease;
-  color: var(--color-text-secondary, #64748B);
+  color: var(--jars-secondary-text);
 }
 
 .jar-list-mode-add-row:hover {
-  border-color: var(--color-brand-600, #5356F1);
-  background: rgba(83, 86, 241, 0.03);
-  color: var(--color-brand-600, #5356F1);
+  border-color: var(--jar-add-hover-border);
+  background: var(--jar-add-hover-bg);
+  color: var(--color-accent-soft);
   transform: translateY(-1px);
 }
 
@@ -1454,8 +1069,8 @@ html.green-theme .jar-card-add-desc {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--color-surface-muted, #EEF2FF);
-  color: var(--color-brand-600, #5356F1);
+  background: var(--jar-add-icon-bg);
+  color: var(--jar-add-icon-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1465,76 +1080,12 @@ html.green-theme .jar-card-add-desc {
 }
 
 .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
-  background: var(--color-brand-600, #5356F1);
+  background: var(--jar-add-icon-hover-bg);
   color: #FFFFFF;
 }
 
 /* List Mode Add Row Theme Overrides */
-html.dark-theme .jar-list-mode-add-row {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1.5px dashed rgba(255, 255, 255, 0.12);
-  color: #94A3B8;
-}
 
-html.dark-theme .jar-list-mode-add-row:hover {
-  border-color: rgba(99, 102, 241, 0.6);
-  background: rgba(99, 102, 241, 0.06);
-  color: #818CF8;
-}
-
-html.dark-theme .jar-list-mode-add-icon {
-  background: rgba(255, 255, 255, 0.05);
-  color: #94A3B8;
-}
-
-html.dark-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
-  background: #5356F1;
-  color: #FFFFFF;
-}
-
-html.cream-theme .jar-list-mode-add-row {
-  background: var(--color-surface, #FDF8F2);
-  border: 1.5px dashed var(--color-border, #E0D4C4);
-  color: #584133;
-}
-
-html.cream-theme .jar-list-mode-add-row:hover {
-  border-color: #C0531E;
-  background: rgba(192, 83, 30, 0.04);
-  color: #C0531E;
-}
-
-html.cream-theme .jar-list-mode-add-icon {
-  background: rgba(192, 83, 30, 0.08);
-  color: #C0531E;
-}
-
-html.cream-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
-  background: #C0531E;
-  color: #FFFFFF;
-}
-
-html.green-theme .jar-list-mode-add-row {
-  background: var(--color-surface, #FFFFFF);
-  border: 1.5px dashed var(--color-border, #B2DFC8);
-  color: #3D6A56;
-}
-
-html.green-theme .jar-list-mode-add-row:hover {
-  border-color: #059669;
-  background: rgba(5, 150, 105, 0.04);
-  color: #059669;
-}
-
-html.green-theme .jar-list-mode-add-icon {
-  background: rgba(5, 150, 105, 0.08);
-  color: #059669;
-}
-
-html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
-  background: #059669;
-  color: #FFFFFF;
-}
 
 .jar-list-mode-add-title {
   font-size: var(--font-base);
@@ -1614,7 +1165,7 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
 }
 
 .jars-tip-card {
-  background: var(--color-surface, #FFFFFF);
+  background: var(--color-surface);
   border: 1px solid var(--color-border, #E2E8F0);
   border-radius: var(--radius-lg, 16px);
   padding: 20px 24px;
@@ -1623,68 +1174,27 @@ html.green-theme .jar-list-mode-add-row:hover .jar-list-mode-add-icon {
   align-items: flex-start;
   gap: 16px;
   transition: transform var(--dur-base) ease, border-color var(--dur-base) ease;
+  border-color: var(--card-outline);
 }
 
 .jars-tip-card:hover {
   transform: translateY(-1px);
-  border-color: var(--color-brand-600, #5356F1);
+  border-color: var(--jars-tip-hover-border);
 }
 
-html.cream-theme .jars-tip-card:hover {
-  border-color: #C0531E;
-}
-
-html.green-theme .jars-tip-card:hover {
-  border-color: #059669;
-}
-
-html.dark-theme .jars-tip-card:hover {
-  border-color: #818CF8;
-}
 
 .jars-tip-icon-box {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: var(--color-surface-muted, #EEF2FF);
-  color: var(--color-brand-600, #5356F1);
+  background: var(--jars-tip-icon-bg);
+  color: var(--color-accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-html.dark-theme .jars-tip-card {
-  background: var(--color-surface, #12131C);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-html.dark-theme .jars-tip-icon-box {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818CF8;
-}
-
-html.dark-theme .jars-tip-link {
-  color: #818CF8;
-}
-
-html.cream-theme .jars-tip-icon-box {
-  background: rgba(192, 83, 30, 0.1);
-  color: #C0531E;
-}
-
-html.cream-theme .jars-tip-link {
-  color: #C0531E;
-}
-
-html.green-theme .jars-tip-icon-box {
-  background: rgba(5, 150, 105, 0.1);
-  color: #059669;
-}
-
-html.green-theme .jars-tip-link {
-  color: #059669;
-}
 
 .jars-tip-body {
   display: flex;
@@ -1710,7 +1220,7 @@ html.green-theme .jars-tip-link {
 .jars-tip-link {
   font-size: var(--font-xs);
   font-weight: 700;
-  color: var(--color-brand-700, #5356F1);
+  color: var(--jars-link-text);
   background: none;
   border: none;
   padding: 0;

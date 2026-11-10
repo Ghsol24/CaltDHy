@@ -238,18 +238,19 @@
   padding: 13px 15px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--txn-row-bg);
   color: var(--color-text);
   text-align: left;
   font: 500 13px var(--font-sans, system-ui, sans-serif);
   box-shadow: var(--shadow-sm);
   transition: border-color var(--dur-fast), background-color var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast);
+  border-color: var(--txn-row-border);
 }
 
 button.transaction-inspection-row { cursor: pointer; }
 button.transaction-inspection-row:hover {
-  border-color: var(--color-border-strong);
-  background: var(--color-brand-50);
+  border-color: var(--txn-row-hover-border);
+  background: var(--txn-row-hover-bg);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -279,10 +280,11 @@ button.transaction-inspection-row:hover {
   padding: 3px 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  background: var(--color-surface-muted);
+  background: var(--txn-row-wallet-bg);
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
   font-size: var(--font-xs);
+  border-color: var(--card-outline);
 }
 .transaction-inspection-wallet svg { flex: 0 0 auto; }
 .transaction-inspection-main small { color: var(--color-text-muted); }
@@ -292,10 +294,10 @@ button.transaction-inspection-row:hover {
 .transaction-inspection-empty { padding: 26px 10px; color: var(--color-text-secondary); text-align: center; }
 
 .transaction-history {
-  --history-panel: var(--color-surface);
-  --history-control: var(--color-surface);
-  --history-hover: var(--color-brand-50);
-  --history-border: var(--color-border);
+  --history-panel: var(--txn-history-panel);
+  --history-control: var(--txn-history-control);
+  --history-hover: var(--txn-history-hover);
+  --history-border: var(--txn-history-border);
   display: grid;
   /* minmax(0, …): the sideways chip row must scroll, not widen the page. */
   grid-template-columns: minmax(0, 1fr);
@@ -629,9 +631,7 @@ button.transaction-inspection-row:hover {
   letter-spacing: .02em;
 }
 .transaction-ledger-head span:last-child { text-align: right; }
-.transaction-ledger-row,
-html.dark-theme .transaction-ledger-row,
-html.cream-theme .transaction-ledger-row {
+.transaction-ledger-row {
   min-height: 68px;
   padding: 11px 18px;
   border: 0;
@@ -641,8 +641,7 @@ html.cream-theme .transaction-ledger-row {
   box-shadow: none;
 }
 .transaction-ledger-row:last-child { border-bottom: 0; }
-button.transaction-ledger-row:hover,
-html.dark-theme button.transaction-ledger-row:hover {
+button.transaction-ledger-row:hover {
   border-color: var(--history-border);
   background: var(--history-hover);
   box-shadow: none;
@@ -669,46 +668,6 @@ html.dark-theme button.transaction-ledger-row:hover {
 .transaction-ledger-date { color: var(--color-text-secondary); font-size: var(--font-xs); white-space: nowrap; }
 .transaction-ledger-row .transaction-inspection-amount { justify-self: end; margin: 0; font-size: var(--font-sm); }
 .transaction-ledger-row .transaction-inspection-wallet { justify-self: start; }
-
-html.dark-theme .transaction-history {
-  --history-panel: rgba(18, 19, 28, .86);
-  --history-control: rgba(255, 255, 255, .035);
-  --history-hover: rgba(96, 165, 250, .11);
-  --history-border: rgba(255, 255, 255, .08);
-}
-html.dark-theme .transaction-inspection-row {
-  background: rgba(18, 19, 28, .86);
-  border-color: rgba(255, 255, 255, .08);
-}
-html.dark-theme .transaction-inspection-wallet { background: rgba(255, 255, 255, .045); border-color: rgba(255, 255, 255, .08); }
-html.dark-theme button.transaction-inspection-row:hover { background: rgba(96, 165, 250, .09); border-color: rgba(96, 165, 250, .3); }
-html.cream-theme .transaction-history {
-  --history-panel: rgba(253, 248, 242, .91);
-  --history-control: rgba(255, 252, 247, .92);
-  --history-border: rgba(140, 110, 70, .2);
-}
-html.cream-theme .transaction-inspection-row { background: var(--color-surface); border-color: rgba(140, 110, 70, .18); }
-html.green-theme .transaction-history {
-  --history-panel: rgba(255, 255, 255, .9);
-  --history-control: rgba(247, 254, 250, .96);
-}
-html.light-theme .transaction-history {
-  --history-panel: rgba(255, 255, 255, .93);
-  --history-control: rgba(248, 250, 252, .96);
-}
-html.dark-theme .transaction-ledger-table .transaction-ledger-row,
-html.cream-theme .transaction-ledger-table .transaction-ledger-row {
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--history-border);
-}
-html.dark-theme .transaction-ledger-table .transaction-ledger-row:last-child,
-html.cream-theme .transaction-ledger-table .transaction-ledger-row:last-child { border-bottom: 0; }
-html.dark-theme .transaction-ledger-table button.transaction-ledger-row:hover,
-html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
-  background: var(--history-hover);
-  border-color: var(--history-border);
-}
 
 .category-history-link:focus-visible,
 .day-drawer button:focus-visible,
@@ -748,6 +707,8 @@ html.cream-theme .transaction-ledger-table button.transaction-ledger-row:hover {
   .transaction-filter-controls { gap: 7px; }
   .transaction-filter-dropdown.is-compact .transaction-filter-trigger { min-height: 42px; }
   .transaction-inspection-row { gap: 10px; padding: 12px; }
+  /* dark/cream vốn giữ padding desktop ở đây (rule theme cũ thắng media query) — giữ như trước. */
+  .transaction-ledger-row { padding: var(--txn-ledger-row-padding-compact); }
   .transaction-inspection-icon { flex-basis: 38px; width: 38px; height: 38px; }
   .transaction-inspection-amount { font-size: var(--font-xs); }
   .analytics-unusual-row { align-items: stretch; flex-direction: column; }

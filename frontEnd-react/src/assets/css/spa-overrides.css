@@ -23,8 +23,8 @@ body {
   margin: 0;
   padding: 0;
   display: block;
-  background: var(--bg, #F5FAF7);
-  color: var(--text-primary, #173126);
+  background: var(--color-canvas);
+  color: var(--color-text);
   font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   overflow-x: hidden;
   overflow-y: auto;

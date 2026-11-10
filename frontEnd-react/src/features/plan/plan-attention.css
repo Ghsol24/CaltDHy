@@ -2,35 +2,7 @@
    Severity lives on each card (critical > high > watch); the frame only takes a
    light tint from the most severe item, so the bar no longer reads as all-red.
    Tokens sit on :root because the mobile sheet renders outside the plan view. */
-:root {
-  --attention-solid: #DC2626;
-  --attention-critical-text: #991B1B;
-  --attention-critical-wash: rgba(220, 38, 38, 0.07);
-  --attention-critical-border: rgba(220, 38, 38, 0.34);
-  --attention-high-badge: rgba(220, 38, 38, 0.1);
-  --attention-watch-solid: #D97706;
-  --attention-watch-text: #92400E;
-  --attention-watch-badge: rgba(245, 158, 11, 0.16);
-  --attention-watch-border: rgba(217, 119, 6, 0.32);
-}
 
-html.dark-theme {
-  --attention-solid: #E11D48;
-  --attention-critical-text: #FF8A95;
-  --attention-critical-wash: rgba(255, 71, 87, 0.1);
-  --attention-critical-border: rgba(255, 71, 87, 0.45);
-  --attention-high-badge: rgba(255, 71, 87, 0.16);
-  --attention-watch-solid: #F59E0B;
-  --attention-watch-text: #FBBF24;
-  --attention-watch-badge: rgba(245, 158, 11, 0.18);
-  --attention-watch-border: rgba(245, 158, 11, 0.42);
-}
-
-html.cream-theme {
-  --attention-solid: #B91C1C;
-  --attention-critical-text: #8F1414;
-  --attention-watch-text: #7C4A03;
-}
 
 .plan-attention {
   display: grid;

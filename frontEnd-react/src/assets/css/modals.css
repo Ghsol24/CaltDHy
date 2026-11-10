@@ -54,7 +54,6 @@
    BUDGET MODAL — Category Type Toggle (Expense / Income)
    ============================================================ */
 
-/* Light theme overrides */
 
 /* ============================================================
    USER GUIDE OVERLAY & PANEL
@@ -76,18 +75,16 @@
   max-width: 960px;
   max-height: 88vh;
   max-height: 88dvh;
-  background: var(--surface);
+  background: var(--color-surface);
   border: 1px solid rgba(255, 255, 255, .08);
   border-radius: var(--radius-xl);
-  box-shadow:
-    0 40px 100px rgba(0, 0, 0, .85),
-    0 0 0 1px rgba(255, 255, 255, .04),
-    inset 0 1px 0 rgba(255, 255, 255, .07);
+  box-shadow: var(--guide-panel-shadow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
   animation: guideSlideIn var(--dur-slow) cubic-bezier(.22, 1, .36, 1) both;
+  border-color: var(--card-outline);
 }
 
 /* Glass top highlight */

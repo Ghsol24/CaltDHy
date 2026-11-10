@@ -66,36 +66,6 @@
 
 
 /* ============================================================
-   TOAST
-   ============================================================ */
-.toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-mono);
-  font-size: var(--font-xs);
-  letter-spacing: .1em;
-  background: var(--surface);
-  color: var(--text-primary);
-  padding: 12px 24px;
-  border-radius: 99px;
-  box-shadow: var(--shadow-lg);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--dur-slower) ease, transform var(--dur-slower) cubic-bezier(.34, 1.2, .64, 1);
-  white-space: nowrap;
-  z-index: var(--z-toast);
-  border-top: 1px solid rgba(255,255,255,.07);
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-4px);
-}
-
-
-/* ============================================================
    CASH FLOW TREND CHART
    ============================================================ */
 
@@ -132,9 +102,7 @@
 /* [Đã dọn dẹp] Bộ rule cũ cho .jars-grid và .jar-card đã được xóa.
    Bộ rule chuẩn duy nhất (Glassmorphism) nằm tại section "Jar Grid" phía dưới. */
 
-/* Theme overrides for Hũ Chi Tiêu → managed via CSS tokens in tokens.css + themes.css
-   Components now read --c-card-*, --c-inst-*, --c-summary-*, --c-bubble-*, --c-dashed-*
-   No per-theme override blocks needed here. */
+/* Màu theo theme của Hũ Chi Tiêu lấy từ token trong tokens.css — không viết rule theo theme ở đây. */
 
 /* ============================================================
    HŨ CHI TIÊU — JARS VIEW
@@ -143,31 +111,6 @@
 /* ============================================================
    NEW UI/UX OPTIMIZATIONS (HORIZONTAL JARS & STYLED BILLS)
    ============================================================ */
-
-/* ── Left Rail Sidebar Collapse/Expand Style ── */
-
-.rail {
-  width: 280px;
-  flex-shrink: 0;
-  transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1),
-              padding 0.35s cubic-bezier(0.25, 1, 0.5, 1),
-              opacity var(--dur-slower) cubic-bezier(0.25, 1, 0.5, 1),
-              border-right-width 0.35s ease;
-  will-change: width, padding, opacity;
-}
-
-@media (min-width: 769px) and (max-width: 1100px) {
-  .rail {
-    width: 240px;
-  }
-}
-
-@media (max-width: 768px) {
-  .rail {
-    width: 100%;
-    transition: none;
-  }
-}
 
 /* ============================================================
    ONBOARDING & WELCOME COMPONENTS
@@ -277,44 +220,17 @@
 }
 
 .home-hero-balance-card {
-  background: linear-gradient(135deg, #094B34 0%, #0D6646 50%, #0E7752 100%);
+  background: var(--home-hero-bg);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 20px;
   padding: 26px 28px 22px 28px;
   color: #FFFFFF;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 28px -4px rgba(9, 75, 52, 0.28), 0 4px 10px -2px rgba(9, 75, 52, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  box-shadow: var(--home-hero-shadow);
   transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
 
-html.light-theme .home-hero-balance-card {
-  background: linear-gradient(135deg, #3730A3 0%, #4F46E5 50%, #6366F1 100%);
-  box-shadow: 0 10px 28px -4px rgba(79, 70, 229, 0.32), 0 4px 10px -2px rgba(79, 70, 229, 0.16), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
-
-html.dark-theme .home-hero-balance-card {
-  background: linear-gradient(135deg, #0B2A6F 0%, #1D4ED8 50%, #3B82F6 100%);
-  box-shadow: 0 10px 30px -4px rgba(37, 99, 235, 0.35), 0 4px 12px -2px rgba(37, 99, 235, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
-
-html.cream-theme .home-hero-balance-card {
-  background: linear-gradient(135deg, #602107 0%, #9C3B0E 50%, #C0531E 100%);
-  box-shadow: 0 10px 28px -4px rgba(192, 83, 30, 0.28), 0 4px 10px -2px rgba(192, 83, 30, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
-
-html.green-theme .home-hero-balance-card {
-  background: linear-gradient(135deg, #064E3B 0%, #047857 50%, #059669 100%);
-  box-shadow: 0 10px 28px -4px rgba(5, 150, 105, 0.28), 0 4px 10px -2px rgba(5, 150, 105, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
-
-html.dark-theme .home-plan-progress-fill.is-healthy {
-  background: var(--color-brand-on-dark, #60A5FA);
-}
-
-html.dark-theme .jars-global-progress-fill {
-  background: linear-gradient(90deg, var(--color-brand-700) 0%, var(--color-brand-on-dark, #60A5FA) 100%);
-}
 
 .home-hero-balance-card:hover {
   transform: translateY(-2px);
@@ -737,7 +653,7 @@ html.dark-theme .jars-global-progress-fill {
 }
 
 .home-plan-progress-fill.is-healthy {
-  background: var(--color-brand-700, #078A59);
+  background: var(--home-progress-healthy-fill);
 }
 
 .home-plan-progress-fill.is-warning {
@@ -793,8 +709,8 @@ html.dark-theme .jars-global-progress-fill {
 
 /* Card 2: Warning / Callout Card */
 .home-callout-warning-card {
-  background: #FEF9E7;
-  border: 1px solid #FDE68A;
+  background: var(--home-callout-bg);
+  border: 1px solid var(--home-callout-border);
   border-radius: 20px;
   padding: 20px 22px;
   display: flex;
@@ -804,79 +720,20 @@ html.dark-theme .jars-global-progress-fill {
 }
 
 .home-callout-warning-card.is-info {
-  background: #EFF6FF;
-  border-color: #BFDBFE;
+  background: var(--home-callout-info-bg);
+  border-color: var(--home-callout-info-border);
 }
 
 .home-callout-warning-card.is-success {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
+  background: var(--home-callout-success-bg);
+  border-color: var(--home-callout-success-border);
 }
 
 .home-callout-warning-card.is-danger {
-  background: #FEF2F2;
-  border-color: #FECACA;
+  background: var(--home-callout-danger-bg);
+  border-color: var(--home-callout-danger-border);
 }
 
-html.dark-theme .home-callout-warning-card {
-  background: rgba(245, 158, 11, 0.10);
-  border: 1px solid rgba(245, 158, 11, 0.28);
-}
-
-html.dark-theme .home-callout-warning-card.is-info {
-  background: rgba(59, 130, 246, 0.10);
-  border-color: rgba(59, 130, 246, 0.28);
-}
-
-html.dark-theme .home-callout-warning-card.is-success {
-  background: rgba(16, 185, 129, 0.10);
-  border-color: rgba(16, 185, 129, 0.28);
-}
-
-html.dark-theme .home-callout-warning-card.is-danger {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.32);
-}
-
-html.light-theme .home-callout-warning-card {
-  background: rgba(79, 70, 229, 0.05);
-  border: 1px solid rgba(79, 70, 229, 0.18);
-}
-
-html.light-theme .home-callout-warning-card.is-info {
-  background: rgba(79, 70, 229, 0.06);
-  border-color: rgba(79, 70, 229, 0.20);
-}
-
-html.light-theme .home-callout-warning-card.is-success {
-  background: rgba(22, 163, 74, 0.06);
-  border-color: rgba(22, 163, 74, 0.20);
-}
-
-html.light-theme .home-callout-warning-card.is-danger {
-  background: rgba(220, 38, 38, 0.06);
-  border-color: rgba(220, 38, 38, 0.20);
-}
-
-html.cream-theme .home-callout-warning-card {
-  background: #FFF3EE;
-  border: 1px solid #F4A88A;
-}
-
-html.cream-theme .home-callout-warning-card.is-danger {
-  background: #FEE2E2;
-  border-color: #F87171;
-}
-
-html.green-theme .home-callout-warning-card {
-  background: #E8F7F0;
-  border: 1px solid #B2DFC8;
-}
-
-html.green-theme .home-callout-warning-card.is-danger {
-  background: #FEF2F2;
-  border-color: #FECACA;
-}
 
 .home-callout-title {
   font-size: var(--font-md);
@@ -1516,18 +1373,18 @@ html.green-theme .home-callout-warning-card.is-danger {
 }
 
 .cal-weekday.cal-danger {
-  background: var(--color-danger-bg, #FEE2E2);
-  color: var(--color-danger, #DC2626);
+  background: var(--cal-danger-bg);
+  color: var(--pill-danger-text);
 }
 
 .cal-weekday.cal-warning {
-  background: var(--color-warning-bg, #FEF3C7);
-  color: var(--color-warning, #D97706);
+  background: var(--cal-warning-bg);
+  color: var(--cal-warning-text);
 }
 
 .cal-weekday.cal-paid {
-  background: var(--color-success-bg, #ECFDF5);
-  color: var(--color-success, #059669);
+  background: var(--cal-paid-bg);
+  color: var(--pill-success-text);
 }
 
 .cal-day-number {
@@ -1588,6 +1445,12 @@ html.green-theme .home-callout-warning-card.is-danger {
   border-color: var(--color-success-border, #A7F3D0);
   color: var(--color-success, #059669);
 }
+.recurring-pill-badge.pill-paid,
+.pill-paid {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--pill-success-text);
+}
 
 .recurring-pill-badge.pill-today,
 .recurring-pill-badge.pill-danger,
@@ -1596,6 +1459,13 @@ html.green-theme .home-callout-warning-card.is-danger {
   background: var(--color-danger-bg, #FEE2E2);
   border-color: var(--color-danger-border, #FECACA);
   color: var(--color-danger, #DC2626);
+}
+.recurring-pill-badge.pill-today,
+.recurring-pill-badge.pill-danger,
+.pill-today {
+  background: var(--pill-danger-bg);
+  border-color: var(--pill-danger-border);
+  color: var(--pill-danger-text);
 }
 
 .recurring-pill-badge.pill-warning,
@@ -1606,12 +1476,19 @@ html.green-theme .home-callout-warning-card.is-danger {
   border-color: var(--color-warning-border, #FDE68A);
   color: var(--color-warning, #B45309);
 }
+.recurring-pill-badge.pill-warning,
+.recurring-pill-badge.pill-soon,
+.pill-soon {
+  background: var(--pill-warning-bg);
+  border-color: var(--pill-warning-border);
+  color: var(--pill-warning-text);
+}
 
 .recurring-pill-badge.pill-normal,
 .pill-normal {
-  background: var(--surface-subtle, var(--color-neutral-bg, #F1F5F9));
-  border-color: var(--color-border, #E2E8F0);
-  color: var(--color-text-secondary, var(--text-secondary));
+  background: var(--pill-neutral-bg);
+  border-color: var(--color-neutral-border);
+  color: var(--color-neutral-text);
 }
 
 .recurring-dots-btn {
@@ -1658,7 +1535,7 @@ html.green-theme .home-callout-warning-card.is-danger {
 
 /* ── 4. Section Phân tích & Gợi ý (Insight Banner at Bottom) ── */
 .plan-insight-banner-card {
-  background: linear-gradient(135deg, rgba(236, 253, 245, 0.7) 0%, rgba(240, 244, 255, 0.7) 100%);
+  background: var(--plan-insight-bg);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: var(--radius-lg, 16px);
   padding: 18px 24px;
@@ -1667,12 +1544,9 @@ html.green-theme .home-callout-warning-card.is-danger {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  border-color: var(--plan-insight-border);
 }
 
-html.dark-theme .plan-insight-banner-card {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
-  border-color: rgba(255, 255, 255, 0.08);
-}
 
 .insight-banner-left {
   display: flex;
@@ -1735,7 +1609,7 @@ html.dark-theme .plan-insight-banner-card {
 
 /* ── 5. Sidebar Quick Record Widget Card ── */
 .sidebar-quick-record-card {
-  background: var(--surface-subtle, #F8FAFC);
+  background: var(--quick-record-bg);
   border: 1px solid var(--color-border, #E2E8F0);
   border-radius: var(--radius-md, 12px);
   padding: 12px;
@@ -1743,12 +1617,9 @@ html.dark-theme .plan-insight-banner-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  border-color: var(--card-outline);
 }
 
-html.dark-theme .sidebar-quick-record-card {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.08);
-}
 
 .quick-record-header {
   display: flex;
@@ -2084,24 +1955,25 @@ html.dark-theme .sidebar-quick-record-card {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 12px;
-  background: var(--surface, #1E293B);
+  background: var(--wallet-filter-bg);
   border: 1px solid var(--color-border, #334155);
   border-radius: var(--radius-sm, 8px);
   font-size: var(--font-xs);
   font-weight: 500;
-  color: var(--text-primary, #F8FAFC);
+  color: var(--wallet-filter-text);
   cursor: pointer;
   outline: none;
   min-width: 135px;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  border-color: var(--wallet-filter-border);
 }
 
 .wallet-custom-dropdown-trigger:hover {
-  border-color: #10B981;
+  border-color: var(--wallet-filter-active-border);
 }
 
 .wallet-custom-dropdown.is-open .wallet-custom-dropdown-trigger {
-  border-color: #10B981;
+  border-color: var(--wallet-filter-active-border);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
@@ -2173,39 +2045,8 @@ html.dark-theme .sidebar-quick-record-card {
   flex-shrink: 0;
 }
 
-/* Light Theme Overrides */
-html.light-theme .wallet-custom-dropdown-trigger {
-  background: #FFFFFF;
-  border-color: #E2E8F0;
-  color: #1E293B;
-}
-html.light-theme .wallet-custom-dropdown-trigger:hover,
-html.light-theme .wallet-custom-dropdown.is-open .wallet-custom-dropdown-trigger {
-  border-color: #059669;
-  background: #FFFFFF;
-}
-
-/* Cream Theme Overrides */
-html.cream-theme .wallet-custom-dropdown-trigger {
-  background: #FDF8F2;
-  border-color: #E2D9CC;
-  color: #42382E;
-}
-html.cream-theme .wallet-custom-dropdown-trigger:hover,
-html.cream-theme .wallet-custom-dropdown.is-open .wallet-custom-dropdown-trigger {
-  border-color: #B45309;
-}
 
 /* Green Theme Overrides */
-html.green-theme .wallet-custom-dropdown-trigger {
-  background: #F2FAF6;
-  border-color: #A7F3D0;
-  color: #064E3B;
-}
-html.green-theme .wallet-custom-dropdown-trigger:hover,
-html.green-theme .wallet-custom-dropdown.is-open .wallet-custom-dropdown-trigger {
-  border-color: #059669;
-}
 
 .wallets-view-toggle-bar {
   display: inline-flex;
@@ -2804,140 +2645,6 @@ html.green-theme .wallet-custom-dropdown.is-open .wallet-custom-dropdown-trigger
    WALLET BALANCE DONUT CHART & BREAKDOWN TABLE (Theme Optimized)
    ============================================================ */
 
-/* ── Base / Fallback Theme Variables (Dark Obsidian default) ── */
-:root {
-  --donut-card-bg: var(--color-surface, #12131C);
-  --donut-card-border: var(--color-border, #26293A);
-  --donut-card-shadow: var(--shadow-card, 0 8px 32px rgba(0, 0, 0, 0.45));
-  --donut-header-icon-bg: rgba(37, 99, 235, 0.16);
-  --donut-header-icon-color: #60A5FA;
-  --donut-filter-bg: #1A1C29;
-  --donut-filter-border: #2E3349;
-  --donut-filter-border-hover: #3D425A;
-  --donut-filter-text: #94A3B8;
-  --donut-filter-hover: #26293A;
-  --donut-track-bg: #1E202E;
-  --donut-muted-text: #8F9CAE;
-  --donut-val-text: #F3F4F6;
-  --donut-table-bg: #161824;
-  --donut-table-border: #26293A;
-  --donut-row-divider: #1E202E;
-  --donut-row-hover: rgba(255, 255, 255, 0.05);
-  --donut-row-name-text: #F3F4F6;
-  --donut-row-pct-text: #8F9CAE;
-  --donut-row-val-text: #F3F4F6;
-  --donut-col-header-text: #8F9CAE;
-  --donut-chevron-color: #64748B;
-  --donut-footer-text: #8F9CAE;
-}
-
-/* ── Light Theme Optimization (Minimalist Modern SaaS — Exact Image 1 Match) ── */
-html.light-theme {
-  --donut-card-bg: #FFFFFF;
-  --donut-card-border: #E2E8F0;
-  --donut-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-  --donut-header-icon-bg: #EFF6FF;
-  --donut-header-icon-color: #2563EB;
-  --donut-filter-bg: #FFFFFF;
-  --donut-filter-border: #E2E8F0;
-  --donut-filter-border-hover: #CBD5E1;
-  --donut-filter-text: #475569;
-  --donut-filter-hover: #F8FAFC;
-  --donut-track-bg: #F1F5F9;
-  --donut-muted-text: #64748B;
-  --donut-val-text: #0F172A;
-  --donut-table-bg: #FFFFFF;
-  --donut-table-border: #E2E8F0;
-  --donut-row-divider: #F1F5F9;
-  --donut-row-hover: #F8FAFC;
-  --donut-row-name-text: #0F172A;
-  --donut-row-pct-text: #475569;
-  --donut-row-val-text: #0F172A;
-  --donut-col-header-text: #64748B;
-  --donut-chevron-color: #94A3B8;
-  --donut-footer-text: #64748B;
-}
-
-/* ── Dark Theme Optimization (Technical Panel Obsidian) ── */
-html.dark-theme {
-  --donut-card-bg: #12131C;
-  --donut-card-border: #26293A;
-  --donut-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --donut-header-icon-bg: rgba(37, 99, 235, 0.18);
-  --donut-header-icon-color: #60A5FA;
-  --donut-filter-bg: #1A1C29;
-  --donut-filter-border: #2E3349;
-  --donut-filter-border-hover: #3D425A;
-  --donut-filter-text: #94A3B8;
-  --donut-filter-hover: #26293A;
-  --donut-track-bg: #1E202E;
-  --donut-muted-text: #8F9CAE;
-  --donut-val-text: #F3F4F6;
-  --donut-table-bg: #161824;
-  --donut-table-border: #26293A;
-  --donut-row-divider: #1E202E;
-  --donut-row-hover: rgba(255, 255, 255, 0.05);
-  --donut-row-name-text: #F3F4F6;
-  --donut-row-pct-text: #8F9CAE;
-  --donut-row-val-text: #F3F4F6;
-  --donut-col-header-text: #8F9CAE;
-  --donut-chevron-color: #64748B;
-  --donut-footer-text: #8F9CAE;
-}
-
-/* ── Cream Theme Optimization (Warm Parchment / Cozy Paper) ── */
-html.cream-theme {
-  --donut-card-bg: #FDF8F2;
-  --donut-card-border: #E0D4C4;
-  --donut-card-shadow: 0 4px 18px rgba(100, 60, 20, 0.06);
-  --donut-header-icon-bg: #F6E2D5;
-  --donut-header-icon-color: #C0531E;
-  --donut-filter-bg: #FFFDF9;
-  --donut-filter-border: #E0D4C4;
-  --donut-filter-border-hover: #C8B8A4;
-  --donut-filter-text: #584133;
-  --donut-filter-hover: #F5EBE1;
-  --donut-track-bg: #EDE4D8;
-  --donut-muted-text: #8C7564;
-  --donut-val-text: #2C1D10;
-  --donut-table-bg: #FFFDF9;
-  --donut-table-border: #E0D4C4;
-  --donut-row-divider: #EDE4D8;
-  --donut-row-hover: #F5EBE1;
-  --donut-row-name-text: #2C1D10;
-  --donut-row-pct-text: #584133;
-  --donut-row-val-text: #2C1D10;
-  --donut-col-header-text: #8C7564;
-  --donut-chevron-color: #A89582;
-  --donut-footer-text: #8C7564;
-}
-
-/* ── Green Theme Optimization (Forest Emerald / Eco Mint) ── */
-html.green-theme {
-  --donut-card-bg: #FFFFFF;
-  --donut-card-border: #B2DFC8;
-  --donut-card-shadow: 0 4px 18px rgba(16, 120, 80, 0.06);
-  --donut-header-icon-bg: #D1FAE5;
-  --donut-header-icon-color: #059669;
-  --donut-filter-bg: #F0FDF4;
-  --donut-filter-border: #BBF7D0;
-  --donut-filter-border-hover: #84C7A3;
-  --donut-filter-text: #064E3B;
-  --donut-filter-hover: #DCFCE7;
-  --donut-track-bg: #E2F2E9;
-  --donut-muted-text: #3D6A56;
-  --donut-val-text: #0E2E1E;
-  --donut-table-bg: #FFFFFF;
-  --donut-table-border: #B2DFC8;
-  --donut-row-divider: #ECFDF5;
-  --donut-row-hover: #E6F7F0;
-  --donut-row-name-text: #0E2E1E;
-  --donut-row-pct-text: #3D6A56;
-  --donut-row-val-text: #0E2E1E;
-  --donut-col-header-text: #6B9582;
-  --donut-chevron-color: #84C7A3;
-  --donut-footer-text: #3D6A56;
-}
 
 /* ── Card Styling ── */
 .wallets-donut-card {
@@ -3315,8 +3022,8 @@ html.green-theme {
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: #1E293B;
-  color: #F8FAFC;
+  background: var(--wallet-tooltip-bg);
+  color: var(--wallet-tooltip-text);
   font-size: var(--font-xs);
   line-height: 1.45;
   padding: 6px 10px;
@@ -3325,17 +3032,18 @@ html.green-theme {
   width: max-content;
   max-width: 250px;
   border: 1px solid #334155;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--wallet-tooltip-shadow);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
   z-index: 50;
   text-align: center;
+  border-color: var(--wallet-tooltip-border);
 }
 
 .wallet-activity-tooltip-popup strong {
-  color: #60A5FA;
+  color: var(--wallet-tooltip-strong-text);
 }
 
 /* Arrow */
@@ -3347,50 +3055,11 @@ html.green-theme {
   transform: translateX(-50%);
   border-width: 5px;
   border-style: solid;
-  border-color: #1E293B transparent transparent transparent;
+  border-color: var(--wallet-tooltip-arrow-border);
 }
 
-/* Light Theme Overrides for Tooltip */
-html.light-theme .wallet-activity-tooltip-popup {
-  background: #FFFFFF;
-  color: #0F172A;
-  border-color: #E2E8F0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-html.light-theme .wallet-activity-tooltip-popup strong {
-  color: #2563EB;
-}
-html.light-theme .wallet-activity-tooltip-popup::after {
-  border-color: #FFFFFF transparent transparent transparent;
-}
-
-/* Cream Theme Overrides for Tooltip */
-html.cream-theme .wallet-activity-tooltip-popup {
-  background: #FFFDF9;
-  color: #42382E;
-  border-color: #E2D9CC;
-  box-shadow: 0 10px 25px -5px rgba(66, 56, 46, 0.12);
-}
-html.cream-theme .wallet-activity-tooltip-popup strong {
-  color: #B45309;
-}
-html.cream-theme .wallet-activity-tooltip-popup::after {
-  border-color: #FFFDF9 transparent transparent transparent;
-}
 
 /* Green Theme Overrides for Tooltip */
-html.green-theme .wallet-activity-tooltip-popup {
-  background: #F0FDF4;
-  color: #064E3B;
-  border-color: #BBF7D0;
-  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15);
-}
-html.green-theme .wallet-activity-tooltip-popup strong {
-  color: #059669;
-}
-html.green-theme .wallet-activity-tooltip-popup::after {
-  border-color: #F0FDF4 transparent transparent transparent;
-}
 
 .wallet-activity-tooltip-wrapper:hover .wallet-activity-tooltip-popup,
 .wallet-activity-info-trigger:focus-visible + .wallet-activity-tooltip-popup {
@@ -3462,7 +3131,7 @@ html.green-theme .wallet-activity-tooltip-popup::after {
 
 /* ── Wallet Finance Tip Card (Theme-Aware) ── */
 .wallet-finance-tip-card {
-  background: rgba(16, 185, 129, 0.08);
+  background: var(--finance-tip-bg);
   border: 1px solid rgba(16, 185, 129, 0.22);
   border-radius: var(--radius-lg, 16px);
   padding: 14px 16px;
@@ -3470,6 +3139,7 @@ html.green-theme .wallet-activity-tooltip-popup::after {
   flex-direction: column;
   gap: 6px;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+  border-color: var(--finance-tip-border);
 }
 
 .tip-header-row {
@@ -3483,7 +3153,7 @@ html.green-theme .wallet-activity-tooltip-popup::after {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #34D399;
+  color: var(--finance-tip-title-text);
   font-size: var(--font-sm);
 }
 
@@ -3498,7 +3168,7 @@ html.green-theme .wallet-activity-tooltip-popup::after {
 .tip-close-btn {
   border: none;
   background: transparent;
-  color: #6EE7B7;
+  color: var(--finance-tip-close-text);
   cursor: pointer;
   font-size: var(--font-base);
   padding: 2px;
@@ -3508,387 +3178,28 @@ html.green-theme .wallet-activity-tooltip-popup::after {
 }
 
 .tip-close-btn:hover {
-  background: rgba(52, 211, 153, 0.15);
+  background: var(--finance-tip-close-hover-bg);
 }
 
 .tip-body-content {
   font-size: var(--font-xs);
-  color: #A7F3D0;
+  color: var(--finance-tip-body-text);
   margin: 0;
   line-height: 1.4;
 }
 
-/* Light Theme Overrides */
-html.light-theme .wallet-finance-tip-card {
-  background: #F0FDF4;
-  border-color: #BBF7D0;
-}
-html.light-theme .tip-title-lead {
-  color: #065F46;
-}
-html.light-theme .tip-close-btn {
-  color: #047857;
-}
-html.light-theme .tip-close-btn:hover {
-  background: rgba(4, 120, 87, 0.1);
-}
-html.light-theme .tip-body-content {
-  color: #047857;
-}
-
-/* Cream Theme Overrides */
-html.cream-theme .wallet-finance-tip-card {
-  background: #FFFBEB;
-  border-color: #FDE68A;
-}
-html.cream-theme .tip-title-lead {
-  color: #78350F;
-}
-html.cream-theme .tip-close-btn {
-  color: #92400E;
-}
-html.cream-theme .tip-close-btn:hover {
-  background: rgba(146, 64, 14, 0.1);
-}
-html.cream-theme .tip-body-content {
-  color: #92400E;
-}
-
-/* Green Theme Overrides */
-html.green-theme .wallet-finance-tip-card {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
-}
-html.green-theme .tip-title-lead {
-  color: #065F46;
-}
-html.green-theme .tip-close-btn {
-  color: #047857;
-}
-html.green-theme .tip-close-btn:hover {
-  background: rgba(4, 120, 87, 0.1);
-}
-html.green-theme .tip-body-content {
-  color: #047857;
-}
 
 /* ============================================================
    WALLET & TRANSFER MODALS (PRO MODERN REDESIGN)
    ============================================================ */
 
-:root {
-  --modal-pro-bg: #FFFFFF;
-  --modal-pro-border: #E2E8F0;
-  --modal-pro-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.04);
-  --modal-pro-title: #0F172A;
-  --modal-pro-label: #0F172A;
-  --modal-pro-hint: #64748B;
-
-  --modal-header-badge-bg: #EEF2FF;
-  --modal-header-badge-color: #4F46E5;
-  --modal-header-badge-border: transparent;
-
-  --modal-card-bg: #FFFFFF;
-  --modal-card-border: #E2E8F0;
-  --modal-card-text: #475569;
-  --modal-card-hover-border: #CBD5E1;
-  --modal-card-active-bg: #F5F3FF;
-  --modal-card-active-border: #6366F1;
-  --modal-card-active-text: #4F46E5;
-  --modal-card-active-ring: rgba(99, 102, 241, 0.14);
-
-  --modal-input-bg: #FFFFFF;
-  --modal-input-border: #E2E8F0;
-  --modal-input-text: #0F172A;
-  --modal-input-focus-border: #6366F1;
-  --modal-input-focus-ring: rgba(99, 102, 241, 0.16);
-  --modal-input-icon: #6366F1;
-
-  --modal-badge-bg: #EEF2FF;
-  --modal-badge-color: #4F46E5;
-  --modal-badge-tag-bg: #EEF2FF;
-  --modal-badge-tag-color: #4F46E5;
-
-  --modal-pill-bg: #F8FAFC;
-  --modal-pill-border: #E2E8F0;
-  --modal-pill-text: #475569;
-
-  --modal-banner-bg: #F8FAFC;
-  --modal-banner-border: #E2E8F0;
-  --modal-banner-label: #64748B;
-  --modal-banner-divider: #6366F1;
-
-  --modal-option-bg: #FFFFFF;
-  --modal-option-border: #E2E8F0;
-  --modal-option-active-bg: #F8FAFF;
-  --modal-option-active-border: #6366F1;
-  --modal-checkbox-border: #CBD5E1;
-  --modal-checkbox-checked-bg: #4F46E5;
-
-  --modal-submit-bg: #4F46E5;
-  --modal-submit-hover: #4338CA;
-  --modal-submit-text: #FFFFFF;
-  --modal-submit-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-
-  --modal-cancel-bg: #FFFFFF;
-  --modal-cancel-border: #E2E8F0;
-  --modal-cancel-hover: #F8FAFC;
-  --modal-cancel-text: #334155;
-}
-
-/* Light Theme */
-html.light-theme {
-  --modal-pro-bg: #FFFFFF;
-  --modal-pro-border: #E2E8F0;
-  --modal-pro-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.04);
-  --modal-pro-title: #0F172A;
-  --modal-pro-label: #0F172A;
-  --modal-pro-hint: #64748B;
-
-  --modal-header-badge-bg: #EEF2FF;
-  --modal-header-badge-color: #4F46E5;
-  --modal-header-badge-border: transparent;
-
-  --modal-card-bg: #FFFFFF;
-  --modal-card-border: #E2E8F0;
-  --modal-card-text: #475569;
-  --modal-card-hover-border: #CBD5E1;
-  --modal-card-active-bg: #F5F3FF;
-  --modal-card-active-border: #6366F1;
-  --modal-card-active-text: #4F46E5;
-  --modal-card-active-ring: rgba(99, 102, 241, 0.14);
-
-  --modal-input-bg: #FFFFFF;
-  --modal-input-border: #E2E8F0;
-  --modal-input-text: #0F172A;
-  --modal-input-focus-border: #6366F1;
-  --modal-input-focus-ring: rgba(99, 102, 241, 0.16);
-  --modal-input-icon: #6366F1;
-
-  --modal-badge-bg: #EEF2FF;
-  --modal-badge-color: #4F46E5;
-  --modal-badge-tag-bg: #EEF2FF;
-  --modal-badge-tag-color: #4F46E5;
-
-  --modal-pill-bg: #F8FAFC;
-  --modal-pill-border: #E2E8F0;
-  --modal-pill-text: #475569;
-
-  --modal-banner-bg: #F8FAFC;
-  --modal-banner-border: #E2E8F0;
-  --modal-banner-label: #64748B;
-  --modal-banner-divider: #6366F1;
-
-  --modal-option-bg: #FFFFFF;
-  --modal-option-border: #E2E8F0;
-  --modal-option-active-bg: #F8FAFF;
-  --modal-option-active-border: #6366F1;
-  --modal-checkbox-border: #CBD5E1;
-  --modal-checkbox-checked-bg: #4F46E5;
-
-  --modal-submit-bg: #4F46E5;
-  --modal-submit-hover: #4338CA;
-  --modal-submit-text: #FFFFFF;
-  --modal-submit-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-
-  --modal-cancel-bg: #FFFFFF;
-  --modal-cancel-border: #E2E8F0;
-  --modal-cancel-hover: #F8FAFC;
-  --modal-cancel-text: #334155;
-}
-
-/* Dark Theme */
-html:not(.light-theme):not(.cream-theme):not(.green-theme),
-html.dark-theme {
-  --modal-pro-bg: #161B22;
-  --modal-pro-border: rgba(255, 255, 255, 0.1);
-  --modal-pro-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --modal-pro-title: #F1F5F9;
-  --modal-pro-label: #F1F5F9;
-  --modal-pro-hint: #64748B;
-
-  --modal-header-badge-bg: rgba(99, 102, 241, 0.2);
-  --modal-header-badge-color: #818CF8;
-  --modal-header-badge-border: rgba(129, 140, 248, 0.3);
-
-  --modal-card-bg: rgba(255, 255, 255, 0.03);
-  --modal-card-border: rgba(255, 255, 255, 0.08);
-  --modal-card-text: #94A3B8;
-  --modal-card-hover-border: rgba(255, 255, 255, 0.16);
-  --modal-card-active-bg: rgba(99, 102, 241, 0.18);
-  --modal-card-active-border: #818CF8;
-  --modal-card-active-text: #E0E7FF;
-  --modal-card-active-ring: rgba(129, 140, 248, 0.25);
-
-  --modal-input-bg: rgba(255, 255, 255, 0.04);
-  --modal-input-border: rgba(255, 255, 255, 0.1);
-  --modal-input-text: #F1F5F9;
-  --modal-input-focus-border: #818CF8;
-  --modal-input-focus-ring: rgba(129, 140, 248, 0.25);
-  --modal-input-icon: #818CF8;
-
-  --modal-badge-bg: rgba(99, 102, 241, 0.2);
-  --modal-badge-color: #818CF8;
-  --modal-badge-tag-bg: rgba(99, 102, 241, 0.18);
-  --modal-badge-tag-color: #818CF8;
-
-  --modal-pill-bg: rgba(255, 255, 255, 0.06);
-  --modal-pill-border: rgba(255, 255, 255, 0.1);
-  --modal-pill-text: #CBD5E1;
-
-  --modal-banner-bg: rgba(255, 255, 255, 0.03);
-  --modal-banner-border: rgba(255, 255, 255, 0.08);
-  --modal-banner-label: #94A3B8;
-  --modal-banner-divider: #818CF8;
-
-  --modal-option-bg: rgba(255, 255, 255, 0.03);
-  --modal-option-border: rgba(255, 255, 255, 0.08);
-  --modal-option-active-bg: rgba(99, 102, 241, 0.12);
-  --modal-option-active-border: #818CF8;
-  --modal-checkbox-border: rgba(255, 255, 255, 0.22);
-  --modal-checkbox-checked-bg: #6366F1;
-
-  --modal-submit-bg: #4F46E5;
-  --modal-submit-hover: #6366F1;
-  --modal-submit-text: #FFFFFF;
-  --modal-submit-shadow: 0 4px 16px rgba(79, 70, 229, 0.45);
-
-  --modal-cancel-bg: rgba(255, 255, 255, 0.05);
-  --modal-cancel-border: rgba(255, 255, 255, 0.1);
-  --modal-cancel-hover: rgba(255, 255, 255, 0.08);
-  --modal-cancel-text: #CBD5E1;
-}
-
-/* Cream Theme */
-html.cream-theme {
-  --modal-pro-bg: #FDF8F2;
-  --modal-pro-border: #EDE4D8;
-  --modal-pro-shadow: 0 24px 48px -12px rgba(100, 60, 20, 0.18), 0 0 0 1px rgba(100, 60, 20, 0.06);
-  --modal-pro-title: #2C1D10;
-  --modal-pro-label: #2C1D10;
-  --modal-pro-hint: #7D6552;
-
-  --modal-header-badge-bg: #EDE4D8;
-  --modal-header-badge-color: #C0531E;
-  --modal-header-badge-border: #E0D4C4;
-
-  --modal-card-bg: #FAF4EC;
-  --modal-card-border: #EDE4D8;
-  --modal-card-text: #584133;
-  --modal-card-hover-border: #D8CCBE;
-  --modal-card-active-bg: #F5EBE1;
-  --modal-card-active-border: #C0531E;
-  --modal-card-active-text: #C0531E;
-  --modal-card-active-ring: rgba(192, 83, 30, 0.15);
-
-  --modal-input-bg: #FAF4EC;
-  --modal-input-border: #E0D4C4;
-  --modal-input-text: #2C1D10;
-  --modal-input-focus-border: #C0531E;
-  --modal-input-focus-ring: rgba(192, 83, 30, 0.16);
-  --modal-input-icon: #C0531E;
-
-  --modal-badge-bg: #EDE4D8;
-  --modal-badge-color: #C0531E;
-  --modal-badge-tag-bg: #EDE4D8;
-  --modal-badge-tag-color: #C0531E;
-
-  --modal-pill-bg: #EDE4D8;
-  --modal-pill-border: #E0D4C4;
-  --modal-pill-text: #584133;
-
-  --modal-banner-bg: #FAF4EC;
-  --modal-banner-border: #EDE4D8;
-  --modal-banner-label: #7D6552;
-  --modal-banner-divider: #C0531E;
-
-  --modal-option-bg: #FAF4EC;
-  --modal-option-border: #EDE4D8;
-  --modal-option-active-bg: #F5EBE1;
-  --modal-option-active-border: #C0531E;
-  --modal-checkbox-border: #D8CCBE;
-  --modal-checkbox-checked-bg: #C0531E;
-
-  --modal-submit-bg: #C0531E;
-  --modal-submit-hover: #A84515;
-  --modal-submit-text: #FFFFFF;
-  --modal-submit-shadow: 0 4px 14px rgba(192, 83, 30, 0.35);
-
-  --modal-cancel-bg: #FAF4EC;
-  --modal-cancel-border: #EDE4D8;
-  --modal-cancel-hover: #EDE4D8;
-  --modal-cancel-text: #584133;
-}
-
-/* Green Theme */
-html.green-theme {
-  --modal-pro-bg: #FFFFFF;
-  --modal-pro-border: #E3F2E9;
-  --modal-pro-shadow: 0 24px 48px -12px rgba(16, 120, 80, 0.14), 0 0 0 1px rgba(16, 120, 80, 0.05);
-  --modal-pro-title: #0E2E1E;
-  --modal-pro-label: #0E2E1E;
-  --modal-pro-hint: #5B8272;
-
-  --modal-header-badge-bg: #E6F7EF;
-  --modal-header-badge-color: #008B57;
-  --modal-header-badge-border: #C9DED3;
-
-  --modal-card-bg: #F7FCFA;
-  --modal-card-border: #E3ECE7;
-  --modal-card-text: #345D4C;
-  --modal-card-hover-border: #C9DED3;
-  --modal-card-active-bg: #E6F7EF;
-  --modal-card-active-border: #008B57;
-  --modal-card-active-text: #008B57;
-  --modal-card-active-ring: rgba(0, 139, 87, 0.15);
-
-  --modal-input-bg: #FFFFFF;
-  --modal-input-border: #E3ECE7;
-  --modal-input-text: #0E2E1E;
-  --modal-input-focus-border: #008B57;
-  --modal-input-focus-ring: rgba(0, 139, 87, 0.16);
-  --modal-input-icon: #008B57;
-
-  --modal-badge-bg: #E6F7EF;
-  --modal-badge-color: #008B57;
-  --modal-badge-tag-bg: #E6F7EF;
-  --modal-badge-tag-color: #008B57;
-
-  --modal-pill-bg: #E3F2E9;
-  --modal-pill-border: #C9DED3;
-  --modal-pill-text: #0E2E1E;
-
-  --modal-banner-bg: #F7FCFA;
-  --modal-banner-border: #E3ECE7;
-  --modal-banner-label: #345D4C;
-  --modal-banner-divider: #008B57;
-
-  --modal-option-bg: #F7FCFA;
-  --modal-option-border: #E3ECE7;
-  --modal-option-active-bg: #E6F7EF;
-  --modal-option-active-border: #008B57;
-  --modal-checkbox-border: #C9DED3;
-  --modal-checkbox-checked-bg: #008B57;
-
-  --modal-submit-bg: #008B57;
-  --modal-submit-hover: #007348;
-  --modal-submit-text: #FFFFFF;
-  --modal-submit-shadow: 0 4px 14px rgba(0, 139, 87, 0.35);
-
-  --modal-cancel-bg: #F7FCFA;
-  --modal-cancel-border: #E3ECE7;
-  --modal-cancel-hover: #E3F2E9;
-  --modal-cancel-text: #345D4C;
-}
 
 /* ── Modal Card Override for Pro Modals ── */
 .txn-modal-card.modal-pro-card {
   max-width: 560px;
   width: 100%;
-  background: var(--modal-pro-bg);
-  border: 1px solid var(--modal-pro-border);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
-  box-shadow: var(--modal-pro-shadow);
   box-sizing: border-box;
 }
 
@@ -3898,7 +3209,7 @@ html.green-theme {
   align-items: flex-start;
   justify-content: space-between;
   padding: 22px 24px 16px 24px;
-  border-bottom: 1px solid var(--modal-pro-border);
+  border-bottom: 1px solid var(--dialog-divider);
   gap: 12px;
   box-sizing: border-box;
 }
@@ -3932,7 +3243,6 @@ html.green-theme {
   margin: 0;
   font-size: var(--font-2xl);
   font-weight: 700;
-  color: var(--modal-pro-title);
   letter-spacing: -0.015em;
   line-height: 1.25;
 }
@@ -4421,45 +3731,34 @@ html.green-theme {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  border-top: 1px solid var(--modal-pro-border);
+  border-top: 1px solid var(--dialog-divider);
 }
 
 .modal-btn-cancel-pro {
   height: 42px;
   padding: 0 22px;
   border-radius: 12px;
-  background: var(--modal-cancel-bg);
-  border: 1.5px solid var(--modal-cancel-border);
-  color: var(--modal-cancel-text);
   font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.modal-btn-cancel-pro:hover {
-  background: var(--modal-cancel-hover);
 }
 
 .modal-btn-submit-pro {
   height: 42px;
   padding: 0 22px;
   border-radius: 12px;
-  background: var(--modal-submit-bg);
-  border: none;
-  color: var(--modal-submit-text);
+  border-style: none;
   font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: var(--modal-submit-shadow);
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .modal-btn-submit-pro:hover:not(:disabled) {
-  background: var(--modal-submit-hover);
   transform: translateY(-1px);
 }
 
@@ -4711,9 +4010,14 @@ html.green-theme {
   background: rgba(0, 0, 0, 0.08);
 }
 
+.filter-pill-btn .pill-count-tag {
+  background: var(--pill-count-tag-bg);
+  color: var(--pill-count-tag-text);
+}
+
 .filter-pill-btn.active .pill-count-tag {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: var(--pill-count-tag-active-bg);
+  color: var(--pill-count-tag-active-text);
 }
 
 /* Custom Themed Sort Dropdown */
@@ -4939,8 +4243,8 @@ html.green-theme {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.12);
-  color: #4F46E5;
+  background: var(--recurring-category-badge-bg);
+  color: var(--color-link);
 }
 
 .recurring-meta-row {
@@ -5007,8 +4311,8 @@ html.green-theme {
 }
 
 .recurring-wallet-chip-btn:hover {
-  border-color: var(--color-brand-700, #4F46E5);
-  background: var(--surface, #FFFFFF);
+  border-color: var(--wallet-chip-hover-border);
+  background: var(--wallet-chip-hover-bg);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -5162,28 +4466,31 @@ html.green-theme {
 }
 
 .due-paid {
-  background: var(--color-success-bg, #ECFDF5);
+  background: var(--color-success-bg);
   border: 1px solid var(--color-success-border, #A7F3D0);
-  color: var(--color-success, #047857);
+  color: var(--pill-success-text);
+  border-color: var(--color-success-border);
 }
 
 .due-danger {
-  background: var(--color-danger-bg, #FEE2E2);
+  background: var(--pill-danger-bg);
   border: 1px solid var(--color-danger-border, #FECACA);
-  color: var(--color-danger, #DC2626);
+  color: var(--pill-danger-text);
+  border-color: var(--pill-danger-border);
 }
 
 .due-warning,
 .due-soon {
-  background: var(--color-warning-bg, #FEF3C7);
+  background: var(--pill-warning-bg);
   border: 1px solid var(--color-warning-border, #FDE68A);
-  color: var(--color-warning, #B45309);
+  color: var(--pill-warning-text);
 }
 
 .due-normal {
-  background: var(--surface-subtle, var(--color-neutral-bg, #F1F5F9));
+  background: var(--pill-neutral-bg);
   border: 1px solid var(--color-border, #E2E8F0);
-  color: var(--color-text-secondary, var(--text-secondary));
+  color: var(--color-neutral-text);
+  border-color: var(--color-neutral-border);
 }
 
 .due-ended {
@@ -5197,18 +4504,18 @@ html.green-theme {
 }
 
 .due-paid .due-pill-sub {
-  color: var(--color-success, #047857);
+  color: var(--due-paid-sub-text);
   opacity: 0.85;
 }
 
 .due-warning .due-pill-sub,
 .due-soon .due-pill-sub {
-  color: var(--color-warning, #B45309);
+  color: var(--due-warning-sub-text);
   opacity: 0.85;
 }
 
 .due-danger .due-pill-sub {
-  color: var(--color-danger, #DC2626);
+  color: var(--due-danger-sub-text);
   opacity: 0.85;
 }
 
@@ -5364,8 +4671,8 @@ html.green-theme {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(99, 102, 241, 0.12);
-  color: #6366F1;
+  background: var(--summary-icon-bg);
+  color: var(--summary-icon-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5419,307 +4726,21 @@ html.green-theme {
 
 .grid-cell-num.text-brand { color: var(--color-success, #10B981); }
 .grid-cell-num.text-warning { color: var(--color-warning, #F59E0B); }
-.grid-cell-num.text-blue { color: var(--color-info, #3B82F6); }
-.grid-cell-num.text-purple { color: var(--color-brand-600, #6366F1); }
+.grid-cell-num.text-blue { color: var(--color-info); }
+.grid-cell-num.text-purple { color: var(--color-accent-soft); }
 
-/* ── Theme Specific Overrides for Recurring View ── */
-html.dark-theme .grid-cell-num.text-blue { color: #60A5FA; }
-html.dark-theme .grid-cell-num.text-purple { color: #818CF8; }
-html.dark-theme .recurring-category-badge {
-  background: rgba(96, 165, 250, 0.16);
-  color: var(--color-brand-on-dark, #60A5FA);
-}
-html.dark-theme .summary-bottom-icon-box {
-  background: rgba(96, 165, 250, 0.16);
-  color: #60A5FA;
-}
-html.dark-theme .filter-pill-btn .pill-count-tag {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--color-text);
-}
 
-html.cream-theme .grid-cell-num.text-purple { color: #C0531E; }
-html.cream-theme .recurring-category-badge {
-  background: var(--color-brand-100, #F6E2D5);
-  color: var(--color-link);
-}
-html.cream-theme .summary-bottom-icon-box {
-  background: rgba(192, 83, 30, 0.14);
-  color: #C0531E;
-}
-html.cream-theme .filter-pill-btn .pill-count-tag {
-  background: rgba(44, 29, 16, 0.08);
-  color: var(--color-text);
-}
-
-html.green-theme .grid-cell-num.text-purple { color: #059669; }
-html.green-theme .recurring-category-badge {
-  background: var(--color-brand-100, #D1FAE5);
-  color: var(--color-link);
-}
-html.green-theme .summary-bottom-icon-box {
-  background: rgba(5, 150, 105, 0.14);
-  color: #059669;
-}
-html.green-theme .filter-pill-btn .pill-count-tag {
-  background: rgba(14, 46, 30, 0.08);
-  color: var(--color-text);
-}
-
-html.dark-theme .recurring-wallet-chip-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-brand-500, #818CF8);
-}
-html.cream-theme .recurring-wallet-chip-btn:hover {
-  border-color: var(--color-brand-600, #C0531E);
-}
-html.green-theme .recurring-wallet-chip-btn:hover {
-  border-color: var(--color-brand-600, #059669);
-}
-
-/* Multi-theme overrides for recurring pill badges & countdown cards */
 /* 1. Dark Theme */
-html.dark-theme .recurring-pill-badge.pill-paid,
-html.dark-theme .pill-paid {
-  background: rgba(16, 185, 129, 0.16);
-  border-color: rgba(16, 185, 129, 0.30);
-  color: #10B981;
+
+
+.due-warning,
+.due-soon {
+  border-color: var(--pill-warning-border);
 }
 
-html.dark-theme .recurring-pill-badge.pill-warning,
-html.dark-theme .recurring-pill-badge.pill-soon,
-html.dark-theme .pill-warning,
-html.dark-theme .pill-soon {
-  background: rgba(245, 158, 11, 0.16);
-  border-color: rgba(245, 158, 11, 0.30);
-  color: #FBBF24;
-}
-
-html.dark-theme .recurring-pill-badge.pill-today,
-html.dark-theme .recurring-pill-badge.pill-danger,
-html.dark-theme .pill-today,
-html.dark-theme .pill-danger {
-  background: rgba(239, 68, 68, 0.16);
-  border-color: rgba(239, 68, 68, 0.30);
-  color: #F87171;
-}
-
-html.dark-theme .recurring-pill-badge.pill-normal,
-html.dark-theme .pill-normal {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.10);
-  color: #94A3B8;
-}
-
-html.dark-theme .due-paid {
-  background: rgba(16, 185, 129, 0.16);
-  border-color: rgba(16, 185, 129, 0.30);
-  color: #10B981;
-}
-html.dark-theme .due-paid .due-pill-sub {
-  color: #34D399;
-}
-
-html.dark-theme .due-warning,
-html.dark-theme .due-soon {
-  background: rgba(245, 158, 11, 0.16);
-  border-color: rgba(245, 158, 11, 0.30);
-  color: #FBBF24;
-}
-html.dark-theme .due-warning .due-pill-sub,
-html.dark-theme .due-soon .due-pill-sub {
-  color: #FDE68A;
-}
-
-html.dark-theme .due-danger {
-  background: rgba(239, 68, 68, 0.16);
-  border-color: rgba(239, 68, 68, 0.30);
-  color: #F87171;
-}
-html.dark-theme .due-danger .due-pill-sub {
-  color: #FCA5A5;
-}
-
-html.dark-theme .due-normal {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.10);
-  color: #94A3B8;
-}
-
-html.dark-theme .cal-weekday.cal-paid {
-  background: rgba(16, 185, 129, 0.20);
-  color: #10B981;
-}
-html.dark-theme .cal-weekday.cal-warning {
-  background: rgba(245, 158, 11, 0.20);
-  color: #FBBF24;
-}
-html.dark-theme .cal-weekday.cal-danger {
-  background: rgba(239, 68, 68, 0.20);
-  color: #F87171;
-}
-
-/* 2. Cream Theme */
-html.cream-theme .recurring-pill-badge.pill-paid,
-html.cream-theme .pill-paid {
-  background: rgba(30, 126, 52, 0.12);
-  border-color: rgba(30, 126, 52, 0.26);
-  color: #1E7E34;
-}
-
-html.cream-theme .recurring-pill-badge.pill-warning,
-html.cream-theme .recurring-pill-badge.pill-soon,
-html.cream-theme .pill-warning,
-html.cream-theme .pill-soon {
-  background: rgba(181, 125, 26, 0.14);
-  border-color: rgba(181, 125, 26, 0.28);
-  color: #995B05;
-}
-
-html.cream-theme .recurring-pill-badge.pill-today,
-html.cream-theme .recurring-pill-badge.pill-danger,
-html.cream-theme .pill-today,
-html.cream-theme .pill-danger {
-  background: rgba(214, 62, 62, 0.12);
-  border-color: rgba(214, 62, 62, 0.26);
-  color: #C53030;
-}
-
-html.cream-theme .recurring-pill-badge.pill-normal,
-html.cream-theme .pill-normal {
-  background: rgba(107, 83, 62, 0.08);
-  border-color: rgba(107, 83, 62, 0.18);
-  color: #6B533E;
-}
-
-html.cream-theme .due-paid {
-  background: rgba(30, 126, 52, 0.12);
-  border-color: rgba(30, 126, 52, 0.26);
-  color: #1E7E34;
-}
-html.cream-theme .due-paid .due-pill-sub {
-  color: #1B662C;
-}
-
-html.cream-theme .due-warning,
-html.cream-theme .due-soon {
-  background: rgba(181, 125, 26, 0.14);
-  border-color: rgba(181, 125, 26, 0.28);
-  color: #995B05;
-}
-html.cream-theme .due-warning .due-pill-sub,
-html.cream-theme .due-soon .due-pill-sub {
-  color: #804A04;
-}
-
-html.cream-theme .due-danger {
-  background: rgba(214, 62, 62, 0.12);
-  border-color: rgba(214, 62, 62, 0.26);
-  color: #C53030;
-}
-html.cream-theme .due-danger .due-pill-sub {
-  color: #9B2C2C;
-}
-
-html.cream-theme .due-normal {
-  background: rgba(107, 83, 62, 0.08);
-  border-color: rgba(107, 83, 62, 0.18);
-  color: #6B533E;
-}
-
-html.cream-theme .cal-weekday.cal-paid {
-  background: rgba(30, 126, 52, 0.14);
-  color: #1E7E34;
-}
-html.cream-theme .cal-weekday.cal-warning {
-  background: rgba(181, 125, 26, 0.14);
-  color: #995B05;
-}
-html.cream-theme .cal-weekday.cal-danger {
-  background: rgba(214, 62, 62, 0.14);
-  color: #C53030;
-}
 
 /* 3. Green Theme */
-html.green-theme .recurring-pill-badge.pill-paid,
-html.green-theme .pill-paid {
-  background: #D1FAE5;
-  border-color: #A7F3D0;
-  color: #047857;
-}
 
-html.green-theme .recurring-pill-badge.pill-warning,
-html.green-theme .recurring-pill-badge.pill-soon,
-html.green-theme .pill-warning,
-html.green-theme .pill-soon {
-  background: #FEF3C7;
-  border-color: #FDE68A;
-  color: #B45309;
-}
-
-html.green-theme .recurring-pill-badge.pill-today,
-html.green-theme .recurring-pill-badge.pill-danger,
-html.green-theme .pill-today,
-html.green-theme .pill-danger {
-  background: #FEE2E2;
-  border-color: #FECACA;
-  color: #DC2626;
-}
-
-html.green-theme .recurring-pill-badge.pill-normal,
-html.green-theme .pill-normal {
-  background: var(--surface-subtle);
-  border-color: var(--color-border);
-  color: var(--color-text-secondary);
-}
-
-html.green-theme .due-paid {
-  background: #D1FAE5;
-  border-color: #A7F3D0;
-  color: #047857;
-}
-html.green-theme .due-paid .due-pill-sub {
-  color: #065F46;
-}
-
-html.green-theme .due-warning,
-html.green-theme .due-soon {
-  background: #FEF3C7;
-  border-color: #FDE68A;
-  color: #B45309;
-}
-html.green-theme .due-warning .due-pill-sub,
-html.green-theme .due-soon .due-pill-sub {
-  color: #B45309;
-}
-
-html.green-theme .due-danger {
-  background: #FEE2E2;
-  border-color: #FECACA;
-  color: #DC2626;
-}
-html.green-theme .due-danger .due-pill-sub {
-  color: #B91C1C;
-}
-
-html.green-theme .due-normal {
-  background: var(--surface-subtle);
-  border-color: var(--color-border);
-  color: var(--color-text-secondary);
-}
-
-html.green-theme .cal-weekday.cal-paid {
-  background: #D1FAE5;
-  color: #047857;
-}
-html.green-theme .cal-weekday.cal-warning {
-  background: #FEF3C7;
-  color: #D97706;
-}
-html.green-theme .cal-weekday.cal-danger {
-  background: #FEE2E2;
-  color: #DC2626;
-}
 
 .grid-cell-sub {
   font-size: var(--font-xs);
@@ -6555,6 +5576,5 @@ html.green-theme .cal-weekday.cal-danger {
 /* Theme colours for this menu come from the --menu-* tokens in tokens.css.
    The old per-theme overrides painted the green (light) theme's menu almost
    black with dark text, which made every option unreadable. */
-
 
 

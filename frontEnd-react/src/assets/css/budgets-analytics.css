@@ -6,25 +6,13 @@
 .budgets-tab-container {
   container: budgets / inline-size;
   --bdash-ok-fill: var(--color-success, #007547);
-  --bdash-warn-fill: #D97706;
+  --bdash-warn-fill: var(--budget-warn-fill);
   --bdash-over-stripes: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.3) 0 4px, transparent 4px 8px);
   --bdash-track: color-mix(in srgb, var(--color-text, #101B36) 9%, transparent);
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
-}
-
-html.dark-theme .budgets-tab-container {
-  --bdash-warn-fill: #F59E0B;
-}
-
-html.cream-theme .budgets-tab-container {
-  --bdash-warn-fill: #B57D1A;
-}
-
-html.green-theme .budgets-tab-container {
-  --bdash-warn-fill: #C07800;
 }
 
 .budget-month-data {
@@ -119,13 +107,13 @@ html.green-theme .budgets-tab-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary, #607086);
+  color: var(--month-nav-text);
   transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 
 .month-nav-btn:hover {
-  background: var(--color-brand-50, #F1FBF6);
-  color: var(--color-link);
+  background: var(--month-nav-hover-bg);
+  color: var(--color-accent);
 }
 
 .month-current-display {
@@ -2351,15 +2339,15 @@ body:has(.blimit-overlay) .toast-region {
 }
 
 .pill-danger {
-  background: var(--color-danger-bg, #FFF0EF);
-  color: var(--color-danger, #E34B45);
-  border-color: var(--color-danger-border, #FED7D5);
+  background: var(--pill-danger-bg);
+  color: var(--pill-danger-text);
+  border-color: var(--pill-danger-border);
 }
 
 .pill-warning {
-  background: var(--color-warning-bg, #FEF3C7);
-  color: var(--color-warning, #B45309);
-  border-color: var(--color-warning-border, #FDE68A);
+  background: var(--pill-warning-bg);
+  color: var(--pill-warning-text);
+  border-color: var(--pill-warning-border);
 }
 
 .pill-neutral {

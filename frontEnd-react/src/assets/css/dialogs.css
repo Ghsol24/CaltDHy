@@ -577,10 +577,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-modal-card {
-  background: var(--surface, #FFFFFF);
+  background: var(--color-surface);
   border: 1px solid var(--border, #E2ECE6);
   border-radius: var(--radius-lg, 16px);
-  box-shadow: var(--shadow-lg, 0 10px 25px -5px rgba(23, 49, 38, 0.1));
+  box-shadow: var(--dialog-card-shadow);
   width: 100%;
   max-width: 500px;
   max-height: 100%;
@@ -605,6 +605,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border, #E2ECE6);
   flex-shrink: 0;
+  background: var(--color-surface);
+  border-color: var(--dialog-divider);
 }
 
 .txn-modal-title {
@@ -612,13 +614,13 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-sans);
   font-size: var(--font-xl);
   font-weight: 700;
-  color: var(--text-primary, #173126);
+  color: var(--color-text);
 }
 
 .txn-modal-close-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary, #60766A);
+  color: var(--dialog-close-text);
   cursor: pointer;
   padding: 6px;
   border-radius: var(--radius-sm, 8px);
@@ -629,8 +631,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-modal-close-btn:hover {
-  background: var(--surface-subtle, #EDF5F0);
-  color: var(--text-primary, #173126);
+  background: var(--control-track-bg);
+  color: var(--color-text);
 }
 
 .txn-modal-body {
@@ -653,10 +655,11 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 /* Type Toggle Switcher */
 .txn-type-toggle {
   display: flex;
-  background: var(--surface-subtle, #EDF5F0);
+  background: var(--control-track-bg);
   padding: 4px;
   border-radius: var(--radius-md, 12px);
   gap: 4px;
+  border: 1px solid var(--color-border);
 }
 
 .txn-type-btn {
@@ -672,28 +675,28 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-sans);
   font-size: var(--font-base);
   font-weight: 600;
-  color: var(--text-secondary, #60766A);
+  color: var(--segment-text);
   cursor: pointer;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .txn-type-btn:hover:not(.active) {
-  color: var(--text-primary, #173126);
-  background: rgba(255, 255, 255, 0.5);
+  color: var(--color-text);
+  background: var(--segment-hover-bg);
 }
 
 .txn-type-btn--expense.active {
-  background: var(--surface, #FFFFFF);
-  color: var(--danger, #C94B45);
-  border-color: var(--border, #E2ECE6);
-  box-shadow: var(--shadow-sm);
+  background: var(--segment-expense-bg);
+  color: var(--segment-expense-text);
+  border-color: var(--segment-expense-border);
+  box-shadow: var(--segment-expense-shadow);
 }
 
 .txn-type-btn--income.active {
-  background: var(--surface, #FFFFFF);
-  color: var(--color-success);
-  border-color: var(--border, #E2ECE6);
-  box-shadow: var(--shadow-sm);
+  background: var(--segment-income-bg);
+  color: var(--segment-income-text);
+  border-color: var(--segment-income-border);
+  box-shadow: var(--segment-income-shadow);
 }
 
 /* Field Groups */
@@ -732,9 +735,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-mono, monospace);
   font-size: var(--font-4xl);
   font-weight: 700;
-  color: var(--text-primary, #173126);
-  background: var(--surface, #FFFFFF);
-  border: 1.5px solid var(--border, #E2ECE6);
+  color: var(--color-text);
+  background: var(--field-bg);
+  border: 1.5px solid var(--field-border);
   border-radius: var(--radius-md, 12px);
   transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
   font-variant-numeric: tabular-nums;
@@ -742,14 +745,14 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-amount-input:focus {
   outline: none;
-  border-color: var(--primary, #078A59);
-  box-shadow: 0 0 0 3px rgba(7, 138, 89, 0.15);
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
 }
 
 /* Error state - chỉ hiển thị khi có class has-error */
 .txn-amount-box.has-error .txn-amount-input {
-  border-color: #EF4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 
 .txn-amount-error-inline {
@@ -771,8 +774,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-sans);
   font-size: var(--font-sm);
   font-weight: 700;
-  color: var(--text-secondary, #A0AEC0);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--segment-text);
+  background: var(--control-muted-bg);
   padding: 4px 8px;
   border-radius: var(--radius-sm, 6px);
   pointer-events: none;
@@ -798,8 +801,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 12px 8px 10px 8px;
   min-width: 0;
   min-height: 98px;
-  background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
-  border: 1.5px solid var(--border, rgba(255, 255, 255, 0.08));
+  background: var(--category-card-bg);
+  border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md, 12px);
   color: var(--color-icon, var(--text-secondary));
   cursor: pointer;
@@ -819,24 +822,25 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-category-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--category-card-hover-bg);
+  border-color: var(--color-border-strong);
   transform: translateY(-1px);
 }
 
 /* Selected state */
 .txn-category-card.active {
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  border-color: var(--color-action-bg);
+  background: var(--category-card-active-bg);
+  border-color: var(--field-focus-border);
   color: var(--color-active-text, var(--text-primary));
-  box-shadow: 0 0 0 1px var(--primary), 0 4px 12px color-mix(in srgb, var(--primary) 15%, transparent);
+  box-shadow: var(--category-card-active-shadow);
 }
 
+/* Thu nhập: thẻ đang chọn, huy hiệu tick và nút Lưu dùng họ màu success của theme. */
 .txn-category-card.active--income {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: #10B981;
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
   color: var(--color-success);
-  box-shadow: 0 0 0 1px #10B981, 0 4px 12px rgba(16, 185, 129, 0.18);
+  box-shadow: 0 0 0 1px var(--color-success), 0 4px 12px color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 
 /* Check Badge on top right of selected card */
@@ -847,7 +851,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--color-accent-solid);
   color: #FFFFFF;
   font-size: var(--font-xs);
   font-weight: 700;
@@ -858,7 +862,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-card-check-badge--income {
-  background: #10B981;
+  background: var(--color-income-solid);
 }
 
 /* Icon */
@@ -875,7 +879,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-size: var(--font-sm);
   font-weight: 500;
   line-height: 1.4;
-  color: var(--text-secondary, #A0AEC0);
+  color: var(--category-card-text);
   white-space: normal;
   overflow-wrap: anywhere;
   max-width: 100%;
@@ -883,8 +887,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-category-card.active .txn-card-name {
-  color: var(--text-primary, #FFFFFF);
-  font-weight: 600;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.txn-category-card.active--income .txn-card-name {
+  color: var(--color-success);
 }
 
 /* Remaining Amount */
@@ -895,7 +903,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   line-height: 1.4;
   overflow-wrap: anywhere;
   max-width: 100%;
-  color: var(--text-primary, #FFFFFF);
+  color: var(--color-text);
   letter-spacing: -0.01em;
   margin-bottom: 3px;
 }
@@ -910,16 +918,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   max-width: 100%;
   color: var(--text-muted, #718096);
   margin-bottom: 6px;
-}
-
-/* Unset category card (Chưa đặt hạn mức) */
-.txn-category-card.is-unset {
-  border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.txn-category-card.is-unset .txn-card-amount {
-  color: var(--text-muted, #718096);
 }
 
 /* Mini Progress Bar */
@@ -1082,9 +1080,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 10px 14px;
   font-family: var(--font-sans);
   font-size: var(--font-base);
-  color: var(--text-primary);
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  color: var(--color-text);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-md);
   transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
 }
@@ -1100,8 +1098,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .txn-input:focus {
   outline: none;
-  border-color: var(--color-action-bg);
-  box-shadow: var(--focus-ring, 0 0 0 3px rgba(79, 70, 229, 0.15));
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
 }
 
 .txn-error-banner {
@@ -1125,8 +1123,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   gap: 12px;
   padding: 16px 24px 20px;
   border-top: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--color-surface);
   flex-shrink: 0;
+  border-color: var(--dialog-divider);
 }
 
 @media (max-width: 480px) {
@@ -1162,9 +1161,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-sans);
   font-size: var(--font-base);
   font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
+  color: var(--btn-secondary-text);
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
@@ -1172,9 +1171,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-btn-cancel:hover:not(:disabled) {
-  background: var(--border);
-  color: var(--text-primary);
+  background: var(--control-muted-bg);
+  color: var(--color-text);
   transform: translateY(-1px);
+  border-color: var(--btn-secondary-hover-border);
 }
 
 .txn-btn-cancel:active {
@@ -1227,12 +1227,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   font-family: var(--font-sans);
   font-size: var(--font-base);
   font-weight: 700;
-  color: #ffffff;
-  background: var(--primary);
+  color: #FFFFFF;
+  background: var(--btn-primary-bg);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--btn-primary-shadow);
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   display: inline-flex;
   align-items: center;
@@ -1241,8 +1241,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-btn-submit:hover:not(:disabled) {
-  background: var(--primary-hover);
-  box-shadow: var(--shadow-md);
+  background: var(--btn-primary-hover-bg);
+  box-shadow: var(--btn-primary-hover-shadow);
   transform: translateY(-1px);
 }
 
@@ -1257,14 +1257,13 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .txn-btn-submit--income {
-  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
-  border-color: transparent;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-income-solid) 86%, black) 0%, var(--color-income-solid) 100%);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-income-solid) 35%, transparent);
 }
 
 .txn-btn-submit--income:hover:not(:disabled) {
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
-  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.45);
+  background: color-mix(in srgb, var(--color-income-solid) 86%, black);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-income-solid) 45%, transparent);
 }
 
 /* ── Transaction dialog on phones: bottom sheet, compact category row, picker sheets ──
@@ -1275,6 +1274,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   /* `hidden` still lets focus() scroll the card while a sheet slides in from below,
      which leaves the form shifted up; `clip` forbids any scrolling. */
   overflow: clip;
+  border-color: var(--color-border);
 }
 
 .txn-modal-card.is-dragging {
@@ -1718,8 +1718,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
+  background: var(--field-bg);
+  border: 1.5px solid var(--field-border);
   border-radius: var(--radius-md, 10px);
   cursor: pointer;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
@@ -1729,13 +1729,11 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   outline: none;
 }
 
-.custom-wallet-trigger:hover:not(:disabled) {
-  border-color: var(--color-action-bg);
-  background: var(--surface-subtle);
+.custom-wallet-trigger:hover {
+  background: var(--control-muted-bg);
 }
 
 .custom-wallet-dropdown.is-open .custom-wallet-trigger {
-  border-color: var(--color-action-bg);
   box-shadow: var(--focus-ring, 0 0 0 3px rgba(79, 70, 229, 0.15));
 }
 
@@ -1937,10 +1935,10 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 /* ── Common Jar Dialog Components ── */
 .financial-tips-dialog {
-  background: var(--surface);
+  background: var(--color-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg, 18px);
-  box-shadow: var(--shadow-dialog, 0 20px 48px rgba(15, 23, 42, 0.16));
+  box-shadow: var(--dialog-card-shadow);
   width: 94vw;
   max-width: 580px;
   max-height: 90vh;
@@ -1949,6 +1947,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   flex-direction: column;
   overflow: hidden;
   animation: modalIn 200ms var(--ease-smooth);
+  border-color: var(--color-border);
 }
 
 .financial-tips-header {
@@ -1957,14 +1956,15 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--surface);
+  background: var(--color-surface);
+  border-color: var(--dialog-divider);
 }
 
 .financial-tips-close-btn {
   background: transparent;
   border: none;
   font-size: var(--font-xl);
-  color: var(--text-muted);
+  color: var(--dialog-close-text);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
@@ -1972,8 +1972,8 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .financial-tips-close-btn:hover {
-  background: var(--surface-subtle);
-  color: var(--text-primary);
+  background: var(--control-track-bg);
+  color: var(--color-text);
 }
 
 .jar-detail-body,
@@ -1989,28 +1989,28 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .jar-detail-footer,
 .financial-tips-footer {
   padding: 16px 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid;
+  border-color: var(--dialog-divider);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--surface);
+  background: var(--color-surface);
   gap: 10px;
 }
-
 .jar-detail-stats-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
+  background: var(--jar-detail-panel-bg);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 18px 22px;
   gap: 16px;
 }
 
 .jar-detail-roadmap-box {
-  background: var(--surface-subtle);
-  border: 1px solid var(--border);
+  background: var(--jar-detail-panel-bg);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -2023,9 +2023,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: var(--surface-subtle);
+  background: var(--jar-detail-panel-bg);
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   transition: background var(--dur-fast) ease;
 }
 
@@ -2033,9 +2033,9 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .jar-detail-btn-withdraw {
   padding: 9px 16px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface-subtle);
-  color: var(--text-secondary);
+  border: 1px solid var(--field-border);
+  background: var(--field-bg);
+  color: var(--btn-secondary-text);
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
@@ -2044,8 +2044,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .jar-detail-btn-edit:hover:not(:disabled),
 .jar-detail-btn-withdraw:hover:not(:disabled) {
-  background: var(--border);
-  color: var(--text-primary);
+  background: var(--control-muted-bg);
+  color: var(--color-text);
+}
+.jar-detail-btn-edit:hover:not(:disabled),
+.jar-detail-btn-withdraw:hover:not(:disabled) {
+  border-color: var(--btn-secondary-hover-border);
 }
 
 .jar-detail-btn-deposit,
@@ -2053,12 +2057,12 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   padding: 9px 18px;
   border-radius: 8px;
   border: none;
-  background: var(--primary);
+  background: var(--btn-primary-bg);
   color: #FFFFFF;
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--btn-primary-shadow);
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
@@ -2067,6 +2071,15 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   background: var(--primary-hover);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
+}
+.jar-detail-btn-deposit,
+.financial-tips-ack-btn {
+  border-color: transparent;
+}
+.jar-detail-btn-deposit:hover:not(:disabled),
+.financial-tips-ack-btn:hover:not(:disabled) {
+  background: var(--btn-primary-hover-bg);
+  box-shadow: var(--btn-primary-hover-shadow);
 }
 
 .financial-tips-tab-btn {
@@ -2082,9 +2095,20 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 }
 
 .financial-tips-tab-btn.active {
-  background: var(--primary);
-  color: #FFFFFF;
+  background: var(--segment-active-bg);
+  color: var(--color-accent);
   border-color: var(--color-action-bg);
+  box-shadow: var(--segment-active-shadow);
+}
+
+.financial-tips-input {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  color: var(--color-text);
+}
+.financial-tips-input:focus {
+  border-color: var(--field-focus-border);
+  box-shadow: var(--field-focus-ring);
 }
 
 /* ── Recurring Modal Custom Themed Selects & Dropdowns ── */
@@ -2247,11 +2271,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 
 .modal-themed-input {
   transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
-}
-
-.modal-themed-input:focus {
-  border-color: var(--color-brand-700, #4F46E5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .modal-dropdown-scroll-list {
