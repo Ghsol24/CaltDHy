@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from '../../components/ui/Dialog';
 import { BookOutlineIcon, CloseOutlineIcon } from '../../components/ui/AppIcons';
 import { getGuideContent } from './guideContent';
 
@@ -19,24 +18,15 @@ export function GuideModal() {
   const closeHelpModal = useSpendingStore((s) => s.closeHelpModal);
   const navigateApp = useSpendingStore((s) => s.navigateTo);
   const [activeTab, setActiveTab] = useState('quickstart');
-  const modalRef = useRef(null);
   const bodyRef = useRef(null);
   const tabRefs = useRef({});
   const copy = getGuideContent(lang);
   const selected = copy.tabs.find((tab) => tab.id === activeTab);
 
-  useFocusTrap(modalRef, isHelpOpen);
-  useBodyScrollLock(isHelpOpen);
-
+  // Every opening starts on the first tab.
   useEffect(() => {
-    if (!isHelpOpen) return undefined;
-    setActiveTab('quickstart');
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') { event.preventDefault(); closeHelpModal(); }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isHelpOpen, closeHelpModal]);
+    if (isHelpOpen) setActiveTab('quickstart');
+  }, [isHelpOpen]);
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = 0;
@@ -71,9 +61,8 @@ export function GuideModal() {
     tabRefs.current[id]?.focus({ preventScroll: true });
   };
 
-  return <div className="modal-backdrop-overlay" role="presentation"
-    onClick={(event) => { if (event.target === event.currentTarget) closeHelpModal(); }}>
-    <div ref={modalRef} className="budget-setup-dialog guide-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="guide-title">
+  return <Dialog isOpen onClose={closeHelpModal} portal={false} labelledBy="guide-title"
+    overlayClassName="modal-backdrop-overlay" className="budget-setup-dialog guide-modal-dialog">
       <div className="budget-dialog-header">
         <div className="budget-dialog-header-lead">
           <div className="budget-dialog-icon-tile guide-header-icon"><BookOutlineIcon size={20} /></div>
@@ -100,6 +89,5 @@ export function GuideModal() {
         </div>
       </div>
       <div className="budget-dialog-footer guide-modal-footer"><button type="button" className="btn-dialog-save" onClick={closeHelpModal}>{copy.done}</button></div>
-    </div>
-  </div>;
+  </Dialog>;
 }

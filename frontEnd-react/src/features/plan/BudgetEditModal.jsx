@@ -1,13 +1,11 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from '../../components/ui/Dialog';
 import { useBudgetCopy } from './budgetCopy';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { CategoryOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
@@ -102,8 +100,6 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const deleteTriggerRef = useRef(null);
   const prevIsOpenRef = useRef(false);
 
-  useFocusTrap(modalRef, isOpen);
-  useBodyScrollLock(isOpen);
 
   const activeMonthStr = selectedMonth || getLocalMonthString();
   const monthDisplay = formatDate(monthStartDate(activeMonthStr), 'month');
@@ -189,24 +185,11 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   }, []);
 
   // Escape peels back one layer at a time: confirm popover → add form → dialog.
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const handleKeyDown = (e) => {
-      if (e.key !== 'Escape') return;
-      e.preventDefault();
-      if (deletingName) {
-        closeDeleteConfirm();
-        return;
-      }
-      if (isAdding) {
-        cancelAdd();
-        return;
-      }
-      handleRequestClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, deletingName, isAdding, cancelAdd, closeDeleteConfirm, handleRequestClose]);
+  const handleEscape = () => {
+    if (deletingName) closeDeleteConfirm();
+    else if (isAdding) cancelAdd();
+    else handleRequestClose();
+  };
 
   // Keep the delete confirmation fully visible and start on its safe choice.
   useEffect(() => {
@@ -373,25 +356,21 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div
-      className="modal-backdrop-overlay blimit-overlay"
-      role="presentation"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleRequestClose();
+  return (
+    <Dialog
+      isOpen
+      onClose={handleRequestClose}
+      onEscape={handleEscape}
+      panelRef={modalRef}
+      overlayClassName="modal-backdrop-overlay blimit-overlay"
+      className={`blimit-dialog${dragOffset ? ' is-dragging' : ''}`}
+      labelledBy="blimit-title"
+      describedBy="blimit-desc"
+      panelProps={{
+        style: dragOffset ? { '--sheet-drag-offset': `${dragOffset}px` } : undefined,
+        onMouseDown: handleDialogMouseDown,
       }}
     >
-      <div
-        ref={modalRef}
-        className={`blimit-dialog${dragOffset ? ' is-dragging' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="blimit-title"
-        aria-describedby="blimit-desc"
-        tabIndex={-1}
-        style={dragOffset ? { transform: `translateY(${dragOffset}px)` } : undefined}
-        onMouseDown={handleDialogMouseDown}
-      >
         <div
           className="blimit-handle-zone"
           onPointerDown={handleSheetPointerDown}
@@ -635,8 +614,6 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
             </div>
           </footer>
         </form>
-      </div>
-    </div>,
-    document.body
+    </Dialog>
   );
 }

@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import React, { useMemo, useState } from 'react';
+import { Dialog } from '../../components/ui/Dialog';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { summarizeTransactions, transactionsForDay } from '../../utils/transactionInsights';
@@ -12,15 +10,6 @@ export function DailyTransactionsDrawer({ date, initialType, transactions, exclu
   expected, savingExpected, onToggleExpected, onClose, onEdit, onManage, onViewHistory }) {
   const { t, label, lang } = useTranslation();
   const [type, setType] = useState(initialType);
-  const panelRef = useRef(null);
-  useFocusTrap(panelRef, true);
-  useBodyScrollLock(true);
-
-  useEffect(() => {
-    const closeOnEscape = (event) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [onClose]);
 
   const rows = useMemo(() => transactionsForDay(transactions, date, { type, excludeRecurring }),
     [transactions, date, type, excludeRecurring]);
@@ -36,10 +25,8 @@ export function DailyTransactionsDrawer({ date, initialType, transactions, exclu
     return [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   }, [rows, type]);
 
-  return createPortal(<div className="day-drawer-backdrop" onMouseDown={(event) => {
-    if (event.target === event.currentTarget) onClose();
-  }}>
-    <section ref={panelRef} className="day-drawer" role="dialog" aria-modal="true" aria-labelledby="day-drawer-title">
+  return <Dialog isOpen onClose={onClose} as="section" labelledBy="day-drawer-title"
+    overlayClassName="day-drawer-backdrop" className="day-drawer">
       <div className="day-drawer-header">
         <div>
           <span className="day-drawer-eyebrow">{t('analytics.pickDay')}</span>
@@ -74,6 +61,5 @@ export function DailyTransactionsDrawer({ date, initialType, transactions, exclu
           {t('analytics.viewHistory')}
         </button>
       </div>
-    </section>
-  </div>, document.body);
+  </Dialog>;
 }

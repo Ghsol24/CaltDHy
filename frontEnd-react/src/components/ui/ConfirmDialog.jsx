@@ -1,9 +1,8 @@
 import { getUserErrorMessage } from '../../utils/userErrors.js';
-import React, { useRef, useEffect, useCallback } from 'react';
+import React from 'react';
 import { useConfirmStore } from '../../stores/useConfirmStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTranslation } from '../../i18n/useTranslation';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from './Dialog';
 
 import { Icon } from './AppIcons';
 import { Button } from './Button';
@@ -22,49 +21,17 @@ export function ConfirmDialog() {
     handleCancel,
   } = useConfirmStore();
 
-  const dialogRef = useRef(null);
-  useFocusTrap(dialogRef, isOpen);
-  useBodyScrollLock(isOpen);
-
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        e.preventDefault();
-        if (!isConfirming) handleCancel();
-      }
-    },
-    [isOpen, isConfirming, handleCancel]
-  );
-
-  useEffect(() => {
-    if (!isOpen) return undefined;
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, handleKeyDown]);
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="confirm-dialog-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isConfirming) {
-          handleCancel();
-        }
-      }}
+    <Dialog
+      isOpen={isOpen}
+      onClose={handleCancel}
+      busy={isConfirming}
+      portal={false}
+      overlayClassName="confirm-dialog-backdrop"
+      className="confirm-dialog-card"
+      labelledBy="confirm-dialog-title"
+      describedBy={message ? 'confirm-dialog-desc' : undefined}
     >
-      <div
-        ref={dialogRef}
-        className="confirm-dialog-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-desc"
-      >
         <div className="confirm-dialog-header">
           <div
             className={`confirm-dialog-icon confirm-dialog-icon--${confirmVariant || 'danger'}`}
@@ -102,7 +69,6 @@ export function ConfirmDialog() {
             {isConfirming ? t('common.processing') : (confirmText || t('common.confirm'))}
           </Button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

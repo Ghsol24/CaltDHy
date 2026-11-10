@@ -1280,6 +1280,7 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .txn-modal-card.is-dragging {
   animation: none;
   transition: none;
+  transform: translateY(var(--sheet-drag-offset, 0px));
 }
 
 .txn-modal-handle-zone {

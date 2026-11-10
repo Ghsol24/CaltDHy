@@ -1,12 +1,10 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from '../../components/ui/Dialog';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { detectBrandInfo } from '../../utils/brandDetection';
@@ -93,15 +91,12 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [newCatInputName, setNewCatInputName] = useState('');
 
-  const modalRef = useRef(null);
   const nameInputRef = useRef(null);
   const catRef = useRef(null);
   const walRef = useRef(null);
   const cycRef = useRef(null);
   const newCatInputRef = useRef(null);
 
-  useFocusTrap(modalRef, isOpen);
-  useBodyScrollLock(isOpen);
 
   // Close custom dropdowns on click outside
   useEffect(() => {
@@ -326,20 +321,15 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const selectedCycleLabel = CYCLE_OPTIONS.find((c) => c.value === cycle)?.label || 'Hàng tháng';
   const categoryDisplayName = category ? label(category) : translateLegacyText(lang, 'Chọn danh mục');
 
-  return createPortal(
-    <div
-      className="txn-modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) onClose();
-      }}
+  return (
+    <Dialog
+      isOpen
+      onClose={onClose}
+      busy={isSubmitting}
+      overlayClassName="txn-modal-backdrop"
+      className="txn-modal-card recurring-modal-dialog"
+      labelledBy="recurring-modal-title"
     >
-      <div
-        ref={modalRef}
-        className="txn-modal-card recurring-modal-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="recurring-modal-title"
-      >
         {/* Header (Pure Outline SVG, No Emojis) */}
         <div className="txn-modal-header">
           <div className="recurring-modal-header-lead">
@@ -782,8 +772,6 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             </button>
           </div>
         </form>
-      </div>
-    </div>,
-    document.body
+    </Dialog>
   );
 }

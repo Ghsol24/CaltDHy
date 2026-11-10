@@ -10,12 +10,15 @@ import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
  * own classes, so moving a dialog onto this keeps its look.
  *
  * While `busy` (e.g. saving), Escape and backdrop clicks are ignored.
+ * `onEscape` lets Escape peel back an inner layer (a picker, an inline form)
+ * before closing; without it Escape calls `onClose`.
  * `autoFocus="container"` focuses the panel itself so a screen reader reads
  * the title first; the default focuses the first control.
  */
 export function Dialog({
   isOpen,
   onClose,
+  onEscape,
   busy = false,
   labelledBy,
   describedBy,
@@ -40,8 +43,14 @@ export function Dialog({
     if (!busy) onClose?.();
   };
 
+  const escape = () => {
+    if (busy) return;
+    if (onEscape) onEscape();
+    else onClose?.();
+  };
+
   useFocusTrap(ref, isOpen, {
-    onEscape: closeOnEscape ? close : undefined,
+    onEscape: closeOnEscape ? escape : undefined,
     initialFocusRef: initialFocusRef || (autoFocus === 'container' ? ref : undefined),
     returnFocusRef,
   });

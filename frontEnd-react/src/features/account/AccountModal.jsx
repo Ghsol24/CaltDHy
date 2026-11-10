@@ -16,7 +16,7 @@ import { evaluatePasswordStrength, MIN_PASSWORD_LENGTH } from '../../utils/passw
 import { useTranslation } from '../../i18n/useTranslation';
 import { LOCALE_META, SUPPORTED_LOCALES } from '../../i18n/translations';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { Dialog } from '../../components/ui/Dialog';
 import { Icon, CloseOutlineIcon, CheckOutlineIcon, AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
 
 // Bộ sưu tập avatar preset (biểu tượng tài chính & phong cách cao cấp, tuyệt đối không có khỉ)
@@ -166,12 +166,9 @@ export function AccountModal() {
   const usdAvailable = useCurrencyStore((state) => state.usdAvailable);
   const exchangeRate = useCurrencyStore((state) => state.exchangeRate);
   const confirm = useConfirmStore((state) => state.confirm);
-  const isConfirmOpen = useConfirmStore((state) => state.isOpen);
   const { transactions, budgets, resetAllFinancialData } = useTransactionStore();
   const isMobile = useIsMobile(720);
   const navigate = useNavigate();
-  const dialogRef = useRef(null);
-  const resetDialogRef = useRef(null);
   const headingRef = useRef(null);
   const contentRef = useRef(null);
   const lastSectionTriggerRef = useRef(null);
@@ -209,8 +206,6 @@ export function AccountModal() {
   const [resetConfirmInput, setResetConfirmInput] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState('');
-  useFocusTrap(dialogRef, !isConfirmOpen && !isResetDialogOpen);
-  useFocusTrap(resetDialogRef, isResetDialogOpen);
 
   // Each mobile screen change keeps focus on a visible control or its heading.
   useEffect(() => {
@@ -329,32 +324,8 @@ export function AccountModal() {
     navigate('/login');
   };
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
-
-  // The Effect Event sees current draft/reset state without rebinding the listener.
-  const handleEscape = useEffectEvent(() => {
-    if (useConfirmStore.getState().isOpen) return;
-    if (isResetDialogOpen) setIsResetDialogOpen(false);
-    else void requestCloseSettings();
-  });
-
-  // Escape closes the nested reset dialog first, then the unified Settings Center.
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key !== 'Escape') return;
-      if (useConfirmStore.getState().isOpen) return;
-      event.preventDefault();
-      handleEscape();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Escape closes the nested reset dialog first (its own Dialog sits on top of
+  // the focus-trap stack), then the Settings Center.
 
   // Password strength
   const pwdStrength = useMemo(() => evaluatePasswordStrength(newPassword), [newPassword]);
@@ -526,22 +497,14 @@ export function AccountModal() {
 
   return (
     <>
-      <div
-        className="account-modal-overlay settings-center-overlay"
-        onClick={(e) => {
-          if (e.target === e.currentTarget && !isResetDialogOpen) {
-            void requestCloseSettings();
-          }
-        }}
-        role="presentation"
+      <Dialog
+        isOpen
+        onClose={() => { void requestCloseSettings(); }}
+        portal={false}
+        overlayClassName="account-modal-overlay settings-center-overlay"
+        className="account-modal-card settings-center-dialog"
+        labelledBy="settings-center-title"
       >
-        <div
-          ref={dialogRef}
-          className="account-modal-card settings-center-dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="settings-center-title"
-        >
           <header className="account-modal-header settings-center-header">
             <div className="account-header-lead">
               {isMobile && !showMobileMenu && (
@@ -1113,19 +1076,20 @@ export function AccountModal() {
             )}
             </div>
           </div>
-        </div>
-      </div>
+      </Dialog>
 
       {/* ── Secondary Dialog: Confirmation Reset Financial Data ── */}
-      {isResetDialogOpen && (
-        <div className="account-reset-dialog-overlay" role="presentation">
-          <div
-            ref={resetDialogRef}
-            className="account-reset-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-label="Xác nhận đặt lại dữ liệu"
-          >
+      <Dialog
+        isOpen={isResetDialogOpen}
+        onClose={() => setIsResetDialogOpen(false)}
+        busy={isResetting}
+        closeOnBackdrop={false}
+        portal={false}
+        overlayClassName="account-reset-dialog-overlay"
+        className="account-reset-dialog"
+        label="Xác nhận đặt lại dữ liệu"
+        panelProps={{ role: 'alertdialog' }}
+      >
             <h3 className="account-reset-title">
               <AlertTriangleOutlineIcon size={18} style={{ marginRight: 6, verticalAlign: '-2px' }} />
               Xác nhận đặt lại dữ liệu chi tiêu
@@ -1183,9 +1147,7 @@ export function AccountModal() {
                 {isResetting ? 'Đang xóa...' : 'Xóa sạch dữ liệu'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Dialog>
     </>
   );
 }

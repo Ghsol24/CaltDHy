@@ -1297,6 +1297,7 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 .blimit-dialog.is-dragging {
   animation: none;
   transition: none;
+  transform: translateY(var(--sheet-drag-offset, 0px));
 }
 
 .blimit-grabber {

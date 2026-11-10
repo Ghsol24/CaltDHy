@@ -10,8 +10,7 @@ import { isLockedTransaction, useDeleteTransaction } from './useDeleteTransactio
 import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMonth } from '../../utils/transactionEditing';
 import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { Dialog } from '../../components/ui/Dialog';
 import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
 import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
@@ -102,8 +101,6 @@ export function TransactionModal() {
   const prevOpenRef = useRef(false);
   const prevEditIdRef = useRef(null);
 
-  useFocusTrap(modalRef, isOpen && !confirmationOpen);
-  useBodyScrollLock(isOpen);
 
   // Fetch wallets if list is empty
   useEffect(() => {
@@ -298,19 +295,11 @@ export function TransactionModal() {
   }, [close, isSubmitting, confirmationOpen]);
   const sheetDrag = useSheetDrag(requestDismiss, { enabled: isPhone && !activePicker });
 
-  // Keyboard shortcut: Escape closes an open phone sheet first, then the modal
-  useEffect(() => {
-    if (!isOpen || confirmationOpen || isSubmitting) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        if (activePicker) setPicker(null);
-        else close();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, close, confirmationOpen, isSubmitting, activePicker]);
+  // Escape closes an open phone sheet first, then the modal.
+  const handleEscape = () => {
+    if (activePicker) setPicker(null);
+    else close();
+  };
 
   // Switch type (expense <-> income) & preserve or reset category
   const handleTypeChange = (newType) => {
@@ -442,22 +431,18 @@ export function TransactionModal() {
   if (!isOpen) return null;
 
   return (
-    <div
-      className="txn-modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting && !confirmationOpen) {
-          close();
-        }
-      }}
+    <Dialog
+      isOpen
+      onClose={requestDismiss}
+      onEscape={handleEscape}
+      busy={isSubmitting}
+      portal={false}
+      panelRef={modalRef}
+      overlayClassName="txn-modal-backdrop"
+      className={`txn-modal-card${sheetDrag.offset ? ' is-dragging' : ''}`}
+      labelledBy="txn-modal-title"
+      panelProps={sheetDrag.offset ? { style: { '--sheet-drag-offset': `${sheetDrag.offset}px` } } : undefined}
     >
-      <div
-        ref={modalRef}
-        className={`txn-modal-card${sheetDrag.offset ? ' is-dragging' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="txn-modal-title"
-        style={sheetDrag.offset ? { transform: `translateY(${sheetDrag.offset}px)` } : undefined}
-      >
         {/* Header (phones: grabber + drag down to dismiss) */}
         <div className="txn-modal-handle-zone" inert={activePicker ? true : undefined} {...(isPhone ? sheetDrag.handlers : {})}>
           <span className="txn-modal-grabber" aria-hidden="true" />
@@ -783,7 +768,6 @@ export function TransactionModal() {
             />
           </TransactionSheet>
         )}
-      </div>
-    </div>
+    </Dialog>
   );
 }
