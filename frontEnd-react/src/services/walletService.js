@@ -2,9 +2,8 @@ import { api } from './api';
 
 export const walletService = {
   getWallets: async (includeArchived = false) => {
-    return await api.get('/api/wallets', {
-      params: includeArchived ? { includeArchived: 'true' } : {}
-    });
+    // api.get takes the query in the URL; it has no `params` option.
+    return await api.get(includeArchived ? '/api/wallets?includeArchived=true' : '/api/wallets');
   },
 
   getPreArchiveInfo: async (id) => {

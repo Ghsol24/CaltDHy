@@ -53,10 +53,9 @@ test('loading wallets fills in defaults and separates open wallets from archived
 });
 
 // The server only returns archived wallets when the request carries
-// includeArchived=true (backEnd/server/routes/wallets.js). The store asks for
-// them, but services/api.js drops the `params` option, so the query string is
-// never sent and the archived list in the app stays empty.
-test('loading wallets asks the server to include archived wallets', { todo: 'api.get ignores options.params' }, async (t) => {
+// includeArchived=true (backEnd/server/routes/wallets.js); without it the
+// archived list in the app stays empty.
+test('loading wallets asks the server to include archived wallets', async (t) => {
   const api = setup(t, { 'GET /api/wallets': () => ok([cash]) });
 
   await store().fetchWallets();
