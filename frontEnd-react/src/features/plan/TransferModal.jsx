@@ -159,12 +159,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
         <div className="txn-modal-header modal-pro-header">
           <div className="modal-pro-header-left">
             <div className="modal-header-icon-badge transfer" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 4l4 4-4 4" />
-                <path d="M3 8h18" />
-                <path d="M7 20l-4-4 4-4" />
-                <path d="M21 16H3" />
-              </svg>
+              <Icon name="swapHorizontal" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <div className="modal-pro-header-titles">
               <h2 id="transfer-modal-title" className="txn-modal-title modal-pro-title">
@@ -198,10 +193,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
               </div>
 
               <div className="transfer-route-divider-pro" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
+                <Icon name="arrowRightLine" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               </div>
 
               <div className="transfer-route-col">
@@ -259,11 +251,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 </label>
                 <div className="modal-pro-amount-box input-shell">
                   <div className="amount-prefix-badge banknote" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="6" width="20" height="12" rx="2" />
-                      <circle cx="12" cy="12" r="2.5" />
-                      <path d="M6 12h.01M18 12h.01" />
-                    </svg>
+                    <Icon name="banknote" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </div>
                   <input
                     id="transfer-amount"
@@ -335,9 +323,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
               </div>
               <div className="modal-input-icon-wrap">
                 <span className="modal-input-prefix-icon note" aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                  </svg>
+                  <Icon name="pencilAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </span>
                 <input
                   id="transfer-desc"
@@ -380,7 +366,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
             >
               {isSubmitting ? (
                 <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
+                  <span className="spinner spinner--box" aria-hidden="true" />
                   <span>Đang xử lý...</span>
                 </>
               ) : (

@@ -185,10 +185,7 @@ export function TransactionHistoryView() {
       <label className="transaction-history-search">
         <span className="transaction-filter-sr-only">{t('common.search')}</span>
         <span className="transaction-history-search-control">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8"
-            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
-          </svg>
+          <Icon name="searchSmall" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
           <input ref={searchRef} type="search" value={query} onChange={(event) => setQuery(event.target.value)}
             placeholder={t('history.searchPlaceholder')} />
         </span>
@@ -196,8 +193,7 @@ export function TransactionHistoryView() {
       {isCompact && <button type="button" className={`transaction-filter-toggle${filterCount ? ' has-filters' : ''}`}
         aria-haspopup="dialog" aria-expanded={filtersOpen} aria-label={filterCount ? `${chipCopy.filters} (${filterCount})` : chipCopy.filters}
         onClick={() => setFiltersOpen(true)}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"
-          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+        <Icon name="filterLines" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
         {filterCount > 0 && <span className="transaction-filter-count" aria-hidden="true">{filterCount}</span>}
       </button>}
       <div ref={controlsRef} className="transaction-filter-controls" role="group" aria-label={chipCopy.activeFilters}>

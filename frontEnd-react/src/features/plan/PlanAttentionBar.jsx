@@ -81,10 +81,7 @@ export function PlanAttentionBar({ alerts, hasPlanData, copy, label, onOpen }) {
     <section className={`plan-attention is-${topTier}`} aria-label={copy.alertsRegion} data-testid="plan-attention">
       <div className="plan-attention-head">
         <span className="plan-attention-bell" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
+          <Icon name="bell" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </span>
         <div className="plan-attention-heading">
           <h3>
@@ -125,9 +122,7 @@ export function PlanAttentionBar({ alerts, hasPlanData, copy, label, onOpen }) {
         <button type="button" className="plan-attention-more" aria-expanded={expanded} aria-controls="plan-alert-list"
           onClick={() => setExpanded((value) => !value)}>
           {expanded ? copy.collapse : copy.moreAlerts(hiddenCount)}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d={expanded ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'} />
-          </svg>
+          <Icon name={expanded ? 'chevronUpAlt' : 'chevronDownAlt'} width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" />
         </button>
       ))}
 

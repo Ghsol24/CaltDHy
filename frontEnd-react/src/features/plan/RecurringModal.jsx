@@ -8,20 +8,15 @@ import { Dialog } from '../../components/ui/Dialog';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { detectBrandInfo } from '../../utils/brandDetection';
-import { CategoryOutlineIcon } from '../../utils/categoryIcons';
-import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { isInstallmentEnded, isValidInstallmentEndDate } from '../../utils/installmentTerm';
 
 import { Icon } from '../../components/ui/AppIcons';
-const CYCLE_OPTIONS = [
-  { value: 'monthly', label: 'Hàng tháng' },
-  { value: 'quarterly', label: 'Hàng quý (3 tháng)' },
-  { value: 'yearly', label: 'Hàng năm' }
-];
-
+import { CYCLE_OPTIONS } from './recurring/cycleOptions';
+import { RecurringNotesSection } from './recurring/RecurringNotesSection';
+import { RecurringScheduleSection } from './recurring/RecurringScheduleSection';
+import { RecurringIdentitySection } from './recurring/RecurringIdentitySection';
 export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const { label, lang } = useTranslation();
   const { createInstallment, updateInstallment } = useJarStore();
@@ -334,19 +329,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
         <div className="txn-modal-header">
           <div className="recurring-modal-header-lead">
             <div className="modal-header-icon-box" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {installmentToEdit ? (
-                  <>
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                    <path d="m15 5 4 4" />
-                  </>
-                ) : (
-                  <>
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </>
-                )}
-              </svg>
+              <Icon name={installmentToEdit ? 'pencil' : 'plus'} width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <h2 id="recurring-modal-title" className="txn-modal-title">
               {installmentToEdit ? 'Chỉnh sửa khoản định kỳ' : 'Thêm khoản định kỳ'}
@@ -367,373 +350,13 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
         <form onSubmit={handleSubmit} noValidate>
           <div className="txn-modal-body recurring-modal-body-grouped">
             {/* ── Section 1: Định danh & Phân loại ── */}
-            <div className="recurring-form-section">
-              <div className="recurring-section-header">
-                <Icon name="tag" className="section-header-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <span className="section-header-title">Định danh & Phân loại</span>
-              </div>
-
-              <div className="recurring-section-content">
-                {/* 1. Tên khoản chi / dịch vụ */}
-                <div className="txn-field-group">
-                  <label htmlFor="rec-name" className="txn-label">
-                    <span>Tên khoản chi / dịch vụ</span>
-                  </label>
-                  <input
-                    id="rec-name"
-                    ref={nameInputRef}
-                    type="text"
-                    className="txn-input modal-themed-input"
-                    placeholder="VD: Youtube Premium, Netflix, Tiền nhà, Internet FPT..."
-                    value={name}
-                    onChange={handleNameChange}
-                    maxLength={60}
-                    required
-                  />
-                </div>
-
-                {/* 2. Danh mục chi tiêu */}
-                <div className="txn-field-group" ref={catRef}>
-                  <label className="txn-label">
-                    <span>Danh mục chi tiêu</span>
-                  </label>
-                  <div className="modal-custom-dropdown-wrap">
-                    <button
-                      type="button"
-                      className={`modal-custom-dropdown-btn ${isCategoryDropdownOpen ? 'is-open' : ''}`}
-                      onClick={() => {
-                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-                        setIsWalletDropdownOpen(false);
-                        setIsCycleDropdownOpen(false);
-                        setIsAddingNewCategory(false);
-                      }}
-                      aria-expanded={isCategoryDropdownOpen}
-                    >
-                      <div className="dropdown-btn-content">
-                        <CategoryOutlineIcon name={category} size={16} className="dropdown-outline-icon text-brand" />
-                        <span className="dropdown-btn-text">{categoryDisplayName}</span>
-                      </div>
-                      <Icon name="chevronDown" className="dropdown-chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </button>
-
-                    {isCategoryDropdownOpen && (
-                      <div className="modal-custom-dropdown-menu" role="listbox">
-                        <div className="modal-dropdown-scroll-list">
-                          {syncedExpenseCategories.map((c) => {
-                            const isSelected = c.name.toLowerCase() === category.toLowerCase();
-                            const labelDisplay = label(c.name);
-                            return (
-                              <button
-                                key={c.name}
-                                type="button"
-                                className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
-                                onClick={() => {
-                                  setCategory(c.name);
-                                  setIsCategoryDropdownOpen(false);
-                                }}
-                                role="option"
-                                aria-selected={isSelected}
-                              >
-                                <div className="dropdown-item-left">
-                                  <CategoryOutlineIcon name={c.name} size={16} className="dropdown-outline-icon" />
-                                  <span className="dropdown-item-label">{labelDisplay}</span>
-                                </div>
-                                {isSelected && (
-                                  <Icon name="check" className="dropdown-item-check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Nút hoặc Form tạo nhanh danh mục mới */}
-                        <div className="modal-dropdown-footer-action">
-                          {!isAddingNewCategory ? (
-                            <button
-                              type="button"
-                              className="dropdown-add-cat-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsAddingNewCategory(true);
-                                setTimeout(() => newCatInputRef.current?.focus(), 50);
-                              }}
-                            >
-                              <Icon name="plus" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                              <span>Thêm danh mục mới</span>
-                            </button>
-                          ) : (
-                            <div className="dropdown-add-cat-form" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                ref={newCatInputRef}
-                                type="text"
-                                className="dropdown-add-cat-input"
-                                placeholder="Tên danh mục mới..."
-                                value={newCatInputName}
-                                onChange={(e) => setNewCatInputName(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleCreateNewCategory();
-                                  } else if (e.key === 'Escape') {
-                                    setIsAddingNewCategory(false);
-                                  }
-                                }}
-                                maxLength={40}
-                              />
-                              <div className="dropdown-add-cat-btns">
-                                <button
-                                  type="button"
-                                  className="dropdown-cat-confirm-btn"
-                                  onClick={handleCreateNewCategory}
-                                >
-                                  Lưu
-                                </button>
-                                <button
-                                  type="button"
-                                  className="dropdown-cat-cancel-btn"
-                                  onClick={() => setIsAddingNewCategory(false)}
-                                >
-                                  Hủy
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            </div>
+            <RecurringIdentitySection catRef={catRef} category={category} categoryDisplayName={categoryDisplayName} handleCreateNewCategory={handleCreateNewCategory} handleNameChange={handleNameChange} isAddingNewCategory={isAddingNewCategory} isCategoryDropdownOpen={isCategoryDropdownOpen} name={name} nameInputRef={nameInputRef} newCatInputName={newCatInputName} newCatInputRef={newCatInputRef} setCategory={setCategory} setIsAddingNewCategory={setIsAddingNewCategory} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNewCatInputName={setNewCatInputName} syncedExpenseCategories={syncedExpenseCategories} />
 
             {/* ── Section 2: Thiết lập dòng tiền & Chu kỳ ── */}
-            <div className="recurring-form-section">
-              <div className="recurring-section-header">
-                <Icon name="creditCard" className="section-header-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <span className="section-header-title">Thiết lập dòng tiền & Chu kỳ</span>
-              </div>
-
-              <div className="recurring-section-content">
-                <div className="recurring-form-grid-2col">
-                  {/* Số tiền mỗi kỳ */}
-                  <div className="txn-field-group">
-                    <label htmlFor="rec-amount" className="txn-label">
-                      <span>Số tiền mỗi kỳ</span>
-                    </label>
-                    <div className="txn-amount-box">
-                      <input
-                        id="rec-amount"
-                        type="text"
-                        inputMode="numeric"
-                        className="txn-amount-input"
-                        placeholder="0"
-                        value={amount}
-                        onChange={handleAmountChange}
-                        required
-                      />
-                      <span className="txn-amount-suffix">VNĐ</span>
-                    </div>
-                  </div>
-
-                  {/* Ví trừ tiền mặc định */}
-                  <div className="txn-field-group" ref={walRef}>
-                    <label className="txn-label">
-                      <span>Ví trừ tiền</span>
-                    </label>
-                    <div className="modal-custom-dropdown-wrap">
-                      <button
-                        type="button"
-                        className={`modal-custom-dropdown-btn ${isWalletDropdownOpen ? 'is-open' : ''}`}
-                        onClick={() => {
-                          setIsWalletDropdownOpen(!isWalletDropdownOpen);
-                          setIsCategoryDropdownOpen(false);
-                          setIsCycleDropdownOpen(false);
-                        }}
-                        aria-expanded={isWalletDropdownOpen}
-                      >
-                        <div className="dropdown-btn-content">
-                          <WalletOutlineIcon type={selectedWallet?.type} size={16} color="currentColor" className="dropdown-outline-icon text-brand" />
-                          <span className="dropdown-btn-text">{selectedWallet?.name || 'Chọn ví'}</span>
-                        </div>
-                        <Icon name="chevronDown" className="dropdown-chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </button>
-
-                      {isWalletDropdownOpen && (
-                        <div className="modal-custom-dropdown-menu" role="listbox">
-                          {wallets.map((w) => {
-                            const isSelected = String(w.id) === String(selectedWallet?.id || '');
-                            return (
-                              <button
-                                key={w.id}
-                                type="button"
-                                className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
-                                onClick={() => {
-                                  setWalletId(w.id);
-                                  setIsWalletDropdownOpen(false);
-                                }}
-                                role="option"
-                                aria-selected={isSelected}
-                              >
-                                <div className="dropdown-item-left">
-                                  <WalletOutlineIcon type={w.type} size={16} color="currentColor" className="dropdown-outline-icon" />
-                                  <div className="wallet-dropdown-text-group">
-                                    <span className="dropdown-item-label">{w.name}</span>
-                                    <span className="dropdown-item-sub">{formatCurrency(w.currentBalance ?? 0)}</span>
-                                  </div>
-                                </div>
-                                {isSelected && (
-                                  <Icon name="check" className="dropdown-item-check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                    {hasArchivedWallet && (
-                      <span className="recurring-term-hint" role="note">
-                        Ví trước đây đã lưu trữ. Hãy chọn ví mới trước khi gia hạn khoản này.
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Chu kỳ thanh toán */}
-                  <div className="txn-field-group" ref={cycRef}>
-                    <label className="txn-label">
-                      <span>Chu kỳ lặp</span>
-                    </label>
-                    <div className="modal-custom-dropdown-wrap">
-                      <button
-                        type="button"
-                        className={`modal-custom-dropdown-btn ${isCycleDropdownOpen ? 'is-open' : ''}`}
-                        onClick={() => {
-                          setIsCycleDropdownOpen(!isCycleDropdownOpen);
-                          setIsCategoryDropdownOpen(false);
-                          setIsWalletDropdownOpen(false);
-                        }}
-                        aria-expanded={isCycleDropdownOpen}
-                      >
-                        <div className="dropdown-btn-content">
-                          <svg className="dropdown-outline-icon text-brand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="23 4 23 10 17 10" />
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                          </svg>
-                          <span className="dropdown-btn-text">{selectedCycleLabel}</span>
-                        </div>
-                        <Icon name="chevronDown" className="dropdown-chevron-icon" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </button>
-
-                      {isCycleDropdownOpen && (
-                        <div className="modal-custom-dropdown-menu" role="listbox">
-                          {CYCLE_OPTIONS.map((opt) => {
-                            const isSelected = opt.value === cycle;
-                            return (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                className={`modal-dropdown-item ${isSelected ? 'is-selected' : ''}`}
-                                onClick={() => {
-                                  setCycle(opt.value);
-                                  setIsCycleDropdownOpen(false);
-                                }}
-                                role="option"
-                                aria-selected={isSelected}
-                              >
-                                <div className="dropdown-item-left">
-                                  <span className="dropdown-item-label">{opt.label}</span>
-                                </div>
-                                {isSelected && (
-                                  <Icon name="check" className="dropdown-item-check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Ngày đến hạn tiếp theo */}
-                  <div className="txn-field-group">
-                    <label htmlFor="rec-date" className="txn-label">
-                      <span>Ngày đến hạn tiếp theo</span>
-                    </label>
-                    <CustomDatePicker
-                      id="rec-date"
-                      inputClassName="txn-input"
-                      value={nextDueDate}
-                      onChange={setNextDueDate}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="recurring-term-control">
-                  <label className="recurring-term-toggle" htmlFor="rec-has-end-date">
-                    <span className="recurring-term-copy">
-                      <strong>Có kỳ hạn</strong>
-                      <span>Đặt ngày kết thúc cho khoản định kỳ này</span>
-                    </span>
-                    <input
-                      id="rec-has-end-date"
-                      type="checkbox"
-                      role="switch"
-                      checked={hasEndDate}
-                      onChange={(e) => setHasEndDate(e.target.checked)}
-                      aria-controls="rec-term-date"
-                    />
-                    <span className="recurring-term-switch" aria-hidden="true" />
-                  </label>
-                  {hasEndDate && (
-                    <div className="txn-field-group recurring-term-date-field" id="rec-term-date">
-                      <label htmlFor="rec-end-date" className="txn-label">
-                        <span>Ngày kết thúc</span>
-                      </label>
-                      <CustomDatePicker
-                        id="rec-end-date"
-                        inputClassName="txn-input"
-                        value={endDate}
-                        min={installmentToEdit ? undefined : nextDueDate}
-                        onChange={setEndDate}
-                        required
-                      />
-                      <span className="recurring-term-hint">Kỳ đến hạn đúng ngày này vẫn được tính.</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <RecurringScheduleSection amount={amount} cycRef={cycRef} cycle={cycle} endDate={endDate} handleAmountChange={handleAmountChange} hasArchivedWallet={hasArchivedWallet} hasEndDate={hasEndDate} installmentToEdit={installmentToEdit} isCycleDropdownOpen={isCycleDropdownOpen} isWalletDropdownOpen={isWalletDropdownOpen} nextDueDate={nextDueDate} selectedCycleLabel={selectedCycleLabel} selectedWallet={selectedWallet} setCycle={setCycle} setEndDate={setEndDate} setHasEndDate={setHasEndDate} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNextDueDate={setNextDueDate} setWalletId={setWalletId} walRef={walRef} wallets={wallets} />
 
             {/* ── Section 3: Ghi chú & Thông tin bổ sung ── */}
-            <div className="recurring-form-section">
-              <div className="recurring-section-header">
-                <svg className="section-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
-                </svg>
-                <span className="section-header-title">Thông tin bổ sung</span>
-              </div>
-
-              <div className="recurring-section-content">
-                <div className="txn-field-group">
-                  <label htmlFor="rec-note" className="txn-label">
-                    <span>Ghi chú gói cước / Hợp đồng (Tùy chọn)</span>
-                  </label>
-                  <input
-                    id="rec-note"
-                    type="text"
-                    className="txn-input modal-themed-input"
-                    placeholder="VD: Gói Family 6 người, Trả góp kỳ 3/12, HĐ 24 tháng..."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    maxLength={100}
-                  />
-                </div>
-              </div>
-            </div>
+            <RecurringNotesSection note={note} setNote={setNote} />
 
             {/* Error Message */}
             {errorMsg && (
@@ -761,7 +384,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
             >
               {isSubmitting ? (
                 <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
+                  <span className="spinner spinner--box" aria-hidden="true" />
                   <span>Đang lưu...</span>
                 </>
               ) : installmentToEdit ? (

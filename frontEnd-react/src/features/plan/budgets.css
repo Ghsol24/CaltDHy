@@ -1121,3 +1121,20 @@ button.bdash-row:focus-visible .bdash-row__chevron {
     animation: bdashFadeIn 0s linear 150ms forwards;
   }
 }
+
+/* ── Chuyển từ inline style của BudgetsTab.jsx (đợt 4) ── */
+.bdash-bar__fill.bdash-bar__fill--box {
+  width: var(--bdash-bar__fill-width);
+}
+
+.bdash-meter__fill.bdash-meter__fill--box {
+  width: var(--bdash-meter__fill-width);
+}
+
+.bdash-meter__today.bdash-meter__today--pos {
+  left: var(--bdash-meter__today-left);
+}
+
+.bdash-meter__today-label.bdash-meter__today-label--pos {
+  left: var(--bdash-meter__today-label-left);
+}

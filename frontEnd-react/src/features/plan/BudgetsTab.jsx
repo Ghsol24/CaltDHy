@@ -88,7 +88,7 @@ function LimitedRow({ item, editable, period, onEdit, t }) {
       </span>
       <span className="bdash-row__track">
         <span className="bdash-bar">
-          <span className={`bdash-bar__fill tone-${tone}`} style={{ width: `${Math.min(100, item.percent)}%` }} />
+          <span className={`bdash-bar__fill tone-${tone} bdash-bar__fill--box`} style={{ '--bdash-bar__fill-width': `${Math.min(100, item.percent)}%` }} />
         </span>
       </span>
       <span className={`bdash-row__pct tone-${tone}`}>{formatPercent(item.percent)}</span>
@@ -439,11 +439,11 @@ export function BudgetsTab() {
                   aria-valuenow={Math.min(100, hero.usedPercent)}
                   aria-label={t('budgets.progressLabel', { percent: formatPercent(hero.usedPercent) })}
                 >
-                  <span className={`bdash-meter__fill tone-${hero.heroTone}`} style={{ width: `${Math.min(100, hero.usedRaw)}%` }} />
-                  {showToday && <span className="bdash-meter__today" style={{ left: `${timeline.elapsedPercent}%` }} />}
+                  <span className={`bdash-meter__fill tone-${hero.heroTone} bdash-meter__fill--box`} style={{ '--bdash-meter__fill-width': `${Math.min(100, hero.usedRaw)}%` }} />
+                  {showToday && <span className="bdash-meter__today bdash-meter__today--pos" style={{ '--bdash-meter__today-left': `${timeline.elapsedPercent}%` }} />}
                 </div>
                 <div className="bdash-meter__today-row">
-                  <span className={`bdash-meter__today-label align-${hero.marker.align}`} style={{ left: `${hero.marker.left}%` }}>
+                  <span className={`bdash-meter__today-label align-${hero.marker.align} bdash-meter__today-label--pos`} style={{ '--bdash-meter__today-label-left': `${hero.marker.left}%` }}>
                     {hero.marker.text}
                   </span>
                 </div>

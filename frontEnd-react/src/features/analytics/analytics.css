@@ -917,3 +917,103 @@
 .table-advice-text--neutral {
   color: var(--color-text-secondary, #607086);
 }
+
+/* ── Ô biểu tượng hạng mục: màu theo hạng mục, nền pha 8.63% (≈ alpha 0x16) — đợt 4: thay cho nối chuỗi hex ── */
+.cat-avatar-tile.cat-avatar-tile--tinted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cat-color);
+  background-color: color-mix(in srgb, var(--cat-color) 8.63%, transparent);
+}
+
+/* ── Chuyển từ inline style của AnalyticsView.jsx (đợt 4) ── */
+.month-current-display.month-current-display--layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-main-title.panel-main-title--layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.cat-progress-fill.cat-progress-fill--box {
+  width: var(--cat-progress-fill-width);
+  background-color: var(--cat-progress-fill-background-color);
+}
+
+.analytics-section-panel__div--layout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-period-tag.report-period-tag--layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.analytics-section-panel__span--text {
+  font-size: 12px;
+  color: var(--color-text-secondary, #607086);
+}
+
+.report-insights-banner__head__span--layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-table__th--box {
+  width: 22%;
+}
+
+.report-table__th--box2 {
+  width: 13%;
+}
+
+.report-table__th--box3 {
+  width: 12%;
+}
+
+.report-table__th--box4 {
+  width: 8%;
+  text-align: center;
+}
+
+.report-table__th--box5 {
+  width: 10%;
+}
+
+.report-table__th--box6 {
+  width: 20%;
+}
+
+.report-table__td--text {
+  text-align: center;
+  padding: 32px;
+  color: var(--color-text-secondary);
+}
+
+.table-cat-icon.table-cat-icon--layout {
+  background-color: var(--color-success-bg, rgba(0, 139, 87, 0.08));
+  color: var(--color-brand, #008B57);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-pct-fill.table-pct-fill--box {
+  width: var(--table-pct-fill-width);
+  background-color: var(--table-pct-fill-background-color);
+}
+
+.report-table__td--text2 {
+  text-align: center;
+}

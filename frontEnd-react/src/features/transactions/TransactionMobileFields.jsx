@@ -31,17 +31,12 @@ const foldText = (text) => String(text || '').normalize('NFD').replace(/[̀-ͯ]/
   .replace(/đ/gi, 'd').toLowerCase().trim();
 
 const ChevronIcon = ({ down = false }) => (
-  <svg className="txn-field-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d={down ? 'm6 9 6 6 6-6' : 'm9 18 6-6-6-6'} />
-  </svg>
+  <Icon name={down ? 'chevronDownAlt' : 'chevronRightAlt'} className="txn-field-chevron" width="18" height="18" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 );
 
 const CalendarIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
-  </svg>
+  <Icon name="calendarSquare" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
 );
 
 /** A bottom sheet layered inside the transaction dialog. Drag the header down, tap the dim, or press Esc to close. */
@@ -60,7 +55,7 @@ export function TransactionSheet({ title, onClose, children }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        style={offset ? { transform: `translateY(${offset}px)` } : undefined}
+        style={offset ? { '--sheet-drag-offset': `${offset}px` } : undefined}
       >
         <div className="txn-sheet__handle-zone" {...handlers}>
           <span className="txn-sheet-grabber" aria-hidden="true" />
@@ -123,8 +118,8 @@ export function CategorySummaryButton({ labelId, type, category, metric, baselin
       </span>
       {bar && (
         <span className="txn-budget-track" aria-hidden="true">
-          <span className="txn-budget-track__fill" style={{ width: `${bar.filled}%`, background: bar.color }} />
-          <span className="txn-budget-track__pending" style={{ width: `${bar.pending}%`, background: bar.color }} />
+          <span className="txn-budget-track__fill txn-budget-track__fill--box" style={{ '--txn-budget-track__fill-width': `${bar.filled}%`, '--txn-budget-track__fill-background': bar.color }} />
+          <span className="txn-budget-track__pending txn-budget-track__pending--box" style={{ '--txn-budget-track__pending-width': `${bar.pending}%`, '--txn-budget-track__pending-background': bar.color }} />
         </span>
       )}
     </button>
@@ -178,7 +173,7 @@ export function CategoryPickerList({ type, categories, selected, metrics, onPick
                 )}
                 {metric?.hasLimit && (
                   <span className="txn-budget-track" aria-hidden="true">
-                    <span className="txn-budget-track__fill" style={{ width: `${metric.percent}%`, background: metric.color }} />
+                    <span className="txn-budget-track__fill txn-budget-track__fill--box" style={{ '--txn-budget-track__fill-width': `${metric.percent}%`, '--txn-budget-track__fill-background': metric.color }} />
                   </span>
                 )}
               </span>

@@ -558,3 +558,16 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
 @media (prefers-reduced-motion: reduce) {
   .jar-cal-cell { transition: none; }
 }
+
+/* ── Chuyển từ inline style của JarActivityCalendar.jsx (đợt 4) ── */
+.jar-cal-year-months.jar-cal-year-months--layout {
+  grid-template-columns: var(--jar-cal-year-months-grid-template-columns);
+}
+
+.jar-cal-year-months__span--layout {
+  grid-column: var(--jar-cal-year-months__span-grid-column);
+}
+
+.jar-cal-year-grid.jar-cal-year-grid--layout {
+  grid-template-columns: var(--jar-cal-year-grid-grid-template-columns);
+}

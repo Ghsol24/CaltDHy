@@ -103,7 +103,7 @@ export const ResetPasswordPage = () => {
           title={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')}
           titleHighlight=""
         >
-          <p id="modHint" style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '20px' }}>
+          <p className="auth-page__p--text" id="modHint">
             {isResetMode
               ? t('auth.resetHint')
               : t('auth.forgotHint')}
@@ -129,7 +129,7 @@ export const ResetPasswordPage = () => {
               )}
 
               {forgotSuccess && (
-                <div id="forgotSuccess" className="form-success show" role="alert" style={{ color: 'var(--success)', marginTop: '8px', fontSize: '12px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <div id="forgotSuccess" className="form-success show form-success--layout" role="alert">
                   <CheckOutlineIcon size={14} /> {forgotSuccess}
                 </div>
               )}
@@ -170,7 +170,7 @@ export const ResetPasswordPage = () => {
               )}
 
               {resetSuccess && (
-                <div id="resetSuccess" className="form-success show" role="alert" style={{ color: 'var(--success)', marginTop: '8px', fontSize: '12px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <div id="resetSuccess" className="form-success show form-success--layout" role="alert">
                   <CheckOutlineIcon size={14} /> {resetSuccess}
                 </div>
               )}

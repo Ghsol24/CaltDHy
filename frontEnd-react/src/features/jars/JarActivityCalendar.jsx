@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCompactCurrency, formatCurrency } from '../../utils/formatters';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { FlameOutlineIcon } from '../../components/ui/AppIcons';
+import { FlameOutlineIcon, Icon } from '../../components/ui/AppIcons';
 import {
   compareWithPreviousMonth, elapsedDays, intensityLevel, monthOf, monthTotals, monthWeeks,
   savingStreak, shiftMonth, yearColumns
@@ -173,9 +173,7 @@ export function JarActivityCalendar({
           {activeView === 'month' && (
             <CustomSelect options={monthOptions} value={month} onChange={onMonthChange} size="sm" variant="subtle"
               align="right" ariaLabel={copy.monthPicker}
-              prefixIcon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" /></svg>} />
+              prefixIcon={<Icon name="calendarCompact" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />} />
           )}
           {yearAllowed && (
             <div className="jar-cal-view-switch" role="group" aria-label={copy.viewLabel}>
@@ -217,11 +215,11 @@ export function JarActivityCalendar({
         </div>
       ) : yearStrip ? (
         <div className="jar-cal-year">
-          <div className="jar-cal-year-months" aria-hidden="true" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
-            {yearMonthMarks.map((mark) => <span key={mark.index} style={{ gridColumn: `${mark.index + 1} / span 2` }}>{mark.label}</span>)}
+          <div className="jar-cal-year-months jar-cal-year-months--layout" aria-hidden="true" style={{ '--jar-cal-year-months-grid-template-columns': `repeat(${columns.length}, minmax(0, 1fr))` }}>
+            {yearMonthMarks.map((mark) => <span className="jar-cal-year-months__span--layout" key={mark.index} style={{ '--jar-cal-year-months__span-grid-column': `${mark.index + 1} / span 2` }}>{mark.label}</span>)}
           </div>
-          <div ref={gridRef} className="jar-cal-year-grid" role="grid" aria-label={copy.titleYear} onKeyDown={onGridKeyDown}
-            style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
+          <div ref={gridRef} className="jar-cal-year-grid jar-cal-year-grid--layout" role="grid" aria-label={copy.titleYear} onKeyDown={onGridKeyDown}
+            style={{ '--jar-cal-year-grid-grid-template-columns': `repeat(${columns.length}, minmax(0, 1fr))` }}>
             {columns.map((column) => (
               <div key={column[0].day} role="row" className="jar-cal-year-column">
                 {column.map((cell) => (cell.future || cell.day < yearStart

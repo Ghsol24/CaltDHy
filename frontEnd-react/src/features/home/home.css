@@ -693,3 +693,13 @@
   line-height: 1.1;
   font-family: var(--font-mono);
 }
+
+/* ── Chuyển từ inline style của AttentionPanel.jsx (đợt 4) ── */
+.home-plan-empty-icon.home-plan-empty-icon--layout {
+  display: inline-flex;
+  align-items: center;
+}
+
+.home-plan-progress-fill.home-plan-progress-fill--box {
+  width: var(--home-plan-progress-fill-width);
+}

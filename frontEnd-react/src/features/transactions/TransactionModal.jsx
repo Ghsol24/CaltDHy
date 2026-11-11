@@ -12,42 +12,25 @@ import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
 import { Dialog } from '../../components/ui/Dialog';
 import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
-import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon, FolderOutlineIcon, CheckOutlineIcon, CategoryOutlineIcon } from '../../utils/categoryIcons';
+import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
-import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { useTranslation } from '../../i18n/useTranslation';
 import { BREAKPOINTS, useMediaQuery } from '../../hooks/useMediaQuery';
 import { useSheetDrag } from '../../hooks/useSheetDrag';
-import { CategoryPickerList, CategorySummaryButton, DateSheetContent, MobileDateField, TransactionSheet } from './TransactionMobileFields';
+import { CategoryPickerList, DateSheetContent, TransactionSheet } from './TransactionMobileFields';
 
 import { Icon } from '../../components/ui/AppIcons';
+import { describeBudgetMetrics, recentCategoryName } from './modal/transactionModalHelpers';
+import { TransactionFooterActions } from './modal/TransactionFooterActions';
+import { TransactionDateField } from './modal/TransactionDateField';
+import { TransactionCategoryField } from './modal/TransactionCategoryField';
+import { TransactionAmountField } from './modal/TransactionAmountField';
 const EMPTY_EXPENSE_CATS = [];
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet.
 const PHONE_QUERY = `(max-width: ${BREAKPOINTS.phone}px)`;
 // Touch screens, whose on-screen keyboard would cover the form if a field took focus.
 const TOUCH_QUERY = '(pointer: coarse)';
-
-function describeBudgetMetrics(metrics, t) {
-  for (const metric of Object.values(metrics)) {
-    metric.color = metric.hasLimit ? `var(--color-${metric.status})` : 'var(--color-neutral-bg)';
-    metric.statusLabel = !metric.hasLimit ? t('transaction.limitUnset') : metric.rawRemaining <= 0n
-      ? t('transaction.limitReached') : t('transaction.limitLeft', { percent: metric.percent });
-  }
-  return metrics;
-}
-
-/** The category of the newest hand-entered transaction of this type (the list arrives newest first). */
-function recentCategoryName(transactions, type, categories) {
-  const names = new Map(categories.map((cat) => [cat.name.toLowerCase(), cat.name]));
-  let best = null;
-  for (const txn of transactions || []) {
-    if (txn.type !== type || txn.installmentId || txn.jarId || !txn.category) continue;
-    const name = names.get(String(txn.category).toLowerCase());
-    if (name && (!best || txn.date > best.date)) best = { date: txn.date, name };
-  }
-  return best?.name || '';
-}
 
 export function TransactionModal() {
   const { t, label, lang, intlLocale } = useTranslation();
@@ -498,143 +481,10 @@ export function TransactionModal() {
             </div>
 
             {/* 2. Amount field */}
-            <div className="txn-field-group">
-              <label htmlFor="txn-amount-input" className="txn-label">
-                <span>{t('transaction.amount')}</span>
-              </label>
-              <div className={`txn-amount-box ${amountError ? 'has-error' : ''}`}>
-                <input
-                  id="txn-amount-input"
-                  ref={amountInputRef}
-                  type="text"
-                  inputMode="numeric"
-                  className="txn-amount-input"
-                  placeholder="0"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  required
-                  aria-required="true"
-                />
-                <span className="txn-amount-suffix" aria-hidden="true">
-                  VNĐ
-                </span>
-              </div>
-              {amountError && (
-                <div className="txn-amount-error-inline" role="alert">
-                  <Icon name="alertCircle" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <span>{amountError}</span>
-                </div>
-              )}
-            </div>
+            <TransactionAmountField amount={amount} amountError={amountError} amountInputRef={amountInputRef} handleAmountChange={handleAmountChange} />
 
             {/* 3. Smart Category Selection Grid */}
-            <div className="txn-field-group">
-              <label className="txn-label" id="txn-category-label">
-                <span>{t('transaction.category')}</span>
-              </label>
-
-              {type === 'expense' && selectedPeriod && <p className="txn-budget-period">
-                {t('transaction.budgetForPeriod', { month: formatDate(`${selectedPeriod}-01`, 'month', { locale: lang }) })}
-                {!isPhone && <>{' · '}{t('transaction.budgetPreview')}</>}
-              </p>}
-              {type === 'expense' && !budgetReady && <p role="status" className="txn-budget-period">{t('transaction.budgetLoading')}</p>}
-              {type === 'expense' && budgetError && <p role="alert" className="txn-budget-error">{t('transaction.budgetFailed')}
-                {' '}<button type="button" onClick={() => setBudgetRetry((value) => value + 1)}>{t('common.tryAgain')}</button></p>}
-              {type === 'expense' && sortedCategories.length === 0 ? (
-                <div className="txn-empty-categories" role="status">
-                  <span className="txn-empty-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <FolderOutlineIcon size={24} color="currentColor" />
-                  </span>
-                  <h4 className="txn-empty-title">{t('transaction.noCategory')}</h4>
-                  <p className="txn-empty-desc">{t('transaction.noCategoryHint')}</p>
-                  <button
-                    type="button"
-                    className="txn-empty-cta-btn"
-                    onClick={() => {
-                      close();
-                      navigateTo('plan', 'budgets');
-                    }}
-                  >
-                    {t('transaction.setupCategory')}
-                  </button>
-                </div>
-              ) : isPhone ? (
-                <CategorySummaryButton
-                  labelId="txn-category-label"
-                  type={type}
-                  category={category}
-                  metric={categoryMetrics[category]}
-                  baseline={baselineMetrics[category]}
-                  hasDraft={draftAmount > 0}
-                  budgetReady={Boolean(budgetReady)}
-                  budgetError={budgetError}
-                  onOpen={() => setPicker('category')}
-                />
-              ) : (
-                <div className="txn-category-grid" role="radiogroup" aria-label={t('transaction.chooseCategory')}>
-                  {sortedCategories.map((cat) => {
-                    const isSelected = category.toLowerCase() === cat.name.toLowerCase();
-                    const metric = categoryMetrics[cat.name];
-                    return (
-                      <button
-                        type="button"
-                        key={cat.name}
-                        role="radio"
-                        aria-checked={isSelected}
-                        className={`txn-category-card ${isSelected ? 'active' : ''} ${isSelected ? (type === 'income' ? 'active--income' : 'active--expense') : ''} ${metric && !metric.hasLimit ? 'is-unset' : ''}`}
-                        onClick={() => setCategory(cat.name)}
-                      >
-                        {isSelected && (
-                          <span className={`txn-card-check-badge ${type === 'income' ? 'txn-card-check-badge--income' : ''}`} aria-hidden="true">
-                            <CheckOutlineIcon size={10} />
-                          </span>
-                        )}
-                        <span className="txn-card-icon" aria-hidden="true">
-                          <CategoryOutlineIcon name={cat.name} size={18} />
-                        </span>
-                        <span className="txn-card-name" title={cat.name}>
-                          {label(cat.name)}
-                        </span>
-
-                        {type === 'expense' && metric ? (
-                          <>
-                            <div className="txn-card-amount">
-                              {metric.hasLimit
-                                ? `${formatCurrency(metric.remaining)}`
-                                : `${formatCurrency(0)}`}
-                            </div>
-                            <div
-                              className="txn-card-subtitle"
-                              style={{
-                                color:
-                                  metric.hasLimit && (metric.percent < 15 || metric.rawRemaining <= 0)
-                                    ? 'var(--color-danger)'
-                                    : undefined
-                              }}
-                            >
-                              {metric.statusLabel}
-                            </div>
-                            <div className="txn-card-progress-track" aria-hidden="true">
-                              <div
-                                className="txn-card-progress-fill"
-                                style={{
-                                  width: metric.hasLimit ? `${metric.percent}%` : '0%',
-                                  backgroundColor: metric.color
-                                }}
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <div className="txn-card-income-tag">
-                            {type === 'expense' ? t(budgetError ? 'transaction.budgetUnavailable' : 'transaction.budgetLoading') : t('type.income')}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <TransactionCategoryField baselineMetrics={baselineMetrics} budgetError={budgetError} budgetReady={budgetReady} category={category} categoryMetrics={categoryMetrics} close={close} draftAmount={draftAmount} isPhone={isPhone} navigateTo={navigateTo} selectedPeriod={selectedPeriod} setBudgetRetry={setBudgetRetry} setCategory={setCategory} setPicker={setPicker} sortedCategories={sortedCategories} type={type} />
 
             {/* 4. Wallet Selection (Chi từ / Nhận vào) */}
             <div className="txn-field-group">
@@ -650,29 +500,7 @@ export function TransactionModal() {
             </div>
 
             {/* 5. Date Field */}
-            <div className="txn-field-group">
-              <label htmlFor="txn-date-input" id="txn-date-label" className="txn-label">
-                <span>{t('transaction.date')}</span>
-              </label>
-              {isPhone ? (
-                <MobileDateField
-                  id="txn-date-input"
-                  labelId="txn-date-label"
-                  value={date}
-                  todayIso={maxDate}
-                  onOpen={() => setPicker('date')}
-                />
-              ) : (
-                <CustomDatePicker
-                  id="txn-date-input"
-                  inputClassName="txn-input"
-                  value={date}
-                  onChange={setDate}
-                  max={maxDate}
-                  required
-                />
-              )}
-            </div>
+            <TransactionDateField date={date} isPhone={isPhone} maxDate={maxDate} setDate={setDate} setPicker={setPicker} />
 
             {/* 6. Description Note */}
             <div className="txn-field-group">
@@ -704,47 +532,7 @@ export function TransactionModal() {
           </div>
 
           {/* 7. Footer CTA Actions */}
-          <div className={`txn-modal-footer${canDelete ? ' txn-modal-footer--with-delete' : ''}`}>
-            {canDelete && (
-              <button
-                type="button"
-                className="txn-btn-delete"
-                onClick={handleDelete}
-                disabled={isSubmitting}
-                aria-label={t('transaction.deleteAria')}
-                title={t('transaction.deleteAria')}
-              >
-                <Icon name="trash" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <span className="txn-btn-delete__label">{t('common.delete')}</span>
-              </button>
-            )}
-            <button
-              type="button"
-              className="txn-btn-cancel"
-              onClick={close}
-              disabled={isSubmitting}
-            >
-              {t('common.cancel')}
-            </button>
-            <button
-              type="submit"
-              className={`txn-btn-submit ${type === 'income' ? 'txn-btn-submit--income' : ''}`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
-                  <span>{t('common.saving')}</span>
-                </>
-              ) : isEditing ? (
-                t('transaction.update')
-              ) : isPhone && draftAmount > 0 && Number.isSafeInteger(draftAmount) ? (
-                t('transaction.saveWithAmount', { amount: formatCurrency(draftAmount) })
-              ) : (
-                t('transaction.save')
-              )}
-            </button>
-          </div>
+          <TransactionFooterActions canDelete={canDelete} close={close} draftAmount={draftAmount} handleDelete={handleDelete} isEditing={isEditing} isPhone={isPhone} isSubmitting={isSubmitting} type={type} />
         </form>
 
         {activePicker === 'category' && (

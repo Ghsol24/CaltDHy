@@ -26,9 +26,7 @@ export function MoneyDisplayGuard({ children }) {
   }, [transactions, budgets, wallets, archived, jars, installments]);
 
   if (result.safe) return children;
-  return <section role="alert" data-testid="money-range-notice" style={{ padding: '24px',
-    color: 'var(--color-warning)', background: 'var(--color-warning-bg)',
-    border: '1px solid var(--color-warning-border)', borderRadius: '12px' }}>
+  return <section className="inline-section--box" role="alert" data-testid="money-range-notice">
     <h2>{t('moneyGuard.title')}</h2>
     <p>{t(result.invalid ? 'moneyGuard.invalid' : 'moneyGuard.overflow')}</p>
     {result.turnover !== null && <p>{t('moneyGuard.turnover', { amount: formatCurrency(result.turnover) })}</p>}

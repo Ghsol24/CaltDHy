@@ -582,3 +582,219 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── Chuyển từ inline style của ArchiveWalletModal.jsx (đợt 4) ── */
+.modal-header.modal-header--box {
+  padding-bottom: 12px;
+}
+
+.modal-header__div--layout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-header__div--box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background-color: var(--color-warning-bg, rgba(245, 158, 11, 0.12));
+  border: 1px solid var(--color-warning-border, rgba(245, 158, 11, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-warning, #d97706);
+}
+
+.modal-header__h3--text {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.modal-header__div--text {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6b7280);
+  margin-top: 2px;
+}
+
+.modal-body.modal-body--layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.modal-body__div--box {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: var(--color-danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--color-danger-border, rgba(239, 68, 68, 0.3));
+  color: var(--color-danger, #ef4444);
+  font-size: 0.88rem;
+}
+
+.modal-body__div--box2 {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--text-secondary, #6b7280);
+}
+
+.btn-spinner.btn-spinner--box {
+  margin: 0 auto 12px auto;
+  width: 24px;
+  height: 24px;
+}
+
+.modal-body__div--box3 {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background-color: var(--color-danger-bg, rgba(239, 68, 68, 0.12));
+  border: 1px solid var(--color-danger-border, rgba(239, 68, 68, 0.3));
+  color: var(--color-danger, #ef4444);
+  font-size: 0.88rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.modal-body__div--box4 {
+  padding: 14px;
+  border-radius: 10px;
+  background-color: var(--surface-subtle, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.modal-body__div--layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--modal-body__div-margin-bottom);
+}
+
+.modal-body__div--layout2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-body__span--text {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.modal-body__div--text {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--modal-body__div-color);
+}
+
+.modal-body__div--layout3 {
+  font-size: 0.84rem;
+  color: var(--color-success, #10b981);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.modal-body__div--layout4 {
+  font-size: 0.84rem;
+  color: var(--color-danger, #ef4444);
+  line-height: 1.4;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-body__div--box5 {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle, rgba(0,0,0,0.08));
+}
+
+.modal-body__label--text {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.modal-body__div--text2 {
+  font-size: 0.78rem;
+  color: var(--text-muted, #9ca3af);
+  margin-top: 4px;
+}
+
+.modal-body__span--text2 {
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: var(--modal-body__span-background-color);
+  color: var(--modal-body__span-color);
+}
+
+.modal-body__div--layout5 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px 0;
+}
+
+.modal-body__span--box {
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: var(--surface-card, rgba(0,0,0,0.06));
+  border: 1px solid var(--border-subtle, rgba(0,0,0,0.1));
+  color: var(--text-primary, #111827);
+}
+
+.modal-body__div--box6 {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background-color: var(--surface, rgba(0,0,0,0.02));
+  border: 1px solid var(--border-subtle, rgba(0,0,0,0.06));
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.45;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.modal-footer.modal-footer--layout {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle, rgba(0,0,0,0.08));
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Chuyển từ inline style của WalletModal.jsx (đợt 4) ── */
+.wallet-color-dot-pro.wallet-color-dot-pro--tone {
+  background-color: var(--wallet-color-dot-pro-background-color);
+}
+
+.txn-btn-submit .spinner.spinner--box {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Chuyển từ inline style của TransferModal.jsx (đợt 4) ── */
+.txn-btn-submit .spinner.spinner--box {
+  width: 14px;
+  height: 14px;
+}
+
+.archive-wallet-lead-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.archive-wallet-lead-icon.archive-wallet-lead-icon--brand {
+  color: var(--color-brand, #078A59);
+}

@@ -25,8 +25,7 @@ function progressAt(elapsed) {
 const RunnerScene = React.memo(function RunnerScene({ cubeRef }) {
   return (
     <div className="signature-login__scene" aria-hidden="true"
-      style={{ '--signature-cycle': `${BOUNCE_MS}ms`, '--signature-run': `${BOUNCE_MS * BAR_COUNT}ms`,
-        '--signature-flight': `${FLIGHT_MS}ms` }}>
+      style={{ '--signature-cycle': `${BOUNCE_MS}ms`, '--signature-run': `${BOUNCE_MS * BAR_COUNT}ms`, '--signature-flight': `${FLIGHT_MS}ms` }}>
       <svg className="signature-login__svg" viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="signature-bar-gradient" x1="0" y1="1" x2="0" y2="0">
@@ -40,10 +39,8 @@ const RunnerScene = React.memo(function RunnerScene({ cubeRef }) {
         </defs>
         <path className="signature-login__floor" d="M26 251H614" />
         {Array.from({ length: BAR_COUNT }, (_, index) => (
-          <g className="signature-login__bar" key={index}
-            style={{ animationDelay: `${-(index + 0.5) * BOUNCE_MS}ms`,
-              '--static-x': `${(index - 4) * 62}px`,
-              '--static-height': 1 - Math.abs(index - 4) * 0.18 }}>
+          <g className="signature-login__bar signature-login__bar--box" key={index}
+            style={{ '--signature-login__bar-animation-delay': `${-(index + 0.5) * BOUNCE_MS}ms`, '--static-x': `${(index - 4) * 62}px`, '--static-height': 1 - Math.abs(index - 4) * 0.18 }}>
             <g className="signature-login__bar-body">
               <rect x="298" y="125" width="39" height="125" rx="7" fill="url(#signature-bar-gradient)" />
               <path d="M337 132Q337 125 330 125L344 131Q350 134 350 140V241Q350 249 343 250H337Z"
@@ -57,8 +54,7 @@ const RunnerScene = React.memo(function RunnerScene({ cubeRef }) {
         <ellipse className="signature-login__impact-ring" cx="327" cy="125" rx="22" ry="5" />
         {Array.from({ length: 6 }, (_, index) => (
           <circle className="signature-login__particle" key={index} cx="320" cy="124" r="2.3"
-            style={{ '--particle-x': `${(index - 2.5) * 15}px`,
-              '--particle-y': `${-18 - (index % 3) * 10}px` }} />
+            style={{ '--particle-x': `${(index - 2.5) * 15}px`, '--particle-y': `${-18 - (index % 3) * 10}px` }} />
         ))}
       </svg>
       <div ref={cubeRef} className="signature-login__cube">C</div>

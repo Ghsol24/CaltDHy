@@ -255,11 +255,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                     }}
                     aria-label="Xóa tên ví"
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="12" r="10" opacity="0.18" />
-                      <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                      <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
+                    <Icon name="xCircleSoft" width="15" height="15" fill="currentColor" />
                   </button>
                 )}
               </div>
@@ -272,11 +268,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
               </label>
               <div className="modal-pro-amount-box input-shell">
                 <div className="amount-prefix-badge wallet" aria-hidden="true">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <line x1="2" y1="10" x2="22" y2="10" />
-                    <circle cx="17" cy="14" r="1.5" />
-                  </svg>
+                  <Icon name="wallet" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
                 <input
                   id="wallet-balance"
@@ -303,10 +295,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                 </label>
                 <div className="modal-pro-amount-box input-shell">
                   <div className="amount-prefix-badge credit-card" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                      <line x1="1" y1="10" x2="23" y2="10" />
-                    </svg>
+                    <Icon name="creditCardAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </div>
                   <input
                     id="wallet-limit"
@@ -336,8 +325,8 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                     <button
                       key={hex}
                       type="button"
-                      className={`wallet-color-dot-pro ${isSelected ? 'active' : ''}`}
-                      style={{ backgroundColor: hex }}
+                      className={`wallet-color-dot-pro ${isSelected ? 'active' : ''} wallet-color-dot-pro--tone`}
+                      style={{ '--wallet-color-dot-pro-background-color': hex }}
                       onClick={() => setColor(hex)}
                       aria-label={`Màu ${hex}`}
                     />
@@ -383,9 +372,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   </div>
 
                   <div className="option-icon-symbol sparkle" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
-                    </svg>
+                    <Icon name="sparkle" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </div>
 
                   <div className="option-content">
@@ -462,7 +449,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
             >
               {isSubmitting ? (
                 <>
-                  <span className="spinner" style={{ width: 14, height: 14 }} aria-hidden="true" />
+                  <span className="spinner spinner--box" aria-hidden="true" />
                   <span>Đang lưu...</span>
                 </>
               ) : (

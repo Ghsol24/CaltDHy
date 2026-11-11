@@ -874,3 +874,21 @@ body:has(.blimit-overlay) .toast-region {
     bottom: auto;
   }
 }
+
+/* ── Chuyển từ inline style của BudgetEditModal.jsx (đợt 4) ── */
+.blimit-meter__fill.blimit-meter__fill--box {
+  width: var(--blimit-meter__fill-width);
+}
+
+.blimit-meter__over.blimit-meter__over--box {
+  width: var(--blimit-meter__over-width);
+}
+
+.blimit-meter__mark.blimit-meter__mark--pos {
+  left: var(--blimit-meter__mark-left);
+}
+
+.blimit-btn .spinner.spinner--box {
+  width: 14px;
+  height: 14px;
+}

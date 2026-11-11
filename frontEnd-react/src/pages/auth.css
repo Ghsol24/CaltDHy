@@ -294,3 +294,30 @@
   position: relative;
   overflow: hidden;
 }
+
+/* ── Chuyển từ inline style của ResetPasswordPage.jsx (đợt 4) ── */
+.auth-page__p--text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-success.show.form-success--layout {
+  color: var(--success);
+  margin-top: 8px;
+  font-size: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* ── Chuyển từ inline style của VerifyEmailPage.jsx (đợt 4) ── */
+.auth-page .auth-page__p--verify {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  text-align: center;
+  margin: 0 0 20px;
+}

@@ -5,6 +5,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { JarDialog } from './JarDialog';
 import { jarsManagementText } from './jarsManagementCopy';
 import './jars-management.css';
+import { Icon } from '../../components/ui/AppIcons';
 
 function activityDay(date) {
   if (!date) return '';
@@ -89,7 +90,7 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
               value={selectedJarId} onChange={setSelectedJarId} ariaLabel={text('filterJar')} className="jm-history-jar-select" />
             <label className="jm-history-search input-shell" htmlFor={`${id}-search`}>
               <span className="jm-visually-hidden">{text('search')}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+              <Icon name="searchAlt" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" />
               <input id={`${id}-search`} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={text('search')} />
             </label>
           </div>

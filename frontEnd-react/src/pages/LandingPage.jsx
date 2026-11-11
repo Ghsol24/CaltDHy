@@ -9,6 +9,7 @@ import { useCurrencyStore } from '../stores/useCurrencyStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { translate } from '../i18n/translations';
 import './landing.css';
+import { Icon } from '../components/ui/AppIcons';
 
 const LANDING_KEYS = [
   'eyebrow', 'tagline', 'totalBalance', 'transactions', 'vsLastMo',
@@ -94,7 +95,7 @@ export function LandingPage() {
   };
 
   return (
-    <div className="landing-page" style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+    <div className="landing-page landing-page--box">
       {/* ── ANIMATED BACKGROUND ORBS ── */}
       <div className="bg-orb bg-orb--1" aria-hidden="true"></div>
       <div className="bg-orb bg-orb--2" aria-hidden="true"></div>
@@ -113,20 +114,7 @@ export function LandingPage() {
         aria-label={t.settingsTitle}
         aria-haspopup="dialog"
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
+        <Icon name="gearLanding" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
       </button>
 
       {/* ── MAIN HERO ── */}
@@ -167,21 +155,7 @@ export function LandingPage() {
           {/* PRIMARY CTAs */}
           <div className="cta-row">
             <Link to="/login" className="btn-login" role="button" onClick={handleButtonClick}>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
+              <Icon name="logIn" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
               <span>{t.loginBtn}</span>
             </Link>
             <Link to="/signup" className="btn-signup" role="button" onClick={handleButtonClick}>
@@ -248,21 +222,21 @@ export function LandingPage() {
                 <div className="screen-txn">
                   <span className="txn-name">{t.previewFood}</span>
                   <div className="txn-bar">
-                    <div className="txn-bar-fill" style={{ width: '72%', background: '#ff4757' }}></div>
+                    <div className="txn-bar-fill txn-bar-fill--box"></div>
                   </div>
                   <span className="txn-amount neg">{formatCurrency(340000, { showSign: true })}</span>
                 </div>
                 <div className="screen-txn">
                   <span className="txn-name">{t.previewTransport}</span>
                   <div className="txn-bar">
-                    <div className="txn-bar-fill" style={{ width: '38%', background: '#ff7043' }}></div>
+                    <div className="txn-bar-fill txn-bar-fill--box2"></div>
                   </div>
                   <span className="txn-amount neg">{formatCurrency(180000, { showSign: true })}</span>
                 </div>
                 <div className="screen-txn">
                   <span className="txn-name">{t.previewSalary}</span>
                   <div className="txn-bar">
-                    <div className="txn-bar-fill" style={{ width: '100%', background: '#00e676' }}></div>
+                    <div className="txn-bar-fill txn-bar-fill--box3"></div>
                   </div>
                   <span className="txn-amount pos">{formatCurrency(6200000, { showSign: true, isIncome: true })}</span>
                 </div>
@@ -346,13 +320,8 @@ export function LandingPage() {
                   className={`idx-theme-btn ${theme === option.id ? 'active' : ''}`}
                   aria-pressed={theme === option.id}
                   onClick={() => setTheme(option.id)}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    {option.id === 'light' && <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>}
-                    {option.id === 'dark' && <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />}
-                    {option.id === 'cream' && <><path d="M5 4h14v16H5zM8 8h8M8 12h6M8 16h4" /></>}
-                    {option.id === 'green' && <><path d="M20 4C10 2 3 8 6 15c6 5 15-1 14-11ZM4 21 15 10" /></>}
-                  </svg>
+                  <Icon name={`theme${option.id[0].toUpperCase()}${option.id.slice(1)}`} width="16" height="16" fill="none"
+                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   <span>{translate(lang, option.labelKey)}</span>
                 </button>
               ))}

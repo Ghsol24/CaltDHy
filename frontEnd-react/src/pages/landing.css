@@ -1134,3 +1134,25 @@ body.dark-theme .idx-screw {
   min-height: 100dvh;
   overflow: hidden;
 }
+
+/* ── Chuyển từ inline style của LandingPage.jsx (đợt 4) ── */
+.landing-page.landing-page--box {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.txn-bar-fill.txn-bar-fill--box {
+  width: 72%;
+  background: #ff4757;
+}
+
+.txn-bar-fill.txn-bar-fill--box2 {
+  width: 38%;
+  background: #ff7043;
+}
+
+.txn-bar-fill.txn-bar-fill--box3 {
+  width: 100%;
+  background: #00e676;
+}

@@ -1472,3 +1472,82 @@
   transform: scale(1);
   color: var(--color-accent);
 }
+
+/* ── Chuyển từ inline style của AccountModal.jsx (đợt 4) ── */
+.account-avatar-card__input--layout {
+  display: none;
+}
+
+.account-verified-badge.account-verified-badge--layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.account-card-panel.account-card-panel--layout {
+  gap: 14px;
+}
+
+.account-card-panel__div--layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-panel-label.account-panel-label--text {
+  font-size: 14px;
+  color: var(--text-primary, #173126);
+}
+
+.account-card-panel__span--text {
+  font-size: 12px;
+  color: var(--text-muted, #7E9287);
+}
+
+.account-card-panel__div--layout2 {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.account-panel-val.account-panel-val--box {
+  margin-top: 2px;
+}
+
+.account-card-panel__p--text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted, #7E9287);
+  line-height: 1.4;
+}
+
+.account-card-panel-row__div--layout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.account-panel-val.account-panel-val--text {
+  font-family: var(--font-mono);
+}
+
+.btn-pwd-text-toggle.btn-pwd-text-toggle--pos {
+  position: static;
+}
+
+.account-card-panel-row__div--text {
+  font-size: 12px;
+  color: var(--text-muted, #7E9287);
+  margin-top: 2px;
+}
+
+.account-reset-dialog__p--box {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary, #173126);
+}
+
+/* ── Chuyển từ inline style của SettingsThemePicker.jsx (đợt 4) ── */
+.theme-card__swatch.theme-card__swatch--tone {
+  background: var(--theme-card__swatch-background);
+}

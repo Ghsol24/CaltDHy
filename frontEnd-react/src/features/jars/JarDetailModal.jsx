@@ -62,19 +62,16 @@ export function JarDetailModal({
             Chỉnh sửa hũ
           </button>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="jar-detail-footer__div--layout">
             <button
               type="button"
-              className="jar-detail-btn-withdraw"
+              className="jar-detail-btn-withdraw jar-detail-btn-withdraw--box"
               onClick={() => {
                 onClose();
                 onWithdraw(jar);
               }}
               disabled={currentAmt <= 0}
-              style={{
-                cursor: currentAmt <= 0 ? 'not-allowed' : 'pointer',
-                opacity: currentAmt <= 0 ? 0.5 : 1
-              }}
+              style={{ '--jar-detail-btn-withdraw-cursor': currentAmt <= 0 ? 'not-allowed' : 'pointer', '--jar-detail-btn-withdraw-opacity': currentAmt <= 0 ? 0.5 : 1 }}
             >
               Rút tiền
             </button>
@@ -96,22 +93,17 @@ export function JarDetailModal({
         <div className="jar-detail-body">
           {/* Top Visual & Stats Banner */}
           <div className="jar-detail-stats-banner">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+            <div className="jar-detail-stats-banner__div--layout">
+              <span className="jar-detail-stats-banner__span--text">
                 Số tiền hiện có
               </span>
-              <span
-                style={{
-                  fontFamily: 'var(--font-mono, monospace)',
-                  fontSize: '24px',
-                  fontWeight: 800,
-                  color: 'var(--text-primary)'
-                }}
+              <span className="jar-detail-stats-banner__span--text2"
+               
               >
                 {formatCurrency(currentAmt)}
               </span>
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Mục tiêu: <strong style={{ color: 'var(--text-primary)' }}>{formatCurrency(targetAmt)}</strong> ({formatPercent(percent)})
+              <span className="jar-detail-stats-banner__span--text3">
+                Mục tiêu: <strong className="jar-detail-stats-banner__strong--tone">{formatCurrency(targetAmt)}</strong> ({formatPercent(percent)})
               </span>
             </div>
 
@@ -125,39 +117,28 @@ export function JarDetailModal({
           </div>
 
           {/* Progress Bar & Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div
-              style={{
-                height: '8px',
-                background: 'var(--border)',
-                borderRadius: '99px',
-                overflow: 'hidden'
-              }}
+          <div className="jar-detail-body__div--layout">
+            <div className="jar-detail-body__div--box"
+             
             >
-              <div
-                style={{
-                  width: `${Math.max(percent > 0 ? 3 : 0, percent)}%`,
-                  height: '100%',
-                  background: isCompleted ? '#10B981' : accentColor,
-                  borderRadius: '99px',
-                  transition: 'width 0.4s ease'
-                }}
+              <div className="jar-detail-body__div--box2"
+                style={{ '--jar-detail-body__div-width': `${Math.max(percent > 0 ? 3 : 0, percent)}%`, '--jar-detail-body__div-background': isCompleted ? '#10B981' : accentColor }}
               />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            <div className="jar-detail-body__div--layout2">
               <span>
                 {isCompleted ? (
-                  <strong style={{ color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <strong className="jar-detail-body__strong--layout">
                     <CheckOutlineIcon size={13} />
                     <span>Đã hoàn thành 100% mục tiêu!</span>
                   </strong>
                 ) : (
-                  <span>Còn thiếu: <strong style={{ color: 'var(--text-primary)' }}>{formatCurrency(remaining)}</strong></span>
+                  <span>Còn thiếu: <strong className="jar-detail-body__strong--tone">{formatCurrency(remaining)}</strong></span>
                 )}
               </span>
               <span>
                 {jar.targetDate ? (
-                  <span>Đến hạn: <strong style={{ color: 'var(--text-primary)' }}>{formatDate(jar.targetDate, 'short')}</strong></span>
+                  <span>Đến hạn: <strong className="jar-detail-body__strong--tone">{formatDate(jar.targetDate, 'short')}</strong></span>
                 ) : (
                   'Mục tiêu linh hoạt'
                 )}
@@ -168,29 +149,29 @@ export function JarDetailModal({
           {/* Savings Roadmap Hint (If target date exists & not completed) */}
           {jar.targetDate && !isCompleted && daysRemaining > 0 && remaining > 0 && (
             <div className="jar-detail-roadmap-box">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--primary)' }}>
+              <div className="jar-detail-roadmap-box__div--layout">
                 <TargetOutlineIcon size={15} />
                 <span>Kế hoạch tích lũy gợi ý</span>
               </div>
-              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Còn <strong style={{ color: 'var(--text-primary)' }}>{daysRemaining} ngày</strong> nữa để về đích. Bạn có thể phân bổ:
+              <p className="jar-detail-roadmap-box__p--text">
+                Còn <strong className="jar-detail-roadmap-box__strong--tone">{daysRemaining} ngày</strong> nữa để về đích. Bạn có thể phân bổ:
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '2px' }}>
-                <div style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi ngày</span>
-                  <strong style={{ fontSize: '13px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+              <div className="jar-detail-roadmap-box__div--layout2">
+                <div className="jar-detail-roadmap-box__div--box">
+                  <span className="jar-detail-roadmap-box__span--text">Mỗi ngày</span>
+                  <strong className="jar-detail-roadmap-box__strong--text">
                     {formatCurrency(dailyNeeded)}
                   </strong>
                 </div>
-                <div style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi tuần</span>
-                  <strong style={{ fontSize: '13px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                <div className="jar-detail-roadmap-box__div--box">
+                  <span className="jar-detail-roadmap-box__span--text">Mỗi tuần</span>
+                  <strong className="jar-detail-roadmap-box__strong--text">
                     {formatCurrency(weeklyNeeded)}
                   </strong>
                 </div>
-                <div style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block' }}>Mỗi tháng</span>
-                  <strong style={{ fontSize: '13px', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                <div className="jar-detail-roadmap-box__div--box">
+                  <span className="jar-detail-roadmap-box__span--text">Mỗi tháng</span>
+                  <strong className="jar-detail-roadmap-box__strong--text">
                     {formatCurrency(monthlyNeeded)}
                   </strong>
                 </div>
@@ -199,19 +180,19 @@ export function JarDetailModal({
           )}
 
           {/* Jar Specific Transaction History */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <div className="jar-detail-body__div--layout3">
+            <div className="jar-detail-body__div--layout4">
+              <h4 className="jar-detail-body__h4--text">
                 Lịch sử nạp / rút ({history.length})
               </h4>
             </div>
 
             {history.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px', background: 'var(--surface-subtle)', borderRadius: '10px' }}>
+              <div className="jar-detail-body__div--box3">
                 Hũ này chưa có giao dịch nạp hoặc rút nào.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div className="jar-detail-body__div--layout5">
                 {history.map((entry, idx) => {
                   const isDeposit = entry.type === 'deposit';
                   return (
@@ -219,40 +200,24 @@ export function JarDetailModal({
                       key={entry.id || idx}
                       className="jar-detail-history-item"
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span
-                          style={{
-                            width: '26px',
-                            height: '26px',
-                            borderRadius: '6px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '12px',
-                            fontWeight: 800,
-                            background: isDeposit ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                            color: isDeposit ? '#10B981' : '#EF4444'
-                          }}
+                      <div className="jar-detail-history-item__div--layout">
+                        <span className="jar-detail-history-item__span--box"
+                          style={{ '--jar-detail-history-item__span-background': isDeposit ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)', '--jar-detail-history-item__span-color': isDeposit ? '#10B981' : '#EF4444' }}
                         >
                           {isDeposit ? '+' : '−'}
                         </span>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <div className="jar-detail-history-item__div--layout2">
+                          <span className="jar-detail-history-item__span--text">
                             {entry.reason || (isDeposit ? 'Nạp tiền vào hũ' : 'Rút tiền từ hũ')}
                           </span>
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          <span className="jar-detail-history-item__span--text2">
                             {entry.date ? formatDate(entry.date, 'full') : '--'}
                           </span>
                         </div>
                       </div>
 
-                      <strong
-                        style={{
-                          fontFamily: 'var(--font-mono, monospace)',
-                          fontSize: '14px',
-                          fontWeight: 700,
-                          color: isDeposit ? '#10B981' : '#EF4444'
-                        }}
+                      <strong className="jar-detail-history-item__strong--text"
+                        style={{ '--jar-detail-history-item__strong-color': isDeposit ? '#10B981' : '#EF4444' }}
                       >
                         {isDeposit ? '+' : '−'}{formatCurrency(entry.amount)}
                       </strong>

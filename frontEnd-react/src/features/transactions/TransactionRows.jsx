@@ -3,7 +3,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { transactionTotal } from '../../utils/transactionInsights';
-import { CategoryOutlineIcon } from '../../components/ui/AppIcons';
+import { CategoryOutlineIcon, Icon } from '../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 
 export function TransactionRows({ transactions, onEdit, onManage, showDate = false, variant = 'cards' }) {
@@ -35,10 +35,7 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
           : <CategoryOutlineIcon name={transaction.category || transaction.type} size={19} />}
       </span>;
       const walletBadge = <span className="transaction-inspection-wallet">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8"
-          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <rect x="2" y="5" width="20" height="16" rx="3" /><path d="M18 14h4M5 5V3h14" />
-        </svg>{walletName}
+        <Icon name="walletAlt" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />{walletName}
       </span>;
       const amountLabel = isWalletCreation ? <span className="transaction-inspection-amount">
         <small>{t('history.openingBalance')}</small>{' '}

@@ -220,7 +220,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
           {/* Empty state if no budgets and no jars */}
           {topCategories.length === 0 && !topJar && (
             <div className="home-plan-empty-state">
-              <span className="home-plan-empty-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span className="home-plan-empty-icon home-plan-empty-icon--layout" aria-hidden="true">
                 <TargetOutlineIcon size={24} color="currentColor" />
               </span>
               <p className="home-plan-empty-text">
@@ -252,8 +252,8 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
                 </div>
                 <div className="home-plan-progress-track">
                   <div
-                    className={`home-plan-progress-fill ${barClass}`}
-                    style={{ width: `${Math.min(100, Math.max(4, item.percent))}%` }}
+                    className={`home-plan-progress-fill ${barClass} home-plan-progress-fill--box`}
+                    style={{ '--home-plan-progress-fill-width': `${Math.min(100, Math.max(4, item.percent))}%` }}
                   />
                 </div>
               </div>
@@ -271,10 +271,8 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
               </div>
               <div className="home-plan-progress-track">
                 <div
-                  className="home-plan-progress-fill is-jar"
-                  style={{
-                    width: `${Math.min(100, Math.max(4, Math.round((Number(topJar.current) / Number(topJar.target)) * 100)))}%`
-                  }}
+                  className="home-plan-progress-fill is-jar home-plan-progress-fill--box"
+                  style={{ '--home-plan-progress-fill-width': `${Math.min(100, Math.max(4, Math.round((Number(topJar.current) / Number(topJar.target)) * 100)))}%` }}
                 />
               </div>
             </div>

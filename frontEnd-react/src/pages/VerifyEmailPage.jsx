@@ -48,7 +48,7 @@ export function VerifyEmailPage() {
     <div className="auth-page">
       <main>
         <IndustrialPanel title={t('auth.verifyEmail')} titleHighlight="">
-          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, textAlign: 'center', margin: '0 0 20px' }}>{message}</p>
+          <p className="auth-page__p--verify">{message}</p>
           {canResend && <button className="btn-cta" type="button" onClick={resend} disabled={isSending}>
             {isSending ? t('auth.sending') : t('auth.resend')}
           </button>}

@@ -1347,3 +1347,474 @@
 .jar-list-track { height: 6px; background: var(--color-surface-muted); border-radius: 99px; overflow: hidden; }
 .jar-list-fill { height: 100%; background: var(--jar-accent-color); border-radius: 99px; }
 .jar-list-right :is(.jar-btn-deposit, .jar-btn-withdraw) { padding: 6px 12px; font-size: var(--font-xs); }
+
+/* ── Chuyển từ inline style của JarDetailModal.jsx (đợt 4) ── */
+.jar-detail-footer__div--layout {
+  display: flex;
+  gap: 8px;
+}
+
+.jar-detail-btn-withdraw.jar-detail-btn-withdraw--box {
+  cursor: var(--jar-detail-btn-withdraw-cursor);
+  opacity: var(--jar-detail-btn-withdraw-opacity);
+}
+
+.jar-detail-stats-banner__div--layout {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jar-detail-stats-banner__span--text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.jar-detail-stats-banner__span--text2 {
+  font-family: var(--font-mono, monospace);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.jar-detail-stats-banner__span--text3 {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.jar-detail-stats-banner__strong--tone {
+  color: var(--text-primary);
+}
+
+.jar-detail-body__div--layout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jar-detail-body__div--box {
+  height: 8px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.jar-detail-body__div--box2 {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+  width: var(--jar-detail-body__div-width);
+  background: var(--jar-detail-body__div-background);
+}
+
+.jar-detail-body__div--layout2 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.jar-detail-body__strong--layout {
+  color: #10B981;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jar-detail-body__strong--tone {
+  color: var(--text-primary);
+}
+
+.jar-detail-roadmap-box__div--layout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.jar-detail-roadmap-box__p--text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.jar-detail-roadmap-box__strong--tone {
+  color: var(--text-primary);
+}
+
+.jar-detail-roadmap-box__div--layout2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.jar-detail-roadmap-box__div--box {
+  background: var(--surface);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.jar-detail-roadmap-box__span--text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.jar-detail-roadmap-box__strong--text {
+  font-size: 13px;
+  color: var(--primary);
+  font-family: var(--font-mono);
+}
+
+.jar-detail-body__div--layout3 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jar-detail-body__div--layout4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jar-detail-body__h4--text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.jar-detail-body__div--box3 {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  background: var(--surface-subtle);
+  border-radius: 10px;
+}
+
+.jar-detail-body__div--layout5 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jar-detail-history-item__div--layout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jar-detail-history-item__span--box {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--jar-detail-history-item__span-background);
+  color: var(--jar-detail-history-item__span-color);
+}
+
+.jar-detail-history-item__div--layout2 {
+  display: flex;
+  flex-direction: column;
+}
+
+.jar-detail-history-item__span--text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.jar-detail-history-item__span--text2 {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.jar-detail-history-item__strong--text {
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--jar-detail-history-item__strong-color);
+}
+
+/* ── Chuyển từ inline style của FinancialTipsModal.jsx (đợt 4) ── */
+.financial-tips-header__div--layout {
+  display: flex;
+  gap: 8px;
+}
+
+.financial-tips-tab-btn.financial-tips-tab-btn--layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.financial-tips-body__h4--text {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.financial-tips-body__p--text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.financial-tips-body__div--layout {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.financial-tips-body__div--box {
+  padding: 12px 14px;
+  background: var(--surface-subtle);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.financial-tips-body__strong--tone {
+  color: var(--primary);
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.financial-tips-body__span--text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.financial-tips-body__div--box2 {
+  background: var(--surface-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.financial-tips-body__div--layout2 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.financial-tips-body__label--text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.financial-tips-input.financial-tips-input--box {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.financial-tips-body__div--box3 {
+  height: 10px;
+  border-radius: 99px;
+  display: flex;
+  overflow: hidden;
+}
+
+.financial-tips-body__div--box4 {
+  width: 50%;
+  background: #3B82F6;
+}
+
+.financial-tips-body__div--box5 {
+  width: 30%;
+  background: #F59E0B;
+}
+
+.financial-tips-body__div--box6 {
+  width: 20%;
+  background: #10B981;
+}
+
+.financial-tips-body__div--layout3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.financial-tips-body__div--box7 {
+  background: var(--surface);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.financial-tips-body__span--text2 {
+  font-size: 12px;
+  color: #3B82F6;
+  font-weight: 700;
+  display: block;
+}
+
+.financial-tips-body__strong--text {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.financial-tips-body__span--text3 {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.financial-tips-body__span--text4 {
+  font-size: 12px;
+  color: #F59E0B;
+  font-weight: 700;
+  display: block;
+}
+
+.financial-tips-body__span--text5 {
+  font-size: 12px;
+  color: #10B981;
+  font-weight: 700;
+  display: block;
+}
+
+.financial-tips-body__strong--text2 {
+  font-size: 14px;
+  color: #10B981;
+  font-family: var(--font-mono);
+}
+
+/* ── Chuyển từ inline style của JarsView.jsx (đợt 4) ── */
+.jars-metric-mini-fill.jars-metric-mini-fill--box {
+  width: var(--jars-metric-mini-fill-width);
+}
+
+.jars-global-progress-fill.jars-global-progress-fill--box {
+  width: var(--jars-global-progress-fill-width);
+}
+
+.jars-status-fill.jars-status-fill--box {
+  width: var(--jars-status-fill-width);
+}
+
+.jars-status-jar-row .jars-status-jar-percent.jars-status-jar-percent--tone {
+  color: #059669;
+}
+
+.jars-status-card-body__div--layout {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jars-status-tag.jars-status-tag--ontrack.jars-status-tag--layout {
+  align-self: flex-start;
+}
+
+.jars-status-subtext.jars-status-subtext--tone {
+  color: #B45309;
+}
+
+.jars-status-tag.jars-status-tag--safe.jars-status-tag--layout2 {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jars-section-title.jars-section-title--box {
+  margin: 0;
+}
+
+.jars-list-section__div--box {
+  padding: 60px 20px;
+  text-align: center;
+  color: #94A3B8;
+}
+
+.jars-list-section .spinner.spinner--box {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 12px;
+}
+
+.jars-list-section__p--box {
+  margin: 0;
+  font-size: 14px;
+}
+
+
+.jar-card-top-row__div--pos {
+  position: relative;
+}
+
+.jar-progress-fill.jar-progress-fill--box {
+  width: var(--jar-progress-fill-width);
+}
+
+
+.jar-list-fill.jar-list-fill--box {
+  width: var(--jar-list-fill-width);
+}
+
+.jars-tip-card.jars-tip-card--box {
+  cursor: pointer;
+}
+
+/* ── Chuyển từ inline style của JarGlassGraphic.jsx (đợt 4) ── */
+.jar-glass-graphic-wrapper.jar-glass-graphic-wrapper--layout {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--jar-glass-graphic-wrapper-width);
+  height: var(--jar-glass-graphic-wrapper-height);
+}
+
+.jar-glass-graphic-wrapper__svg--box {
+  overflow: visible;
+}
+
+.jar-glass-graphic-wrapper__text--box {
+  user-select: none;
+  pointer-events: none;
+}
+
+.jar-glass-graphic-wrapper__span--text {
+  position: absolute;
+  top: 2px;
+  right: -4px;
+  background: #FFFFFF;
+  border: 1.5px solid color-mix(in srgb, currentColor 20%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 99px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--jar-glass-graphic-wrapper__span-color);
+}

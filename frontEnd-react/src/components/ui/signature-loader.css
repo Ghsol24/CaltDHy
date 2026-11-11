@@ -261,3 +261,11 @@
   .signature-login__impact-ring,
   .signature-login__particle { display: none; }
 }
+
+/* ── Chuyển từ inline style của SignatureLoginOverlay.jsx (đợt 4) ── */
+
+.signature-login__bar.signature-login__bar--box {
+  animation-delay: var(--signature-login__bar-animation-delay);
+}
+
+

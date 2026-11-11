@@ -121,3 +121,127 @@
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
+
+/* ── Chuyển từ inline style của PageSkeleton.jsx (đợt 4) ── */
+.skeleton-item.skeleton-text.skeleton-text--title.skeleton-item--box {
+  width: 40%;
+}
+
+.skeleton-item.skeleton-text.skeleton-item--box2 {
+  width: 70%;
+  height: 28px;
+  margin-top: 8px;
+}
+
+.skeleton-item.skeleton-text.skeleton-text--body.skeleton-item--box3 {
+  width: 50%;
+  margin-top: 4px;
+}
+
+.skeleton-card.page-skeleton-main.skeleton-card--box {
+  margin-top: 24px;
+  min-height: 260px;
+}
+
+.skeleton-card__div--layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.skeleton-item.skeleton-text.skeleton-text--title.skeleton-item--box4 {
+  width: 30%;
+}
+
+.skeleton-item.skeleton-text.skeleton-item--box5 {
+  width: 120px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.skeleton-item.skeleton-item--box6 {
+  width: 100%;
+  height: 180px;
+  border-radius: 8px;
+}
+
+.skeleton-card.page-skeleton-list.skeleton-card--box2 {
+  margin-top: 24px;
+}
+
+.skeleton-item.skeleton-text.skeleton-text--title.skeleton-item--box7 {
+  width: 25%;
+  margin-bottom: 12px;
+}
+
+.skeleton-row.skeleton-row--last {
+  border-bottom: none;
+}
+
+.skeleton-row__div--layout {
+  flex: 1;
+}
+
+.skeleton-item.skeleton-text.skeleton-item--box8 {
+  width: 40%;
+  margin-bottom: 6px;
+}
+
+.skeleton-item.skeleton-text--body.skeleton-item--box9 {
+  width: 25%;
+}
+
+.skeleton-item.skeleton-text.skeleton-item--box10 {
+  width: 80px;
+  height: 18px;
+}
+
+/* ── Chuyển từ inline style của brandIcons.jsx (đợt 4) ── */
+
+/* ── Chuyển từ inline style của AppShellSkeleton.jsx (đợt 4) ── */
+.tb-right.tb-right--layout {
+  gap: 16px;
+  align-items: center;
+}
+
+.skeleton-item.skeleton-text.skeleton-item--shell-title {
+  width: 120px;
+  height: 20px;
+}
+
+.sidebar-scrollable-content.sidebar-scrollable-content--box {
+  padding: 16px 12px;
+}
+
+.sidebar-scrollable-content .sidebar-nav-group.sidebar-nav-group--box {
+  margin-bottom: 20px;
+}
+
+.sidebar-group-label.sidebar-group-label--box {
+  margin-bottom: 8px;
+}
+
+.sidebar-nav-item.sidebar-nav-item--box {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.skeleton-item.skeleton-avatar.skeleton-avatar--xs.skeleton-item--shell-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.skeleton-item.skeleton-text.skeleton-item--shell-label {
+  width: 65%;
+  height: 14px;
+}
+
+/* ── Chuyển từ inline style của MoneyDisplayGuard.jsx (đợt 4) ── */
+.inline-section--box {
+  padding: 24px;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: 12px;
+}

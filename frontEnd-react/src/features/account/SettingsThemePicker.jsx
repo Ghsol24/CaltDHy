@@ -20,7 +20,7 @@ export function SettingsThemePicker({ theme, onChange, compact = false }) {
           aria-label={`${t('settings.appearance')} ${t(option.labelKey)}`}
           onClick={() => onChange(option.id)}
         >
-          <span className="theme-card__swatch" style={{ background: option.swatch }} aria-hidden="true" />
+          <span className="theme-card__swatch theme-card__swatch--tone" style={{ '--theme-card__swatch-background': option.swatch }} aria-hidden="true" />
           <span className="theme-card__name">{t(option.labelKey)}</span>
           <svg className="theme-card__check-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />

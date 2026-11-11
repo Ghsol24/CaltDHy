@@ -375,12 +375,12 @@ export function PlanOverviewTab() {
           <div className="column-card-body">
             {isWalletsLoading && wallets.length === 0 ? (
               <div className="column-empty-state">
-                <span className="spinner" style={{ width: 20, height: 20 }} />
+                <span className="spinner spinner--box" />
                 <p>Đang tải danh sách ví...</p>
               </div>
             ) : topWallets.length === 0 ? (
               <div className="column-empty-state">
-                <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
+                <span className="empty-emoji empty-emoji--layout" aria-hidden="true">
                   <WalletOutlineIcon type="credit" size={28} color="currentColor" />
                 </span>
                 <p>Chưa có tài khoản nào.</p>
@@ -394,8 +394,8 @@ export function PlanOverviewTab() {
                     <div key={w.id} className="plan-item-box plan-item-box--wallet">
                       <div className="item-box-left">
                         <div
-                          className="wallet-icon-square"
-                          style={{ backgroundColor: `${w.color || '#4F46E5'}18`, color: w.color || '#4F46E5' }}
+                          className="wallet-icon-square wallet-icon-square--tone"
+                          style={{ '--wallet-icon-square-background-color': `${w.color || '#4F46E5'}18`, '--wallet-icon-square-color': w.color || '#4F46E5' }}
                           aria-hidden="true"
                         >
                           <WalletOutlineIcon type={w.type} size={18} color="currentColor" />
@@ -411,11 +411,11 @@ export function PlanOverviewTab() {
                           {formatCurrency(w.currentBalance ?? w.initialBalance ?? 0)}
                         </strong>
                         {w.isDefault ? (
-                          <span className="wallet-growth-tag" style={{ color: 'var(--color-brand, #078A59)', backgroundColor: 'var(--color-brand-bg, rgba(7, 138, 89, 0.12))' }}>
+                          <span className="wallet-growth-tag wallet-growth-tag--tone">
                             Mặc định
                           </span>
                         ) : totalAssets > 0 && Number(w.currentBalance) > 0 ? (
-                          <span className="wallet-growth-tag" style={{ color: 'var(--text-secondary, #6b7280)' }}>
+                          <span className="wallet-growth-tag wallet-growth-tag--tone2">
                             {formatPercent((Number(w.currentBalance) / totalAssets) * 100)}
                           </span>
                         ) : null}
@@ -455,12 +455,12 @@ export function PlanOverviewTab() {
           <div className="column-card-body">
             {isTxnsLoading && topBudgetCategories.length === 0 ? (
               <div className="column-empty-state">
-                <span className="spinner" style={{ width: 20, height: 20 }} />
+                <span className="spinner spinner--box" />
                 <p>Đang tải dữ liệu ngân sách...</p>
               </div>
             ) : topBudgetCategories.length === 0 || !hasAnyBudgetLimit ? (
               <div className="column-empty-state">
-                <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
+                <span className="empty-emoji empty-emoji--layout" aria-hidden="true">
                   <NavIcon name="budgets" size={28} />
                 </span>
                 <p>Chưa có ngân sách nào được thiết lập trong tháng này.</p>
@@ -503,8 +503,8 @@ export function PlanOverviewTab() {
                           <div
                             className={`budget-mini-fill ${
                               isDanger ? 'fill-danger' : isWarning ? 'fill-warning' : 'fill-brand'
-                            }`}
-                            style={{ width: `${barWidth}%` }}
+                            } budget-mini-fill--box`}
+                            style={{ '--budget-mini-fill-width': `${barWidth}%` }}
                           />
                         </div>
                       )}
@@ -543,12 +543,12 @@ export function PlanOverviewTab() {
           <div className="column-card-body">
             {isJarsLoading && topInstallments.length === 0 ? (
               <div className="column-empty-state">
-                <span className="spinner" style={{ width: 20, height: 20 }} />
+                <span className="spinner spinner--box" />
                 <p>Đang tải danh sách định kỳ...</p>
               </div>
             ) : topInstallments.length === 0 ? (
               <div className="column-empty-state">
-                <span className="empty-emoji" aria-hidden="true" style={{ display: 'inline-flex', color: 'var(--color-text-muted, #94A3B8)' }}>
+                <span className="empty-emoji empty-emoji--layout" aria-hidden="true">
                   <RefreshOutlineIcon size={28} color="currentColor" />
                 </span>
                 <p>Bạn chưa theo dõi khoản định kỳ nào.</p>
@@ -582,7 +582,7 @@ export function PlanOverviewTab() {
                       <div className="item-box-right item-box-right--recurring">
                         <span className={`recurring-pill-badge pill-${tierInfo.tier}`}>
                           {tierInfo.tier === 'paid' && (
-                            <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }} />
+                            <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="plan-icon-gap" />
                           )}
                           {tierInfo.shortText}
                         </span>
@@ -620,11 +620,7 @@ export function PlanOverviewTab() {
       <div className="plan-insight-banner-card">
         <div className="insight-banner-left">
           <div className="insight-3d-icon-box" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" x2="18" y1="20" y2="10" />
-              <line x1="12" x2="12" y1="20" y2="4" />
-              <line x1="6" x2="6" y1="20" y2="14" />
-            </svg>
+            <Icon name="barChartSimple" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </div>
           <div className="insight-banner-text">
             <strong className="insight-banner-title">Gợi ý dành cho bạn</strong>

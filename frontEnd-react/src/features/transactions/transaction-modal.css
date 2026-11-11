@@ -872,6 +872,7 @@
 
 .txn-sheet.is-dragging {
   animation: none;
+  transform: translateY(var(--sheet-drag-offset, 0px));
 }
 
 .txn-sheet__handle-zone {
@@ -1135,4 +1136,35 @@
   .txn-modal-card {
     animation: none;
   }
+}
+
+/* ── Chuyển từ inline style của TransactionModal.jsx (đợt 4) ── */
+.txn-empty-icon.txn-empty-icon--layout {
+  display: inline-flex;
+  align-items: center;
+}
+
+.txn-card-subtitle.txn-card-subtitle--danger {
+  color: var(--color-danger);
+}
+
+.txn-card-progress-fill.txn-card-progress-fill--box {
+  width: var(--txn-card-progress-fill-width);
+  background-color: var(--txn-card-progress-fill-background-color);
+}
+
+.txn-btn-submit .spinner.spinner--box {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Chuyển từ inline style của TransactionMobileFields.jsx (đợt 4) ── */
+.txn-budget-track__fill.txn-budget-track__fill--box {
+  width: var(--txn-budget-track__fill-width);
+  background: var(--txn-budget-track__fill-background);
+}
+
+.txn-budget-track__pending.txn-budget-track__pending--box {
+  width: var(--txn-budget-track__pending-width);
+  background: var(--txn-budget-track__pending-background);
 }

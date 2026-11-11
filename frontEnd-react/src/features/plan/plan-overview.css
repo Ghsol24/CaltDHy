@@ -798,3 +798,36 @@
   background: var(--color-brand-700, #4F46E5);
   color: #ffffff;
 }
+
+/* ── Chuyển từ inline style của PlanOverviewTab.jsx (đợt 4) ── */
+.column-empty-state .spinner.spinner--box {
+  width: 20px;
+  height: 20px;
+}
+
+.empty-emoji.empty-emoji--layout {
+  display: inline-flex;
+  color: var(--color-text-muted, #94A3B8);
+}
+
+.wallet-icon-square.wallet-icon-square--tone {
+  background-color: var(--wallet-icon-square-background-color);
+  color: var(--wallet-icon-square-color);
+}
+
+.wallet-growth-tag.wallet-growth-tag--tone {
+  color: var(--color-brand, #078A59);
+  background-color: var(--color-brand-bg, rgba(7, 138, 89, 0.12));
+}
+
+.wallet-growth-tag.wallet-growth-tag--tone2 {
+  color: var(--text-secondary, #6b7280);
+}
+
+.budget-mini-fill.budget-mini-fill--box {
+  width: var(--budget-mini-fill-width);
+}
+
+.plan-icon-gap {
+  margin-right: 4px;
+}

@@ -951,3 +951,14 @@
     display: none;
   }
 }
+
+/* ── Chuyển từ inline style của RecurringTab.jsx (đợt 4) ── */
+.banner-stat-val.banner-stat-val--tone {
+  color: var(--color-danger);
+}
+
+.wallets-loading .spinner.spinner--box {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 8px;
+}

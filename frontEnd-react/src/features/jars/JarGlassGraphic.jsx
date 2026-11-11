@@ -26,24 +26,17 @@ export const JarGlassGraphic = React.memo(function JarGlassGraphic({
 
   return (
     <div
-      className="jar-glass-graphic-wrapper"
-      style={{
-        position: 'relative',
-        width,
-        height,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
+      className="jar-glass-graphic-wrapper jar-glass-graphic-wrapper--layout"
+      style={{ '--jar-glass-graphic-wrapper-width': width, '--jar-glass-graphic-wrapper-height': height }}
       aria-hidden="true"
     >
-      <svg
+      <svg className="jar-glass-graphic-wrapper__svg--box"
         width={width}
         height={height}
         viewBox="0 0 100 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        style={{ overflow: 'visible' }}
+       
       >
         <defs>
           {/* Jar Body Clip Path for Liquid */}
@@ -117,13 +110,13 @@ export const JarGlassGraphic = React.memo(function JarGlassGraphic({
         )}
 
         {/* 3. Center Icon / Emoji Inside Jar */}
-        <text
+        <text className="jar-glass-graphic-wrapper__text--box"
           x="50"
           y="70"
           fontSize="22"
           textAnchor="middle"
           dominantBaseline="central"
-          style={{ userSelect: 'none', pointerEvents: 'none' }}
+         
         >
           {icon || '🫙'}
         </text>
@@ -171,23 +164,8 @@ export const JarGlassGraphic = React.memo(function JarGlassGraphic({
       </svg>
 
       {/* Floating Percentage Badge on top-right */}
-      <span
-        style={{
-          position: 'absolute',
-          top: '2px',
-          right: '-4px',
-          background: '#FFFFFF',
-          color: color || '#5356F1',
-          border: `1.5px solid ${color || '#5356F1'}33`,
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-          borderRadius: '99px',
-          padding: '2px 7px',
-          fontSize: '12px',
-          fontWeight: 800,
-          fontFamily: 'var(--font-mono, monospace)',
-          letterSpacing: '-0.02em',
-          lineHeight: 1.2
-        }}
+      <span className="jar-glass-graphic-wrapper__span--text"
+        style={{ '--jar-glass-graphic-wrapper__span-color': color || '#5356F1' }}
       >
         {clampedPercent}%
       </span>

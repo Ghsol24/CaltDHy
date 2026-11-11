@@ -128,28 +128,18 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
       panelProps={{ style: { maxWidth: '540px' } }}
     >
         {/* Header */}
-        <div className="modal-header" style={{ paddingBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '10px',
-                backgroundColor: 'var(--color-warning-bg, rgba(245, 158, 11, 0.12))',
-                border: '1px solid var(--color-warning-border, rgba(245, 158, 11, 0.3))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-warning, #d97706)'
-              }}
+        <div className="modal-header modal-header--box">
+          <div className="modal-header__div--layout">
+            <div className="modal-header__div--box"
+             
             >
               <Icon name="archive" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <div>
-              <h3 id="archive-modal-title" style={{ margin: 0, fontSize: '1.15rem', fontWeight: 600 }}>
+              <h3 className="modal-header__h3--text" id="archive-modal-title">
                 Lưu trữ & Đóng ví
               </h3>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #6b7280)', marginTop: '2px' }}>
+              <div className="modal-header__div--text">
                 Ví: <strong>{wallet.name}</strong>
               </div>
             </div>
@@ -166,46 +156,29 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
         </div>
 
         {/* Body */}
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px 20px' }}>
+        <div className="modal-body modal-body--layout">
           {/* Lỗi chung */}
           {errorMsg && (
-            <div
-              style={{
-                padding: '10px 14px',
-                borderRadius: '8px',
-                backgroundColor: 'var(--color-danger-bg, rgba(239, 68, 68, 0.12))',
-                border: '1px solid var(--color-danger-border, rgba(239, 68, 68, 0.3))',
-                color: 'var(--color-danger, #ef4444)',
-                fontSize: '0.88rem'
-              }}
+            <div className="modal-body__div--box"
+             
             >
               {errorMsg}
             </div>
           )}
 
           {isLoadingPreflight ? (
-            <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-secondary, #6b7280)' }}>
-              <div className="btn-spinner" style={{ margin: '0 auto 12px auto', width: '24px', height: '24px' }} />
+            <div className="modal-body__div--box2">
+              <div className="btn-spinner btn-spinner--box" />
               <div>Đang kiểm tra số dư và các liên kết của ví...</div>
             </div>
           ) : (
             <>
               {/* Cảnh báo nếu là ví mặc định */}
               {isDefaultWallet && (
-                <div
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--color-danger-bg, rgba(239, 68, 68, 0.12))',
-                    border: '1px solid var(--color-danger-border, rgba(239, 68, 68, 0.3))',
-                    color: 'var(--color-danger, #ef4444)',
-                    fontSize: '0.88rem',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px'
-                  }}
+                <div className="modal-body__div--box3"
+                 
                 >
-                  <Icon name="alertCircle" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <Icon name="alertCircle" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="archive-wallet-lead-icon" />
                   <div>
                     <strong>Đây là ví mặc định:</strong> Bạn không thể đóng ví mặc định. Vui lòng vào phần chỉnh sửa một ví khác và chọn làm mặc định trước.
                   </div>
@@ -214,20 +187,10 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
               {/* Cảnh báo nếu là ví duy nhất còn lại */}
               {!isDefaultWallet && activeWalletsCount <= 1 && (
-                <div
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--color-danger-bg, rgba(239, 68, 68, 0.12))',
-                    border: '1px solid var(--color-danger-border, rgba(239, 68, 68, 0.3))',
-                    color: 'var(--color-danger, #ef4444)',
-                    fontSize: '0.88rem',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px'
-                  }}
+                <div className="modal-body__div--box3"
+                 
                 >
-                  <Icon name="alertCircle" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <Icon name="alertCircle" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="archive-wallet-lead-icon" />
                   <div>
                     <strong>Không thể đóng ví:</strong> Bạn phải duy trì ít nhất một ví hoạt động trong hệ thống.
                   </div>
@@ -235,29 +198,20 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
               )}
 
               {/* ── CARD 1: Trạng thái số dư ── */}
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--surface-subtle, rgba(0, 0, 0, 0.03))',
-                  border: '1px solid var(--border-subtle, rgba(0, 0, 0, 0.08))'
-                }}
+              <div className="modal-body__div--box4"
+               
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasBalance || hasDebt ? '10px' : '0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="modal-body__div--layout" style={{ '--modal-body__div-margin-bottom': hasBalance || hasDebt ? '10px' : '0' }}>
+                  <div className="modal-body__div--layout2">
                     <Icon name="creditCard" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <span style={{ fontWeight: 600, fontSize: '0.92rem' }}>Số dư hiện tại</span>
+                    <span className="modal-body__span--text">Số dư hiện tại</span>
                   </div>
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      fontSize: '1rem',
-                      color: hasDebt
+                  <div className="modal-body__div--text"
+                    style={{ '--modal-body__div-color': hasDebt
                         ? 'var(--color-danger, #ef4444)'
                         : hasBalance
                         ? 'var(--color-warning, #d97706)'
-                        : 'var(--color-success, #10b981)'
-                    }}
+                        : 'var(--color-success, #10b981)' }}
                   >
                     {formatCurrency(balance)}
                   </div>
@@ -265,15 +219,8 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
                 {/* TH1: Số dư = 0 */}
                 {!hasDebt && !hasBalance && (
-                  <div
-                    style={{
-                      fontSize: '0.84rem',
-                      color: 'var(--color-success, #10b981)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      marginTop: '6px'
-                    }}
+                  <div className="modal-body__div--layout3"
+                   
                   >
                     <Icon name="check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     <span>{t('wallet.readyToArchive', { amount: formatCurrency(0) })}</span>
@@ -282,16 +229,8 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
                 {/* TH2: Số dư âm (có nợ) */}
                 {hasDebt && (
-                  <div
-                    style={{
-                      fontSize: '0.84rem',
-                      color: 'var(--color-danger, #ef4444)',
-                      lineHeight: 1.4,
-                      marginTop: '6px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
+                  <div className="modal-body__div--layout4"
+                   
                   >
                     <AlertTriangleOutlineIcon size={16} color="currentColor" />
                     <span>Ví đang có dư nợ. Theo chuẩn kế toán, bạn cần nạp tiền thanh toán hết dư nợ trước khi đóng ví này.</span>
@@ -300,10 +239,10 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
                 {/* TH3: Số dư dương -> Chọn ví nhận */}
                 {hasBalance && (
-                  <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed var(--border-subtle, rgba(0,0,0,0.08))' }}>
-                    <label
+                  <div className="modal-body__div--box5">
+                    <label className="modal-body__label--text"
                       htmlFor="transfer-target-select"
-                      style={{ display: 'block', fontSize: '0.84rem', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary, #6b7280)' }}
+                     
                     >
                       Chuyển toàn bộ số dư sang ví nhận:
                     </label>
@@ -315,7 +254,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
                       disabled={isSubmitting}
                       placeholder="Chọn ví nhận số dư..."
                     />
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #9ca3af)', marginTop: '4px' }}>
+                    <div className="modal-body__div--text2">
                       * Hệ thống sẽ tự động tạo 1 giao dịch chuyển tiền hợp lệ để tất toán sạch số dư ví.
                     </div>
                   </div>
@@ -323,75 +262,44 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
               </div>
 
               {/* ── CARD 2: Trạng thái các khoản trả góp / định kỳ ── */}
-              <div
-                style={{
-                  padding: '14px',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--surface-subtle, rgba(0, 0, 0, 0.03))',
-                  border: '1px solid var(--border-subtle, rgba(0, 0, 0, 0.08))'
-                }}
+              <div className="modal-body__div--box4"
+               
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasInstallments ? '10px' : '0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                      <path d="M3 3v5h5" />
-                      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                      <path d="M16 21h5v-5" />
-                    </svg>
-                    <span style={{ fontWeight: 600, fontSize: '0.92rem' }}>Khoản trả góp / định kỳ</span>
+                <div className="modal-body__div--layout" style={{ '--modal-body__div-margin-bottom': hasInstallments ? '10px' : '0' }}>
+                  <div className="modal-body__div--layout2">
+                    <Icon name="rotateCcw" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <span className="modal-body__span--text">Khoản trả góp / định kỳ</span>
                   </div>
-                  <span
-                    style={{
-                      fontSize: '0.84rem',
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      borderRadius: '12px',
-                      backgroundColor: hasInstallments ? 'var(--color-warning-bg, rgba(245, 158, 11, 0.12))' : 'var(--color-success-bg, rgba(16, 185, 129, 0.12))',
-                      color: hasInstallments ? 'var(--color-warning, #d97706)' : 'var(--color-success, #10b981)'
-                    }}
+                  <span className="modal-body__span--text2"
+                    style={{ '--modal-body__span-background-color': hasInstallments ? 'var(--color-warning-bg, rgba(245, 158, 11, 0.12))' : 'var(--color-success-bg, rgba(16, 185, 129, 0.12))', '--modal-body__span-color': hasInstallments ? 'var(--color-warning, #d97706)' : 'var(--color-success, #10b981)' }}
                   >
                     {hasInstallments ? `${activeInstallments.length} khoản đang chạy` : 'Không có liên kết'}
                   </span>
                 </div>
 
                 {!hasInstallments ? (
-                  <div
-                    style={{
-                      fontSize: '0.84rem',
-                      color: 'var(--color-success, #10b981)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      marginTop: '6px'
-                    }}
+                  <div className="modal-body__div--layout3"
+                   
                   >
                     <Icon name="check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     <span>Không có khoản chi định kỳ nào bị gián đoạn.</span>
                   </div>
                 ) : (
                   <div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', margin: '8px 0 12px 0' }}>
+                    <div className="modal-body__div--layout5">
                       {activeInstallments.map((inst) => (
-                        <span
+                        <span className="modal-body__span--box"
                           key={inst.id}
-                          style={{
-                            fontSize: '0.78rem',
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            backgroundColor: 'var(--surface-card, rgba(0,0,0,0.06))',
-                            border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
-                            color: 'var(--text-primary, #111827)'
-                          }}
+                         
                         >
                           {inst.name} ({formatCurrency(inst.amount)})
                         </span>
                       ))}
                     </div>
 
-                    <label
+                    <label className="modal-body__label--text"
                       htmlFor="installment-target-select"
-                      style={{ display: 'block', fontSize: '0.84rem', fontWeight: 500, marginBottom: '6px', color: 'var(--text-secondary, #6b7280)' }}
+                     
                     >
                       Chuyển sang ví thanh toán thay thế:
                     </label>
@@ -408,24 +316,10 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
               </div>
 
               {/* ── CARD 3: Cam kết bảo toàn Audit Trail ── */}
-              <div
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--surface, rgba(0,0,0,0.02))',
-                  border: '1px solid var(--border-subtle, rgba(0,0,0,0.06))',
-                  fontSize: '0.82rem',
-                  color: 'var(--text-secondary, #6b7280)',
-                  lineHeight: 1.45,
-                  display: 'flex',
-                  gap: '10px',
-                  alignItems: 'flex-start'
-                }}
+              <div className="modal-body__div--box6"
+               
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px', color: 'var(--color-brand, #078A59)' }}>
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
+                <Icon name="shieldCheckAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="archive-wallet-lead-icon archive-wallet-lead-icon--brand" />
                 <div>
                   <strong>Bảo toàn lịch sử 100%:</strong> Ví sau khi lưu trữ sẽ ẩn khỏi danh sách chi tiêu mới. Toàn bộ giao dịch và báo cáo quá khứ của ví vẫn được giữ nguyên vẹn và bạn có thể mở lại ví bất kỳ lúc nào.
                 </div>
@@ -435,7 +329,7 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
         </div>
 
         {/* Footer */}
-        <div className="modal-footer" style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle, rgba(0,0,0,0.08))', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+        <div className="modal-footer modal-footer--layout">
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Hủy
           </Button>

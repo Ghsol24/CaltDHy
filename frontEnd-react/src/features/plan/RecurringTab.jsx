@@ -6,31 +6,20 @@ import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { RecurringModal } from './RecurringModal';
-import { formatCurrency, getDueStatus, getRecurringTier, formatDate, parseDate, getLocalMonthString } from '../../utils/formatters';
-import { detectBrandInfo } from '../../utils/brandDetection';
-import { BrandLogoIcon } from '../../utils/brandIcons';
+import { formatCurrency, getDueStatus, getRecurringTier, formatDate, getLocalMonthString } from '../../utils/formatters';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../i18n/useTranslation';
-import { translateLegacyText } from '../../i18n/legacyTranslations';
 import { isInstallmentEnded } from '../../utils/installmentTerm';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
-const CYCLE_SUFFIXES = {
-  monthly: '/ tháng',
-  quarterly: '/ quý',
-  yearly: '/ năm'
-};
-
-const SORT_OPTIONS = [
-  { value: 'due-asc', label: 'Sắp đến hạn gần nhất' },
-  { value: 'amount-desc', label: 'Số tiền cao nhất' },
-  { value: 'name-asc', label: 'Tên A → Z' }
-];
-
+import { SORT_OPTIONS } from './recurring/recurringOptions';
+import { RecurringSummaryBox } from './recurring/RecurringSummaryBox';
+import { RecurringList } from './recurring/RecurringList';
+import { RecurringFilterBar } from './recurring/RecurringFilterBar';
+import { RecurringHeaderCard } from './recurring/RecurringHeaderCard';
 export function RecurringTab() {
-  const { t, label, lang } = useTranslation();
+  const { t } = useTranslation();
   const { installments, payInstallment, toggleInstallment, deleteInstallment, updateInstallment, isLoading } = useJarStore();
   const { wallets } = useWalletStore();
   const { confirm } = useConfirmStore();
@@ -361,141 +350,15 @@ export function RecurringTab() {
         <h1 className="recurring-route-heading">{t('nav.recurring')}</h1>
       </div>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
-      <div className="recurring-top-bar-card">
-        <div className="recurring-bar-stats-group">
-          <div className="banner-stat-block">
-            <span className="banner-stat-label">Chi phí ước tính / tháng</span>
-            <strong className="banner-stat-val text-brand">
-              ~{formatCurrency(Math.round(monthlyEstimatedCost))}
-            </strong>
-          </div>
-
-          <div className="banner-stat-divider" aria-hidden="true" />
-
-          <div className="banner-stat-block">
-            <span className="banner-stat-label">Khoản đang theo dõi</span>
-            <strong className="banner-stat-val">
-              {activeItems.length} / {installments.length} khoản
-            </strong>
-          </div>
-
-          <div className="banner-stat-divider" aria-hidden="true" />
-
-          <div className="banner-stat-block">
-            <span className="banner-stat-label">Sắp đến hạn (7 ngày)</span>
-            <strong className="banner-stat-val" style={{ color: 'var(--color-danger)' }}>
-              {counts.soon} khoản
-            </strong>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="recurring-btn-create-primary"
-          onClick={handleOpenCreate}
-          aria-label="Thêm khoản định kỳ mới"
-        >
-          <Icon name="plus" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <span className="plan-wide-copy">Thêm khoản định kỳ</span>
-          <span className="plan-mobile-copy">Thêm</span>
-        </button>
-      </div>
+      <RecurringHeaderCard activeItems={activeItems} counts={counts} handleOpenCreate={handleOpenCreate} installments={installments} monthlyEstimatedCost={monthlyEstimatedCost} />
 
       {/* ── 2. Filter Pills & Custom Themed Sort Dropdown ── */}
-      <div className="recurring-controls-bar">
-        <div className="recurring-filter-pills" role="tablist" aria-label="Lọc khoản định kỳ">
-          <button
-            type="button"
-            className={`filter-pill-btn ${filterTab === 'all' ? 'active' : ''}`}
-            onClick={() => setFilterTab('all')}
-            role="tab"
-            aria-selected={filterTab === 'all'}
-          >
-            <span>Tất cả</span>
-            <span className="pill-count-tag">{counts.all}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`filter-pill-btn ${filterTab === 'soon' ? 'active' : ''}`}
-            onClick={() => setFilterTab('soon')}
-            role="tab"
-            aria-selected={filterTab === 'soon'}
-          >
-            <span>Sắp đến hạn</span>
-            <span className="pill-count-tag">{counts.soon}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`filter-pill-btn ${filterTab === 'today' ? 'active' : ''}`}
-            onClick={() => setFilterTab('today')}
-            role="tab"
-            aria-selected={filterTab === 'today'}
-          >
-            <span>Hôm nay</span>
-            <span className="pill-count-tag">{counts.today}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`filter-pill-btn ${filterTab === 'overdue' ? 'active' : ''}`}
-            onClick={() => setFilterTab('overdue')}
-            role="tab"
-            aria-selected={filterTab === 'overdue'}
-          >
-            <span>Quá hạn</span>
-            <span className="pill-count-tag">{counts.overdue}</span>
-          </button>
-        </div>
-
-        {/* Custom Themed Sort Dropdown */}
-        <div className="recurring-sort-custom-wrap" ref={sortRef}>
-          <button
-            type="button"
-            className={`recurring-sort-custom-btn ${isSortDropdownOpen ? 'is-active' : ''}`}
-            onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-            aria-expanded={isSortDropdownOpen}
-            aria-haspopup="listbox"
-            aria-label={`Sắp xếp: ${currentSortLabel}`}
-          >
-            <svg className="sort-compact-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16" />
-            </svg>
-            <span className="sort-label-text">{currentSortLabel}</span>
-            <Icon name="chevronDown" className={`sort-chevron-icon ${isSortDropdownOpen ? 'is-open' : ''}`} width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </button>
-
-          {isSortDropdownOpen && (
-            <div className="recurring-sort-custom-menu" role="listbox">
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={`sort-custom-item ${sortBy === opt.value ? 'is-selected' : ''}`}
-                  onClick={() => {
-                    setSortBy(opt.value);
-                    setIsSortDropdownOpen(false);
-                  }}
-                  role="option"
-                  aria-selected={sortBy === opt.value}
-                >
-                  {sortBy === opt.value && (
-                    <Icon name="check" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  )}
-                  <span>{opt.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <RecurringFilterBar counts={counts} currentSortLabel={currentSortLabel} filterTab={filterTab} isSortDropdownOpen={isSortDropdownOpen} setFilterTab={setFilterTab} setIsSortDropdownOpen={setIsSortDropdownOpen} setSortBy={setSortBy} sortBy={sortBy} sortRef={sortRef} />
 
       {/* ── 3. Loading State ── */}
       {isLoading && installments.length === 0 && (
         <div className="wallets-loading">
-          <span className="spinner" style={{ width: 24, height: 24, marginBottom: 8 }} />
+          <span className="spinner spinner--box" />
           <p>Đang tải danh sách khoản định kỳ...</p>
         </div>
       )}
@@ -504,11 +367,7 @@ export function RecurringTab() {
       {!isLoading && installments.length === 0 && (
         <EmptyState
           icon={
-            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="18" height="18" x="3" y="4" rx="2" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <polyline points="9 16 12 19 15 16" />
-            </svg>
+            <Icon name="calendarDown" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           }
           title="Chưa có khoản định kỳ nào"
           description="Thêm khoản chi đều đặn như tiền nhà hoặc dịch vụ thuê bao để theo dõi hạn thanh toán."
@@ -518,333 +377,10 @@ export function RecurringTab() {
       )}
 
       {/* ── 5. List of Recurring Cards ── */}
-      {!isLoading && displayItems.length > 0 && (
-        <div className="recurring-rows-list">
-          {displayItems.map((item) => {
-            const isActive = item.active !== false;
-            const isEnded = isInstallmentEnded(item);
-            const tierInfo = getRecurringTier(item, currentMonthStr);
-            const cycleSuffix = CYCLE_SUFFIXES[item.cycle] || '/ tháng';
-            const brandInfo = detectBrandInfo(item.name);
-            const brandKey = item.brandKey || brandInfo.brandKey;
-
-            // Formatted due date
-            const parsedDueDate = item.nextDueDate ? parseDate(item.nextDueDate) : null;
-            const formattedDueDate = parsedDueDate ? formatDate(parsedDueDate, 'day-date') : item.nextDueDate || 'Chưa định ngày';
-            const formattedEndDate = item.endDate ? formatDate(item.endDate, 'day-date') : '';
-            const dayOfMonth = parsedDueDate ? String(parsedDueDate.getDate()).padStart(2, '0') : '01';
-
-            // Assigned wallet
-            const assignedWallet = wallets.find((w) => String(w.id) === String(item.walletId))
-              || (item.walletId ? null : wallets[0]);
-            const walletLabel = assignedWallet?.name || (item.walletId ? 'Ví đã lưu trữ' : 'Chọn ví');
-            const categoryLabel = label(item.category || brandInfo.categoryDefault);
-            const noteLabel = translateLegacyText(lang, item.note || item.desc || brandInfo.noteDefault || '');
-
-            const isPaidThisMonth = tierInfo.isPaidThisMonth;
-
-            const isMenuOpen = openActionMenuId === item.id;
-            const isWalletMenuOpen = openWalletSelectorId === item.id;
-            const pendingAction = pendingActions[item.id];
-
-            return (
-              <div
-                key={item.id}
-                className={`recurring-row-card ${!isActive ? 'is-paused' : ''} ${isEnded ? 'is-ended' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''} ${pendingAction ? 'is-processing' : ''}`}
-                aria-busy={Boolean(pendingAction)}
-              >
-                {/* 1. Brand Logo Tile */}
-                <div className="recurring-row-logo-col">
-                  <BrandLogoIcon brandKey={brandKey} size={48} />
-                </div>
-
-                {/* 2. Title & Meta Info */}
-                <div className="recurring-row-main-col">
-                  <div className="recurring-title-row">
-                    <h4 className="recurring-main-name" title={item.name}>
-                      {item.name}
-                    </h4>
-                    <span className="recurring-category-badge">
-                      {categoryLabel}
-                    </span>
-                  </div>
-
-                  <div className="recurring-meta-row">
-                    <span className="recurring-meta-item">
-                      <Icon name="calendar" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <span>Ngày thanh toán: <strong>{dayOfMonth} hàng tháng</strong></span>
-                    </span>
-
-                    {formattedEndDate && (
-                      <span className="recurring-meta-item recurring-term-meta">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <rect width="18" height="18" x="3" y="4" rx="2" />
-                          <line x1="16" y1="2" x2="16" y2="6" />
-                          <line x1="8" y1="2" x2="8" y2="6" />
-                          <line x1="3" y1="10" x2="21" y2="10" />
-                          <line x1="7" y1="16" x2="17" y2="16" />
-                        </svg>
-                        <span>Kết thúc: <strong>{formattedEndDate}</strong></span>
-                      </span>
-                    )}
-
-                    {noteLabel && (
-                      <span className="recurring-meta-item recurring-meta-note">
-                        <Icon name="tag" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <span>{noteLabel}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Wallet + due status: one footer row on phones; transparent to the desktop grid. */}
-                <div className="recurring-row-footer">
-                {/* 3. Ví trừ tiền (Custom Themed Dropdown Popover) */}
-                <div className="recurring-row-wallet-col">
-                  <span className="row-col-label">Ví trừ tiền</span>
-                  <div className="recurring-wallet-custom-wrapper" ref={isWalletMenuOpen ? walletRef : null}>
-                    <button
-                      type="button"
-                      className="recurring-wallet-chip-btn"
-                      onClick={() => setOpenWalletSelectorId(isWalletMenuOpen ? null : item.id)}
-                      disabled={Boolean(pendingAction)}
-                      aria-expanded={isWalletMenuOpen}
-                      title={assignedWallet?.name ? `Ví trừ tiền: ${assignedWallet.name}` : walletLabel}
-                    >
-                      <span className="wallet-chip-icon" aria-hidden="true">
-                        {pendingAction === 'wallet' ? <span className="btn-spinner" /> : <WalletOutlineIcon type={assignedWallet?.type} size={16} color="currentColor" />}
-                      </span>
-                      <span className="wallet-chip-name">{walletLabel}</span>
-                      <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </button>
-
-                    {isWalletMenuOpen && (
-                      <div
-                        className="recurring-wallet-popover-menu"
-                        role="menu"
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="wallet-popover-header">Chọn ví trừ tiền</div>
-                        {wallets.map((w) => (
-                          <button
-                            key={w.id}
-                            type="button"
-                            className={`wallet-popover-item ${String(w.id) === String(assignedWallet?.id) ? 'is-active' : ''}`}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAssignWallet(item, w.id);
-                            }}
-                          >
-                            <span className="wallet-popover-icon">
-                              <WalletOutlineIcon type={w.type} size={16} color="currentColor" />
-                            </span>
-                            <div className="wallet-popover-info">
-                              <span className="wallet-popover-name">{w.name}</span>
-                              <span className="wallet-popover-bal">{formatCurrency(w.currentBalance ?? 0)}</span>
-                            </div>
-                            {String(w.id) === String(assignedWallet?.id) && (
-                              <Icon name="check" className="wallet-check-icon" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 4. Due Status Countdown Pill */}
-                <div className="recurring-row-due-col">
-                  <div className={`recurring-due-pill-box due-${isEnded ? 'ended' : tierInfo.tier}`}>
-                    {(pendingAction === 'pay' || pendingAction === 'toggle') && <span className="btn-spinner" role="status" aria-label={t('common.processing')} />}
-                    {isEnded ? (
-                      <>
-                        <div className="due-pill-top">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M8 12h8" />
-                          </svg>
-                          <strong>Đã kết thúc</strong>
-                        </div>
-                        <span className="due-pill-sub">Kỳ hạn: {formattedEndDate}</span>
-                      </>
-                    ) : tierInfo.tier === 'paid' ? (
-                      <>
-                        <div className="due-pill-top">
-                          <Icon name="check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                          <strong>{tierInfo.text}</strong>
-                        </div>
-                        <span className="due-pill-sub">
-                          Kỳ tới: {formattedDueDate}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="due-pill-top">
-                          {tierInfo.tier === 'danger' ? (
-                            <Icon name="alertCircle" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          ) : (
-                            <Icon name="clock" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          )}
-                          <strong>{tierInfo.text}</strong>
-                        </div>
-                        <span className="due-pill-sub">
-                          Đến hạn vào {formattedDueDate}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                </div>
-
-                {/* 5. Amount */}
-                <div className="recurring-row-amount-col">
-                  <span className="row-col-label">Số tiền</span>
-                  <strong className="recurring-row-price">
-                    {formatCurrency(item.amount)} <span className="price-cycle">{cycleSuffix}</span>
-                  </strong>
-                </div>
-
-                {/* 6. Actions: 3-dots Menu ONLY with Pure Outline SVG Icons */}
-                <div className="recurring-row-actions-col">
-                  <div className="recurring-menu-wrapper" ref={isMenuOpen ? menuRef : null}>
-                    <button
-                      type="button"
-                      className="recurring-dots-action-btn"
-                      onClick={() => setOpenActionMenuId(isMenuOpen ? null : item.id)}
-                      disabled={Boolean(pendingAction)}
-                      aria-expanded={isMenuOpen}
-                      aria-haspopup="true"
-                      aria-label={`Tùy chọn cho khoản ${item.name}`}
-                      title="Tùy chọn"
-                    >
-                      <Icon name="moreVertical" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </button>
-
-                    {isMenuOpen && (
-                      <div className="recurring-actions-dropdown" role="menu">
-                        <button
-                          type="button"
-                          className="actions-dropdown-item"
-                          role="menuitem"
-                          onClick={() => handlePay(item)}
-                          disabled={isEnded}
-                          title={isEnded ? 'Gia hạn ngày kết thúc để tiếp tục thanh toán' : undefined}
-                        >
-                          <Icon name="check" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <span>{isPaidThisMonth ? 'Đánh dấu đã trả kỳ tới' : 'Đánh dấu đã trả kỳ này'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="actions-dropdown-item"
-                          role="menuitem"
-                          onClick={() => handleOpenEdit(item)}
-                        >
-                          <Icon name="pencil" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <span>Chỉnh sửa khoản định kỳ</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="actions-dropdown-item"
-                          role="menuitem"
-                          onClick={() => handleToggle(item)}
-                          disabled={isEnded}
-                          title={isEnded ? 'Gia hạn ngày kết thúc để tiếp tục theo dõi' : undefined}
-                        >
-                          <svg className="menu-action-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            {isActive ? (
-                              <>
-                                <rect x="6" y="4" width="4" height="16" rx="1" />
-                                <rect x="14" y="4" width="4" height="16" rx="1" />
-                              </>
-                            ) : (
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            )}
-                          </svg>
-                          <span>{isActive ? 'Tạm dừng theo dõi' : 'Tiếp tục theo dõi'}</span>
-                        </button>
-                        <div className="dropdown-menu-divider" aria-hidden="true" />
-                        <button
-                          type="button"
-                          className="actions-dropdown-item text-danger"
-                          role="menuitem"
-                          onClick={() => handleDelete(item)}
-                        >
-                          <Icon name="trash" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <span>Xóa khoản định kỳ</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {<RecurringList currentMonthStr={currentMonthStr} displayItems={displayItems} handleAssignWallet={handleAssignWallet} handleDelete={handleDelete} handleOpenEdit={handleOpenEdit} handlePay={handlePay} handleToggle={handleToggle} isLoading={isLoading} menuRef={menuRef} openActionMenuId={openActionMenuId} openWalletSelectorId={openWalletSelectorId} pendingActions={pendingActions} setOpenActionMenuId={setOpenActionMenuId} setOpenWalletSelectorId={setOpenWalletSelectorId} walletRef={walletRef} wallets={wallets} />}
 
       {/* ── 6. Bottom Summary Box: Tổng quan khoản định kỳ (Không có nút Lịch) ── */}
-      <div className="recurring-summary-bottom-card">
-        <div className="summary-bottom-header-row">
-          <div className="summary-bottom-title-lead">
-            <div className="summary-bottom-icon-box" aria-hidden="true">
-              <Icon name="calendar" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </div>
-            <div className="summary-bottom-titles">
-              <h3 className="summary-bottom-title">Tổng quan khoản định kỳ</h3>
-              <span className="summary-bottom-subtitle">
-                Thống kê chi tiết trong {monthDisplayLabel}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="summary-bottom-grid">
-          {/* Cell 1: Đã thanh toán */}
-          <div className="summary-grid-cell">
-            <span className="grid-cell-label">Đã thanh toán</span>
-            <strong className="grid-cell-num text-brand">
-              {formatCurrency(monthlyBreakdown.paidAmount)}
-            </strong>
-            <span className="grid-cell-sub">{monthlyBreakdown.paidCount} khoản</span>
-          </div>
-
-          <div className="summary-grid-divider" aria-hidden="true" />
-
-          {/* Cell 2: Sắp thanh toán */}
-          <div className="summary-grid-cell">
-            <span className="grid-cell-label">Sắp thanh toán</span>
-            <strong className="grid-cell-num text-warning">
-              {formatCurrency(monthlyBreakdown.upcomingSoonAmount)}
-            </strong>
-            <span className="grid-cell-sub">{monthlyBreakdown.upcomingSoonCount} khoản</span>
-          </div>
-
-          <div className="summary-grid-divider" aria-hidden="true" />
-
-          {/* Cell 3: Còn lại trong tháng */}
-          <div className="summary-grid-cell">
-            <span className="grid-cell-label">Còn lại trong tháng</span>
-            <strong className="grid-cell-num text-blue">
-              {formatCurrency(monthlyBreakdown.remainingAmount)}
-            </strong>
-            <span className="grid-cell-sub">{monthlyBreakdown.remainingCount} khoản</span>
-          </div>
-
-          <div className="summary-grid-divider" aria-hidden="true" />
-
-          {/* Cell 4: Trung bình / tháng */}
-          <div className="summary-grid-cell">
-            <span className="grid-cell-label">Trung bình / tháng</span>
-            <strong className="grid-cell-num text-purple">
-              {formatCurrency(Math.round(monthlyEstimatedCost))}
-            </strong>
-            <span className="grid-cell-sub">~ chi phí định kỳ</span>
-          </div>
-        </div>
-      </div>
+      <RecurringSummaryBox monthDisplayLabel={monthDisplayLabel} monthlyBreakdown={monthlyBreakdown} monthlyEstimatedCost={monthlyEstimatedCost} />
 
       {/* ── Modal Add / Edit Recurring Item ── */}
       {isModalOpen && (

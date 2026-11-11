@@ -17,8 +17,8 @@ export function AppShellSkeleton() {
           <span className="tb-badge">v2.0</span>
         </div>
 
-        <div className="tb-right" style={{ gap: '16px', alignItems: 'center' }}>
-          <div className="skeleton-item skeleton-text" style={{ width: '120px', height: '20px' }} />
+        <div className="tb-right tb-right--layout">
+          <div className="skeleton-item skeleton-text skeleton-item--shell-title" />
           <div className="skeleton-item skeleton-avatar skeleton-avatar--sm" />
         </div>
       </header>
@@ -26,10 +26,10 @@ export function AppShellSkeleton() {
       {/* ── Body Container with Sidebar + Main Content ── */}
       <div className="app-body-container">
         <aside className="app-sidebar-nav" aria-label={t('common.loading')}>
-          <div className="sidebar-scrollable-content" style={{ padding: '16px 12px' }}>
+          <div className="sidebar-scrollable-content sidebar-scrollable-content--box">
             {groupLabels.map((groupLabel, gIdx) => (
-              <div key={gIdx} className="sidebar-nav-group" style={{ marginBottom: '20px' }}>
-                <div className="sidebar-group-label" style={{ marginBottom: '8px' }}>
+              <div key={gIdx} className="sidebar-nav-group sidebar-nav-group--box">
+                <div className="sidebar-group-label sidebar-group-label--box">
                   <span className="sidebar-group-dot" aria-hidden="true" />
                   <span>{t(groupLabel).toLocaleUpperCase()}</span>
                 </div>
@@ -37,11 +37,11 @@ export function AppShellSkeleton() {
                   {[1, 2].slice(0, gIdx === 0 ? 1 : 2).map((item) => (
                     <div
                       key={item}
-                      className="sidebar-nav-item"
-                      style={{ pointerEvents: 'none', opacity: 0.7 }}
+                      className="sidebar-nav-item sidebar-nav-item--box"
+                     
                     >
-                      <div className="skeleton-item skeleton-avatar skeleton-avatar--xs" style={{ width: '18px', height: '18px' }} />
-                      <div className="skeleton-item skeleton-text" style={{ width: '65%', height: '14px' }} />
+                      <div className="skeleton-item skeleton-avatar skeleton-avatar--xs skeleton-item--shell-icon" />
+                      <div className="skeleton-item skeleton-text skeleton-item--shell-label" />
                     </div>
                   ))}
                 </div>

@@ -33,12 +33,12 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
     >
         {/* Header */}
         <div className="financial-tips-header">
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="financial-tips-header__div--layout">
             <button
               type="button"
               onClick={() => setTopic('smart')}
-              className={`financial-tips-tab-btn ${topic === 'smart' ? 'active' : ''}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              className={`financial-tips-tab-btn ${topic === 'smart' ? 'active' : ''} financial-tips-tab-btn--layout`}
+             
             >
               <TargetOutlineIcon size={15} />
               <span>Tại sao cần mục tiêu?</span>
@@ -46,8 +46,8 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
             <button
               type="button"
               onClick={() => setTopic('50-30-20')}
-              className={`financial-tips-tab-btn ${topic === '50-30-20' ? 'active' : ''}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              className={`financial-tips-tab-btn ${topic === '50-30-20' ? 'active' : ''} financial-tips-tab-btn--layout`}
+             
             >
               <ChartOutlineIcon size={15} />
               <span>Quy tắc 50/30/20</span>
@@ -69,40 +69,40 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
           {topic === 'smart' ? (
             <>
               <div>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                <h4 className="financial-tips-body__h4--text">
                   Biến Ước Mơ Thành Mục Tiêu Tài Chính Cụ Thể
                 </h4>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <p className="financial-tips-body__p--text">
                   Khi tiền tiết kiệm không có mục tiêu rõ ràng, nó rất dễ bị chi tiêu vào những khoản mua sắm bốc đồng.
                   Tạo các <strong>Hũ chi tiêu</strong> giúp bạn gán ý nghĩa cho từng đồng tiền bạn kiếm được.
                 </p>
               </div>
 
               {/* SMART Pillars */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ padding: '12px 14px', background: 'var(--surface-subtle)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                  <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '13px', marginBottom: '2px' }}>
+              <div className="financial-tips-body__div--layout">
+                <div className="financial-tips-body__div--box">
+                  <strong className="financial-tips-body__strong--tone">
                     S - Cụ thể (Specific)
                   </strong>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  <span className="financial-tips-body__span--text">
                     Thay vì "tiết kiệm tiền", hãy đặt tên hũ rõ ràng: "Quỹ khẩn cấp 6 tháng", "Mua xe máy mới", "Du lịch Đà Lạt".
                   </span>
                 </div>
 
-                <div style={{ padding: '12px 14px', background: 'var(--surface-subtle)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                  <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '13px', marginBottom: '2px' }}>
+                <div className="financial-tips-body__div--box">
+                  <strong className="financial-tips-body__strong--tone">
                     M - Đo lường được (Measurable)
                   </strong>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  <span className="financial-tips-body__span--text">
                     {t('jars.measurableTip', { amount: formatCurrency(15000000) })}
                   </span>
                 </div>
 
-                <div style={{ padding: '12px 14px', background: 'var(--surface-subtle)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                  <strong style={{ color: 'var(--primary)', display: 'block', fontSize: '13px', marginBottom: '2px' }}>
+                <div className="financial-tips-body__div--box">
+                  <strong className="financial-tips-body__strong--tone">
                     T - Có thời hạn (Time-bound)
                   </strong>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  <span className="financial-tips-body__span--text">
                     Gán ngày đến hạn (Target Date) giúp CaltDHy tính toán chính xác mỗi tháng bạn cần nạp bao nhiêu tiền để về đích đúng hẹn.
                   </span>
                 </div>
@@ -111,28 +111,20 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
           ) : (
             <>
               <div>
-                <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                <h4 className="financial-tips-body__h4--text">
                   Quy Tắc Quản Trị Dòng Tiền 50/30/20
                 </h4>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <p className="financial-tips-body__p--text">
                   Đây là phương pháp phân bổ tài chính kinh điển giúp cân bằng giữa cuộc sống hiện tại và mục tiêu tương lai.
                 </p>
               </div>
 
               {/* Interactive Calculator */}
-              <div
-                style={{
-                  background: 'var(--surface-subtle)',
-                  border: '1.5px solid var(--border)',
-                  borderRadius: '14px',
-                  padding: '16px 20px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '14px'
-                }}
+              <div className="financial-tips-body__div--box2"
+               
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                <div className="financial-tips-body__div--layout2">
+                  <label className="financial-tips-body__label--text">
                     Thu nhập ròng hàng tháng của bạn (VND):
                   </label>
                   <input
@@ -140,53 +132,46 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                     value={numericIncome ? formatInputNumber(numericIncome) : ''}
                     onChange={handleIncomeChange}
                     placeholder="Nhập mức thu nhập..."
-                    className="financial-tips-input"
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      fontFamily: 'var(--font-mono)',
-                      outline: 'none'
-                    }}
+                    className="financial-tips-input financial-tips-input--box"
+                   
                   />
                 </div>
 
                 {/* 50/30/20 Distribution Visual Bar */}
-                <div style={{ height: '10px', borderRadius: '99px', display: 'flex', overflow: 'hidden' }}>
-                  <div style={{ width: '50%', background: '#3B82F6' }} title="50% Thiết yếu" />
-                  <div style={{ width: '30%', background: '#F59E0B' }} title="30% Mong muốn" />
-                  <div style={{ width: '20%', background: '#10B981' }} title="20% Tiết kiệm" />
+                <div className="financial-tips-body__div--box3">
+                  <div className="financial-tips-body__div--box4" title="50% Thiết yếu" />
+                  <div className="financial-tips-body__div--box5" title="30% Mong muốn" />
+                  <div className="financial-tips-body__div--box6" title="20% Tiết kiệm" />
                 </div>
 
                 {/* 3 Columns Output */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '12px', color: '#3B82F6', fontWeight: 700, display: 'block' }}>50% Thiết yếu</span>
-                    <strong style={{ fontSize: '14px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                <div className="financial-tips-body__div--layout3">
+                  <div className="financial-tips-body__div--box7">
+                    <span className="financial-tips-body__span--text2">50% Thiết yếu</span>
+                    <strong className="financial-tips-body__strong--text">
                       {formatCurrency(needs50)}
                     </strong>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    <span className="financial-tips-body__span--text3">
                       Nhà cửa, ăn uống, hóa đơn
                     </span>
                   </div>
 
-                  <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '12px', color: '#F59E0B', fontWeight: 700, display: 'block' }}>30% Mong muốn</span>
-                    <strong style={{ fontSize: '14px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                  <div className="financial-tips-body__div--box7">
+                    <span className="financial-tips-body__span--text4">30% Mong muốn</span>
+                    <strong className="financial-tips-body__strong--text">
                       {formatCurrency(wants30)}
                     </strong>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    <span className="financial-tips-body__span--text3">
                       Giải trí, mua sắm, ăn ngoài
                     </span>
                   </div>
 
-                  <div style={{ background: 'var(--surface)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '12px', color: '#10B981', fontWeight: 700, display: 'block' }}>20% Tích lũy hũ</span>
-                    <strong style={{ fontSize: '14px', color: '#10B981', fontFamily: 'var(--font-mono)' }}>
+                  <div className="financial-tips-body__div--box7">
+                    <span className="financial-tips-body__span--text5">20% Tích lũy hũ</span>
+                    <strong className="financial-tips-body__strong--text2">
                       {formatCurrency(savings20)}
                     </strong>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    <span className="financial-tips-body__span--text3">
                       Nạp vào các hũ chi tiêu
                     </span>
                   </div>

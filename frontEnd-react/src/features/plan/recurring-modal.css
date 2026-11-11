@@ -415,3 +415,9 @@
     max-width: none;
   }
 }
+
+/* ── Chuyển từ inline style của RecurringModal.jsx (đợt 4) ── */
+.txn-btn-submit .spinner.spinner--box {
+  width: 14px;
+  height: 14px;
+}

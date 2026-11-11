@@ -6,7 +6,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { getUserErrorMessage } from '../../utils/userErrors.js';
-import { JarOutlineIcon } from '../../components/ui/AppIcons';
+import { JarOutlineIcon, Icon } from '../../components/ui/AppIcons';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { JarDialog } from './JarDialog';
 import { getJarTransactionCopy } from './jarTransactionCopy';
@@ -147,7 +147,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
       <form id={formId} onSubmit={handleSubmit} noValidate className="jar-transfer-form" aria-busy={isSubmitting}>
         <div className="jar-transfer-route" aria-label={isDeposit ? copy.depositRoute : copy.withdrawRoute}>
           <span>{isDeposit ? copy.wallet : copy.jar}</span>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6" /></svg>
+          <Icon name="arrowRightAlt" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" />
           <span>{isDeposit ? copy.jar : copy.wallet}</span>
           <small>{copy.internalTransfer}</small>
         </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { spendingService } from '../../services/spendingService';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/formatters';
+import { Icon } from '../../components/ui/AppIcons';
 
 const FIELD_KEYS = {
   amount: 'transaction.amount', fee: 'transaction.fee', type: 'transaction.type',
@@ -48,8 +49,7 @@ export function TransactionRevisionHistory({ transactionId, wallets }) {
 
   const retry = <button type="button" className="txn-revisions-retry"
     onClick={() => setRequest((previous) => previous + 1)}>{t('common.tryAgain')}</button>;
-  const icon = <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 3v6h6M12 7v5l3 2" /></svg>;
+  const icon = <Icon name="history" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />;
 
   if (state.entries.length === 0) {
     if (state.status === 'error') {
