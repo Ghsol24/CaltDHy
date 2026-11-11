@@ -39,7 +39,7 @@ const getInitialTheme = () => {
   return 'dark';
 };
 
-export const useThemeStore = create((set, get) => ({
+export const useThemeStore = create((set) => ({
   theme: getInitialTheme(),
 
   setTheme: (theme) => {
@@ -49,12 +49,6 @@ export const useThemeStore = create((set, get) => ({
     } catch {}
     applyThemeToDOM(next);
     set({ theme: next });
-  },
-
-  toggleTheme: () => {
-    const current = get().theme;
-    const next = current === 'dark' ? 'light' : 'dark';
-    get().setTheme(next);
   }
 }));
 

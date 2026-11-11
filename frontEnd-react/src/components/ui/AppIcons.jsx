@@ -449,13 +449,7 @@ const GLYPHS = {
   play: <polygon points="5 3 19 12 5 21 5 3" />,
   eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>,
   eyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></>,
-  themeLight: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>,
-  themeDark: <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />,
-  themeCream: <path d="M5 4h14v16H5zM8 8h8M8 12h6M8 16h4" />,
-  themeGreen: <path d="M20 4C10 2 3 8 6 15c6 5 15-1 14-11ZM4 21 15 10" />,
 };
-
-export const ICON_NAMES = Object.freeze(Object.keys(GLYPHS));
 
 export function Icon({ name, ...svgProps }) {
   const glyph = GLYPHS[name];

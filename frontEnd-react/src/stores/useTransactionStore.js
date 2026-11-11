@@ -84,45 +84,12 @@ return ({
   financialResetVersion: 0,
   error: null,
   editingTransaction: null,
-  filters: {
-    type: 'all',
-    category: 'all',
-    search: ''
-  },
 
   setExpenseCategories: async (cats) => {
     const epoch = sessionEpoch();
     await spendingService.updateCategories(cats.map(c => c.name));
     scopedSet(epoch, storeSet)({ expenseCategories: cats,
       budgetCategoryBase: { names: cats.map((c) => c.name), fetchedAt: Date.now() } });
-  },
-
-  deleteExpenseCategory: async (catName) => {
-    const updated = get().expenseCategories.filter((c) => c.name !== catName);
-    const updatedBudgets = { ...get().budgets };
-    delete updatedBudgets[catName];
-    return get().updateBudgetsAndCategories(updatedBudgets, updated);
-  },
-
-  addExpenseCategory: async (catObj) => {
-    const exists = get().expenseCategories.some(
-      (c) => c.name.toLowerCase() === catObj.name.toLowerCase()
-    );
-    if (exists) return;
-    const updated = [...get().expenseCategories, catObj];
-    return get().setExpenseCategories(updated);
-  },
-
-  setFilter: (key, value) => {
-    set((state) => ({
-      filters: { ...state.filters, [key]: value }
-    }));
-  },
-
-  resetFilters: () => {
-    set({
-      filters: { type: 'all', category: 'all', search: '' }
-    });
   },
 
   openEditTransaction: (transaction) => set({ editingTransaction: transaction }),

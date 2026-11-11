@@ -20,26 +20,11 @@ export const useSpendingStore = create((set) => ({
   settingsSection: 'general',
   isSettingsHome: true,
   settingsNavigationRequest: null,
-  isWrapupOpen: false,
   isHelpOpen: false,
 
   routeRevision: 0,
   routeMode: 'push',
 
-  setActiveView: (view, options = {}) =>
-    set((state) => {
-      if (state.activeView === view && (view !== 'plan' || state.planSubTab === 'overview')) {
-        return state;
-      }
-      return {
-        activeView: view,
-        planSubTab: view === 'plan' ? 'overview' : state.planSubTab,
-        ...(options.syncRoute === false ? {} : {
-          routeRevision: state.routeRevision + 1,
-          routeMode: options.replace ? 'replace' : 'push'
-        })
-      };
-    }),
   setPlanSubTab: (subTab, options = {}) =>
     set((state) => (state.planSubTab === subTab ? state : {
       planSubTab: subTab,
@@ -116,9 +101,6 @@ export const useSpendingStore = create((set) => ({
   setSettingsSection: (section) => set({ settingsSection: section, isSettingsHome: false }),
   showSettingsHome: () => set({ isSettingsHome: true }),
   closeSettingsModal: () => set({ isSettingsOpen: false, settingsNavigationRequest: null }),
-
-  openWrapupModal: () => set({ isWrapupOpen: true }),
-  closeWrapupModal: () => set({ isWrapupOpen: false }),
 
   openHelpModal: () => set({ isHelpOpen: true }),
   closeHelpModal: () => set({ isHelpOpen: false })

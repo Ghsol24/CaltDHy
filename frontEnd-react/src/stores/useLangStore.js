@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { DEFAULT_LOCALE, normalizeLocale, SUPPORTED_LOCALES } from '../i18n/translations';
+import { DEFAULT_LOCALE, normalizeLocale } from '../i18n/translations';
 import { setActiveFormattingLocale } from '../utils/formatters';
 
 const KEY = 'caltdhy_lang';
@@ -22,7 +22,6 @@ setActiveFormattingLocale(initialLang);
 
 export const useLangStore = create((set) => ({
   lang: initialLang,
-  supportedLocales: SUPPORTED_LOCALES,
   setLang: (value) => {
     const lang = normalizeLocale(value);
     try {
