@@ -6,11 +6,16 @@ const assert = require('node:assert/strict');
 const { chromium, expect } = require('@playwright/test');
 const { startUiFixtureServer } = require('./ui-fixture-server.cjs');
 
+// Ghim "hôm nay" cho cả dữ liệu mẫu lẫn đồng hồ trang: các kiểm tra lịch tiết kiệm
+// và "Cần chú ý" dựa trên ngày giao dịch, vốn bị kẹp về hôm nay nên đổi theo ngày chạy.
+const FIXTURE_NOW = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 27, 10, 0, 0); })();
+
 async function newPage(browser, server, { theme = 'green', width = 1440 } = {}) {
   const context = await browser.newContext({
     viewport: { width, height: width < 600 ? 844 : 1000 }, isMobile: width < 600, hasTouch: width < 600,
     serviceWorkers: 'block', locale: 'vi-VN', timezoneId: 'Asia/Ho_Chi_Minh', reducedMotion: 'reduce'
   });
+  await context.clock.setFixedTime(FIXTURE_NOW);
   await context.addInitScript((value) => {
     localStorage.setItem('caltdhy_theme', value);
     localStorage.setItem('caltdhy_lang', 'vi');
@@ -333,7 +338,7 @@ module.exports = { check, checks, newPage };
 
 if (require.main === module) {
   (async () => {
-    const server = await startUiFixtureServer();
+    const server = await startUiFixtureServer({ now: FIXTURE_NOW });
     const browser = await chromium.launch();
     let failed = 0;
     try {

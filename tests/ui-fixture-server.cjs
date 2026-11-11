@@ -14,17 +14,19 @@ const MIME = {
 };
 
 const pad = (n) => String(n).padStart(2, '0');
-function monthDate(monthOffset, day) {
-  const now = new Date();
+// `now` (tuỳ chọn) ghim "hôm nay" của dữ liệu mẫu. Mặc định là thời điểm chạy, nên
+// ngày giao dịch bị kẹp về hôm nay (pastDay) và kết quả đổi theo ngày trong tháng;
+// test nào kiểm tra số liệu theo ngày nên truyền một ngày cố định (và ghim đồng hồ trang).
+function monthDateAt(monthOffset, day, now = new Date()) {
   const base = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
   const last = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
   return `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(Math.min(day, last))}`;
 }
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
-// Keep fixture days in the past so "today" logic stays meaningful.
-const pastDay = (day) => Math.max(1, Math.min(day, new Date().getDate()));
 
-function buildFixtures() {
+function buildFixtures({ now = new Date() } = {}) {
+  const monthDate = (monthOffset, day) => monthDateAt(monthOffset, day, now);
+  // Keep fixture days in the past so "today" logic stays meaningful.
+  const pastDay = (day) => Math.max(1, Math.min(day, now.getDate()));
   const wallets = [
     { _id: 'w-zalo', name: 'ZaloPay', type: 'ewallet', initialBalance: 1200000, isDefault: true },
     { _id: 'w-cash', name: 'Tiền mặt', type: 'cash', initialBalance: 300000 },
@@ -73,7 +75,7 @@ function buildFixtures() {
   ];
   const installments = [
     { _id: 'i1', name: 'Giữ xe định kỳ', category: 'Transportation', amount: 50000, cycle: 'monthly', nextDueDate: monthDate(1, 7) },
-    { _id: 'i2', name: 'Góp đt', category: 'Shopping', amount: 917000, cycle: 'monthly', nextDueDate: monthDate(0, Math.min(new Date().getDate() + 2, 28)) },
+    { _id: 'i2', name: 'Góp đt', category: 'Shopping', amount: 917000, cycle: 'monthly', nextDueDate: monthDate(0, Math.min(now.getDate() + 2, 28)) },
     { _id: 'i3', name: 'Youtube Pre', category: 'Entertainment', amount: 54444, cycle: 'monthly', nextDueDate: monthDate(1, 13) },
     { _id: 'i4', name: 'Trả góp cái bàn', category: 'Shopping', amount: 180484, cycle: 'monthly', nextDueDate: monthDate(1, 24) }
   ];
@@ -113,11 +115,14 @@ function handleApi(req, res, db) {
   return ok(null);
 }
 
-async function startUiFixtureServer({ distDir = path.join(__dirname, '..', 'frontEnd-react', 'dist') } = {}) {
+async function startUiFixtureServer({ distDir = path.join(__dirname, '..', 'frontEnd-react', 'dist'), now } = {}) {
   if (!fs.existsSync(path.join(distDir, 'index.html'))) {
     throw new Error(`Missing build at ${distDir}. Run "npm run build --prefix frontEnd-react" first.`);
   }
-  const db = buildFixtures();
+  const fixtureNow = now ? new Date(now) : null;
+  const db = buildFixtures({ now: fixtureNow || new Date() });
+  // "Hôm nay" (YYYY-MM-DD) theo cùng mốc với dữ liệu mẫu.
+  const today = () => { const d = fixtureNow || new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   const server = http.createServer((req, res) => {
     if (req.url.startsWith('/api/')) {
       let body = '';
@@ -137,4 +142,4 @@ async function startUiFixtureServer({ distDir = path.join(__dirname, '..', 'fron
   return { url: `http://127.0.0.1:${port}`, db, close: () => new Promise((resolve) => server.close(resolve)), today };
 }
 
-module.exports = { startUiFixtureServer, buildFixtures, monthDate };
+module.exports = { startUiFixtureServer, buildFixtures, monthDate: monthDateAt };
