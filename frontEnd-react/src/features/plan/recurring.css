@@ -929,9 +929,18 @@
 /* Responsive for Recurring */
 @media (max-width: 1180px) and (min-width: 961px) {
   .recurring-row-card {
-    grid-template-columns: 44px minmax(150px, 1fr) 140px 175px 120px 36px;
+    /* Thẻ chỉ rộng 700px ở màn 1024px (có thanh rail): cho cột tên, cột ví và cột số tiền
+       co trong khoảng minmax để không tràn; cột hạn thanh toán giữ 175px để huy hiệu
+       không bị cắt. Từ ~1100px trở lên các cột đạt bề rộng như trước. */
+    grid-template-columns: 44px minmax(120px, 1fr) minmax(112px, 140px) 175px minmax(104px, 120px) 36px;
     gap: 12px;
     padding: 14px 16px;
+  }
+
+  /* "/ tháng" xuống dòng như bố cục ≤960px: cả cụm số tiền (~140px) rộng hơn cột 120px
+     nên trước đây lấn sang huy hiệu hạn thanh toán. */
+  .recurring-row-card .price-cycle {
+    display: block;
   }
 }
 

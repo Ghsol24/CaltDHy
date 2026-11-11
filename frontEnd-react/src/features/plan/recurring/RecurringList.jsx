@@ -9,7 +9,7 @@ import { Icon } from '../../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../../i18n/useTranslation';
 
-export function RecurringList({ currentMonthStr, displayItems, handleAssignWallet, handleDelete, handleOpenEdit, handlePay, handleToggle, isLoading, menuRef, openActionMenuId, openWalletSelectorId, pendingActions, setOpenActionMenuId, setOpenWalletSelectorId, walletRef, wallets }) {
+export function RecurringList({ currentMonthStr, displayItems, handleAssignWallet, handleDelete, handleOpenEdit, handlePay, handleToggle, isLoading, menuRef, menuTriggerRef, openActionMenuId, openWalletSelectorId, pendingActions, setOpenActionMenuId, setOpenWalletSelectorId, walletRef, wallets }) {
   const { label, lang, t } = useTranslation();
   return (!isLoading && displayItems.length > 0 && (
     <div className="recurring-rows-list">
@@ -197,7 +197,7 @@ export function RecurringList({ currentMonthStr, displayItems, handleAssignWalle
                 <button
                   type="button"
                   className="recurring-dots-action-btn"
-                  onClick={() => setOpenActionMenuId(isMenuOpen ? null : item.id)}
+                  onClick={(e) => { menuTriggerRef.current = e.currentTarget; setOpenActionMenuId(isMenuOpen ? null : item.id); }}
                   disabled={Boolean(pendingAction)}
                   aria-expanded={isMenuOpen}
                   aria-haspopup="true"

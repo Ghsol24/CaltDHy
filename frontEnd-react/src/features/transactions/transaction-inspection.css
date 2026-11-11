@@ -688,7 +688,6 @@ button.transaction-ledger-row:hover {
   .transaction-filter-controls { gap: 7px; }
   .transaction-filter-dropdown.is-compact .transaction-filter-trigger { min-height: 42px; }
   .transaction-inspection-row { gap: 10px; padding: 12px; }
-  /* dark/cream vốn giữ padding desktop ở đây (rule theme cũ thắng media query) — giữ như trước. */
   .transaction-ledger-row { padding: var(--txn-ledger-row-padding-compact); }
   .transaction-inspection-icon { flex-basis: 38px; width: 38px; height: 38px; }
   .transaction-inspection-amount { font-size: var(--font-xs); }

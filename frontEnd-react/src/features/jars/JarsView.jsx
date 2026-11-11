@@ -1,5 +1,5 @@
 import { getUserErrorMessage } from '../../utils/userErrors.js';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useJarStore } from '../../stores/useJarStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
@@ -79,6 +79,8 @@ export function JarsView() {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuJarId, setActiveMenuJarId] = useState(null);
+  // Nút ⋮ đã mở menu thẻ hũ: nhận lại focus khi đóng hộp thoại xác nhận xoá.
+  const menuTriggerRef = useRef(null);
   const [deletingJarId, setDeletingJarId] = useState(null);
   const [recomIndex, setRecomIndex] = useState(0);
 
@@ -167,6 +169,7 @@ export function JarsView() {
         : `Bạn có chắc chắn muốn xóa hũ tiết kiệm "${jar.name}" không?`;
 
     confirm({
+      returnFocusRef: menuTriggerRef,
       title: 'Xóa hũ tiết kiệm',
       message,
       confirmText: 'Xóa hũ',
@@ -346,7 +349,7 @@ export function JarsView() {
         )}
 
         {/* LOADED STATE: GRID VIEW */}
-        {<JarsGridView activeMenuJarId={activeMenuJarId} deletingJarId={deletingJarId} handleCreateNew={handleCreateNew} handleDelete={handleDelete} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jars={jars} setActiveMenuJarId={setActiveMenuJarId} viewMode={viewMode} visibleJars={visibleJars} />}
+        {<JarsGridView activeMenuJarId={activeMenuJarId} deletingJarId={deletingJarId} handleCreateNew={handleCreateNew} handleDelete={handleDelete} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jars={jars} menuTriggerRef={menuTriggerRef} setActiveMenuJarId={setActiveMenuJarId} viewMode={viewMode} visibleJars={visibleJars} />}
 
         {/* LOADED STATE: LIST VIEW */}
         {<JarsListView handleCreateNew={handleCreateNew} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jars={jars} viewMode={viewMode} visibleJars={visibleJars} />}

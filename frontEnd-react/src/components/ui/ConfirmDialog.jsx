@@ -17,6 +17,7 @@ export function ConfirmDialog() {
     confirmText,
     cancelText,
     confirmVariant,
+    returnFocusRef,
     handleConfirm,
     handleCancel,
   } = useConfirmStore();
@@ -26,6 +27,7 @@ export function ConfirmDialog() {
       isOpen={isOpen}
       onClose={handleCancel}
       busy={isConfirming}
+      returnFocusRef={returnFocusRef}
       portal={false}
       overlayClassName="confirm-dialog-backdrop"
       className="confirm-dialog-card"

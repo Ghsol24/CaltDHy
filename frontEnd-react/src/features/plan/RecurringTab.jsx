@@ -40,6 +40,8 @@ export function RecurringTab() {
   // 3-dots action menu state
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
   const menuRef = useRef(null);
+  // Nút ⋮ đã mở menu: nhận lại focus khi đóng hộp thoại xác nhận (mục menu đã biến mất).
+  const menuTriggerRef = useRef(null);
 
   // Wallet inline selector popover state
   const [openWalletSelectorId, setOpenWalletSelectorId] = useState(null);
@@ -302,6 +304,7 @@ export function RecurringTab() {
   const handleDelete = (item) => {
     setOpenActionMenuId(null);
     confirm({
+      returnFocusRef: menuTriggerRef,
       title: 'Xóa khoản định kỳ',
       message: `Bạn có chắc chắn muốn xóa khoản định kỳ "${item.name}" (${formatCurrency(item.amount)}) khỏi hệ thống?`,
       confirmText: 'Xóa khoản',
@@ -377,7 +380,7 @@ export function RecurringTab() {
       )}
 
       {/* ── 5. List of Recurring Cards ── */}
-      {<RecurringList currentMonthStr={currentMonthStr} displayItems={displayItems} handleAssignWallet={handleAssignWallet} handleDelete={handleDelete} handleOpenEdit={handleOpenEdit} handlePay={handlePay} handleToggle={handleToggle} isLoading={isLoading} menuRef={menuRef} openActionMenuId={openActionMenuId} openWalletSelectorId={openWalletSelectorId} pendingActions={pendingActions} setOpenActionMenuId={setOpenActionMenuId} setOpenWalletSelectorId={setOpenWalletSelectorId} walletRef={walletRef} wallets={wallets} />}
+      {<RecurringList currentMonthStr={currentMonthStr} displayItems={displayItems} handleAssignWallet={handleAssignWallet} handleDelete={handleDelete} handleOpenEdit={handleOpenEdit} handlePay={handlePay} handleToggle={handleToggle} isLoading={isLoading} menuRef={menuRef} menuTriggerRef={menuTriggerRef} openActionMenuId={openActionMenuId} openWalletSelectorId={openWalletSelectorId} pendingActions={pendingActions} setOpenActionMenuId={setOpenActionMenuId} setOpenWalletSelectorId={setOpenWalletSelectorId} walletRef={walletRef} wallets={wallets} />}
 
       {/* ── 6. Bottom Summary Box: Tổng quan khoản định kỳ (Không có nút Lịch) ── */}
       <RecurringSummaryBox monthDisplayLabel={monthDisplayLabel} monthlyBreakdown={monthlyBreakdown} monthlyEstimatedCost={monthlyEstimatedCost} />

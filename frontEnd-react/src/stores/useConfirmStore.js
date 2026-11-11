@@ -11,6 +11,9 @@ export const useConfirmStore = create((set, get) => ({
   confirmText: '',
   cancelText: '',
   confirmVariant: 'danger',
+  // Ref tới nút nhận lại focus khi đóng, dùng khi nút đã mở hộp thoại không còn
+  // trong DOM (mục của menu ⋮ đã đóng) — xem useFocusTrap.
+  returnFocusRef: null,
   _resolver: null,
   _onConfirm: null,
   _onCancel: null,
@@ -21,6 +24,7 @@ export const useConfirmStore = create((set, get) => ({
     confirmText = '',
     cancelText = '',
     confirmVariant = 'danger',
+    returnFocusRef = null,
     onConfirm,
     onCancel,
   } = {}) => {
@@ -36,6 +40,7 @@ export const useConfirmStore = create((set, get) => ({
         confirmText,
         cancelText,
         confirmVariant,
+        returnFocusRef,
         _resolver: resolve,
         _onConfirm: onConfirm || null,
         _onCancel: onCancel || null,

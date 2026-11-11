@@ -3,7 +3,7 @@ import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { Icon } from '../../../components/ui/AppIcons';
 import { DeferredJarGlassGraphic } from './DeferredJarGlassGraphic';
 
-export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, handleDelete, handleDeposit, handleEdit, handleOpenDetail, handleWithdraw, isLoading, jars, setActiveMenuJarId, viewMode, visibleJars }) {
+export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, handleDelete, handleDeposit, handleEdit, handleOpenDetail, handleWithdraw, isLoading, jars, menuTriggerRef, setActiveMenuJarId, viewMode, visibleJars }) {
   return (!isLoading && jars.length > 0 && viewMode === 'grid' && (
     <div className="jars-grid-container">
       {visibleJars.map((jar) => {
@@ -51,6 +51,7 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
                   className={`jar-card-menu-btn ${activeMenuJarId === jar.id ? 'is-active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
+                    menuTriggerRef.current = e.currentTarget;
                     setActiveMenuJarId(activeMenuJarId === jar.id ? null : jar.id);
                   }}
                   aria-label="Tùy chọn hũ"

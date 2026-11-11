@@ -673,7 +673,6 @@ html.dark-theme {
   --txn-history-control: rgba(255, 255, 255, .035);
   --txn-history-hover: rgba(96, 165, 250, .11);
   --txn-history-panel: rgba(18, 19, 28, .86);
-  --txn-ledger-row-padding-compact: 11px 18px;  /* dòng sổ giao dịch trên điện thoại — giữ như trước */
   --txn-row-bg: rgba(18, 19, 28, .86);
   --txn-row-border: rgba(255, 255, 255, .08);
   --txn-row-hover-border: var(--color-info-border);
@@ -1124,10 +1123,10 @@ html.cream-theme {
   /* Trang chủ */
   --home-callout-bg: #FFF3EE;
   --home-callout-border: #F4A88A;
-  --home-callout-info-bg: var(--home-callout-bg);   /* chưa có màu info/success riêng — giữ như trước */
-  --home-callout-info-border: var(--home-callout-border);
-  --home-callout-success-bg: var(--home-callout-bg);
-  --home-callout-success-border: var(--home-callout-border);
+  --home-callout-info-bg: #EEF3FB;      /* tông đặc: màu info trong suốt phủ lên nền kem bị xám đục */
+  --home-callout-info-border: #C7D7F0;
+  --home-callout-success-bg: #EEF7EE;
+  --home-callout-success-border: #C3E6CB;
   --home-callout-danger-bg: #FEE2E2;
   --home-callout-danger-border: #F87171;
   --home-hero-bg: linear-gradient(135deg, #602107 0%, #9C3B0E 50%, #C0531E 100%);
@@ -1205,11 +1204,8 @@ html.cream-theme {
   --txn-history-border: rgba(140, 110, 70, .2);
   --txn-history-control: rgba(255, 252, 247, .92);
   --txn-history-panel: rgba(253, 248, 242, .91);
-  --txn-ledger-row-padding-compact: 11px 18px;  /* dòng sổ giao dịch trên điện thoại — giữ như trước */
   --txn-row-bg: var(--color-surface);
   --txn-row-border: rgba(140, 110, 70, .18);
-  --txn-row-hover-bg: var(--txn-row-bg);       /* cream chưa có hiệu ứng hover — giữ như trước */
-  --txn-row-hover-border: var(--txn-row-border);
   /* Hũ tiết kiệm */
   --jar-add-bg: var(--color-surface, #FDF8F2);
   --jar-add-border: var(--color-border, #E0D4C4);
@@ -1418,10 +1414,10 @@ html.green-theme {
   /* Trang chủ */
   --home-callout-bg: #E8F7F0;
   --home-callout-border: var(--color-border);
-  --home-callout-info-bg: var(--home-callout-bg);   /* chưa có màu info/success riêng — giữ như trước */
-  --home-callout-info-border: var(--home-callout-border);
-  --home-callout-success-bg: var(--home-callout-bg);
-  --home-callout-success-border: var(--home-callout-border);
+  --home-callout-info-bg: var(--color-info-bg);
+  --home-callout-info-border: var(--color-info-border);
+  --home-callout-success-bg: var(--color-success-bg);
+  --home-callout-success-border: var(--color-success-border);
   --home-callout-danger-bg: var(--color-danger-bg);
   --home-callout-danger-border: var(--color-danger-border);
   --home-hero-bg: linear-gradient(135deg, #064E3B 0%, #047857 50%, #059669 100%);

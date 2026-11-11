@@ -114,6 +114,7 @@ export function WalletsTab() {
       confirmText: 'Xóa ví',
       cancelText: 'Hủy',
       confirmVariant: 'danger',
+      returnFocusRef: menuTriggerRef,
       onConfirm: async () => {
         setDeletingWalletId(wallet.id);
         try {
