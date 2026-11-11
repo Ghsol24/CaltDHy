@@ -94,23 +94,6 @@ html, body {
 }
 
 
-/* ============================================================
-   TACTILE MECHANICAL CLICK FEEDBACK (OPTION B)
-   ============================================================ */
-
-/* Đồng bộ hóa transition cho cảm giác nhả chuột mượt mà nhưng nhấn sập tức thì */
-.btn-primary {
-  transition: transform var(--dur-quick) cubic-bezier(.25, .8, .25, 1), box-shadow var(--dur-quick) cubic-bezier(.25, .8, .25, 1), background-color var(--dur-fast), color var(--dur-fast), filter var(--dur-fast);
-}
-
-/* Khi nhấn sập (:active), triệt tiêu hoàn toàn transition để lún sập tức thời */
-.btn-primary:active {
-  transition: none;
-  transform: translateY(2px) scale(0.97);
-  box-shadow: var(--shadow-press);
-  filter: brightness(0.92);
-}
-
 
 /* ============================================================
    FOCUS-VISIBLE — Accessibility outline

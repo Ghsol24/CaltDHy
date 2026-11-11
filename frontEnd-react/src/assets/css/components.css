@@ -35,37 +35,6 @@
 
 .txn-amount.pos { color: var(--color-success); }
 
-/* ── Inline budget warning card (Plan 1A) ────────────────────────────── */
-
-/* Mục 5 – Primary (Accent fill) button – dùng cho modal báo cáo */
-.btn-primary {
-  padding: 13px;
-  font-family: var(--font-mono);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: .13em;
-  text-transform: uppercase;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  box-shadow: var(--shadow-brand);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .2) 0%, transparent 55%);
-  pointer-events: none;
-}
-
-.btn-primary:hover { transform: translateY(-1px); }
-/* transition and :active press live in base.css */
-
 
 /* ============================================================
    CASH FLOW TREND CHART

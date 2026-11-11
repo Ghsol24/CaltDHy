@@ -792,11 +792,6 @@ body.dark-theme .metric-label {
   color: #8896a8;
 }
 
-body.dark-theme .landing-page .status-bar {
-  background: #353b3c;
-  background-image: linear-gradient(180deg, rgba(255,255,255,.04) 0%, transparent 100%);
-}
-
 body.dark-theme .brand-name span {
   text-shadow: 0 0 30px rgba(96, 165, 250, .5), 0 0 70px rgba(96, 165, 250, .2);
 }
@@ -1080,12 +1075,6 @@ body.dark-theme .idx-screw {
 .idx-done-btn:focus-visible {
   outline: 2px solid var(--color-link);
   outline-offset: 3px;
-}
-
-.idx-theme-hint {
-  margin: 12px 0 0;
-  color: var(--text-muted);
-  font: 400 12px/1.6 var(--font-sans);
 }
 
 /* Done button */

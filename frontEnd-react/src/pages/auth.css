@@ -42,17 +42,6 @@
   line-height: 1.5;
 }
 
-/* ── Status bar ── */
-.auth-page .status-bar {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 8px;
-  background: var(--panel); border: 1px solid var(--border);
-  border-radius: var(--radius-full); padding: 8px 14px;
-  box-shadow: var(--shadow-sm); z-index: 10;
-  transition: background var(--dur-mid) ease;
-}
-.auth-page .status-bar svg { color: var(--color-icon); }
-
 /* ── Module card ── */
 .module {
   position: relative; z-index: 1;
