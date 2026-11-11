@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../../components/ui/Button';
 import { SettingsNavIcon } from './SettingsNavIcon';
 
 export function SettingsGuideTab({ activeTab, closeSettingsModal, openHelpModal }) {
@@ -12,16 +13,17 @@ export function SettingsGuideTab({ activeTab, closeSettingsModal, openHelpModal 
         <div>
           <strong>Hướng dẫn CaltDHy</strong>
         </div>
-        <button
-          type="button"
-          className="btn-account-save"
+        <Button
+          variant="primary"
+          size="lg"
+          className="settings-guide-card__action"
           onClick={() => {
             closeSettingsModal();
             openHelpModal();
           }}
         >
           Mở hướng dẫn
-        </button>
+        </Button>
       </div>
     </div>
   )) || null;

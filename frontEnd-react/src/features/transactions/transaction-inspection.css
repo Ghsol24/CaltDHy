@@ -24,17 +24,6 @@
   font: 500 14px var(--font-sans, system-ui, sans-serif);
 }
 
-.day-drawer-secondary {
-  min-height: 44px;
-  padding: 9px 15px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-link);
-  font: 700 13px var(--font-sans);
-  cursor: pointer;
-}
-
 .category-history-link {
   min-height: 34px;
   margin-top: 6px;
@@ -217,14 +206,6 @@
 
 .day-drawer-primary {
   flex: 1;
-  min-height: 44px;
-  padding: 9px 15px;
-  border: 1px solid var(--color-brand-700);
-  border-radius: var(--radius-sm);
-  background: var(--color-brand-700);
-  color: white;
-  font: 700 13px var(--font-sans);
-  cursor: pointer;
 }
 
 .transaction-inspection-list { display: grid; gap: 8px; }

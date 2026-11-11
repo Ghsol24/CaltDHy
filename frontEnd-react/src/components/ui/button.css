@@ -1,0 +1,162 @@
+/* Nút chữ dùng chung cho <Button> (components/ui/Button.jsx):
+   .btn + .btn--{primary|secondary|danger|danger-outline|warning} [+ .btn--sm | .btn--lg].
+   Dời từ cuối confirm-dialog.css — đợt 4; main.jsx nạp ngay sau file đó nên thứ tự cascade không đổi. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+/* Used by <Button> (components/ui/Button.jsx): btn + btn--{variant} [+ btn--sm]. */
+.btn--primary {
+  background: var(--primary);
+  color: var(--color-on-action);
+  border-color: var(--primary-hover);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn--secondary {
+  background: var(--surface-subtle);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: var(--color-on-action);
+  border-color: var(--danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+}
+
+.btn--warning {
+  background: var(--color-warning);
+  color: var(--color-on-action);
+  border-color: var(--color-warning);
+}
+
+.btn--warning:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-warning) 85%, #000);
+}
+
+.btn--sm {
+  padding: 6px 12px;
+  font-size: var(--font-sm);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading isn't "unavailable": keep the spinner and label fully visible. */
+.btn[aria-busy="true"] {
+  cursor: progress;
+  opacity: 1;
+}
+
+/* Nút có viền nhạt, chỉ chuyển sang màu nguy hiểm khi hover/focus/nhấn
+   (nút Xoá trong chân hộp thoại giao dịch). */
+.btn--danger-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--color-border, var(--border));
+}
+
+.btn--danger-outline:focus-visible,
+.btn--danger-outline:active:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--color-danger-50);
+  border-color: var(--color-danger);
+}
+
+@media (hover: hover) {
+  .btn--danger-outline:hover:not(:disabled) {
+    color: var(--color-danger);
+    background: var(--color-danger-50);
+    border-color: var(--color-danger);
+  }
+}
+
+/* ── Cỡ lg: chuẩn chung cho nút ở chân hộp thoại (đợt 4e) ──
+   Cao 42px (44px trên màn chạm hoặc bố cục điện thoại < 600px), chữ 14px, bo 12px. Nút chính và nút phụ lấy
+   màu từ token --btn-primary-* / --field-* để mỗi theme tự đổi qua tokens.css. */
+.btn--lg {
+  min-height: 42px;
+  padding: 8px 20px;
+  gap: 8px;
+  font-size: var(--font-base);
+  line-height: 1.25;
+  border-radius: var(--radius-md);
+  user-select: none;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+/* Ngưỡng chạm: cả khi trình duyệt không báo pointer coarse (cửa sổ hẹp, WebView). */
+@media (pointer: coarse), (max-width: 599px) {
+  .btn--lg {
+    min-height: 44px;
+  }
+}
+
+.btn--lg:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn--lg.btn--primary {
+  background: var(--btn-primary-bg);
+  border-color: transparent;
+  box-shadow: var(--btn-primary-shadow);
+}
+
+.btn--lg.btn--primary:hover:not(:disabled) {
+  background: var(--btn-primary-hover-bg);
+  box-shadow: var(--btn-primary-hover-shadow);
+}
+
+/* Nút lưu khi đang nhập khoản Thu: màu thu nhập thay cho màu thương hiệu. */
+.btn--lg.btn--primary.btn--income {
+  background: var(--color-income-solid);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-income-solid) 35%, transparent);
+}
+
+.btn--lg.btn--primary.btn--income:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-income-solid) 86%, black);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-income-solid) 45%, transparent);
+}
+
+/* Bóng của nút chính đè vòng focus chung (*:focus-visible cũng vẽ bằng
+   box-shadow), nên ghép lại cả hai. */
+.btn--lg.btn--primary:focus-visible:not(:disabled) {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary), var(--btn-primary-shadow);
+}
+
+.btn--lg.btn--secondary {
+  background: var(--field-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--field-border);
+}
+
+.btn--lg.btn--secondary:hover:not(:disabled) {
+  background: var(--control-muted-bg);
+  color: var(--color-text);
+  border-color: var(--btn-secondary-hover-border);
+}

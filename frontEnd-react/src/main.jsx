@@ -11,6 +11,7 @@ import './assets/css/app-shell.css'
 // Thành phần UI dùng chung và hộp thoại
 import './components/ui/toast.css'
 import './components/ui/confirm-dialog.css'
+import './components/ui/button.css'
 import './components/ui/primitives.css'
 import './features/transactions/transaction-modal.css'
 import './components/ui/custom-wallet-dropdown.css'

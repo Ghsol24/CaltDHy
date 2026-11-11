@@ -3,10 +3,10 @@ import React, { forwardRef } from 'react';
 const cx = (...names) => names.filter(Boolean).join(' ');
 
 /**
- * Text button on the shared `.btn` styles (assets/css/dialogs.css).
+ * Text button on the shared `.btn` styles (components/ui/button.css).
  *
- * - `variant`: primary | secondary | danger | warning
- * - `size`: 'sm' for compact rows
+ * - `variant`: primary | secondary | danger | danger-outline | warning
+ * - `size`: 'sm' for compact rows, 'lg' for dialog footers (42px, 44px on touch)
  * - `loading`: shows the spinner, disables the button and sets aria-busy so
  *   a second click can't send the same request twice
  * - defaults to type="button" so it never submits a form by accident

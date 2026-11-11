@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../components/ui/Button';
 import { JarDialog } from './JarDialog';
 import { formatCurrency, formatDate, formatPercent } from '../../utils/formatters';
 import { JarGlassGraphic } from './JarGlassGraphic';
@@ -51,8 +52,9 @@ export function JarDetailModal({
       subtitle={jar.category || 'Mục tiêu tiết kiệm'} className="jar-detail-centered-dialog"
       footer={(
         <div className="jar-detail-footer">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="lg"
             className="jar-detail-btn-edit"
             onClick={() => {
               onClose();
@@ -60,24 +62,25 @@ export function JarDetailModal({
             }}
           >
             Chỉnh sửa hũ
-          </button>
+          </Button>
 
           <div className="jar-detail-footer__div--layout">
-            <button
-              type="button"
-              className="jar-detail-btn-withdraw jar-detail-btn-withdraw--box"
+            <Button
+              variant="secondary"
+              size="lg"
+              className="jar-detail-btn-withdraw"
               onClick={() => {
                 onClose();
                 onWithdraw(jar);
               }}
               disabled={currentAmt <= 0}
-              style={{ '--jar-detail-btn-withdraw-cursor': currentAmt <= 0 ? 'not-allowed' : 'pointer', '--jar-detail-btn-withdraw-opacity': currentAmt <= 0 ? 0.5 : 1 }}
             >
               Rút tiền
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="lg"
               className="jar-detail-btn-deposit"
               onClick={() => {
                 onClose();
@@ -85,7 +88,7 @@ export function JarDetailModal({
               }}
             >
               + Nạp tiền
-            </button>
+            </Button>
           </div>
         </div>
       )}>

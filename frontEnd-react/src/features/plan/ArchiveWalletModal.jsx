@@ -330,10 +330,10 @@ export function ArchiveWalletModal({ isOpen, onClose, wallet = null, onSuccess =
 
         {/* Footer */}
         <div className="modal-footer modal-footer--layout">
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="secondary" size="lg" onClick={onClose} disabled={isSubmitting}>
             Hủy
           </Button>
-          <Button variant="warning" onClick={handleConfirmArchive} disabled={!canSubmit} loading={isSubmitting}>
+          <Button variant="warning" size="lg" onClick={handleConfirmArchive} disabled={!canSubmit} loading={isSubmitting}>
             <span>Xác nhận Lưu trữ & Đóng ví</span>
           </Button>
         </div>

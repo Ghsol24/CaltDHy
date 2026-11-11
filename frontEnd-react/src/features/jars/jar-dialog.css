@@ -38,7 +38,7 @@
 .jar-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .jar-dialog button:disabled { opacity: .55; cursor: not-allowed; }
 .jar-dialog input, .jar-dialog select, .jar-dialog textarea { max-width: 100%; min-width: 0; }
-.jar-dialog-footer button { min-height: 44px; white-space: normal; }
+.jar-dialog-footer button { white-space: normal; }
 .jar-dialog .jar-detail-body { overflow: visible; padding: 0; }
 .jar-dialog .jar-detail-footer { border-style: none; padding: 0; width: 100%; flex-wrap: wrap; gap: 10px; }
 .jar-dialog .jar-detail-history-item { gap: 12px; overflow-wrap: anywhere; }

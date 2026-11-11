@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../../components/ui/Button';
 import { CheckOutlineIcon } from '../../../components/ui/AppIcons';
 import { AVATAR_PRESETS } from './avatarPresets';
 
@@ -139,21 +140,12 @@ export function SettingsProfileTab({ activeTab, avatar, currentPassword, email, 
   
       {/* Footer Actions */}
       <div className="account-footer-actions">
-        <button
-          type="button"
-          className="btn-account-cancel"
-          onClick={handleCancelProfile}
-          disabled={!isProfileDirty || isProfileSaving}
-        >
+        <Button variant="secondary" size="lg" onClick={handleCancelProfile} disabled={!isProfileDirty || isProfileSaving}>
           Hủy
-        </button>
-        <button
-          type="submit"
-          className="btn-account-save"
-          disabled={!isProfileDirty || isProfileSaving}
-        >
+        </Button>
+        <Button type="submit" variant="primary" size="lg" disabled={!isProfileDirty} loading={isProfileSaving}>
           {isProfileSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-        </button>
+        </Button>
       </div>
     </form>
   )) || null;

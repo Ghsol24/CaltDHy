@@ -26,11 +26,7 @@
 .jm-remaining { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 13px 14px; border-radius: 10px; background: var(--color-surface-muted); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--font-sm); }
 .jm-remaining strong { color: var(--color-text); font-size: var(--font-2xl); font-family: var(--font-mono, monospace); overflow-wrap: anywhere; }
 .jm-error { margin: 0; padding: 10px 12px; border: 1px solid var(--color-danger-border); background: var(--color-danger-bg); border-radius: 10px; color: var(--color-danger); font-size: var(--font-sm); line-height: 1.5; }
-.jm-button { min-height: 44px; border-radius: 10px; padding: 10px 16px; border: 1px solid transparent; font: inherit; font-size: var(--font-sm); line-height: 1.4; font-weight: 650; cursor: pointer; }
-.jm-button-primary { background: var(--color-action-bg); color: var(--color-on-action); border-color: var(--color-action-bg); }
-.jm-button-secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--color-border); }
-.jm-button:focus-visible, .jm-history-type-button:focus-visible { outline: 3px solid var(--color-brand-600); outline-offset: 3px; }
-.jm-button:disabled { cursor: wait; opacity: .65; }
+.jm-history-type-button:focus-visible { outline: 3px solid var(--color-brand-600); outline-offset: 3px; }
 .jar-history-management-dialog .jar-dialog-body { padding: 0; display: flex; overflow: hidden; }
 .jm-history { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
 .jm-history-toolbar { flex-shrink: 0; padding: 18px 24px 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); }

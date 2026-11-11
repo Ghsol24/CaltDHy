@@ -1,4 +1,5 @@
 import React, { useId, useMemo, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -69,7 +70,7 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
     <JarDialog isOpen={isOpen} onClose={onClose} title={text('historyTitle')}
       subtitle={text('historyCap')} className="jar-history-management-dialog"
       footer={<><span className="jm-history-count" role="status">{text('resultCount', { count: filteredActivities.length })}</span>
-        <button type="button" className="jm-button jm-button-primary" onClick={onClose}>{text('close')}</button></>}>
+        <Button variant="primary" size="lg" onClick={onClose}>{text('close')}</Button></>}>
       <div className="jm-history">
         <div className="jm-history-toolbar">
           <dl className="jm-history-totals" aria-label={text('filteredSummary')}>

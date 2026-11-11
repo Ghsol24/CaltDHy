@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { Dialog } from '../../components/ui/Dialog';
@@ -88,6 +89,6 @@ export function GuideModal() {
           </div>
         </div>
       </div>
-      <div className="budget-dialog-footer guide-modal-footer"><button type="button" className="btn-dialog-save" onClick={closeHelpModal}>{copy.done}</button></div>
+      <div className="budget-dialog-footer guide-modal-footer"><Button variant="primary" size="lg" onClick={closeHelpModal}>{copy.done}</Button></div>
   </Dialog>;
 }

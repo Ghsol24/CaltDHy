@@ -540,47 +540,6 @@
   margin-top: 10px;
 }
 
-.btn-account-cancel {
-  padding: 9px 16px;
-  font-family: var(--font-sans);
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-secondary, #60766A);
-  background: var(--surface-subtle, #EDF5F0);
-  border: 1px solid var(--border, #E2ECE6);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color var(--dur-quick) ease, border-color var(--dur-quick) ease, color var(--dur-quick) ease, box-shadow var(--dur-quick) ease, transform var(--dur-quick) ease, opacity var(--dur-quick) ease;
-}
-
-.btn-account-cancel:hover {
-  background: var(--border, #E2ECE6);
-  color: var(--text-primary, #173126);
-}
-
-.btn-account-save {
-  padding: 9px 20px;
-  font-family: var(--font-sans);
-  font-size: var(--font-sm);
-  font-weight: 600;
-  color: #FFFFFF;
-  background: var(--primary, #078A59);
-  border: 1px solid var(--primary, #078A59);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease, filter var(--dur-fast) ease;
-}
-
-.btn-account-save:hover:not(:disabled) {
-  filter: brightness(1.08);
-  box-shadow: 0 4px 14px rgba(7, 138, 89, 0.25);
-}
-
-.btn-account-save:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* ── Reset Confirmation Dialog ── */
 .account-reset-dialog-overlay {
   position: fixed;
@@ -664,29 +623,6 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 4px;
-}
-
-.btn-confirm-reset-delete {
-  padding: 9px 18px;
-  font-family: var(--font-sans);
-  font-size: var(--font-sm);
-  font-weight: 700;
-  color: #FFFFFF;
-  background: var(--danger, #EF4444);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease, filter var(--dur-fast) ease;
-}
-
-.btn-confirm-reset-delete:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-confirm-reset-delete:hover:not(:disabled) {
-  filter: brightness(1.1);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* ── Responsive adjustments ── */
@@ -1343,10 +1279,9 @@
     grid-template-columns: 36px minmax(0, 1fr);
   }
 
-  .settings-guide-card .btn-account-save {
+  .settings-guide-card .settings-guide-card__action {
     grid-column: 1 / -1;
     width: 100%;
-    min-height: 44px;
   }
 
   .settings-theme-grid {

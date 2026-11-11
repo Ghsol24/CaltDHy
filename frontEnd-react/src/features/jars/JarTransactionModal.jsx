@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
@@ -136,12 +137,12 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
       title={isDeposit ? copy.depositTitle : copy.withdrawTitle} subtitle={jar.name}
       className="jar-transaction-dialog" busy={isSubmitting} initialFocusRef={amountInputRef}
       footer={<>
-        <button type="button" className="jar-transfer-cancel" onClick={requestClose} disabled={isSubmitting}>{copy.cancel}</button>
-        <button type="submit" form={formId} className="jar-transfer-submit" disabled={!canSubmit}>
+        <Button variant="secondary" size="lg" className="jar-transfer-cancel" onClick={requestClose} disabled={isSubmitting}>{copy.cancel}</Button>
+        <Button type="submit" form={formId} variant="primary" size="lg" className="jar-transfer-submit" disabled={!canSubmit} loading={isSubmitting}>
           {isSubmitting ? copy.processing : validAmount
             ? (isDeposit ? copy.depositAmount(money(enteredAmount)) : copy.withdrawAmount(money(enteredAmount)))
             : (isDeposit ? copy.depositTitle : copy.withdrawTitle)}
-        </button>
+        </Button>
       </>}
     >
       <form id={formId} onSubmit={handleSubmit} noValidate className="jar-transfer-form" aria-busy={isSubmitting}>

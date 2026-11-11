@@ -1,5 +1,6 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Button } from '../../components/ui/Button';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useToastStore } from '../../stores/useToastStore';
@@ -587,19 +588,12 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
           <footer className="blimit-foot">
             <span className="blimit-dirty" aria-live="polite">{isDirty ? t('budgetEditor.unsaved') : ''}</span>
             <div className="blimit-foot__actions">
-              <button type="button" className="blimit-btn blimit-btn--ghost" onClick={handleRequestClose} disabled={isSubmitting}>
+              <Button variant="secondary" size="lg" className="blimit-btn blimit-btn--ghost" onClick={handleRequestClose} disabled={isSubmitting}>
                 {t('common.cancel')}
-              </button>
-              <button type="submit" className="blimit-btn blimit-btn--primary" disabled={isSubmitting || !isDirty}>
-                {isSubmitting ? (
-                  <>
-                    <span className="spinner spinner--box" aria-hidden="true" />
-                    <span>{t('common.saving')}</span>
-                  </>
-                ) : (
-                  t('budgetEditor.save')
-                )}
-              </button>
+              </Button>
+              <Button type="submit" variant="primary" size="lg" className="blimit-btn blimit-btn--primary" loading={isSubmitting} disabled={!isDirty}>
+                {isSubmitting ? t('common.saving') : t('budgetEditor.save')}
+              </Button>
             </div>
           </footer>
         </form>

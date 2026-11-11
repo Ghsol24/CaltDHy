@@ -187,20 +187,6 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
   margin-top: 8px;
 }
 
-.confirm-dialog-btn {
-  padding: 9px 18px;
-  font-size: var(--font-sm);
-  font-weight: 600;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.confirm-dialog-btn:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
-
 .is-deleting {
   opacity: 0.4;
   pointer-events: none;
@@ -210,77 +196,4 @@ body:has(.account-modal-overlay, .txn-modal-backdrop, .modal-backdrop-overlay, .
 .recurring-row-card.is-processing {
   opacity: 0.75;
   transition: opacity var(--dur-base) ease;
-}
-
-/* Button variants */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-family: var(--font-sans);
-  font-size: var(--font-sm);
-  font-weight: 600;
-  border-radius: var(--radius-md);
-  padding: 8px 16px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-/* Used by <Button> (components/ui/Button.jsx): btn + btn--{variant} [+ btn--sm]. */
-.btn--primary {
-  background: var(--primary);
-  color: var(--color-on-action);
-  border-color: var(--primary-hover);
-}
-
-.btn--primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-}
-
-.btn--secondary {
-  background: var(--surface-subtle);
-  color: var(--text-primary);
-  border-color: var(--border);
-}
-
-.btn--secondary:hover:not(:disabled) {
-  background: var(--border);
-}
-
-.btn--danger {
-  background: var(--danger);
-  color: var(--color-on-action);
-  border-color: var(--danger);
-}
-
-.btn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--danger) 85%, #000);
-}
-
-.btn--warning {
-  background: var(--color-warning);
-  color: var(--color-on-action);
-  border-color: var(--color-warning);
-}
-
-.btn--warning:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-warning) 85%, #000);
-}
-
-.btn--sm {
-  padding: 6px 12px;
-  font-size: var(--font-sm);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Loading isn't "unavailable": keep the spinner and label fully visible. */
-.btn[aria-busy="true"] {
-  cursor: progress;
-  opacity: 1;
 }

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { Dialog } from '../../components/ui/Dialog';
+import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
 
@@ -434,31 +435,15 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
 
           {/* Footer */}
           <div className="txn-modal-footer">
-            <button
-              type="button"
-              className="txn-btn-cancel modal-btn-cancel-pro"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button variant="secondary" size="lg" className="txn-btn-cancel" onClick={onClose} disabled={isSubmitting}>
               Hủy
-            </button>
-            <button
-              type="submit"
-              className="txn-btn-submit modal-btn-submit-pro"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner spinner--box" aria-hidden="true" />
-                  <span>Đang lưu...</span>
-                </>
-              ) : (
-                <>
-                  <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <span>{isEditing ? 'Cập nhật ví' : 'Tạo ví mới'}</span>
-                </>
+            </Button>
+            <Button type="submit" variant="primary" size="lg" className="txn-btn-submit" loading={isSubmitting}>
+              {!isSubmitting && (
+                <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               )}
-            </button>
+              <span>{isSubmitting ? 'Đang lưu...' : isEditing ? 'Cập nhật ví' : 'Tạo ví mới'}</span>
+            </Button>
           </div>
         </form>
     </Dialog>

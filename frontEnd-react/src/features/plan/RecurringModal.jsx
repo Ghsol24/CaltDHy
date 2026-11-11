@@ -5,6 +5,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { Dialog } from '../../components/ui/Dialog';
+import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { detectBrandInfo } from '../../utils/brandDetection';
@@ -369,30 +370,12 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
 
           {/* Footer */}
           <div className="txn-modal-footer">
-            <button
-              type="button"
-              className="txn-btn-cancel modal-btn-cancel-themed"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button variant="secondary" size="lg" className="txn-btn-cancel" onClick={onClose} disabled={isSubmitting}>
               Hủy
-            </button>
-            <button
-              type="submit"
-              className="txn-btn-submit modal-btn-submit-themed"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="spinner spinner--box" aria-hidden="true" />
-                  <span>Đang lưu...</span>
-                </>
-              ) : installmentToEdit ? (
-                'Lưu thay đổi'
-              ) : (
-                'Tạo khoản định kỳ'
-              )}
-            </button>
+            </Button>
+            <Button type="submit" variant="primary" size="lg" className="txn-btn-submit" loading={isSubmitting}>
+              {isSubmitting ? 'Đang lưu...' : installmentToEdit ? 'Lưu thay đổi' : 'Tạo khoản định kỳ'}
+            </Button>
           </div>
         </form>
     </Dialog>

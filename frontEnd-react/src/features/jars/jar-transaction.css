@@ -33,18 +33,15 @@
 .jar-transfer-form .jar-transfer-error { margin: 8px 0 0; font-size: var(--font-xs); line-height: 1.5; }
 .jar-transfer-amount-box.is-invalid, .jar-transfer-wallet-box.is-invalid { border-color: var(--color-danger); }
 .jar-transfer-server-error { padding: 11px 13px; border: 1px solid var(--color-danger-border); border-radius: 9px; background: var(--color-danger-bg); color: var(--color-danger); font-size: var(--font-sm); line-height: 1.5; }
-.jar-transfer-cancel, .jar-transfer-submit { min-height: 42px; min-width: 0; padding: 10px 16px; border: 1px solid var(--color-border-strong); border-radius: 9px; font: 600 14px/1.4 var(--font-sans); overflow-wrap: anywhere; cursor: pointer; }
-.jar-transfer-cancel { background: var(--color-surface); color: var(--color-text); }
-.jar-transfer-submit { border-color: var(--color-action-bg); background: var(--color-action-bg); color: var(--color-on-action); }
-.jar-transfer-submit:hover:not(:disabled) { background: var(--color-action-hover-bg); }
-.jar-transfer-form button:focus-visible, .jar-transfer-cancel:focus-visible, .jar-transfer-submit:focus-visible { outline: 2px solid var(--color-link); outline-offset: 3px; }
-.jar-transfer-form :disabled, .jar-transfer-cancel:disabled, .jar-transfer-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+.jar-transfer-cancel, .jar-transfer-submit { min-width: 0; overflow-wrap: anywhere; } /* nút là <Button size="lg">: chỉ còn móc bố cục */
+.jar-transfer-form button:focus-visible { outline: 2px solid var(--color-link); outline-offset: 3px; }
+.jar-transfer-form :disabled { opacity: 0.55; cursor: not-allowed; }
 @media (max-width: 430px) {
   .jar-transfer-form { gap: 16px; }
   .jar-transfer-route small { width: 100%; margin-left: 0; }
   .jar-transfer-preview-grid { grid-template-columns: minmax(0, 1fr); gap: 13px; }
   .jar-transfer-preview-grid > div + div { padding-top: 12px; border-top: 1px solid var(--color-border); }
-  .jar-transfer-cancel, .jar-transfer-submit { padding-inline: 11px; font-size: var(--font-sm); }
+  .jar-transfer-cancel, .jar-transfer-submit { padding-inline: 11px; } /* vừa nhãn dài trên màn hẹp */
 }
 
 @media (max-width: 599px) {

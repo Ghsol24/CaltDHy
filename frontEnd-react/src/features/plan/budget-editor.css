@@ -640,50 +640,6 @@
   margin-left: auto;
 }
 
-.blimit-btn {
-  height: 40px;
-  padding: 0 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 0;
-  border-radius: 10px;
-  font: 600 14px/1 var(--font-sans);
-  cursor: pointer;
-  transition: background var(--dur-fast) ease, color var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.blimit-btn--ghost {
-  background: transparent;
-  color: var(--color-text-secondary, #607086);
-}
-
-.blimit-btn--ghost:hover:not(:disabled) {
-  background: var(--color-surface-muted, #F7FAF8);
-  color: var(--color-text, #101B36);
-}
-
-.blimit-btn--primary {
-  padding: 0 22px;
-  background: var(--color-action-bg, #007547);
-  color: var(--color-on-action, #FFFFFF);
-}
-
-.blimit-btn--primary:hover:not(:disabled) {
-  background: var(--color-action-hover-bg, #00663E);
-}
-
-.blimit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.blimit-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 @keyframes blimitDialogIn {
   from { opacity: 0; transform: translateY(8px) scale(0.985); }
   to { opacity: 1; transform: none; }
@@ -835,15 +791,8 @@
     margin-left: 0;
   }
 
-  .blimit-btn {
-    height: 48px;
-    font-size: var(--font-md);
-  }
-
   .blimit-btn--ghost {
     flex: 1;
-    background: var(--color-surface-muted, #F7FAF8);
-    color: var(--color-text, #101B36);
   }
 
   .blimit-btn--primary {
@@ -886,9 +835,4 @@ body:has(.blimit-overlay) .toast-region {
 
 .blimit-meter__mark.blimit-meter__mark--pos {
   left: var(--blimit-meter__mark-left);
-}
-
-.blimit-btn .spinner.spinner--box {
-  width: 14px;
-  height: 14px;
 }

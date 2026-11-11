@@ -598,114 +598,10 @@
   }
 }
 
-.txn-btn-cancel {
-  padding: 10px 20px;
-  font-family: var(--font-sans);
-  font-size: var(--font-base);
-  font-weight: 600;
-  color: var(--btn-secondary-text);
-  background: var(--field-bg);
-  border: 1px solid var(--field-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-  user-select: none;
-}
-
-.txn-btn-cancel:hover:not(:disabled) {
-  background: var(--control-muted-bg);
-  color: var(--color-text);
-  transform: translateY(-1px);
-  border-color: var(--btn-secondary-hover-border);
-}
-
-.txn-btn-cancel:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* Delete (edit mode only): a quiet outline icon, set apart on the left, that turns red on intent. */
+/* Nút chân hộp thoại là <Button size="lg"> (components/ui/button.css) — đợt 4e;
+   các lớp txn-btn-* chỉ còn làm móc bố cục. Nút Xoá (chỉ khi sửa) đứng tách bên trái. */
 .txn-btn-delete {
   margin-right: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0 14px;
-  font-family: var(--font-sans);
-  font-size: var(--font-base);
-  font-weight: 600;
-  color: var(--color-text-secondary, var(--text-secondary));
-  background: transparent;
-  border: 1px solid var(--color-border, var(--border));
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
-  user-select: none;
-}
-
-.txn-btn-delete:focus-visible,
-.txn-btn-delete:active:not(:disabled) {
-  color: var(--color-danger);
-  background: var(--color-danger-50);
-  border-color: var(--color-danger);
-}
-
-@media (hover: hover) {
-  .txn-btn-delete:hover:not(:disabled) {
-    color: var(--color-danger);
-    background: var(--color-danger-50);
-    border-color: var(--color-danger);
-  }
-}
-
-.txn-btn-delete:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.txn-btn-submit {
-  padding: 10px 24px;
-  font-family: var(--font-sans);
-  font-size: var(--font-base);
-  font-weight: 700;
-  color: #FFFFFF;
-  background: var(--btn-primary-bg);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  box-shadow: var(--btn-primary-shadow);
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  user-select: none;
-}
-
-.txn-btn-submit:hover:not(:disabled) {
-  background: var(--btn-primary-hover-bg);
-  box-shadow: var(--btn-primary-hover-shadow);
-  transform: translateY(-1px);
-}
-
-.txn-btn-submit:active {
-  transform: translateY(0) scale(0.98);
-}
-
-.txn-btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.txn-btn-submit--income {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-income-solid) 86%, black) 0%, var(--color-income-solid) 100%);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-income-solid) 35%, transparent);
-}
-
-.txn-btn-submit--income:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-income-solid) 86%, black);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-income-solid) 45%, transparent);
 }
 
 /* ── Transaction dialog on phones: bottom sheet, compact category row, picker sheets ──
@@ -1111,7 +1007,6 @@
 
   .txn-modal-footer > button {
     justify-content: center;
-    min-height: 48px;
   }
 
   /* Delete shrinks to an icon-only square so Cancel/Update keep their widths. */
@@ -1151,11 +1046,6 @@
 .txn-card-progress-fill.txn-card-progress-fill--box {
   width: var(--txn-card-progress-fill-width);
   background-color: var(--txn-card-progress-fill-background-color);
-}
-
-.txn-btn-submit .spinner.spinner--box {
-  width: 14px;
-  height: 14px;
 }
 
 /* ── Chuyển từ inline style của TransactionMobileFields.jsx (đợt 4) ── */

@@ -57,11 +57,12 @@ export function ConfirmDialog() {
         {error && <p className="confirm-dialog-error" role="alert">{getUserErrorMessage(error, 'dialog.actionFailed')}</p>}
 
         <div className="confirm-dialog-actions">
-          <Button variant="secondary" className="confirm-dialog-btn" onClick={handleCancel} disabled={isConfirming}>
+          <Button variant="secondary" size="lg" className="confirm-dialog-btn" onClick={handleCancel} disabled={isConfirming}>
             {cancelText || t('common.cancel')}
           </Button>
           <Button
             variant={confirmVariant === 'danger' ? 'danger' : 'primary'}
+            size="lg"
             className="confirm-dialog-btn"
             onClick={handleConfirm}
             loading={isConfirming}

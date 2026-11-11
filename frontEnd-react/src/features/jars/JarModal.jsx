@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { useJarStore } from '../../stores/useJarStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -98,10 +99,10 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
       subtitle={text(isEditing ? 'editSubtitle' : 'createSubtitle')} className="jar-management-dialog"
       busy={isSubmitting} initialFocusRef={nameInputRef}
       footer={<>
-        <button type="button" className="jm-button jm-button-secondary" onClick={onClose} disabled={isSubmitting}>{text('cancel')}</button>
-        <button type="submit" form={formId} className="jm-button jm-button-primary" disabled={isSubmitting}>
+        <Button variant="secondary" size="lg" onClick={onClose} disabled={isSubmitting}>{text('cancel')}</Button>
+        <Button type="submit" form={formId} variant="primary" size="lg" loading={isSubmitting}>
           {text(isSubmitting ? 'saving' : isEditing ? 'saveChanges' : 'createAction')}
-        </button>
+        </Button>
       </>}>
       <form id={formId} onSubmit={handleSubmit} className="jm-form" noValidate>
         <div className="jm-field">

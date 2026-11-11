@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
+import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -8,8 +9,9 @@ export function TransactionFooterActions({ canDelete, close, draftAmount, handle
   return (
     <div className={`txn-modal-footer${canDelete ? ' txn-modal-footer--with-delete' : ''}`}>
       {canDelete && (
-        <button
-          type="button"
+        <Button
+          variant="danger-outline"
+          size="lg"
           className="txn-btn-delete"
           onClick={handleDelete}
           disabled={isSubmitting}
@@ -18,34 +20,26 @@ export function TransactionFooterActions({ canDelete, close, draftAmount, handle
         >
           <Icon name="trash" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           <span className="txn-btn-delete__label">{t('common.delete')}</span>
-        </button>
+        </Button>
       )}
-      <button
-        type="button"
-        className="txn-btn-cancel"
-        onClick={close}
-        disabled={isSubmitting}
-      >
+      <Button variant="secondary" size="lg" className="txn-btn-cancel" onClick={close} disabled={isSubmitting}>
         {t('common.cancel')}
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
-        className={`txn-btn-submit ${type === 'income' ? 'txn-btn-submit--income' : ''}`}
-        disabled={isSubmitting}
+        variant="primary"
+        size="lg"
+        className={`txn-btn-submit${type === 'income' ? ' btn--income' : ''}`}
+        loading={isSubmitting}
       >
-        {isSubmitting ? (
-          <>
-            <span className="spinner spinner--box" aria-hidden="true" />
-            <span>{t('common.saving')}</span>
-          </>
-        ) : isEditing ? (
-          t('transaction.update')
-        ) : isPhone && draftAmount > 0 && Number.isSafeInteger(draftAmount) ? (
-          t('transaction.saveWithAmount', { amount: formatCurrency(draftAmount) })
-        ) : (
-          t('transaction.save')
-        )}
-      </button>
+        {isSubmitting
+          ? t('common.saving')
+          : isEditing
+            ? t('transaction.update')
+            : isPhone && draftAmount > 0 && Number.isSafeInteger(draftAmount)
+              ? t('transaction.saveWithAmount', { amount: formatCurrency(draftAmount) })
+              : t('transaction.save')}
+      </Button>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { Dialog } from '../../components/ui/Dialog';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
@@ -53,13 +54,13 @@ export function DailyTransactionsDrawer({ date, initialType, transactions, exclu
           : <p className="transaction-inspection-empty">{t('analytics.dayEmpty')}</p>}
       </div>
       <div className="day-drawer-actions">
-        {type === 'expense' && summary.count > 0 && <button type="button" className="day-drawer-secondary" disabled={savingExpected}
+        {type === 'expense' && summary.count > 0 && <Button variant="secondary" size="lg" className="day-drawer-secondary" loading={savingExpected}
           onClick={() => onToggleExpected(date, !expected)}>
           {t(expected ? 'analytics.unusualUndoExpected' : 'analytics.unusualMarkExpected')}
-        </button>}
-        <button type="button" className="day-drawer-primary" onClick={() => onViewHistory(date, type)}>
+        </Button>}
+        <Button variant="primary" size="lg" className="day-drawer-primary" onClick={() => onViewHistory(date, type)}>
           {t('analytics.viewHistory')}
-        </button>
+        </Button>
       </div>
   </Dialog>;
 }

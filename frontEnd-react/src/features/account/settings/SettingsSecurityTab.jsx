@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../../components/ui/Button';
 import { detectCurrentDevice } from './accountHelpers';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -111,13 +112,15 @@ export function SettingsSecurityTab({ activeTab, confirmPassword, currentPasswor
         )}
   
         <div className="account-card-panel__div--layout2">
-          <button
+          <Button
             type="submit"
-            className="btn-account-save"
-            disabled={isPwdSaving || !currentPassword || !newPassword || !confirmPassword}
+            variant="primary"
+            size="lg"
+            disabled={!currentPassword || !newPassword || !confirmPassword}
+            loading={isPwdSaving}
           >
             {isPwdSaving ? 'Đang đổi...' : 'Cập nhật mật khẩu'}
-          </button>
+          </Button>
         </div>
       </form>
   

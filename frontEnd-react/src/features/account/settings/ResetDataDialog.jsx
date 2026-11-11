@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../../components/ui/Button';
 import { Dialog } from '../../../components/ui/Dialog';
 import { AlertTriangleOutlineIcon } from '../../../components/ui/AppIcons';
 
@@ -55,22 +56,18 @@ export function ResetDataDialog({ handleConfirmResetData, isResetDialogOpen, isR
           )}
     
           <div className="account-reset-actions">
-            <button
-              type="button"
-              className="btn-account-cancel"
-              onClick={() => setIsResetDialogOpen(false)}
-              disabled={isResetting}
-            >
+            <Button variant="secondary" size="lg" onClick={() => setIsResetDialogOpen(false)} disabled={isResetting}>
               Hủy bỏ
-            </button>
-            <button
-              type="button"
-              className="btn-confirm-reset-delete"
-              disabled={resetConfirmInput.trim() !== 'RESET' || isResetting}
+            </Button>
+            <Button
+              variant="danger"
+              size="lg"
+              disabled={resetConfirmInput.trim() !== 'RESET'}
+              loading={isResetting}
               onClick={handleConfirmResetData}
             >
               {isResetting ? 'Đang xóa...' : 'Xóa sạch dữ liệu'}
-            </button>
+            </Button>
           </div>
     </Dialog>
   );

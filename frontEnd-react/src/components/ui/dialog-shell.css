@@ -129,29 +129,3 @@
     min-width: 0;
   }
 }
-
-.btn-dialog-save {
-  height: 42px;
-  padding: 0 24px;
-  border-radius: var(--radius-sm, 8px);
-  border: none;
-  background: var(--color-brand-700, #008B57);
-  color: #FFFFFF;
-  font-size: var(--font-base);
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.btn-dialog-save:hover:not(:disabled) {
-  background: var(--color-brand-600, #009A5D);
-  box-shadow: 0 4px 12px rgba(0, 139, 87, 0.25);
-}
-
-.btn-dialog-save:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}

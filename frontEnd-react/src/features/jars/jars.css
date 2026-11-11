@@ -1354,11 +1354,6 @@
   gap: 8px;
 }
 
-.jar-detail-btn-withdraw.jar-detail-btn-withdraw--box {
-  cursor: var(--jar-detail-btn-withdraw-cursor);
-  opacity: var(--jar-detail-btn-withdraw-opacity);
-}
-
 .jar-detail-stats-banner__div--layout {
   display: flex;
   flex-direction: column;
