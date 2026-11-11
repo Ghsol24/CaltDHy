@@ -6,7 +6,6 @@ import { AppShellSkeleton } from './components/layout/AppShellSkeleton';
 import { useTranslation } from './i18n/useTranslation';
 import { LocalizationObserver } from './i18n/LocalizationObserver';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
-import { PwaUpdateNotice } from './components/layout/PwaUpdateNotice';
 import { useSignatureLoginStore } from './stores/useSignatureLoginStore';
 
 const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
@@ -16,6 +15,9 @@ const SignupPage = lazyNamed(() => import('./pages/SignupPage'), 'SignupPage');
 const ResetPasswordPage = lazyNamed(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
 const VerifyEmailPage = lazyNamed(() => import('./pages/VerifyEmailPage'), 'VerifyEmailPage');
 const SpendingPage = lazyNamed(() => import('./pages/SpendingPage'), 'SpendingPage');
+// Tải lười: workbox-window (đăng ký service worker) không cần cho lần vẽ đầu tiên,
+// tách ra khỏi bundle khởi đầu để giữ ngân sách JS 350 KiB.
+const PwaUpdateNotice = lazyNamed(() => import('./components/layout/PwaUpdateNotice'), 'PwaUpdateNotice');
 
 function RedirectWithQuery({ to }) {
   const location = useLocation();
@@ -95,7 +97,7 @@ export default function App() {
       <RouteErrorBoundary>
       <SignatureLoginHost />
       <LocalizationObserver />
-      <PwaUpdateNotice />
+      <Suspense fallback={null}><PwaUpdateNotice /></Suspense>
       <AuthExpirationListener />
       <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
