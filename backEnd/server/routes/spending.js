@@ -667,6 +667,76 @@ router.post('/', financialRequest(async (req, res) => {
 }));
 
 // =============================================
+// POST /api/spending/import – Nhập nhiều giao dịch thu/chi vào một ví (từ CSV đã đọc ở client)
+// Tất cả hoặc không gì cả: một dòng sai thì không dòng nào được ghi; financialRequest
+// kiểm lại số dư sau khi ghi nên một file làm ví xuống dưới 0 cũng bị từ chối toàn bộ.
+// =============================================
+const IMPORT_MAX_ROWS = 500;
+const importKey = (date, type, amount, desc) => [date, type, amount, String(desc || '').trim().toLowerCase()].join('|');
+router.post('/import', financialRequest(async (req, res) => {
+    try {
+        const { walletId, rows } = req.body || {};
+        const skipDuplicates = req.body?.skipDuplicates !== false;
+        if (!isValidObjectId(walletId)) {
+            return res.status(400).json({ success: false, message: 'Cần chọn ví để nhập giao dịch.' });
+        }
+        if (!Array.isArray(rows) || rows.length === 0 || rows.length > IMPORT_MAX_ROWS) {
+            return res.status(400).json({ success: false, message: 'Mỗi lần nhập cần từ 1 đến 500 giao dịch.' });
+        }
+        const wallet = await Wallet.findOne({ _id: walletId, userId: req.user.id, archived: false });
+        if (!wallet) {
+            return res.status(400).json({ success: false, message: 'Ví đã chọn không tồn tại hoặc không thuộc quyền sở hữu của bạn.' });
+        }
+
+        const invalidRows = [];
+        const clean = rows.map((row, index) => {
+            const valid = row && typeof row === 'object' && !Array.isArray(row) &&
+                ['income', 'expense'].includes(row.type) &&
+                !validateTransactionPayload(row) &&
+                row.category.trim().length <= 50 &&
+                (row.desc === undefined || (typeof row.desc === 'string' && row.desc.length <= 200));
+            if (!valid) { invalidRows.push(index + 1); return null; }
+            return { type: row.type, amount: row.amount, category: row.category.trim(),
+                date: row.date, desc: typeof row.desc === 'string' ? row.desc.trim() : '' };
+        });
+        if (invalidRows.length) {
+            return res.status(400).json({ success: false, code: 'IMPORT_INVALID_ROWS',
+                message: 'File có dòng không hợp lệ nên chưa nhập giao dịch nào.', invalidRows: invalidRows.slice(0, 50) });
+        }
+
+        // Trùng = cùng ví, ngày, loại, số tiền và mô tả với một giao dịch thu/chi đã có trong sổ.
+        // Hai dòng giống nhau trong cùng file vẫn được giữ (hai lần mua thật trong một ngày).
+        let skipped = 0;
+        let accepted = clean;
+        if (skipDuplicates) {
+            const dates = [...new Set(clean.map(row => row.date))].map(parseTransactionDate);
+            const existing = await Transaction.find({
+                userId: req.user.id, walletId, type: { $in: ['income', 'expense'] }, date: { $in: dates }
+            }).select('type amount desc date').lean();
+            const seen = new Set(existing.map(tx => importKey(tx.date.toISOString().slice(0, 10), tx.type, tx.amount, tx.desc)));
+            accepted = clean.filter(row => !seen.has(importKey(row.date, row.type, row.amount, row.desc)));
+            skipped = clean.length - accepted.length;
+        }
+
+        if (accepted.length) {
+            await Transaction.create(accepted.map(row => ({
+                userId: req.user.id, walletId, type: row.type, amount: row.amount, fee: 0,
+                category: row.category, desc: row.desc, date: parseTransactionDate(row.date)
+            })), { ordered: true });
+            for (const category of new Set(accepted.map(row => row.category))) {
+                await Category.ensureCategorySafe(req.user.id, category);
+            }
+        }
+        res.status(201).json({ success: true, message: 'Đã nhập giao dịch từ file.',
+            data: { imported: accepted.length, skipped } });
+    } catch (error) {
+        if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
+        console.error('[finance] route_failed');
+        res.status(500).json({ success: false, message: 'Lỗi khi nhập giao dịch.' });
+    }
+}));
+
+// =============================================
 // GET /api/spending/:id/history - Lịch sử sửa/xóa, kể cả giao dịch đã xóa
 // =============================================
 router.get('/:id/history', financialRequest(async (req, res) => {

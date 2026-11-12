@@ -81,6 +81,71 @@ export const apiMessages = {
     "Enter a valid whole VND amount within the supported limit.",
     "请输入有效且在支持范围内的 VND 整数金额。"
   ],
+  "Loại khoản định kỳ không hợp lệ.": [
+    "Loại khoản định kỳ không hợp lệ.",
+    "Invalid recurring item type.",
+    "周期项目类型无效。"
+  ],
+  "Không thể đổi loại của khoản định kỳ đã tạo.": [
+    "Không thể đổi loại của khoản định kỳ đã tạo.",
+    "The type of an existing recurring item cannot be changed.",
+    "无法更改已创建周期项目的类型。"
+  ],
+  "Đã đánh dấu đã nhận và ghi nhận thu nhập!": [
+    "Đã đánh dấu đã nhận và ghi nhận thu nhập!",
+    "Marked as received and income recorded.",
+    "已标记收款并记录收入。"
+  ],
+  "Cần chọn ví để nhập giao dịch.": [
+    "Cần chọn ví để nhập giao dịch.",
+    "Choose a wallet to import transactions into.",
+    "请选择要导入交易的钱包。"
+  ],
+  "Mỗi lần nhập cần từ 1 đến 500 giao dịch.": [
+    "Mỗi lần nhập cần từ 1 đến 500 giao dịch.",
+    "Each import needs between 1 and 500 transactions.",
+    "每次导入需包含 1 至 500 笔交易。"
+  ],
+  "File có dòng không hợp lệ nên chưa nhập giao dịch nào.": [
+    "File có dòng không hợp lệ nên chưa nhập giao dịch nào.",
+    "The file has invalid rows, so nothing was imported.",
+    "文件包含无效行，因此未导入任何交易。"
+  ],
+  "Đã nhập giao dịch từ file.": [
+    "Đã nhập giao dịch từ file.",
+    "Transactions imported from the file.",
+    "已从文件导入交易。"
+  ],
+  "Lỗi khi nhập giao dịch.": [
+    "Lỗi khi nhập giao dịch.",
+    "Unable to import the transactions.",
+    "无法导入交易。"
+  ],
+  "Ví đã chọn không tồn tại hoặc không thuộc quyền sở hữu của bạn.": [
+    "Ví đã chọn không tồn tại hoặc không thuộc quyền sở hữu của bạn.",
+    "The selected wallet does not exist or does not belong to you.",
+    "所选钱包不存在或不属于您。"
+  ],
+  "Liên kết quản lý email không hợp lệ.": [
+    "Liên kết quản lý email không hợp lệ.",
+    "This email settings link is not valid.",
+    "此邮件设置链接无效。"
+  ],
+  "Đã cập nhật lựa chọn email nhắc.": [
+    "Đã cập nhật lựa chọn email nhắc.",
+    "Your reminder email choice has been saved.",
+    "已保存您的提醒邮件设置。"
+  ],
+  "Thông báo đẩy chưa được cấu hình.": [
+    "Thông báo đẩy chưa được cấu hình.",
+    "Push notifications are not set up on this server.",
+    "此服务器尚未配置推送通知。"
+  ],
+  "Thiết bị đăng ký thông báo không hợp lệ.": [
+    "Thiết bị đăng ký thông báo không hợp lệ.",
+    "This device could not be registered for notifications.",
+    "此设备无法注册通知。"
+  ],
   "Chu kỳ không hợp lệ.": [
     "Chu kỳ không hợp lệ.",
     "Invalid recurrence cycle.",

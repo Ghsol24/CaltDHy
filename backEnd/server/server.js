@@ -254,10 +254,31 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
     let server;
     let stopping = false;
+    let reminderTimer;
+
+    // Nhắc nhở (tùy chọn): 10 phút kiểm tra một lần. Thông báo đẩy hằng ngày gửi theo giờ từng người
+    // chọn; email chỉ gửi từ 08:00 giờ Việt Nam. Cả hai tự chống gửi trùng nên chạy nhiều lần hoặc
+    // nhiều instance vẫn an toàn.
+    function startReminders() {
+        if (process.env.REMINDERS_ENABLED !== 'true') return;
+        const { sendReminderEmails, sendDailyPushReminders } = require('./utils/reminders');
+        const tick = () => {
+            if (stopping) return;
+            sendDailyPushReminders().catch(() => console.error('[reminders] push_failed'));
+            if ((new Date().getUTCHours() + 7) % 24 < 8) return;
+            sendReminderEmails().then(result => {
+                if (result.sent || result.failed) console.log('[reminders] sent=' + result.sent + ' failed=' + result.failed);
+            }).catch(() => console.error('[reminders] email_failed'));
+        };
+        reminderTimer = setInterval(tick, 10 * 60 * 1000);
+        reminderTimer.unref();
+        tick();
+    }
 
     async function stop(exitCode) {
         if (stopping) return;
         stopping = true;
+        clearInterval(reminderTimer);
         const deadline = setTimeout(() => {
             console.error('[server] shutdown_timeout');
             process.exit(1);
@@ -317,6 +338,7 @@ if (require.main === module) {
             });
         });
         console.log('[server] ready');
+        startReminders();
     }
 
     void start().catch(() => {

@@ -310,3 +310,17 @@
   text-align: center;
   margin: 0 0 20px;
 }
+
+/* Trang quản lý email nhắc (mở từ link trong email) */
+.email-preferences-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.email-preferences-off {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+}

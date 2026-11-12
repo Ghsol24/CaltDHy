@@ -58,6 +58,17 @@ export const authService = {
     });
   },
 
+  getPushConfig: async () => apiFetch('/api/auth/push-config'),
+  addPushSubscription: async (endpoint) => apiFetch('/api/auth/push-subscriptions', {
+    method: 'POST', body: JSON.stringify({ endpoint })
+  }),
+  removePushSubscription: async (endpoint) => apiFetch('/api/auth/push-subscriptions/remove', {
+    method: 'POST', body: JSON.stringify({ endpoint })
+  }),
+  updateEmailReminders: async (data) => apiFetch('/api/auth/email-reminders', {
+    method: 'POST', body: JSON.stringify(data)
+  }),
+
   updatePreferences: async (preferences) => {
     return await apiFetch('/api/auth/preferences', {
       method: 'PUT',

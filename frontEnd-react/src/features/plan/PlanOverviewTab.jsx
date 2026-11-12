@@ -13,7 +13,7 @@ import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { CategoryOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { getPlanCopy } from './planCopy';
-import { isInstallmentEnded } from '../../utils/installmentTerm';
+import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
 import { buildPlanAlerts } from '../../utils/planAlerts';
 import { PlanAttentionBar } from './PlanAttentionBar';
 import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
@@ -125,7 +125,7 @@ export function PlanOverviewTab() {
   const totalBudgetRemaining = hasAnyBudgetLimit ? totalBudgetLimit - totalBudgetSpent : null;
 
   // 3. Recurring calculation
-  const activeInstallments = (installments || []).filter((item) => item.active !== false && !isInstallmentEnded(item));
+  const activeInstallments = (installments || []).filter((item) => item.active !== false && !isInstallmentEnded(item) && !isRecurringIncome(item));
   const monthlyEstimatedCost = activeInstallments.reduce((sum, item) => {
     const amt = Number(item.amount) || 0;
     if (item.cycle === 'yearly') return sum + amt / 12;

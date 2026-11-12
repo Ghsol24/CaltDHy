@@ -127,6 +127,11 @@ export function TransactionModal() {
   }, [isOpen, type, selectedPeriod, budgetMonth, budgetRetry]);
 
   const draftAmount = Number(String(amount).replace(/\D/g, ''));
+  // Thu nhập mới: cho thấy trước số dư ví sau khi nhận, để người dùng kiểm tra đúng ví và đúng số.
+  const incomeWallet = type === 'income' && !editingTransaction
+    ? wallets.find((wallet) => String(wallet.id) === String(walletId)) : null;
+  const incomeBalanceAfter = incomeWallet && draftAmount > 0 && Number.isSafeInteger(draftAmount)
+    ? (incomeWallet.currentBalance ?? incomeWallet.initialBalance ?? 0) + draftAmount : null;
   const categoryMetrics = useMemo(() => {
     if (type !== 'expense' || !budgetReady || budgetError) return {};
     const metrics = previewCategoryBudgets({ transactions, budgets: applicableBudgets,
@@ -481,7 +486,7 @@ export function TransactionModal() {
             </div>
 
             {/* 2. Amount field */}
-            <TransactionAmountField amount={amount} amountError={amountError} amountInputRef={amountInputRef} handleAmountChange={handleAmountChange} />
+            <TransactionAmountField type={type} amount={amount} amountError={amountError} amountInputRef={amountInputRef} handleAmountChange={handleAmountChange} />
 
             {/* 3. Smart Category Selection Grid */}
             <TransactionCategoryField baselineMetrics={baselineMetrics} budgetError={budgetError} budgetReady={budgetReady} category={category} categoryMetrics={categoryMetrics} close={close} draftAmount={draftAmount} isPhone={isPhone} navigateTo={navigateTo} selectedPeriod={selectedPeriod} setBudgetRetry={setBudgetRetry} setCategory={setCategory} setPicker={setPicker} sortedCategories={sortedCategories} type={type} />
@@ -497,6 +502,11 @@ export function TransactionModal() {
                 onChange={setWalletId}
                 placeholder={t('transaction.chooseWallet')}
               />
+              {incomeBalanceAfter !== null && (
+                <p className="txn-field-hint txn-field-hint--income" aria-live="polite">
+                  {t('transaction.balanceAfterIncome', { amount: formatCurrency(incomeBalanceAfter) })}
+                </p>
+              )}
             </div>
 
             {/* 5. Date Field */}

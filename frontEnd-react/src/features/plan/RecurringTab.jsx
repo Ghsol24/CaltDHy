@@ -9,7 +9,7 @@ import { RecurringModal } from './RecurringModal';
 import { formatCurrency, getDueStatus, getRecurringTier, formatDate, getLocalMonthString } from '../../utils/formatters';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useTranslation } from '../../i18n/useTranslation';
-import { isInstallmentEnded } from '../../utils/installmentTerm';
+import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
@@ -91,9 +91,9 @@ export function RecurringTab() {
     return (installments || []).filter((item) => item.active !== false && !isInstallmentEnded(item));
   }, [installments]);
 
-  // Total monthly estimated cost
+  // Total monthly estimated cost: obligations only, recurring income is never a cost.
   const monthlyEstimatedCost = useMemo(() => {
-    return activeItems.reduce((sum, item) => {
+    return activeItems.filter((item) => !isRecurringIncome(item)).reduce((sum, item) => {
       const amt = Number(item.amount) || 0;
       if (item.cycle === 'yearly') return sum + amt / 12;
       if (item.cycle === 'quarterly') return sum + amt / 3;
@@ -194,6 +194,7 @@ export function RecurringTab() {
 
     // 1. Tính các khoản đã thanh toán trong tháng mục tiêu từ lịch sử
     installments.forEach((item) => {
+      if (isRecurringIncome(item)) return;
       if (Array.isArray(item.history)) {
         item.history.forEach((h) => {
           if (h && typeof h.paidDate === 'string' && h.paidDate.startsWith(targetMonth)) {
@@ -206,6 +207,7 @@ export function RecurringTab() {
 
     // 2. Phân loại các khoản chưa thanh toán trong tháng mục tiêu
     activeItems.forEach((item) => {
+      if (isRecurringIncome(item)) return;
       const isPaidInMonth = Array.isArray(item.history) && item.history.some(
         (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(targetMonth)
       );
@@ -262,7 +264,9 @@ export function RecurringTab() {
       await payInstallment(item.id);
       addToast({
         type: 'success',
-        message: `Đã đánh dấu đã trả khoản "${item.name}" (${formatCurrency(item.amount)}).`,
+        message: isRecurringIncome(item)
+          ? `Đã ghi nhận khoản thu "${item.name}" (${formatCurrency(item.amount)}).`
+          : `Đã đánh dấu đã trả khoản "${item.name}" (${formatCurrency(item.amount)}).`,
         duration: 4000
       });
     } catch (err) {
@@ -330,7 +334,9 @@ export function RecurringTab() {
       await updateInstallment(item.id, { walletId: newWalletId });
       addToast({
         type: 'success',
-        message: `Đã cập nhật ví trừ tiền cho "${item.name}".`,
+        message: isRecurringIncome(item)
+          ? `Đã cập nhật ví nhận tiền cho "${item.name}".`
+          : `Đã cập nhật ví trừ tiền cho "${item.name}".`,
         duration: 3000
       });
     } catch (err) {
@@ -373,7 +379,7 @@ export function RecurringTab() {
             <Icon name="calendarDown" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           }
           title="Chưa có khoản định kỳ nào"
-          description="Thêm khoản chi đều đặn như tiền nhà hoặc dịch vụ thuê bao để theo dõi hạn thanh toán."
+          description="Thêm khoản chi đều đặn như tiền nhà, hoặc khoản thu đều đặn như lương, để theo dõi kỳ hạn."
           actionLabel="Thêm khoản đầu tiên"
           onAction={handleOpenCreate}
         />

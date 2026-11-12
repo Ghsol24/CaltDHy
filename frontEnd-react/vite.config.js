@@ -9,13 +9,15 @@ export default defineConfig({
     manifest: false,
     injectRegister: false,
     registerType: 'prompt',
-    includeAssets: ['manifest.json', 'app-icon.svg', 'app-icon-192.png', 'app-icon-512.png', 'apple-touch-icon.png'],
+    includeAssets: ['push-sw.js', 'manifest.json', 'app-icon.svg', 'app-icon-192.png', 'app-icon-512.png', 'apple-touch-icon.png'],
     workbox: {
       globPatterns: ['**/*.{js,css,html}'],
       navigateFallback: '/index.html',
       navigateFallbackDenylist: [/^\/api(?:\/|$)/],
       runtimeCaching: [],
       cleanupOutdatedCaches: true,
+      // Adds the push / notificationclick handlers to the generated worker.
+      importScripts: ['/push-sw.js'],
     },
   })],
   server: {
