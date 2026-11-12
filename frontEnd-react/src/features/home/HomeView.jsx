@@ -6,6 +6,7 @@ import { formatDate, formatTime, getLocalMonthString } from '../../utils/formatt
 import { AvailableToSpendCard } from './AvailableToSpendCard';
 import { RecentTransactions } from './RecentTransactions';
 import { AttentionPanel } from './AttentionPanel';
+import { ReminderInviteCard } from './ReminderInviteCard';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export function HomeView() {
@@ -106,6 +107,7 @@ export function HomeView() {
         {/* Left Column: Hero Card + Recent Transactions */}
         <div className="home-col-main">
           <AvailableToSpendCard />
+          <ReminderInviteCard />
           <RecentTransactions />
         </div>
 

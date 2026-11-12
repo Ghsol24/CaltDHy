@@ -1,27 +1,10 @@
-import React, { useState } from 'react';
-import { useAuthStore } from '../../../stores/useAuthStore';
-import { useToastStore } from '../../../stores/useToastStore';
-import { getUserErrorMessage } from '../../../utils/userErrors';
+import React from 'react';
 import { LOCALE_META, SUPPORTED_LOCALES } from '../../../i18n/translations';
 import { formatDate } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function SettingsGeneralTab({ activeTab, displayCurrency, exchangeRate, setDisplayCurrency, setLang, usdAvailable }) {
   const { lang, t } = useTranslation();
-  const user = useAuthStore((state) => state.user);
-  const updatePreferences = useAuthStore((state) => state.updatePreferences);
-  const addToast = useToastStore((state) => state.addToast);
-  const [savingReminder, setSavingReminder] = useState(false);
-  const reminderOn = user?.preferences?.dueReminders?.email === true;
-  const emailVerified = user?.emailVerified === true;
-  const setReminder = async (email) => {
-    if (email === reminderOn || savingReminder) return;
-    setSavingReminder(true);
-    // Lưu kèm ngôn ngữ đang dùng để email nhắc hạn gửi đúng ngôn ngữ đó.
-    try { await updatePreferences({ dueReminders: { email, locale: lang } }); }
-    catch (error) { addToast({ type: 'error', message: getUserErrorMessage(error, 'error.save') }); }
-    finally { setSavingReminder(false); }
-  };
   return (activeTab === 'general' && (
     <div className="account-tab-pane">
       <div className="account-tab-intro">
@@ -62,19 +45,6 @@ export function SettingsGeneralTab({ activeTab, displayCurrency, exchangeRate, s
             <span>{t('settings.timeZoneHint')}</span>
           </div>
           <span className="settings-readonly-value">{Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Ho_Chi_Minh'}</span>
-        </div>
-        <div className="settings-preference-row">
-          <div>
-            <strong>{t('settings.dueReminder')}</strong>
-            <span id="due-reminder-hint">{t(emailVerified || reminderOn ? 'settings.dueReminderHint' : 'settings.dueReminderUnverified')}</span>
-          </div>
-          <div className="settings-segmented-control" role="group" aria-label={t('settings.dueReminder')} aria-describedby="due-reminder-hint">
-            {[true, false].map((value) => (
-              <button key={String(value)} type="button" className={reminderOn === value ? 'active' : ''}
-                aria-pressed={reminderOn === value} disabled={savingReminder || (value && !emailVerified)}
-                onClick={() => setReminder(value)}>{t(value ? 'settings.on' : 'settings.off')}</button>
-            ))}
-          </div>
         </div>
       </div>
   

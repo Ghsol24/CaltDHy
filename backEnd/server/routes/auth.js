@@ -13,6 +13,9 @@ const { validEmail, normalizeEmail } = require('../utils/emailAddress');
 const { configuredProvider, sendAccountEmail } = require('../utils/accountEmail');
 const { publicPreferences, publicUser } = require('../utils/publicUser');
 const { validPreferencesUpdate, preferenceUpdateFields } = require('../utils/cashFlowPreferences');
+const PushSubscription = require('../models/PushSubscription');
+const { validPushEndpoint, vapidConfig } = require('../utils/webPush');
+const { applyReminderChoice } = require('../utils/reminders');
 const router = express.Router();
 
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
@@ -222,6 +225,45 @@ router.put('/preferences', protect, async (req, res) => {
         }
         return res.json({ success: true, preferences: publicPreferences(user.preferences) });
     } catch (error) { return failure(res, 'preferences_update_failed', error); }
+});
+
+// Trang "tạm dừng / tắt email nhắc" mở từ link trong email: không cần đăng nhập, chỉ cần mã có chữ ký.
+router.post('/email-reminders', async (req, res) => {
+    try {
+        const { token, action } = req.body || {};
+        if (!await applyReminderChoice(token, action)) {
+            return res.status(400).json({ success: false, message: 'Liên kết quản lý email không hợp lệ.' });
+        }
+        return res.json({ success: true, message: 'Đã cập nhật lựa chọn email nhắc.' });
+    } catch (error) { return failure(res, 'email_reminders_failed', error); }
+});
+
+// Thông báo đẩy: khóa công khai để trình duyệt đăng ký, và danh sách thiết bị của tài khoản.
+router.get('/push-config', protect, (req, res) => {
+    res.json({ success: true, publicKey: vapidConfig()?.publicKey || null });
+});
+router.post('/push-subscriptions', protect, async (req, res) => {
+    try {
+        const endpoint = req.body?.endpoint;
+        if (!vapidConfig()) return res.status(503).json({ success: false, message: 'Thông báo đẩy chưa được cấu hình.' });
+        if (!validPushEndpoint(endpoint)) return res.status(400).json({ success: false, message: 'Thiết bị đăng ký thông báo không hợp lệ.' });
+        const mine = await PushSubscription.find({ userId: req.user.id }).sort({ createdAt: 1 }).select('endpoint').lean();
+        if (!mine.some(item => item.endpoint === endpoint)) {
+            // Giữ tối đa 10 thiết bị; thiết bị cũ nhất nhường chỗ.
+            if (mine.length >= 10) await PushSubscription.deleteOne({ _id: mine[0]._id });
+            // Một endpoint thuộc về tài khoản đăng nhập gần nhất trên trình duyệt đó.
+            await PushSubscription.findOneAndUpdate({ endpoint }, { $set: { userId: req.user.id } }, { upsert: true });
+        }
+        return res.json({ success: true });
+    } catch (error) { return failure(res, 'push_subscribe_failed', error); }
+});
+router.post('/push-subscriptions/remove', protect, async (req, res) => {
+    try {
+        if (typeof req.body?.endpoint === 'string') {
+            await PushSubscription.deleteOne({ userId: req.user.id, endpoint: req.body.endpoint });
+        }
+        return res.json({ success: true });
+    } catch (error) { return failure(res, 'push_unsubscribe_failed', error); }
 });
 
 router.put('/profile', protect, async (req, res) => {

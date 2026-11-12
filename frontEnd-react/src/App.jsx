@@ -14,6 +14,7 @@ const LoginPage = lazyNamed(() => import('./pages/LoginPage'), 'LoginPage');
 const SignupPage = lazyNamed(() => import('./pages/SignupPage'), 'SignupPage');
 const ResetPasswordPage = lazyNamed(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
 const VerifyEmailPage = lazyNamed(() => import('./pages/VerifyEmailPage'), 'VerifyEmailPage');
+const EmailPreferencesPage = lazyNamed(() => import('./pages/EmailPreferencesPage'), 'EmailPreferencesPage');
 const SpendingPage = lazyNamed(() => import('./pages/SpendingPage'), 'SpendingPage');
 // Tải lười: workbox-window (đăng ký service worker) không cần cho lần vẽ đầu tiên,
 // tách ra khỏi bundle khởi đầu để giữ ngân sách JS 350 KiB.
@@ -115,6 +116,8 @@ export default function App() {
 
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/verify-email.html" element={<RedirectWithQuery to="/verify-email" />} />
+
+        <Route path="/email-preferences" element={<EmailPreferencesPage />} />
         
         <Route
           path="/spending/*"

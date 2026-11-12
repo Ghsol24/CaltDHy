@@ -126,6 +126,26 @@ export const apiMessages = {
     "The selected wallet does not exist or does not belong to you.",
     "所选钱包不存在或不属于您。"
   ],
+  "Liên kết quản lý email không hợp lệ.": [
+    "Liên kết quản lý email không hợp lệ.",
+    "This email settings link is not valid.",
+    "此邮件设置链接无效。"
+  ],
+  "Đã cập nhật lựa chọn email nhắc.": [
+    "Đã cập nhật lựa chọn email nhắc.",
+    "Your reminder email choice has been saved.",
+    "已保存您的提醒邮件设置。"
+  ],
+  "Thông báo đẩy chưa được cấu hình.": [
+    "Thông báo đẩy chưa được cấu hình.",
+    "Push notifications are not set up on this server.",
+    "此服务器尚未配置推送通知。"
+  ],
+  "Thiết bị đăng ký thông báo không hợp lệ.": [
+    "Thiết bị đăng ký thông báo không hợp lệ.",
+    "This device could not be registered for notifications.",
+    "此设备无法注册通知。"
+  ],
   "Chu kỳ không hợp lệ.": [
     "Chu kỳ không hợp lệ.",
     "Invalid recurrence cycle.",

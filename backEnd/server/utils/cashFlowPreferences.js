@@ -28,13 +28,8 @@ function publicCashFlowPreferences(value) {
 function validPreferencesUpdate(body) {
     if (!isObject(body)) return false;
     const keys = Object.keys(body);
-    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'dueReminders'].includes(key))) return false;
-    if (owns(body, 'dueReminders')) {
-        const reminders = body.dueReminders;
-        if (!isObject(reminders) || !owns(reminders, 'email') || typeof reminders.email !== 'boolean') return false;
-        if (Object.keys(reminders).some(key => !['email', 'locale'].includes(key))) return false;
-        if (owns(reminders, 'locale') && !reminderLocales.has(reminders.locale)) return false;
-    }
+    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'notifications'].includes(key))) return false;
+    if (owns(body, 'notifications') && !validNotificationsUpdate(body.notifications)) return false;
     if (owns(body, 'analyticsExcludeRecurring') && typeof body.analyticsExcludeRecurring !== 'boolean') return false;
     if (owns(body, 'cashFlow')) {
         if (!isObject(body.cashFlow)) return false;
@@ -65,15 +60,49 @@ function preferenceUpdateFields(body, existing) {
             fields['preferences.analyticsExcludeRecurring'] = body.cashFlow.lastUsed.excludeRecurring;
         }
     }
-    if (owns(body, 'dueReminders')) {
-        fields['preferences.dueReminders.email'] = body.dueReminders.email;
-        if (owns(body.dueReminders, 'locale')) fields['preferences.dueReminders.locale'] = body.dueReminders.locale;
+    if (owns(body, 'notifications')) {
+        const update = body.notifications;
+        for (const key of ['dueEmail', 'inactivityEmail', 'locale', 'promptDismissed']) {
+            if (owns(update, key)) fields['preferences.notifications.' + key] = update[key];
+        }
+        if (owns(update, 'dailyReminder')) {
+            fields['preferences.notifications.dailyReminder.enabled'] = update.dailyReminder.enabled;
+            fields['preferences.notifications.dailyReminder.hour'] = update.dailyReminder.hour;
+        }
+        // Chỉ cho phép bỏ tạm dừng từ đây; đặt tạm dừng đi qua link có chữ ký trong email.
+        if (owns(update, 'emailPausedUntil')) fields['preferences.notifications.emailPausedUntil'] = null;
     }
     return fields;
 }
 
-function publicDueReminders(value) {
-    return { email: value?.email === true, locale: reminderLocales.has(value?.locale) ? value.locale : 'vi' };
+function validNotificationsUpdate(value) {
+    if (!isObject(value)) return false;
+    const keys = Object.keys(value);
+    const booleans = ['dueEmail', 'inactivityEmail', 'promptDismissed'];
+    if (!keys.length || keys.some(key => ![...booleans, 'dailyReminder', 'locale', 'emailPausedUntil'].includes(key))) return false;
+    if (booleans.some(key => owns(value, key) && typeof value[key] !== 'boolean')) return false;
+    if (owns(value, 'locale') && !reminderLocales.has(value.locale)) return false;
+    if (owns(value, 'emailPausedUntil') && value.emailPausedUntil !== null) return false;
+    if (owns(value, 'dailyReminder')) {
+        const daily = value.dailyReminder;
+        if (!isObject(daily) || Object.keys(daily).length !== 2 || typeof daily.enabled !== 'boolean' ||
+            !Number.isInteger(daily.hour) || daily.hour < 6 || daily.hour > 23) return false;
+    }
+    return true;
 }
 
-module.exports = { publicDueReminders, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };
+function publicNotifications(value) {
+    const hour = value?.dailyReminder?.hour;
+    const paused = value?.emailPausedUntil ? new Date(value.emailPausedUntil) : null;
+    return {
+        dueEmail: value?.dueEmail === true,
+        inactivityEmail: value?.inactivityEmail === true,
+        dailyReminder: { enabled: value?.dailyReminder?.enabled === true,
+            hour: Number.isInteger(hour) && hour >= 6 && hour <= 23 ? hour : 21 },
+        locale: reminderLocales.has(value?.locale) ? value.locale : 'vi',
+        emailPausedUntil: paused && paused > new Date() ? paused.toISOString() : null,
+        promptDismissed: value?.promptDismissed === true
+    };
+}
+
+module.exports = { publicNotifications, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };

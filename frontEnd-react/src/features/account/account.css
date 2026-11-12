@@ -1539,6 +1539,39 @@
   color: var(--color-accent);
 }
 
+/* ── Cài đặt > Thông báo ── */
+.settings-notify-heading {
+  margin: 20px 0 8px;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+}
+
+.settings-notify-select {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, var(--text-primary));
+  background: var(--color-surface, var(--surface));
+  border: 1.5px solid var(--color-border, var(--border));
+  border-radius: 8px;
+}
+
+.settings-notify-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-notify-paused {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 /* ── Thẻ giao diện có bản xem trước (trang Cài đặt > Giao diện) ── */
 .settings-theme-hint {
   margin: 4px 0 0;

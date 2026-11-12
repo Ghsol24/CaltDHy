@@ -703,3 +703,78 @@
 .home-plan-progress-fill.home-plan-progress-fill--box {
   width: var(--home-plan-progress-fill-width);
 }
+
+/* ── Thẻ mời bật nhắc (hỏi một lần, sau giao dịch đầu tiên) ── */
+.home-reminder-invite {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  background: var(--color-surface, var(--surface));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-lg, 16px);
+}
+
+.home-reminder-invite__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--control-muted-bg);
+  color: var(--color-link);
+}
+
+.home-reminder-invite__text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.home-reminder-invite__text h3 {
+  margin: 0;
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+}
+
+.home-reminder-invite__text p {
+  margin: 2px 0 0;
+  font-size: var(--font-sm);
+  line-height: 1.45;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.home-reminder-invite__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.home-reminder-invite__actions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.home-reminder-invite__later {
+  background: transparent;
+  border: 1px solid var(--color-border, var(--border));
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.home-reminder-invite__accept {
+  background: var(--color-action-bg, var(--primary));
+  border: 1px solid transparent;
+  color: var(--color-action-text, #FFFFFF);
+}
+
+.home-reminder-invite__actions button:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+}

@@ -23,6 +23,7 @@ import { SettingsGuideTab } from './settings/SettingsGuideTab';
 import { SettingsGeneralTab } from './settings/SettingsGeneralTab';
 import { SettingsDataTab } from './settings/SettingsDataTab';
 import { SettingsSecurityTab } from './settings/SettingsSecurityTab';
+import { SettingsNotificationsTab } from './settings/SettingsNotificationsTab';
 import { SettingsProfileTab } from './settings/SettingsProfileTab';
 
 const SETTINGS_GROUPS = [
@@ -40,7 +41,8 @@ const SETTINGS_GROUPS = [
     headingKey: 'settings.appearanceLanguageTitle',
     items: [
       { id: 'general', labelKey: 'settings.languageRegion', icon: 'general' },
-      { id: 'appearance', labelKey: 'settings.appearance', icon: 'appearance' }
+      { id: 'appearance', labelKey: 'settings.appearance', icon: 'appearance' },
+      { id: 'notifications', labelKey: 'notify.title', icon: 'notifications' }
     ]
   },
   {
@@ -58,7 +60,7 @@ const SECTION_GROUP_TITLE_KEYS = Object.fromEntries(
 );
 const MOBILE_SETTINGS_GROUPS = [{
   labelKey: 'settings.title',
-  items: ['general', 'security', 'data', 'guide'].map((id) => (
+  items: ['general', 'notifications', 'security', 'data', 'guide'].map((id) => (
     SETTINGS_GROUPS.flatMap((group) => group.items).find((item) => item.id === id)
   ))
 }];
@@ -531,6 +533,8 @@ export function AccountModal() {
             {<SettingsDataTab activeTab={activeTab} budgets={budgets} copyError={copyError} copySuccess={copySuccess} exportError={exportError} handleCopyUid={handleCopyUid} handleExportData={handleExportData} isExporting={isExporting} setIsResetDialogOpen={setIsResetDialogOpen} setResetConfirmInput={setResetConfirmInput} setResetError={setResetError} transactions={transactions} user={user} />}
 
             {<SettingsGeneralTab activeTab={activeTab} displayCurrency={displayCurrency} exchangeRate={exchangeRate} setDisplayCurrency={setDisplayCurrency} setLang={setLang} usdAvailable={usdAvailable} />}
+
+            <SettingsNotificationsTab activeTab={activeTab} />
 
             {activeTab === 'appearance' && (
               <div className="account-tab-pane">

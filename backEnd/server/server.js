@@ -256,19 +256,21 @@ if (require.main === module) {
     let stopping = false;
     let reminderTimer;
 
-    // Email nhắc hạn (tùy chọn): mỗi giờ kiểm tra một lần, chỉ gửi từ 08:00 giờ Việt Nam.
-    // sendDueReminders tự chống gửi trùng nên chạy nhiều lần hoặc nhiều instance vẫn an toàn.
-    function startDueReminders() {
-        if (process.env.DUE_REMINDER_EMAILS !== 'true') return;
-        const { sendDueReminders } = require('./utils/dueReminders');
+    // Nhắc nhở (tùy chọn): 10 phút kiểm tra một lần. Thông báo đẩy hằng ngày gửi theo giờ từng người
+    // chọn; email chỉ gửi từ 08:00 giờ Việt Nam. Cả hai tự chống gửi trùng nên chạy nhiều lần hoặc
+    // nhiều instance vẫn an toàn.
+    function startReminders() {
+        if (process.env.REMINDERS_ENABLED !== 'true') return;
+        const { sendReminderEmails, sendDailyPushReminders } = require('./utils/reminders');
         const tick = () => {
-            const vietnamHour = (new Date().getUTCHours() + 7) % 24;
-            if (stopping || vietnamHour < 8) return;
-            sendDueReminders().then(result => {
+            if (stopping) return;
+            sendDailyPushReminders().catch(() => console.error('[reminders] push_failed'));
+            if ((new Date().getUTCHours() + 7) % 24 < 8) return;
+            sendReminderEmails().then(result => {
                 if (result.sent || result.failed) console.log('[reminders] sent=' + result.sent + ' failed=' + result.failed);
-            }).catch(() => console.error('[reminders] run_failed'));
+            }).catch(() => console.error('[reminders] email_failed'));
         };
-        reminderTimer = setInterval(tick, 60 * 60 * 1000);
+        reminderTimer = setInterval(tick, 10 * 60 * 1000);
         reminderTimer.unref();
         tick();
     }
@@ -336,7 +338,7 @@ if (require.main === module) {
             });
         });
         console.log('[server] ready');
-        startDueReminders();
+        startReminders();
     }
 
     void start().catch(() => {

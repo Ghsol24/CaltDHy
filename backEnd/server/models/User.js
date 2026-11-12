@@ -68,6 +68,9 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: ''
         },
+        // Dấu chống gửi trùng của job nhắc; không phải tùy chọn của người dùng.
+        lastInactivityEmailAt: { type: Date, default: null, select: false },
+        lastDailyPushDate: { type: String, default: null, select: false },
         preferences: {
             analyticsExcludeRecurring: {
                 type: Boolean,
@@ -77,10 +80,17 @@ const userSchema = new mongoose.Schema(
                 lastUsed: { type: cashFlowViewSchema, default: null },
                 pinnedDefault: { type: cashFlowViewSchema, default: null }
             },
-            // Email nhắc khoản định kỳ sắp đến hạn: mặc định tắt, người dùng tự bật.
-            dueReminders: {
-                email: { type: Boolean, default: false },
-                locale: { type: String, enum: ['vi', 'en', 'zh-CN'], default: 'vi' }
+            // Thông báo: mọi loại đều mặc định tắt, người dùng tự bật trong Cài đặt > Thông báo.
+            notifications: {
+                dueEmail: { type: Boolean, default: false },         // email khoản định kỳ sắp đến hạn
+                inactivityEmail: { type: Boolean, default: false },  // email khi 3 ngày chưa ghi giao dịch
+                dailyReminder: {                                     // thông báo đẩy nhắc ghi chép mỗi ngày
+                    enabled: { type: Boolean, default: false },
+                    hour: { type: Number, min: 6, max: 23, default: 21 } // giờ Việt Nam
+                },
+                locale: { type: String, enum: ['vi', 'en', 'zh-CN'], default: 'vi' },
+                emailPausedUntil: { type: Date, default: null },     // "tạm dừng 30 ngày" từ link trong email
+                promptDismissed: { type: Boolean, default: false }   // đã trả lời thẻ mời bật nhắc
             }
         }
     },

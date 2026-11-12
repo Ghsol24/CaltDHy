@@ -1,11 +1,11 @@
 'use strict';
-const { publicCashFlowPreferences, publicDueReminders } = require('./cashFlowPreferences');
+const { publicCashFlowPreferences, publicNotifications } = require('./cashFlowPreferences');
 
 function publicPreferences(preferences) {
     return {
         analyticsExcludeRecurring: preferences?.analyticsExcludeRecurring === true,
         cashFlow: publicCashFlowPreferences(preferences?.cashFlow),
-        dueReminders: publicDueReminders(preferences?.dueReminders)
+        notifications: publicNotifications(preferences?.notifications)
     };
 }
 
