@@ -1,6 +1,6 @@
 import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useState } from 'react';
-import '../i18n/notifyTranslations';
+import '../i18n/lazyTranslations';
 import { Link, useSearchParams } from 'react-router';
 import { authService } from '../services/authService';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';

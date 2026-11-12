@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../../../i18n/notifyTranslations';
+import '../../../i18n/lazyTranslations';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useToastStore } from '../../../stores/useToastStore';
 import { getUserErrorMessage } from '../../../utils/userErrors';

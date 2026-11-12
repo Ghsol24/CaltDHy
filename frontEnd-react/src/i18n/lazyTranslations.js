@@ -1,6 +1,7 @@
-// Strings for the notification settings, the home reminder card and the email-preferences page.
-// Kept out of translations.js so they stay out of the initial bundle: each of those three screens is
-// loaded on demand and imports this file, which registers the strings before the screen renders.
+// Strings used only by screens that load on demand: the notification settings, the home reminder card,
+// the email-preferences page, the theme picker and the income balance hint. Kept out of translations.js
+// so they stay out of the initial bundle; each of those screens imports this file, which registers the
+// strings before it renders.
 import { registerTranslations } from './translations';
 
 registerTranslations({
@@ -28,6 +29,10 @@ registerTranslations({
     'notify.managePaused': 'Đã tạm dừng email nhắc trong 30 ngày. Bạn có thể nhận lại sớm hơn trong Cài đặt > Thông báo.',
     'notify.manageOff': 'Đã tắt email nhắc. Bạn có thể bật lại trong Cài đặt > Thông báo.',
     'settings.on': 'Bật', 'settings.off': 'Tắt',
+    'settings.theme.darkDesc': 'Nền tối, dịu mắt khi thiếu sáng', 'settings.theme.lightDesc': 'Nền trắng, rõ nét ban ngày',
+    'settings.theme.creamDesc': 'Tông giấy ấm, dễ đọc lâu', 'settings.theme.greenDesc': 'Sắc xanh lá nhẹ, tươi mát',
+    'settings.themeHint': 'Thay đổi được áp dụng ngay.',
+    'transaction.balanceAfterIncome': 'Số dư sau khi nhận: {amount}',
   },
   en: {
     'notify.title': 'Notifications', 'notify.intro': 'Every reminder starts off. Turn on what you need; you can change it at any time.',
@@ -53,6 +58,10 @@ registerTranslations({
     'notify.managePaused': 'Reminder emails are paused for 30 days. You can resume sooner in Settings > Notifications.',
     'notify.manageOff': 'Reminder emails are off. You can turn them back on in Settings > Notifications.',
     'settings.on': 'On', 'settings.off': 'Off',
+    'settings.theme.darkDesc': 'Dark background, easy in low light', 'settings.theme.lightDesc': 'White background, crisp in daylight',
+    'settings.theme.creamDesc': 'Warm paper tone for long reading', 'settings.theme.greenDesc': 'Soft, fresh green tint',
+    'settings.themeHint': 'Changes apply immediately.',
+    'transaction.balanceAfterIncome': 'Balance after receiving: {amount}',
   },
   'zh-CN': {
     'notify.title': '通知', 'notify.intro': '所有提醒默认关闭。按需开启，随时可以更改。',
@@ -78,5 +87,9 @@ registerTranslations({
     'notify.managePaused': '提醒邮件已暂停 30 天。您可以在“设置 > 通知”中提前恢复。',
     'notify.manageOff': '提醒邮件已关闭。您可以在“设置 > 通知”中重新开启。',
     'settings.on': '开启', 'settings.off': '关闭',
+    'settings.theme.darkDesc': '深色背景，弱光下更护眼', 'settings.theme.lightDesc': '白色背景，白天清晰易读',
+    'settings.theme.creamDesc': '暖色纸张质感，适合长时间阅读', 'settings.theme.greenDesc': '清新柔和的浅绿色调',
+    'settings.themeHint': '更改会立即生效。',
+    'transaction.balanceAfterIncome': '入账后余额：{amount}',
   },
 });

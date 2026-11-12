@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../i18n/lazyTranslations';
 import { THEME_OPTIONS } from '../../utils/themes';
 import { useTranslation } from '../../i18n/useTranslation';
 
