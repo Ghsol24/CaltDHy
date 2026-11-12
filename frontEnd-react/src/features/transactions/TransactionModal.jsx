@@ -1,5 +1,6 @@
 import { getUserErrorMessage } from '../../utils/userErrors.js';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import '../../i18n/lazyTranslations';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
