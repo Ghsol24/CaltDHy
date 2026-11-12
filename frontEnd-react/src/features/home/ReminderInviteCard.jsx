@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../../i18n/notifyTranslations';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
