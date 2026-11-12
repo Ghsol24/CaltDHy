@@ -42,7 +42,7 @@ test('loading normalises jars and recurring items for the screens', async (t) =>
   });
   assert.deepEqual(store().jars[1].history, []);
   assert.deepEqual(store().installments[0], {
-    id: 'rent', name: 'Tiền nhà', category: 'Housing & Bills', icon: 'recurring', amount: 5_000_000,
+    id: 'rent', type: 'expense', name: 'Tiền nhà', category: 'Housing & Bills', icon: 'recurring', amount: 5_000_000,
     cycle: 'monthly', nextDueDate: inThisMonth('10'), endDate: null, active: true, totalPaid: 0, history: [],
     totalAmount: 5_000_000, remainingAmount: 0, monthlyAmount: 5_000_000, dueDate: inThisMonth('10'),
     totalMonths: 0, paidMonths: 0, walletId: 'bank', isActive: true

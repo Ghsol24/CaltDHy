@@ -36,8 +36,9 @@ const normalizeJar = (j) => ({
 
 const normalizeInstallment = (i) => ({
   id: i._id || i.id,
+  type: i.type === 'income' ? 'income' : 'expense',
   name: i.name || '',
-  category: i.category || 'Housing & Bills',
+  category: i.category || (i.type === 'income' ? 'Salary' : 'Housing & Bills'),
   icon: i.icon || 'recurring',
   amount: Number(i.amount) || 0,
   cycle: i.cycle || 'monthly',

@@ -254,10 +254,29 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
     let server;
     let stopping = false;
+    let reminderTimer;
+
+    // Email nhắc hạn (tùy chọn): mỗi giờ kiểm tra một lần, chỉ gửi từ 08:00 giờ Việt Nam.
+    // sendDueReminders tự chống gửi trùng nên chạy nhiều lần hoặc nhiều instance vẫn an toàn.
+    function startDueReminders() {
+        if (process.env.DUE_REMINDER_EMAILS !== 'true') return;
+        const { sendDueReminders } = require('./utils/dueReminders');
+        const tick = () => {
+            const vietnamHour = (new Date().getUTCHours() + 7) % 24;
+            if (stopping || vietnamHour < 8) return;
+            sendDueReminders().then(result => {
+                if (result.sent || result.failed) console.log('[reminders] sent=' + result.sent + ' failed=' + result.failed);
+            }).catch(() => console.error('[reminders] run_failed'));
+        };
+        reminderTimer = setInterval(tick, 60 * 60 * 1000);
+        reminderTimer.unref();
+        tick();
+    }
 
     async function stop(exitCode) {
         if (stopping) return;
         stopping = true;
+        clearInterval(reminderTimer);
         const deadline = setTimeout(() => {
             console.error('[server] shutdown_timeout');
             process.exit(1);
@@ -317,6 +336,7 @@ if (require.main === module) {
             });
         });
         console.log('[server] ready');
+        startDueReminders();
     }
 
     void start().catch(() => {

@@ -76,6 +76,11 @@ const userSchema = new mongoose.Schema(
             cashFlow: {
                 lastUsed: { type: cashFlowViewSchema, default: null },
                 pinnedDefault: { type: cashFlowViewSchema, default: null }
+            },
+            // Email nhắc khoản định kỳ sắp đến hạn: mặc định tắt, người dùng tự bật.
+            dueReminders: {
+                email: { type: Boolean, default: false },
+                locale: { type: String, enum: ['vi', 'en', 'zh-CN'], default: 'vi' }
             }
         }
     },

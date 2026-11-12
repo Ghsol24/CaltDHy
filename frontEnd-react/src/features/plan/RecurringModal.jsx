@@ -7,7 +7,8 @@ import { useToastStore } from '../../stores/useToastStore';
 import { Dialog } from '../../components/ui/Dialog';
 import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
-import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
+import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon } from '../../utils/categoryIcons';
 import { detectBrandInfo } from '../../utils/brandDetection';
 import { useTranslation } from '../../i18n/useTranslation';
 import { translateLegacyText } from '../../i18n/legacyTranslations';
@@ -22,7 +23,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const { label, lang } = useTranslation();
   const { createInstallment, updateInstallment } = useJarStore();
   const { wallets } = useWalletStore();
-  const { expenseCategories, budgets, transactions, setExpenseCategories } = useTransactionStore();
+  const { expenseCategories, incomeCategories, budgets, transactions, setExpenseCategories } = useTransactionStore();
   const { addToast } = useToastStore();
 
   // 1. Đồng bộ hoàn chỉnh danh mục từ thiết lập của người dùng
@@ -65,6 +66,31 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
 
     return Array.from(map.values());
   }, [expenseCategories, budgets, transactions]);
+
+  // Loại khoản định kỳ chỉ chọn được lúc tạo; backend không cho đổi sau đó.
+  const [type, setType] = useState(installmentToEdit?.type === 'income' ? 'income' : 'expense');
+  const isIncome = type === 'income';
+
+  const syncedIncomeCategories = useMemo(() => {
+    const map = new Map();
+    const add = (categoryName) => {
+      if (categoryName && !map.has(categoryName.toLowerCase())) {
+        map.set(categoryName.toLowerCase(), { name: categoryName, icon: getCategoryIcon(categoryName, 'income') });
+      }
+    };
+    (Array.isArray(incomeCategories) ? incomeCategories : []).forEach((c) => add(c?.name));
+    (Array.isArray(transactions) ? transactions : []).forEach((txn) => {
+      if (txn.type === 'income' && !txn.jarId) add(txn.category);
+    });
+    DEFAULT_INCOME_CATEGORIES.forEach((c) => add(c.name));
+    return Array.from(map.values());
+  }, [incomeCategories, transactions]);
+  const activeCategories = isIncome ? syncedIncomeCategories : syncedExpenseCategories;
+  const defaultCategoryFor = (nextType) => {
+    const list = nextType === 'income' ? syncedIncomeCategories : syncedExpenseCategories;
+    const preferred = nextType === 'income' ? 'Salary' : 'Housing & Bills';
+    return list.some((c) => c.name === preferred) ? preferred : (list[0]?.name || preferred);
+  };
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -115,9 +141,9 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   useEffect(() => {
     if (!isOpen) return;
 
-    const defaultCatName = syncedExpenseCategories.some((c) => c.name === 'Housing & Bills')
-      ? 'Housing & Bills'
-      : (syncedExpenseCategories[0]?.name || 'Housing & Bills');
+    const initialType = installmentToEdit?.type === 'income' ? 'income' : 'expense';
+    const defaultCatName = defaultCategoryFor(initialType);
+    setType(initialType);
 
     if (installmentToEdit) {
       setName(installmentToEdit.name || '');
@@ -154,14 +180,15 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       nameInputRef.current?.focus();
     }, 50);
     return () => clearTimeout(timer);
-  }, [isOpen, installmentToEdit, wallets, syncedExpenseCategories]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- category lists only seed the form when it opens
+  }, [isOpen, installmentToEdit, wallets]);
 
   // Khi người dùng gõ tên khoản chi, tự động gợi ý danh mục và ghi chú thông minh
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
 
-    if (!installmentToEdit) {
+    if (!installmentToEdit && !isIncome) {
       const brand = detectBrandInfo(val);
       if (brand.brandKey !== 'default') {
         // Tìm xem danh mục gợi ý có khớp với danh mục của user không
@@ -219,6 +246,14 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
 
   if (!isOpen) return null;
 
+  const handleTypeChange = (nextType) => {
+    if (nextType === type) return;
+    setType(nextType);
+    setCategory(defaultCategoryFor(nextType));
+    setIsCategoryDropdownOpen(false);
+    setIsAddingNewCategory(false);
+  };
+
   const handleAmountChange = (e) => {
     const rawVal = e.target.value.replace(/\D/g, '');
     if (!rawVal) {
@@ -234,7 +269,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     setErrorMsg('');
 
     if (!name.trim()) {
-      setErrorMsg('Vui lòng nhập tên khoản định kỳ hoặc trả góp.');
+      setErrorMsg(isIncome ? 'Vui lòng nhập tên khoản thu định kỳ.' : 'Vui lòng nhập tên khoản định kỳ hoặc trả góp.');
       nameInputRef.current?.focus();
       return;
     }
@@ -246,7 +281,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     }
 
     if (!nextDueDate) {
-      setErrorMsg('Vui lòng chọn ngày đến hạn thanh toán.');
+      setErrorMsg(isIncome ? 'Vui lòng chọn ngày nhận tiền.' : 'Vui lòng chọn ngày đến hạn thanh toán.');
       return;
     }
 
@@ -268,10 +303,11 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       return;
     }
 
-    const brand = detectBrandInfo(name.trim());
-    const finalCategory = category || brand.categoryDefault || syncedExpenseCategories[0]?.name || 'Housing & Bills';
+    const brand = isIncome ? { brandKey: 'default' } : detectBrandInfo(name.trim());
+    const finalCategory = category || brand.categoryDefault || defaultCategoryFor(type);
 
     const payload = {
+      ...(installmentToEdit ? {} : { type }),
       name: name.trim(),
       category: finalCategory,
       ...((savedWalletUnavailable && !walletId) ? {} : { walletId: walletId || wallets[0]?.id || null }),
@@ -296,7 +332,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
         await createInstallment(payload);
         addToast({
           type: 'success',
-          message: `Đã tạo khoản định kỳ "${name.trim()}" (${formatCurrency(cleanAmount)}/${cycle === 'yearly' ? 'năm' : cycle === 'quarterly' ? 'quý' : 'tháng'}).`,
+          message: `Đã tạo khoản ${isIncome ? 'thu ' : ''}định kỳ "${name.trim()}" (${formatCurrency(cleanAmount)}/${cycle === 'yearly' ? 'năm' : cycle === 'quarterly' ? 'quý' : 'tháng'}).`,
           duration: 4000
         });
       }
@@ -350,11 +386,24 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="txn-modal-body recurring-modal-body-grouped">
+            {/* Loại khoản định kỳ: chỉ chọn khi tạo mới */}
+            {!installmentToEdit && (
+              <div className="txn-type-toggle recurring-modal-type-toggle" role="group" aria-label="Loại khoản định kỳ">
+                <button type="button" className={`txn-type-btn txn-type-btn--expense ${!isIncome ? 'active' : ''}`} onClick={() => handleTypeChange('expense')} aria-pressed={!isIncome}>
+                  <ArrowUpRightOutlineIcon size={16} />
+                  <span>Khoản chi</span>
+                </button>
+                <button type="button" className={`txn-type-btn txn-type-btn--income ${isIncome ? 'active' : ''}`} onClick={() => handleTypeChange('income')} aria-pressed={isIncome}>
+                  <ArrowDownLeftOutlineIcon size={16} />
+                  <span>Khoản thu</span>
+                </button>
+              </div>
+            )}
             {/* ── Section 1: Định danh & Phân loại ── */}
-            <RecurringIdentitySection catRef={catRef} category={category} categoryDisplayName={categoryDisplayName} handleCreateNewCategory={handleCreateNewCategory} handleNameChange={handleNameChange} isAddingNewCategory={isAddingNewCategory} isCategoryDropdownOpen={isCategoryDropdownOpen} name={name} nameInputRef={nameInputRef} newCatInputName={newCatInputName} newCatInputRef={newCatInputRef} setCategory={setCategory} setIsAddingNewCategory={setIsAddingNewCategory} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNewCatInputName={setNewCatInputName} syncedExpenseCategories={syncedExpenseCategories} />
+            <RecurringIdentitySection isIncome={isIncome} catRef={catRef} category={category} categoryDisplayName={categoryDisplayName} handleCreateNewCategory={handleCreateNewCategory} handleNameChange={handleNameChange} isAddingNewCategory={isAddingNewCategory} isCategoryDropdownOpen={isCategoryDropdownOpen} name={name} nameInputRef={nameInputRef} newCatInputName={newCatInputName} newCatInputRef={newCatInputRef} setCategory={setCategory} setIsAddingNewCategory={setIsAddingNewCategory} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNewCatInputName={setNewCatInputName} syncedExpenseCategories={activeCategories} />
 
             {/* ── Section 2: Thiết lập dòng tiền & Chu kỳ ── */}
-            <RecurringScheduleSection amount={amount} cycRef={cycRef} cycle={cycle} endDate={endDate} handleAmountChange={handleAmountChange} hasArchivedWallet={hasArchivedWallet} hasEndDate={hasEndDate} installmentToEdit={installmentToEdit} isCycleDropdownOpen={isCycleDropdownOpen} isWalletDropdownOpen={isWalletDropdownOpen} nextDueDate={nextDueDate} selectedCycleLabel={selectedCycleLabel} selectedWallet={selectedWallet} setCycle={setCycle} setEndDate={setEndDate} setHasEndDate={setHasEndDate} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNextDueDate={setNextDueDate} setWalletId={setWalletId} walRef={walRef} wallets={wallets} />
+            <RecurringScheduleSection isIncome={isIncome} amount={amount} cycRef={cycRef} cycle={cycle} endDate={endDate} handleAmountChange={handleAmountChange} hasArchivedWallet={hasArchivedWallet} hasEndDate={hasEndDate} installmentToEdit={installmentToEdit} isCycleDropdownOpen={isCycleDropdownOpen} isWalletDropdownOpen={isWalletDropdownOpen} nextDueDate={nextDueDate} selectedCycleLabel={selectedCycleLabel} selectedWallet={selectedWallet} setCycle={setCycle} setEndDate={setEndDate} setHasEndDate={setHasEndDate} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNextDueDate={setNextDueDate} setWalletId={setWalletId} walRef={walRef} wallets={wallets} />
 
             {/* ── Section 3: Ghi chú & Thông tin bổ sung ── */}
             <RecurringNotesSection note={note} setNote={setNote} />

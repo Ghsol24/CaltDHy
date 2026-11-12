@@ -445,6 +445,92 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
         assert.equal(await Transaction.countDocuments({ userId: c.userId }), 0);
         assert.equal((await c.agent.get('/api/health')).status, 200);
     });
+    it('recurring income credits the wallet as income, keeps its type and cannot be received twice', async () => {
+        const c = await client(), w = await wallet(c, 1000);
+        const created = await c.send('post', '/api/jars/installments', {
+            type: 'income', name: 'Salary', amount: 500, category: 'Salary', cycle: 'monthly', nextDueDate: date, walletId: w
+        });
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const id = created.body.data.id;
+        assert.equal(created.body.data.type, 'income');
+        assert.equal((await c.send('post', '/api/jars/installments', {
+            type: 'transfer', name: 'Bad', amount: 1, category: 'Salary', cycle: 'monthly', nextDueDate: date
+        })).status, 400);
+        assert.equal((await c.send('put', '/api/jars/installments/' + id, { type: 'expense' })).status, 400);
+
+        const received = await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date });
+        assert.equal(received.status, 200, JSON.stringify(received.body));
+        assert.equal(received.body.data.nextDueDate, '2026-10-21');
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1500);
+        const [tx] = await Transaction.find({ installmentId: id });
+        assert.equal(tx.type, 'income'); assert.equal(tx.category, 'Salary');
+        assert.equal(tx.desc, 'Thu nhập định kỳ: Salary'); assert.equal(tx.period, date);
+        assert.equal((await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date })).status, 409);
+        assert.equal((await c.send('put', '/api/jars/installments/' + id, { name: 'Wage' })).status, 200);
+        assert.equal((await Transaction.findById(tx.id)).desc, 'Thu nhập định kỳ: Wage');
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1500);
+    });
+
+    it('a recurring bill larger than the wallet balance is rejected without recording anything', async () => {
+        const c = await client(), w = await wallet(c, 50), id = await installment(c, w);
+        const response = await c.send('patch', '/api/jars/installments/' + id + '/pay', { period: date });
+        assert.equal(response.status, 409, JSON.stringify(response.body));
+        assert.equal((await getAllWalletBalances(c.userId))[w], 50);
+        assert.equal(await Transaction.countDocuments({ installmentId: id }), 0);
+        const item = await Installment.findById(id);
+        assert.equal(item.nextDueDate, date); assert.equal(item.totalPaid, 0);
+        assert.equal(item.type, 'expense');
+    });
+
+    it('CSV import is all-or-nothing, skips rows already in the ledger and never overdraws the wallet', async () => {
+        const c = await client(), w = await wallet(c, 1000), other = await client(), foreign = await wallet(other, 1000);
+        const rows = [
+            { date, type: 'expense', amount: 200, category: 'Food', desc: 'Lunch' },
+            { date, type: 'expense', amount: 200, category: 'Food', desc: 'Lunch' },
+            { date: '2026-09-20', type: 'income', amount: 500, category: 'Salary', desc: 'Bonus' }
+        ];
+        const count = () => Transaction.countDocuments({ userId: c.userId });
+        const before = await count();
+
+        for (const bad of [
+            { walletId: w, rows: [] }, { walletId: w, rows: 'x' }, { rows },
+            { walletId: foreign, rows },
+            { walletId: w, rows: Array.from({ length: 501 }, () => rows[0]) }
+        ]) assert.equal((await c.send('post', '/api/spending/import', bad)).status, 400, JSON.stringify(bad).slice(0, 80));
+
+        const invalid = await c.send('post', '/api/spending/import', { walletId: w, rows: [rows[0],
+            { ...rows[0], amount: 10.5 }, { ...rows[0], type: 'transfer' }, { ...rows[0], date: '2999-01-01' },
+            { ...rows[0], date: '2026-02-30' }, { ...rows[0], category: '' }, null] });
+        assert.equal(invalid.status, 400);
+        assert.deepEqual(invalid.body.invalidRows, [2, 3, 4, 5, 6, 7]);
+        assert.equal(await count(), before);
+
+        const overdraw = await c.send('post', '/api/spending/import', { walletId: w,
+            rows: [{ date, type: 'expense', amount: 5000, category: 'Food', desc: 'Too much' }] });
+        assert.equal(overdraw.status, 409, JSON.stringify(overdraw.body));
+        assert.equal(await count(), before);
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1000);
+
+        const key = crypto.randomUUID();
+        const first = await c.send('post', '/api/spending/import', { walletId: w, rows }, key);
+        assert.equal(first.status, 201, JSON.stringify(first.body));
+        assert.deepEqual(first.body.data, { imported: 3, skipped: 0 });
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1100);
+        assert.deepEqual((await c.send('post', '/api/spending/import', { walletId: w, rows }, key)).body.data, { imported: 3, skipped: 0 });
+        assert.equal(await count(), before + 3);
+
+        const again = await c.send('post', '/api/spending/import', { walletId: w,
+            rows: [...rows, { date, type: 'expense', amount: 50, category: 'Food', desc: 'Coffee' }] });
+        assert.deepEqual(again.body.data, { imported: 1, skipped: 3 });
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1050);
+        const forced = await c.send('post', '/api/spending/import', { walletId: w, rows: [rows[2]], skipDuplicates: false });
+        assert.deepEqual(forced.body.data, { imported: 1, skipped: 0 });
+        assert.equal((await getAllWalletBalances(c.userId))[w], 1550);
+        const imported = await Transaction.findOne({ userId: c.userId, desc: 'Coffee' });
+        assert.equal(imported.date.toISOString().slice(0, 10), date);
+        assert.equal(imported.systemGenerated, false);
+    });
+
 
     it('development cleanup removes only the selected account sessions, receipts, money fence and expected days', async () => {
         const connection = await mongoose.createConnection(db.getUri('caltdhy_test')).asPromise();

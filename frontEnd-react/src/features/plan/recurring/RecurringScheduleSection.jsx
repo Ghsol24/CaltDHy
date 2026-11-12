@@ -5,7 +5,7 @@ import { formatCurrency } from '../../../utils/formatters';
 import { CYCLE_OPTIONS } from './cycleOptions';
 import { CustomDatePicker } from '../../../components/ui/CustomDatePicker';
 
-export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handleAmountChange, hasArchivedWallet, hasEndDate, installmentToEdit, isCycleDropdownOpen, isWalletDropdownOpen, nextDueDate, selectedCycleLabel, selectedWallet, setCycle, setEndDate, setHasEndDate, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNextDueDate, setWalletId, walRef, wallets }) {
+export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handleAmountChange, hasArchivedWallet, hasEndDate, installmentToEdit, isCycleDropdownOpen, isIncome = false, isWalletDropdownOpen, nextDueDate, selectedCycleLabel, selectedWallet, setCycle, setEndDate, setHasEndDate, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNextDueDate, setWalletId, walRef, wallets }) {
   return (
     <div className="recurring-form-section">
       <div className="recurring-section-header">
@@ -38,7 +38,7 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
           {/* Ví trừ tiền mặc định */}
           <div className="txn-field-group" ref={walRef}>
             <label className="txn-label">
-              <span>Ví trừ tiền</span>
+              <span>{isIncome ? 'Ví nhận tiền' : 'Ví trừ tiền'}</span>
             </label>
             <div className="modal-custom-dropdown-wrap">
               <button

@@ -13,10 +13,10 @@
 | --- | --- |
 | **Trang chủ** | Tiền có thể chi còn lại, thanh "Cần chú ý" (cảnh báo ngân sách từ 75%, khoản sắp đến hạn), giao dịch gần đây |
 | **Giao dịch** | Thu nhập, chi tiêu (kèm phí), chuyển khoản giữa các ví; lịch sử có tìm kiếm và bộ lọc theo loại, danh mục, ví, thời gian; xem lịch sử chỉnh sửa của từng giao dịch |
-| **Kế hoạch** | Ví & tài khoản (ví mặc định, lưu trữ/mở lại ví), ngân sách theo tháng cho từng danh mục, khoản định kỳ (trả góp, hóa đơn, tạm dừng/kết thúc) |
+| **Kế hoạch** | Ví & tài khoản (ví mặc định, lưu trữ/mở lại ví), ngân sách theo tháng cho từng danh mục, khoản định kỳ cả chi (trả góp, hóa đơn) lẫn thu (lương, tiền cho thuê), xác nhận một chạm khi đến hạn, tạm dừng/kết thúc |
 | **Phân tích** | Tổng quan thu chi, cơ cấu danh mục, biểu đồ xu hướng dòng tiền theo ngày / 3 tháng / 6 tháng, xuất CSV và in báo cáo |
 | **Hũ chi tiêu** | Hũ tiết kiệm theo mục tiêu, có hạn hoàn thành tùy chọn; nạp/rút là chuyển tiền nội bộ với ví, không tính là thu chi |
-| **Cài đặt** | 4 giao diện (tối, sáng, kem, xanh lá), 3 ngôn ngữ (Tiếng Việt, English, 简体中文), hiển thị VND hoặc USD, xuất toàn bộ dữ liệu JSON, đặt lại dữ liệu |
+| **Cài đặt** | 4 giao diện (tối, sáng, kem, xanh lá), 3 ngôn ngữ (Tiếng Việt, English, 简体中文), hiển thị VND hoặc USD, xuất toàn bộ dữ liệu JSON, nhập giao dịch từ CSV (có xem trước, bỏ qua giao dịch trùng), email nhắc hạn khoản định kỳ (tùy chọn), đặt lại dữ liệu |
 | **Tài khoản** | Đăng ký mở hoặc theo lời mời, xác minh email, quên/đặt lại mật khẩu qua Brevo hoặc Gmail |
 
 ### Nguyên tắc về tiền và bảo mật

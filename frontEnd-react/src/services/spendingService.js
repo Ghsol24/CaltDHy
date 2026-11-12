@@ -15,6 +15,8 @@ export const spendingService = {
 
   setExpectedDay: async (date, expected) => api.put(`/api/spending/expected-days/${encodeURIComponent(date)}`, { expected }),
 
+  importTransactions: async (data) => api.post('/api/spending/import', data),
+
   createTransaction: async (data) => {
     return await api.post('/api/spending', data);
   },

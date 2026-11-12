@@ -420,6 +420,57 @@
   color: var(--color-link);
 }
 
+.recurring-income-badge {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--color-success-bg);
+  color: var(--pill-success-text);
+  white-space: nowrap;
+}
+
+.recurring-row-card.is-income .recurring-row-price {
+  color: var(--pill-success-text);
+}
+
+/* One-tap confirm for a period that is due, overdue or within 3 days. */
+.recurring-quick-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border, var(--border));
+  background: var(--color-surface, var(--surface));
+  color: var(--color-link);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.recurring-quick-confirm-btn:hover:not(:disabled) {
+  border-color: var(--color-link);
+}
+
+.recurring-quick-confirm-btn:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+}
+
+.recurring-quick-confirm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.recurring-modal-type-toggle {
+  margin-bottom: 4px;
+}
+
 .recurring-meta-row {
   display: flex;
   align-items: center;

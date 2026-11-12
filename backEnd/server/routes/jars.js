@@ -17,6 +17,9 @@ const { getVietnamTodayString, nowAsVietnamDateAnchor, isValidDateString } = req
 // Tất cả routes Jars đều yêu cầu xác thực
 router.use(protect);
 
+const RECURRING_TYPES = ['expense', 'income'];
+const recurringDesc = (type, name) => `${type === 'income' ? 'Thu nhập định kỳ' : 'Thanh toán định kỳ'}: ${name}`;
+
 const isValidObjectId = (id) => (typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id)) || id instanceof mongoose.Types.ObjectId;
 
 /* =============================================
@@ -377,9 +380,13 @@ router.get('/installments', financialRequest(async (req, res) => {
 router.post('/installments', financialRequest(async (req, res) => {
     try {
         const { name, icon, amount, cycle, nextDueDate, endDate, category, walletId } = req.body;
+        const type = req.body.type === undefined ? 'expense' : req.body.type;
 
         if (!name || !amount || !cycle || !nextDueDate) {
             return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc.' });
+        }
+        if (!RECURRING_TYPES.includes(type)) {
+            return res.status(400).json({ success: false, message: 'Loại khoản định kỳ không hợp lệ.' });
         }
         if (!category || typeof category !== 'string' || !category.trim()) {
             return res.status(400).json({ success: false, message: 'Danh mục khoản định kỳ không được để trống.' });
@@ -402,6 +409,7 @@ router.post('/installments', financialRequest(async (req, res) => {
 
         const itemPayload = {
             userId: req.user.id,
+            type,
             name: name.trim(),
             category: category.trim(),
             icon: icon || '💳',
@@ -446,6 +454,11 @@ router.put('/installments/:id', financialRequest(async (req, res) => {
         const oldWalletId = item.walletId;
 
         const { name, icon, amount, cycle, nextDueDate, endDate, category, walletId } = req.body;
+        const itemType = item.type === 'income' ? 'income' : 'expense';
+        // Đổi loại sau khi đã có kỳ được ghi sẽ biến chi thành thu trong sổ cái.
+        if (req.body.type !== undefined && req.body.type !== itemType) {
+            return res.status(400).json({ success: false, message: 'Không thể đổi loại của khoản định kỳ đã tạo.' });
+        }
         if (endDate !== undefined) {
             if (endDate !== null && !isValidDateString(endDate)) {
                 return res.status(400).json({ success: false, message: 'Ngày kết thúc không hợp lệ.' });
@@ -538,8 +551,8 @@ router.put('/installments/:id', financialRequest(async (req, res) => {
         if (name !== undefined && name.trim() !== oldName) {
             const newName = name.trim();
             await Transaction.updateMany(
-                { installmentId: item._id, userId: req.user.id, desc: `Thanh toán định kỳ: ${oldName}` },
-                { $set: { desc: `Thanh toán định kỳ: ${newName}` } }
+                { installmentId: item._id, userId: req.user.id, desc: recurringDesc(itemType, oldName) },
+                { $set: { desc: recurringDesc(itemType, newName) } }
             );
         }
 
@@ -683,13 +696,14 @@ router.patch('/installments/:id/pay', financialRequest(async (req, res) => {
             item.totalPaid = (item.totalPaid || 0) + item.amount;
             await item.save(session ? { session } : {});
 
-            // Sinh Transaction Expense với category động của item
+            // Sinh Transaction cùng loại với khoản định kỳ: chi (tiền rời ví) hoặc thu (tiền mới vào ví).
+            const itemType = item.type === 'income' ? 'income' : 'expense';
             const txPayload = {
                 userId: req.user.id,
-                type: 'expense',
-                desc: `Thanh toán định kỳ: ${item.name}`,
+                type: itemType,
+                desc: recurringDesc(itemType, item.name),
                 amount: item.amount,
-                category: item.category || 'Housing & Bills',
+                category: item.category || (itemType === 'income' ? 'Salary' : 'Housing & Bills'),
                 date: nowAsVietnamDateAnchor(),
                 walletId: payWallet ? payWallet._id : null,
                 installmentId: item._id,
@@ -705,7 +719,13 @@ router.patch('/installments/:id/pay', financialRequest(async (req, res) => {
             return item;
         });
 
-        res.json({ success: true, message: 'Đã đánh dấu thanh toán và ghi nhận chi tiêu!', data: updatedItem.toJSON() });
+        res.json({
+            success: true,
+            message: updatedItem.type === 'income'
+                ? 'Đã đánh dấu đã nhận và ghi nhận thu nhập!'
+                : 'Đã đánh dấu thanh toán và ghi nhận chi tiêu!',
+            data: updatedItem.toJSON()
+        });
     } catch (error) {
         if (error.hasErrorLabel?.('TransientTransactionError')) throw error;
         if (error.message === 'INSTALLMENT_NOT_FOUND') {

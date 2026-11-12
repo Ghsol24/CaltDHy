@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ImportCsvDialog } from './ImportCsvDialog';
 import { formatDate } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function SettingsDataTab({ activeTab, budgets, copyError, copySuccess, exportError, handleCopyUid, handleExportData, isExporting, setIsResetDialogOpen, setResetConfirmInput, setResetError, transactions, user }) {
   const { t } = useTranslation();
+  const [isImportOpen, setIsImportOpen] = useState(false);
   return (activeTab === 'data' && (
     <div className="account-tab-pane">
       <div className="account-tab-intro">
@@ -72,6 +74,22 @@ export function SettingsDataTab({ activeTab, budgets, copyError, copySuccess, ex
         {exportError && <div className="account-feedback-msg error" role="alert">{exportError}</div>}
       </div>
   
+      {/* Import Data */}
+      <div className="account-card-panel">
+        <div className="account-card-panel-row">
+          <div>
+            <div className="account-panel-label">Nhập giao dịch từ CSV</div>
+            <div className="account-card-panel-row__div--text">
+              Đưa giao dịch từ sao kê ngân hàng hoặc bảng tính vào một ví, có xem trước.
+            </div>
+          </div>
+          <button type="button" className="btn-avatar-action btn-avatar-preset" onClick={() => setIsImportOpen(true)}>
+            Nhập CSV
+          </button>
+        </div>
+      </div>
+      {isImportOpen && <ImportCsvDialog isOpen onClose={() => setIsImportOpen(false)} />}
+
       {/* Danger Zone */}
       <div className="account-danger-card">
         <h4 className="account-danger-title">Vùng nguy hiểm</h4>

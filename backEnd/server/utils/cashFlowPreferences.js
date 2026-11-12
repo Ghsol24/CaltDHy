@@ -3,6 +3,7 @@
 const modes = new Set(['daily', '3months', '6months']);
 const series = new Set(['expense', 'income', 'both']);
 const owns = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+const reminderLocales = new Set(['vi', 'en', 'zh-CN']);
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 function validCashFlowView(value) {
@@ -27,7 +28,13 @@ function publicCashFlowPreferences(value) {
 function validPreferencesUpdate(body) {
     if (!isObject(body)) return false;
     const keys = Object.keys(body);
-    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow'].includes(key))) return false;
+    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'dueReminders'].includes(key))) return false;
+    if (owns(body, 'dueReminders')) {
+        const reminders = body.dueReminders;
+        if (!isObject(reminders) || !owns(reminders, 'email') || typeof reminders.email !== 'boolean') return false;
+        if (Object.keys(reminders).some(key => !['email', 'locale'].includes(key))) return false;
+        if (owns(reminders, 'locale') && !reminderLocales.has(reminders.locale)) return false;
+    }
     if (owns(body, 'analyticsExcludeRecurring') && typeof body.analyticsExcludeRecurring !== 'boolean') return false;
     if (owns(body, 'cashFlow')) {
         if (!isObject(body.cashFlow)) return false;
@@ -58,7 +65,15 @@ function preferenceUpdateFields(body, existing) {
             fields['preferences.analyticsExcludeRecurring'] = body.cashFlow.lastUsed.excludeRecurring;
         }
     }
+    if (owns(body, 'dueReminders')) {
+        fields['preferences.dueReminders.email'] = body.dueReminders.email;
+        if (owns(body.dueReminders, 'locale')) fields['preferences.dueReminders.locale'] = body.dueReminders.locale;
+    }
     return fields;
 }
 
-module.exports = { validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };
+function publicDueReminders(value) {
+    return { email: value?.email === true, locale: reminderLocales.has(value?.locale) ? value.locale : 'vi' };
+}
+
+module.exports = { publicDueReminders, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };

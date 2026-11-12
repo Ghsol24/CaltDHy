@@ -15,6 +15,8 @@ const installmentHistorySchema = new mongoose.Schema(
  * Schema: Installment (Trả Góp & Hóa Đơn Định Kỳ)
  * Đại diện cho một khoản thanh toán định kỳ (Netflix, gym, trả góp điện thoại...)
  * cycle: 'monthly' | 'quarterly' | 'yearly'
+ * type: 'expense' (hóa đơn, trả góp) | 'income' (lương, tiền cho thuê...). Xác nhận một kỳ
+ * sinh Transaction cùng type; không đổi được sau khi tạo để sổ cái không lệch nghĩa.
  */
 const installmentSchema = new mongoose.Schema(
     {
@@ -29,6 +31,12 @@ const installmentSchema = new mongoose.Schema(
             required: [true, 'Tên khoản thanh toán không được để trống.'],
             trim: true,
             maxlength: [60, 'Tên không được vượt quá 60 ký tự.']
+        },
+        type: {
+            type: String,
+            enum: { values: ['expense', 'income'], message: 'Loại khoản định kỳ phải là expense hoặc income.' },
+            default: 'expense',
+            immutable: true
         },
         icon: {
             type: String,
@@ -82,7 +90,9 @@ const installmentSchema = new mongoose.Schema(
         history: {
             type: [installmentHistorySchema],
             default: []
-        }
+        },
+        // Kỳ (nextDueDate) gần nhất đã gửi email nhắc hạn; chống gửi trùng khi job chạy lại.
+        lastReminderPeriod: { type: String, default: null }
     },
     {
         timestamps: true,
@@ -90,6 +100,8 @@ const installmentSchema = new mongoose.Schema(
             virtuals: true,
             transform: (doc, ret) => {
                 ret.id = ret._id.toString();
+                ret.type = ret.type === 'income' ? 'income' : 'expense';
+                delete ret.lastReminderPeriod;
                 ret.userId = ret.userId.toString();
                 if (ret.walletId) ret.walletId = ret.walletId.toString();
                 if (Array.isArray(ret.history)) {

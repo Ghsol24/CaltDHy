@@ -1,3 +1,6 @@
+// A recurring item is an obligation (expense) unless it was created as income.
+export const isRecurringIncome = (item) => item?.type === 'income';
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function isValidInstallmentEndDate(value) {

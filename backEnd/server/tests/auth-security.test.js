@@ -19,7 +19,8 @@ const AuthSession = require('../models/AuthSession');
 const security = require('../utils/sessionSecurity');
 const password = 'Synthetic-password-1234';
 const defaultPreferences = analyticsExcludeRecurring => ({
-    analyticsExcludeRecurring, cashFlow: { lastUsed: null, pinnedDefault: null }
+    analyticsExcludeRecurring, cashFlow: { lastUsed: null, pinnedDefault: null },
+    dueReminders: { email: false, locale: 'vi' }
 });
 
 async function anonymous() {
@@ -272,7 +273,7 @@ describe('Account security regressions', { concurrency: false }, () => {
         const changed = await owner.send('put', 'preferences', { cashFlow: { lastUsed: remembered } });
         assert.equal(changed.status, 200);
         const expected = { analyticsExcludeRecurring: false,
-            cashFlow: { lastUsed: remembered, pinnedDefault: pinned } };
+            cashFlow: { lastUsed: remembered, pinnedDefault: pinned }, dueReminders: { email: false, locale: 'vi' } };
         assert.deepEqual(changed.body.preferences, expected);
         assert.deepEqual((await owner.agent.get('/api/auth/profile')).body.user.preferences, expected);
 
@@ -297,7 +298,7 @@ describe('Account security regressions', { concurrency: false }, () => {
         const changed = await c.send('put', 'preferences', { analyticsExcludeRecurring: true });
         assert.equal(changed.status, 200);
         assert.deepEqual(changed.body.preferences, { analyticsExcludeRecurring: true,
-            cashFlow: { lastUsed: { ...view, excludeRecurring: true }, pinnedDefault: view } });
+            cashFlow: { lastUsed: { ...view, excludeRecurring: true }, pinnedDefault: view }, dueReminders: { email: false, locale: 'vi' } });
     });
 
     it('rejects malformed cash-flow preferences and inconsistent recurring flags atomically', async () => {
@@ -305,7 +306,7 @@ describe('Account security regressions', { concurrency: false }, () => {
         const view = { mode: 'daily', series: 'expense', excludeRecurring: false };
         assert.equal((await c.send('put', 'preferences', { cashFlow: { lastUsed: view } })).status, 200);
         const expected = { analyticsExcludeRecurring: false,
-            cashFlow: { lastUsed: view, pinnedDefault: null } };
+            cashFlow: { lastUsed: view, pinnedDefault: null }, dueReminders: { email: false, locale: 'vi' } };
         for (const cashFlow of [null, [], {}, { unknown: view }, { lastUsed: null }, { lastUsed: [] },
             { pinnedDefault: [] }, { lastUsed: { ...view, mode: 'monthly' } },
             { lastUsed: { ...view, series: 'all' } }, { lastUsed: { ...view, excludeRecurring: 'false' } },
