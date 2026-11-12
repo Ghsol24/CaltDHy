@@ -536,6 +536,7 @@ export function AccountModal() {
               <div className="account-tab-pane">
                 <div className="account-tab-intro">
                   <h3 className="account-tab-intro-title">{t('settings.appearance')}</h3>
+                  <p className="settings-theme-hint">{t('settings.themeHint')}</p>
                 </div>
                 <SettingsThemePicker theme={theme} onChange={handleSelectTheme} />
               </div>

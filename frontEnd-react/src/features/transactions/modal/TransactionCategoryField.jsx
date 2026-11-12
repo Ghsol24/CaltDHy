@@ -49,6 +49,29 @@ export function TransactionCategoryField({ baselineMetrics, budgetError, budgetR
           budgetError={budgetError}
           onOpen={() => setPicker('category')}
         />
+      ) : type === 'income' ? (
+        // Thu nhập không có hạn mức để hiển thị, nên mỗi danh mục chỉ cần biểu tượng và tên:
+        // dùng chip gọn tự xuống dòng thay cho thẻ lớn lặp lại nhãn "Thu nhập".
+        <div className="txn-category-chips" role="radiogroup" aria-label={t('transaction.chooseCategory')}>
+          {sortedCategories.map((cat) => {
+            const isSelected = category.toLowerCase() === cat.name.toLowerCase();
+            return (
+              <button
+                type="button"
+                key={cat.name}
+                role="radio"
+                aria-checked={isSelected}
+                className={`txn-category-chip${isSelected ? ' active' : ''}`}
+                onClick={() => setCategory(cat.name)}
+              >
+                <span className="txn-category-chip__icon" aria-hidden="true">
+                  {isSelected ? <CheckOutlineIcon size={14} /> : <CategoryOutlineIcon name={cat.name} size={16} />}
+                </span>
+                <span className="txn-category-chip__name">{label(cat.name)}</span>
+              </button>
+            );
+          })}
+        </div>
       ) : (
         <div className="txn-category-grid" role="radiogroup" aria-label={t('transaction.chooseCategory')}>
           {sortedCategories.map((cat) => {
