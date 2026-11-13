@@ -71,6 +71,14 @@ const userSchema = new mongoose.Schema(
         // Dấu chống gửi trùng của job nhắc; không phải tùy chọn của người dùng.
         lastInactivityEmailAt: { type: Date, default: null, select: false },
         lastDailyPushDate: { type: String, default: null, select: false },
+        // Xác thực hai lớp (TOTP). Khóa bí mật được mã hóa trước khi lưu; mã khôi phục chỉ lưu dạng băm.
+        twoFactor: {
+            enabled: { type: Boolean, default: false },
+            secret: { type: String, default: undefined, select: false },
+            pendingSecret: { type: String, default: undefined, select: false },
+            lastStep: { type: Number, default: 0, select: false },
+            recoveryCodes: { type: [String], default: undefined, select: false }
+        },
         preferences: {
             analyticsExcludeRecurring: {
                 type: Boolean,
@@ -109,6 +117,7 @@ const userSchema = new mongoose.Schema(
                 delete ret.resetPasswordExpiry;
                 delete ret.emailVerificationToken;
                 delete ret.emailVerificationExpiry;
+                if (ret.twoFactor) ret.twoFactor = { enabled: ret.twoFactor.enabled === true };
                 return ret;
             }
         }

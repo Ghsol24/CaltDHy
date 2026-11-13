@@ -11,7 +11,7 @@ async function protect(req, res, next) {
             tokenHash: hash(token), expiresAt: { $gt: new Date() }
         }).lean();
         const user = session && await User.findById(session.userId)
-            .select('name email avatar emailVerified preferences +authVersion').lean();
+            .select('name email avatar emailVerified preferences twoFactor.enabled +authVersion').lean();
         if (!user || session.authVersion !== (user.authVersion || 0)) {
             clearSession(res);
             return res.status(401).json({
@@ -21,6 +21,10 @@ async function protect(req, res, next) {
         }
         req.user = publicUser(user);
         req.authSession = session;
+        // "Hoạt động gần nhất" trong danh sách thiết bị: ghi thưa (5 phút/lần), không chặn request.
+        if (!session.lastSeenAt || Date.now() - new Date(session.lastSeenAt).getTime() > 5 * 60 * 1000) {
+            AuthSession.updateOne({ _id: session._id }, { $set: { lastSeenAt: new Date() } }).catch(() => {});
+        }
         return next();
     } catch {
         console.error('[auth] session_lookup_failed');

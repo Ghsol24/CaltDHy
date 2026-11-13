@@ -4,7 +4,7 @@ import { calculateMonthlyStats, getBudgetStatus } from './financeMath.js';
  * Everything the budget page shows for one month, from that month's spending and
  * that month's limits only, so the two can never come from different months.
  */
-export function buildBudgetModel({ transactions = [], month, budgets = {}, categoryNames = [] }) {
+export function buildBudgetModel({ transactions = [], month, budgets = {}, categoryNames = [], rollover = null }) {
   const monthlyStats = calculateMonthlyStats(transactions, month);
   // Limits name their own categories, so a limited category always has a row.
   const names = Array.from(new Set([...categoryNames, ...Object.keys(budgets || {}),
@@ -14,7 +14,9 @@ export function buildBudgetModel({ transactions = [], month, budgets = {}, categ
   let totalSpent = 0;
   const items = names.map((category) => {
     const rawLimit = budgets && budgets[category] !== undefined ? Number(budgets[category]) : null;
-    const limit = rawLimit && rawLimit > 0 ? rawLimit : null;
+    // Rollover: what was left of this category's limit last month is added to this month's limit.
+    const carried = rawLimit && rawLimit > 0 ? Number(rollover?.[category]) || 0 : 0;
+    const limit = rawLimit && rawLimit > 0 ? rawLimit + carried : null;
     const spent = monthlyStats.byCategory[category] || 0;
     const status = getBudgetStatus(spent, limit || 0);
     if (limit !== null) {
@@ -22,7 +24,7 @@ export function buildBudgetModel({ transactions = [], month, budgets = {}, categ
       totalSpent += spent;
     }
     return {
-      category, limit, spent, hasLimit: limit !== null,
+      category, limit, spent, carried, hasLimit: limit !== null,
       percent: limit ? status.percent : 0,
       remaining: limit ? status.remaining : null,
       isOver: limit ? status.isOver : false
@@ -46,6 +48,7 @@ export function buildBudgetModel({ transactions = [], month, budgets = {}, categ
     unbudgeted,
     unbudgetedTotal: unbudgeted.reduce((sum, item) => sum + item.spent, 0),
     totalLimit,
+    totalCarried: limited.reduce((sum, item) => sum + item.carried, 0),
     totalSpent,
     totalExpense: monthlyStats.totalExpense,
     hasAnyLimit,

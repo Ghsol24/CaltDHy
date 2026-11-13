@@ -3,6 +3,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { GuideModal } from '../../features/guide/GuideModal';
 import { ContextualSectionGuide } from '../../features/guide/ContextualSectionGuide';
 import { AccountModal } from '../../features/account/AccountModal';
+import { OfflineSyncNotice } from '../layout/OfflineSyncNotice';
 
 export const AppUtilities = React.memo(function AppUtilities() {
   const isSettingsOpen = useSpendingStore((state) => state.isSettingsOpen);
@@ -12,6 +13,7 @@ export const AppUtilities = React.memo(function AppUtilities() {
       {isSettingsOpen && <AccountModal />}
       <ContextualSectionGuide />
       <GuideModal />
+      <OfflineSyncNotice />
     </>
   );
 });

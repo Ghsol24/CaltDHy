@@ -16,6 +16,7 @@ const { validPreferencesUpdate, preferenceUpdateFields } = require('../utils/cas
 const PushSubscription = require('../models/PushSubscription');
 const { validPushEndpoint, vapidConfig } = require('../utils/webPush');
 const { applyReminderChoice } = require('../utils/reminders');
+const totp = require('../utils/totp');
 const router = express.Router();
 
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
@@ -57,6 +58,36 @@ function failure(res, event, error) {
     if (error?.code === 11000) return res.status(409).json({ success: false, message: 'Thông tin tài khoản đã được sử dụng.' });
     return res.status(500).json({ success: false, message: 'Không thể hoàn thành yêu cầu. Vui lòng thử lại.' });
 }
+
+const TWO_FACTOR_FIELDS = '+twoFactor.secret +twoFactor.pendingSecret +twoFactor.lastStep +twoFactor.recoveryCodes';
+/**
+ * Accepts a current authenticator code or an unused recovery code, and marks it used with a
+ * conditional write so the same code can never be accepted twice, even by concurrent requests.
+ */
+async function consumeSecondFactor(user, supplied) {
+    if (typeof supplied !== 'string' || supplied.length > 40 || !user.twoFactor?.secret) return false;
+    const code = supplied.replace(/\s/g, '');
+    if (/^\d{6}$/.test(code)) {
+        const lastStep = user.twoFactor.lastStep || 0;
+        const step = totp.verifyCode(totp.decryptSecret(user.twoFactor.secret), code, { lastStep });
+        if (!step) return false;
+        const updated = await User.updateOne({ _id: user._id, 'twoFactor.enabled': true,
+            $or: [{ 'twoFactor.lastStep': { $lt: step } }, { 'twoFactor.lastStep': { $exists: false } }] },
+        { $set: { 'twoFactor.lastStep': step } });
+        return updated.modifiedCount === 1;
+    }
+    if (totp.normalizeRecoveryCode(code).length !== 10) return false;
+    const hashed = totp.hashRecoveryCode(code);
+    const updated = await User.updateOne({ _id: user._id, 'twoFactor.enabled': true, 'twoFactor.recoveryCodes': hashed },
+        { $pull: { 'twoFactor.recoveryCodes': hashed } });
+    return updated.modifiedCount === 1;
+}
+async function passwordMatches(userId, supplied) {
+    if (typeof supplied !== 'string' || !supplied || Buffer.byteLength(supplied, 'utf8') > 72) return null;
+    const user = await User.findById(userId).select('+password ' + TWO_FACTOR_FIELDS);
+    return user && await bcrypt.compare(supplied, user.password) ? user : null;
+}
+const WRONG_PASSWORD = 'Mật khẩu hiện tại không đúng.';
 
 router.get('/csrf', (req, res) => res.json({ success: true, csrfToken: issueCsrf(req, res) }));
 router.get('/registration', (req, res) => res.json({
@@ -104,7 +135,7 @@ router.post('/register', async (req, res) => {
             await Wallet.create([{ userId: user._id, name: 'Tiền mặt', type: 'cash',
                 icon: '💵', initialBalance: 0, isDefault: true }], { session });
             await revokeSession(req, session);
-            return { user, issued: await createSession(user, session) };
+            return { user, issued: await createSession(user, session, req) };
         });
         return res.status(201).json({ success: true, message: 'Đăng ký thành công!',
             user: publicUser(result.user), csrfToken: setSession(req, res, result.issued) });
@@ -118,18 +149,29 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body || {};
+        const { email, password, totpCode } = req.body || {};
         if (!validEmail(email) || typeof password !== 'string' || password.length === 0 ||
             Buffer.byteLength(password, 'utf8') > 72) {
             return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không hợp lệ.' });
         }
-        const user = await User.findOne({ email: normalizeEmail(email) }).select('+password +authVersion');
+        const user = await User.findOne({ email: normalizeEmail(email) }).select('+password +authVersion ' + TWO_FACTOR_FIELDS);
         if (!user || !await bcrypt.compare(password, user.password)) {
             return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
         }
+        // Lớp thứ hai chỉ được hỏi sau khi mật khẩu đúng, nên không lộ tài khoản nào đang bật 2FA.
+        if (user.twoFactor?.enabled) {
+            if (totpCode === undefined || totpCode === null || totpCode === '') {
+                return res.status(401).json({ success: false, code: 'TOTP_REQUIRED',
+                    message: 'Nhập mã 6 số từ ứng dụng xác thực để tiếp tục.' });
+            }
+            if (!await consumeSecondFactor(user, totpCode)) {
+                return res.status(401).json({ success: false, code: 'TOTP_INVALID',
+                    message: 'Mã xác thực không đúng hoặc đã hết hạn.' });
+            }
+        }
         const issued = await runWithTransaction(async session => {
             await revokeSession(req, session);
-            return createSession(user, session);
+            return createSession(user, session, req);
         });
         return res.json({ success: true, message: 'Đăng nhập thành công!',
             user: publicUser(user), csrfToken: setSession(req, res, issued) });
@@ -266,6 +308,96 @@ router.post('/push-subscriptions/remove', protect, async (req, res) => {
     } catch (error) { return failure(res, 'push_unsubscribe_failed', error); }
 });
 
+// =============================================
+// Thiết bị đang đăng nhập
+// =============================================
+router.get('/sessions', protect, async (req, res) => {
+    try {
+        const sessions = await AuthSession.find({ userId: req.user.id, expiresAt: { $gt: new Date() } })
+            .select('userAgent createdAt lastSeenAt expiresAt authVersion').sort({ lastSeenAt: -1 }).lean();
+        // Phiên có authVersion cũ đã vô hiệu (đổi mật khẩu) nhưng chưa bị TTL dọn: không liệt kê.
+        const live = sessions.filter(session => session.authVersion === req.authSession.authVersion);
+        return res.json({ success: true, data: live.map(session => ({
+            id: session._id.toString(), current: session._id.toString() === req.authSession._id.toString(),
+            userAgent: session.userAgent || '', createdAt: session.createdAt,
+            lastSeenAt: session.lastSeenAt || session.createdAt, expiresAt: session.expiresAt
+        })) });
+    } catch (error) { return failure(res, 'sessions_list_failed', error); }
+});
+router.post('/sessions/revoke', protect, async (req, res) => {
+    try {
+        const id = req.body?.id;
+        if (typeof id !== 'string' || !/^[a-f0-9]{24}$/i.test(id)) {
+            return res.status(400).json({ success: false, message: 'Phiên đăng nhập không hợp lệ.' });
+        }
+        if (id === req.authSession._id.toString()) {
+            return res.status(400).json({ success: false, message: 'Để thoát thiết bị này, hãy dùng nút Đăng xuất.' });
+        }
+        const result = await AuthSession.deleteOne({ _id: id, userId: req.user.id });
+        if (!result.deletedCount) return res.status(404).json({ success: false, message: 'Phiên đăng nhập không còn tồn tại.' });
+        return res.json({ success: true, message: 'Đã đăng xuất thiết bị đó.' });
+    } catch (error) { return failure(res, 'session_revoke_failed', error); }
+});
+router.post('/sessions/revoke-others', protect, async (req, res) => {
+    try {
+        const result = await AuthSession.deleteMany({ userId: req.user.id, _id: { $ne: req.authSession._id } });
+        return res.json({ success: true, message: 'Đã đăng xuất các thiết bị khác.', revoked: result.deletedCount });
+    } catch (error) { return failure(res, 'session_revoke_others_failed', error); }
+});
+
+// =============================================
+// Xác thực hai lớp (TOTP)
+// =============================================
+router.post('/2fa/setup', protect, async (req, res) => {
+    try {
+        const user = await passwordMatches(req.user.id, req.body?.currentPassword);
+        if (!user) return res.status(400).json({ success: false, message: WRONG_PASSWORD });
+        if (user.twoFactor?.enabled) {
+            return res.status(409).json({ success: false, message: 'Xác thực hai lớp đang bật. Hãy tắt trước khi thiết lập lại.' });
+        }
+        const secret = totp.generateSecret();
+        await User.updateOne({ _id: user._id }, { $set: { 'twoFactor.pendingSecret': totp.encryptSecret(secret) } });
+        return res.json({ success: true, secret, otpauthUri: totp.otpauthUri(secret, user.email) });
+    } catch (error) { return failure(res, 'two_factor_setup_failed', error); }
+});
+router.post('/2fa/enable', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select(TWO_FACTOR_FIELDS);
+        const code = typeof req.body?.code === 'string' ? req.body.code.replace(/\s/g, '') : '';
+        if (!user?.twoFactor?.pendingSecret || user.twoFactor.enabled) {
+            return res.status(400).json({ success: false, message: 'Hãy bắt đầu thiết lập xác thực hai lớp trước.' });
+        }
+        const step = totp.verifyCode(totp.decryptSecret(user.twoFactor.pendingSecret), code);
+        if (!step) return res.status(400).json({ success: false, message: 'Mã xác thực không đúng hoặc đã hết hạn.' });
+        const recoveryCodes = totp.generateRecoveryCodes();
+        const updated = await User.updateOne(
+            { _id: user._id, 'twoFactor.pendingSecret': user.twoFactor.pendingSecret, 'twoFactor.enabled': { $ne: true } },
+            { $set: { 'twoFactor.enabled': true, 'twoFactor.secret': user.twoFactor.pendingSecret,
+                'twoFactor.lastStep': step, 'twoFactor.recoveryCodes': recoveryCodes.map(totp.hashRecoveryCode) },
+            $unset: { 'twoFactor.pendingSecret': '' } });
+        if (!updated.modifiedCount) return res.status(409).json({ success: false, message: 'Phiên đăng nhập đã thay đổi.' });
+        // Thiết bị khác phải đăng nhập lại bằng lớp thứ hai; thiết bị đang thao tác được giữ.
+        await AuthSession.deleteMany({ userId: user._id, _id: { $ne: req.authSession._id } });
+        return res.json({ success: true, message: 'Đã bật xác thực hai lớp.', recoveryCodes });
+    } catch (error) { return failure(res, 'two_factor_enable_failed', error); }
+});
+router.post('/2fa/disable', protect, async (req, res) => {
+    try {
+        const user = await passwordMatches(req.user.id, req.body?.currentPassword);
+        if (!user) return res.status(400).json({ success: false, message: WRONG_PASSWORD });
+        if (!user.twoFactor?.enabled) {
+            await User.updateOne({ _id: user._id }, { $unset: { 'twoFactor.pendingSecret': '' } });
+            return res.json({ success: true, message: 'Đã tắt xác thực hai lớp.' });
+        }
+        if (!await consumeSecondFactor(user, req.body?.code)) {
+            return res.status(400).json({ success: false, message: 'Mã xác thực không đúng hoặc đã hết hạn.' });
+        }
+        await User.updateOne({ _id: user._id }, { $set: { 'twoFactor.enabled': false, 'twoFactor.lastStep': 0 },
+            $unset: { 'twoFactor.secret': '', 'twoFactor.pendingSecret': '', 'twoFactor.recoveryCodes': '' } });
+        return res.json({ success: true, message: 'Đã tắt xác thực hai lớp.' });
+    } catch (error) { return failure(res, 'two_factor_disable_failed', error); }
+});
+
 router.put('/profile', protect, async (req, res) => {
     try {
         const { name, email, avatar, currentPassword, newPassword } = req.body || {};
@@ -310,7 +442,7 @@ router.put('/profile', protect, async (req, res) => {
                 // Rotate the credential itself: upgrading the old session's
                 // authVersion would also preserve every stolen copy of it.
                 await AuthSession.deleteOne({ _id: currentSession._id }, { session });
-                return { user, issued: await createSession(user, session) };
+                return { user, issued: await createSession(user, session, req) };
             }
             return { user };
         });

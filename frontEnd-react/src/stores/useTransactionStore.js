@@ -10,6 +10,7 @@ import { getLocalDateString, getLocalMonthString } from '../utils/formatters';
 import { moneyInteger, MAX_MONEY } from '../utils/moneyPrecision';
 import { isMonthString, withBudgetEdit } from '../utils/budgetPeriod';
 
+
 const getStoredTxns = () => [];
 
 const saveStoredTxns = () => undefined;
@@ -63,7 +64,10 @@ const normalizeTxn = (t) => ({
   fee: Number(t.fee) || 0,
   jarId: t.jarId || null,
   installmentId: t.installmentId || null,
-  systemGenerated: Boolean(t.systemGenerated)
+  systemGenerated: Boolean(t.systemGenerated),
+  tags: Array.isArray(t.tags) ? t.tags : [],
+  note: t.note || '',
+  splitGroupId: t.splitGroupId || null
 });
 
 export const useTransactionStore = create((storeSet, storeGet) => {

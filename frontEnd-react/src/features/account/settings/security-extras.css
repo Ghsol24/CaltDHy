@@ -1,0 +1,19 @@
+.security-panel { display: grid; gap: 12px; }
+.security-text { margin: 4px 0 0; color: var(--color-text-secondary); font-size: var(--font-sm); line-height: 1.5; }
+.security-badge { flex: 0 0 auto; align-self: flex-start; padding: 3px 10px; border-radius: 999px; background: var(--color-surface-muted); color: var(--color-text-secondary); font-size: var(--font-xs); font-weight: 700; white-space: nowrap; }
+.security-badge.is-on { background: var(--color-success-bg); color: var(--color-success); }
+.security-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.security-form { display: grid; gap: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.security-step { color: var(--color-text); font-size: var(--font-sm); }
+.security-link { justify-self: start; text-decoration: none; }
+.security-secret { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-surface-muted); }
+.security-secret code, .security-recovery code { font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--font-sm); color: var(--color-text); overflow-wrap: anywhere; }
+.security-secret code { flex: 1; min-width: 0; letter-spacing: .04em; }
+.security-code { font-family: var(--font-mono, ui-monospace, monospace); letter-spacing: .18em; max-width: 260px; }
+.security-recovery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; margin: 0; padding: 12px 14px; list-style: none; border-radius: var(--radius-md); background: var(--color-surface-muted); }
+.security-sessions { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.security-sessions li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.security-sessions li > div { display: grid; gap: 2px; min-width: 0; }
+.security-sessions strong { color: var(--color-text); font-size: var(--font-sm); overflow-wrap: anywhere; }
+.security-sessions small { color: var(--color-text-secondary); font-size: var(--font-xs); }
+.security-sessions .account-session-badge { flex: 0 0 auto; white-space: nowrap; }

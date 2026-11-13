@@ -42,6 +42,14 @@ const NAV_ICON_SHAPES = {
       <line x1="3" x2="21" y1="10" y2="10" />
     </>
   ),
+  debts: (
+    <>
+      <path d="M16 3h5v5" />
+      <path d="M21 3 14 10" />
+      <path d="M8 21H3v-5" />
+      <path d="m3 21 7-7" />
+    </>
+  ),
   analyticsOverview: (
     <>
       <line x1="18" x2="18" y1="20" y2="10" />

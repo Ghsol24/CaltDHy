@@ -163,10 +163,12 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
     message: limitMessage,
     skip: req => ['GET', 'HEAD'].includes(req.method) ||
-        ['/logout', '/preferences'].includes(req.path)
+        ['/logout', '/preferences', '/sessions/revoke', '/sessions/revoke-others'].includes(req.path)
 });
 
 app.use('/api', csrfProtection);
+// Một file sao lưu đầy đủ lớn hơn giới hạn 2MB chung; chỉ riêng đường dẫn khôi phục được nới.
+app.use('/api/spending/restore-backup', express.json({ limit: '12mb' }));
 app.use(express.json({ limit: '2mb' }));
 function checkDbReady(req, res, next) {
     if (mongoose.connection.readyState !== 1) {
@@ -187,7 +189,9 @@ app.get('/api/health', (req, res) => {
     });
 });
 app.use('/api/auth', authLimiter, checkDbReady, require('./routes/auth'));
+app.use('/api/spending', checkDbReady, require('./routes/spendingExtras'));
 app.use('/api/spending', checkDbReady, require('./routes/spending'));
+app.use('/api/debts', checkDbReady, require('./routes/debts'));
 app.use('/api/jars', checkDbReady, require('./routes/jars'));
 app.use('/api/wallets', checkDbReady, require('./routes/wallets'));
 app.use('/api', (req, res) => {

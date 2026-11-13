@@ -324,3 +324,7 @@
   border: 1px solid currentColor;
   color: inherit;
 }
+
+/* Second sign-in step (two-factor code). */
+.totp-step { display: grid; gap: 6px; }
+.totp-hint { margin: 0 0 8px; color: var(--color-text-secondary, #5b6b62); font-size: 13px; line-height: 1.45; }

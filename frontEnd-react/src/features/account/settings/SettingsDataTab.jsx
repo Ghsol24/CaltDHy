@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ImportCsvDialog } from './ImportCsvDialog';
+import { RestoreBackupPanel } from './RestoreBackupPanel';
 import { formatDate } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -89,6 +90,8 @@ export function SettingsDataTab({ activeTab, budgets, copyError, copySuccess, ex
         </div>
       </div>
       {isImportOpen && <ImportCsvDialog isOpen onClose={() => setIsImportOpen(false)} />}
+
+      <RestoreBackupPanel />
 
       {/* Danger Zone */}
       <div className="account-danger-card">

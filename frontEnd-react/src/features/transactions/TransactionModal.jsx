@@ -6,6 +6,7 @@ import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { spendingService } from '../../services/spendingService';
+import { extrasService } from '../../services/extrasService';
 import { TransactionRevisionHistory } from './TransactionRevisionHistory';
 import { isLockedTransaction, useDeleteTransaction } from './useDeleteTransaction';
 import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMonth } from '../../utils/transactionEditing';
@@ -27,6 +28,9 @@ import { TransactionFooterActions } from './modal/TransactionFooterActions';
 import { TransactionDateField } from './modal/TransactionDateField';
 import { TransactionCategoryField } from './modal/TransactionCategoryField';
 import { TransactionAmountField } from './modal/TransactionAmountField';
+import { TransactionExtrasField } from './modal/TransactionExtrasField';
+import { TransactionSplitField, splitAmount, splitProblem } from './modal/TransactionSplitField';
+import { getTransactionExtrasCopy } from './transactionExtrasCopy';
 const EMPTY_EXPENSE_CATS = [];
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet.
 const PHONE_QUERY = `(max-width: ${BREAKPOINTS.phone}px)`;
@@ -40,7 +44,9 @@ export function TransactionModal() {
   const closeAddTxnModal = useSpendingStore((s) => s.closeAddTxnModal);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
 
+  const extrasCopy = getTransactionExtrasCopy(lang);
   const addTransaction = useTransactionStore((s) => s.addTransaction);
+  const fetchTransactions = useTransactionStore((s) => s.fetchTransactions);
   const updateTransaction = useTransactionStore((s) => s.updateTransaction);
   const undoAddTransaction = useTransactionStore((s) => s.undoAddTransaction);
   const editingTransaction = useTransactionStore((s) => s.editingTransaction);
@@ -70,6 +76,11 @@ export function TransactionModal() {
   const [date, setDate] = useState(() => getLocalDateString());
   const maxDate = getLocalDateString();
   const [desc, setDesc] = useState('');
+  const [tags, setTags] = useState([]);
+  const [note, setNote] = useState('');
+  const [pendingReceipts, setPendingReceipts] = useState([]);
+  const [splitEnabled, setSplitEnabled] = useState(false);
+  const [splitParts, setSplitParts] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [amountError, setAmountError] = useState('');
@@ -128,6 +139,12 @@ export function TransactionModal() {
   }, [isOpen, type, selectedPeriod, budgetMonth, budgetRetry]);
 
   const draftAmount = Number(String(amount).replace(/\D/g, ''));
+  // Tags already in use, most used first, offered as one-tap suggestions.
+  const tagSuggestions = useMemo(() => {
+    const counts = new Map();
+    for (const item of transactions) for (const tag of item.tags || []) counts.set(tag, (counts.get(tag) || 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([tag]) => tag);
+  }, [transactions]);
   // Thu nhập mới: cho thấy trước số dư ví sau khi nhận, để người dùng kiểm tra đúng ví và đúng số.
   const incomeWallet = type === 'income' && !editingTransaction
     ? wallets.find((wallet) => String(wallet.id) === String(walletId)) : null;
@@ -177,6 +194,11 @@ export function TransactionModal() {
     if (isFirstOpen || isEditTargetChanged) {
       prevOpenRef.current = true;
       prevEditIdRef.current = editingTransaction?.id || null;
+      setTags(editingTransaction?.tags || []);
+      setNote(editingTransaction?.note || '');
+      setPendingReceipts([]);
+      setSplitEnabled(false);
+      setSplitParts([]);
 
       if (editingTransaction) {
         setType(editingTransaction.type || 'expense');
@@ -357,7 +379,19 @@ export function TransactionModal() {
     }
 
     const transactionData = {
-      type, amount: numAmount, category, walletId: targetWalletId || null, date, desc: desc.trim()
+      type, amount: numAmount, category, walletId: targetWalletId || null, date, desc: desc.trim(),
+      tags, note: note.trim()
+    };
+    const splitting = !isEditing && splitEnabled;
+    if (splitting) {
+      const problem = splitProblem({ parts: splitParts, total: numAmount, category, copy: extrasCopy });
+      if (problem) { setErrorMsg(problem); return; }
+    }
+    // Photos chosen before the transaction existed are uploaded once it has an ID.
+    const uploadReceipts = async (transactionId) => {
+      if (!transactionId || pendingReceipts.length === 0) return;
+      const results = await Promise.allSettled(pendingReceipts.map((dataUrl) => extrasService.addAttachment(transactionId, dataUrl)));
+      if (results.some((result) => result.status === 'rejected')) addToast({ type: 'warning', message: extrasCopy.receiptsPartial, duration: 7000 });
     };
     // Legacy entries can have no wallet. A note edit must not silently assign a default wallet.
     if (isEditing && (walletId || null) === (editingTransaction.walletId || null)) {
@@ -374,10 +408,24 @@ export function TransactionModal() {
             duration: 4000
           });
         }
+      } else if (splitting) {
+        const used = splitParts.reduce((sum, part) => sum + splitAmount(part.amount), 0);
+        // The parts are saved together by the server; the list is then reloaded to show them.
+        const res = await extrasService.createSplit({
+          type, walletId: targetWalletId || null, date, desc: desc.trim(), tags, note: note.trim(),
+          parts: [{ category, amount: numAmount - used },
+            ...splitParts.map((part) => ({ category: part.category, amount: splitAmount(part.amount) }))]
+        });
+        if (res?.success) {
+          await Promise.allSettled([uploadReceipts(res.data[0]?.id), fetchTransactions()]);
+          close();
+          addToast({ type: 'success', message: extrasCopy.splitSaved(res.data.length, formatCurrency(numAmount)), duration: 5000 });
+        }
       } else {
         const res = await addTransaction(transactionData);
         if (res?.success) {
           const createdTxn = res.data;
+          await uploadReceipts(createdTxn?.id);
           close();
           addToast({
             type: 'success',
@@ -529,6 +577,14 @@ export function TransactionModal() {
                 maxLength={100}
               />
             </div>
+
+            {!isEditing && <TransactionSplitField copy={extrasCopy} enabled={splitEnabled} setEnabled={setSplitEnabled}
+              parts={splitParts} setParts={setSplitParts} total={draftAmount} category={category} categories={sortedCategories} />}
+            {isEditing && editingTransaction.splitGroupId && <p className="txn-field-hint txn-split-edit-hint">{extrasCopy.splitEditHint}</p>}
+
+            <TransactionExtrasField key={`extras-${editingTransaction?.id || 'new'}`} copy={extrasCopy} tags={tags} setTags={setTags}
+              note={note} setNote={setNote} transactionId={editingTransaction?.id || null}
+              pendingReceipts={pendingReceipts} setPendingReceipts={setPendingReceipts} suggestions={tagSuggestions} />
 
             {isEditing && <TransactionRevisionHistory key={editingTransaction.id}
               transactionId={editingTransaction.id} wallets={[...wallets, ...archivedWallets]} />}

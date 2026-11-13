@@ -1,0 +1,48 @@
+.forecast-card, .budget-adv-card {
+  display: grid; gap: 14px; padding: 18px; border: 1px solid var(--color-border); border-radius: var(--radius-lg, 16px);
+  background: var(--color-surface); color: var(--color-text);
+}
+.forecast-card h2, .budget-adv-card h2 { margin: 0; font-size: var(--font-lg); font-weight: 700; }
+.forecast-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; }
+.forecast-stat { display: grid; gap: 4px; align-content: start; min-width: 0; padding: 12px 14px; border-radius: var(--radius-md); background: var(--color-surface-muted); }
+.forecast-stat > span { color: var(--color-text-secondary); font-size: var(--font-xs); font-weight: 600; }
+.forecast-stat strong { font-size: var(--font-xl); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.forecast-stat.is-main strong { font-size: var(--font-2xl); }
+.forecast-stat small { color: var(--color-text-secondary); font-size: var(--font-xs); line-height: 1.45; }
+.forecast-stat.is-negative strong, .forecast-stat strong.is-negative { color: var(--color-danger); }
+.forecast-stat.is-negative small { color: var(--color-danger); }
+.forecast-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: var(--font-sm); }
+.forecast-list li { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.forecast-list time { flex: 0 0 auto; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.forecast-list li > span { flex: 1; min-width: 0; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.forecast-list li > span.forecast-goal-name { flex: 0 1 38%; color: var(--color-text); font-weight: 600; }
+.forecast-list li > span.is-late { color: var(--color-warning); }
+.forecast-list strong { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.forecast-goals { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.forecast-goals h3 { margin: 0; font-size: var(--font-sm); font-weight: 700; }
+.forecast-note { margin: 0; color: var(--color-text-secondary); font-size: var(--font-xs); }
+
+.budget-adv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.budget-adv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.budget-adv-item { display: grid; gap: 6px; align-content: start; min-width: 0; padding: 12px 14px; border-radius: var(--radius-md); background: var(--color-surface-muted); }
+.budget-adv-item > span { color: var(--color-text-secondary); font-size: var(--font-xs); font-weight: 600; }
+.budget-adv-item strong { font-size: var(--font-base); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.budget-adv-item small { color: var(--color-text-secondary); font-size: var(--font-xs); line-height: 1.4; }
+.budget-adv-item.is-over small, .budget-adv-item.is-over strong { color: var(--color-danger); }
+.budget-adv-bar { height: 8px; border-radius: 999px; background: var(--control-track-bg, var(--color-border)); overflow: hidden; }
+.budget-adv-bar span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); }
+.budget-adv-item.is-warn .budget-adv-bar span { background: var(--color-warning); }
+.budget-adv-item.is-over .budget-adv-bar span { background: var(--color-danger); }
+.budget-adv-empty { margin: 0; color: var(--color-text-secondary); font-size: var(--font-sm); line-height: 1.5; }
+.budget-adv-form { display: grid; gap: 14px; padding-top: 14px; border-top: 1px solid var(--color-border); }
+.budget-adv-form .form-dialog-row { align-items: start; }
+.budget-adv-switch { display: flex; align-items: flex-start; gap: 10px; color: var(--color-text); font-size: var(--font-sm); font-weight: 600; cursor: pointer; }
+.budget-adv-switch input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--color-action-bg); }
+.budget-adv-switch small { display: block; margin-top: 2px; color: var(--color-text-secondary); font-size: var(--font-xs); font-weight: 400; line-height: 1.45; }
+.budget-adv-hint { margin: 0; color: var(--color-text-secondary); font-size: var(--font-xs); }
+@media (max-width: 720px) {
+  .forecast-grid { grid-template-columns: 1fr 1fr; }
+  .forecast-stat.is-main { grid-column: 1 / -1; }
+  .budget-adv-grid { grid-template-columns: 1fr; }
+  .budget-adv-form .form-dialog-row { grid-template-columns: 1fr; }
+}

@@ -16,6 +16,7 @@ function publicUser(user) {
         email: user.email,
         avatar: user.avatar || '',
         emailVerified: user.emailVerified === true,
+        twoFactorEnabled: user.twoFactor?.enabled === true,
         preferences: publicPreferences(user.preferences)
     };
 }

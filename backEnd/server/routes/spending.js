@@ -13,6 +13,10 @@ const Category = require('../models/Category');
 const Jar = require('../models/Jar');
 const Installment = require('../models/Installment');
 const ExpectedHighSpendDay = require('../models/ExpectedHighSpendDay');
+const TransactionAttachment = require('../models/TransactionAttachment');
+const FinanceSetting = require('../models/FinanceSetting');
+const Debt = require('../models/Debt');
+const { cleanTags, cleanNote, snapshotTags } = require('../utils/transactionExtras');
 const { isValidVNDAmount } = require('../utils/money');
 const { getVietnamTodayString } = require('../utils/localDate');
 
@@ -24,7 +28,7 @@ router.use(protect);
 router.get('/export', async (req, res) => {
     try {
         const userId = req.user.id;
-        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays, transactionRevisions, walletHistory] = await Promise.all([
+        const [user, transactions, budgets, wallets, categories, jars, installments, expectedHighSpendDays, transactionRevisions, walletHistory, debts, financeSetting] = await Promise.all([
             User.findById(userId).select('_id name email customCategories').lean(),
             Transaction.find({ userId }).lean(),
             Budget.find({ userId }).lean(),
@@ -34,7 +38,9 @@ router.get('/export', async (req, res) => {
             Installment.find({ userId }).lean(),
             ExpectedHighSpendDay.find({ userId }).lean(),
             TransactionRevision.find({ userId }).lean(),
-            WalletActivity.find({ userId }).lean()
+            WalletActivity.find({ userId }).lean(),
+            Debt.find({ userId }).lean(),
+            FinanceSetting.findOne({ userId }).select('-_id savedFilters budget').lean()
         ]);
         if (!user) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
@@ -56,7 +62,11 @@ router.get('/export', async (req, res) => {
                 installments,
                 expectedHighSpendDays,
                 transactionRevisions,
-                walletHistory
+                walletHistory,
+                debts,
+                // Ảnh hóa đơn không nằm trong bản sao lưu: chúng quá lớn cho một file JSON.
+                savedFilters: financeSetting?.savedFilters || [],
+                budgetSettings: financeSetting?.budget || null
             }
         });
     } catch {
@@ -126,7 +136,10 @@ function transactionSnapshot(transaction) {
         jarId: json.jarId || null,
         installmentId: json.installmentId || null,
         systemGenerated: Boolean(json.systemGenerated),
-        period: json.period || null
+        period: json.period || null,
+        tags: snapshotTags(json.tags),
+        note: json.note || '',
+        splitGroupId: json.splitGroupId || null
     };
 }
 
@@ -573,6 +586,23 @@ router.get('/', financialRequest(async (req, res) => {
             }
         }
 
+        // Tìm kiếm nâng cao: nhãn, khoảng số tiền và từ khóa trong mô tả/ghi chú/danh mục.
+        if (typeof req.query.tag === 'string' && req.query.tag.trim()) {
+            filter.tags = req.query.tag.trim().toLowerCase().slice(0, 30);
+        }
+        const amountFilter = {};
+        for (const [param, operator] of [['minAmount', '$gte'], ['maxAmount', '$lte']]) {
+            const raw = req.query[param];
+            if (typeof raw === 'string' && /^\d{1,15}$/.test(raw)) amountFilter[operator] = Number(raw);
+        }
+        if (Object.keys(amountFilter).length > 0) filter.amount = amountFilter;
+        if (typeof req.query.q === 'string' && req.query.q.trim()) {
+            const pattern = new RegExp(req.query.q.trim().slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+            const search = [{ desc: pattern }, { note: pattern }, { category: pattern }, { tags: pattern }];
+            if (filter.$or) { filter.$and = [{ $or: filter.$or }, { $or: search }]; delete filter.$or; }
+            else filter.$or = search;
+        }
+
         const page = parseInt(req.query.page, 10);
         const limit = parseInt(req.query.limit, 10);
 
@@ -624,6 +654,10 @@ router.post('/', financialRequest(async (req, res) => {
 
         const validationError = validateTransactionPayload({ type, amount, category, date });
         if (validationError) return res.status(400).json({ success: false, message: validationError });
+        const tags = cleanTags(req.body.tags), note = cleanNote(req.body.note);
+        if (tags === null || note === null) {
+            return res.status(400).json({ success: false, message: 'Nhãn hoặc ghi chú không hợp lệ.' });
+        }
 
         const walletError = await validateTransactionWallets({ type, walletId, toWalletId, userId: req.user.id });
         if (walletError) return res.status(400).json({ success: false, message: walletError });
@@ -638,7 +672,8 @@ router.post('/', financialRequest(async (req, res) => {
             amount: Number(amount),
             category: category.trim(),
             date: parseTransactionDate(date),
-            fee: isValidVNDAmount(fee, { allowZero: true }) ? Number(fee) : 0
+            fee: isValidVNDAmount(fee, { allowZero: true }) ? Number(fee) : 0,
+            tags, note
         };
         if (isValidObjectId(walletId)) {
             createPayload.walletId = walletId;
@@ -836,6 +871,13 @@ router.put('/:id', financialRequest(async (req, res) => {
             category: category.trim(),
             date: parseTransactionDate(date)
         };
+        // Nhãn/ghi chú chỉ đổi khi client gửi lên, để client cũ không vô tình xóa chúng.
+        for (const [field, clean] of [['tags', cleanTags], ['note', cleanNote]]) {
+            if (req.body[field] === undefined) continue;
+            const value = clean(req.body[field]);
+            if (value === null) return res.status(400).json({ success: false, message: 'Nhãn hoặc ghi chú không hợp lệ.' });
+            updatePayload[field] = value;
+        }
         if (fee !== undefined) {
             updatePayload.fee = isValidVNDAmount(fee, { allowZero: true }) ? Number(fee) : 0;
         }
@@ -972,6 +1014,9 @@ router.post('/:id/restore', financialRequest(async (req, res) => {
             walletId: snapshot.walletId || null,
             toWalletId: snapshot.toWalletId || null,
             fee: snapshot.fee || 0,
+            tags: cleanTags(String(snapshot.tags || '').split(',')) || [],
+            note: cleanNote(snapshot.note) || '',
+            ...(isValidObjectId(snapshot.splitGroupId) ? { splitGroupId: snapshot.splitGroupId } : {}),
             ...(typeof snapshot.period === 'string' ? { period: snapshot.period } : {})
         });
         await Category.ensureCategorySafe(req.user.id, restored.category);
@@ -998,6 +1043,8 @@ router.post('/reset-data', financialRequest(async (req, res) => {
         await WalletActivity.deleteMany({ userId });
         await Budget.deleteMany({ userId });
         await ExpectedHighSpendDay.deleteMany({ userId });
+        await TransactionAttachment.deleteMany({ userId });
+        await FinanceSetting.updateOne({ userId }, { $set: { budget: { totalLimit: 0, weeklyLimit: 0, rollover: false } } });
 
         // 2. Đặt lại số dư Hũ tiết kiệm và tiến độ Trả góp định kỳ về 0 để bảo toàn tính nhất quán sổ cái
         const canRunExtraModelOps = (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) || (Jar.updateMany !== mongoose.Model.updateMany);
@@ -1018,3 +1065,5 @@ router.post('/reset-data', financialRequest(async (req, res) => {
 }));
 
 module.exports = router;
+// Dùng chung với routes/spendingExtras.js để hóa đơn chia nhỏ tuân theo đúng luật của giao dịch thường.
+module.exports.helpers = { isValidObjectId, parseTransactionDate, validateTransactionPayload };

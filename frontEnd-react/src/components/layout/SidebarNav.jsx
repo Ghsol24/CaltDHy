@@ -85,6 +85,10 @@ export function SidebarNav() {
         {
           id: 'plan_recurring', viewId: 'plan', subTabId: 'recurring', label: t('nav.recurring'), icon: 'recurring',
           isActive: activeView === 'plan' && planSubTab === 'recurring'
+        },
+        {
+          id: 'plan_debts', viewId: 'plan', subTabId: 'debts', label: t('nav.debts'), icon: 'debts',
+          isActive: activeView === 'plan' && planSubTab === 'debts'
         }
       ]
     },

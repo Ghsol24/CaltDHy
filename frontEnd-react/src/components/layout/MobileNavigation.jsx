@@ -13,7 +13,8 @@ const PRIMARY_ITEMS = [
 const SECTION_ITEMS = {
   plan: [
     { id: 'overview', labelKey: 'nav.overview' }, { id: 'wallets', labelKey: 'nav.wallets' },
-    { id: 'budgets', labelKey: 'nav.budgets' }, { id: 'recurring', labelKey: 'nav.recurring' }
+    { id: 'budgets', labelKey: 'nav.budgets' }, { id: 'recurring', labelKey: 'nav.recurring' },
+    { id: 'debts', labelKey: 'nav.debts' }
   ],
   analytics: [
     { id: 'overview', labelKey: 'nav.overview', target: 'analytics-overview' },

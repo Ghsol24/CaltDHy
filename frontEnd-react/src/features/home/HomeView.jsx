@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { calculateMonthlyStats } from '../../utils/financeMath';
@@ -8,6 +8,8 @@ import { RecentTransactions } from './RecentTransactions';
 import { AttentionPanel } from './AttentionPanel';
 import { ReminderInviteCard } from './ReminderInviteCard';
 import { useTranslation } from '../../i18n/useTranslation';
+
+const ForecastCard = lazy(() => import('../forecast/ForecastCard').then((module) => ({ default: module.ForecastCard })));
 
 export function HomeView() {
   const { t } = useTranslation();
@@ -107,6 +109,7 @@ export function HomeView() {
         {/* Left Column: Hero Card + Recent Transactions */}
         <div className="home-col-main">
           <AvailableToSpendCard />
+          <Suspense fallback={null}><ForecastCard /></Suspense>
           <ReminderInviteCard />
           <RecentTransactions />
         </div>

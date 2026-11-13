@@ -32,3 +32,15 @@
 @media (max-width: 900px) {
   .pwa-update-notice { bottom: calc(76px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
 }
+
+/* "No Internet connection" strip (see OfflineSyncNotice). Bottom-left on wide screens so it never covers a
+   centred dialog's buttons; at the top on phones, where dialogs are bottom sheets. */
+.offline-sync-notice {
+  position: fixed; z-index: var(--z-system-notice); left: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
+  max-width: min(340px, calc(100vw - 32px)); padding: 10px 14px;
+  border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); background: var(--color-warning-bg);
+  color: var(--color-text); box-shadow: var(--shadow-dialog); font: 600 13px var(--font-sans, system-ui, sans-serif); line-height: 1.4;
+}
+@media (max-width: 900px) {
+  .offline-sync-notice { left: 12px; right: 12px; bottom: auto; top: calc(8px + env(safe-area-inset-top)); max-width: none; }
+}

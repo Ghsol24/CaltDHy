@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '../../../components/ui/Button';
-import { detectCurrentDevice } from './accountHelpers';
+import { TwoFactorPanel, SessionsPanel } from './SecurityExtras';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function SettingsSecurityTab({ activeTab, confirmPassword, currentPassword, handleChangePassword, isPwdSaving, newPassword, pwdMsg, pwdStrength, setConfirmPassword, setCurrentPassword, setNewPassword, setShowConfirmPwd, setShowCurrentPwd, setShowNewPwd, showConfirmPwd, showCurrentPwd, showNewPwd }) {
@@ -124,19 +124,8 @@ export function SettingsSecurityTab({ activeTab, confirmPassword, currentPasswor
         </div>
       </form>
   
-      {/* Sessions Section */}
-      <div className="account-card-panel">
-        <div className="account-card-panel-row">
-          <div>
-            <div className="account-panel-label">Phiên đăng nhập hiện tại</div>
-            <div className="account-panel-val account-panel-val--box">{detectCurrentDevice(t)}</div>
-          </div>
-          <span className="account-session-badge">Đang hoạt động</span>
-        </div>
-        <p className="account-card-panel__p--text">
-          Hệ thống tự động vô hiệu hóa các phiên đăng nhập cũ trên thiết bị khác mỗi khi bạn thay đổi mật khẩu.
-        </p>
-      </div>
+      <TwoFactorPanel />
+      <SessionsPanel />
     </div>
   )) || null;
 }

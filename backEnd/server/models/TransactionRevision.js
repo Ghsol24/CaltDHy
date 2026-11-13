@@ -17,7 +17,11 @@ const snapshotSchema = new mongoose.Schema({
     jarId: { type: String, default: null },
     installmentId: { type: String, default: null },
     systemGenerated: { type: Boolean, default: false },
-    period: { type: String, default: null }
+    period: { type: String, default: null },
+    // Tags are stored joined ("a, b") so a snapshot stays a flat list of comparable values.
+    tags: { type: String, default: '' },
+    note: { type: String, default: '' },
+    splitGroupId: { type: String, default: null }
 }, { _id: false });
 
 const transactionRevisionSchema = new mongoose.Schema({

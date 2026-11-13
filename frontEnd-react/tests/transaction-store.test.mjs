@@ -34,12 +34,14 @@ test('loading transactions normalises server records for the screens', async (t)
   assert.deepEqual(store().transactions[0], {
     id: 'a', type: 'expense', desc: 'Cà phê', amount: 30000, category: 'Food & Dining',
     date: inThisMonth('05'), walletId: 'w1', toWalletId: 'w2', fee: 1500,
-    jarId: null, installmentId: null, systemGenerated: false
+    jarId: null, installmentId: null, systemGenerated: false,
+    tags: [], note: '', splitGroupId: null
   });
   assert.deepEqual(store().transactions[1], {
     id: 'b', type: 'income', desc: '', amount: 5000, category: 'Salary',
     date: '', walletId: null, toWalletId: null, fee: 0,
-    jarId: null, installmentId: null, systemGenerated: false
+    jarId: null, installmentId: null, systemGenerated: false,
+    tags: [], note: '', splitGroupId: null
   });
   assert.equal(store().isLoading, false);
   assert.equal(store().hasLoadedTransactions, true);

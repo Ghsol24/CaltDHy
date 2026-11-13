@@ -68,7 +68,14 @@ const transactionSchema = new mongoose.Schema(
             ref: 'Installment',
             default: null,
             index: true
-        }
+        },
+        // Nhãn tự do ("du lịch Đà Lạt") để báo cáo xuyên danh mục; đã chuẩn hóa ở route.
+        tags: { type: [{ type: String, trim: true, maxlength: 30 }], default: [] },
+        // Ghi chú dài, tách khỏi `desc` (tiêu đề ngắn hiển thị trong danh sách).
+        note: { type: String, default: '', trim: true, maxlength: 2000 },
+        // Các phần của cùng một hóa đơn được chia nhỏ dùng chung mã này. Mỗi phần vẫn là một
+        // giao dịch đầy đủ nên ngân sách, báo cáo và số dư ví không cần biết đến việc chia.
+        splitGroupId: { type: mongoose.Schema.Types.ObjectId, default: null }
     },
     {
         timestamps: true,
@@ -81,6 +88,9 @@ const transactionSchema = new mongoose.Schema(
                 if (ret.toWalletId) ret.toWalletId = ret.toWalletId.toString();
                 if (ret.jarId) ret.jarId = ret.jarId.toString();
                 if (ret.installmentId) ret.installmentId = ret.installmentId.toString();
+                if (ret.splitGroupId) ret.splitGroupId = ret.splitGroupId.toString();
+                ret.tags = Array.isArray(ret.tags) ? ret.tags : [];
+                ret.note = ret.note || '';
                 ret.fee = ret.fee || 0;
                 ret.date = ret.date.toISOString().slice(0, 10);
                 delete ret._id;
@@ -94,6 +104,8 @@ const transactionSchema = new mongoose.Schema(
 // Index để tìm nhanh các giao dịch của user
 transactionSchema.index({ userId: 1, date: 1 });
 transactionSchema.index({ userId: 1, walletId: 1 });
+transactionSchema.index({ userId: 1, tags: 1 });
+transactionSchema.index({ userId: 1, splitGroupId: 1 }, { partialFilterExpression: { splitGroupId: { $type: 'objectId' } } });
 transactionSchema.index({ userId: 1, installmentId: 1, period: 1 }, {
     unique: true, partialFilterExpression: { period: { $type: 'string' } }
 });

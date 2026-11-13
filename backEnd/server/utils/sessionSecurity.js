@@ -56,11 +56,12 @@ function csrfProtection(req, res, next) {
     }
     return next();
 }
-async function createSession(user, session) {
+async function createSession(user, session, req) {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + sessionLifetime());
+    const userAgent = String(req?.get?.('User-Agent') || '').replace(/[^\x20-\x7e]/g, '').slice(0, 300);
     await AuthSession.create([{
-        tokenHash: hash(token), userId: user._id, authVersion: user.authVersion || 0, expiresAt
+        tokenHash: hash(token), userId: user._id, authVersion: user.authVersion || 0, expiresAt, userAgent
     }], session ? { session } : {});
     return { token, expiresAt };
 }

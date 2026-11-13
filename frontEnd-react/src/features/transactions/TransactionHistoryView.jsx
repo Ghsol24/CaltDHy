@@ -16,6 +16,10 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatDisplayDate } from '../../utils/datePicker';
 import { getHistoryFilterCopy } from './historyFilterCopy';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
+import { getTransactionExtrasCopy } from './transactionExtrasCopy';
+import { AmountRangeFilter, AmountRangeInputs, SavedFiltersMenu } from './HistoryAdvancedFilters';
+import { useFinanceSettingsStore } from '../../stores/useFinanceSettingsStore';
+import { useToastStore } from '../../stores/useToastStore';
 
 import { Icon } from '../../components/ui/AppIcons';
 const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -23,6 +27,12 @@ const VALID_DATE = /^\d{4}-\d{2}-\d{2}$/;
 export function TransactionHistoryView() {
   const { t, label, lang } = useTranslation();
   const chipCopy = getHistoryFilterCopy(lang);
+  const extrasCopy = getTransactionExtrasCopy(lang);
+  const savedFilters = useFinanceSettingsStore((state) => state.savedFilters);
+  const loadSettings = useFinanceSettingsStore((state) => state.load);
+  const saveFilters = useFinanceSettingsStore((state) => state.saveFilters);
+  const addToast = useToastStore((state) => state.addToast);
+  useEffect(() => { void loadSettings(); }, [loadSettings]);
   const [searchParams, setSearchParams] = useSearchParams();
   const seedDate = searchParams.get('date');
   const seedFrom = searchParams.get('from');
@@ -38,6 +48,9 @@ export function TransactionHistoryView() {
   const [category, setCategory] = useState(searchParams.get('category') || 'all');
   const [walletId, setWalletId] = useState('all');
   const [excludeRecurring, setExcludeRecurring] = useState(searchParams.get('excludeRecurring') === '1');
+  const [tag, setTag] = useState(searchParams.get('tag') || 'all');
+  const [minAmount, setMinAmount] = useState(null);
+  const [maxAmount, setMaxAmount] = useState(null);
   const [visibleCount, setVisibleCount] = useState(50);
   const isCompact = useMediaQuery('(max-width: 640px)');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -59,30 +72,60 @@ export function TransactionHistoryView() {
   const navigateTo = useSpendingStore((state) => state.navigateTo);
 
   const categories = useMemo(() => [...new Set(historyRows.map((row) => row.category).filter(Boolean))].sort(), [historyRows]);
+  const allTags = useMemo(() => [...new Set(transactions.flatMap((row) => row.tags || []))].sort((a, b) => a.localeCompare(b)), [transactions]);
   const invalidRange = Boolean(startDate && endDate && startDate > endDate);
+  const invalidAmount = Boolean(minAmount && maxAmount && minAmount > maxAmount);
   const filtered = useMemo(() => {
-    if (invalidRange) return [];
+    if (invalidRange || invalidAmount) return [];
     const normalizedQuery = query.trim().toLocaleLowerCase();
+    const amountOf = (row) => (row.type === 'wallet_created' ? Number(row.initialBalance) || 0 : transactionTotal(row));
     return historyRows.filter((row) =>
       (!startDate || row.date >= startDate) && (!endDate || row.date <= endDate) &&
       (type === 'all' || row.type === type) &&
       (category === 'all' || row.category === category) &&
       (walletId === 'all' || row.walletId === walletId || row.toWalletId === walletId) &&
       (!excludeRecurring || !isRecurringTrendTransaction(row)) &&
-      (!normalizedQuery || `${row.desc || ''} ${row.category || ''}`.toLocaleLowerCase().includes(normalizedQuery))
+      (tag === 'all' || (row.tags || []).includes(tag)) &&
+      (!minAmount || amountOf(row) >= minAmount) && (!maxAmount || amountOf(row) <= maxAmount) &&
+      // Search covers the title, category, long note and tags ("#công tác" also matches).
+      (!normalizedQuery || `${row.desc || ''} ${row.category || ''} ${row.note || ''} ${(row.tags || []).map((item) => `#${item}`).join(' ')}`
+        .toLocaleLowerCase().includes(normalizedQuery))
     ).sort((a, b) => b.date.localeCompare(a.date) || transactionTotal(b) - transactionTotal(a));
-  }, [historyRows, startDate, endDate, type, category, walletId, excludeRecurring, query, invalidRange]);
+  }, [historyRows, startDate, endDate, type, category, walletId, excludeRecurring, query, invalidRange, tag, minAmount, maxAmount, invalidAmount]);
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
   const hasActiveFilters = Boolean(query || startDate || endDate || datePreset !== 'all' ||
-    type !== 'all' || category !== 'all' || walletId !== 'all' || excludeRecurring);
+    type !== 'all' || category !== 'all' || walletId !== 'all' || excludeRecurring || tag !== 'all' || minAmount || maxAmount);
 
-  useEffect(() => { setVisibleCount(50); }, [startDate, endDate, type, category, walletId, excludeRecurring, query]);
+  useEffect(() => { setVisibleCount(50); }, [startDate, endDate, type, category, walletId, excludeRecurring, query, tag, minAmount, maxAmount]);
 
   const clearFilters = () => {
     setQuery(''); setStartDate(''); setEndDate(''); setType('all');
     setCategory('all'); setWalletId('all'); setExcludeRecurring(false); setDatePreset('all');
+    setTag('all'); setMinAmount(null); setMaxAmount(null);
     setSearchParams({}, { replace: true });
   };
+  const changeAmount = (min, max) => { setMinAmount(min); setMaxAmount(max); };
+
+  // A saved filter stores the preset ("this month"), not its dates, so it stays current when reused later.
+  const currentCriteria = () => ({ query: query.trim(), type, category, walletId, tag, minAmount, maxAmount,
+    datePreset, startDate: datePreset === 'custom' ? startDate : '', endDate: datePreset === 'custom' ? endDate : '', excludeRecurring });
+  const applySaved = ({ criteria }) => {
+    const knownWallet = [...wallets, ...archivedWallets].some((wallet) => wallet.id === criteria.walletId);
+    setQuery(criteria.query || ''); setType(criteria.type || 'all'); setCategory(criteria.category || 'all');
+    setWalletId(knownWallet ? criteria.walletId : 'all'); setTag(criteria.tag || 'all');
+    setMinAmount(criteria.minAmount || null); setMaxAmount(criteria.maxAmount || null);
+    setExcludeRecurring(Boolean(criteria.excludeRecurring));
+    const preset = criteria.datePreset || 'all';
+    setDatePreset(preset);
+    if (preset === 'custom') { setStartDate(criteria.startDate || ''); setEndDate(criteria.endDate || ''); }
+    else { const range = historyDateRange(preset); setStartDate(range.from); setEndDate(range.to); }
+    setSearchParams({}, { replace: true });
+  };
+  const saveCurrent = async (name) => {
+    await saveFilters([...savedFilters, { name, criteria: currentCriteria() }]);
+    addToast({ type: 'success', message: extrasCopy.savedOk });
+  };
+  const deleteSaved = (id) => saveFilters(savedFilters.filter((filter) => filter.id !== id));
 
   const chooseDatePreset = (preset) => {
     setDatePreset(preset);
@@ -108,7 +151,7 @@ export function TransactionHistoryView() {
     if (startDate && endDate) return startDate === endDate ? showDate(startDate) : `${showDate(startDate)} – ${showDate(endDate)}`;
     return startDate ? chipCopy.rangeFrom(showDate(startDate)) : chipCopy.rangeTo(showDate(endDate));
   })();
-  const filterCount = [type !== 'all', category !== 'all', walletId !== 'all', Boolean(periodText), excludeRecurring]
+  const filterCount = [type !== 'all', category !== 'all', walletId !== 'all', Boolean(periodText), excludeRecurring, tag !== 'all', Boolean(minAmount || maxAmount)]
     .filter(Boolean).length;
 
   const options = {
@@ -118,6 +161,7 @@ export function TransactionHistoryView() {
       ...categories.map((value) => ({ value, label: label(value) }))],
     wallet: [{ value: 'all', label: t('history.allWallets') },
       ...[...wallets, ...archivedWallets].map((wallet) => ({ value: wallet.id, label: wallet.name }))],
+    tag: [{ value: 'all', label: extrasCopy.allTags }, ...allTags.map((value) => ({ value, label: `#${value}` }))],
     period: [
       { value: 'all', label: t('history.allTime') },
       { value: 'thisMonth', label: t('history.thisMonth') },
@@ -142,6 +186,9 @@ export function TransactionHistoryView() {
     { id: 'period', active: datePreset !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={datePreset !== 'all'}
       label={t('history.filterPeriod')} value={datePreset} onChange={changePeriod} options={options.period}
       valueText={periodText || undefined} /> },
+    ...(allTags.length || tag !== 'all' ? [{ id: 'tag', active: tag !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={tag !== 'all'}
+      label={extrasCopy.filterTag} value={tag} onChange={(value) => { setTag(value); if (value === 'all') dropParams('tag'); }} options={options.tag} /> }] : []),
+    { id: 'amount', active: Boolean(minAmount || maxAmount), node: <AmountRangeFilter copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} sheet={isCompact} /> },
     { id: 'recurring', active: excludeRecurring, node: <label className={`transaction-history-checkbox${excludeRecurring ? ' is-active' : ''}`}>
       <input type="checkbox" checked={excludeRecurring} onChange={(event) => changeRecurring(event.target.checked)} />
       <Icon name="checkAlt" className="transaction-history-check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -202,6 +249,8 @@ export function TransactionHistoryView() {
           <Icon name="closeAlt" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />{t('history.clear')}{filterCount > 0 && ` (${filterCount})`}
         </button>}
         {orderedChips.map((chip) => <React.Fragment key={chip.id}>{chip.node}</React.Fragment>)}
+        <SavedFiltersMenu copy={extrasCopy} filters={savedFilters} canSave={hasActiveFilters && !invalidRange && !invalidAmount}
+          onApply={applySaved} onSave={saveCurrent} onDelete={deleteSaved} align="end" sheet={isCompact} />
       </div>
     </div>
 
@@ -218,6 +267,11 @@ export function TransactionHistoryView() {
       <FilterOptionGroup title={t('history.filterPeriod')} options={options.period} value={datePreset} onChange={changePeriod} />
       {datePreset === 'custom' && customDates('history-sheet-date')}
       <FilterOptionGroup title={t('history.filterCategory')} options={options.category} value={category} onChange={changeCategory} />
+      {(allTags.length > 0 || tag !== 'all') && <FilterOptionGroup title={extrasCopy.filterTag} options={options.tag} value={tag} onChange={setTag} />}
+      <fieldset className="transaction-sheet-group">
+        <legend>{extrasCopy.amountRange}</legend>
+        <AmountRangeInputs copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} className="history-sheet-amount" />
+      </fieldset>
       <label className="transaction-sheet-switch">
         <span>{t('history.excludeRecurring')}</span>
         <input type="checkbox" role="switch" checked={excludeRecurring} onChange={(event) => changeRecurring(event.target.checked)} />
@@ -225,6 +279,7 @@ export function TransactionHistoryView() {
     </BottomSheet>}
 
     {invalidRange && <p role="alert" className="transaction-history-error">{t('history.invalidRange')}</p>}
+    {invalidAmount && <p role="alert" className="transaction-history-error">{extrasCopy.amountInvalid}</p>}
     {(loadError || walletLoadError) && <div role="alert" className="transaction-history-error">
       <span>{t('history.loadFailed')}</span>
       <button type="button" onClick={() => { void reloadTransactions(); void reloadWallets(); }}>{t('common.tryAgain')}</button>

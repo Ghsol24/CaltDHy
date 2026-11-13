@@ -905,6 +905,246 @@ export const apiMessages = {
     "Chưa thể xử lý thông tin này. Vui lòng tải lại trang và thử lại.",
     "Could not process this information. Reload the page and try again.",
     "无法处理此信息，请重新加载页面后重试。"
+  ],
+  "Nhập mã 6 số từ ứng dụng xác thực để tiếp tục.": [
+    "Nhập mã 6 số từ ứng dụng xác thực để tiếp tục.",
+    "Enter the 6-digit code from your authenticator app to continue.",
+    "请输入身份验证器应用中的 6 位验证码以继续。"
+  ],
+  "Mã xác thực không đúng hoặc đã hết hạn.": [
+    "Mã xác thực không đúng hoặc đã hết hạn.",
+    "That code is incorrect or has expired.",
+    "验证码不正确或已过期。"
+  ],
+  "Phiên đăng nhập không hợp lệ.": [
+    "Phiên đăng nhập không hợp lệ.",
+    "That sign-in session is not valid.",
+    "登录会话无效。"
+  ],
+  "Để thoát thiết bị này, hãy dùng nút Đăng xuất.": [
+    "Để thoát thiết bị này, hãy dùng nút Đăng xuất.",
+    "To sign out of this device, use the Log out button.",
+    "要退出此设备，请使用“退出登录”按钮。"
+  ],
+  "Phiên đăng nhập không còn tồn tại.": [
+    "Phiên đăng nhập không còn tồn tại.",
+    "That sign-in session no longer exists.",
+    "该登录会话已不存在。"
+  ],
+  "Đã đăng xuất thiết bị đó.": [
+    "Đã đăng xuất thiết bị đó.",
+    "That device has been signed out.",
+    "已退出该设备。"
+  ],
+  "Đã đăng xuất các thiết bị khác.": [
+    "Đã đăng xuất các thiết bị khác.",
+    "All other devices have been signed out.",
+    "已退出其他所有设备。"
+  ],
+  "Xác thực hai lớp đang bật. Hãy tắt trước khi thiết lập lại.": [
+    "Xác thực hai lớp đang bật. Hãy tắt trước khi thiết lập lại.",
+    "Two-step verification is already on. Turn it off before setting it up again.",
+    "两步验证已开启。请先关闭再重新设置。"
+  ],
+  "Hãy bắt đầu thiết lập xác thực hai lớp trước.": [
+    "Hãy bắt đầu thiết lập xác thực hai lớp trước.",
+    "Start setting up two-step verification first.",
+    "请先开始设置两步验证。"
+  ],
+  "Đã bật xác thực hai lớp.": [
+    "Đã bật xác thực hai lớp.",
+    "Two-step verification is on.",
+    "两步验证已开启。"
+  ],
+  "Đã tắt xác thực hai lớp.": [
+    "Đã tắt xác thực hai lớp.",
+    "Two-step verification is off.",
+    "两步验证已关闭。"
+  ],
+  "Mật khẩu hiện tại không đúng.": [
+    "Mật khẩu hiện tại không đúng.",
+    "The current password is incorrect.",
+    "当前密码不正确。"
+  ],
+  "Không tìm thấy khoản nợ.": [
+    "Không tìm thấy khoản nợ.",
+    "Debt record not found.",
+    "未找到该借贷记录。"
+  ],
+  "Thông tin khoản nợ không hợp lệ.": [
+    "Thông tin khoản nợ không hợp lệ.",
+    "The debt details are not valid.",
+    "借贷信息无效。"
+  ],
+  "Sổ nợ đã đạt giới hạn 300 khoản. Hãy xóa bớt khoản đã tất toán.": [
+    "Sổ nợ đã đạt giới hạn 300 khoản. Hãy xóa bớt khoản đã tất toán.",
+    "The debt book has reached its limit of 300 records. Delete some settled ones first.",
+    "借贷记录已达 300 条上限。请先删除部分已结清的记录。"
+  ],
+  "Đã thêm khoản nợ.": [
+    "Đã thêm khoản nợ.",
+    "Debt record added.",
+    "已添加借贷记录。"
+  ],
+  "Số tiền gốc không thể nhỏ hơn số đã trả.": [
+    "Số tiền gốc không thể nhỏ hơn số đã trả.",
+    "The original amount cannot be less than what has already been repaid.",
+    "本金不能小于已还金额。"
+  ],
+  "Đã cập nhật khoản nợ.": [
+    "Đã cập nhật khoản nợ.",
+    "Debt record updated.",
+    "借贷记录已更新。"
+  ],
+  "Khoản nợ vừa thay đổi. Vui lòng tải lại và thử lại.": [
+    "Khoản nợ vừa thay đổi. Vui lòng tải lại và thử lại.",
+    "This debt record just changed. Reload and try again.",
+    "该借贷记录刚刚发生变化。请刷新后重试。"
+  ],
+  "Đã xóa khoản nợ.": [
+    "Đã xóa khoản nợ.",
+    "Debt record deleted.",
+    "借贷记录已删除。"
+  ],
+  "Số tiền trả vượt quá số còn nợ.": [
+    "Số tiền trả vượt quá số còn nợ.",
+    "The repayment is more than the amount still owed.",
+    "还款金额超过剩余欠款。"
+  ],
+  "Đã ghi lần trả.": [
+    "Đã ghi lần trả.",
+    "Repayment recorded.",
+    "已记录还款。"
+  ],
+  "Đã xóa lần trả.": [
+    "Đã xóa lần trả.",
+    "Repayment deleted.",
+    "还款记录已删除。"
+  ],
+  "Nhãn hoặc ghi chú không hợp lệ.": [
+    "Nhãn hoặc ghi chú không hợp lệ.",
+    "The tags or note are not valid.",
+    "标签或备注无效。"
+  ],
+  "Hóa đơn chia nhỏ cần từ 2 đến 10 phần và một ví.": [
+    "Hóa đơn chia nhỏ cần từ 2 đến 10 phần và một ví.",
+    "A split bill needs 2 to 10 parts and one wallet.",
+    "拆分账单需要 2 到 10 个部分和一个钱包。"
+  ],
+  "Đã lưu hóa đơn chia nhỏ!": [
+    "Đã lưu hóa đơn chia nhỏ!",
+    "Split bill saved!",
+    "拆分账单已保存！"
+  ],
+  "Không tìm thấy giao dịch.": [
+    "Không tìm thấy giao dịch.",
+    "Transaction not found.",
+    "未找到该交易。"
+  ],
+  "Không tìm thấy ảnh đính kèm.": [
+    "Không tìm thấy ảnh đính kèm.",
+    "Attached image not found.",
+    "未找到附加图片。"
+  ],
+  "Ảnh không hợp lệ. Chỉ nhận JPEG, PNG hoặc WebP tối đa 600KB.": [
+    "Ảnh không hợp lệ. Chỉ nhận JPEG, PNG hoặc WebP tối đa 600KB.",
+    "That image is not valid. Use a JPEG, PNG or WebP image of up to 600KB.",
+    "图片无效。仅支持不超过 600KB 的 JPEG、PNG 或 WebP 图片。"
+  ],
+  "Mỗi giao dịch chỉ đính kèm tối đa 3 ảnh.": [
+    "Mỗi giao dịch chỉ đính kèm tối đa 3 ảnh.",
+    "Each transaction can have up to 3 images.",
+    "每笔交易最多可附加 3 张图片。"
+  ],
+  "Tài khoản đã đạt giới hạn ảnh đính kèm. Hãy xóa bớt ảnh cũ.": [
+    "Tài khoản đã đạt giới hạn ảnh đính kèm. Hãy xóa bớt ảnh cũ.",
+    "Your account has reached its limit for attached images. Delete some older ones first.",
+    "您的账户已达附加图片上限。请先删除部分旧图片。"
+  ],
+  "Đã đính kèm ảnh.": [
+    "Đã đính kèm ảnh.",
+    "Image attached.",
+    "图片已附加。"
+  ],
+  "Đã xóa ảnh đính kèm.": [
+    "Đã xóa ảnh đính kèm.",
+    "Attached image deleted.",
+    "附加图片已删除。"
+  ],
+  "Không thể tải ảnh đính kèm.": [
+    "Không thể tải ảnh đính kèm.",
+    "Unable to load the attached images.",
+    "无法加载附加图片。"
+  ],
+  "Không thể lưu ảnh đính kèm.": [
+    "Không thể lưu ảnh đính kèm.",
+    "Unable to save the attached image.",
+    "无法保存附加图片。"
+  ],
+  "Không thể xóa ảnh đính kèm.": [
+    "Không thể xóa ảnh đính kèm.",
+    "Unable to delete the attached image.",
+    "无法删除附加图片。"
+  ],
+  "Chỉ lưu được tối đa 12 bộ lọc.": [
+    "Chỉ lưu được tối đa 12 bộ lọc.",
+    "You can save up to 12 filters.",
+    "最多可保存 12 个筛选条件。"
+  ],
+  "Bộ lọc không hợp lệ.": [
+    "Bộ lọc không hợp lệ.",
+    "That filter is not valid.",
+    "筛选条件无效。"
+  ],
+  "Đã lưu bộ lọc.": [
+    "Đã lưu bộ lọc.",
+    "Filter saved.",
+    "筛选条件已保存。"
+  ],
+  "Không thể lưu bộ lọc.": [
+    "Không thể lưu bộ lọc.",
+    "Unable to save the filter.",
+    "无法保存筛选条件。"
+  ],
+  "Không thể tải tùy chọn.": [
+    "Không thể tải tùy chọn.",
+    "Unable to load your options.",
+    "无法加载选项。"
+  ],
+  "Tùy chọn ngân sách không hợp lệ.": [
+    "Tùy chọn ngân sách không hợp lệ.",
+    "The budget options are not valid.",
+    "预算选项无效。"
+  ],
+  "Đã lưu tùy chọn ngân sách.": [
+    "Đã lưu tùy chọn ngân sách.",
+    "Budget options saved.",
+    "预算选项已保存。"
+  ],
+  "Không thể lưu tùy chọn ngân sách.": [
+    "Không thể lưu tùy chọn ngân sách.",
+    "Unable to save the budget options.",
+    "无法保存预算选项。"
+  ],
+  "Cần xác nhận trước khi khôi phục dữ liệu.": [
+    "Cần xác nhận trước khi khôi phục dữ liệu.",
+    "Confirm before restoring your data.",
+    "恢复数据前需要确认。"
+  ],
+  "Đã khôi phục dữ liệu từ file sao lưu.": [
+    "Đã khôi phục dữ liệu từ file sao lưu.",
+    "Your data has been restored from the backup file.",
+    "已从备份文件恢复数据。"
+  ],
+  "File sao lưu không hợp lệ hoặc không phải do CaltDHy xuất ra.": [
+    "File sao lưu không hợp lệ hoặc không phải do CaltDHy xuất ra.",
+    "That backup file is not valid or was not exported by CaltDHy.",
+    "备份文件无效，或不是由 CaltDHy 导出的。"
+  ],
+  "Không thể khôi phục dữ liệu. Dữ liệu hiện tại được giữ nguyên.": [
+    "Không thể khôi phục dữ liệu. Dữ liệu hiện tại được giữ nguyên.",
+    "Unable to restore the data. Your current data has not been changed.",
+    "无法恢复数据。当前数据保持不变。"
   ]
 };
 
