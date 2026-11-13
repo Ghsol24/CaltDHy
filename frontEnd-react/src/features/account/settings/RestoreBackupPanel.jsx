@@ -82,7 +82,7 @@ export function RestoreBackupPanel({ onRestored }) {
       <p><strong>{copy.restoreSummary(picked.name)}</strong>
         {picked.backup.exportedAt && <><br />{copy.restoreExported(formatDate(picked.backup.exportedAt, 'short', { locale: lang }))}</>}
         <br />{copy.restoreCounts({ wallets: count(picked.backup.wallets), transactions: count(picked.backup.transactions),
-          jars: count(picked.backup.jars), installments: count(picked.backup.installments), debts: count(picked.backup.debts) })}</p>
+          jars: count(picked.backup.jars), installments: count(picked.backup.installments) })}</p>
       <p className="form-dialog-error">{copy.restoreWarning}</p>
       <div className="form-dialog-field">
         <label htmlFor="restore-confirm">{copy.restoreType}</label>

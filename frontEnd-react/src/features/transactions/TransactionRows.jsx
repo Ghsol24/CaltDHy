@@ -5,14 +5,11 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 import { transactionTotal } from '../../utils/transactionInsights';
 import { CategoryOutlineIcon, Icon } from '../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { getTransactionExtrasCopy } from './transactionExtrasCopy';
-import './transaction-extras.css';
 
 export function TransactionRows({ transactions, onEdit, onManage, showDate = false, variant = 'cards' }) {
   const { t, label, lang } = useTranslation();
   const wallets = useWalletStore((state) => state.wallets);
   const archivedWallets = useWalletStore((state) => state.archivedWallets);
-  const extrasCopy = getTransactionExtrasCopy(lang);
   const walletNames = new Map([...wallets, ...archivedWallets].map((wallet) => [wallet.id, wallet.name]));
 
   if (transactions.length === 0) return <div className={variant === 'ledger' ? 'transaction-ledger-table' : undefined}>
@@ -46,16 +43,11 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
       </span> : <strong className={`transaction-inspection-amount is-${transaction.type}`}>
         {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '−' : '↔ '}{formatCurrency(amount)}
       </strong>;
-      const tagRow = (transaction.tags?.length > 0 || transaction.splitGroupId) && <span className="txn-row-tags">
-        {transaction.splitGroupId && <span className="txn-row-tag is-split">{extrasCopy.splitBadge}</span>}
-        {(transaction.tags || []).slice(0, 4).map((tag) => <span className="txn-row-tag" key={tag}>#{tag}</span>)}
-      </span>;
       const content = variant === 'ledger' ? <>
         <span className="transaction-ledger-identity">
           {categoryIcon}
           <span className="transaction-ledger-main">
             <strong>{description}</strong>
-            {tagRow}
             {Number(transaction.fee) > 0 && <small>{t('history.fee', { amount: formatCurrency(transaction.fee) })}</small>}
             {locked && !isWalletCreation && <small>{t(transaction.jarId ? 'history.lockedJar'
               : transaction.installmentId ? 'history.lockedRecurring' : 'history.lockedGeneric')}</small>}
@@ -76,7 +68,6 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
             {showDate && <time dateTime={transaction.date}>{formatDate(transaction.date, 'short', { locale: lang })}</time>}
           </span>
           {walletBadge}
-          {tagRow}
           {Number(transaction.fee) > 0 && <small>{t('history.fee', { amount: formatCurrency(transaction.fee) })}</small>}
           {locked && !isWalletCreation && <small>{t(transaction.jarId ? 'history.lockedJar'
             : transaction.installmentId ? 'history.lockedRecurring' : 'history.lockedGeneric')}</small>}

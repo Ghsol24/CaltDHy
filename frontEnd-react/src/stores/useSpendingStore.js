@@ -3,7 +3,7 @@ import { getLocalMonthString } from '../utils/formatters';
 
 export const useSpendingStore = create((set) => ({
   activeView: 'home', // 'home' | 'plan' | 'analytics' | 'jars'
-  planSubTab: 'overview', // 'overview' | 'wallets' | 'budgets' | 'recurring' | 'debts'
+  planSubTab: 'overview', // 'overview' | 'wallets' | 'budgets' | 'recurring'
   analyticsSubTab: 'overview', // 'overview' | 'spending' | 'cash-flow' | 'reports'
   analyticsExcludeRecurring: false,
   jarsSubTab: 'goals', // 'goals' | 'jars' | 'history'

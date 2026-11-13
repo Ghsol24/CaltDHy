@@ -18,10 +18,10 @@ const COPY = {
     deviceOn: (browser, os) => `${browser} trên ${os}`,
     restoreTitle: 'Khôi phục từ file sao lưu', restoreDesc: 'Nạp lại file JSON đã xuất từ CaltDHy. Toàn bộ dữ liệu tài chính hiện tại sẽ được thay bằng nội dung file.',
     restoreChoose: 'Chọn file JSON', restoreDialogTitle: 'Xác nhận khôi phục dữ liệu',
-    restoreSummary: (name) => `File: ${name}`, restoreCounts: ({ wallets, transactions, jars, installments, debts }) =>
-      `${wallets} ví · ${transactions} giao dịch · ${jars} hũ · ${installments} khoản định kỳ · ${debts} khoản nợ`,
+    restoreSummary: (name) => `File: ${name}`, restoreCounts: ({ wallets, transactions, jars, installments }) =>
+      `${wallets} ví · ${transactions} giao dịch · ${jars} hũ · ${installments} khoản định kỳ`,
     restoreExported: (date) => `Xuất ngày ${date}`,
-    restoreWarning: 'Ví, giao dịch, ngân sách, hũ, khoản định kỳ và sổ nợ hiện có sẽ bị thay thế hoàn toàn. Ảnh hóa đơn không nằm trong file sao lưu nên sẽ mất. Không thể hoàn tác.',
+    restoreWarning: 'Ví, giao dịch, ngân sách, hũ, khoản định kỳ hiện có sẽ bị thay thế hoàn toàn. Ảnh hóa đơn không nằm trong file sao lưu nên sẽ mất. Không thể hoàn tác.',
     restoreType: 'Nhập chính xác chữ RESTORE để tiếp tục:', restoreConfirm: 'Khôi phục', restoring: 'Đang khôi phục…',
     restoreInvalid: 'File này không phải bản sao lưu CaltDHy hợp lệ.', restoreTooLarge: 'File quá lớn (tối đa 12MB).',
     restoreDone: 'Đã khôi phục dữ liệu từ file sao lưu.'
@@ -44,10 +44,10 @@ const COPY = {
     deviceOn: (browser, os) => `${browser} on ${os}`,
     restoreTitle: 'Restore from a backup file', restoreDesc: 'Load a JSON file exported from CaltDHy. All current financial data will be replaced by the file.',
     restoreChoose: 'Choose JSON file', restoreDialogTitle: 'Confirm restore',
-    restoreSummary: (name) => `File: ${name}`, restoreCounts: ({ wallets, transactions, jars, installments, debts }) =>
-      `${wallets} wallets · ${transactions} transactions · ${jars} jars · ${installments} recurring items · ${debts} debts`,
+    restoreSummary: (name) => `File: ${name}`, restoreCounts: ({ wallets, transactions, jars, installments }) =>
+      `${wallets} wallets · ${transactions} transactions · ${jars} jars · ${installments} recurring items`,
     restoreExported: (date) => `Exported ${date}`,
-    restoreWarning: 'Your current wallets, transactions, budgets, jars, recurring items and debts will be replaced entirely. Receipt photos are not part of a backup and will be lost. This cannot be undone.',
+    restoreWarning: 'Your current wallets, transactions, budgets, jars, recurring items will be replaced entirely. Receipt photos are not part of a backup and will be lost. This cannot be undone.',
     restoreType: 'Type RESTORE exactly to continue:', restoreConfirm: 'Restore', restoring: 'Restoring…',
     restoreInvalid: 'This file is not a valid CaltDHy backup.', restoreTooLarge: 'The file is too large (12MB at most).',
     restoreDone: 'Data restored from the backup file.'
@@ -70,10 +70,10 @@ const COPY = {
     deviceOn: (browser, os) => `${os} 上的 ${browser}`,
     restoreTitle: '从备份文件恢复', restoreDesc: '载入从 CaltDHy 导出的 JSON 文件。当前所有财务数据将被文件内容替换。',
     restoreChoose: '选择 JSON 文件', restoreDialogTitle: '确认恢复数据',
-    restoreSummary: (name) => `文件：${name}`, restoreCounts: ({ wallets, transactions, jars, installments, debts }) =>
-      `${wallets} 个钱包 · ${transactions} 笔交易 · ${jars} 个储蓄罐 · ${installments} 个周期项目 · ${debts} 笔借贷`,
+    restoreSummary: (name) => `文件：${name}`, restoreCounts: ({ wallets, transactions, jars, installments }) =>
+      `${wallets} 个钱包 · ${transactions} 笔交易 · ${jars} 个储蓄罐 · ${installments} 个周期项目`,
     restoreExported: (date) => `导出于 ${date}`,
-    restoreWarning: '现有的钱包、交易、预算、储蓄罐、周期项目和借贷记录将被完全替换。票据照片不在备份中，将会丢失。此操作无法撤销。',
+    restoreWarning: '现有的钱包、交易、预算、储蓄罐、周期项目将被完全替换。票据照片不在备份中，将会丢失。此操作无法撤销。',
     restoreType: '请准确输入 RESTORE 以继续：', restoreConfirm: '恢复', restoring: '正在恢复…',
     restoreInvalid: '此文件不是有效的 CaltDHy 备份。', restoreTooLarge: '文件过大（最大 12MB）。',
     restoreDone: '已从备份文件恢复数据。'

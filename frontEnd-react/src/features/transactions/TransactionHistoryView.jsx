@@ -48,7 +48,6 @@ export function TransactionHistoryView() {
   const [category, setCategory] = useState(searchParams.get('category') || 'all');
   const [walletId, setWalletId] = useState('all');
   const [excludeRecurring, setExcludeRecurring] = useState(searchParams.get('excludeRecurring') === '1');
-  const [tag, setTag] = useState(searchParams.get('tag') || 'all');
   const [minAmount, setMinAmount] = useState(null);
   const [maxAmount, setMaxAmount] = useState(null);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -72,7 +71,6 @@ export function TransactionHistoryView() {
   const navigateTo = useSpendingStore((state) => state.navigateTo);
 
   const categories = useMemo(() => [...new Set(historyRows.map((row) => row.category).filter(Boolean))].sort(), [historyRows]);
-  const allTags = useMemo(() => [...new Set(transactions.flatMap((row) => row.tags || []))].sort((a, b) => a.localeCompare(b)), [transactions]);
   const invalidRange = Boolean(startDate && endDate && startDate > endDate);
   const invalidAmount = Boolean(minAmount && maxAmount && minAmount > maxAmount);
   const filtered = useMemo(() => {
@@ -85,34 +83,31 @@ export function TransactionHistoryView() {
       (category === 'all' || row.category === category) &&
       (walletId === 'all' || row.walletId === walletId || row.toWalletId === walletId) &&
       (!excludeRecurring || !isRecurringTrendTransaction(row)) &&
-      (tag === 'all' || (row.tags || []).includes(tag)) &&
       (!minAmount || amountOf(row) >= minAmount) && (!maxAmount || amountOf(row) <= maxAmount) &&
-      // Search covers the title, category, long note and tags ("#công tác" also matches).
-      (!normalizedQuery || `${row.desc || ''} ${row.category || ''} ${row.note || ''} ${(row.tags || []).map((item) => `#${item}`).join(' ')}`
-        .toLocaleLowerCase().includes(normalizedQuery))
+      (!normalizedQuery || `${row.desc || ''} ${row.category || ''}`.toLocaleLowerCase().includes(normalizedQuery))
     ).sort((a, b) => b.date.localeCompare(a.date) || transactionTotal(b) - transactionTotal(a));
-  }, [historyRows, startDate, endDate, type, category, walletId, excludeRecurring, query, invalidRange, tag, minAmount, maxAmount, invalidAmount]);
+  }, [historyRows, startDate, endDate, type, category, walletId, excludeRecurring, query, invalidRange, minAmount, maxAmount, invalidAmount]);
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
   const hasActiveFilters = Boolean(query || startDate || endDate || datePreset !== 'all' ||
-    type !== 'all' || category !== 'all' || walletId !== 'all' || excludeRecurring || tag !== 'all' || minAmount || maxAmount);
+    type !== 'all' || category !== 'all' || walletId !== 'all' || excludeRecurring || minAmount || maxAmount);
 
-  useEffect(() => { setVisibleCount(50); }, [startDate, endDate, type, category, walletId, excludeRecurring, query, tag, minAmount, maxAmount]);
+  useEffect(() => { setVisibleCount(50); }, [startDate, endDate, type, category, walletId, excludeRecurring, query, minAmount, maxAmount]);
 
   const clearFilters = () => {
     setQuery(''); setStartDate(''); setEndDate(''); setType('all');
     setCategory('all'); setWalletId('all'); setExcludeRecurring(false); setDatePreset('all');
-    setTag('all'); setMinAmount(null); setMaxAmount(null);
+    setMinAmount(null); setMaxAmount(null);
     setSearchParams({}, { replace: true });
   };
   const changeAmount = (min, max) => { setMinAmount(min); setMaxAmount(max); };
 
   // A saved filter stores the preset ("this month"), not its dates, so it stays current when reused later.
-  const currentCriteria = () => ({ query: query.trim(), type, category, walletId, tag, minAmount, maxAmount,
+  const currentCriteria = () => ({ query: query.trim(), type, category, walletId, tag: 'all', minAmount, maxAmount,
     datePreset, startDate: datePreset === 'custom' ? startDate : '', endDate: datePreset === 'custom' ? endDate : '', excludeRecurring });
   const applySaved = ({ criteria }) => {
     const knownWallet = [...wallets, ...archivedWallets].some((wallet) => wallet.id === criteria.walletId);
     setQuery(criteria.query || ''); setType(criteria.type || 'all'); setCategory(criteria.category || 'all');
-    setWalletId(knownWallet ? criteria.walletId : 'all'); setTag(criteria.tag || 'all');
+    setWalletId(knownWallet ? criteria.walletId : 'all');
     setMinAmount(criteria.minAmount || null); setMaxAmount(criteria.maxAmount || null);
     setExcludeRecurring(Boolean(criteria.excludeRecurring));
     const preset = criteria.datePreset || 'all';
@@ -151,7 +146,7 @@ export function TransactionHistoryView() {
     if (startDate && endDate) return startDate === endDate ? showDate(startDate) : `${showDate(startDate)} – ${showDate(endDate)}`;
     return startDate ? chipCopy.rangeFrom(showDate(startDate)) : chipCopy.rangeTo(showDate(endDate));
   })();
-  const filterCount = [type !== 'all', category !== 'all', walletId !== 'all', Boolean(periodText), excludeRecurring, tag !== 'all', Boolean(minAmount || maxAmount)]
+  const filterCount = [type !== 'all', category !== 'all', walletId !== 'all', Boolean(periodText), excludeRecurring, Boolean(minAmount || maxAmount)]
     .filter(Boolean).length;
 
   const options = {
@@ -161,7 +156,6 @@ export function TransactionHistoryView() {
       ...categories.map((value) => ({ value, label: label(value) }))],
     wallet: [{ value: 'all', label: t('history.allWallets') },
       ...[...wallets, ...archivedWallets].map((wallet) => ({ value: wallet.id, label: wallet.name }))],
-    tag: [{ value: 'all', label: extrasCopy.allTags }, ...allTags.map((value) => ({ value, label: `#${value}` }))],
     period: [
       { value: 'all', label: t('history.allTime') },
       { value: 'thisMonth', label: t('history.thisMonth') },
@@ -186,8 +180,6 @@ export function TransactionHistoryView() {
     { id: 'period', active: datePreset !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={datePreset !== 'all'}
       label={t('history.filterPeriod')} value={datePreset} onChange={changePeriod} options={options.period}
       valueText={periodText || undefined} /> },
-    ...(allTags.length || tag !== 'all' ? [{ id: 'tag', active: tag !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={tag !== 'all'}
-      label={extrasCopy.filterTag} value={tag} onChange={(value) => { setTag(value); if (value === 'all') dropParams('tag'); }} options={options.tag} /> }] : []),
     { id: 'amount', active: Boolean(minAmount || maxAmount), node: <AmountRangeFilter copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} sheet={isCompact} /> },
     { id: 'recurring', active: excludeRecurring, node: <label className={`transaction-history-checkbox${excludeRecurring ? ' is-active' : ''}`}>
       <input type="checkbox" checked={excludeRecurring} onChange={(event) => changeRecurring(event.target.checked)} />
@@ -267,7 +259,6 @@ export function TransactionHistoryView() {
       <FilterOptionGroup title={t('history.filterPeriod')} options={options.period} value={datePreset} onChange={changePeriod} />
       {datePreset === 'custom' && customDates('history-sheet-date')}
       <FilterOptionGroup title={t('history.filterCategory')} options={options.category} value={category} onChange={changeCategory} />
-      {(allTags.length > 0 || tag !== 'all') && <FilterOptionGroup title={extrasCopy.filterTag} options={options.tag} value={tag} onChange={setTag} />}
       <fieldset className="transaction-sheet-group">
         <legend>{extrasCopy.amountRange}</legend>
         <AmountRangeInputs copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} className="history-sheet-amount" />

@@ -5,8 +5,6 @@ import { BudgetEditModal } from './BudgetEditModal';
 import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '../../utils/formatters';
 import { monthPeriod, shiftMonth } from '../../utils/budgetPeriod';
 import { buildBudgetModel } from '../../utils/budgetModel';
-import { BudgetAdvancedCard } from '../forecast/BudgetAdvancedCard';
-import { useFinanceSettingsStore } from '../../stores/useFinanceSettingsStore';
 import { CategoryOutlineIcon, BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { useBudgetCopy } from './budgetCopy';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
@@ -238,19 +236,14 @@ export function BudgetsTab() {
 
   const categoryNames = useMemo(() => (expenseCategories || []).map((c) => c.name), [expenseCategories]);
   const displayedBudgets = displayedMonth ? budgetsByMonth[displayedMonth]?.data : null;
+  const model = useMemo(() => (displayedMonth && displayedBudgets
+    ? buildBudgetModel({ transactions, month: displayedMonth, budgets: displayedBudgets, categoryNames })
+    : null), [transactions, displayedMonth, displayedBudgets, categoryNames]);
   const previousMonth = displayedMonth ? shiftMonth(displayedMonth, -1) : null;
   const previousBudgets = previousMonth ? budgetsByMonth[previousMonth]?.data : null;
   const previousModel = useMemo(() => (previousBudgets
     ? buildBudgetModel({ transactions, month: previousMonth, budgets: previousBudgets, categoryNames })
     : null), [transactions, previousMonth, previousBudgets, categoryNames]);
-  // Rollover carries one month only: the unspent part of each category limit of the month before.
-  const rolloverOn = useFinanceSettingsStore((s) => s.budget.rollover);
-  const rollover = useMemo(() => (rolloverOn && previousModel
-    ? Object.fromEntries(previousModel.limited.filter((item) => item.remaining > 0).map((item) => [item.category, item.remaining]))
-    : null), [rolloverOn, previousModel]);
-  const model = useMemo(() => (displayedMonth && displayedBudgets
-    ? buildBudgetModel({ transactions, month: displayedMonth, budgets: displayedBudgets, categoryNames, rollover })
-    : null), [transactions, displayedMonth, displayedBudgets, categoryNames, rollover]);
 
   const timeline = useMemo(
     () => getMonthTimeline(displayedMonth || selectedMonth, localCurrentMonth),
@@ -486,9 +479,6 @@ export function BudgetsTab() {
             )}
 
             {/* ── Categories: one table on wide screens, two-line rows on phones ── */}
-            {model && <BudgetAdvancedCard transactions={transactions} monthExpense={model.totalExpense} carried={model.totalCarried}
-              isCurrentMonth={displayedMonth === localCurrentMonth} canEdit={!isSwitching && !loadError} />}
-
             <section className="bdash-card" aria-labelledby="bdash-list-title">
               <div className="bdash-card__head">
                 <h3 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h3>

@@ -23,11 +23,6 @@ export const useFinanceSettingsStore = create((storeSet, get) => ({
     const epoch = sessionEpoch();
     const response = await spendingService.saveFilters(filters.map(({ name, criteria }) => ({ name, criteria })));
     scopedSet(epoch, storeSet)({ ...response.data, loaded: true });
-  },
-  saveBudget: async (budget) => {
-    const epoch = sessionEpoch();
-    const response = await spendingService.saveBudgetSettings(budget);
-    scopedSet(epoch, storeSet)({ ...response.data, loaded: true });
   }
 }));
 

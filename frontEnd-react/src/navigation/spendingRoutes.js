@@ -1,4 +1,4 @@
-const PLAN_TABS = new Set(['overview', 'wallets', 'budgets', 'recurring', 'debts']);
+const PLAN_TABS = new Set(['overview', 'wallets', 'budgets', 'recurring']);
 const ANALYTICS_TABS = new Set(['overview', 'spending', 'cash-flow', 'reports', 'transactions']);
 const JARS_PATH_TO_TAB = { goals: 'goals', list: 'jars', history: 'history' };
 const JARS_TAB_TO_PATH = { goals: 'goals', jars: 'list', history: 'history' };
@@ -9,7 +9,6 @@ const ROUTE_META = {
   'plan:wallets': { titleKey: 'nav.wallets', focus: '.wallets-v2-heading' },
   'plan:budgets': { titleKey: 'nav.budgets', focus: '.budgets-view-title' },
   'plan:recurring': { titleKey: 'nav.recurring', focus: '.recurring-route-heading' },
-  'plan:debts': { titleKey: 'nav.debts', focus: '.debts-route-heading' },
   'analytics:overview': { titleKey: 'nav.overview', focus: '#analytics-overview' },
   'analytics:spending': { titleKey: 'nav.spending', focus: '#analytics-spending' },
   'analytics:cash-flow': { titleKey: 'nav.cashFlow', focus: '#analytics-cashflow' },
