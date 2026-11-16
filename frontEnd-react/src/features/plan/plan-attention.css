@@ -15,9 +15,7 @@
   background: var(--color-surface);
 }
 
-.plan-attention.is-critical,
-.plan-attention.is-high { border-color: var(--attention-critical-border); }
-.plan-attention.is-watch { border-color: var(--attention-watch-border); }
+/* The frame stays neutral; colour belongs to each item's badge (PLAN-03). */
 
 .plan-attention-head {
   display: flex;
@@ -37,7 +35,7 @@
   background: var(--attention-solid);
 }
 
-.plan-attention.is-watch .plan-attention-bell { background: var(--attention-watch-solid); }
+.plan-attention.is-watch .plan-attention-bell { color: var(--color-text-secondary); background: var(--color-surface-muted, var(--surface-subtle)); }
 .plan-attention.is-calm .plan-attention-bell { color: var(--color-success); background: var(--color-success-bg); }
 .plan-attention.is-critical .plan-attention-bell { animation: planAttentionBell 900ms ease-in-out 1; }
 
@@ -56,8 +54,7 @@
   color: var(--color-text);
 }
 
-.plan-attention.is-critical h3,
-.plan-attention.is-high h3 { color: var(--attention-critical-text); }
+
 .plan-attention.is-watch h3 { color: var(--attention-watch-text); }
 
 .plan-attention-count {

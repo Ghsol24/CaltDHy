@@ -9,12 +9,14 @@
 .jm-input::placeholder, .jm-history-search input::placeholder { color: var(--color-text-muted); opacity: 1; }
 .jm-input:focus-visible, .jm-history-search:focus-within { border-color: var(--color-brand-600); box-shadow: var(--focus-ring); outline: none; }
 .jm-input[aria-invalid="true"] { border-color: var(--color-danger); }
-.jm-money-input { font-family: var(--font-mono, monospace); font-weight: 650; }
+.jm-money-input { font-family: var(--font-money);
+  font-variant-numeric: tabular-nums; font-weight: 650; }
 .jm-two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .jm-field-hint, .jm-balance-readonly p { margin: 0; color: var(--color-text-muted); font-size: var(--font-xs); line-height: 1.55; overflow-wrap: anywhere; }
 .jm-balance-readonly { border: 1px solid var(--color-border); background: var(--color-surface-muted); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .jm-balance-readonly > span { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--color-text-muted); font-size: var(--font-sm); }
-.jm-balance-readonly strong { color: var(--color-text); font-family: var(--font-mono, monospace); }
+.jm-balance-readonly strong { color: var(--color-text); font-family: var(--font-money);
+  font-variant-numeric: tabular-nums; }
 .jm-colors { min-width: 0; border: 0; padding: 0; margin: 0; }
 .jm-color-options { display: flex; flex-wrap: wrap; gap: 2px; margin: 3px 0 -6px -7px; }
 .jm-color-option { position: relative; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
@@ -24,7 +26,8 @@
 .jm-color-option input:checked + .jm-color-swatch { outline: 2px solid var(--color-text); outline-offset: 3px; }
 .jm-color-option input:focus-visible + .jm-color-swatch { outline: 3px solid var(--color-brand-600); outline-offset: 4px; }
 .jm-remaining { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 13px 14px; border-radius: 10px; background: var(--color-surface-muted); border: 1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--font-sm); }
-.jm-remaining strong { color: var(--color-text); font-size: var(--font-2xl); font-family: var(--font-mono, monospace); overflow-wrap: anywhere; }
+.jm-remaining strong { color: var(--color-text); font-size: var(--font-2xl); font-family: var(--font-money);
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .jm-error { margin: 0; padding: 10px 12px; border: 1px solid var(--color-danger-border); background: var(--color-danger-bg); border-radius: 10px; color: var(--color-danger); font-size: var(--font-sm); line-height: 1.5; }
 .jm-history-type-button:focus-visible { outline: 3px solid var(--color-brand-600); outline-offset: 3px; }
 .jar-history-management-dialog .jar-dialog-body { padding: 0; display: flex; overflow: hidden; }
@@ -34,7 +37,8 @@
 .jm-history-totals > div { min-width: 0; padding-right: 10px; }
 .jm-history-totals > div + div { border-left: 1px solid var(--color-border); padding-left: 12px; }
 .jm-history-totals dt { font-size: var(--font-xs); color: var(--color-text-muted); margin-bottom: 5px; line-height: 1.5; }
-.jm-history-totals dd { margin: 0; color: var(--color-text); font-family: var(--font-mono, monospace); font-size: clamp(13px, 2.4vw, 17px); font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.jm-history-totals dd { margin: 0; color: var(--color-text); font-family: var(--font-money);
+  font-variant-numeric: tabular-nums; font-size: clamp(13px, 2.4vw, 17px); font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
 .jm-history-totals .jm-deposit { color: var(--color-success); }
 .jm-history-totals .jm-withdraw { color: var(--color-text); }
 .jm-history-type-filter { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 6px; padding: 5px; box-sizing: border-box; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 12px; }
@@ -60,7 +64,8 @@
 .jm-history-row-copy strong { color: var(--color-text); font-size: var(--font-sm); font-weight: 650; line-height: 1.5; overflow-wrap: anywhere; }
 .jm-history-row-action { font-size: var(--font-xs); line-height: 1.4; color: var(--color-text-muted); }
 .jm-history-row-copy p { color: var(--color-text-muted); margin: 2px 0 0; font-size: var(--font-xs); line-height: 1.45; overflow-wrap: anywhere; }
-.jm-history-amount { font-family: var(--font-mono, monospace); font-size: var(--font-sm); line-height: 1.5; font-weight: 700; color: var(--color-text); text-align: right; padding-top: 1px; overflow-wrap: anywhere; max-width: 220px; }
+.jm-history-amount { font-family: var(--font-money);
+  font-variant-numeric: tabular-nums; font-size: var(--font-sm); line-height: 1.5; font-weight: 700; color: var(--color-text); text-align: right; padding-top: 1px; overflow-wrap: anywhere; max-width: 220px; }
 .jm-history-row.is-deposit .jm-history-amount { color: var(--color-success); }
 .jm-history-empty { padding: 28px 8px; margin: 0; color: var(--color-text-muted); text-align: center; font-size: var(--font-sm); line-height: 1.6; }
 .jm-history-count { color: var(--color-text-muted); font-size: var(--font-xs); line-height: 1.5; margin-right: auto; }

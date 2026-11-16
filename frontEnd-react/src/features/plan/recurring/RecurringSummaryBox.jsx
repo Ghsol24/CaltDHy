@@ -23,7 +23,7 @@ export function RecurringSummaryBox({ monthDisplayLabel, monthlyBreakdown, month
         {/* Cell 1: Đã thanh toán */}
         <div className="summary-grid-cell">
           <span className="grid-cell-label">Đã thanh toán</span>
-          <strong className="grid-cell-num text-brand">
+          <strong className="grid-cell-num">
             {formatCurrency(monthlyBreakdown.paidAmount)}
           </strong>
           <span className="grid-cell-sub">{monthlyBreakdown.paidCount} khoản</span>
@@ -34,7 +34,7 @@ export function RecurringSummaryBox({ monthDisplayLabel, monthlyBreakdown, month
         {/* Cell 2: Sắp thanh toán */}
         <div className="summary-grid-cell">
           <span className="grid-cell-label">Sắp thanh toán</span>
-          <strong className="grid-cell-num text-warning">
+          <strong className="grid-cell-num">
             {formatCurrency(monthlyBreakdown.upcomingSoonAmount)}
           </strong>
           <span className="grid-cell-sub">{monthlyBreakdown.upcomingSoonCount} khoản</span>
@@ -45,7 +45,7 @@ export function RecurringSummaryBox({ monthDisplayLabel, monthlyBreakdown, month
         {/* Cell 3: Còn lại trong tháng */}
         <div className="summary-grid-cell">
           <span className="grid-cell-label">Còn lại trong tháng</span>
-          <strong className="grid-cell-num text-blue">
+          <strong className="grid-cell-num">
             {formatCurrency(monthlyBreakdown.remainingAmount)}
           </strong>
           <span className="grid-cell-sub">{monthlyBreakdown.remainingCount} khoản</span>
@@ -56,7 +56,7 @@ export function RecurringSummaryBox({ monthDisplayLabel, monthlyBreakdown, month
         {/* Cell 4: Trung bình / tháng */}
         <div className="summary-grid-cell">
           <span className="grid-cell-label">Trung bình / tháng</span>
-          <strong className="grid-cell-num text-purple">
+          <strong className="grid-cell-num">
             {formatCurrency(Math.round(monthlyEstimatedCost))}
           </strong>
           <span className="grid-cell-sub">~ chi phí định kỳ</span>

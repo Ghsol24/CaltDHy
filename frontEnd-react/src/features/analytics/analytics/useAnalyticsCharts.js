@@ -4,13 +4,25 @@ import { formatCompactCurrency } from '../../../utils/compactFormatters';
 import { cashFlowSeriesTypes } from '../../../utils/cashFlowData';
 import { cashFlowChartContext } from '../cashFlowChartContext';
 
-export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactChart, label, lang, monthData, monthlyTrend, openDay, prefersReducedMotion, setDrilldown, setMobileWeek, setSelectedMonth, t, theme, trendMode, trendSeries, viewCategoryHistory, visibleDailyDays }) {
+// Hover shade for a bar: 20% darker. Canvas colours are resolved here because
+// not every browser accepts color-mix() as a canvas fill.
+function darken(color) {
+  const match = /^#([\da-f]{6})$/i.exec(String(color).trim());
+  if (!match) return color;
+  const n = parseInt(match[1], 16);
+  const part = (shift) => Math.round(((n >> shift) & 255) * 0.8).toString(16).padStart(2, '0');
+  return `#${part(16)}${part(8)}${part(0)}`;
+}
+
+export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactChart, label, lang, monthData, monthlyTrend, openDay, prefersReducedMotion, setDrilldown, setMobileWeek, setSelectedMonth, t, theme, trendMode, trendSeries, unusualDays = [], viewCategoryHistory, visibleDailyDays }) {
   const chartThemeTokens = useMemo(() => {
     const styles = getComputedStyle(document.documentElement);
     const read = (name) => styles.getPropertyValue(name).trim();
     return {
       theme,
-      income: read('--color-success'), expense: read('--color-danger'),
+      // Ordinary spending bars are neutral; red marks only unusually high days (CF-05).
+      income: read('--color-success'), expense: read('--color-text-muted'), expenseHover: read('--color-text-secondary'),
+      unusual: read('--color-danger'),
       tick: read('--color-text-muted'), grid: read('--color-border'),
       tooltipBg: read('--color-surface'), text: read('--color-text'),
       sliceBorder: read('--color-surface'), future: read('--color-surface-muted'),
@@ -75,18 +87,26 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
   }, [monthData.expense, monthData.categories, chartThemeTokens, prefersReducedMotion, viewCategoryHistory]);
 
   const chartRows = trendMode === 'daily' ? visibleDailyDays : monthlyTrend;
+  const unusualDates = useMemo(() => new Set(unusualDays.map((day) => day.date)), [unusualDays]);
+  // Unusual days are always highlighted (touch screens have no hover); hovering
+  // any bar only deepens its colour.
+  const isUnusualBar = (type, index) => trendMode === 'daily' && type === 'expense' && unusualDates.has(chartRows[index]?.date);
   const barChartData = useMemo(() => ({
     labels: chartRows.map((row) => row.label),
     datasets: cashFlowSeriesTypes(trendSeries).map((type) => ({
       cashFlowType: type,
       label: t(`type.${type}`),
       data: chartRows.map((row) => row[type]),
-      backgroundColor: chartThemeTokens[type],
+      backgroundColor: chartRows.map((_row, index) => (isUnusualBar(type, index) ? chartThemeTokens.unusual : chartThemeTokens[type])),
+      hoverBackgroundColor: chartRows.map((_row, index) => {
+        if (isUnusualBar(type, index)) return darken(chartThemeTokens.unusual);
+        return type === 'expense' ? chartThemeTokens.expenseHover : darken(chartThemeTokens[type]);
+      }),
       borderRadius: trendMode === 'daily' ? 4 : 6,
       barPercentage: trendMode === 'daily' ? 0.7 : 0.65,
       categoryPercentage: trendMode === 'daily' ? 0.8 : 0.65,
     })),
-  }), [chartRows, trendSeries, trendMode, chartThemeTokens, t]);
+  }), [chartRows, trendSeries, trendMode, chartThemeTokens, t, unusualDates]);
 
   const today = getLocalDateString();
   const chartContextRef = useRef(null);
@@ -146,6 +166,7 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
               ? `${label} · ${t('analytics.cashflow.ongoing')}` : label;
           },
           label: (context) => ` ${context.dataset.label}: ${formatCurrency(context.parsed.y || 0)}`,
+          afterLabel: (context) => (isUnusualBar(context.dataset.cashFlowType, context.dataIndex) ? ` ${t('analytics.unusualTitle')}` : ''),
         },
       },
     },
@@ -162,6 +183,6 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
       } },
     },
   }), [setDrilldown, setMobileWeek, drilldownRevision, trendMode, visibleDailyDays, monthlyTrend, chartRows, barChartData, activeMonth,
-    chartThemeTokens, prefersReducedMotion, isCompactChart, openDay, setSelectedMonth, today, t, lang]);
+    chartThemeTokens, prefersReducedMotion, isCompactChart, openDay, setSelectedMonth, today, t, lang, unusualDates]);
   return { barChartData, barOptions, chartContext, doughnutChartData, doughnutOptions, today };
 }

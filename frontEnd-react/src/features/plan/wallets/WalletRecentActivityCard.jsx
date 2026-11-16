@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { formatCurrency, formatRelativeDateTime } from '../../../utils/formatters';
 
-export function WalletRecentActivityCard({ defaultWallet, handleGoToFullHistory, walletActivities, walletMap }) {
+export function WalletRecentActivityCard({ handleGoToFullHistory, walletActivities, walletMap }) {
   return (
     <div className="wallets-side-card">
       <div className="side-card-header">
@@ -44,14 +44,10 @@ export function WalletRecentActivityCard({ defaultWallet, handleGoToFullHistory,
             const toW = walletMap[tx.toWalletId];
             const fromName = fromW ? fromW.name : 'Ví nguồn';
             const toName = toW ? toW.name : 'Ví đích';
-            const isIncoming = tx.toWalletId === defaultWallet?.id;
     
             return (
               <div key={tx.id || tx._id} className="wallet-activity-row">
-                <div
-                  className="activity-icon-badge activity-icon-badge--tone"
-                  style={{ '--activity-icon-badge-background': isIncoming ? '#10B98118' : '#3B82F618', '--activity-icon-badge-color': isIncoming ? '#10B981' : '#3B82F6' }}
-                >
+                <div className="activity-icon-badge">
                   <Icon name="transfer" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
     
@@ -64,8 +60,10 @@ export function WalletRecentActivityCard({ defaultWallet, handleGoToFullHistory,
                   </span>
                 </div>
     
-                <div className={`activity-amt-box ${isIncoming ? 'text-brand' : 'text-danger'}`}>
-                  {isIncoming ? '+' : '-'}{formatCurrency(tx.amount)}
+                {/* Moving money between your own wallets is neither income nor spending:
+                    neutral colour, no sign (WAL-07, X-07). */}
+                <div className="activity-amt-box">
+                  {formatCurrency(tx.amount)}
                 </div>
               </div>
             );

@@ -64,14 +64,14 @@
   border-radius: 12px;
   border: 1px solid var(--color-brand-600, #056C46);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(7, 138, 89, 0.25);
+  box-shadow: var(--shadow-sm);
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
   white-space: nowrap;
 }
 
 .home-btn-add-txn:hover {
   background: var(--color-brand-600, #056C46);
-  box-shadow: 0 4px 14px rgba(7, 138, 89, 0.35);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
   transform: translateY(-1px);
 }
 
@@ -144,7 +144,8 @@
   color: rgba(255, 255, 255, 0.92);
   padding: 4px 10px;
   border-radius: 9999px;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -205,7 +206,8 @@
   font-size: var(--font-lg);
   font-weight: 700;
   color: #FFFFFF;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
@@ -359,7 +361,8 @@
 }
 
 .home-txn-amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-md);
   font-weight: 800;
   text-align: right;
@@ -370,8 +373,10 @@
   color: var(--color-success);
 }
 
+/* Ordinary spending reads in the text colour with its "−" sign; red is kept for
+   over-limit / overdue / negative balances (X-07). */
 .home-txn-amount.is-expense {
-  color: var(--color-danger, #D9383A);
+  color: var(--color-text, var(--text-primary));
 }
 
 .home-txn-amount.is-transfer {
@@ -521,7 +526,8 @@
 .home-plan-item-amounts {
   color: var(--color-text, var(--text-primary));
   font-weight: 700;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-sm);
 }
 
@@ -692,7 +698,8 @@
   font-weight: 800;
   color: var(--color-text, var(--text-primary));
   line-height: 1.1;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Chuyển từ inline style của AttentionPanel.jsx (đợt 4) ── */

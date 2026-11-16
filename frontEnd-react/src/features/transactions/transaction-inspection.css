@@ -246,8 +246,8 @@ button.transaction-inspection-row:hover {
   background: var(--color-brand-50);
   color: var(--color-link);
 }
-.transaction-inspection-icon.is-expense { background: var(--color-danger-bg); color: var(--color-danger); }
-.transaction-inspection-icon.is-income { background: var(--color-success-bg); color: var(--color-success); }
+.transaction-inspection-icon.is-expense { background: var(--color-surface-muted, var(--surface-subtle)); color: var(--color-text-secondary); }
+.transaction-inspection-icon.is-income { background: var(--color-surface-muted, var(--surface-subtle)); color: var(--color-text-secondary); }
 .transaction-inspection-main { display: grid; flex: 1; gap: 5px; min-width: 0; }
 .transaction-inspection-main strong { overflow-wrap: anywhere; font-size: var(--font-sm); }
 .transaction-inspection-meta { display: flex; flex-wrap: wrap; gap: 4px 9px; color: var(--color-text-secondary); }
@@ -270,7 +270,7 @@ button.transaction-inspection-row:hover {
 .transaction-inspection-wallet svg { flex: 0 0 auto; }
 .transaction-inspection-main small { color: var(--color-text-muted); }
 .transaction-inspection-amount { flex: 0 0 auto; margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.transaction-inspection-amount.is-expense { color: var(--color-danger); }
+.transaction-inspection-amount.is-expense { color: var(--color-text); }
 .transaction-inspection-amount.is-income { color: var(--color-success); }
 .transaction-inspection-empty { padding: 26px 10px; color: var(--color-text-secondary); text-align: center; }
 .transaction-history-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 12px; text-align: center; }
@@ -638,10 +638,10 @@ button.transaction-ledger-row:hover {
 .transaction-ledger-category {
   justify-self: start;
   max-width: 100%;
-  padding: 5px 9px;
-  border-radius: var(--radius-full);
-  background: var(--color-brand-50);
-  color: var(--color-link);
+  /* Plain text, not a link-coloured pill: it is not separately clickable (TXN-04). */
+  padding: 0;
+  background: none;
+  color: var(--color-text-secondary);
   font-size: var(--font-xs);
   font-weight: 600;
   overflow: hidden;

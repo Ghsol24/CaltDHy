@@ -271,7 +271,8 @@
 }
 
 .floating-guide-badge {
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.08em;

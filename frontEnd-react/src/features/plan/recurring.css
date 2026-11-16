@@ -97,7 +97,8 @@
 .banner-stat-val {
   font-size: var(--font-xl);
   font-weight: 800;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, var(--text-primary));
 }
 
@@ -643,7 +644,8 @@
 
 .wallet-popover-bal {
   font-size: var(--font-xs);
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-muted, #8A98A9);
 }
 
@@ -757,7 +759,8 @@
 .recurring-row-price {
   font-size: var(--font-md);
   font-weight: 800;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, var(--text-primary));
   white-space: nowrap;
 }
@@ -944,7 +947,8 @@
 .grid-cell-num {
   font-size: var(--font-xl);
   font-weight: 800;
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text, var(--text-primary));
 }
 

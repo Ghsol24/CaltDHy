@@ -16,7 +16,7 @@ import { getPlanCopy } from './planCopy';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
 import { buildPlanAlerts } from '../../utils/planAlerts';
 import { PlanAttentionBar } from './PlanAttentionBar';
-import { WALLET_TYPE_LABELS } from './wallets/walletLabels';
+import { WALLET_TYPE_LABELS, displayWalletColor } from './wallets/walletLabels';
 import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
@@ -393,7 +393,7 @@ export function PlanOverviewTab() {
                       <div className="item-box-left">
                         <div
                           className="wallet-icon-square wallet-icon-square--tone"
-                          style={{ '--wallet-icon-square-background-color': `${w.color || '#4F46E5'}18`, '--wallet-icon-square-color': w.color || '#4F46E5' }}
+                          style={{ '--wallet-icon-square-background-color': `${displayWalletColor(w.color, '#4F46E5')}18`, '--wallet-icon-square-color': displayWalletColor(w.color, '#4F46E5') }}
                           aria-hidden="true"
                         >
                           <WalletOutlineIcon type={w.type} size={18} color="currentColor" />

@@ -111,6 +111,8 @@
   /* ── Font Family Tokens ── */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Amounts use the body font with equal-width digits (X-02); mono stays for codes. */
+  --font-money: var(--font-sans);
   --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* ── Font Scale ──

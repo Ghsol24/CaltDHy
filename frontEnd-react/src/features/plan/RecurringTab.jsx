@@ -357,10 +357,23 @@ export function RecurringTab() {
       <div className="recurring-page-header">
         <PageTitleIcon name="recurring" />
         <h1 className="recurring-route-heading">{t('nav.recurring')}</h1>
-        <div className="page-header-actions page-header-actions--end"><span className="page-guide-slot" data-guide-slot="" /></div>
+        {/* The page's main action sits in the title row, as on every other page (REC-03). */}
+        <div className="page-header-actions page-header-actions--end">
+          <span className="page-guide-slot" data-guide-slot="" />
+          <button
+            type="button"
+            className="recurring-btn-create-primary"
+            onClick={handleOpenCreate}
+            aria-label="Thêm khoản định kỳ mới"
+          >
+            <Icon name="plus" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <span className="plan-wide-copy">Thêm khoản định kỳ</span>
+            <span className="plan-mobile-copy">Thêm</span>
+          </button>
+        </div>
       </div>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
-      <RecurringHeaderCard activeItems={activeItems} counts={counts} handleOpenCreate={handleOpenCreate} installments={installments} monthlyEstimatedCost={monthlyEstimatedCost} />
+      <RecurringHeaderCard activeItems={activeItems} counts={counts} installments={installments} monthlyEstimatedCost={monthlyEstimatedCost} />
 
       {/* ── 2. Filter Pills & Custom Themed Sort Dropdown ── */}
       <RecurringFilterBar counts={counts} currentSortLabel={currentSortLabel} filterTab={filterTab} isSortDropdownOpen={isSortDropdownOpen} setFilterTab={setFilterTab} setIsSortDropdownOpen={setIsSortDropdownOpen} setSortBy={setSortBy} sortBy={sortBy} sortRef={sortRef} />

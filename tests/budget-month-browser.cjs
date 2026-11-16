@@ -232,8 +232,11 @@ const digits = (text) => String(text || '').replace(/\D/g, '');
     await page.locator('.month-nav-btn--next').focus();
     await page.keyboard.press('ArrowLeft');
     await expect(label).toHaveText(monthLabel(previous));
-    const animated = await page.evaluate(() => document.querySelector('.budget-month-data').getAnimations()
-      .some(animation => animation.effect?.getKeyframes().some(frame => String(frame.transform).includes('translateX'))));
+    // The label can update a frame before the content swaps in, so wait for the
+    // 160ms transition to start instead of sampling a single instant.
+    const animated = await page.waitForFunction(() => document.querySelector('.budget-month-data').getAnimations()
+      .some(animation => animation.effect?.getKeyframes().some(frame => String(frame.transform).includes('translateX'))),
+    null, { timeout: 1000, polling: 'raf' }).then(() => true, () => false);
     assert.equal(animated, true, 'switching months plays the short transition');
     await page.keyboard.press('ArrowRight');
     await expect(label).toHaveText(monthLabel(current));

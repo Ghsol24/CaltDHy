@@ -94,7 +94,8 @@
 }
 
 .custom-wallet-balance {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-xs);
   color: var(--text-secondary);
   white-space: nowrap;
@@ -213,7 +214,8 @@
 }
 
 .custom-wallet-item-balance {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-xs);
   color: var(--text-secondary);
 }

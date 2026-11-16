@@ -29,7 +29,7 @@ export function AnalyticsKpiGrid({ monthData }) {
             <Icon name="trendingDown" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </div>
         </div>
-        <div className={`kpi-card-amount ${monthData.expense > 0 ? 'text-danger' : 'text-muted'}`}>
+        <div className={`kpi-card-amount ${monthData.expense > 0 ? '' : 'text-muted'}`}>
           {formatCurrency(monthData.expense)}
         </div>
         <div className="kpi-card-meta">

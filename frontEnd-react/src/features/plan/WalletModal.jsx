@@ -12,8 +12,8 @@ const PRESET_COLORS = [
   '#078A59', // Brand Mint Emerald
   '#2563EB', // Royal Blue
   '#7C3AED', // Vivid Purple
-  '#EA580C', // Deep Orange
-  '#DC2626', // Crimson Red
+  '#C026D3', // Fuchsia (replaces orange: warning colours are not wallet colours)
+  '#4D7C0F', // Moss green (replaces red)
   '#0891B2', // Cyan Teal
   '#4F46E5', // Indigo
   '#D97706', // Amber Gold

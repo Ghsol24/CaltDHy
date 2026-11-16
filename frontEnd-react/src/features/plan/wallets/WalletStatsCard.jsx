@@ -14,7 +14,7 @@ export function WalletStatsCard({ allAssets, defaultWallet, totalBalance, wallet
         </div>
         <div className="stat-cell-info">
           <span className="stat-cell-label">Tổng số dư các ví</span>
-          <strong className="stat-cell-val text-brand">{formatCurrency(allAssets)}</strong>
+          <strong className="stat-cell-val">{formatCurrency(allAssets)}</strong>
           {excludedAmount !== 0 && (
             <span className="stat-cell-sub">Trong đó {formatCurrency(excludedAmount)} không tính vào chi tiêu</span>
           )}
