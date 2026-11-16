@@ -162,8 +162,9 @@ const authLimiter = rateLimit({
     standardHeaders: 'draft-6',
     legacyHeaders: false,
     message: limitMessage,
-    skip: req => ['GET', 'HEAD'].includes(req.method) ||
-        ['/logout', '/preferences', '/sessions/revoke', '/sessions/revoke-others'].includes(req.path)
+    // Callback của Google/Facebook là GET nhưng thực hiện đăng nhập và gọi ra ngoài, nên vẫn bị đếm.
+    skip: req => (['GET', 'HEAD'].includes(req.method) && !/^\/oauth\/[a-z]+\/callback\/?$/.test(req.path)) ||
+        ['/logout', '/preferences', '/sessions/revoke', '/sessions/revoke-others', '/oauth/cancel'].includes(req.path)
 });
 
 app.use('/api', csrfProtection);

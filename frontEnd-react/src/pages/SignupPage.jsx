@@ -7,6 +7,7 @@ import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
+import { SocialLogin } from '../components/auth/SocialLogin';
 import './auth.css';
 
 function getPasswordStrength(pw, t) {
@@ -159,6 +160,10 @@ export const SignupPage = () => {
             </button>
 
           </form>
+          )}
+          {/* A new Google/Facebook account follows the same rule as the form: open sign-up, or a valid invite. */}
+          {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
+            <SocialLogin inviteToken={validInviteLink ? inviteToken : ''} />
           )}
 
           <div className="divider">

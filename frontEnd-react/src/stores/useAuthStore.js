@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { authService } from '../services/authService';
 import { apiFetch, clearApiSession } from '../services/api';
 import { invalidateSession, sessionEpoch, assertSession, sessionChangedError } from '../services/sessionRuntime';
+import { consumeOAuthSignIn } from '../services/oauthReturn.js';
 import { normalizeCashFlowPreferences, isCashFlowView } from '../utils/cashFlowPreferences';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
@@ -52,6 +53,10 @@ export const useAuthStore = create((set, get) => ({
     const current = { epoch };
     current.promise = (async () => {
       try {
+        // Returning from a Google/Facebook sign-in this tab started is a deliberate login,
+        // so it lifts the logout barrier exactly like a successful password login does.
+        const signedInElsewhere = consumeOAuthSignIn();
+        if (signedInElsewhere) storage.remove(LOGOUT_KEY);
         if (storage.get(LOGOUT_KEY)) {
           await apiFetch('/api/auth/logout', { method: 'POST' });
           assertSession(epoch);
@@ -62,6 +67,7 @@ export const useAuthStore = create((set, get) => ({
         assertSession(epoch);
         hydrateUserPreferences(data.user);
         set({ user: data.user, isAuthenticated: true, status: 'authenticated', error: null });
+        if (signedInElsewhere) broadcast();
       } catch (error) {
         if (sessionEpoch() !== epoch) return;
         hydrateUserPreferences(null);
@@ -72,12 +78,18 @@ export const useAuthStore = create((set, get) => ({
     initialization = current;
     return current.promise;
   },
-  login: async (email, password, { signal, totpCode } = {}) => {
+  login: (email, password, { signal, totpCode } = {}) => get().signIn(
+    () => authService.login(totpCode ? { email, password, totpCode } : { email, password }, { signal }), signal),
+  // Second half of a Google/Facebook sign-in that needed confirmation: the CaltDHy password
+  // (linking to an existing account) and/or a two-factor code.
+  completeOAuth: (credentials) => get().signIn(
+    () => apiFetch('/api/auth/oauth/complete', { method: 'POST', body: JSON.stringify(credentials) })),
+  signIn: async (request, signal) => {
     clearPrivateState();
     const epoch = sessionEpoch();
     set({ user: null, isAuthenticated: false, status: 'checking', isLoading: true, error: null });
     try {
-      const data = await authService.login(totpCode ? { email, password, totpCode } : { email, password }, { signal });
+      const data = await request();
       assertSession(epoch);
       if (signal?.aborted) throw new DOMException('Login cancelled', 'AbortError');
       storage.remove(LOGOUT_KEY);

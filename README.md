@@ -17,7 +17,7 @@
 | **Phân tích** | Tổng quan thu chi, cơ cấu danh mục, biểu đồ xu hướng dòng tiền theo ngày / 3 tháng / 6 tháng, xuất CSV và in báo cáo |
 | **Hũ chi tiêu** | Hũ tiết kiệm theo mục tiêu, có hạn hoàn thành tùy chọn; nạp/rút là chuyển tiền nội bộ với ví, không tính là thu chi |
 | **Cài đặt** | 4 giao diện (tối, sáng, kem, xanh lá), 3 ngôn ngữ (Tiếng Việt, English, 简体中文), hiển thị VND hoặc USD, xuất toàn bộ dữ liệu JSON, nhập giao dịch từ CSV (có xem trước, bỏ qua giao dịch trùng), mục Thông báo (nhắc ghi chép hằng ngày bằng thông báo đẩy, email khoản định kỳ sắp đến hạn, email khi 3 ngày chưa ghi; tất cả mặc định tắt), đặt lại dữ liệu |
-| **Tài khoản** | Đăng ký mở hoặc theo lời mời, xác minh email, quên/đặt lại mật khẩu qua Brevo hoặc Gmail |
+| **Tài khoản** | Đăng ký mở hoặc theo lời mời, xác minh email, quên/đặt lại mật khẩu qua Brevo hoặc Gmail, đăng nhập bằng Google / Facebook (tùy chọn) |
 
 ### Nguyên tắc về tiền và bảo mật
 
@@ -102,6 +102,8 @@ Mở `backEnd/server/.env` và điền tối thiểu:
 | `JWT_SECRET` | Chuỗi ngẫu nhiên tối thiểu 32 byte (lệnh tạo bên dưới) |
 | `CLIENT_URL` | `http://localhost:5173` nếu cần thử liên kết trong email |
 | `REGISTRATION_MODE` | `open` để tự đăng ký, hoặc giữ `invite` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Tùy chọn: bật nút "Tiếp tục với Google" |
+| `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | Tùy chọn: bật nút "Tiếp tục với Facebook" |
 
 Tạo `JWT_SECRET` ngẫu nhiên:
 
@@ -112,6 +114,19 @@ node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('h
 `JWT_SECRET` hiện dùng làm khóa HMAC cho phiên và CSRF (tên biến giữ lại để tương thích). Các biến còn lại như email, rate limit, proxy, cookie được giải thích ngay trong `.env.example`. Hiển thị USD là tùy chọn, cấu hình qua `frontEnd-react/.env.example`.
 
 > Không commit `.env` thật và không đặt bí mật vào biến `VITE_*`, vì các biến này được đưa vào mã phía client.
+
+#### Đăng nhập bằng Google / Facebook (tùy chọn)
+
+Luồng chạy hoàn toàn phía server bằng chuyển hướng (authorization code), nên không tải script bên thứ ba và CSP giữ nguyên. Cần `CLIENT_URL` và khai báo đúng địa chỉ callback ở nhà cung cấp:
+
+| Nhà cung cấp | Nơi tạo | Redirect URI cần khai báo |
+| --- | --- | --- |
+| Google | Google Cloud Console → OAuth client loại "Web application" | `<CLIENT_URL>/api/auth/oauth/google/callback` |
+| Facebook | Meta for Developers → sản phẩm Facebook Login | `<CLIENT_URL>/api/auth/oauth/facebook/callback` |
+
+Khi phát triển với Vite, đặt `NODE_ENV=development` và `CLIENT_URL=http://localhost:5173`. Nút chỉ hiện khi đang mở ứng dụng tại đúng `CLIENT_URL`.
+
+Quy tắc tài khoản: email trùng với tài khoản mật khẩu sẵn có **không được gộp tự động**, người dùng phải nhập mật khẩu CaltDHy của tài khoản đó để liên kết; tài khoản bật 2FA vẫn phải nhập mã; tài khoản tạo bằng Google/Facebook chưa có mật khẩu và tạo mật khẩu qua email đặt lại mật khẩu (Cài đặt → Bảo mật).
 
 ### 4. Chạy
 

@@ -1,18 +1,22 @@
 import React from 'react';
 import { Button } from '../../../components/ui/Button';
-import { TwoFactorPanel, SessionsPanel } from './SecurityExtras';
+import { TwoFactorPanel, SessionsPanel, CreatePasswordPanel } from './SecurityExtras';
+import { useAuthStore } from '../../../stores/useAuthStore';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function SettingsSecurityTab({ activeTab, confirmPassword, currentPassword, handleChangePassword, isPwdSaving, newPassword, pwdMsg, pwdStrength, setConfirmPassword, setCurrentPassword, setNewPassword, setShowConfirmPwd, setShowCurrentPwd, setShowNewPwd, showConfirmPwd, showCurrentPwd, showNewPwd }) {
   const { t } = useTranslation();
+  // Only an explicit false hides the form: accounts created with Google/Facebook have no current password to type.
+  const hasPassword = useAuthStore((state) => state.user?.hasPassword !== false);
   return (activeTab === 'security' && (
     <div className="account-tab-pane">
       <div className="account-tab-intro">
         <h3 className="account-tab-intro-title">Bảo mật tài khoản</h3>
       </div>
   
+      {!hasPassword && <CreatePasswordPanel />}
       {/* Change Password Form */}
-      <form onSubmit={handleChangePassword} className="account-card-panel account-card-panel--layout">
+      {hasPassword && <form onSubmit={handleChangePassword} className="account-card-panel account-card-panel--layout">
         <div className="account-card-panel__div--layout">
           <span className="account-panel-label account-panel-label--text">
             Đổi mật khẩu
@@ -122,8 +126,8 @@ export function SettingsSecurityTab({ activeTab, confirmPassword, currentPasswor
             {isPwdSaving ? 'Đang đổi...' : 'Cập nhật mật khẩu'}
           </Button>
         </div>
-      </form>
-  
+      </form>}
+
       <TwoFactorPanel />
       <SessionsPanel />
     </div>

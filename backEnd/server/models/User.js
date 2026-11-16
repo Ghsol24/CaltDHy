@@ -25,10 +25,17 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true
         },
+        // Không bắt buộc: tài khoản tạo bằng Google/Facebook không có mật khẩu cho tới khi
+        // người dùng tự tạo qua email "đặt lại mật khẩu". Mọi nơi so sánh mật khẩu phải tự kiểm tra.
         password: {
             type: String,
-            required: [true, 'Mật khẩu không được để trống.'],
             select: false  // Không trả về mặc định – phải dùng .select('+password')
+        },
+        // Danh tính đã liên kết ở nhà cung cấp đăng nhập ngoài (giá trị "sub"/"id" của họ, không phải email).
+        // Index unique + sparse: mỗi danh tính chỉ thuộc một tài khoản, tài khoản không liên kết thì bỏ qua.
+        oauth: {
+            googleId: { type: String, default: undefined, select: false, index: { unique: true, sparse: true } },
+            facebookId: { type: String, default: undefined, select: false, index: { unique: true, sparse: true } }
         },
         resetPasswordToken: {
             type: String,
@@ -112,6 +119,7 @@ const userSchema = new mongoose.Schema(
                 delete ret._id;
                 delete ret.__v;
                 delete ret.password;
+                delete ret.oauth;
                 delete ret.authVersion;
                 delete ret.resetPasswordToken;
                 delete ret.resetPasswordExpiry;

@@ -1,0 +1,34 @@
+/*
+ * Third-party brand buttons. Colours are the providers' own, not theme tokens (AGENTS.md exempts
+ * third-party logos), because their brand rules fix them:
+ *  - Google sign-in branding: Light #FFFFFF / stroke #747775 / text #1F1F1F, Dark #131314 / #8E918F / #E3E3E3,
+ *    standard-colour "G", Google Sans Medium 14/20, 12px before the logo, 10px after it, 12px after the text.
+ *  - Facebook Login: the approved logo before the call to action, unaltered; white logo on Facebook Blue.
+ */
+.btn-social {
+  width: 100%; min-height: 44px; padding: 10px 12px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  border-radius: var(--radius-md); cursor: pointer; text-decoration: none;
+  font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .1px;
+  transition: filter var(--dur-quick) ease, box-shadow var(--dur-quick) ease, transform var(--dur-quick) ease;
+}
+.btn-social .brand-logo { flex: 0 0 auto; width: auto; height: 20px; }
+.btn-social:hover:not(:disabled) { box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+.btn-social:active:not(:disabled) { transform: translateY(1px); }
+.btn-social:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.btn-social:disabled { opacity: .65; cursor: progress; }
+
+.btn-social--google {
+  background: #FFFFFF; color: #1F1F1F; border: 1px solid #747775;
+  font-family: 'Google Sans', 'Roboto', var(--font-sans);
+}
+html.dark-theme .btn-social--google { background: #131314; color: #E3E3E3; border-color: #8E918F; }
+
+.btn-social--facebook {
+  background: #0866FF; color: #FFFFFF; border: 1px solid #0866FF;
+  font-family: var(--font-sans);
+}
+.btn-social--facebook:hover:not(:disabled) { filter: brightness(.94); }
+
+/* Small marks in Settings rows. */
+.brand-logo { display: block; }

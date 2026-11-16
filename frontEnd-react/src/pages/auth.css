@@ -328,3 +328,11 @@
 /* Second sign-in step (two-factor code). */
 .totp-step { display: grid; gap: 6px; }
 .totp-hint { margin: 0 0 8px; color: var(--color-text-secondary, #5b6b62); font-size: 13px; line-height: 1.45; }
+
+/* ── Google / Facebook sign-in ── */
+.social-login { display: grid; gap: 10px; }
+.btn-social:disabled { opacity: .65; cursor: progress; }
+.btn-social:focus-visible, .oauth-cancel:focus-visible { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
+.oauth-note { margin: 0 0 18px; color: var(--text-secondary); font-family: var(--font-sans); font-size: var(--font-sm); line-height: 1.55; overflow-wrap: anywhere; }
+.oauth-cancel { margin-top: 12px; }
+.oauth-cancel:disabled { opacity: .65; cursor: not-allowed; }

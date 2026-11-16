@@ -17,3 +17,11 @@
 .security-sessions strong { color: var(--color-text); font-size: var(--font-sm); overflow-wrap: anywhere; }
 .security-sessions small { color: var(--color-text-secondary); font-size: var(--font-xs); }
 .security-sessions .account-session-badge { flex: 0 0 auto; white-space: nowrap; }
+
+/* Linked accounts (Settings > Data & privacy) */
+.linked-accounts__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.linked-accounts__item { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--surface); }
+.linked-accounts__row { display: flex; align-items: center; gap: 12px; }
+.linked-accounts__name { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: 8px; }
+.linked-accounts__name strong { color: var(--color-text); font-size: var(--font-sm); }
+.linked-accounts .security-badge { align-self: center; }

@@ -11,7 +11,7 @@ async function protect(req, res, next) {
             tokenHash: hash(token), expiresAt: { $gt: new Date() }
         }).lean();
         const user = session && await User.findById(session.userId)
-            .select('name email avatar emailVerified preferences twoFactor.enabled +authVersion').lean();
+            .select('name email avatar emailVerified preferences twoFactor.enabled +authVersion +password +oauth.googleId +oauth.facebookId').lean();
         if (!user || session.authVersion !== (user.authVersion || 0)) {
             clearSession(res);
             return res.status(401).json({

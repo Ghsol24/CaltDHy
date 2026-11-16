@@ -59,6 +59,8 @@ function failure(res, event, error) {
     return res.status(500).json({ success: false, message: 'Không thể hoàn thành yêu cầu. Vui lòng thử lại.' });
 }
 
+// publicUser() báo tài khoản đã liên kết Google/Facebook nào, nên mọi lần nạp user để trả về phải kèm hai trường này.
+const OAUTH_FIELDS = '+oauth.googleId +oauth.facebookId';
 const TWO_FACTOR_FIELDS = '+twoFactor.secret +twoFactor.pendingSecret +twoFactor.lastStep +twoFactor.recoveryCodes';
 /**
  * Accepts a current authenticator code or an unused recovery code, and marks it used with a
@@ -85,10 +87,15 @@ async function consumeSecondFactor(user, supplied) {
 async function passwordMatches(userId, supplied) {
     if (typeof supplied !== 'string' || !supplied || Buffer.byteLength(supplied, 'utf8') > 72) return null;
     const user = await User.findById(userId).select('+password ' + TWO_FACTOR_FIELDS);
-    return user && await bcrypt.compare(supplied, user.password) ? user : null;
+    return user && user.password && await bcrypt.compare(supplied, user.password) ? user : null;
 }
 const WRONG_PASSWORD = 'Mật khẩu hiện tại không đúng.';
+// Tài khoản tạo bằng Google/Facebook chưa có mật khẩu: các thao tác cần "mật khẩu hiện tại" phải
+// báo rõ lý do thay vì báo sai mật khẩu. Người dùng tạo mật khẩu qua email đặt lại mật khẩu.
+const PASSWORD_NOT_SET = 'Tài khoản này chưa có mật khẩu. Hãy tạo mật khẩu qua email trước.';
+const passwordNotSet = res => res.status(400).json({ success: false, code: 'PASSWORD_NOT_SET', message: PASSWORD_NOT_SET });
 
+router.use('/oauth', require('./oauth')({ consumeSecondFactor, TWO_FACTOR_FIELDS }));
 router.get('/csrf', (req, res) => res.json({ success: true, csrfToken: issueCsrf(req, res) }));
 router.get('/registration', (req, res) => res.json({
     success: true, inviteOnly: req.app.locals.registrationMode === 'invite'
@@ -154,8 +161,9 @@ router.post('/login', async (req, res) => {
             Buffer.byteLength(password, 'utf8') > 72) {
             return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không hợp lệ.' });
         }
-        const user = await User.findOne({ email: normalizeEmail(email) }).select('+password +authVersion ' + TWO_FACTOR_FIELDS);
-        if (!user || !await bcrypt.compare(password, user.password)) {
+        const user = await User.findOne({ email: normalizeEmail(email) }).select('+password +authVersion ' + OAUTH_FIELDS + ' ' + TWO_FACTOR_FIELDS);
+        // Tài khoản chỉ có Google/Facebook không có mật khẩu: trả cùng một lỗi, không lộ cách đăng nhập của email đó.
+        if (!user || !user.password || !await bcrypt.compare(password, user.password)) {
             return res.status(401).json({ success: false, message: 'Email hoặc mật khẩu không đúng.' });
         }
         // Lớp thứ hai chỉ được hỏi sau khi mật khẩu đúng, nên không lộ tài khoản nào đang bật 2FA.
@@ -350,6 +358,7 @@ router.post('/sessions/revoke-others', protect, async (req, res) => {
 // =============================================
 router.post('/2fa/setup', protect, async (req, res) => {
     try {
+        if (!req.user.hasPassword) return passwordNotSet(res);
         const user = await passwordMatches(req.user.id, req.body?.currentPassword);
         if (!user) return res.status(400).json({ success: false, message: WRONG_PASSWORD });
         if (user.twoFactor?.enabled) {
@@ -383,6 +392,7 @@ router.post('/2fa/enable', protect, async (req, res) => {
 });
 router.post('/2fa/disable', protect, async (req, res) => {
     try {
+        if (!req.user.hasPassword) return passwordNotSet(res);
         const user = await passwordMatches(req.user.id, req.body?.currentPassword);
         if (!user) return res.status(400).json({ success: false, message: WRONG_PASSWORD });
         if (!user.twoFactor?.enabled) {
@@ -412,7 +422,7 @@ router.put('/profile', protect, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Kích thước ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 1MB.' });
         }
         const result = await runWithTransaction(async session => {
-            const user = await User.findById(req.user.id).select('+password +authVersion').session(session);
+            const user = await User.findById(req.user.id).select('+password +authVersion ' + OAUTH_FIELDS).session(session);
             const currentSession = await AuthSession.findById(req.authSession._id).session(session);
             if (!currentSession || currentSession.expiresAt <= new Date() || !user ||
                 currentSession.authVersion !== (user.authVersion || 0) ||
@@ -421,6 +431,9 @@ router.put('/profile', protect, async (req, res) => {
             }
             const changedEmail = email !== undefined && normalizeEmail(email) !== user.email;
             if (newPassword || changedEmail) {
+                if (!user.password) {
+                    const error = new Error('Password not set.'); error.status = 400; error.code = 'PASSWORD_NOT_SET'; throw error;
+                }
                 if (typeof currentPassword !== 'string' || Buffer.byteLength(currentPassword) > 72 ||
                     !await bcrypt.compare(currentPassword, user.password)) {
                     const error = new Error('Current password required.'); error.status = 400; throw error;
@@ -450,6 +463,7 @@ router.put('/profile', protect, async (req, res) => {
             user: publicUser(result.user),
             csrfToken: result.issued ? setSession(req, res, result.issued) : issueCsrf(req, res) });
     } catch (error) {
+        if (error.code === 'PASSWORD_NOT_SET') return passwordNotSet(res);
         if ([400, 401].includes(error.status)) return res.status(error.status).json({ success: false,
             message: error.status === 400 ? 'Cần mật khẩu hiện tại chính xác để đổi email/mật khẩu.' : 'Phiên đăng nhập đã thay đổi.' });
         return failure(res, 'profile_update_failed', error);

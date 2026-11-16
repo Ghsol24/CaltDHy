@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ImportCsvDialog } from './ImportCsvDialog';
 import { RestoreBackupPanel } from './RestoreBackupPanel';
+import { LinkedAccountsPanel } from './LinkedAccountsPanel';
 import { formatDate } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -54,6 +55,8 @@ export function SettingsDataTab({ activeTab, budgets, copyError, copySuccess, ex
         </div>
       </div>
   
+      <LinkedAccountsPanel />
+
       {/* Export Data */}
       <div className="account-card-panel">
         <div className="account-card-panel-row">

@@ -1145,6 +1145,66 @@ export const apiMessages = {
     "Không thể khôi phục dữ liệu. Dữ liệu hiện tại được giữ nguyên.",
     "Unable to restore the data. Your current data has not been changed.",
     "无法恢复数据。当前数据保持不变。"
+  ],
+  "Phiên liên kết đã hết hạn. Hãy đăng nhập lại bằng Google hoặc Facebook.": [
+    "Phiên liên kết đã hết hạn. Hãy đăng nhập lại bằng Google hoặc Facebook.",
+    "This sign-in step has expired. Please sign in with Google or Facebook again.",
+    "此登录步骤已过期。请重新使用 Google 或 Facebook 登录。"
+  ],
+  "Mật khẩu không đúng.": [
+    "Mật khẩu không đúng.",
+    "That password is incorrect.",
+    "密码不正确。"
+  ],
+  "Tài khoản này chưa có mật khẩu. Hãy tạo mật khẩu qua email trước.": [
+    "Tài khoản này chưa có mật khẩu. Hãy tạo mật khẩu qua email trước.",
+    "This account has no password yet. Create one by email first.",
+    "此账户尚未设置密码。请先通过电子邮件创建密码。"
+  ],
+  "Liên kết tài khoản thành công!": [
+    "Liên kết tài khoản thành công!",
+    "Your account is now linked.",
+    "账户关联成功！"
+  ],
+  "Tài khoản Google/Facebook này đã được liên kết với một tài khoản CaltDHy khác.": [
+    "Tài khoản Google/Facebook này đã được liên kết với một tài khoản CaltDHy khác.",
+    "This Google/Facebook account is already linked to another CaltDHy account.",
+    "此 Google/Facebook 账户已关联到另一个 CaltDHy 账户。"
+  ],
+  "Cách đăng nhập này hiện chưa được bật.": [
+    "Cách đăng nhập này hiện chưa được bật.",
+    "This sign-in option is not turned on yet.",
+    "此登录方式尚未启用。"
+  ],
+  "Tài khoản đã liên kết với Google.": [
+    "Tài khoản đã liên kết với Google.",
+    "This account is already linked to Google.",
+    "此账户已关联 Google。"
+  ],
+  "Tài khoản đã liên kết với Facebook.": [
+    "Tài khoản đã liên kết với Facebook.",
+    "This account is already linked to Facebook.",
+    "此账户已关联 Facebook。"
+  ],
+  "Đã gỡ liên kết Google.": [
+    "Đã gỡ liên kết Google.",
+    "Google has been unlinked.",
+    "已解除关联 Google。"
+  ],
+  "Đã gỡ liên kết Facebook.": [
+    "Đã gỡ liên kết Facebook.",
+    "Facebook has been unlinked.",
+    "已解除关联 Facebook。"
+  ],
+  "Tài khoản chưa liên kết cách đăng nhập này.": [
+    "Tài khoản chưa liên kết cách đăng nhập này.",
+    "This sign-in option is not linked to your account.",
+    "此登录方式尚未关联到您的账户。"
+  ],
+  "Đây là cách đăng nhập duy nhất. Hãy tạo mật khẩu trước khi gỡ.": [
+    "Đây là cách đăng nhập duy nhất. Hãy tạo mật khẩu trước khi gỡ.",
+    "This is your only way to sign in. Create a password before unlinking it.",
+    "这是您唯一的登录方式。请先创建密码再解除关联。"
   ]
 };
 

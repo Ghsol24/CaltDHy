@@ -17,6 +17,9 @@ function publicUser(user) {
         avatar: user.avatar || '',
         emailVerified: user.emailVerified === true,
         twoFactorEnabled: user.twoFactor?.enabled === true,
+        // Cần nạp user với '+password +oauth.googleId +oauth.facebookId'; chỉ kết quả đúng/sai được trả ra ngoài.
+        hasPassword: typeof user.password === 'string' && user.password.length > 0,
+        linkedProviders: ['google', 'facebook'].filter(provider => Boolean(user.oauth?.[provider + 'Id'])),
         preferences: publicPreferences(user.preferences)
     };
 }

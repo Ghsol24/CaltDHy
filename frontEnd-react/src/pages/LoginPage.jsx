@@ -1,12 +1,15 @@
 import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, ClockOutlineIcon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
+import { SocialLogin } from '../components/auth/SocialLogin';
+import { OAuthConfirm } from '../components/auth/OAuthConfirm';
+import { getSocialCopy, socialErrorText } from '../components/auth/socialLoginCopy';
 import './auth.css';
 
 const OFFLINE_COPY = {
@@ -31,8 +34,15 @@ export const LoginPage = () => {
   const totpCopy = TOTP_COPY[lang] || (String(lang).startsWith('zh') ? TOTP_COPY['zh-CN'] : TOTP_COPY.vi);
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine !== false, () => true);
   const offlineText = OFFLINE_COPY[lang] || (String(lang).startsWith('zh') ? OFFLINE_COPY['zh-CN'] : OFFLINE_COPY.vi);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const isExpired = searchParams.get('expired') === '1';
+  // Where a Google/Facebook sign-in landed: done (signed in), link / verify (needs confirmation), or an error code.
+  const socialCopy = getSocialCopy(lang);
+  const oauthStep = searchParams.get('oauth');
+  const oauthErrorCode = searchParams.get('oauth_error');
+  const authStatus = useAuthStore((state) => state.status);
+  const leaveOAuthStep = () => setSearchParams({}, { replace: true });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,8 +66,16 @@ export const LoginPage = () => {
     failSignature(attempt.id);
   }, [failSignature]);
 
+  useEffect(() => {
+    if (oauthStep !== 'done') return;
+    if (authStatus === 'authenticated') navigate('/spending/home', { replace: true });
+    // The server said "signed in" but this browser has no session (for example cookies are blocked).
+    else if (authStatus === 'anonymous') setSearchParams({ oauth_error: 'failed' }, { replace: true });
+  }, [oauthStep, authStatus, navigate, setSearchParams]);
+
   const isEmailValid = /\S+@\S+\.\S+/.test(email.trim());
   const isPwValid = password.length >= 1;
+  const oauthError = oauthErrorCode && !error && !isSubmitting ? socialErrorText(socialCopy, oauthErrorCode) : '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,6 +124,17 @@ export const LoginPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (oauthStep === 'link' || oauthStep === 'verify') {
+    return <div className="auth-page"><main><OAuthConfirm onExit={leaveOAuthStep} /></main></div>;
+  }
+  if (oauthStep === 'done') {
+    return (
+      <div className="auth-page"><main><IndustrialPanel>
+        <p className="oauth-note" role="status" aria-live="polite">{socialCopy.finishing}</p>
+      </IndustrialPanel></main></div>
+    );
+  }
 
   return (
     <div className="auth-page">
@@ -172,12 +201,20 @@ export const LoginPage = () => {
               </div>
             )}
 
+            {oauthError && (
+              <div id="oauthErr" className="form-err form-err--icon show" role="alert">
+                <AlertTriangleOutlineIcon size={14} /> {oauthError}
+              </div>
+            )}
+
             <button type="submit" className={`btn-cta ${isSubmitting ? 'loading' : ''}`} disabled={isSubmitting}>
               <span className="spinner" aria-hidden="true"></span>
               <span className="btn-text">{isSubmitting ? t('auth.loggingIn') : t('auth.login')}</span>
             </button>
 
           </form>
+
+          <SocialLogin />
 
           <div className="divider">
             <span>{t('auth.or')}</span>

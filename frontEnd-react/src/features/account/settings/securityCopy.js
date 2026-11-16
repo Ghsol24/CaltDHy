@@ -24,7 +24,11 @@ const COPY = {
     restoreWarning: 'Ví, giao dịch, ngân sách, hũ, khoản định kỳ hiện có sẽ bị thay thế hoàn toàn. Ảnh hóa đơn không nằm trong file sao lưu nên sẽ mất. Không thể hoàn tác.',
     restoreType: 'Nhập chính xác chữ RESTORE để tiếp tục:', restoreConfirm: 'Khôi phục', restoring: 'Đang khôi phục…',
     restoreInvalid: 'File này không phải bản sao lưu CaltDHy hợp lệ.', restoreTooLarge: 'File quá lớn (tối đa 12MB).',
-    restoreDone: 'Đã khôi phục dữ liệu từ file sao lưu.'
+    restoreDone: 'Đã khôi phục dữ liệu từ file sao lưu.',
+    noPasswordTitle: 'Tạo mật khẩu',
+    noPasswordBody: 'Tài khoản này được tạo bằng Google hoặc Facebook nên chưa có mật khẩu. Tạo mật khẩu để có thêm một cách đăng nhập, và để đổi email hoặc bật xác thực hai lớp.',
+    noPasswordSend: 'Gửi email tạo mật khẩu', noPasswordSending: 'Đang gửi…',
+    noPasswordSent: (email) => `Đã gửi yêu cầu. Hãy mở liên kết trong email gửi tới ${email} để tạo mật khẩu (liên kết có hạn 15 phút).`
   },
   en: {
     tfaTitle: 'Two-factor sign-in (2FA)', tfaOn: 'On', tfaOff: 'Off',
@@ -50,7 +54,11 @@ const COPY = {
     restoreWarning: 'Your current wallets, transactions, budgets, jars, recurring items will be replaced entirely. Receipt photos are not part of a backup and will be lost. This cannot be undone.',
     restoreType: 'Type RESTORE exactly to continue:', restoreConfirm: 'Restore', restoring: 'Restoring…',
     restoreInvalid: 'This file is not a valid CaltDHy backup.', restoreTooLarge: 'The file is too large (12MB at most).',
-    restoreDone: 'Data restored from the backup file.'
+    restoreDone: 'Data restored from the backup file.',
+    noPasswordTitle: 'Create a password',
+    noPasswordBody: 'This account was created with Google or Facebook, so it has no password yet. Create one to have another way to sign in, and to change your email or turn on two-factor sign-in.',
+    noPasswordSend: 'Email me a link to create a password', noPasswordSending: 'Sending…',
+    noPasswordSent: (email) => `Request sent. Open the link in the email sent to ${email} to create your password (the link lasts 15 minutes).`
   },
   'zh-CN': {
     tfaTitle: '两步验证 (2FA)', tfaOn: '已开启', tfaOff: '已关闭',
@@ -76,7 +84,11 @@ const COPY = {
     restoreWarning: '现有的钱包、交易、预算、储蓄罐、周期项目将被完全替换。票据照片不在备份中，将会丢失。此操作无法撤销。',
     restoreType: '请准确输入 RESTORE 以继续：', restoreConfirm: '恢复', restoring: '正在恢复…',
     restoreInvalid: '此文件不是有效的 CaltDHy 备份。', restoreTooLarge: '文件过大（最大 12MB）。',
-    restoreDone: '已从备份文件恢复数据。'
+    restoreDone: '已从备份文件恢复数据。',
+    noPasswordTitle: '创建密码',
+    noPasswordBody: '此账户通过 Google 或 Facebook 创建，因此尚未设置密码。创建密码后可多一种登录方式，并可更改电子邮件或开启两步验证。',
+    noPasswordSend: '发送创建密码的邮件', noPasswordSending: '正在发送…',
+    noPasswordSent: (email) => `请求已发送。请打开发送至 ${email} 的邮件中的链接以创建密码（链接有效期 15 分钟）。`
   }
 };
 export const getSecurityCopy = (lang) => COPY[lang] || (String(lang).startsWith('zh') ? COPY['zh-CN'] : COPY.vi);

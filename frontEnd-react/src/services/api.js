@@ -64,15 +64,15 @@ async function request(endpoint, options, epoch) {
       assertActive();
       const error = new Error(getUserErrorMessage({
         message: data?.message, status: response.status, code: data?.code,
-        context: /^\/api\/auth\/login(?:\?|$)/.test(endpoint) ? 'login' : undefined,
+        context: /^\/api\/auth\/(login|oauth\/complete)(?:\?|$)/.test(endpoint) ? 'login' : undefined,
       }, 'error.requestFailed'));
       error.status = response.status; error.code = data?.code;
-      if (response.status === 401 && !/^\/api\/auth\/(login|session)(?:\?|$)/.test(endpoint)) {
+      if (response.status === 401 && !/^\/api\/auth\/(login|session|oauth\/complete)(?:\?|$)/.test(endpoint)) {
         window.dispatchEvent(new CustomEvent('caltdhy:auth-expired'));
       }
       throw error;
     }
-    const sessionResponse = /^\/api\/auth\/(login|register|session|profile)(?:\?|$)/.test(endpoint);
+    const sessionResponse = /^\/api\/auth\/(login|register|session|profile|oauth\/complete)(?:\?|$)/.test(endpoint);
     if (!data || typeof data !== 'object' || Array.isArray(data) || data.success !== true ||
       (sessionResponse && (!data.user || !/^[a-f\d]{24}$/i.test(data.user.id || '')))) {
       const read = ['GET', 'HEAD'].includes(method);

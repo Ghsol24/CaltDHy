@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { securityService as authService } from '../../../services/securityService';
+import { authService as accountService } from '../../../services/authService';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { formatRelativeDateTime } from '../../../utils/formatters';
@@ -194,3 +195,35 @@ export function SessionsPanel() {
     </div>}
   </div>;
 }
+
+/**
+ * Replaces the change-password form for an account created with Google / Facebook, which has no
+ * current password to type. The first password is created through the emailed reset link, so it
+ * takes control of the mailbox, not just an open session, to add a password to the account.
+ */
+export function CreatePasswordPanel() {
+  const { lang } = useTranslation();
+  const copy = getSecurityCopy(lang);
+  const email = useAuthStore((state) => state.user?.email || '');
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+  const send = async () => {
+    setBusy(true); setError('');
+    try { await accountService.forgotPassword({ email }); setSent(true); }
+    catch (cause) { setError([503].includes(cause?.status) ? getUserErrorMessage(cause) : problem(cause, copy)); }
+    finally { setBusy(false); }
+  };
+  return <div className="account-card-panel security-panel">
+    <div>
+      <div className="account-panel-label">{copy.noPasswordTitle}</div>
+      <p className="security-text">{copy.noPasswordBody}</p>
+    </div>
+    {error && <div className="account-feedback-msg error" role="alert">{error}</div>}
+    {sent && <div className="account-feedback-msg success" role="status">{copy.noPasswordSent(email)}</div>}
+    <div><Button type="button" variant="primary" size="lg" onClick={send} loading={busy} disabled={busy || sent}>
+      {busy ? copy.noPasswordSending : copy.noPasswordSend}
+    </Button></div>
+  </div>;
+}
+
