@@ -1,6 +1,6 @@
 // Chính sách quyền riêng tư và Điều khoản sử dụng của CaltDHy (vi / en; ngôn ngữ khác dùng bản en).
 // Khi thêm thu thập dữ liệu hoặc bên xử lý mới, cập nhật bản này và `updated`.
-export const CONTACT_EMAIL = ''; // điền email hỗ trợ để hiện mục liên hệ trên cả hai trang
+export const CONTACT_EMAIL = 'giahuyz3sta@gmail.com'; // điền email hỗ trợ để hiện mục liên hệ trên cả hai trang
 
 const vi = {
   back: 'Quay lại', updatedLabel: 'Cập nhật lần cuối', otherDoc: { privacy: 'Xem Điều khoản sử dụng', terms: 'Xem Chính sách quyền riêng tư' },
