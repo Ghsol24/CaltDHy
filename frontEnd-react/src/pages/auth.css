@@ -336,3 +336,13 @@
 .oauth-note { margin: 0 0 18px; color: var(--text-secondary); font-family: var(--font-sans); font-size: var(--font-sm); line-height: 1.55; overflow-wrap: anywhere; }
 .oauth-cancel { margin-top: 12px; }
 .oauth-cancel:disabled { opacity: .65; cursor: not-allowed; }
+
+/* ── Trang pháp lý (/privacy, /terms) ── */
+.auth-page.legal-page { align-items: flex-start; overflow: visible; }
+.legal-page main { width: 100%; max-width: 760px; margin: 0 auto; }
+.legal-doc { text-align: left; line-height: 1.65; }
+.legal-doc h2 { font-size: 1.05rem; margin: 22px 0 6px; }
+.legal-doc p, .legal-doc li { color: var(--text-secondary, inherit); }
+.legal-doc ul { padding-left: 20px; margin: 6px 0; }
+.legal-doc .legal-meta { font-size: 0.85rem; opacity: 0.75; }
+.legal-links { font-size: 0.8rem; margin-top: 10px; opacity: 0.85; }

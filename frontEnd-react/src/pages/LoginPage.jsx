@@ -8,6 +8,7 @@ import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, ClockOutlineIcon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 import { SocialLogin } from '../components/auth/SocialLogin';
+import { LegalLinks } from '../components/auth/LegalLinks';
 import { OAuthConfirm } from '../components/auth/OAuthConfirm';
 import { getSocialCopy, socialErrorText } from '../components/auth/socialLoginCopy';
 import './auth.css';
@@ -231,6 +232,7 @@ export const LoginPage = () => {
               {t('auth.signup')}
             </Link>
           </p>
+          <LegalLinks />
         </IndustrialPanel>
       </main>
     </div>

@@ -8,6 +8,7 @@ import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 import { SocialLogin } from '../components/auth/SocialLogin';
+import { LegalLinks } from '../components/auth/LegalLinks';
 import './auth.css';
 
 function getPasswordStrength(pw, t) {
@@ -181,6 +182,7 @@ export const SignupPage = () => {
               {t('auth.login')}
             </Link>
           </p>
+          <LegalLinks />
         </IndustrialPanel>
       </main>
     </div>

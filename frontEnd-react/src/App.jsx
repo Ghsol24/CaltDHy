@@ -15,10 +15,14 @@ const SignupPage = lazyNamed(() => import('./pages/SignupPage'), 'SignupPage');
 const ResetPasswordPage = lazyNamed(() => import('./pages/ResetPasswordPage'), 'ResetPasswordPage');
 const VerifyEmailPage = lazyNamed(() => import('./pages/VerifyEmailPage'), 'VerifyEmailPage');
 const EmailPreferencesPage = lazyNamed(() => import('./pages/EmailPreferencesPage'), 'EmailPreferencesPage');
+const LegalPage = lazyNamed(() => import('./pages/LegalPage'), 'LegalPage');
 const SpendingPage = lazyNamed(() => import('./pages/SpendingPage'), 'SpendingPage');
 // Tải lười: workbox-window (đăng ký service worker) không cần cho lần vẽ đầu tiên,
 // tách ra khỏi bundle khởi đầu để giữ ngân sách JS 350 KiB.
 const PwaUpdateNotice = lazyNamed(() => import('./components/layout/PwaUpdateNotice'), 'PwaUpdateNotice');
+
+// Liên kết .html cũ vẫn chuyển hướng về route mới (giữ query).
+const LEGACY_HTML = { 'index': '/', 'login': '/login', 'signup': '/signup', 'reset-password': '/reset-password', 'verify-email': '/verify-email' };
 
 function RedirectWithQuery({ to }) {
   const location = useLocation();
@@ -103,21 +107,18 @@ export default function App() {
       <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/index.html" element={<RedirectWithQuery to="/" />} />
         
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/login.html" element={<RedirectWithQuery to="/login" />} />
         
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/signup.html" element={<RedirectWithQuery to="/signup" />} />
         
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/reset-password.html" element={<RedirectWithQuery to="/reset-password" />} />
 
         <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/verify-email.html" element={<RedirectWithQuery to="/verify-email" />} />
 
         <Route path="/email-preferences" element={<EmailPreferencesPage />} />
+        {['/privacy', '/terms'].map((path) => <Route key={path} path={path} element={<LegalPage />} />)}
+        {Object.entries(LEGACY_HTML).map(([name, to]) => <Route key={name} path={`/${name}.html`} element={<RedirectWithQuery to={to} />} />)}
         
         <Route
           path="/spending/*"
