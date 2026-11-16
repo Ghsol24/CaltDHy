@@ -371,21 +371,37 @@
   padding: 0;
 }
 
+/* Hover is a neutral tint; only the current page gets the brand tint and a
+   left bar, so pointing never looks like a second selected item (NAV-08). */
 .sidebar-nav-item:hover {
-  background: var(--color-brand-50, #F1FBF6);
+  background: var(--color-surface-muted, var(--surface-subtle));
   color: var(--text-primary);
 }
 
-.sidebar-nav-item.active {
+.sidebar-nav-item.active,
+.sidebar-nav-item.active:hover {
+  position: relative;
   background: var(--color-brand-50, #F1FBF6);
   color: var(--color-active-text);
   font-weight: 600;
 }
 
+.sidebar-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+
 /* Items sit inside a clipped (foldable) box, so the focus ring is drawn
    inside the item instead of around it. */
 .sidebar-nav-item:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--primary);
+  box-shadow: none;
+  outline-offset: -2px !important;
 }
 
 .sidebar-item-icon {

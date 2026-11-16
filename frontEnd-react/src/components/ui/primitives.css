@@ -245,3 +245,34 @@
   border: 1px solid var(--color-warning-border);
   border-radius: 12px;
 }
+
+/* ============================================================
+   TOUCH TARGETS — 44px minimum on touch screens (X-10). Desktop
+   (fine pointer) keeps the compact sizes.
+   ============================================================ */
+@media (pointer: coarse) {
+  :is(.analytics-segment-btn, .transaction-filter-trigger, .cashflow-text-button, .btn-report-action,
+    .history-chip-button, .calt-custom-select-trigger, .jar-next-strip-switch, .jar-next-strip-cta,
+    .home-btn-add-txn, .home-txns-view-all-btn, .jars-hero-cta-btn) {
+    min-height: 44px;
+  }
+
+  /* Text links that act as buttons: give them a full-height hit area. */
+  :is(.category-history-link, .home-callout-link-btn, .jars-tip-link, .jars-section-action-link,
+    .jar-activity-view-all, .jar-open-detail-btn) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Icon-only buttons. */
+  :is(.recurring-dots-btn, .month-nav-btn, .jars-view-btn, .jar-card-menu-btn, .jar-btn-detail-icon,
+    .wallet-activity-info-trigger, .tip-close-btn, .bdash-hero__previous-link) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .jar-cal-cell {
+    min-height: 44px;
+  }
+}

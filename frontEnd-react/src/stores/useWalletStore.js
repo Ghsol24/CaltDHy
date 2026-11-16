@@ -33,6 +33,7 @@ return ({
   walletHistory: [],
   selectedWalletId: null,
   isLoading: false,
+  loadFailed: false,
   error: null,
 
   setSelectedWalletId: (id) => set({ selectedWalletId: id }),
@@ -66,13 +67,14 @@ return ({
           wallets: calculatedActive,
           archivedWallets: calculatedArchived,
           walletHistory: res.history || [],
-          isLoading: false
+          isLoading: false,
+          loadFailed: false
         });
         return { success: true, data: calculatedActive, archived: calculatedArchived };
       } else {
         throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
+    } catch (error) { set({ isLoading: false, loadFailed: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
   createWallet: async (data) => {

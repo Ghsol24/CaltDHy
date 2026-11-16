@@ -6,14 +6,14 @@ import { transactionTotal } from '../../utils/transactionInsights';
 import { CategoryOutlineIcon, Icon } from '../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 
-export function TransactionRows({ transactions, onEdit, onManage, showDate = false, variant = 'cards' }) {
+export function TransactionRows({ transactions, onEdit, onManage, showDate = false, variant = 'cards', emptyState = null }) {
   const { t, label, lang } = useTranslation();
   const wallets = useWalletStore((state) => state.wallets);
   const archivedWallets = useWalletStore((state) => state.archivedWallets);
   const walletNames = new Map([...wallets, ...archivedWallets].map((wallet) => [wallet.id, wallet.name]));
 
   if (transactions.length === 0) return <div className={variant === 'ledger' ? 'transaction-ledger-table' : undefined}>
-    <p className="transaction-inspection-empty">{t('history.empty')}</p>
+    {emptyState || <p className="transaction-inspection-empty">{t('history.empty')}</p>}
   </div>;
 
   return <div className={variant === 'ledger' ? 'transaction-ledger-table' : 'transaction-inspection-list'}>

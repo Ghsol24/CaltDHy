@@ -213,8 +213,9 @@
   color: #86EFAC;
 }
 
+/* White on the indigo card (FCA5A5 measured 4.28:1); the "−" sign says it is spending. */
 .hero-stat-val--expense {
-  color: #FCA5A5;
+  color: #FFFFFF;
 }
 
 /* ── Left Column: Recent Transactions ── */
@@ -415,8 +416,8 @@
 }
 
 .home-txn-btn-action {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   border: 1px solid var(--color-border, var(--border));
   background: var(--color-surface, var(--surface));

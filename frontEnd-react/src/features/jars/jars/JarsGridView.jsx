@@ -41,7 +41,7 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
             {/* Top Category Tag + Menu */}
             <div className="jar-card-top-row" onClick={(e) => e.stopPropagation()}>
               <span className="jar-category-badge">
-                {jar.category || 'MỤC TIÊU'}
+                {jar.category || 'Mục tiêu'}
               </span>
   
               {/* 3-dots dropdown */}

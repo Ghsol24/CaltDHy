@@ -63,6 +63,7 @@ return ({
   installments: getStoredInstallments(),
   isLoading: false,
   hasLoaded: false,
+  loadFailed: false,
   error: null,
 
   fetchData: async () => {
@@ -84,9 +85,10 @@ return ({
         jars: jarsData,
         installments: instData,
         isLoading: false,
-        hasLoaded: true
+        hasLoaded: true,
+        loadFailed: false
       });
-    } catch (error) { set({ isLoading: false, hasLoaded: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
+    } catch (error) { set({ isLoading: false, hasLoaded: true, loadFailed: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
   createJar: async (data) => {

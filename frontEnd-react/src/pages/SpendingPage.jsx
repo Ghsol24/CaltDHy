@@ -7,6 +7,7 @@ import { useJarStore } from '../stores/useJarStore';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { MoneyDisplayGuard } from '../components/ui/MoneyDisplayGuard';
 import { PageSkeleton } from '../components/ui/PageSkeleton';
+import { LoadErrorBanner } from '../components/ui/LoadErrorBanner';
 import { getLocalMonthString } from '../utils/formatters';
 import { SpendingRouteSync } from '../components/layout/SpendingRouteSync';
 import { useLangStore } from '../stores/useLangStore';
@@ -35,6 +36,20 @@ export function SpendingPage() {
   const isTxnsLoading = useTransactionStore((s) => s.isLoading);
   const hasLoadedTransactions = useTransactionStore((s) => s.hasLoadedTransactions);
   const isInitialLoading = isTxnsLoading && !hasLoadedTransactions;
+  const txnsFailed = useTransactionStore((s) => s.loadFailed);
+  const walletsFailed = useWalletStore((s) => s.loadFailed);
+  const jarsFailed = useJarStore((s) => s.loadFailed);
+  const isWalletsLoading = useWalletStore((s) => s.isLoading);
+  const isJarsLoading = useJarStore((s) => s.isLoading);
+  // Any failed base load hides the numbers: a balance computed without its
+  // transactions or wallets would be wrong, not merely incomplete.
+  const loadFailed = txnsFailed || walletsFailed || jarsFailed;
+  const isRetrying = loadFailed && (isTxnsLoading || isWalletsLoading || isJarsLoading);
+  const retryFailedLoads = () => {
+    if (txnsFailed) fetchTransactions();
+    if (walletsFailed) fetchWallets();
+    if (jarsFailed) fetchJarData();
+  };
 
   useEffect(() => {
     const currentMonth = getLocalMonthString();
@@ -50,7 +65,12 @@ export function SpendingPage() {
       <AppShell key={`${lang}-${displayCurrency}`}>
       <ErrorBoundary resetKey={`${activeView}:${analyticsSubTab}:${planSubTab}:${jarsSubTab}`}>
         <MoneyDisplayGuard>
-        {isInitialLoading ? (
+        {loadFailed ? (
+          <>
+            <LoadErrorBanner onRetry={retryFailedLoads} retrying={isRetrying} />
+            <PageSkeleton decorative />
+          </>
+        ) : isInitialLoading ? (
           <PageSkeleton />
         ) : (
           <Suspense fallback={<PageSkeleton />}>

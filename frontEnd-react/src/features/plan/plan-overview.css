@@ -562,6 +562,7 @@
   color: var(--color-text-secondary, var(--text-secondary));
   padding: 1px 0;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .cal-weekday.cal-danger {
@@ -816,7 +817,7 @@
 }
 
 .wallet-growth-tag.wallet-growth-tag--tone {
-  color: var(--color-brand, #078A59);
+  color: var(--color-success, #047857);
   background-color: var(--color-brand-bg, rgba(7, 138, 89, 0.12));
 }
 

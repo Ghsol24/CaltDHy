@@ -1,10 +1,12 @@
 import React from 'react';
 import { useTranslation } from '../../i18n/useTranslation';
 
-export function PageSkeleton() {
+/** `decorative`: placeholder shapes only (e.g. beside a load error), not announced as loading. */
+export function PageSkeleton({ decorative = false }) {
   const { t } = useTranslation();
+  const a11y = decorative ? { 'aria-hidden': true } : { role: 'status', 'aria-label': t('common.loading') };
   return (
-    <div className="page-skeleton-container" role="status" aria-label={t('common.loading')}>
+    <div className="page-skeleton-container" {...a11y}>
       {/* Top KPI Cards Skeleton */}
       <div className="page-skeleton-kpi-grid">
         {[1, 2, 3].map((i) => (

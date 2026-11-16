@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { Topbar } from './Topbar';
 import { SidebarNav } from './SidebarNav';
@@ -22,6 +23,9 @@ export function AppShell({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { t } = useTranslation();
 
+  // Screen readers hear that the page is still loading (NAV-13).
+  const isFirstLoad = useTransactionStore((state) => state.isLoading && !state.hasLoadedTransactions);
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -34,7 +38,7 @@ export function AppShell({ children }) {
       <Topbar />
       <div className="app-body-container">
         <SidebarNav />
-        <main id="main-content" className="app-main" tabIndex={-1}>
+        <main id="main-content" className="app-main" tabIndex={-1} aria-busy={isFirstLoad || undefined}>
           <MobileSectionNavigation />
           <div className="app-container">
             {children || <Outlet />}

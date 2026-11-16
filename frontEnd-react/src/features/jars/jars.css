@@ -649,13 +649,24 @@
   justify-content: space-between;
 }
 
+/* Jar type label: neutral text + a dot in the jar's colour. The jar colour is
+   user-chosen and too light for 12px text (3.6:1), so it never colours text (X-11). */
 .jar-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--font-xs);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 6px;
+  font-weight: 600;
+  padding: 3px 0;
+}
+
+.jar-category-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--jar-accent-color);
+  flex: none;
 }
 
 .jar-card-menu-btn {
@@ -1304,7 +1315,10 @@
 /* ── Jar accent tints ──
    Each card/row sets --jar-accent-color from the jar's own colour; tints are
    mixed here instead of gluing an alpha suffix onto a hex string in JSX. */
-.jar-category-badge,
+.jar-category-badge {
+  color: var(--text-secondary);
+}
+
 .jar-list-icon,
 .jar-list-badge {
   background: color-mix(in srgb, var(--jar-accent-color) 9.4%, transparent);
