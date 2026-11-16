@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatCurrency, formatPercent } from '../../../utils/formatters';
+import { formatChangePercent, formatCurrency, formatPercent } from '../../../utils/formatters';
 
 export function ReportSummaryCards({ reportData }) {
   return (
@@ -20,7 +20,7 @@ export function ReportSummaryCards({ reportData }) {
             {reportData.prevStats.income === 0 && reportData.curStats.income > 0
               ? `↑ +${formatPercent(100, { fractionDigits: 1 })}`
               : reportData.incomeDelta > 0
-              ? `↑ +${formatPercent(Math.abs(reportData.incomeDeltaPct), { fractionDigits: 1 })}`
+              ? formatChangePercent(reportData.incomeDeltaPct)
               : reportData.incomeDelta < 0
               ? `↓ -${formatPercent(Math.abs(reportData.incomeDeltaPct), { fractionDigits: 1 })}`
               : `~ ${formatPercent(0, { fractionDigits: 1 })}`}
@@ -31,7 +31,7 @@ export function ReportSummaryCards({ reportData }) {
         </strong>
         <div className="report-summary-card__meta">
           <span>Kỳ trước: {formatCurrency(reportData.prevStats.income)}</span>
-          <span>{reportData.curStats.incomeCount} GD</span>
+          <span>{reportData.curStats.incomeCount} giao dịch</span>
         </div>
       </div>
     
@@ -57,7 +57,7 @@ export function ReportSummaryCards({ reportData }) {
               : reportData.prevStats.expense > 0 && reportData.curStats.expense === 0
               ? `↓ -${formatPercent(100, { fractionDigits: 1 })}`
               : reportData.expenseDelta > 0
-              ? `↑ +${formatPercent(Math.abs(reportData.expenseDeltaPct), { fractionDigits: 1 })}`
+              ? formatChangePercent(reportData.expenseDeltaPct)
               : reportData.expenseDelta < 0
               ? `↓ -${formatPercent(Math.abs(reportData.expenseDeltaPct), { fractionDigits: 1 })}`
               : `~ ${formatPercent(0, { fractionDigits: 1 })}`}
@@ -68,14 +68,14 @@ export function ReportSummaryCards({ reportData }) {
         </strong>
         <div className="report-summary-card__meta">
           <span>Kỳ trước: {formatCurrency(reportData.prevStats.expense)}</span>
-          <span>{reportData.curStats.expenseCount} GD</span>
+          <span>{reportData.curStats.expenseCount} giao dịch</span>
         </div>
       </div>
     
       {/* Summary 3: Dòng tiền thuần */}
       <div className="report-summary-card">
         <div className="report-summary-card__header">
-          <span className="report-summary-card__title">Dòng tiền thuần (Net)</span>
+          <span className="report-summary-card__title">Dòng tiền thuần</span>
           <span className={`delta-badge ${
             reportData.curStats.net > 0
               ? 'delta-badge--up-good'

@@ -16,15 +16,10 @@ import { getPlanCopy } from './planCopy';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
 import { buildPlanAlerts } from '../../utils/planAlerts';
 import { PlanAttentionBar } from './PlanAttentionBar';
+import { WALLET_TYPE_LABELS } from './wallets/walletLabels';
 import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
-const WALLET_TYPE_LABELS = {
-  cash: 'Tiền mặt',
-  bank: 'Ngân hàng',
-  credit: 'Thẻ tín dụng',
-  'e-wallet': 'Ví điện tử'
-};
 
 export function PlanOverviewTab() {
   const { label, lang } = useTranslation();
@@ -275,14 +270,14 @@ export function PlanOverviewTab() {
 
       {/* ── 3. SECTION 2: TỔNG QUAN NHANH (3 METRIC CARDS) ── */}
       <div className="plan-metrics-grid">
-        {/* Card 1: Tổng tài sản */}
+        {/* Card 1: Tổng số dư các ví */}
         <div className="plan-metric-card">
           <div className="metric-card-top-row">
             <div className="metric-icon-circle metric-icon--purple" aria-hidden="true">
               <Icon name="creditCard" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </div>
             <div className="metric-titles">
-              <span className="plan-metric-label">Tổng tài sản</span>
+              <span className="plan-metric-label">Tổng số dư các ví</span>
               <strong className="plan-metric-value">
                 {formatCurrency(totalAssets)}
               </strong>

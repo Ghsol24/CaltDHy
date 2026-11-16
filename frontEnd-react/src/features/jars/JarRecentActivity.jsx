@@ -47,7 +47,7 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
                   <div className="jar-activity-text">
                     <span className="jar-activity-desc">{deposit ? copy.depositInto(event.jarName) : copy.withdrawFrom(event.jarName)}</span>
                     <span className="jar-activity-meta">
-                      {formatDate(event.date, 'full', { locale: lang })}{event.reason ? ` · ${event.reason}` : ''}
+                      {formatDate(event.date, 'short', { locale: lang })}{event.reason ? ` · ${event.reason}` : ''}
                     </span>
                   </div>
                   <strong className={`jar-activity-amount is-${event.type}`}>

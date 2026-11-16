@@ -8,6 +8,7 @@ import { useWalletStore } from '../../stores/useWalletStore';
 import { useJarStore } from '../../stores/useJarStore';
 import { Dialog } from '../../components/ui/Dialog';
 import { useBudgetCopy } from './budgetCopy';
+import { useTranslation } from '../../i18n/useTranslation';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { CategoryOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/financeMath';
@@ -69,6 +70,7 @@ function PlusIcon() {
 
 export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   const t = useBudgetCopy();
+  const { label } = useTranslation();
   const { budgets, expenseCategories, transactions, updateBudgetsAndCategories } = useTransactionStore();
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const { addToast } = useToastStore();
@@ -253,7 +255,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
     addToast({
       type: 'info',
-      message: `Đã bỏ "${name}" khỏi bản nháp. Nhấn Lưu để xác nhận.`,
+      message: `Đã bỏ "${label(name)}" khỏi bản nháp. Nhấn Lưu để xác nhận.`,
       action: {
         label: 'Hoàn tác',
         onClick: () => {
@@ -262,7 +264,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
             const at = Math.min(index, prev.length);
             return [...prev.slice(0, at), removed, ...prev.slice(at)];
           });
-          addToast({ type: 'success', message: `Đã khôi phục danh mục "${removed.name}".` });
+          addToast({ type: 'success', message: `Đã khôi phục danh mục "${label(removed.name)}".` });
         }
       },
       duration: 5000
@@ -455,7 +457,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                     </span>
 
                     <div className="blimit-row__text">
-                      <span className="blimit-row__name" title={row.name}>{row.name}</span>
+                      <span className="blimit-row__name" title={label(row.name)}>{label(row.name)}</span>
                       <span id={spentId} className={`blimit-row__spent is-${tone}`}>
                         {spent > 0 ? t('budgetEditor.spent', { amount: formatCurrency(spent) }) : t('budgetEditor.noSpending')}
                         {tone === 'over' && <span className="blimit-row__spent-extra"> · {t('budgetEditor.overLimit')}</span>}
@@ -473,7 +475,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                         placeholder={t('budgetEditor.unlimited')}
                         value={row.input}
                         onChange={(e) => handleRowInputChange(row.name, e.target.value)}
-                        aria-label={t('budgetEditor.limitFor', { name: row.name })}
+                        aria-label={t('budgetEditor.limitFor', { name: label(row.name) })}
                         aria-describedby={spentId}
                       />
                       {row.input && <span className="blimit-amount__suffix" aria-hidden="true">₫</span>}
@@ -487,8 +489,8 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                           deleteTriggerRef.current = e.currentTarget;
                           setDeletingName(isDeleting ? null : row.name);
                         }}
-                        aria-label={`Xóa danh mục ${row.name}`}
-                        title={`Xóa danh mục ${row.name}`}
+                        aria-label={`Xóa danh mục ${label(row.name)}`}
+                        title={`Xóa danh mục ${label(row.name)}`}
                         aria-haspopup="dialog"
                         aria-expanded={isDeleting}
                       >
@@ -497,7 +499,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
                       {isDeleting && (
                         <div className="blimit-confirm" role="alertdialog" aria-labelledby={confirmId}>
-                          <p id={confirmId}>{t('budgetEditor.deleteConfirm', { name: row.name })}</p>
+                          <p id={confirmId}>{t('budgetEditor.deleteConfirm', { name: label(row.name) })}</p>
                           <div className="blimit-confirm__actions">
                             <button type="button" className="blimit-confirm__btn is-ghost" onClick={closeDeleteConfirm}>
                               {t('common.cancel')}

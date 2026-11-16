@@ -73,7 +73,7 @@ test('delete confirmation names the real type, date and wallets, and adds past-m
 
   const past = deleteConfirmMessage(original, options);
   assert.match(past, /Phí/);
-  assert.match(past, /tháng 9 năm 2026/);
+  assert.match(past, /Tháng 9, 2026/);
   assert.ok(past.includes(translate('vi', 'transaction.changeRecorded')));
 });
 

@@ -54,14 +54,14 @@ export const AvailableToSpendCard = React.memo(function AvailableToSpendCard() {
         <div className="hero-stat-col">
           <span className="hero-stat-label">{t('home.spentThisMonth')}</span>
           <strong className="hero-stat-val hero-stat-val--expense">
-            −{formatCurrency(monthlyExpense)}
+            {monthlyExpense > 0 ? '−' : ''}{formatCurrency(monthlyExpense)}
           </strong>
         </div>
 
         <div className="hero-stat-col">
           <span className="hero-stat-label">{t('home.incomeThisMonth')}</span>
           <strong className="hero-stat-val hero-stat-val--income">
-            +{formatCurrency(monthlyIncome)}
+            {monthlyIncome > 0 ? '+' : ''}{formatCurrency(monthlyIncome)}
           </strong>
         </div>
       </div>

@@ -134,12 +134,23 @@ export function formatCurrency(value, options = {}) {
   return `+${formatted}`;
 }
 
+// Vietnamese shorthand people already write: 600k, 1,5tr, 2 tỷ (X-04).
+const VI_COMPACT_UNITS = [[1e9, ' tỷ'], [1e6, 'tr'], [1e3, 'k']];
+
 /** Compact axis labels; only the returned label is converted, never the plotted VND value. */
 export function formatCompactCurrency(value, options = {}) {
   const locale = resolveLocale(options);
   const currency = resolveDisplayCurrency(options);
   const amount = convertVndForDisplay(value, { currency, vndPerUsd: options.vndPerUsd });
   if (amount === null || !Number.isFinite(Number(amount))) return translate(locale, 'common.outOfRange');
+  if (locale === 'vi' && currency === BASE_CURRENCY) {
+    const number = Number(amount);
+    const abs = Math.abs(number);
+    const sign = number < 0 ? '−' : '';
+    const unit = VI_COMPACT_UNITS.find(([size]) => abs >= size);
+    if (!unit) return `${sign}${formatNumber(abs, { locale })}`;
+    return `${sign}${formatNumber(abs / unit[0], { locale, maximumFractionDigits: 1 })}${unit[1]}`;
+  }
   return getNumberFormatter(getIntlLocale(locale), {
     style: 'currency', currency, currencyDisplay: 'narrowSymbol', notation: 'compact',
     maximumFractionDigits: currency === 'USD' ? 2 : 1,
@@ -171,27 +182,75 @@ export function parseDate(value) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+// Two date shapes for the whole app (X-03): long "13 tháng 11, 2026" for headings
+// and short "13/11" for lists and tables (the year is added when it is not this year).
 const DATE_OPTIONS = {
-  full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
-  short: { year: 'numeric', month: 'short', day: 'numeric' },
+  full: { year: 'numeric', month: 'long', day: 'numeric' },
+  short: { month: '2-digit', day: '2-digit' },
+  'short-with-year': { year: 'numeric', month: '2-digit', day: '2-digit' },
   compact: { year: 'numeric', month: '2-digit', day: '2-digit' },
   'day-date': { year: 'numeric', month: '2-digit', day: '2-digit' },
   month: { year: 'numeric', month: 'long' },
+  'weekday-day-month': { weekday: 'short', day: '2-digit', month: '2-digit' },
 };
+
+function appLocaleFromIntl(intlLocale) {
+  const tag = String(intlLocale || '').toLowerCase();
+  if (tag.startsWith('en')) return 'en';
+  if (tag.startsWith('zh')) return 'zh-CN';
+  return 'vi';
+}
+
+function capitalizeFirst(text, intlLocale) {
+  return text ? text.charAt(0).toLocaleUpperCase(intlLocale) + text.slice(1) : text;
+}
+
+/**
+ * "Tháng 11, 2026" (vi) / "November 2026" (en). `omitCurrentYear` drops the year
+ * when it is this year ("Tháng 11"); `lowercase` gives "tháng 11" for use inside
+ * a Vietnamese sentence. Accepts an app locale or, for components that only
+ * know it, an Intl locale (`intlLocale`).
+ */
+export function formatMonthYear(value, options = {}) {
+  const date = parseDate(value);
+  if (!date) return '';
+  const locale = options.intlLocale ? appLocaleFromIntl(options.intlLocale) : resolveLocale(options);
+  const intlLocale = getIntlLocale(locale);
+  const omitYear = options.omitCurrentYear && date.getFullYear() === new Date().getFullYear();
+  if (locale === 'vi') {
+    const text = `tháng ${date.getMonth() + 1}${omitYear ? '' : `, ${date.getFullYear()}`}`;
+    return options.lowercase ? text : capitalizeFirst(text, intlLocale);
+  }
+  const text = getDateFormatter(intlLocale, omitYear ? { month: 'long' } : { month: 'long', year: 'numeric' }).format(date);
+  return capitalizeFirst(text, intlLocale);
+}
 
 export function formatDate(value, format = 'full', options = {}) {
   const date = parseDate(value);
   if (!date) return '';
-  const locale = getIntlLocale(resolveLocale(options));
-  return getDateFormatter(locale, DATE_OPTIONS[format] || DATE_OPTIONS.short).format(date);
+  if (format === 'month') return formatMonthYear(date, options);
+  const appLocale = resolveLocale(options);
+  const otherYear = date.getFullYear() !== new Date().getFullYear();
+  // ICU writes "13-11" for vi day+month without a year; Vietnamese readers expect "13/11".
+  if (format === 'short' && appLocale === 'vi') {
+    const dayMonth = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+    return otherYear ? `${dayMonth}/${date.getFullYear()}` : dayMonth;
+  }
+  const key = format === 'short' && otherYear ? 'short-with-year' : format;
+  return getDateFormatter(getIntlLocale(appLocale), DATE_OPTIONS[key] || DATE_OPTIONS.short).format(date);
+}
+
+// Date-only values are stored at midnight; "00:00" adds nothing, so it is left out.
+function hasClockTime(date) {
+  return date.getHours() !== 0 || date.getMinutes() !== 0;
 }
 
 export function formatDateTime(value, options = {}) {
   const date = parseDate(value);
   if (!date) return '';
-  return getDateFormatter(getIntlLocale(resolveLocale(options)), {
-    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-  }).format(date);
+  const locale = resolveLocale(options);
+  const day = formatDate(date, 'short', { locale });
+  return hasClockTime(date) ? `${day}, ${formatTime(date, { locale })}` : day;
 }
 
 export function formatMonthShort(value, options = {}) {
@@ -232,7 +291,8 @@ export function formatRelativeDateTime(value, options = {}) {
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const diffDays = Math.round((today.getTime() - target.getTime()) / 86400000);
   if (diffDays === 0 || diffDays === 1) {
-    return `${translate(locale, diffDays === 0 ? 'date.today' : 'date.yesterday')}, ${formatTime(date, { locale })}`;
+    const dayText = translate(locale, diffDays === 0 ? 'date.today' : 'date.yesterday');
+    return hasClockTime(date) ? `${dayText}, ${formatTime(date, { locale })}` : dayText;
   }
   return formatDateTime(date, { locale });
 }
@@ -245,6 +305,23 @@ export function formatPercent(value, options = {}) {
   return getNumberFormatter(getIntlLocale(resolveLocale(options)), {
     style: 'percent', minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits,
   }).format(Number.isFinite(number) ? number / 100 : 0);
+}
+
+/**
+ * "↑ +18,6%" / "↓ -42,0%"; a rise of 300% or more reads "↑ gấp 41 lần" because a
+ * percentage that large (usually against a tiny previous period) says little.
+ */
+export function formatChangePercent(value, options = {}) {
+  const pct = Number(value);
+  if (!Number.isFinite(pct)) return '—';
+  const locale = resolveLocale(options);
+  const fractionDigits = options.fractionDigits ?? 1;
+  if (pct >= 300) {
+    return `↑ ${translate(locale, 'change.times', { count: formatNumber(Math.round(pct / 100 + 1), { locale }) })}`;
+  }
+  if (pct > 0) return `↑ +${formatPercent(pct, { locale, fractionDigits })}`;
+  if (pct < 0) return `↓ -${formatPercent(Math.abs(pct), { locale, fractionDigits })}`;
+  return `~ ${formatPercent(0, { locale, fractionDigits })}`;
 }
 
 export function getDueStatus(value, options = {}) {

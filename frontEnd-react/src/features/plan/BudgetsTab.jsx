@@ -7,6 +7,7 @@ import { monthPeriod, shiftMonth } from '../../utils/budgetPeriod';
 import { buildBudgetModel } from '../../utils/budgetModel';
 import { CategoryOutlineIcon, BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { useBudgetCopy } from './budgetCopy';
+import { useTranslation } from '../../i18n/useTranslation';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
@@ -63,6 +64,7 @@ function ChevronIcon() {
 }
 
 function LimitedRow({ item, editable, period, onEdit, t }) {
+  const { label } = useTranslation();
   const tone = toneFor(item.percent, item.isOver);
   const overAmount = item.isOver ? item.spent - item.limit : 0;
   const Tag = editable ? 'button' : 'div';
@@ -74,7 +76,7 @@ function LimitedRow({ item, editable, period, onEdit, t }) {
         <CategoryOutlineIcon name={item.category} size={18} />
       </span>
       <span className="bdash-row__name">
-        <span className="bdash-row__name-text" title={item.category}>{item.category}</span>
+        <span className="bdash-row__name-text" title={label(item.category)}>{label(item.category)}</span>
         {item.isOver && (
           <span
             className="bdash-row__alert"
@@ -118,6 +120,7 @@ function LimitedRow({ item, editable, period, onEdit, t }) {
 }
 
 function UnsetRow({ item, editable, onEdit, t }) {
+  const { label } = useTranslation();
   const Tag = editable ? 'button' : 'div';
   const interactiveProps = editable ? { type: 'button', onClick: () => onEdit(item.category) } : {};
 
@@ -127,7 +130,7 @@ function UnsetRow({ item, editable, onEdit, t }) {
         <CategoryOutlineIcon name={item.category} size={18} />
       </span>
       <span className="bdash-row__name">
-        <span className="bdash-row__name-text" title={item.category}>{item.category}</span>
+        <span className="bdash-row__name-text" title={label(item.category)}>{label(item.category)}</span>
       </span>
       <span className="bdash-row__note">{t('budgets.unsetNote', { amount: formatCurrency(item.spent) })}</span>
       {editable && (
@@ -296,7 +299,7 @@ export function BudgetsTab() {
     if (period === 'current') {
       stats = [
         { key: 'daily', label: t('budgets.dailyCapLabel'),
-          value: formatCurrency(roundDownToThousand(Math.max(0, remaining) / timeline.daysLeft)), tone: remaining <= 0 ? 'over' : null },
+          value: remaining <= 0 ? t('budgets.dailyCapExhausted') : formatCurrency(roundDownToThousand(remaining / timeline.daysLeft)), tone: remaining <= 0 ? 'over' : null },
         { key: 'days', label: t('budgets.daysLeftLabel'), value: t('budgets.daysLeftValue', { count: timeline.daysLeft }) }
       ];
     } else if (period === 'past') {

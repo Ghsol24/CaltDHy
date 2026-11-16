@@ -22,7 +22,9 @@ export function Topbar() {
     .substring(0, 2)
     .toUpperCase() || 'U';
 
-  const todayStr = formatDate(new Date(), 'full');
+  const today = new Date();
+  const todayFull = formatDate(today, 'full');
+  const todayStr = formatDate(today, 'weekday-day-month');
 
   return (
     <header className="topbar" role="banner">
@@ -39,13 +41,12 @@ export function Topbar() {
             Calt<span className="tb-logo-accent">D</span>Hy
           </span>
         </Link>
-        <span className="tb-badge">v2.0</span>
       </div>
 
       {/* ── Right Actions ── */}
       <div className="tb-right">
         {/* Date Display */}
-        <div className="tb-date" title={todayStr}>
+        <div className="tb-date" title={todayFull}>
           <Icon name="calendarRounded" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
           <span>{todayStr}</span>
         </div>

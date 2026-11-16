@@ -277,9 +277,8 @@
 }
 
 .empty-heading-caps {
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   font-weight: 700;
-  letter-spacing: 0.08em;
   color: var(--color-text-secondary, #607086);
 }
 
@@ -606,8 +605,6 @@
   font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-text-secondary, #607086);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .report-summary-card__amount {
@@ -761,8 +758,6 @@
   color: var(--color-text-secondary, #607086);
   font-size: var(--font-xs);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   padding: 12px 14px;
   border-bottom: 1px solid var(--color-border, #E3ECE7);
   white-space: nowrap;

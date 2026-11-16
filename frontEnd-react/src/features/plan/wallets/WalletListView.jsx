@@ -10,7 +10,7 @@ export function WalletListView({ deletingWalletId, filteredWallets, handleArchiv
     <div className="wallets-horizontal-list">
       {filteredWallets.map((w) => {
         const isNegative = Number(w.currentBalance) < 0;
-        const typeLabel = WALLET_TYPE_LABELS[w.type] || 'Ví tiền mặt';
+        const typeLabel = WALLET_TYPE_LABELS[w.type] || WALLET_TYPE_LABELS.cash;
         const accentColor = w.color || '#10B981';
         const txCount = walletTxCountMap[w.id] || 0;
         const isMenuOpen = openMenuWalletId === w.id;

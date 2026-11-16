@@ -67,16 +67,16 @@ export function WalletBalanceDistributionCard({ chartTotal, distDropdownRef, dis
           totalBalance={chartTotal}
           hoveredId={hoveredSliceId}
           onHoverSlice={setHoveredSliceId}
-          centerLabel={distributionMode === 'balance' ? 'Tổng số dư' : 'Tổng giao dịch'}
+          centerLabel={distributionMode === 'balance' ? 'Tổng số dư các ví' : 'Tổng giao dịch'}
           isCountMode={distributionMode === 'txCount'}
         />
     
         <div className="donut-table-wrapper">
           <div className="donut-table-header">
-            <span className="donut-th-cat">Danh mục</span>
+            <span className="donut-th-cat">Ví</span>
             <span className="donut-th-pct">Tỷ lệ</span>
             <span className="donut-th-val">
-              {distributionMode === 'balance' ? 'Số tiền' : 'Số GD'}
+              {distributionMode === 'balance' ? 'Số dư' : 'Số giao dịch'}
             </span>
             <span className="donut-th-spacer" aria-hidden="true" />
           </div>
@@ -117,7 +117,7 @@ export function WalletBalanceDistributionCard({ chartTotal, distDropdownRef, dis
                     <div className="donut-row-val">
                       {distributionMode === 'balance'
                         ? formatCurrency(slice.balance)
-                        : `${slice.balance} GD`}
+                        : `${slice.balance} giao dịch`}
                     </div>
     
                     <div className="donut-row-chevron" aria-hidden="true">
@@ -132,7 +132,7 @@ export function WalletBalanceDistributionCard({ chartTotal, distDropdownRef, dis
           {donutSlices.length > 0 && (
             <div className="donut-table-footer">
               <Icon name="info" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <span>Tổng {donutSlices.length} danh mục</span>
+              <span>{distributionMode === 'balance' ? `${donutSlices.length} ví có số dư` : `${donutSlices.length} ví có giao dịch`}</span>
             </div>
           )}
         </div>

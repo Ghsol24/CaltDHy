@@ -37,10 +37,10 @@ export function AnalyticsKpiGrid({ monthData }) {
         </div>
       </div>
     
-      {/* Card 3: Dòng tiền thuần (Net) */}
+      {/* Card 3: Dòng tiền thuần */}
       <div className="analytics-kpi-card card-net">
         <div className="kpi-card-header">
-          <span className="kpi-card-label">Dòng tiền thuần (Net)</span>
+          <span className="kpi-card-label">Dòng tiền thuần</span>
           <div className="kpi-icon-badge badge-net" aria-hidden="true">
             <Icon name="rangeVertical" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </div>
@@ -87,10 +87,10 @@ export function AnalyticsKpiGrid({ monthData }) {
             {monthData.income <= 0
               ? 'Chưa có dữ liệu'
               : monthData.savingsRate >= 20
-              ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Mục tiêu ≥ 20%)`
+              ? 'Mục tiêu ≥ 20%'
               : monthData.savingsRate >= 0
-              ? `Tiết kiệm ${formatPercent(monthData.savingsRate)} (Dưới mục tiêu 20%)`
-              : `Thâm hụt ${formatPercent(Math.abs(monthData.savingsRate))} thu nhập`}
+              ? 'Dưới mục tiêu 20%'
+              : 'Chi vượt thu'}
           </span>
         </div>
       </div>

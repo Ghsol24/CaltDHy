@@ -4,7 +4,7 @@ import { formatCurrency, formatPercent } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function ReportCategoryTable({ activeMonth, curQuarterMonths, reportData, reportPeriodType, viewCategoryHistory }) {
-  const { t } = useTranslation();
+  const { t, label } = useTranslation();
   return (
     <div className="report-table-wrapper">
       <table className="report-table" aria-label="Bảng phân tích chi tiết chi phí theo danh mục">
@@ -14,7 +14,7 @@ export function ReportCategoryTable({ activeMonth, curQuarterMonths, reportData,
             <th className="report-table__th--box2">Chi tiêu kỳ này</th>
             <th className="report-table__th--box2">So với kỳ trước</th>
             <th className="report-table__th--box3">Tỷ trọng</th>
-            <th className="report-table__th--box4">Số GD</th>
+            <th className="report-table__th--box4">Số giao dịch</th>
             <th className="report-table__th--box3">Hạn mức</th>
             <th className="report-table__th--box5">Ngân sách</th>
             <th className="report-table__th--box6">Đánh giá & Khuyến nghị</th>
@@ -41,7 +41,7 @@ export function ReportCategoryTable({ activeMonth, curQuarterMonths, reportData,
                       <span className="table-cat-icon table-cat-icon--layout">
                         <CategoryOutlineIcon name={cat.name} size={15} />
                       </span>
-                      <span className="table-cat-name">{cat.name}</span>
+                      <span className="table-cat-name">{label(cat.name)}</span>
                     </div>
                     {cat.spentCur > 0 && <button type="button" className="category-history-link"
                       onClick={() => viewCategoryHistory(cat.name,

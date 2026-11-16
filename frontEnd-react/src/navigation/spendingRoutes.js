@@ -3,20 +3,21 @@ const ANALYTICS_TABS = new Set(['overview', 'spending', 'cash-flow', 'reports', 
 const JARS_PATH_TO_TAB = { goals: 'goals', list: 'jars', history: 'history' };
 const JARS_TAB_TO_PATH = { goals: 'goals', jars: 'list', history: 'history' };
 
+// groupKey names the sidebar group so both "Tổng quan" pages get distinct tab titles.
 const ROUTE_META = {
   home: { titleKey: 'nav.home', focus: '.home-dashboard-greeting' },
-  'plan:overview': { titleKey: 'nav.overview', focus: '.plan-overview-title' },
-  'plan:wallets': { titleKey: 'nav.wallets', focus: '.wallets-v2-heading' },
-  'plan:budgets': { titleKey: 'nav.budgets', focus: '.budgets-view-title' },
-  'plan:recurring': { titleKey: 'nav.recurring', focus: '.recurring-route-heading' },
-  'analytics:overview': { titleKey: 'nav.overview', focus: '#analytics-overview' },
-  'analytics:spending': { titleKey: 'nav.spending', focus: '#analytics-spending' },
-  'analytics:cash-flow': { titleKey: 'nav.cashFlow', focus: '#analytics-cashflow' },
-  'analytics:reports': { titleKey: 'nav.reports', focus: '#analytics-reports' },
-  'analytics:transactions': { titleKey: 'nav.transactionHistory', focus: '#transaction-history-title' },
-  'jars:goals': { titleKey: 'nav.goals', focus: '#jars-section-goals' },
-  'jars:jars': { titleKey: 'nav.jarList', focus: '#jars-section-list' },
-  'jars:history': { titleKey: 'nav.history', focus: '#jars-section-history' }
+  'plan:overview': { groupKey: 'nav.plan', titleKey: 'nav.overview', focus: '.plan-overview-title' },
+  'plan:wallets': { groupKey: 'nav.plan', titleKey: 'nav.wallets', focus: '.wallets-v2-heading' },
+  'plan:budgets': { groupKey: 'nav.plan', titleKey: 'nav.budgets', focus: '.budgets-view-title' },
+  'plan:recurring': { groupKey: 'nav.plan', titleKey: 'nav.recurring', focus: '.recurring-route-heading' },
+  'analytics:overview': { groupKey: 'nav.analytics', titleKey: 'nav.analyticsOverview', focus: '#analytics-overview' },
+  'analytics:spending': { groupKey: 'nav.analytics', titleKey: 'nav.spending', focus: '#analytics-spending' },
+  'analytics:cash-flow': { groupKey: 'nav.analytics', titleKey: 'nav.cashFlow', focus: '#analytics-cashflow' },
+  'analytics:reports': { groupKey: 'nav.analytics', titleKey: 'nav.reports', focus: '#analytics-reports' },
+  'analytics:transactions': { groupKey: 'nav.analytics', titleKey: 'nav.transactionHistory', focus: '#transaction-history-title' },
+  'jars:goals': { groupKey: 'nav.jars', titleKey: 'nav.goals', focus: '#jars-section-goals' },
+  'jars:jars': { groupKey: 'nav.jars', titleKey: 'nav.jarList', focus: '#jars-section-list' },
+  'jars:history': { groupKey: 'nav.jars', titleKey: 'nav.history', focus: '#jars-section-history' }
 };
 
 export function parseSpendingPath(pathname) {

@@ -265,7 +265,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                     onChange={handleAmountChange}
                     required
                   />
-                  <span className="modal-pro-amount-suffix">VNĐ</span>
+                  <span className="modal-pro-amount-suffix">₫</span>
                 </div>
                 <p className="modal-field-hint">Số tiền sẽ được trừ từ ví nguồn</p>
               </div>
@@ -293,7 +293,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                     value={fee}
                     onChange={handleFeeChange}
                   />
-                  <span className="modal-pro-amount-suffix">VNĐ</span>
+                  <span className="modal-pro-amount-suffix">₫</span>
                 </div>
                 <p className="modal-field-hint">Phí giao dịch sẽ được trừ thêm vào ví gửi</p>
               </div>

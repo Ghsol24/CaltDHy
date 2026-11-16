@@ -62,6 +62,8 @@ export function SidebarNav() {
     {
       id: 'group_home',
       groupLabel: t('nav.home'),
+      // A one-item group needs no header: "Trang chủ" stands on its own (NAV-03).
+      standalone: true,
       items: [
         { id: 'home_main', viewId: 'home', label: t('nav.home'), icon: 'home', isActive: activeView === 'home' }
       ]
@@ -93,7 +95,7 @@ export function SidebarNav() {
       groupLabel: t('nav.analytics'),
       items: [
         {
-          id: 'analytics_overview', viewId: 'analytics', subTabId: 'overview', label: t('nav.overview'), icon: 'analyticsOverview',
+          id: 'analytics_overview', viewId: 'analytics', subTabId: 'overview', label: t('nav.analyticsOverview'), icon: 'analyticsOverview',
           isActive: activeView === 'analytics' && (analyticsSubTab === 'overview' || !analyticsSubTab)
         },
         {
@@ -101,7 +103,7 @@ export function SidebarNav() {
           isActive: activeView === 'analytics' && analyticsSubTab === 'spending'
         },
         {
-          id: 'analytics_cashflow', viewId: 'analytics', subTabId: 'cash-flow', label: t('nav.cashFlowTrend'), icon: 'cashFlow',
+          id: 'analytics_cashflow', viewId: 'analytics', subTabId: 'cash-flow', label: t('nav.cashFlow'), icon: 'cashFlow',
           isActive: activeView === 'analytics' && analyticsSubTab === 'cash-flow'
         },
         {
@@ -134,6 +136,24 @@ export function SidebarNav() {
     }
   ];
 
+  const renderItem = (item) => (
+    <button
+      key={item.id}
+      type="button"
+      className={`sidebar-nav-item ${item.isActive ? 'active' : ''}`}
+      onClick={() => handleNavClick(item.viewId, item.subTabId)}
+      aria-current={item.isActive ? 'page' : undefined}
+      title={isSidebarCollapsed ? item.label : undefined}
+    >
+      <span className="sidebar-item-icon" aria-hidden="true">
+        <NavIcon name={item.icon} />
+      </span>
+      {!isSidebarCollapsed && (
+        <span className="sidebar-item-label">{item.label}</span>
+      )}
+    </button>
+  );
+
   return (
     <aside
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
@@ -156,6 +176,26 @@ export function SidebarNav() {
 
       <div className="sidebar-scrollable-content">
         {navGroups.map((group, gIdx) => {
+          if (group.standalone && !isSidebarCollapsed) {
+            return (
+              <div key={group.id} className="sidebar-nav-group sidebar-nav-group--standalone">
+                <div className="sidebar-standalone-row">
+                  <div className="sidebar-group-items">{group.items.map(renderItem)}</div>
+                  {gIdx === 0 && (
+                    <button
+                      type="button"
+                      className="sidebar-hamburger-btn"
+                      onClick={toggleSidebar}
+                      aria-label={t('nav.collapse')}
+                      title={t('nav.collapse')}
+                    >
+                      <HamburgerIcon size={17} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }
           // The icon-only rail has no group headers, so every item stays reachable there.
           const isGroupOpen = isSidebarCollapsed || !collapsedGroups.includes(group.id);
           const hasActiveItem = group.items.some((item) => item.isActive);
@@ -196,23 +236,7 @@ export function SidebarNav() {
               )}
               <div id={itemsId} className="sidebar-group-collapse" inert={!isGroupOpen}>
                 <div className="sidebar-group-items">
-                  {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`sidebar-nav-item ${item.isActive ? 'active' : ''}`}
-                      onClick={() => handleNavClick(item.viewId, item.subTabId)}
-                      aria-current={item.isActive ? 'page' : undefined}
-                      title={isSidebarCollapsed ? item.label : undefined}
-                    >
-                      <span className="sidebar-item-icon" aria-hidden="true">
-                        <NavIcon name={item.icon} />
-                      </span>
-                      {!isSidebarCollapsed && (
-                        <span className="sidebar-item-label">{item.label}</span>
-                      )}
-                    </button>
-                  ))}
+                  {group.items.map(renderItem)}
                 </div>
               </div>
             </div>

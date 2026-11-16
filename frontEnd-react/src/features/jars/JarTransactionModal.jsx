@@ -161,7 +161,7 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
               aria-invalid={Boolean(showAmountError && amountError)}
               aria-describedby={showAmountError && amountError ? `${amountId}-error` : undefined}
               onChange={(event) => { setAmount(formatInputNumber(event.target.value)); setErrorMsg(''); }} />
-            <span>VND</span>
+            <span>₫</span>
           </div>
           <div className="jar-transfer-presets" role="group" aria-label={copy.quickAmounts}>
             {QUICK_AMOUNTS.map((value) => <button key={value} type="button"

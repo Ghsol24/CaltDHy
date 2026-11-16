@@ -35,8 +35,8 @@ export function WalletsFilterToolbar({ filterStatus, filterType, searchQuery, se
           onChange={setFilterType}
           options={[
             { value: 'all', label: 'Tất cả loại ví' },
-            { value: 'cash', label: 'Ví tiền mặt' },
-            { value: 'bank', label: 'Tài khoản ngân hàng' },
+            { value: 'cash', label: 'Tiền mặt' },
+            { value: 'bank', label: 'Ngân hàng' },
             { value: 'credit', label: 'Thẻ tín dụng' },
             { value: 'e-wallet', label: 'Ví điện tử' }
           ]}

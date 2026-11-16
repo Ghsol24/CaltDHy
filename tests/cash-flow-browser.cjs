@@ -467,7 +467,7 @@ async function check(name, work) {
     await enter();
     const navigation = page.getByRole('navigation', { name: 'Điều hướng Phân tích' });
     for (let cycle = 0; cycle < 3; cycle++) {
-      for (const section of ['Chi tiêu', 'Dòng tiền', 'Báo cáo', 'Dòng tiền', 'Tổng quan']) {
+      for (const section of ['Chi tiêu', 'Dòng tiền', 'Báo cáo', 'Dòng tiền', 'Tóm tắt thu chi']) {
         await navigation.getByRole('button', { name: section, exact: true }).click();
         await expect(page.getByText('Đã xảy ra lỗi hiển thị', { exact: true })).toHaveCount(0);
         await expect(page.getByText('Chưa thể hiển thị nội dung', { exact: true })).toHaveCount(0);

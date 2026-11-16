@@ -7,9 +7,11 @@ import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } fro
 import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
 import { TargetOutlineIcon } from '../../components/ui/AppIcons';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export const AttentionPanel = React.memo(function AttentionPanel() {
   const navigateTo = useSpendingStore((s) => s.navigateTo);
+  const { label } = useTranslation();
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
   const jars = useJarStore((s) => s.jars);
@@ -158,7 +160,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   } else if (hasBudgets && !hasTransactions) {
     calloutConfig = {
       title: 'Kế hoạch tháng đã sẵn sàng',
-      body: `Bạn đã phân bổ ${formatCurrency(totalLimit)} ngân sách cho ${categoryStatusList.length} danh mục. Ghi nhận giao dịch khi phát sinh chi tiêu nhé!`,
+      body: `Bạn đã phân bổ ${formatCurrency(totalLimit)} ngân sách cho ${categoryStatusList.length} danh mục. Hãy ghi giao dịch khi phát sinh chi tiêu.`,
       ctaText: 'Xem chi tiết ngân sách',
       ctaAction: handleGoToBudgets,
       cardClass: 'is-info'
@@ -173,11 +175,11 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     };
   } else if (dangerCategory) {
     calloutConfig = {
-      title: `Cảnh báo: ${dangerCategory.category} vượt ngân sách`,
+      title: `Cảnh báo: ${label(dangerCategory.category)} vượt ngân sách`,
       body: `Đã chi ${formatCurrency(dangerCategory.spent)} / ${formatCurrency(dangerCategory.limit)} (vượt +${formatCurrency(dangerCategory.spent - dangerCategory.limit)}) so với hạn mức bạn tự đặt cho danh mục này. ${
         availableToSpend > 0
           ? `Bạn vẫn còn ${formatCurrency(availableToSpend)} khả dụng nói chung, nhưng nên điều chỉnh hạn mức hoặc giảm chi ở đây.`
-          : 'Hãy cân nhắc điều chỉnh các khoản tiếp theo!'
+          : 'Số dư khả dụng đã hết; nên điều chỉnh các khoản chi tiếp theo.'
       }`,
       ctaText: 'Xem và điều chỉnh ngân sách',
       ctaAction: handleGoToBudgets,
@@ -185,7 +187,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     };
   } else if (warningCategory) {
     calloutConfig = {
-      title: `${warningCategory.category} gần chạm ngân sách`,
+      title: `${label(warningCategory.category)} gần chạm ngân sách`,
       body: `Bạn chỉ còn ${formatCurrency(Math.max(0, warningCategory.remaining))} cho ${daysLeft} ngày tới. Cần lưu ý khi phát sinh chi tiêu mới.`,
       ctaText: 'Xem ngân sách',
       ctaAction: handleGoToBudgets,
@@ -193,8 +195,8 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     };
   } else if (netCashFlow > 0 && monthlyStats.income > monthlyStats.expense * 1.5 && jarsCount > 0) {
     calloutConfig = {
-      title: 'Dòng tiền tháng này rất dồi dào',
-      body: `Thặng dư hiện tại đạt +${formatCurrency(netCashFlow)}. Hãy trích một phần vào các Hũ tiết kiệm để sớm đạt mục tiêu!`,
+      title: `Tháng này dư ${formatCurrency(netCashFlow)}`,
+      body: 'Có thể chuyển một phần vào hũ tiết kiệm để sớm đạt mục tiêu.',
       ctaText: 'Tích luỹ vào hũ tiết kiệm',
       ctaAction: handleGoToJars,
       cardClass: 'is-success'
@@ -202,8 +204,8 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   } else if (hasBudgets && monthlyStats.expense > 0) {
     const usedPct = totalLimit > 0 ? Math.round((totalBudgetSpent / totalLimit) * 100) : 0;
     calloutConfig = {
-      title: 'Kế hoạch chi tiêu rất tối ưu',
-      body: `Bạn mới sử dụng ${usedPct}% tổng ngân sách đã đặt. Tiến độ chi tiêu hoàn toàn an toàn.`,
+      title: `Đã dùng ${usedPct}% tổng ngân sách`,
+      body: 'Chưa có danh mục nào vượt hạn mức.',
       ctaText: 'Xem ngân sách',
       ctaAction: handleGoToBudgets,
       cardClass: 'is-success'
@@ -245,7 +247,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
             return (
               <div key={item.category || idx} className="home-plan-item">
                 <div className="home-plan-item-header">
-                  <span className="home-plan-item-name">{item.category}</span>
+                  <span className="home-plan-item-name">{label(item.category)}</span>
                   <span className="home-plan-item-amounts">
                     {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
                   </span>
@@ -307,7 +309,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
           onClick={handleGoToRecurring}
           onKeyDown={(e) => e.key === 'Enter' && handleGoToRecurring()}
         >
-          <span className="home-mini-stat-label">Hóa đơn sắp tới</span>
+          <span className="home-mini-stat-label">Khoản định kỳ sắp tới</span>
           <strong className="home-mini-stat-val">{upcomingBillsCount}</strong>
         </div>
 

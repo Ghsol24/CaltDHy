@@ -281,7 +281,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   onChange={handleBalanceChange}
                 />
                 <div className="amount-currency-pill" title="Đơn vị tiền tệ">
-                  <span>VNĐ</span>
+                  <span>₫</span>
                   <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </div>
               </div>
@@ -308,7 +308,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                     onChange={handleLimitChange}
                   />
                   <div className="amount-currency-pill">
-                    <span>VNĐ</span>
+                    <span>₫</span>
                   </div>
                 </div>
               </div>

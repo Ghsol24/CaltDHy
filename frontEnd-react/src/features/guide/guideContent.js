@@ -38,7 +38,7 @@ const sections = [
     [['Báo cáo', 'Reports', '报表'],
       ['Chọn kỳ trước khi xuất CSV hoặc in báo cáo. Bản xuất toàn bộ dữ liệu nằm trong Cài đặt.', 'Choose the period before exporting CSV or printing. For a full data export, use Settings.', '导出CSV或打印前先选择期间。需要完整数据导出时请使用设置。'], 'reports']
   ]],
-  ['jars', ['Hũ chi tiêu', 'Savings jars', '储蓄罐'], [
+  ['jars', ['Hũ tiết kiệm', 'Savings jars', '储蓄罐'], [
     [['Tạo hũ theo mục tiêu', 'Create a goal jar', '创建目标储蓄罐'],
       ['Chọn Tạo hũ mới, nhập tên và mục tiêu; ngày hoàn thành là tùy chọn. Bạn tự tạo số hũ cần dùng. Số tiền đã có khi tạo là số dư ban đầu của hũ, không tự trừ từ ví.', 'Choose Create jar, enter a name and target; a deadline is optional. Create as many goal jars as needed. An opening jar balance does not automatically deduct from a wallet.', '点击创建储蓄罐，输入名称及目标金额；完成日期可选。可按需创建目标罐。初始储蓄金额不会自动从钱包扣除。'], 'jars'],
     [['Nạp và rút: chuyển tiền nội bộ', 'Deposit and withdraw: internal transfers', '存入与取出：内部转账'],

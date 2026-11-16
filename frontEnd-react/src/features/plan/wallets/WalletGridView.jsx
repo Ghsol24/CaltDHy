@@ -10,7 +10,7 @@ export function WalletGridView({ deletingWalletId, filteredWallets, getWalletUsa
     <div className="wallets-cards-grid">
       {filteredWallets.map((w) => {
         const isNegative = Number(w.currentBalance) < 0;
-        const typeLabel = WALLET_TYPE_LABELS[w.type] || 'Ví tiền mặt';
+        const typeLabel = WALLET_TYPE_LABELS[w.type] || WALLET_TYPE_LABELS.cash;
         const accentColor = w.color || '#10B981';
         const txCount = walletTxCountMap[w.id] || 0;
         const isMenuOpen = openMenuWalletId === w.id;
@@ -142,7 +142,7 @@ export function WalletGridView({ deletingWalletId, filteredWallets, getWalletUsa
               </div>
             </div>
   
-            {/* Card Body: Big Balance + Tỷ lệ sử dụng (Progress Bar) */}
+            {/* Card Body: Big Balance + Tỷ trọng số dư (Progress Bar) */}
             <div className="wallet-grid-card-body">
               <div className={`wallet-grid-balance ${isNegative ? 'text-danger' : 'text-brand'}`}>
                 {formatCurrency(w.currentBalance ?? w.initialBalance ?? 0)}
@@ -150,7 +150,7 @@ export function WalletGridView({ deletingWalletId, filteredWallets, getWalletUsa
   
               <div className="wallet-grid-usage-box">
                 <div className="wallet-grid-usage-labels">
-                  <span className="usage-label">Tỷ lệ sử dụng</span>
+                  <span className="usage-label">Tỷ trọng số dư</span>
                   <strong className="usage-pct">{usagePct}%</strong>
                 </div>
                 <div className="wallet-grid-progress-track">

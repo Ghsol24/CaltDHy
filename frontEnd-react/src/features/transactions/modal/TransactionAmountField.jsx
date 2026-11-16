@@ -24,7 +24,7 @@ export function TransactionAmountField({ amount, amountError, amountInputRef, ha
           aria-required="true"
         />
         <span className="txn-amount-suffix" aria-hidden="true">
-          VNĐ
+          ₫
         </span>
       </div>
       {amountError && (

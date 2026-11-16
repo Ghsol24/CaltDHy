@@ -74,7 +74,7 @@ export function FinancialTipsModal({ isOpen, onClose, initialTopic = 'smart' }) 
                 </h4>
                 <p className="financial-tips-body__p--text">
                   Khi tiền tiết kiệm không có mục tiêu rõ ràng, nó rất dễ bị chi tiêu vào những khoản mua sắm bốc đồng.
-                  Tạo các <strong>Hũ chi tiêu</strong> giúp bạn gán ý nghĩa cho từng đồng tiền bạn kiếm được.
+                  Tạo các <strong>Hũ tiết kiệm</strong> giúp bạn gán ý nghĩa cho từng đồng tiền bạn kiếm được.
                 </p>
               </div>
 

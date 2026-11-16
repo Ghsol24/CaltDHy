@@ -60,7 +60,9 @@ export function SpendingRouteSync() {
     applyingLocation.current = true;
     syncFromRoute(route.view, route.subTab);
     const meta = getSpendingRouteMeta(route);
-    document.title = `${t(meta.titleKey)} – CaltDHy`;
+    document.title = meta.groupKey
+      ? `${t(meta.groupKey)} · ${t(meta.titleKey)} – CaltDHy`
+      : `${t(meta.titleKey)} – CaltDHy`;
     const stopFocus = focusRouteContent(route);
     const timerId = window.setTimeout(() => { applyingLocation.current = false; }, 0);
     return () => {

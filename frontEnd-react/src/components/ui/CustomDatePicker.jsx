@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef,
 import { useTranslation } from '../../i18n/useTranslation';
 import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 import { formatDisplayDate, isoMonth, parseIsoDate, parseIsoMonth, parseTypedDate, shiftIsoMonth } from '../../utils/datePicker';
+import { formatMonthYear } from '../../utils/formatters';
 import './date-picker.css';
 
 import { Icon } from './AppIcons';
@@ -108,8 +109,7 @@ export function CalendarPanel({
 
   const monthTitle = useMemo(() => {
     const { year, month } = parseIsoDate(focusedIso);
-    const title = new Intl.DateTimeFormat(intlLocale || 'vi-VN', { month: 'long', year: 'numeric' }).format(new Date(year, month, 1));
-    return title.charAt(0).toLocaleUpperCase(intlLocale || 'vi-VN') + title.slice(1);
+    return formatMonthYear(new Date(year, month, 1), { intlLocale: intlLocale || 'vi-VN' });
   }, [focusedIso, intlLocale]);
   const dayLabel = useCallback((iso) => {
     const { year, month, day } = parseIsoDate(iso);
@@ -226,8 +226,7 @@ export function MonthPanel({ id: explicitId, value = '', onSelect, min, max, cla
   const monthName = (monthIndex) => (labels.month
     ? labels.month(monthIndex + 1)
     : new Intl.DateTimeFormat(intlLocale || 'en-US', { month: 'short' }).format(new Date(2000, monthIndex, 1)));
-  const fullName = (monthIndex) => new Intl.DateTimeFormat(intlLocale || 'vi-VN', { month: 'long', year: 'numeric' })
-    .format(new Date(year, monthIndex, 1));
+  const fullName = (monthIndex) => formatMonthYear(new Date(year, monthIndex, 1), { intlLocale: intlLocale || 'vi-VN' });
   const isDisabled = (month) => Boolean((min && month < min) || (max && month > max));
 
   const select = (month) => {

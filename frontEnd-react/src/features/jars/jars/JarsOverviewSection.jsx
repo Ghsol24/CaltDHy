@@ -57,9 +57,6 @@ export function JarsOverviewSection({ activeJarsCount, handleCreateNew, thisMont
             </div>
           </div>
           <strong className="jars-metric-value">{formatCurrency(totalTarget)}</strong>
-          <span className="jars-metric-trend jars-metric-trend--neutral">
-            Mục tiêu cả năm
-          </span>
         </div>
     
         {/* Card 3: Đang thực hiện */}
@@ -71,9 +68,6 @@ export function JarsOverviewSection({ activeJarsCount, handleCreateNew, thisMont
             </div>
           </div>
           <strong className="jars-metric-value">{activeJarsCount} hũ</strong>
-          <span className="jars-metric-trend jars-metric-trend--neutral">
-            Hoạt động ổn định
-          </span>
         </div>
     
         {/* Card 4: Tỷ lệ hoàn thành */}

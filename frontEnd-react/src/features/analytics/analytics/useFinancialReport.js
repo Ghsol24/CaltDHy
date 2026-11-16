@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { formatCurrency, formatDate, formatDateTime, formatPercent } from '../../../utils/formatters';
+import { formatChangePercent, formatCurrency, formatDate, formatDateTime, formatPercent } from '../../../utils/formatters';
 import { getBudgetStatus } from '../../../utils/financeMath';
 import { getCategoryIcon } from '../../../utils/categories';
 import { translateLegacyText } from '../../../i18n/legacyTranslations';
@@ -139,10 +139,10 @@ export function useFinancialReport({ activeMonth, addToast, budgets, curQuarterM
         // deltaAmt > 0 (Chi tiêu tăng so với kỳ trước)
         if (limit && budgetStatus.isOver) {
           deltaBadgeType = 'bad';
-          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
+          deltaBadgeText = formatChangePercent(deltaPct);
         } else if (limit && (budgetStatus.status === 'warning' || budgetStatus.percent >= 100)) {
           deltaBadgeType = 'warn';
-          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
+          deltaBadgeText = formatChangePercent(deltaPct);
         } else if (limit && spentCur <= limit * 0.75) {
           // Tăng nhưng an toàn dưới 75% hạn mức
           if (deltaPct > 30) {
@@ -150,7 +150,7 @@ export function useFinancialReport({ activeMonth, addToast, budgets, curQuarterM
           } else {
             deltaBadgeType = 'neutral';
           }
-          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
+          deltaBadgeText = formatChangePercent(deltaPct);
         } else {
           // Chưa đặt hạn mức
           if (deltaPct > 50) {
@@ -160,7 +160,7 @@ export function useFinancialReport({ activeMonth, addToast, budgets, curQuarterM
           } else {
             deltaBadgeType = 'neutral';
           }
-          deltaBadgeText = `↑ +${formatPercent(deltaPct, { fractionDigits: 1 })}`;
+          deltaBadgeText = formatChangePercent(deltaPct);
         }
       }
 
@@ -174,20 +174,19 @@ export function useFinancialReport({ activeMonth, addToast, budgets, curQuarterM
         adviceText = 'Không phát sinh chi tiêu (tiết kiệm 100% so với kỳ trước)';
         adviceType = 'good';
       } else if (limit && budgetStatus.isOver) {
-        const overPct = budgetStatus.percent - 100;
-        adviceText = `Vượt ${formatPercent(overPct)} ngân sách! Cần thắt chặt chi tiêu`;
+        adviceText = `Vượt hạn mức ${formatCurrency(spentCur - limit)}`;
         adviceType = 'danger';
       } else if (limit && budgetStatus.percent === 100) {
-        adviceText = `Đã chạm 100% hạn mức trần! Hạn chế phát sinh thêm chi phí`;
+        adviceText = 'Đã dùng hết hạn mức';
         adviceType = 'warning';
       } else if (limit && budgetStatus.status === 'warning') {
         adviceText = `Đã chạm ${budgetStatus.percent}% hạn mức, còn ${formatCurrency(budgetStatus.remaining)}`;
         adviceType = 'warning';
       } else if (limit && spentCur < limit * 0.75 && deltaAmt < 0) {
-        adviceText = `Tiết kiệm tốt (giảm ${formatPercent(Math.abs(deltaPct))}), an toàn dưới ngân sách`;
+        adviceText = `Giảm ${formatPercent(Math.abs(deltaPct))} so với kỳ trước, dưới hạn mức`;
         adviceType = 'good';
       } else if (limit && spentCur < limit * 0.75) {
-        adviceText = `Kiểm soát tốt dưới hạn mức ngân sách (${budgetStatus.percent}%)`;
+        adviceText = `Đã dùng ${budgetStatus.percent}% hạn mức`;
         adviceType = 'good';
       } else if (!limit && deltaAmt < 0) {
         adviceText = `Chi tiêu giảm ${formatPercent(Math.abs(deltaPct))} so với kỳ trước`;
@@ -234,44 +233,45 @@ export function useFinancialReport({ activeMonth, addToast, budgets, curQuarterM
         type: 'info',
         text: 'Chưa đủ dữ liệu trong kỳ này để đưa ra nhận định tài chính. Hãy ghi nhận giao dịch trước khi đánh giá xu hướng.'
       });
-    } else if (curStats.net > 0 && curStats.savingsRate >= 20) {
-      insights.push({
-        type: 'accolade',
-        text: `Quản lý tài chính xuất sắc! Dòng tiền thặng dư ${formatCurrency(curStats.net)} và bạn đã tiết kiệm được ${formatPercent(curStats.savingsRate)} tổng thu nhập trong kỳ này.`
-      });
     } else if (curStats.net > 0) {
       insights.push({
-        type: 'accolade',
-        text: `Dòng tiền dương thặng dư ${formatCurrency(curStats.net)}. Thu nhập đang kiểm soát tốt hơn tổng chi tiêu.`
+        type: curStats.savingsRate >= 20 ? 'accolade' : 'info',
+        text: `Kỳ này dư ${formatCurrency(curStats.net)} (${formatPercent(curStats.savingsRate)} thu nhập).`
       });
     } else if (curStats.net < 0) {
       insights.push({
         type: 'warning',
-        text: `Dòng tiền đang thâm hụt ${formatCurrency(Math.abs(curStats.net))}. Chi tiêu vượt tổng thu nhập trong kỳ, cần hạn chế các khoản chi không cấp thiết.`
+        text: `Kỳ này chi vượt thu ${formatCurrency(Math.abs(curStats.net))}.`
       });
     }
 
-    if (overList.length > 0) {
+    if (overList.length === 1) {
+      const [over] = overList;
       insights.push({
         type: 'warning',
-        text: `Cảnh báo vượt ngân sách: Có ${overList.length} nhóm chi phí đã vượt hạn mức (${overList.map(o => o.name).join(', ')}). Hãy rà soát lại các khoản chi lớn.`
+        text: `${label(over.name)} vượt hạn mức ${formatCurrency(over.spentCur - over.limit)}.`
+      });
+    } else if (overList.length > 1) {
+      insights.push({
+        type: 'warning',
+        text: `${overList.length} danh mục vượt hạn mức: ${overList.map((o) => label(o.name)).join(', ')}.`
       });
     } else if (warnList.length > 0) {
       insights.push({
         type: 'info',
-        text: `Có ${warnList.length} nhóm chi phí đang tiệm cận trần ngân sách (${warnList.map(w => w.name).join(', ')}). Chú ý thắt chặt trong các ngày còn lại.`
+        text: `${warnList.length} danh mục sắp chạm hạn mức: ${warnList.map((w) => label(w.name)).join(', ')}.`
       });
     } else if (hasCurrentData && curStats.expense > 0 && categoryRows.some(r => r.limit)) {
       insights.push({
-        type: 'accolade',
-        text: `Tất cả các nhóm có thiết lập ngân sách đều nằm trong vùng kiểm soát an toàn! Tiếp tục phát huy kỷ luật tài chính.`
+        type: 'info',
+        text: 'Chưa có danh mục nào vượt hạn mức.'
       });
     }
 
     if (hasCurrentData && curStats.expense < prevStats.expense && prevStats.expense > 0) {
       insights.push({
-        type: 'accolade',
-        text: `Tổng chi tiêu giảm ${formatCurrency(prevStats.expense - curStats.expense)} (${formatPercent(Math.abs(expenseDeltaPct))}) so với kỳ trước. Bạn đang tối ưu ngân sách rất hiệu quả!`
+        type: 'info',
+        text: `Chi tiêu giảm ${formatCurrency(prevStats.expense - curStats.expense)} (${formatPercent(Math.abs(expenseDeltaPct))}) so với kỳ trước.`
       });
     }
 
@@ -291,7 +291,7 @@ export function useFinancialReport({ activeMonth, addToast, budgets, curQuarterM
       categoryRows,
       insights
     };
-  }, [reportPeriodType, quarterLabel, prevQuarterLabel, monthLabel, prevMonthStr, activeMonth, curQuarterMonths, prevQuarterMonths, transactions, budgets, lang]);
+  }, [reportPeriodType, quarterLabel, prevQuarterLabel, monthLabel, prevMonthStr, activeMonth, curQuarterMonths, prevQuarterMonths, transactions, budgets, lang, label]);
 
   // Handle CSV Export with UTF-8 BOM
   const handleExportCSV = () => {

@@ -88,8 +88,6 @@ export const legacyAdditionalEntries = [
   ['Nên đặt hạn mức chi tiêu', 'Consider setting spending limits', '建议设置支出限额'],
   ['Hãy cân nhắc điều chỉnh các khoản tiếp theo!', 'Consider adjusting your next expenses.', '请考虑调整接下来的支出。'],
   ['Xem và điều chỉnh ngân sách', 'View and adjust budget', '查看并调整预算'],
-  ['Dòng tiền tháng này rất dồi dào', 'Cash flow is strong this month', '本月现金流充足'],
-  ['Kế hoạch chi tiêu rất tối ưu', 'Your spending plan is highly optimized', '支出计划非常理想'],
 
   ['MỤC TIÊU', 'GOAL', '目标'], ['Mục tiêu linh hoạt', 'Flexible goal', '灵活目标'],
   ['Mục tiêu chung', 'General goal', '通用目标'], ['+ Nạp tiền', '+ Add money', '+ 存入'], ['− Rút tiền', '− Withdraw', '− 取出'],
@@ -106,8 +104,8 @@ export const legacyAdditionalEntries = [
   ['Các hũ của bạn', 'Your jars', '你的储蓄罐'],
   ['Tạo hũ đầu tiên', 'Create first jar', '创建第一个储蓄罐'], ['Gợi ý cho bạn', 'Suggestions for you', '为你推荐'],
   ['Đặt ngày đến hạn để nhận gợi ý tích lũy hàng tháng', 'Set a due date for monthly savings guidance', '设置截止日期以获得每月储蓄建议'],
-  ['Đã đến hạn mục tiêu!', 'The goal is due!', '目标已到期！'],
-  ['Đã hoàn thành 100% mục tiêu xuất sắc!', 'Goal completed 100%!', '目标已完成 100%！'],
+  ['Đã đến hạn mục tiêu', 'The goal is due', '目标已到期'],
+  ['Đã đạt mục tiêu', 'Goal reached', '已达成目标'],
 
   ['(Mặc định)', '(Default)', '（默认）'], ['Không có liên kết', 'No linked items', '无关联项目'],
   ['Hoàn tác', 'Undo', '撤销'], ['Vui lòng nhập tên danh mục mới.', 'Enter a new category name.', '请输入新分类名称。'],

@@ -16,7 +16,7 @@ const SECTION_ITEMS = {
     { id: 'budgets', labelKey: 'nav.budgets' }, { id: 'recurring', labelKey: 'nav.recurring' }
   ],
   analytics: [
-    { id: 'overview', labelKey: 'nav.overview', target: 'analytics-overview' },
+    { id: 'overview', labelKey: 'nav.analyticsOverview', target: 'analytics-overview' },
     { id: 'spending', labelKey: 'nav.spending', target: 'analytics-spending' },
     { id: 'cash-flow', labelKey: 'nav.cashFlow', target: 'analytics-cashflow' },
     { id: 'reports', labelKey: 'nav.reports', target: 'analytics-reports' },

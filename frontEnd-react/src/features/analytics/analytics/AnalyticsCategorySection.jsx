@@ -7,7 +7,7 @@ import { CategoryOutlineIcon } from '../../../utils/categoryIcons';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function AnalyticsCategorySection({ analyticsSubTab, doughnutChartData, doughnutOptions, isMobile, monthData, monthLabel, openAddTxnModal, viewCategoryHistory }) {
-  const { t } = useTranslation();
+  const { t, label } = useTranslation();
   return ((!isMobile || analyticsSubTab === 'spending') && (
   <>
   <div className="analytics-section-panel" id="analytics-spending">
@@ -18,7 +18,7 @@ export function AnalyticsCategorySection({ analyticsSubTab, doughnutChartData, d
         </h3>
         <p className="panel-subtitle">
           {monthData.categories.length > 0
-            ? `${monthData.categories.length} danh mục có phát sinh chi tiêu trong ${monthLabel}`
+            ? `${monthData.categories.length} danh mục`
             : 'Chưa có khoản chi nào trong tháng'}
         </p>
       </div>
@@ -31,7 +31,7 @@ export function AnalyticsCategorySection({ analyticsSubTab, doughnutChartData, d
           <Icon name="pieChart" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </div>
         <strong className="empty-heading-caps">
-          CHƯA CÓ DỮ LIỆU CHI TIÊU TRONG {monthLabel.toUpperCase()}
+          Chưa có dữ liệu chi tiêu trong {monthLabel}
         </strong>
         <p className="empty-body-desc">
           Thêm các giao dịch chi tiêu mới để hệ thống tự động phân loại và trực quan hóa tỷ trọng từng nhóm chi phí.
@@ -66,7 +66,7 @@ export function AnalyticsCategorySection({ analyticsSubTab, doughnutChartData, d
                     <CategoryOutlineIcon name={cat.name} size={16} />
                   </span>
                   <div className="cat-text-info">
-                    <span className="cat-title-text">{cat.name}</span>
+                    <span className="cat-title-text">{label(cat.name)}</span>
                     <span className="cat-pct-badge">{formatPercent(cat.percent)}</span>
                   </div>
                 </div>

@@ -3,7 +3,7 @@ const copy = {
     overview: 'Tổng quan kế hoạch',
     create: 'Lập kế hoạch',
     mobileOverview: 'Kế hoạch',
-    mobileCreate: 'Lập mới',
+    mobileCreate: 'Lập kế hoạch',
     attention: 'Cần chú ý',
     alertCount: (count) => `${count} việc cần lưu ý`,
     moreAlerts: (count) => `Xem thêm ${count} việc`,
