@@ -978,7 +978,7 @@ function blendCssColor(color, background) {
     await planNav.getByRole('button', { name: 'Ngân sách' }).click();
     await mobilePage.waitForURL('**/spending/plan/budgets');
     await expect(mobilePage.getByRole('heading', { name: 'Ngân sách', exact: true })).toBeVisible();
-    await expect(mobilePage).toHaveTitle('Ngân sách – CaltDHy');
+    await expect(mobilePage).toHaveTitle('Kế hoạch · Ngân sách – CaltDHy');
     await mobilePage.reload();
     await expect(mobilePage.getByRole('heading', { name: 'Ngân sách', exact: true })).toBeVisible();
     await expect(mobilePage.locator('.bdash-row.is-over')).toHaveCount(1);
@@ -1003,8 +1003,8 @@ function blendCssColor(color, background) {
     await mobilePage.keyboard.press('Escape');
     await expect(mobileBudgetDialog).toHaveCount(0);
 
-    const monthName = (month) => new Intl.DateTimeFormat('vi-VN', { year: 'numeric', month: 'long' })
-      .format(new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1, 1));
+    // Month titles read "Tháng 10, 2026" (UX audit X-03).
+    const monthName = (month) => `Tháng ${Number(month.slice(5))}, ${month.slice(0, 4)}`;
     const shiftMonth = (month, delta) => {
       const date = new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1 + delta, 1);
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -1063,7 +1063,7 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await expect(mobilePage.locator('#analytics-spending')).toBeVisible();
     await expect(mobilePage.locator('#analytics-overview, #analytics-cashflow, #analytics-reports')).toHaveCount(0);
-    await expect(mobilePage).toHaveTitle('Chi tiêu – CaltDHy');
+    await expect(mobilePage).toHaveTitle('Phân tích · Chi tiêu – CaltDHy');
     await mobilePage.locator('.analytics-cat-item-row').filter({ hasText: 'Dịch vụ' })
       .getByRole('button', { name: 'Xem giao dịch' }).click();
     await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?from=/);
@@ -1166,7 +1166,7 @@ function blendCssColor(color, background) {
     await expect(dayDrawer).toBeVisible();
     await expect(dayDrawer.locator('.day-drawer-summary strong')).toContainText(/410\.000/);
     await expect(dayDrawer.locator('.transaction-inspection-row')).toHaveCount(2);
-    await dayDrawer.getByRole('button', { name: 'Đánh dấu ngày đã dự kiến' }).click();
+    await dayDrawer.getByRole('button', { name: 'Tôi đã dự tính ngày này' }).click();
     await expect(dayDrawer.getByRole('button', { name: 'Bỏ đánh dấu ngày dự kiến' })).toBeVisible();
     await dayDrawer.getByRole('button', { name: 'Xem đầy đủ trong lịch sử' }).click();
     await mobilePage.waitForURL(/\/spending\/analytics\/transactions\?date=/);
@@ -1375,7 +1375,7 @@ function blendCssColor(color, background) {
     await mobilePage.waitForURL('**/spending/analytics/reports');
     await expect(desktopReportsNav).toHaveAttribute('aria-current', 'page');
     await mobilePage.locator('#analytics-cashflow').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
-    await expect(mobilePage.getByRole('button', { name: 'Xu hướng dòng tiền', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(mobilePage.getByRole('button', { name: 'Dòng tiền', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(mobilePage).toHaveURL(/\/spending\/analytics\/reports$/);
     await mobilePage.locator('#analytics-reports').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
     await expect(desktopReportsNav).toHaveAttribute('aria-current', 'page');
@@ -1460,11 +1460,11 @@ function blendCssColor(color, background) {
 
     const localizedRoutes = [
       ['/spending/home', 'Dashboard', '首页'],
-      ['/spending/plan/wallets', 'Wallets & Accounts', '钱包与账户'],
-      ['/spending/plan/budgets', 'Budgets', '预算'],
-      ['/spending/plan/recurring', 'Recurring items', '周期项目'],
-      ['/spending/analytics/overview', 'Overview', '总览'],
-      ['/spending/jars/list', 'Jar list', '储蓄罐列表']
+      ['/spending/plan/wallets', 'Plan · Wallets & Accounts', '计划 · 钱包与账户'],
+      ['/spending/plan/budgets', 'Plan · Budgets', '计划 · 预算'],
+      ['/spending/plan/recurring', 'Plan · Recurring items', '计划 · 周期项目'],
+      ['/spending/analytics/overview', 'Analytics · Income & spending summary', '分析 · 收支概要'],
+      ['/spending/jars/list', 'Savings jars · Jar list', '储蓄罐 · 储蓄罐列表']
     ];
     for (const [locale, column, homeLabel, transactionLabel] of [
       ['en', 1, 'Dashboard', 'Add transaction'],

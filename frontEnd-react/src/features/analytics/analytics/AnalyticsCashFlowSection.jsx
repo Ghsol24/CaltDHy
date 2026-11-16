@@ -47,8 +47,7 @@ export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, ba
       </div>}
     unusualContent={trendMode === 'daily' && trendSeries !== 'income' && unusualDays.length > 0 &&
       <div className="analytics-unusual-days">
-        <div><strong>{t('analytics.unusualTitle')}</strong><p>{t('analytics.unusualExplanation')}</p>
-          <small>{t('analytics.cashflow.recurringExcluded')}</small></div>
+        <div><strong>{t('analytics.unusualTitle')}</strong><p>{t('analytics.unusualExplanation')}</p></div>
         {unusualDays.map((day) => <div className="analytics-unusual-row" key={day.date}>
           <button type="button" onClick={() => openDay(day.date, 'expense', true)}>
             <strong>{formatDate(day.date, 'short', { locale: lang })}</strong>
@@ -56,7 +55,7 @@ export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, ba
               ratio: day.ratio.toLocaleString(intlLocale, { maximumFractionDigits: 1 }),
             })}</span>
           </button>
-          <button type="button" disabled={savingExpectedDay === day.date}
+          <button type="button" disabled={savingExpectedDay === day.date} title={t('analytics.unusualMarkExpectedHint')}
             onClick={() => toggleExpectedDay(day.date, true)}>{t('analytics.unusualMarkExpected')}</button>
         </div>)}
       </div>}

@@ -44,7 +44,7 @@ export const translations = {
     'common.outOfRange': 'Ngoài giới hạn hiển thị',
 
     'nav.home': 'Trang chủ', 'nav.plan': 'Kế hoạch', 'nav.analytics': 'Phân tích',
-    'nav.jars': 'Hũ chi tiêu', 'nav.overview': 'Tổng quan',
+    'nav.jars': 'Hũ tiết kiệm', 'nav.overview': 'Tổng quan', 'nav.analyticsOverview': 'Tóm tắt thu chi',
     'nav.wallets': 'Ví & Tài khoản', 'nav.budgets': 'Ngân sách',
     'nav.recurring': 'Khoản định kỳ', 'nav.spending': 'Chi tiêu',
     'nav.cashFlow': 'Dòng tiền', 'nav.reports': 'Báo cáo', 'nav.goals': 'Mục tiêu',
@@ -135,7 +135,7 @@ export const translations = {
     'analytics.viewHistory': 'Xem đầy đủ trong lịch sử', 'analytics.unusualTitle': 'Ngày chi cao bất thường',
     'analytics.unusualExplanation': 'So với mức chi điển hình trong 90 ngày gần đây, không gồm khoản định kỳ.',
     'analytics.unusualRatio': 'Cao gấp {ratio} lần mức thường ngày',
-    'analytics.unusualMarkExpected': 'Đánh dấu ngày đã dự kiến', 'analytics.unusualUndoExpected': 'Bỏ đánh dấu ngày dự kiến',
+    'analytics.unusualMarkExpected': 'Tôi đã dự tính ngày này', 'analytics.unusualUndoExpected': 'Bỏ đánh dấu ngày dự kiến',
     'analytics.unusualSaveFailed': 'Không thể lưu ngày đã dự kiến. Vui lòng thử lại.',
     'analytics.unusualLoadFailed': 'Không thể tải các ngày đã dự kiến.',
     'history.title': 'Lịch sử giao dịch',
@@ -174,7 +174,7 @@ export const translations = {
     'category.Other Expense': 'Chi tiêu khác', 'category.Salary': 'Lương',
     'category.Business': 'Kinh doanh', 'category.Investment': 'Đầu tư',
     'category.Gift & Bonus': 'Quà tặng & Thưởng', 'category.Other Income': 'Thu nhập khác',
-    'category.Other': 'Khác',
+    'category.Other': 'Khác', 'category.Transfer': 'Chuyển tiền',
 
     'error.generic': 'Đã xảy ra lỗi. Vui lòng thử lại.',
     'error.load': 'Không thể tải dữ liệu. Vui lòng thử lại.',
@@ -274,17 +274,13 @@ export const translations = {
     'transaction.revisionSummary': 'Đã sửa {count} lần', 'transaction.revisionSummaryOne': 'Đã sửa 1 lần',
     'transaction.revisionShow': 'Xem lịch sử', 'transaction.revisionHide': 'Ẩn lịch sử',
     'common.closeWindow': 'Đóng cửa sổ',
-    'home.greetingOkay': '{month} của bạn đang ổn',
-    'home.greetingStart': 'Chào bạn, hãy bắt đầu quản lý tài chính {month}',
-    'home.greetingReady': '{month} đã sẵn sàng cho kế hoạch chi tiêu',
-    'home.greetingOver': '{month} có khoản đã vượt hạn mức!',
-    'home.greetingWarning': '{month} cần chú ý chi tiêu',
-    'home.greetingSummary': 'Tổng quan chi tiêu {month}',
-    'home.greetingGrowing': 'Dòng tiền {month} đang tăng trưởng tích cực',
-    'home.greetingControlled': 'Chi tiêu {month} trong tầm kiểm soát',
+    
+    
+    
+    
     'home.lastUpdated': 'Hiển thị lúc {time}', 'home.addTransaction': 'Thêm giao dịch',
-    'home.availableOverview': 'Tổng quan tiền khả dụng', 'home.available': 'TIỀN CÓ THỂ CHI CÒN LẠI',
-    'home.availableHint': 'Số dư ví khả dụng; hóa đơn chưa trả chưa được trừ trước.',
+    'home.availableOverview': 'Tổng quan tiền khả dụng', 'home.available': 'Có thể chi',
+    'home.availableHint': 'Số dư ví khả dụng; khoản định kỳ chưa trả chưa được trừ trước.',
     'home.spentThisMonth': 'Đã chi tháng này', 'home.incomeThisMonth': 'Thu nhập tháng này',
     'home.recent': 'Giao dịch gần đây', 'home.viewAll': 'Xem tất cả', 'home.noRecent': 'Chưa có giao dịch gần đây',
     'home.noRecentHint': 'Hãy ghi lại khoản chi tiêu hoặc thu nhập đầu tiên của bạn.',
@@ -300,7 +296,7 @@ export const translations = {
     'analytics.csvSummary': '1. TỔNG KẾT CHỈ SỐ TÀI CHÍNH',
     'analytics.csvSummaryHeaders': 'Chỉ số,Kỳ này,Kỳ trước,Chênh lệch (VND),% Thay đổi',
     'analytics.totalIncome': 'Tổng thu nhập', 'analytics.totalExpense': 'Tổng chi tiêu',
-    'analytics.net': 'Dòng tiền thuần (Net)', 'analytics.savingsRate': 'Tỷ lệ tiết kiệm',
+    'analytics.net': 'Dòng tiền thuần', 'analytics.savingsRate': 'Tỷ lệ tiết kiệm',
     'analytics.csvCategorySection': '2. PHÂN TÍCH CHI TIẾT THEO NHÓM CHI PHÍ',
     'analytics.csvCategoryHeaders': 'Danh mục,Chi tiêu kỳ này,Chi tiêu kỳ trước,Chênh lệch (VND),% Biến động,Tỷ trọng chi tiêu,Số giao dịch,Hạn mức ngân sách,Trạng thái ngân sách,Đánh giá & Khuyến nghị',
     'analytics.overBudget': 'Vượt ngân sách ({percent}%)',
@@ -341,7 +337,7 @@ export const translations = {
     'common.outOfRange': 'Outside display range',
 
     'nav.home': 'Dashboard', 'nav.plan': 'Plan', 'nav.analytics': 'Analytics',
-    'nav.jars': 'Jars', 'nav.overview': 'Overview',
+    'nav.jars': 'Savings jars', 'nav.overview': 'Overview', 'nav.analyticsOverview': 'Income & spending summary',
     'nav.wallets': 'Wallets & Accounts', 'nav.budgets': 'Budgets',
     'nav.recurring': 'Recurring items', 'nav.spending': 'Spending',
     'nav.cashFlow': 'Cash flow', 'nav.reports': 'Reports', 'nav.goals': 'Goals',
@@ -470,7 +466,7 @@ export const translations = {
     'category.Other Expense': 'Other Expense', 'category.Salary': 'Salary',
     'category.Business': 'Business', 'category.Investment': 'Investment',
     'category.Gift & Bonus': 'Gift & Bonus', 'category.Other Income': 'Other Income',
-    'category.Other': 'Other',
+    'category.Other': 'Other', 'category.Transfer': 'Transfer',
 
     'error.generic': 'Something went wrong. Please try again.',
     'error.load': 'Unable to load data. Please try again.',
@@ -569,17 +565,13 @@ export const translations = {
     'transaction.revisionSummary': 'Edited {count} times', 'transaction.revisionSummaryOne': 'Edited once',
     'transaction.revisionShow': 'View history', 'transaction.revisionHide': 'Hide history',
     'common.closeWindow': 'Close window',
-    'home.greetingOkay': 'Your {month} finances look good',
-    'home.greetingStart': 'Welcome — start managing your {month} finances',
-    'home.greetingReady': 'Your {month} spending plan is ready',
-    'home.greetingOver': 'A category is over its limit in {month}!',
-    'home.greetingWarning': 'Your {month} spending needs attention',
-    'home.greetingSummary': '{month} spending overview',
-    'home.greetingGrowing': '{month} cash flow is growing strongly',
-    'home.greetingControlled': '{month} spending is under control',
+    
+    
+    
+    
     'home.lastUpdated': 'Shown at {time}', 'home.addTransaction': 'Add transaction',
-    'home.availableOverview': 'Available-to-spend overview', 'home.available': 'AVAILABLE TO SPEND',
-    'home.availableHint': 'Eligible wallet balances; unpaid bills are not deducted in advance.',
+    'home.availableOverview': 'Available-to-spend overview', 'home.available': 'Available to spend',
+    'home.availableHint': 'Eligible wallet balances; unpaid recurring payments are not deducted in advance.',
     'home.spentThisMonth': 'Spent this month', 'home.incomeThisMonth': 'Income this month',
     'home.recent': 'Recent transactions', 'home.viewAll': 'View all', 'home.noRecent': 'No recent transactions',
     'home.noRecentHint': 'Record your first expense or income transaction.',
@@ -635,7 +627,7 @@ export const translations = {
     'common.outOfRange': '超出显示范围',
 
     'nav.home': '首页', 'nav.plan': '计划', 'nav.analytics': '分析', 'nav.jars': '储蓄罐',
-    'nav.overview': '总览', 'nav.wallets': '钱包与账户',
+    'nav.overview': '总览', 'nav.analyticsOverview': '收支概要', 'nav.wallets': '钱包与账户',
     'nav.budgets': '预算', 'nav.recurring': '周期项目', 'nav.spending': '支出',
     'nav.cashFlow': '现金流', 'nav.reports': '报告', 'nav.goals': '目标',
     'nav.jarList': '储蓄罐列表', 'nav.history': '存取记录', 'nav.transactionHistory': '交易记录',
@@ -758,7 +750,7 @@ export const translations = {
     'category.Other Expense': '其他支出', 'category.Salary': '工资',
     'category.Business': '经营收入', 'category.Investment': '投资',
     'category.Gift & Bonus': '礼物与奖金', 'category.Other Income': '其他收入',
-    'category.Other': '其他',
+    'category.Other': '其他', 'category.Transfer': '转账',
 
     'error.generic': '发生错误，请重试。', 'error.load': '无法加载数据，请重试。',
     'error.save': '无法保存更改，请重试。',
@@ -850,10 +842,8 @@ export const translations = {
     'transaction.revisionSummary': '已修改 {count} 次', 'transaction.revisionSummaryOne': '已修改 1 次',
     'transaction.revisionShow': '查看记录', 'transaction.revisionHide': '收起记录',
     'common.closeWindow': '关闭窗口',
-    'home.greetingOkay': '您的{month}财务状况良好', 'home.greetingStart': '欢迎，开始管理{month}财务吧',
-    'home.greetingReady': '{month}支出计划已准备就绪', 'home.greetingOver': '{month}有分类已超出限额！',
-    'home.greetingWarning': '{month}支出需要关注', 'home.greetingSummary': '{month}支出总览',
-    'home.greetingGrowing': '{month}现金流增长良好', 'home.greetingControlled': '{month}支出在控制范围内',
+    
+    
     'home.lastUpdated': '显示于 {time}', 'home.addTransaction': '添加交易',
     'home.availableOverview': '可支配金额总览', 'home.available': '剩余可支配金额',
     'home.availableHint': '可用钱包余额，未付账单不会提前扣除。',

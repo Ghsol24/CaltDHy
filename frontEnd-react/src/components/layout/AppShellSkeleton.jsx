@@ -14,7 +14,6 @@ export function AppShellSkeleton() {
           <span className="tb-logo">
             Calt<span className="tb-logo-accent">D</span>Hy
           </span>
-          <span className="tb-badge">v2.0</span>
         </div>
 
         <div className="tb-right tb-right--layout">

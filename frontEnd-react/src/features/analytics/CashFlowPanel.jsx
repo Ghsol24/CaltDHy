@@ -194,7 +194,7 @@ export function CashFlowPanel({
     </div>
     <dl className="cashflow-summary" data-testid="cashflow-summary" aria-label={text('scopeHint')}>
       <div><dt>{text('income')}</dt><dd className="cashflow-money--income">{formatCurrency(summary?.income || 0, { locale: lang })}</dd></div>
-      <div><dt>{text('expense')}</dt><dd className="cashflow-money--expense">{formatCurrency(summary?.expense || 0, { locale: lang })}</dd></div>
+      <div><dt>{text(excludeRecurring ? 'expenseExcludingRecurring' : 'expense')}</dt><dd className="cashflow-money--expense">{formatCurrency(summary?.expense || 0, { locale: lang })}</dd></div>
       <div><dt>{text('net')}</dt><dd className={(summary?.net || 0) < 0 ? 'cashflow-money--expense' : ''}>
         {formatCurrency(summary?.net || 0, { locale: lang })}
       </dd></div>

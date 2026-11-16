@@ -99,8 +99,8 @@ const digits = (text) => String(text || '').replace(/\D/g, '');
   // Spent|limit pairs that may ever appear together in the summary card.
   const expected = { [previous]: '80000|100000', [current]: '300000|500000', [next]: '0|500000' };
   const allowedPairs = new Set(Object.values(expected));
-  const monthLabel = (month) => new Intl.DateTimeFormat('vi-VN', { year: 'numeric', month: 'long' })
-    .format(new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1, 1));
+  // Month titles read "Tháng 10, 2026" (UX audit X-03).
+    const monthLabel = (month) => `Tháng ${Number(month.slice(5))}, ${month.slice(0, 4)}`;
 
   async function record(target, action) {
     await target.evaluate(() => {

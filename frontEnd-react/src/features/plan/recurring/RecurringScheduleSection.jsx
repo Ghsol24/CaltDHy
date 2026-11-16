@@ -31,7 +31,7 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
                 onChange={handleAmountChange}
                 required
               />
-              <span className="txn-amount-suffix">VNĐ</span>
+              <span className="txn-amount-suffix">₫</span>
             </div>
           </div>
     

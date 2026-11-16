@@ -1,8 +1,9 @@
 import React, { lazy, Suspense } from 'react';
+import '../../i18n/homeTranslations';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { calculateMonthlyStats } from '../../utils/financeMath';
-import { formatDate, formatTime, getLocalMonthString } from '../../utils/formatters';
+import { formatMonthYear, formatTime, getLocalMonthString } from '../../utils/formatters';
 import { AvailableToSpendCard } from './AvailableToSpendCard';
 import { RecentTransactions } from './RecentTransactions';
 import { AttentionPanel } from './AttentionPanel';
@@ -22,7 +23,9 @@ export function HomeView() {
   const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
 
   const currentMonthStr = getLocalMonthString();
-  const monthLabel = formatDate(`${currentMonthStr}-01`, 'month');
+  // "Tháng 11" opens a sentence, "tháng 11" sits inside one; the year shows only when it is not this year.
+  const monthTitle = formatMonthYear(`${currentMonthStr}-01`, { omitCurrentYear: true });
+  const monthInline = formatMonthYear(`${currentMonthStr}-01`, { omitCurrentYear: true, lowercase: true });
 
   // Tự động kiểm tra và đồng bộ dữ liệu ngân sách chuẩn của tháng hiện tại khi mở Trang chủ
   React.useEffect(() => {
@@ -81,8 +84,8 @@ export function HomeView() {
     const now = new Date();
     const displayTimeText = t('home.lastUpdated', { time: formatTime(now) });
 
-    return { greeting: t(greetingKey, { month: monthLabel }), displayTimeText };
-  }, [transactions, budgets, currentMonthStr, monthLabel, t]);
+    return { greeting: t(greetingKey, { Month: monthTitle, month: monthInline }), displayTimeText };
+  }, [transactions, budgets, currentMonthStr, monthTitle, monthInline, t]);
 
   return (
     <div className="home-dashboard-v2-container">

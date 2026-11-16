@@ -25,10 +25,10 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
             const perMonth = Math.round(remaining / monthsLeft);
             monthlyHintText = `Cần khoảng ${formatCurrency(perMonth)} / tháng để đạt mục tiêu đúng hạn`;
           } else {
-            monthlyHintText = 'Đã đến hạn mục tiêu!';
+            monthlyHintText = 'Đã đến hạn mục tiêu';
           }
         } else if (isCompleted) {
-          monthlyHintText = 'Đã hoàn thành 100% mục tiêu xuất sắc!';
+          monthlyHintText = 'Đã đạt mục tiêu';
         }
   
         return (

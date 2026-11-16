@@ -11,7 +11,7 @@ import { JarTransactionModal } from './JarTransactionModal';
 import { JarDetailModal } from './JarDetailModal';
 import { JarHistoryModal } from './JarHistoryModal';
 import { FinancialTipsModal } from './FinancialTipsModal';
-import { formatCurrency, getLocalDateString } from '../../utils/formatters';
+import { formatCurrency, formatMonthYear, getLocalDateString } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { JarActivityCalendar } from './JarActivityCalendar';
@@ -102,11 +102,10 @@ export function JarsView() {
   const availableMonths = useMemo(() => {
     const months = [];
     const now = new Date();
-    const formatter = new Intl.DateTimeFormat(intlLocale || 'vi-VN', { month: 'long', year: 'numeric' });
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      months.push({ value: val, label: formatter.format(d) });
+      months.push({ value: val, label: formatMonthYear(d, { intlLocale }) });
     }
     return months;
   }, [intlLocale]);
@@ -204,7 +203,7 @@ export function JarsView() {
 
   if (!hasLoaded || (isLoading && jars.length === 0)) {
     return (
-      <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+      <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
         <div className="feature-loading" role="status" aria-live="polite">Đang tải dữ liệu hũ…</div>
       </div>
     );
@@ -212,7 +211,7 @@ export function JarsView() {
 
   if (error && jars.length === 0) {
     return (
-      <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+      <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
         <EmptyState
           icon={<AlertTriangleOutlineIcon size={32} />}
           title="Chưa thể tải dữ liệu hũ"
@@ -237,7 +236,7 @@ export function JarsView() {
         ? 'Lịch sử hũ'
         : 'Mục tiêu';
     return (
-      <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+      <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
         <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card">
           <div className="jars-hero-top-row">
             <div className="jars-hero-titles">
@@ -265,7 +264,7 @@ export function JarsView() {
   }
 
   return (
-    <div className="jars-page-root" role="region" aria-label="Quản lý Hũ chi tiêu và Tiết kiệm">
+    <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
       {/* ── ERROR STATE BANNER ── */}
       {error && (
         <div className="jars-load-error" role="alert">
@@ -331,7 +330,7 @@ export function JarsView() {
         {isLoading && jars.length === 0 && (
           <div className="jars-list-section__div--box">
             <span className="spinner spinner--box" />
-            <p className="jars-list-section__p--box">Đang tải danh sách hũ chi tiêu...</p>
+            <p className="jars-list-section__p--box">Đang tải danh sách hũ tiết kiệm...</p>
           </div>
         )}
 
@@ -341,7 +340,7 @@ export function JarsView() {
             icon={
               <Icon name="packageBox" width="48" height="48" fill="none" stroke="#5356F1" strokeWidth="1.5" />
             }
-            title="Chưa có hũ chi tiêu nào"
+            title="Chưa có hũ tiết kiệm nào"
             description="Tạo hũ đầu tiên và nhập số tiền mục tiêu để theo dõi tiến độ."
             actionLabel="+ Tạo hũ tiết kiệm đầu tiên"
             onAction={handleCreateNew}

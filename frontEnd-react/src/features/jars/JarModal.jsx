@@ -114,7 +114,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
         </div>
         <div className="jm-two-columns">
           <div className="jm-field">
-            <label htmlFor={`${id}-target`}>{text('target')} <span className="jm-unit">VND</span></label>
+            <label htmlFor={`${id}-target`}>{text('target')} <span className="jm-unit">₫</span></label>
             <input id={`${id}-target`} ref={targetInputRef} className="jm-input jm-money-input" inputMode="numeric"
               value={target} onChange={updateAmount(setTarget)} placeholder="0" required disabled={isSubmitting}
               aria-invalid={error?.field === 'target'} aria-describedby={error?.field === 'target' ? `${id}-error` : undefined} />
@@ -132,7 +132,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
           </div>
         ) : (
           <div className="jm-field">
-            <label htmlFor={`${id}-initial`}>{text('initial')} <span className="jm-optional">{text('optional')}</span> <span className="jm-unit">VND</span></label>
+            <label htmlFor={`${id}-initial`}>{text('initial')} <span className="jm-optional">{text('optional')}</span> <span className="jm-unit">₫</span></label>
             <input id={`${id}-initial`} ref={initialInputRef} className="jm-input jm-money-input" inputMode="numeric"
               value={initialAmount} onChange={updateAmount(setInitialAmount)} placeholder="0" disabled={isSubmitting}
               aria-invalid={error?.field === 'initial'} aria-describedby={`${id}-initial-hint${error?.field === 'initial' ? ` ${id}-error` : ''}`} />

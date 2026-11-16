@@ -190,6 +190,18 @@
   margin-bottom: 8px;
 }
 
+/* A one-item group ("Trang chủ") shows its item directly, with the collapse button beside it. */
+.sidebar-standalone-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-standalone-row > .sidebar-group-items {
+  flex: 1;
+  min-width: 0;
+}
+
 .sidebar-group-header-row {
   display: flex;
   align-items: center;

@@ -125,14 +125,14 @@ async function check(name, work) {
 
   await check('historical editing uses the September budget and previews the draft once', async () => {
     await openPast();
-    await expect(modal.locator('.txn-period-notice')).toContainText('tháng 9 năm 2026');
-    await expect(modal.locator('.txn-budget-period').first()).toContainText('tháng 9 năm 2026');
+    await expect(modal.locator('.txn-period-notice')).toContainText('Tháng 9, 2026');
+    await expect(modal.locator('.txn-budget-period').first()).toContainText('Tháng 9, 2026');
     await expect(mealCard().locator('.txn-card-amount')).toContainText(/70\.000\s*₫/);
     await modal.locator('#txn-amount-input').fill('40000');
     await expect(mealCard().locator('.txn-card-amount')).toContainText(/60\.000\s*₫/);
     await modal.locator('.txn-btn-submit').click();
     await expect(confirmation).toBeVisible();
-    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('tháng 9 năm 2026');
+    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText(/10\.000\s*₫/);
     assert.equal((await ledger()).find(tx => (tx.id || tx._id) === pastId).amount, 30000);
   });
@@ -206,7 +206,7 @@ async function check(name, work) {
       const completed = page.waitForResponse(response => septemberBudget(new URL(response.url())));
       release();
       await completed;
-      await expect(modal.locator('.txn-budget-period').first()).toContainText('tháng 10 năm 2026');
+      await expect(modal.locator('.txn-budget-period').first()).toContainText('Tháng 10, 2026');
       await expect(mealCard().locator('.txn-card-amount')).toContainText(/440\.000\s*₫/);
       await modal.locator('.txn-modal-close-btn').click();
     } finally {
@@ -300,7 +300,7 @@ async function check(name, work) {
         await modal.locator('#txn-amount-input').fill('50000');
         await modal.locator('.txn-btn-submit').click();
         await expect(confirmation).toBeVisible();
-        await expect(confirmation.locator('.confirm-dialog-message')).toContainText('tháng 9 năm 2026');
+        await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
         const confirmLayout = await confirmation.evaluate(element => {
           const box = element.getBoundingClientRect();
           return { left: box.left, right: box.right, top: box.top, bottom: box.bottom,
@@ -322,12 +322,12 @@ async function check(name, work) {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
     await modal.locator('#txn-date-input').fill('2026-10-01');
-    await expect(modal.locator('.txn-budget-period').first()).toContainText('tháng 10 năm 2026');
+    await expect(modal.locator('.txn-budget-period').first()).toContainText('Tháng 10, 2026');
     await expect(mealCard().locator('.txn-card-amount')).toContainText(/440\.000\s*₫/);
     await modal.locator('.txn-btn-submit').click();
     await expect(confirmation).toBeVisible();
-    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('tháng 9 năm 2026');
-    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('tháng 10 năm 2026');
+    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
+    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 10, 2026');
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText(/40\.000\s*₫/);
     await confirmation.locator('.confirm-dialog-btn').last().click();
     await expect(modal).toHaveCount(0);
@@ -343,7 +343,7 @@ async function check(name, work) {
     const row = page.locator('.home-txn-row').filter({ hasText: 'Xóa tháng 9' });
     await row.hover();
     await row.locator('.home-txn-btn-action--delete').click();
-    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('tháng 9 năm 2026');
+    await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText(/5\.000\s*₫/);
     await confirmation.locator('.confirm-dialog-btn').last().click();
     await expect(row).toHaveCount(0);

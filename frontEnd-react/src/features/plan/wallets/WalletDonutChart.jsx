@@ -117,14 +117,14 @@ export function WalletDonutChart({
               {hoveredSlice.name} • {formatPercent(hoveredSlice.percent, { fractionDigits: 1 })}
             </span>
             <strong className="donut-center-val donut-center-val--tone" style={{ '--donut-center-val-color': hoveredSlice.color }}>
-              {isCountMode ? `${hoveredSlice.balance} GD` : formatCurrency(hoveredSlice.balance)}
+              {isCountMode ? `${hoveredSlice.balance} giao dịch` : formatCurrency(hoveredSlice.balance)}
             </strong>
           </>
         ) : (
           <>
             <span className="donut-center-label">{centerLabel}</span>
             <strong className="donut-center-val">
-              {isCountMode ? `${totalBalance} GD` : formatCurrency(totalBalance)}
+              {isCountMode ? `${totalBalance} giao dịch` : formatCurrency(totalBalance)}
             </strong>
           </>
         )}

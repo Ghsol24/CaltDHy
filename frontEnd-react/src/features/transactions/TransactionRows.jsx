@@ -56,7 +56,7 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
         <span className="transaction-ledger-category">{label(transaction.category)}</span>
         {walletBadge}
         <time dateTime={transaction.date} className="transaction-ledger-date">
-          {formatDate(transaction.date, 'compact', { locale: lang })}
+          {formatDate(transaction.date, 'short', { locale: lang })}
         </time>
         {amountLabel}
       </> : <>

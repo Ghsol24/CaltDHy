@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
-import { formatCompactCurrency, formatCurrency, formatDate, getLocalDateString } from '../../../utils/formatters';
+import { formatCurrency, formatDate, getLocalDateString } from '../../../utils/formatters'
+import { formatCompactCurrency } from '../../../utils/compactFormatters';
 import { cashFlowSeriesTypes } from '../../../utils/cashFlowData';
 import { cashFlowChartContext } from '../cashFlowChartContext';
 

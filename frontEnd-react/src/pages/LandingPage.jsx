@@ -140,7 +140,7 @@ export function LandingPage() {
               <span className="metric-label">{t.transactions}</span>
             </div>
             <div className="metric-badge">
-              <span className="metric-value metric-value--accent">↓ 7.2%</span>
+              <span className="metric-value metric-value--accent">↓ 7,2%</span>
               <span className="metric-label">{t.vsLastMo}</span>
             </div>
           </div>
