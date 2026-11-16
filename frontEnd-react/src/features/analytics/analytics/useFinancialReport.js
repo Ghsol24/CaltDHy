@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { formatChangePercent, formatCurrency, formatDate, formatDateTime, formatPercent } from '../../../utils/formatters';
+import { formatCurrency, formatDate, formatDateTime, formatPercent } from '../../../utils/formatters';
+import { formatChangePercent } from '../../../utils/compactFormatters';
 import { getBudgetStatus } from '../../../utils/financeMath';
 import { getCategoryIcon } from '../../../utils/categories';
 import { translateLegacyText } from '../../../i18n/legacyTranslations';

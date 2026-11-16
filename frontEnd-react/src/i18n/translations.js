@@ -104,7 +104,6 @@ export const translations = {
     'analytics.cashflow.oneMonth': '1 tháng', 'analytics.cashflow.threeMonths': '3 tháng', 'analytics.cashflow.sixMonths': '6 tháng',
     'analytics.cashflow.byDay': 'Theo ngày', 'analytics.cashflow.byMonth': 'Theo tháng',
     'analytics.cashflow.income': 'Thu nhập', 'analytics.cashflow.expense': 'Chi tiêu', 'analytics.cashflow.both': 'Thu và chi',
-    'analytics.cashflow.expenseExcludingRecurring': 'Chi tiêu (không gồm định kỳ)',
     'analytics.cashflow.includeRecurring': 'Bao gồm khoản định kỳ',
     'analytics.cashflow.recurringIncluded': 'Gồm khoản định kỳ', 'analytics.cashflow.recurringExcluded': 'Không gồm khoản định kỳ',
     'analytics.cashflow.scopeHint': 'Áp dụng cho biểu đồ, số tổng và ngày chi nhiều trong khu vực này. Báo cáo khác giữ nguyên.',
@@ -136,7 +135,7 @@ export const translations = {
     'analytics.viewHistory': 'Xem đầy đủ trong lịch sử', 'analytics.unusualTitle': 'Ngày chi cao bất thường',
     'analytics.unusualExplanation': 'So với mức chi điển hình trong 90 ngày gần đây, không gồm khoản định kỳ.',
     'analytics.unusualRatio': 'Cao gấp {ratio} lần mức thường ngày',
-    'analytics.unusualMarkExpected': 'Tôi đã dự tính ngày này', 'analytics.unusualMarkExpectedHint': 'Không cảnh báo ngày này nữa', 'analytics.unusualUndoExpected': 'Bỏ đánh dấu ngày dự kiến',
+    'analytics.unusualMarkExpected': 'Tôi đã dự tính ngày này', 'analytics.unusualUndoExpected': 'Bỏ đánh dấu ngày dự kiến',
     'analytics.unusualSaveFailed': 'Không thể lưu ngày đã dự kiến. Vui lòng thử lại.',
     'analytics.unusualLoadFailed': 'Không thể tải các ngày đã dự kiến.',
     'history.title': 'Lịch sử giao dịch',
@@ -163,7 +162,7 @@ export const translations = {
     'date.today': 'Hôm nay', 'date.yesterday': 'Hôm qua', 'date.noDate': 'Chưa định ngày',
     'date.dueToday': 'Đến hạn hôm nay', 'date.overdueDays': 'Quá hạn {count} ngày',
     'date.daysLeft': 'Còn {count} ngày', 'date.paidThisMonth': 'Đã trả tháng này',
-    'date.paid': 'Đã trả', 'change.times': 'gấp {count} lần',
+    'date.paid': 'Đã trả',
 
     'type.income': 'Thu nhập', 'type.expense': 'Chi tiêu', 'type.transfer': 'Chuyển khoản',
     'type.deposit': 'Nạp tiền', 'type.withdraw': 'Rút tiền',
@@ -275,14 +274,10 @@ export const translations = {
     'transaction.revisionSummary': 'Đã sửa {count} lần', 'transaction.revisionSummaryOne': 'Đã sửa 1 lần',
     'transaction.revisionShow': 'Xem lịch sử', 'transaction.revisionHide': 'Ẩn lịch sử',
     'common.closeWindow': 'Đóng cửa sổ',
-    'home.greetingOkay': '{Month} đang ổn',
-    'home.greetingStart': 'Chào bạn, hãy bắt đầu quản lý tài chính {month}',
-    'home.greetingReady': 'Kế hoạch chi tiêu {month} đã sẵn sàng',
-    'home.greetingOver': '{Month}: có khoản vượt hạn mức',
-    'home.greetingWarning': 'Chi tiêu {month} cần chú ý',
-    'home.greetingSummary': 'Tổng quan chi tiêu {month}',
-    'home.greetingGrowing': 'Thu nhập {month} cao hơn chi tiêu',
-    'home.greetingControlled': 'Chi tiêu {month} trong tầm kiểm soát',
+    
+    
+    
+    
     'home.lastUpdated': 'Hiển thị lúc {time}', 'home.addTransaction': 'Thêm giao dịch',
     'home.availableOverview': 'Tổng quan tiền khả dụng', 'home.available': 'Có thể chi',
     'home.availableHint': 'Số dư ví khả dụng; khoản định kỳ chưa trả chưa được trừ trước.',
@@ -401,7 +396,6 @@ export const translations = {
     'analytics.cashflow.oneMonth': '1 month', 'analytics.cashflow.threeMonths': '3 months', 'analytics.cashflow.sixMonths': '6 months',
     'analytics.cashflow.byDay': 'By day', 'analytics.cashflow.byMonth': 'By month',
     'analytics.cashflow.income': 'Income', 'analytics.cashflow.expense': 'Expenses', 'analytics.cashflow.both': 'Income and expenses',
-    'analytics.cashflow.expenseExcludingRecurring': 'Expenses (excluding recurring)',
     'analytics.cashflow.includeRecurring': 'Include recurring payments',
     'analytics.cashflow.recurringIncluded': 'Includes recurring payments', 'analytics.cashflow.recurringExcluded': 'Excludes recurring payments',
     'analytics.cashflow.scopeHint': 'Applies to the chart, totals and spending days in this section. Other reports keep their full totals.',
@@ -433,7 +427,7 @@ export const translations = {
     'analytics.viewHistory': 'Open full transaction history', 'analytics.unusualTitle': 'Unusually high spending days',
     'analytics.unusualExplanation': 'Compared with the median of spending days in the previous 90 days, excluding recurring payments.',
     'analytics.unusualRatio': '{ratio} times your usual daily spend',
-    'analytics.unusualMarkExpected': 'Mark day as expected', 'analytics.unusualMarkExpectedHint': 'Stop flagging this day', 'analytics.unusualUndoExpected': 'Undo expected day',
+    'analytics.unusualMarkExpected': 'Mark day as expected', 'analytics.unusualUndoExpected': 'Undo expected day',
     'analytics.unusualSaveFailed': 'Could not save the expected day. Please try again.',
     'analytics.unusualLoadFailed': 'Could not load expected days.',
     'history.title': 'Transaction history',
@@ -460,7 +454,7 @@ export const translations = {
     'date.today': 'Today', 'date.yesterday': 'Yesterday', 'date.noDate': 'No date set',
     'date.dueToday': 'Due today', 'date.overdueDays': '{count} days overdue',
     'date.daysLeft': '{count} days left', 'date.paidThisMonth': 'Paid this month',
-    'date.paid': 'Paid', 'change.times': '{count}× higher',
+    'date.paid': 'Paid',
 
     'type.income': 'Income', 'type.expense': 'Expense', 'type.transfer': 'Transfer',
     'type.deposit': 'Deposit', 'type.withdraw': 'Withdraw',
@@ -571,14 +565,10 @@ export const translations = {
     'transaction.revisionSummary': 'Edited {count} times', 'transaction.revisionSummaryOne': 'Edited once',
     'transaction.revisionShow': 'View history', 'transaction.revisionHide': 'Hide history',
     'common.closeWindow': 'Close window',
-    'home.greetingOkay': '{Month} looks fine',
-    'home.greetingStart': 'Welcome — start managing your {month} finances',
-    'home.greetingReady': 'Your {month} spending plan is ready',
-    'home.greetingOver': '{Month}: a category is over its limit',
-    'home.greetingWarning': 'Your {month} spending needs attention',
-    'home.greetingSummary': '{Month} spending overview',
-    'home.greetingGrowing': 'Income is ahead of spending in {month}',
-    'home.greetingControlled': '{Month} spending is under control',
+    
+    
+    
+    
     'home.lastUpdated': 'Shown at {time}', 'home.addTransaction': 'Add transaction',
     'home.availableOverview': 'Available-to-spend overview', 'home.available': 'Available to spend',
     'home.availableHint': 'Eligible wallet balances; unpaid recurring payments are not deducted in advance.',
@@ -690,7 +680,6 @@ export const translations = {
     'analytics.cashflow.oneMonth': '1个月', 'analytics.cashflow.threeMonths': '3个月', 'analytics.cashflow.sixMonths': '6个月',
     'analytics.cashflow.byDay': '按日', 'analytics.cashflow.byMonth': '按月',
     'analytics.cashflow.income': '收入', 'analytics.cashflow.expense': '支出', 'analytics.cashflow.both': '收入与支出',
-    'analytics.cashflow.expenseExcludingRecurring': '支出（不含定期款项）',
     'analytics.cashflow.includeRecurring': '包含周期付款',
     'analytics.cashflow.recurringIncluded': '包含周期付款', 'analytics.cashflow.recurringExcluded': '不含周期付款',
     'analytics.cashflow.scopeHint': '适用于此区域的图表、总额和高支出日期。其他报告保留完整总额。',
@@ -722,7 +711,7 @@ export const translations = {
     'analytics.viewHistory': '查看完整交易记录', 'analytics.unusualTitle': '异常高支出日期',
     'analytics.unusualExplanation': '与过去 90 天有支出日期的中位数比较，不含周期付款。',
     'analytics.unusualRatio': '是平时每日支出的 {ratio} 倍',
-    'analytics.unusualMarkExpected': '将此日期标记为预期支出', 'analytics.unusualMarkExpectedHint': '不再提醒这一天', 'analytics.unusualUndoExpected': '取消日期预期标记',
+    'analytics.unusualMarkExpected': '将此日期标记为预期支出', 'analytics.unusualUndoExpected': '取消日期预期标记',
     'analytics.unusualSaveFailed': '无法保存预期日期，请重试。',
     'analytics.unusualLoadFailed': '无法加载预期日期。',
     'history.title': '交易记录',
@@ -749,7 +738,7 @@ export const translations = {
     'date.today': '今天', 'date.yesterday': '昨天', 'date.noDate': '未设置日期',
     'date.dueToday': '今天到期', 'date.overdueDays': '已逾期 {count} 天',
     'date.daysLeft': '还剩 {count} 天', 'date.paidThisMonth': '本月已支付',
-    'date.paid': '已支付', 'change.times': '{count} 倍',
+    'date.paid': '已支付',
 
     'type.income': '收入', 'type.expense': '支出', 'type.transfer': '转账',
     'type.deposit': '存入', 'type.withdraw': '取出',
@@ -853,10 +842,8 @@ export const translations = {
     'transaction.revisionSummary': '已修改 {count} 次', 'transaction.revisionSummaryOne': '已修改 1 次',
     'transaction.revisionShow': '查看记录', 'transaction.revisionHide': '收起记录',
     'common.closeWindow': '关闭窗口',
-    'home.greetingOkay': '您的{month}财务状况良好', 'home.greetingStart': '欢迎，开始管理{month}财务吧',
-    'home.greetingReady': '{month}支出计划已准备就绪', 'home.greetingOver': '{month}有分类已超出限额',
-    'home.greetingWarning': '{month}支出需要关注', 'home.greetingSummary': '{month}支出总览',
-    'home.greetingGrowing': '{month}收入高于支出', 'home.greetingControlled': '{month}支出在控制范围内',
+    
+    
     'home.lastUpdated': '显示于 {time}', 'home.addTransaction': '添加交易',
     'home.availableOverview': '可支配金额总览', 'home.available': '剩余可支配金额',
     'home.availableHint': '可用钱包余额，未付账单不会提前扣除。',

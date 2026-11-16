@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '../../i18n/useTranslation';
-import { formatCompactCurrency, formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '../../utils/formatters';
+import { formatCompactCurrency } from '../../utils/compactFormatters';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { FlameOutlineIcon, Icon } from '../../components/ui/AppIcons';
 import {

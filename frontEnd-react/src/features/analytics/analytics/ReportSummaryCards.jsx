@@ -1,5 +1,6 @@
 import React from 'react';
-import { formatChangePercent, formatCurrency, formatPercent } from '../../../utils/formatters';
+import { formatCurrency, formatPercent } from '../../../utils/formatters';
+import { formatChangePercent } from '../../../utils/compactFormatters';
 
 export function ReportSummaryCards({ reportData }) {
   return (

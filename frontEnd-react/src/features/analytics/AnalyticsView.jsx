@@ -1,4 +1,5 @@
 import { getUserErrorMessage } from '../../utils/userErrors.js';
+import '../../i18n/analyticsTranslations';
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,

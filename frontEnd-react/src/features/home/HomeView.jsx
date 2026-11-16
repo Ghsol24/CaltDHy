@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from 'react';
+import '../../i18n/homeTranslations';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { calculateMonthlyStats } from '../../utils/financeMath';
