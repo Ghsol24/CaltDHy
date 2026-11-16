@@ -174,7 +174,8 @@
 .txn-amount-input {
   width: 100%;
   padding: 12px 70px 12px 16px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-4xl);
   font-weight: 700;
   color: var(--color-text);
@@ -227,7 +228,8 @@
 .txn-amount-sign {
   position: absolute;
   left: 16px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-2xl);
   font-weight: 700;
   color: var(--color-success);
@@ -434,7 +436,8 @@
 
 /* Remaining Amount */
 .txn-card-amount {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-sm);
   font-weight: 700;
   line-height: 1.4;

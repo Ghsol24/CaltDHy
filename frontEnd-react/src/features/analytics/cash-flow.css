@@ -35,7 +35,8 @@
 .cashflow-summary dt { color: var(--text-secondary); font-size: var(--font-xs); }
 .cashflow-summary dd { margin: 0; color: var(--text-primary); font-size: var(--font-md); font-weight: 700; font-variant-numeric: tabular-nums; }
 .cashflow-summary .cashflow-money--income { color: var(--color-success); }
-.cashflow-summary .cashflow-money--expense { color: var(--color-danger); }
+.cashflow-summary .cashflow-money--expense { color: var(--color-text); }
+.cashflow-summary dd.cashflow-money--negative { color: var(--color-danger); }
 .cashflow-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 .cashflow-main { min-width: 0; }
 .cashflow-main .trend-week-nav { margin-bottom: 16px; }
@@ -60,16 +61,16 @@
 .cashflow-top-days li button:hover { background: var(--surface-subtle); }
 .cashflow-day-rank { display: grid; place-items: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--text-muted); font-size: var(--font-xs); font-weight: 600; }
 .cashflow-day-date { flex: 1; font-size: var(--font-xs); line-height: 1.5; }
-.cashflow-top-days li strong { color: var(--color-danger); font-size: var(--font-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cashflow-top-days li strong { color: var(--color-text); font-size: var(--font-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cashflow-top-days li svg { width: 13px; color: var(--text-muted); flex-shrink: 0; }
 .cashflow-more-days { margin-top: 8px; min-height: 40px; }
 .cashflow-more-days[aria-expanded="true"] svg { transform: rotate(180deg); }
 .cashflow-unusual { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
 .cashflow-unusual .analytics-unusual-days { margin-top: 0; }
 
-.cashflow-series-swatch { display: inline-flex; width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--color-danger); flex-shrink: 0; }
+.cashflow-series-swatch { display: inline-flex; width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--color-text-muted); flex-shrink: 0; }
 .cashflow-series-swatch--income { background: var(--color-success); }
-.cashflow-series-swatch--both { width: 18px; background: linear-gradient(to right, var(--color-success) 0 45%, transparent 45% 55%, var(--color-danger) 55% 100%); }
+.cashflow-series-swatch--both { width: 18px; background: linear-gradient(to right, var(--color-success) 0 45%, transparent 45% 55%, var(--color-text-muted) 55% 100%); }
 .cashflow-overlay { position: fixed; inset: 0; z-index: var(--z-dropdown); pointer-events: none; }
 .cashflow-popover { position: fixed; box-sizing: border-box; width: min(304px, calc(100vw - 32px)); padding: 16px; overflow-y: auto; border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-dialog); pointer-events: auto; }
 .cashflow-popover--display { width: min(344px, calc(100vw - 32px)); }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { WALLET_TYPE_LABELS } from './walletLabels';
+import { WALLET_TYPE_LABELS, displayWalletColor } from './walletLabels';
 import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { Icon, StarOutlineIcon } from '../../../components/ui/AppIcons';
 import { formatCurrency } from '../../../utils/formatters';
@@ -12,7 +12,7 @@ export function WalletListView({ deletingWalletId, filteredWallets, handleArchiv
       {filteredWallets.map((w) => {
         const isNegative = Number(w.currentBalance) < 0;
         const typeLabel = WALLET_TYPE_LABELS[w.type] || WALLET_TYPE_LABELS.cash;
-        const accentColor = w.color || '#10B981';
+        const accentColor = displayWalletColor(w.color, '#4F46E5');
         const txCount = walletTxCountMap[w.id] || 0;
         const isMenuOpen = openMenuWalletId === w.id;
         return (
@@ -63,7 +63,7 @@ export function WalletListView({ deletingWalletId, filteredWallets, handleArchiv
             {/* Right: Balance + 3-dots Menu */}
             <div className="wallet-h-balance-col">
               <span className="wallet-h-balance-label">Số dư hiện tại</span>
-              <strong className={`wallet-h-balance-val ${isNegative ? 'text-danger' : 'text-brand'}`}>
+              <strong className={`wallet-h-balance-val${isNegative ? ' text-danger' : ''}`}>
                 {formatCurrency(w.currentBalance ?? w.initialBalance ?? 0)}
               </strong>
             </div>

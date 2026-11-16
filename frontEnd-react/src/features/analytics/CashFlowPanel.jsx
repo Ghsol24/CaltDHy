@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { CalendarPanel, MonthPanel } from '../../components/ui/CustomDatePicker';
 import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon } from '../../components/ui/AppIcons';
 import { NavIcon } from '../../components/ui/NavIcons';
@@ -28,7 +28,7 @@ function SearchIcon() {
 
 /** Presentation only: data aggregation, persistence and the chart are supplied by AnalyticsView. */
 export function CashFlowPanel({
-  t, lang, intlLocale, periodMode, series, excludeRecurring, activeMonth, periodLabel, summary,
+  t, lang, periodMode, series, excludeRecurring, activeMonth, periodLabel, summary,
   chart, weekNavigation, hasData, emptyMessage, topDays = [], unusualContent,
   onPeriodModeChange, onSeriesChange, onExcludeRecurringChange, onMonthChange,
   onOpenDay, onViewHistory, onPinDefault, onClearDefault, pinnedDefault,
@@ -45,7 +45,7 @@ export function CashFlowPanel({
   const text = (key, values) => t(`analytics.cashflow.${key}`, values);
   const isCurrentDefault = pinnedDefault?.mode === preferenceMode
     && pinnedDefault?.series === series && pinnedDefault?.excludeRecurring === excludeRecurring;
-  const [monthYear, monthNumber] = activeMonth.split('-').map(Number);
+  const [, monthNumber] = activeMonth.split('-').map(Number);
   const rangeMonthCount = periodMode === '6months' ? 6 : periodMode === '3months' ? 3 : 1;
   const monthAnchor = new Date(`${activeMonth}-01T00:00:00`);
   const firstMonthDate = new Date(monthAnchor);
@@ -55,10 +55,6 @@ export function CashFlowPanel({
   const dateMin = firstMonthDate.getFullYear() < 1 ? '0001-01-01'
     : `${String(firstMonthDate.getFullYear()).padStart(4, '0')}-${String(firstMonthDate.getMonth() + 1).padStart(2, '0')}-01`;
   const dateMax = `${activeMonth}-${String(lastMonthDate.getDate()).padStart(2, '0')}`;
-  const rangeCrossesYear = firstMonthDate.getFullYear() !== monthYear;
-  const dayLabelFormatter = useMemo(() => new Intl.DateTimeFormat(intlLocale || lang, {
-    day: 'numeric', month: 'short', ...(rangeCrossesYear ? { year: 'numeric' } : {}),
-  }), [intlLocale, lang, rangeCrossesYear]);
 
   useEffect(() => { setShowAllDays(false); }, [periodLabel, excludeRecurring, series]);
 
@@ -195,7 +191,7 @@ export function CashFlowPanel({
     <dl className="cashflow-summary" data-testid="cashflow-summary" aria-label={text('scopeHint')}>
       <div><dt>{text('income')}</dt><dd className="cashflow-money--income">{formatCurrency(summary?.income || 0, { locale: lang })}</dd></div>
       <div><dt>{text(excludeRecurring ? 'expenseExcludingRecurring' : 'expense')}</dt><dd className="cashflow-money--expense">{formatCurrency(summary?.expense || 0, { locale: lang })}</dd></div>
-      <div><dt>{text('net')}</dt><dd className={(summary?.net || 0) < 0 ? 'cashflow-money--expense' : ''}>
+      <div><dt>{text('net')}</dt><dd className={(summary?.net || 0) < 0 ? 'cashflow-money--negative' : ''}>
         {formatCurrency(summary?.net || 0, { locale: lang })}
       </dd></div>
     </dl>
@@ -219,7 +215,7 @@ export function CashFlowPanel({
             <button type="button" data-testid="cashflow-top-day" data-date={day.date} onClick={() => onOpenDay(day.date, 'expense')}
               aria-label={`${t('analytics.dayTransactions', { date: formatDate(day.date, 'short', { locale: lang }) })} · ${formatCurrency(day.expense, { locale: lang })}`}>
               <span className="cashflow-day-rank" aria-hidden="true">{index + 1}</span>
-              <span className="cashflow-day-date">{dayLabelFormatter.format(new Date(`${day.date}T00:00:00`))}</span>
+              <span className="cashflow-day-date">{formatDate(day.date, 'short', { locale: lang })}</span>
               <strong>{formatCurrency(day.expense, { locale: lang })}</strong>
               <SmallIcon><path d="m9 6 6 6-6 6" /></SmallIcon>
             </button>

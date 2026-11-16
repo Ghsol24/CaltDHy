@@ -51,7 +51,8 @@
 }
 
 .jar-cal-amount-total {
-  font: 800 28px/1.15 var(--font-mono);
+  font: 800 28px/1.15 var(--font-money);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
@@ -411,7 +412,8 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
 }
 
 .jar-activity-amount {
-  font: 700 13px/1.2 var(--font-mono);
+  font: 700 13px/1.2 var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

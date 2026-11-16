@@ -1512,7 +1512,7 @@
 
 /* Theme name label */
 .theme-card__name {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: .12em;

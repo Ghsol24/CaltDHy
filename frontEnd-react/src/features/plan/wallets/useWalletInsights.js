@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
-import { WALLET_TYPE_LABELS } from './walletLabels';
+import { DISTRIBUTION_PALETTE, WALLET_TYPE_LABELS } from './walletLabels';
 
-// Color palette hài hòa, chuẩn thiết kế hiện đại
-const CHART_PALETTE = ['#2563EB', '#D97706', '#0D9488', '#DC2626', '#6366F1', '#10B981', '#EC4899', '#8B5CF6', '#F59E0B', '#0284C7'];
+const paletteAt = (index) => DISTRIBUTION_PALETTE[index % DISTRIBUTION_PALETTE.length];
 
 /**
  * Số liệu suy ra cho tab Ví: tổng tài sản, ví mặc định, số giao dịch mỗi ví,
@@ -55,7 +54,8 @@ export function useWalletInsights({ wallets, transactions, distributionMode, sea
   // Slices for Donut Chart (Hỗ trợ theo Số dư hoặc Số giao dịch)
   const donutSlices = useMemo(() => {
     if (distributionMode === 'txCount') {
-      const activeWallets = wallets.filter((w) => (walletTxCountMap[w.id] || 0) > 0);
+      const activeWallets = wallets.filter((w) => (walletTxCountMap[w.id] || 0) > 0)
+        .sort((a, b) => (walletTxCountMap[b.id] || 0) - (walletTxCountMap[a.id] || 0));
       const totalTx = activeWallets.reduce(
         (sum, w) => sum + (walletTxCountMap[w.id] || 0),
         0
@@ -66,13 +66,14 @@ export function useWalletInsights({ wallets, transactions, distributionMode, sea
       return activeWallets.map((w, idx) => ({
         id: w.id,
         name: w.name,
-        color: w.color || CHART_PALETTE[idx % CHART_PALETTE.length],
+        color: paletteAt(idx),
         balance: walletTxCountMap[w.id] || 0,
         percent: ((walletTxCountMap[w.id] || 0) / totalTx) * 100
       }));
     }
 
-    const positiveWallets = wallets.filter((w) => Number(w.currentBalance) > 0);
+    const positiveWallets = wallets.filter((w) => Number(w.currentBalance) > 0)
+      .sort((a, b) => Number(b.currentBalance) - Number(a.currentBalance));
     const sumPositive = positiveWallets.reduce(
       (s, w) => s + Number(w.currentBalance),
       0
@@ -83,7 +84,7 @@ export function useWalletInsights({ wallets, transactions, distributionMode, sea
     return positiveWallets.map((w, idx) => ({
       id: w.id,
       name: w.name,
-      color: w.color || CHART_PALETTE[idx % CHART_PALETTE.length],
+      color: paletteAt(idx),
       balance: Number(w.currentBalance),
       percent: (Number(w.currentBalance) / sumPositive) * 100
     }));

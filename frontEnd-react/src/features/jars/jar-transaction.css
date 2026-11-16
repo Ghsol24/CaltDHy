@@ -7,7 +7,7 @@
 .jar-transfer-field > label > span, .jar-transfer-wallet-box > label > span { color: var(--color-text-secondary); font-weight: 400; }
 .jar-transfer-amount-box { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 15px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); }
 .jar-transfer-amount-box:focus-within { border-color: var(--color-link); box-shadow: var(--focus-ring); }
-.jar-transfer-amount-box > input { min-width: 0; width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-text); font: 650 clamp(22px, 5vw, 30px)/1.25 var(--font-mono); font-variant-numeric: tabular-nums; outline: none; }
+.jar-transfer-amount-box > input { min-width: 0; width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-text); font: 650 clamp(22px, 5vw, 30px)/1.25 var(--font-money); font-variant-numeric: tabular-nums; outline: none; }
 .jar-transfer-amount-box > span { flex: 0 0 auto; color: var(--color-text-secondary); font-size: var(--font-xs); font-weight: 600; }
 .jar-transfer-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
 .jar-transfer-presets > button { min-height: 32px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text-secondary); font: 500 12px/1.4 var(--font-sans); cursor: pointer; }
@@ -24,7 +24,7 @@
 .jar-transfer-preview-grid > div { display: grid; align-content: start; gap: 5px; min-width: 0; }
 .jar-transfer-preview-grid > div > span { display: flex; align-items: center; gap: 5px; min-width: 0; color: var(--color-text-secondary); font-size: var(--font-xs); overflow-wrap: anywhere; }
 .jar-transfer-preview-grid > div > span > svg { flex: 0 0 auto; }
-.jar-transfer-preview-grid strong { color: var(--color-text); font: 650 18px/1.4 var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.jar-transfer-preview-grid strong { color: var(--color-text); font: 650 18px/1.4 var(--font-money); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .jar-transfer-preview-grid small { color: var(--color-text-secondary); font-size: var(--font-xs); line-height: 1.5; overflow-wrap: anywhere; }
 .jar-transfer-note > textarea { display: block; min-width: 0; width: 100%; min-height: 72px; max-height: 160px; padding: 10px 12px; border: 1px solid var(--color-border-strong); border-radius: 9px; resize: vertical; background: var(--color-surface); color: var(--color-text); font: 400 14px/1.5 var(--font-sans); }
 .jar-transfer-note > textarea:focus-visible { border-color: var(--color-link); }

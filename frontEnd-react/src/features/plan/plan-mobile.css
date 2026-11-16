@@ -292,13 +292,9 @@
   .plan-feature-view .banner-stat-block:first-child { grid-column: 1 / -1; }
   .plan-feature-view .banner-stat-divider { display: none; }
   .plan-feature-view .banner-stat-val { overflow-wrap: anywhere; font-family: var(--font-sans); }
-  /* "Thêm" sits on the title row instead of taking a full-width row in the card. */
-  .plan-feature-view .recurring-view-v2-container { position: relative; }
-  .plan-feature-view .recurring-page-header { min-height: 44px; padding-right: 96px; }
+  /* "Thêm" sits in the title row (it is part of the page header). */
+  .plan-feature-view .recurring-page-header { min-height: 44px; }
   .plan-feature-view .recurring-btn-create-primary {
-    position: absolute;
-    top: 0;
-    right: 0;
     justify-content: center;
     min-height: 44px;
     padding: 0 14px;

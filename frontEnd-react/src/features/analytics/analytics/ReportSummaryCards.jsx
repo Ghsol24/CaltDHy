@@ -64,7 +64,7 @@ export function ReportSummaryCards({ reportData }) {
               : `~ ${formatPercent(0, { fractionDigits: 1 })}`}
           </span>
         </div>
-        <strong className={`report-summary-card__amount ${reportData.curStats.expense > 0 ? 'text-danger' : 'text-muted'}`}>
+        <strong className={`report-summary-card__amount ${reportData.curStats.expense > 0 ? '' : 'text-muted'}`}>
           {formatCurrency(reportData.curStats.expense)}
         </strong>
         <div className="report-summary-card__meta">

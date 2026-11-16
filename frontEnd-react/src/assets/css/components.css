@@ -3,7 +3,8 @@
 /* Date group divider */
 
 .txn-date-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-xs);
   letter-spacing: .15em;
   text-transform: uppercase;
@@ -25,7 +26,8 @@
 /* Category pill */
 
 .txn-amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   font-size: var(--font-md);
   font-weight: 700;
   flex-shrink: 0;

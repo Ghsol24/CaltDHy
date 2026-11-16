@@ -166,7 +166,7 @@ export function JarsProgressSection({ handleDeposit, navigateTo, progressOvervie
                   className="jars-status-action-btn"
                   onClick={() => handleDeposit(progressOverview.needsAttention[0].jar)}
                 >
-                  <span>+ Nạp ngay</span>
+                  <span>+ Nạp tiền</span>
                 </button>
               </>
             ) : (

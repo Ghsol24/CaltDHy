@@ -53,7 +53,7 @@ export function FinancialReportSection({ activeMonth, analyticsSubTab, curQuarte
   
         <button
           type="button"
-          className="btn-report-action btn-report-action--primary"
+          className="btn-report-action"
           onClick={handleExportCSV}
           title="Tải bảng tính sao kê chi tiết dạng CSV (tương thích Excel)"
         >

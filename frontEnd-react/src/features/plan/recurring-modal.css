@@ -150,7 +150,8 @@
 
 .dropdown-item-sub {
   font-size: var(--font-xs);
-  font-family: var(--font-mono);
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
   color: var(--text-muted, #8A98A9);
 }
 
