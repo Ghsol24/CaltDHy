@@ -11,8 +11,8 @@ const sections = [
       ['Xem Phân tích để kiểm tra thu chi; mở Lịch sử giao dịch để tìm và sửa giao dịch nhập sai.', 'Review income and expenses in Analytics; use Transaction history to find and correct an entry.', '在分析中查看收支；在交易记录中查找并修改录入错误的交易。'], 'analytics']
   ]],
   ['home', ['Trang chủ', 'Home', '首页'], [
-    [['Tiền có thể chi còn lại', 'Available to spend', '剩余可支配金额'],
-      ['Là số dư các ví được tính vào tiền khả dụng, bỏ qua ví lưu trữ và thẻ tín dụng. Tiền chuyển vào hũ đã rời ví nguồn nên không bị trừ lần nữa. Hóa đơn chưa trả chưa được trừ trước.', 'This is the balance of eligible spending wallets, excluding archived wallets and credit cards. Jar transfers already reduce the source wallet. Unpaid bills are not deducted in advance.', '这是可计入可用资金的钱包余额，不含已归档钱包及信用卡。转入储蓄罐的金额已从来源钱包扣除；未付账单不会提前扣除。']],
+    [['Có thể chi', 'Available to spend', '剩余可支配金额'],
+      ['Là số dư các ví được tính vào tiền khả dụng, bỏ qua ví lưu trữ và thẻ tín dụng. Tiền chuyển vào hũ đã rời ví nguồn nên không bị trừ lần nữa. Khoản định kỳ chưa trả chưa được trừ trước.', 'This is the balance of eligible spending wallets, excluding archived wallets and credit cards. Jar transfers already reduce the source wallet. Unpaid bills are not deducted in advance.', '这是可计入可用资金的钱包余额，不含已归档钱包及信用卡。转入储蓄罐的金额已从来源钱包扣除；未付账单不会提前扣除。']],
     [['Thêm giao dịch', 'Add a transaction', '添加交易'],
       ['Chi tiêu làm giảm ví; Thu nhập làm tăng ví. Chuyển khoản chỉ chuyển tiền giữa các ví, không cộng vào thu/chi tháng. Với chi tiêu, phí nhập kèm được tính vào tổng chi.', 'Expense reduces a wallet; Income increases it. Transfers move existing money and are excluded from monthly income/expenses. An expense includes its entered fee.', '支出减少钱包余额，收入增加余额。转账只移动已有资金，不计入月度收支。支出总额包含录入的手续费。'], 'transaction'],
     [['Cần chú ý và giao dịch gần đây', 'Alerts and recent transactions', '提醒与近期交易'],
@@ -68,6 +68,7 @@ export function getGuideContent(lang) {
     more: pick(['Xem hướng dẫn', 'View guide', '查看指南']),
     understood: pick(['Đã hiểu', 'Got it', '明白了']),
     hint: pick(['Gợi ý cho', 'Tips for', '使用提示']),
+    button: pick(['Gợi ý', 'Tips', '提示']),
     tabs: sections.map(([id, title, items]) => ({ id, title: pick(title),
       sections: items.map(([heading, body, action]) => ({ title: pick(heading), body: pick(body), action })) }))
   };

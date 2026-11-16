@@ -96,15 +96,18 @@ export function HomeView() {
           <p className="home-dashboard-updated">{displayTimeText}</p>
         </div>
 
-        <button
-          type="button"
-          className="home-btn-add-txn"
-          onClick={openAddTxnModal}
-          aria-label={t('home.addTransaction')}
-        >
-          <span className="home-btn-add-plus" aria-hidden="true">+</span>
-          <span>{t('home.addTransaction')}</span>
-        </button>
+        <div className="page-header-actions">
+          <span className="page-guide-slot" data-guide-slot="" />
+          <button
+            type="button"
+            className="home-btn-add-txn"
+            onClick={openAddTxnModal}
+            aria-label={t('home.addTransaction')}
+          >
+            <span className="home-btn-add-plus" aria-hidden="true">+</span>
+            <span>{t('home.addTransaction')}</span>
+          </button>
+        </div>
       </div>
 
       {/* ── 2-COLUMN RESPONSIVE GRID ── */}

@@ -8,6 +8,7 @@ import { BrandLogoIcon } from '../../../utils/brandIcons';
 import { Icon } from '../../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { MenuPopover } from '../../../components/ui/MenuPopover';
 
 export function RecurringList({ currentMonthStr, displayItems, handleAssignWallet, handleDelete, handleOpenEdit, handlePay, handleToggle, isLoading, menuRef, menuTriggerRef, openActionMenuId, openWalletSelectorId, pendingActions, setOpenActionMenuId, setOpenWalletSelectorId, walletRef, wallets }) {
   const { label, lang, t } = useTranslation();
@@ -228,7 +229,7 @@ export function RecurringList({ currentMonthStr, displayItems, handleAssignWalle
                 </button>
   
                 {isMenuOpen && (
-                  <div className="recurring-actions-dropdown" role="menu">
+                  <MenuPopover className="recurring-actions-dropdown" label={`Tùy chọn cho khoản ${item.name}`} onClose={() => setOpenActionMenuId(null)} triggerRef={menuTriggerRef}>
                     <button
                       type="button"
                       className="actions-dropdown-item"
@@ -272,7 +273,7 @@ export function RecurringList({ currentMonthStr, displayItems, handleAssignWalle
                       <Icon name="trash" className="menu-action-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       <span>Xóa khoản định kỳ</span>
                     </button>
-                  </div>
+                  </MenuPopover>
                 )}
               </div>
             </div>

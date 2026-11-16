@@ -380,3 +380,45 @@
   background: var(--color-brand-600, var(--primary-hover));
   transform: translateY(-1px);
 }
+
+/* Tips button in a page's title row (replaces the floating widget, NAV-01). */
+.page-guide {
+  position: relative;
+}
+
+.page-guide-btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong, var(--border));
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-surface, var(--surface));
+  color: var(--color-text, var(--text-primary));
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.page-guide-btn:hover {
+  background: var(--color-surface-muted, var(--surface-subtle));
+}
+
+.page-guide-btn[aria-expanded="true"] {
+  border-color: var(--primary);
+}
+
+.page-guide-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: var(--z-popover, 300);
+  width: min(380px, calc(100vw - 32px));
+  text-align: left;
+}
+
+@media (pointer: coarse) {
+  .page-guide-btn { min-height: 44px; }
+}

@@ -1,5 +1,5 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { Dialog } from '../../components/ui/Dialog';
@@ -26,6 +26,7 @@ const getWalletIconByType = (_walletType) => {
 };
 
 export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusRef }) {
+  const optionId = useId();
   const { createWallet, updateWallet } = useWalletStore();
   const { addToast } = useToastStore();
 
@@ -348,6 +349,8 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   onClick={() => setIsDefault(!isDefault)}
                   role="checkbox"
                   aria-checked={isDefault}
+                  aria-labelledby={`${optionId}-default-title`}
+                  aria-describedby={`${optionId}-default-desc`}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === ' ' || e.key === 'Enter') {
@@ -364,6 +367,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                       onClick={(e) => e.stopPropagation()}
                       className="option-native-checkbox"
                       aria-hidden="true"
+                      tabIndex={-1}
                     />
                     <span className={`option-custom-checkbox ${isDefault ? 'checked' : ''}`}>
                       {isDefault && (
@@ -377,8 +381,8 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   </div>
 
                   <div className="option-content">
-                    <strong className="option-title">Đặt làm ví mặc định</strong>
-                    <p className="option-desc">Tự động chọn ví này khi mở popup thêm giao dịch mới</p>
+                    <strong className="option-title" id={`${optionId}-default-title`}>Đặt làm ví mặc định</strong>
+                    <p className="option-desc" id={`${optionId}-default-desc`}>Tự động chọn ví này khi mở popup thêm giao dịch mới</p>
                   </div>
                 </div>
 
@@ -388,6 +392,8 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   onClick={() => setIsExcludedFromTotal(!isExcludedFromTotal)}
                   role="checkbox"
                   aria-checked={isExcludedFromTotal}
+                  aria-labelledby={`${optionId}-excluded-title`}
+                  aria-describedby={`${optionId}-excluded-desc`}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === ' ' || e.key === 'Enter') {
@@ -404,6 +410,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                       onClick={(e) => e.stopPropagation()}
                       className="option-native-checkbox"
                       aria-hidden="true"
+                      tabIndex={-1}
                     />
                     <span className={`option-custom-checkbox ${isExcludedFromTotal ? 'checked' : ''}`}>
                       {isExcludedFromTotal && (
@@ -417,8 +424,8 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   </div>
 
                   <div className="option-content">
-                    <strong className="option-title">Không tính vào tổng tài sản chi tiêu</strong>
-                    <p className="option-desc">Phù hợp cho tài khoản tiết kiệm dài hạn hoặc tài khoản doanh nghiệp</p>
+                    <strong className="option-title" id={`${optionId}-excluded-title`}>Không tính vào tổng tài sản chi tiêu</strong>
+                    <p className="option-desc" id={`${optionId}-excluded-desc`}>Phù hợp cho tài khoản tiết kiệm dài hạn hoặc tài khoản doanh nghiệp</p>
                   </div>
                 </div>
               </div>

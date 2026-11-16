@@ -15,6 +15,8 @@ export function JarsOverviewSection({ activeJarsCount, handleCreateNew, thisMont
           </div>
         </div>
     
+        <div className="page-header-actions">
+        <span className="page-guide-slot" data-guide-slot="" />
         <button
           type="button"
           className="jars-hero-cta-btn"
@@ -23,6 +25,7 @@ export function JarsOverviewSection({ activeJarsCount, handleCreateNew, thisMont
           <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           <span>Tạo hũ mới</span>
         </button>
+        </div>
       </div>
     
       {/* 4 Metric Cards */}

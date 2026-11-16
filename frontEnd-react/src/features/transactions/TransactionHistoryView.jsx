@@ -69,6 +69,7 @@ export function TransactionHistoryView() {
     desc: t('history.walletCreated', { name: event.walletName })
   }))], [transactions, walletHistory, t]);
   const navigateTo = useSpendingStore((state) => state.navigateTo);
+  const openAddTxnModal = useSpendingStore((state) => state.openAddTxnModal);
 
   const categories = useMemo(() => [...new Set(historyRows.map((row) => row.category).filter(Boolean))].sort(), [historyRows]);
   const invalidRange = Boolean(startDate && endDate && startDate > endDate);
@@ -218,6 +219,7 @@ export function TransactionHistoryView() {
         <PageTitleIcon name="transactions" />
         <h1 id="transaction-history-title">{t('history.title')}</h1>
       </div>
+      <div className="page-header-actions page-header-actions--end"><span className="page-guide-slot" data-guide-slot="" /></div>
     </header>
 
     <div className={`transaction-filter-bar${isCompact ? ' is-compact' : ''}`}>
@@ -283,7 +285,19 @@ export function TransactionHistoryView() {
       <span>{t('type.income')}: {formatCurrency(summary.income)}</span>
     </div>
     {(!loadError || historyRows.length > 0) && <TransactionRows transactions={filtered.slice(0, visibleCount)}
-      onEdit={openEditTransaction} onManage={manageSource} showDate variant="ledger" />}
+      onEdit={openEditTransaction} onManage={manageSource} showDate variant="ledger"
+      emptyState={historyRows.length === 0 ? (
+        // No data yet and "nothing matches the filters" are different situations (TXN-07).
+        <div className="transaction-history-empty">
+          <strong>Chưa có giao dịch nào</strong>
+          <button type="button" className="btn btn--primary btn--sm" onClick={openAddTxnModal}>+ Thêm giao dịch</button>
+        </div>
+      ) : (
+        <div className="transaction-history-empty">
+          <strong>Không có giao dịch khớp bộ lọc</strong>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={clearFilters}>Xóa bộ lọc</button>
+        </div>
+      )} />}
     {visibleCount < filtered.length && <button type="button" className="transaction-history-more"
       onClick={() => setVisibleCount((count) => count + 50)}>{t('history.loadMore')}
       <Icon name="chevronDownAlt" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

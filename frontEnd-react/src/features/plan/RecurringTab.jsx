@@ -357,6 +357,7 @@ export function RecurringTab() {
       <div className="recurring-page-header">
         <PageTitleIcon name="recurring" />
         <h1 className="recurring-route-heading">{t('nav.recurring')}</h1>
+        <div className="page-header-actions page-header-actions--end"><span className="page-guide-slot" data-guide-slot="" /></div>
       </div>
       {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
       <RecurringHeaderCard activeItems={activeItems} counts={counts} handleOpenCreate={handleOpenCreate} installments={installments} monthlyEstimatedCost={monthlyEstimatedCost} />

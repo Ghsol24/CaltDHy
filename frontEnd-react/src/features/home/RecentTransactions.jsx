@@ -139,6 +139,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                           className="home-txn-btn-action"
                           onClick={(e) => handleEdit(e, txn)}
                           title={t('transaction.edit')}
+                          aria-label={t('transaction.edit')}
                         >
                           <Icon name="editSquare" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
                         </button>
@@ -147,6 +148,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                           className="home-txn-btn-action home-txn-btn-action--delete"
                           onClick={(e) => handleDelete(e, txn)}
                           title={t('home.deleteTitle')}
+                          aria-label={t('home.deleteTitle')}
                         >
                           <Icon name="trash" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </button>

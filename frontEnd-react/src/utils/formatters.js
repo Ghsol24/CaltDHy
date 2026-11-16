@@ -307,12 +307,18 @@ export function getDueStatus(value, options = {}) {
   };
 }
 
+// One-line weekday for date tiles: "THỨ 3" wrapped and pushed the day number out (PLAN-01).
+const VI_WEEKDAY_TILE = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
 export function getCalendarDateParts(value, options = {}) {
   const date = parseDate(value);
   if (!date) return { weekdayShort: '--', day: '--', month: '--' };
-  const locale = getIntlLocale(resolveLocale(options));
+  const appLocale = resolveLocale(options);
+  const locale = getIntlLocale(appLocale);
   return {
-    weekdayShort: getDateFormatter(locale, { weekday: 'short' }).format(date).toLocaleUpperCase(locale),
+    weekdayShort: appLocale === 'vi'
+      ? VI_WEEKDAY_TILE[date.getDay()]
+      : getDateFormatter(locale, { weekday: 'short' }).format(date).toLocaleUpperCase(locale),
     day: getDateFormatter(locale, { day: '2-digit' }).format(date),
     month: getDateFormatter(locale, { month: 'short' }).format(date),
   };

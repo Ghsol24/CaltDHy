@@ -273,6 +273,8 @@ button.transaction-inspection-row:hover {
 .transaction-inspection-amount.is-expense { color: var(--color-danger); }
 .transaction-inspection-amount.is-income { color: var(--color-success); }
 .transaction-inspection-empty { padding: 26px 10px; color: var(--color-text-secondary); text-align: center; }
+.transaction-history-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 12px; text-align: center; }
+.transaction-history-empty strong { font-size: var(--font-base); color: var(--color-text, var(--text-primary)); }
 
 .transaction-history {
   --history-panel: var(--txn-history-panel);

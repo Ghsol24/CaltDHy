@@ -4,6 +4,7 @@ import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { Icon, StarOutlineIcon } from '../../../components/ui/AppIcons';
 import { formatCurrency } from '../../../utils/formatters';
 import { IconButton } from '../../../components/ui/Button';
+import { MenuPopover } from '../../../components/ui/MenuPopover';
 
 export function WalletListView({ deletingWalletId, filteredWallets, handleArchive, handleDelete, handleEdit, handleTransfer, menuRef, menuTriggerRef, openAddTxnModal, openMenuWalletId, setOpenMenuWalletId, viewMode, walletTxCountMap }) {
   return (filteredWallets.length > 0 && viewMode === 'list' && (
@@ -79,7 +80,7 @@ export function WalletListView({ deletingWalletId, filteredWallets, handleArchiv
               </IconButton>
   
               {isMenuOpen && (
-                <div className="wallet-actions-popover" role="menu">
+                <MenuPopover className="wallet-actions-popover" label={`Tùy chọn ví ${w.name}`} onClose={() => setOpenMenuWalletId(null)} triggerRef={menuTriggerRef}>
                   <button
                     type="button"
                     className="wallet-popover-action"
@@ -156,7 +157,7 @@ export function WalletListView({ deletingWalletId, filteredWallets, handleArchiv
                     <Icon name="trash" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     <span>Xóa vĩnh viễn</span>
                   </button>
-                </div>
+                </MenuPopover>
               )}
             </div>
           </div>

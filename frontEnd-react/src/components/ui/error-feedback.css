@@ -29,3 +29,34 @@
   .display-error { padding-inline: 1rem; }
   .display-error__actions .btn { flex: 1; }
 }
+
+.load-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--color-danger-bg);
+  color: var(--text-primary);
+}
+.load-error-banner__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+.load-error-banner__text { flex: 1; min-width: 0; }
+.load-error-banner__text strong { display: block; font-size: var(--font-base); }
+.load-error-banner__text p { margin: 2px 0 0; font-size: var(--font-sm); color: var(--text-secondary); }
+.load-error-banner .btn { flex: none; min-height: 40px; }
+@media (max-width: 480px) {
+  .load-error-banner { flex-wrap: wrap; }
+  .load-error-banner .btn { width: 100%; min-height: 44px; }
+}

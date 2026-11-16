@@ -54,7 +54,7 @@
 
 .wallets-btn-transfer-outline:hover:not(:disabled) {
   border-color: #10B981;
-  color: #10B981;
+  color: var(--color-success);
   background: rgba(16, 185, 129, 0.05);
 }
 
@@ -181,7 +181,7 @@
 }
 
 .stat-cell-val.text-brand {
-  color: #10B981;
+  color: var(--color-success);
 }
 
 .stat-cell-val.text-brand-default {
@@ -667,7 +667,7 @@
   padding: 2px 8px;
   border-radius: 9999px;
   background: rgba(16, 185, 129, 0.12);
-  color: #059669;
+  color: var(--color-success);
 }
 
 .wallet-badge-excluded-pill {
@@ -832,7 +832,7 @@
 
 .wallet-add-card-dashed:hover .add-dashed-icon-circle {
   border-color: #10B981;
-  color: #10B981;
+  color: var(--color-success);
 }
 
 .add-dashed-text-group {
@@ -956,7 +956,7 @@
   gap: 4px;
   background: transparent;
   border: none;
-  color: #059669;
+  color: var(--color-success);
   font-size: var(--font-xs);
   font-weight: 600;
   cursor: pointer;
@@ -1535,7 +1535,7 @@
 
 .stat-cell-icon-wrap.stat-cell-icon-wrap--tone {
   background: #10B98118;
-  color: #10B981;
+  color: var(--color-success);
 }
 
 .stat-cell-icon-wrap.stat-cell-icon-wrap--tone2 {
@@ -1587,7 +1587,7 @@
 
 .quick-action-icon-box.quick-action-icon-box--tone {
   background: #10B98118;
-  color: #10B981;
+  color: var(--color-success);
 }
 
 .quick-action-icon-box.quick-action-icon-box--tone2 {

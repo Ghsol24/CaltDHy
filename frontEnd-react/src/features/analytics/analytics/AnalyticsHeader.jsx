@@ -16,6 +16,7 @@ export function AnalyticsHeader({ handleNextMonth, handlePrevMonth, handleSetLas
       </div>
     
       <div className="analytics-header-controls">
+        <span className="page-guide-slot" data-guide-slot="" />
         {/* Segmented Comparison: Tháng này | Tháng trước */}
         <div className="analytics-segmented-switch" role="tablist" aria-label="Khoảng thời gian so sánh">
           <button

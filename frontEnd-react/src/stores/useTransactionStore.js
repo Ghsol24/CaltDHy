@@ -85,6 +85,8 @@ return ({
   categories: [],
   isLoading: false,
   hasLoadedTransactions: false,
+  // True while the last full transaction load failed; screens then show an error, not empty data.
+  loadFailed: false,
   financialResetVersion: 0,
   error: null,
   editingTransaction: null,
@@ -144,7 +146,7 @@ return ({
       if (res.success && Array.isArray(res.data)) {
         const txns = res.data.map(normalizeTxn);
         saveStoredTxns(txns);
-        set({ transactions: txns, isLoading: false, hasLoadedTransactions: true });
+        set({ transactions: txns, isLoading: false, hasLoadedTransactions: true, loadFailed: false });
         get().updateSpendingMetrics(txns);
 
         // Đồng bộ số dư ví
@@ -156,7 +158,7 @@ return ({
       } else {
         throw new Error(getUserErrorMessage(res, 'error.generic'));
       }
-    } catch (error) { set({ isLoading: false, hasLoadedTransactions: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
+    } catch (error) { set({ isLoading: false, hasLoadedTransactions: true, loadFailed: true, error: getUserErrorMessage(error, 'error.generic') }); return { success: false, error: getUserErrorMessage(error, 'error.generic') }; }
   },
 
   /** Fills the month cache only; never changes what other screens show. */

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import {
@@ -37,6 +39,10 @@ export function ContextualSectionGuide() {
   const user = useAuthStore((state) => state.user);
   const [currentGuide, setCurrentGuide] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Pages mark a spot in their title row with `data-guide-slot`; the tips button
+  // lives there instead of floating over content (UX audit NAV-01).
+  const [slot, setSlot] = useState(null);
+  const { pathname } = useLocation();
 
   const userId = user?.id || user?.email || 'guest';
 
@@ -65,6 +71,32 @@ export function ContextualSectionGuide() {
     }
   }, [activeView, userId, lang]);
 
+  useEffect(() => {
+    setSlot(null);
+    if (!currentGuide) return undefined;
+    const startedAt = performance.now();
+    let frameId;
+    const find = () => {
+      const target = document.querySelector('[data-guide-slot]');
+      if (target) { setSlot(target); return; }
+      if (performance.now() - startedAt < 2000) frameId = requestAnimationFrame(find);
+    };
+    frameId = requestAnimationFrame(find);
+    return () => cancelAnimationFrame(frameId);
+  }, [currentGuide, pathname]);
+
+  useEffect(() => {
+    if (!isExpanded || !slot) return undefined;
+    const onKey = (event) => { if (event.key === 'Escape') setIsExpanded(false); };
+    const onPointer = (event) => { if (!slot.contains(event.target)) setIsExpanded(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [isExpanded, slot]);
+
   const handleDismiss = () => {
     if (activeView) {
       const storageKey = `caltdhy_guide_seen_${userId}_${activeView}`;
@@ -84,25 +116,8 @@ export function ContextualSectionGuide() {
 
   if (!currentGuide) return null;
 
-  if (!isExpanded) {
-    return (
-      <div className="floating-guide-widget is-collapsed">
-        <button
-          type="button"
-          className="floating-guide-disclosure-btn"
-          aria-expanded="false"
-          aria-controls="contextual-section-guide"
-          onClick={() => setIsExpanded(true)}
-        >
-          <SparkleOutlineIcon size={16} />
-          <span>{copy.hint} {currentGuide.badge.toLocaleLowerCase(intlLocale)}</span>
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="floating-guide-widget">
+  const label = `${copy.hint} ${currentGuide.badge.toLocaleLowerCase(intlLocale)}`;
+  const card = (
       <aside id="contextual-section-guide" className="floating-guide-card" aria-label={copy.title}>
         {/* Header */}
         <div className="floating-guide-header">
@@ -152,6 +167,31 @@ export function ContextualSectionGuide() {
           </button>
         </div>
       </aside>
-    </div>
   );
+
+  if (slot) {
+    return createPortal(
+      <div className="page-guide">
+        <button
+          type="button"
+          className="page-guide-btn"
+          aria-expanded={isExpanded}
+          aria-controls="contextual-section-guide"
+          aria-label={label}
+          title={label}
+          onClick={() => setIsExpanded((open) => !open)}
+        >
+          <SparkleOutlineIcon size={16} />
+          <span>{copy.button}</span>
+        </button>
+        {isExpanded && <div className="page-guide-popover">{card}</div>}
+      </div>,
+      slot
+    );
+  }
+
+  // No title row to sit in (e.g. while a load error is shown): show nothing
+  // rather than a button floating over the page.
+  return null;
 }
+
