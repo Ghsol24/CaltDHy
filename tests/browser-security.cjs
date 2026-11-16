@@ -1003,8 +1003,8 @@ function blendCssColor(color, background) {
     await mobilePage.keyboard.press('Escape');
     await expect(mobileBudgetDialog).toHaveCount(0);
 
-    const monthName = (month) => new Intl.DateTimeFormat('vi-VN', { year: 'numeric', month: 'long' })
-      .format(new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1, 1));
+    // Month titles read "Tháng 10, 2026" (UX audit X-03).
+    const monthName = (month) => `Tháng ${Number(month.slice(5))}, ${month.slice(0, 4)}`;
     const shiftMonth = (month, delta) => {
       const date = new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1 + delta, 1);
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
