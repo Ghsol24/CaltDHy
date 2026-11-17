@@ -321,13 +321,14 @@
 
 /* Category split: donut + one button per category (colour dot, icon, name + share bar, amount, %). */
 .analytics-category-data-grid {
-  /* The donut and the list read as one block: capped width, centred, so the margins on both
-     sides match whatever the screen width. */
+  /* The donut and the list read as one block, centred in the card. The cap is wide enough that
+     the donut sits near the left edge: the dense list carries more visual weight, so a narrow
+     centred block made the donut look adrift in white space. */
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   align-items: center;
   width: 100%;
-  max-width: 960px;
+  max-width: 1120px;
   margin-inline: auto;
 }
 
