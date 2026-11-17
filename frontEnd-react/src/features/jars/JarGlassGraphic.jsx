@@ -9,13 +9,15 @@ import React from 'react';
  * @param {string} icon - Emoji or icon to show inside jar
  * @param {number} width - Render width in px (default 80)
  * @param {number} height - Render height in px (default 96)
+ * @param {boolean} showPercent - Show the floating % badge (off for the small graphic beside a jar name)
  */
 export const JarGlassGraphic = React.memo(function JarGlassGraphic({
   percent = 0,
   color = '#5356F1',
   icon = '🫙',
   width = 84,
-  height = 100
+  height = 100,
+  showPercent = true
 }) {
   const clampedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
 
@@ -164,11 +166,13 @@ export const JarGlassGraphic = React.memo(function JarGlassGraphic({
       </svg>
 
       {/* Floating Percentage Badge on top-right */}
-      <span className="jar-glass-graphic-wrapper__span--text"
-        style={{ '--jar-glass-graphic-wrapper__span-color': color || '#5356F1' }}
-      >
-        {clampedPercent}%
-      </span>
+      {showPercent && (
+        <span className="jar-glass-graphic-wrapper__span--text"
+          style={{ '--jar-glass-graphic-wrapper__span-color': color || '#5356F1' }}
+        >
+          {clampedPercent}%
+        </span>
+      )}
     </div>
   );
 });

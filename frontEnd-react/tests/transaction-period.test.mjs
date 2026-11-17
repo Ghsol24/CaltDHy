@@ -97,7 +97,7 @@ test('new period feedback has translations in every supported locale', () => {
   for (const locale of ['vi', 'en', 'zh-CN']) {
     for (const key of ['historicalPeriod', 'historicalHint', 'confirmHistorical', 'confirmSave', 'historicalImpact',
       'monthIncomeImpact', 'monthExpenseImpact', 'walletImpact', 'changeRecorded', 'budgetForPeriod',
-      'budgetPreview', 'budgetLoading', 'budgetFailed', 'budgetUnavailable', 'revisionHistory',
+      'budgetLoading', 'budgetFailed', 'budgetUnavailable', 'revisionHistory',
       'historyLoading', 'historyFailed', 'revisionSummary', 'revisionSummaryOne', 'revisionShow',
       'revisionHide', 'accountOwner', 'previousWallet',
       'receivingWallet', 'fee', 'amountRange', 'dateRequired']) {

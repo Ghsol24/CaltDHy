@@ -45,7 +45,9 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     else if (kind === 'history') trigger = page.locator('#jars-section-history .jar-activity-view-all');
     else {
       await expect(card()).toBeVisible();
-      trigger = kind === 'edit' ? card().locator('.jar-btn-detail-icon')
+      // Sửa hũ nằm trong menu ⋮ của thẻ (thẻ chỉ còn hai nút Nạp / Rút, đợt 10).
+      if (kind === 'edit') await card().locator('.jar-card-menu-btn').click();
+      trigger = kind === 'edit' ? card().locator('.jar-dropdown-item', { hasText: 'Chỉnh sửa' })
         : kind === 'deposit' ? card().locator('.jar-btn-deposit')
         : kind === 'withdraw' ? card().locator('.jar-btn-withdraw') : card().locator('.jar-name-title');
     }
@@ -53,7 +55,8 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     const backgroundScroll = await page.evaluate(() => scrollY);
     await trigger.click();
     await expect(dialog).toBeVisible();
-    return { trigger, backgroundScroll };
+    // Menu đã đóng sau khi chọn "Chỉnh sửa": focus trở về nút ⋮ đã mở menu.
+    return { trigger: kind === 'edit' ? card().locator('.jar-card-menu-btn') : trigger, backgroundScroll };
   }
   async function close(opened, verifyFocus = false) {
     await page.keyboard.press('Escape');

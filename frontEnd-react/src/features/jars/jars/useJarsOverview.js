@@ -1,24 +1,22 @@
 import { useMemo } from 'react';
-import { collectJarEvents, compareWithPreviousMonth, monthOf, monthTotals, summariseDays } from '../jarActivity';
+import { collectJarEvents, monthOf, monthTotals, summariseDays } from '../jarActivity';
 import { buildJarSuggestions, getJarSuggestionCopy } from '../jarSuggestionCopy';
 import { formatCurrency } from '../../../utils/formatters';
 
 export const JARS_PER_PAGE = 12;
 
 export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, today }) {
-  const { totalSaved, totalTarget, totalPercent, totalRemaining, activeJarsCount } = useMemo(() => {
+  const { totalSaved, totalTarget, totalPercent, totalRemaining, datedJarsCount } = useMemo(() => {
     let saved = 0;
     let target = 0;
-    let activeCount = 0;
+    let datedCount = 0;
 
     jars.forEach((jar) => {
       const cur = Number(jar.current) || 0;
       const tgt = Number(jar.target) || 0;
       saved += cur;
       target += tgt;
-      if (cur > 0 || tgt > 0) {
-        activeCount++;
-      }
+      if (jar.targetDate) datedCount++;
     });
 
     const percent = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
@@ -29,7 +27,7 @@ export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, t
       totalTarget: target,
       totalPercent: percent,
       totalRemaining: remaining,
-      activeJarsCount: activeCount
+      datedJarsCount: datedCount
     };
   }, [jars]);
 
@@ -40,7 +38,6 @@ export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, t
   const jarDays = useMemo(() => summariseDays(jarEvents), [jarEvents]);
   const thisMonth = monthOf(today);
   const thisMonthNet = useMemo(() => monthTotals(jarDays, thisMonth).net, [jarDays, thisMonth]);
-  const thisMonthComparison = useMemo(() => compareWithPreviousMonth(jarDays, thisMonth), [jarDays, thisMonth]);
 
   // Suggestions use exact balances; locale changes only affect their presentation.
   const smartSuggestions = useMemo(() => buildJarSuggestions(jars), [jars]);
@@ -61,15 +58,6 @@ export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, t
       return { closest: null, onTrack: [], needsAttention: [] };
     }
 
-    // 1. Closest
-    const sortedByPercent = [...jars].sort((a, b) => {
-      const pA = Number(a.current || 0) / Number(a.target || 1);
-      const pB = Number(b.current || 0) / Number(b.target || 1);
-      return pB - pA;
-    });
-    const closest = sortedByPercent[0] || null;
-
-    // 2. Needs Attention & 3. On Track
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -84,7 +72,7 @@ export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, t
       if (cur === 0 && tgt > 0) {
         needsAttention.push({
           jar: j,
-          reason: 'Chưa có số dư khởi động',
+          reason: 'Chưa nạp lần nào',
           missing: tgt
         });
       } else if (j.targetDate) {
@@ -111,8 +99,20 @@ export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, t
       }
     });
 
-    return { closest, onTrack, needsAttention };
+    // Mỗi hũ chỉ thuộc một nhóm: "Gần đạt nhất" lấy hũ đúng tiến độ có % cao nhất và không lặp lại ở nhóm bên dưới.
+    const ratio = (jar) => Number(jar.current || 0) / Number(jar.target || 1);
+    const closest = [...onTrack].sort((a, b) => ratio(b) - ratio(a))[0] || null;
+    return { closest, onTrack: onTrack.filter((jar) => jar !== closest), needsAttention };
   }, [jars]);
+
+  // Trạng thái hiện thành huy hiệu ngay trên thẻ hũ: mỗi hũ chỉ thuộc một nhóm.
+  const jarStatuses = useMemo(() => {
+    const map = new Map();
+    [progressOverview.closest, ...progressOverview.onTrack].filter(Boolean)
+      .forEach((jar) => map.set(jar.id, { tone: 'ontrack', label: 'Đúng tiến độ' }));
+    progressOverview.needsAttention.forEach(({ jar, reason }) => map.set(jar.id, { tone: 'attention', label: reason }));
+    return map;
+  }, [progressOverview]);
 
   // ── 5. Sorted Jars for List Section ──
   const sortedJars = useMemo(() => {
@@ -146,5 +146,5 @@ export function useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, t
     const start = (currentPage - 1) * JARS_PER_PAGE;
     return sortedJars.slice(start, start + JARS_PER_PAGE);
   }, [currentPage, sortedJars]);
-  return { activeJarsCount, currentSuggestion, jarDays, jarEvents, pageCount, progressOverview, smartSuggestions, splitSuggestion, suggestionCopy, suggestionPercent, thisMonthComparison, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget, visibleJars };
+  return { currentSuggestion, datedJarsCount, jarDays, jarEvents, jarStatuses, pageCount, progressOverview, smartSuggestions, splitSuggestion, suggestionCopy, suggestionPercent, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget, visibleJars };
 }

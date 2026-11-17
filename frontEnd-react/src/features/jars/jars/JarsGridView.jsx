@@ -3,7 +3,7 @@ import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { Icon } from '../../../components/ui/AppIcons';
 import { DeferredJarGlassGraphic } from './DeferredJarGlassGraphic';
 
-export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, handleDelete, handleDeposit, handleEdit, handleOpenDetail, handleWithdraw, isLoading, jars, menuTriggerRef, setActiveMenuJarId, viewMode, visibleJars }) {
+export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, handleDelete, handleDeposit, handleEdit, handleOpenDetail, handleWithdraw, isLoading, jarStatuses, jars, menuTriggerRef, setActiveMenuJarId, viewMode, visibleJars }) {
   return (!isLoading && jars.length > 0 && viewMode === 'grid' && (
     <div className="jars-grid-container">
       {visibleJars.map((jar) => {
@@ -13,24 +13,22 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
         const remaining = Math.max(0, targetAmt - currentAmt);
         const isCompleted = targetAmt > 0 && currentAmt >= targetAmt;
         const accentColor = jar.color || '#5356F1';
-  
-        // Calculate monthly savings suggestion
-        let monthlyHintText = 'Đặt ngày đến hạn để nhận gợi ý tích lũy hàng tháng';
+        const status = jarStatuses?.get(jar.id);
+
+        // Hạn và gợi ý tích lũy theo tháng. Chưa đặt hạn thì chỉ là một liên kết chữ mở hộp thoại sửa.
+        let dueNote = '';
         if (jar.targetDate && remaining > 0) {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
           const diffDays = Math.ceil((new Date(jar.targetDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           if (diffDays > 0) {
             const monthsLeft = Math.max(1, Math.round(diffDays / 30));
-            const perMonth = Math.round(remaining / monthsLeft);
-            monthlyHintText = `Cần khoảng ${formatCurrency(perMonth)} / tháng để đạt mục tiêu đúng hạn`;
+            dueNote = `Cần khoảng ${formatCurrency(Math.round(remaining / monthsLeft))} / tháng để đạt mục tiêu đúng hạn`;
           } else {
-            monthlyHintText = 'Đã đến hạn mục tiêu';
+            dueNote = 'Đã đến hạn mục tiêu';
           }
-        } else if (isCompleted) {
-          monthlyHintText = 'Đã đạt mục tiêu';
         }
-  
+
         return (
           <div
             key={jar.id}
@@ -38,14 +36,43 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
             style={{ '--jar-accent-color': accentColor }}
             onClick={() => handleOpenDetail(jar)}
           >
-            {/* Top Category Tag + Menu */}
-            <div className="jar-card-top-row" onClick={(e) => e.stopPropagation()}>
-              <span className="jar-category-badge">
-                {jar.category || 'Mục tiêu'}
-              </span>
-  
+            {/* Hình hũ nhỏ cạnh tên + phân loại + menu */}
+            <div className="jar-card-top-row">
+              <div className="jar-card-heading">
+                <div className="jar-graphic-center-box">
+                  <DeferredJarGlassGraphic
+                    percent={percent}
+                    color={accentColor}
+                    icon={jar.icon}
+                    width={38}
+                    height={46}
+                    showPercent={false}
+                  />
+                </div>
+                <div className="jar-card-heading__text">
+                  <h3 className="jar-name-title" title={jar.name}>
+                    {/* The whole card opens the detail on click; this button is the
+                        keyboard and screen-reader route to the same action. */}
+                    <button
+                      type="button"
+                      className="jar-open-detail-btn"
+                      aria-label={`Xem chi tiết hũ ${jar.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenDetail(jar);
+                      }}
+                    >
+                      {jar.name}
+                    </button>
+                  </h3>
+                  <span className="jar-category-badge">
+                    {jar.category || 'Mục tiêu'}
+                  </span>
+                </div>
+              </div>
+
               {/* 3-dots dropdown */}
-              <div className="jar-card-top-row__div--pos">
+              <div className="jar-card-top-row__div--pos" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   className={`jar-card-menu-btn ${activeMenuJarId === jar.id ? 'is-active' : ''}`}
@@ -58,7 +85,7 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
                 >
                   <Icon name="moreVerticalBold" width="16" height="16" fill="currentColor" />
                 </button>
-  
+
                 {activeMenuJarId === jar.id && (
                   <div className="jar-card-dropdown-menu">
                     <button
@@ -95,68 +122,47 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
                 )}
               </div>
             </div>
-  
-            {/* 3D Glass Jar Illustration Graphic */}
-            <div className="jar-graphic-center-box">
-              <DeferredJarGlassGraphic
-                percent={percent}
-                color={accentColor}
-                icon={jar.icon}
-                width={80}
-                height={96}
-              />
-            </div>
-  
-            {/* Jar Name & Amounts */}
+
+            {/* Trạng thái tiến độ: huy hiệu ngay trên thẻ (thay cho khối "Tổng quan tiến độ" khi có ít hũ) */}
+            {(status || isCompleted) && (
+              <span className={`jar-status-badge jar-status-badge--${isCompleted ? 'done' : status.tone}`}>
+                {isCompleted ? 'Đã đạt mục tiêu' : status.label}
+              </span>
+            )}
+
+            {/* Số tiền và tiến độ */}
             <div className="jar-info-section">
-              <h3 className="jar-name-title" title={jar.name}>
-                {/* The whole card opens the detail on click; this button is the
-                    keyboard and screen-reader route to the same action. */}
-                <button
-                  type="button"
-                  className="jar-open-detail-btn"
-                  aria-label={`Xem chi tiết hũ ${jar.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenDetail(jar);
-                  }}
-                >
-                  {jar.name}
-                </button>
-              </h3>
               <div className="jar-amounts-row">
                 <strong className="jar-current-amount">{formatCurrency(currentAmt)}</strong>
-                <span className="jar-target-amount">/ {formatCurrency(targetAmt)}</span>
+                <span className="jar-target-amount">{`/ ${formatCurrency(targetAmt)}`}</span>
               </div>
-  
+
               <div className="jar-progress-track">
                 <div
                   className={`jar-progress-fill${isCompleted ? ' is-complete' : ''} jar-progress-fill--box`}
                   style={{ '--jar-progress-fill-width': `${Math.max(percent > 0 ? 3 : 0, percent)}%` }}
                 />
               </div>
-            </div>
-  
-            {/* 2 Meta Columns: Còn thiếu / Đến hạn */}
-            <div className="jar-meta-cols-row">
-              <span>
-                Còn thiếu: <strong>{formatCurrency(remaining)}</strong>
-              </span>
-              <span>
-                {jar.targetDate ? (
-                  <>Đến hạn: <strong>{formatDate(jar.targetDate, 'short')}</strong></>
-                ) : (
-                  'Mục tiêu linh hoạt'
-                )}
+              <span className="jar-progress-caption">
+                {isCompleted ? `${percent}%` : `${percent}% · còn thiếu ${formatCurrency(remaining)}`}
               </span>
             </div>
-  
-            {/* Smart Monthly Target Box */}
-            <div className="jar-smart-hint-box">
-              <span>{monthlyHintText}</span>
+
+            {/* Hạn mục tiêu */}
+            <div className="jar-due-row" onClick={(e) => e.stopPropagation()}>
+              {jar.targetDate ? (
+                <>
+                  <span>Đến hạn <strong>{formatDate(jar.targetDate, 'short')}</strong></span>
+                  {dueNote && <span className="jar-due-note">{dueNote}</span>}
+                </>
+              ) : !isCompleted && (
+                <button type="button" className="jar-due-link" onClick={() => handleEdit(jar)}>
+                  Đặt ngày đến hạn
+                </button>
+              )}
             </div>
-  
-            {/* Footer 3 Action Buttons */}
+
+            {/* Hai hành động chính */}
             <div className="jar-card-footer-actions" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
@@ -165,7 +171,7 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
               >
                 + Nạp tiền
               </button>
-  
+
               <button
                 type="button"
                 className="jar-btn-withdraw"
@@ -174,21 +180,11 @@ export function JarsGridView({ activeMenuJarId, deletingJarId, handleCreateNew, 
               >
                 Rút tiền
               </button>
-  
-              <button
-                type="button"
-                className="jar-btn-detail-icon"
-                onClick={() => handleEdit(jar)}
-                aria-label={`Chỉnh sửa hũ ${jar.name}`}
-                title="Chỉnh sửa hũ"
-              >
-                <Icon name="pencil" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </button>
             </div>
           </div>
         );
       })}
-  
+
       {/* Card "+ Tạo hũ mới" (Dashed Border) */}
       <button type="button" className="jar-card-add-new" onClick={handleCreateNew}>
         <div className="jar-card-add-icon-circle">+</div>

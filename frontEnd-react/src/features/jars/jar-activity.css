@@ -184,7 +184,7 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
 
 .jar-cal-cell.is-withdraw .jar-cal-dot { background: var(--cal-withdraw); }
 
-.jar-cal-card.is-narrow .jar-cal-cell { min-height: 40px; align-items: center; }
+.jar-cal-card.is-narrow .jar-cal-cell { min-height: 44px; align-items: center; }
 .jar-cal-card.is-narrow .jar-cal-row,
 .jar-cal-card.is-narrow .jar-cal-weekdays,
 .jar-cal-card.is-narrow .jar-cal-grid { gap: 4px; }
@@ -340,6 +340,7 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: 44px;
   padding: 6px 4px;
   border: 0;
   background: none;
@@ -531,18 +532,19 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
   cursor: pointer;
 }
 
+/* Nút phụ: trên trang chỉ "Tạo hũ mới" là nút đậm (JAR-05). */
 .jar-next-strip-cta {
   min-height: 40px;
   padding: 0 18px;
-  border: 0;
+  border: 1px solid var(--color-border-strong, var(--color-border));
   border-radius: 10px;
-  background: var(--color-action-bg);
-  color: var(--color-on-action, #fff);
+  background: var(--color-surface);
+  color: var(--color-text);
   font: 700 13px/1 var(--font-sans);
   cursor: pointer;
 }
 
-.jar-next-strip-cta:hover { background: var(--color-action-hover-bg); }
+.jar-next-strip-cta:hover { background: var(--color-surface-muted, var(--surface-subtle)); }
 
 @media (max-width: 1100px) {
   .jars-insights-grid.jars-insights-grid--calendar { grid-template-columns: minmax(0, 1fr); }
@@ -551,6 +553,8 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
 @media (max-width: 599px) {
   .jar-cal-card,
   .jar-activity-card { padding: 16px; }
+  /* Ô lịch cần rộng tối thiểu 44px trên màn 390px: bớt lề ngang của thẻ lịch (JAR-03). */
+  .jar-cal-card { padding-inline: 12px; }
   .jar-cal-amount-total { font-size: var(--font-4xl); }
   .jar-next-strip { padding: 14px; }
   .jar-next-strip-actions { width: 100%; }
@@ -572,4 +576,38 @@ button.jar-cal-cell:hover:not(:disabled) { border-color: var(--color-border-stro
 
 .jar-cal-year-grid.jar-cal-year-grid--layout {
   grid-template-columns: var(--jar-cal-year-grid-grid-template-columns);
+}
+
+/* ── Đợt 10 (JHS-03): chip lọc Tất cả / Nạp / Rút ── */
+.jar-activity-type-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.jar-activity-type-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: 600 12px/1 var(--font-sans);
+  cursor: pointer;
+}
+
+.jar-activity-type-chip[aria-pressed="true"] {
+  background: var(--color-brand-50);
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+.jar-activity-type-chip:focus-visible {
+  outline: 2px solid var(--color-brand-700, var(--color-link));
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .jar-activity-type-chip { min-height: 44px; }
 }

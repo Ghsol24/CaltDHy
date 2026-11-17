@@ -110,7 +110,8 @@ async function check(name, work) {
   });
   const modal = page.getByRole('dialog', { name: 'Chỉnh sửa giao dịch', exact: true });
   const confirmation = page.locator('.confirm-dialog-card');
-  const mealCard = () => modal.locator('.txn-category-card').filter({ has: page.locator('.txn-card-name', { hasText: /^Ăn uống$/ }) });
+  // Desktop: một dòng ngân sách cho danh mục đang chọn (Ăn uống) thay cho số trên từng thẻ (đợt 10).
+  const budgetLine = () => modal.locator('.txn-budget-line');
   const historyRow = description => page.locator('.transaction-ledger-row').filter({ hasText: description });
   async function openPast(description = 'Giao dịch tháng 9') {
     await page.goto('/spending/analytics/transactions');
@@ -127,9 +128,9 @@ async function check(name, work) {
     await openPast();
     await expect(modal.locator('.txn-period-notice')).toContainText('Tháng 9, 2026');
     await expect(modal.locator('.txn-budget-period').first()).toContainText('Tháng 9, 2026');
-    await expect(mealCard().locator('.txn-card-amount')).toContainText(/70\.000\s*₫/);
+    await expect(budgetLine()).toContainText(/70\.000\s*₫/);
     await modal.locator('#txn-amount-input').fill('40000');
-    await expect(mealCard().locator('.txn-card-amount')).toContainText(/60\.000\s*₫/);
+    await expect(budgetLine()).toContainText(/60\.000\s*₫/);
     await modal.locator('.txn-btn-submit').click();
     await expect(confirmation).toBeVisible();
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
@@ -202,12 +203,13 @@ async function check(name, work) {
       await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
       await expect.poll(() => held).toBe(true);
       await modal.locator('#txn-date-input').fill('2026-10-01');
-      await expect(mealCard().locator('.txn-card-amount')).toContainText(/440\.000\s*₫/);
+      await expect(budgetLine()).toContainText(/440\.000\s*₫/);
       const completed = page.waitForResponse(response => septemberBudget(new URL(response.url())));
       release();
       await completed;
-      await expect(modal.locator('.txn-budget-period').first()).toContainText('Tháng 10, 2026');
-      await expect(mealCard().locator('.txn-card-amount')).toContainText(/440\.000\s*₫/);
+      // Tháng hiện tại: không cần dòng tên kỳ riêng (chỉ kỳ quá khứ mới có).
+      await expect(modal.locator('.txn-budget-period')).toHaveCount(0);
+      await expect(budgetLine()).toContainText(/440\.000\s*₫/);
       await modal.locator('.txn-modal-close-btn').click();
     } finally {
       release();
@@ -223,10 +225,10 @@ async function check(name, work) {
     try {
       await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
       await expect(modal.locator('.txn-budget-error')).toBeVisible();
-      await expect(modal.locator('.txn-card-amount')).toHaveCount(0);
+      await expect(budgetLine()).toHaveText('');
       fail = false;
       await modal.locator('.txn-budget-error button').click();
-      await expect(mealCard().locator('.txn-card-amount')).toContainText(/60\.000\s*₫/);
+      await expect(budgetLine()).toContainText(/60\.000\s*₫/);
       await expect(modal.locator('.txn-budget-error')).toHaveCount(0);
       await modal.locator('.txn-modal-close-btn').click();
     } finally { await page.unroute(septemberBudget); }
@@ -249,7 +251,7 @@ async function check(name, work) {
           ? modal.locator('.txn-category-summary')
             .filter({ has: page.locator('.txn-category-summary__name', { hasText: /^Ăn uống$/ }) })
             .locator('.txn-category-summary__line')
-          : mealCard().locator('.txn-card-amount');
+          : budgetLine();
         await expect(mealBudget).toContainText(/60\.000\s*₫/);
         const noticePalette = await modal.locator('.txn-period-notice').evaluate(element => {
           const color = css => css.match(/[\d.]+/g).map(Number);
@@ -322,8 +324,9 @@ async function check(name, work) {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await openPast('Giao dịch tháng 9 — ghi chú đã sửa');
     await modal.locator('#txn-date-input').fill('2026-10-01');
-    await expect(modal.locator('.txn-budget-period').first()).toContainText('Tháng 10, 2026');
-    await expect(mealCard().locator('.txn-card-amount')).toContainText(/440\.000\s*₫/);
+    // Tháng hiện tại: không cần dòng tên kỳ riêng (chỉ kỳ quá khứ mới có).
+    await expect(modal.locator('.txn-budget-period')).toHaveCount(0);
+    await expect(budgetLine()).toContainText(/440\.000\s*₫/);
     await modal.locator('.txn-btn-submit').click();
     await expect(confirmation).toBeVisible();
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
@@ -532,8 +535,9 @@ async function check(name, work) {
       await expect(modal.locator('.txn-category-card')).toHaveCount(0);
       return;
     }
-    await expect(modal.locator('.txn-category-card')).toHaveCount(layoutCategories.length);
-    await expect(modal.locator('.txn-card-amount')).toHaveCount(layoutCategories.length);
+    // Desktop: 9 chip + chip "Thêm…" (mở bộ chọn đầy đủ) thay cho 18 thẻ.
+    await expect(modal.locator('.txn-category-card')).toHaveCount(10);
+    await expect(modal.locator('.txn-category-card--more')).toHaveCount(1);
   }
 
   const categorySheet = () => page.getByRole('dialog', { name: 'Chọn danh mục', exact: true });
@@ -665,9 +669,9 @@ async function check(name, work) {
         const name = card.querySelector('.txn-card-name');
         const range = document.createRange();
         range.selectNodeContents(name);
-        return { box: bounds(card), name: bounds(name), text: name.textContent,
+        return { box: bounds(card), name: bounds(name), text: name.textContent, title: card.getAttribute('title'),
           textRects: [...range.getClientRects()].map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
-          children: [...card.querySelectorAll('.txn-card-icon, .txn-card-name, .txn-card-amount, .txn-card-subtitle, .txn-card-progress-track, .txn-card-income-tag')]
+          children: [...card.querySelectorAll('.txn-card-icon, .txn-card-name')]
             .map(child => ({ selector: child.className, box: bounds(child) })) };
       });
       const originalBodyScroll = body.scrollTop;
@@ -677,7 +681,7 @@ async function check(name, work) {
       // Probe actual scroll behavior, including overflow:hidden containers that can
       // still scroll programmatically. This detects nested clipping without copying CSS.
       const nestedScrollers = [...element.querySelectorAll('*')].filter(node => {
-        if (node === body || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
+        if (node === body || node.classList.contains('txn-card-name') || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
         const previous = node.scrollTop;
         node.scrollTop = 1;
         const scrolls = node.scrollTop > 0;
@@ -692,7 +696,6 @@ async function check(name, work) {
     });
     const firstRow = layout.cards.filter(card => Math.abs(card.box.top - layout.cards[0].box.top) <= 1);
     assert.equal(firstRow.length, columns, `${name}: expected ${columns} cards in the first row`);
-    assert.ok(layout.bodyCanScroll, `${name}: many categories remain reachable through the modal body`);
     assert.deepEqual(layout.nestedScrollers, [], `${name}: the body is the only vertical scroll region`);
     assert.ok(layout.bodyOverflow <= 1 && layout.documentOverflow <= 1, `${name}: no horizontal page/body overflow`);
     assert.ok(layout.modal.left >= -1 && layout.modal.right <= layout.viewport.width + 1,
@@ -700,12 +703,11 @@ async function check(name, work) {
     assert.ok(layout.footer.top >= 0 && layout.footer.bottom <= layout.viewport.height + 1,
       `${name}: save actions stay visible on short screens`);
     for (const card of layout.cards) {
+      // Chip cao cố định: tên tối đa 2 dòng, phần dài hơn được cắt và đủ chữ ở tooltip (title).
       assert.ok(card.name.height > 0 && card.textRects.length > 0, `${name}: ${card.text} has visible text`);
-      for (const text of card.textRects) {
-        assert.ok(text.left >= card.name.left - 1 && text.right <= card.name.right + 1
-          && text.top >= card.name.top - 1 && text.bottom <= card.name.bottom + 1,
-        `${name}: the full name wraps inside its box: ${card.text}`);
-      }
+      assert.ok(card.title && card.title.length > 0, `${name}: ${card.text} keeps its full name in a tooltip`);
+      assert.ok(layout.cards.filter(other => Math.abs(other.box.top - card.box.top) <= 1)
+        .every(other => Math.abs(other.box.height - card.box.height) <= 1), `${name}: chips of a row share one height`);
       for (const child of card.children) {
         assert.ok(child.box.left >= card.box.left - 1 && child.box.right <= card.box.right + 1
           && child.box.top >= card.box.top - 1 && child.box.bottom <= card.box.bottom + 1,
@@ -719,12 +721,12 @@ async function check(name, work) {
     fs.mkdirSync(evidenceDir, { recursive: true });
     for (const theme of ['dark', 'cream', 'green', 'light']) {
       for (const [device, viewport, columns] of [
-        ['compact-desktop', { width: 1024, height: 640 }, 3],
+        ['compact-desktop', { width: 1024, height: 640 }, 5],
         ['mobile-boundary', { width: 599, height: 600 }, 1]
       ]) {
         await openCategoryLayout(theme, viewport);
         const layout = await assertCategoryLayout(`${theme}/${device}`, columns);
-        if (columns === 3) assert.ok(layout.cards.some(card => card.textRects.length > 1),
+        if (columns === 5) assert.ok(layout.cards.some(card => card.textRects.length > 1),
           `${theme}/${device}: long-name fixture must exercise multiline wrapping`);
         await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-categories.png`), animations: 'disabled' });
         await modal.locator('.txn-modal-close-btn').click();
@@ -732,9 +734,31 @@ async function check(name, work) {
     }
   });
 
+  await check('desktop chips: "Thêm…" opens the full list, the chosen category stays in the chips and arrows move the choice', async () => {
+    await openCategoryLayout('light', { width: 1280, height: 900 });
+    const chosen = () => modal.locator('.txn-category-card[aria-checked="true"]');
+    await expect(chosen()).toHaveCount(1);
+    await modal.locator('.txn-category-card--more').click();
+    const sheet = categorySheet();
+    await expect(sheet.locator('.txn-cat-option')).toHaveCount(layoutCategories.length);
+    const lastName = layoutCategories.at(-1);
+    await sheet.locator('.txn-cat-option').last().click();
+    await expect(sheet).toHaveCount(0);
+    // Danh mục vừa chọn nằm ngoài 9 chip đầu nên được đưa vào hàng chip (ô cuối), vẫn là radio đang chọn.
+    await expect(chosen()).toHaveAttribute('title', lastName);
+    await expect(modal.locator('.txn-category-card')).toHaveCount(10);
+    // Nhóm radio: một điểm dừng Tab, mũi tên đổi lựa chọn và chuyển focus theo.
+    assert.equal(await modal.locator('.txn-category-card[role="radio"][tabindex="0"]').count(), 1);
+    await chosen().focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(chosen()).not.toHaveAttribute('title', lastName);
+    await expect(chosen()).toBeFocused();
+    await modal.locator('.txn-modal-close-btn').click();
+  });
+
   await check('category layout survives the 599/600 breakpoint and simulated larger text on short screens', async () => {
     await openCategoryLayout('light', { width: 600, height: 600 });
-    await assertCategoryLayout('light/600px desktop boundary', 3);
+    await assertCategoryLayout('light/600px desktop boundary', 5);
     await modal.locator('.txn-modal-close-btn').click();
     await openCategoryLayout('cream', { width: 390, height: 568 });
     await assertCategoryLayout('cream/390px short mobile', 1);
@@ -749,7 +773,7 @@ async function check(name, work) {
       await assertCategoryLayout('cream/390px simulated 20px text', 1);
       await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-large-text.png'), animations: 'disabled' });
       await page.setViewportSize({ width: 800, height: 480 });
-      await assertCategoryLayout('cream/800px short desktop simulated 20px text', 3);
+      await assertCategoryLayout('cream/800px short desktop simulated 20px text', 5);
     } finally { await largeText.evaluate(element => element.remove()); }
     await page.setViewportSize({ width: 320, height: 480 });
     await assertCategoryLayout('cream/320px narrow mobile', 1);
@@ -839,7 +863,7 @@ async function check(name, work) {
       await assertCategoryLayout('mobile/failed budget labels', 1);
       await modal.locator('.txn-type-btn--income').click();
       await expect(modal.locator('.txn-category-summary__line')).toHaveText('Danh mục thu nhập');
-      await expect(modal.locator('.txn-card-amount')).toHaveCount(0);
+      await expect(modal.locator('.txn-budget-line')).toHaveCount(0);
       await assertCategoryLayout('mobile/income labels', 1);
       await modal.locator('.txn-modal-close-btn').click();
     } finally { await page.unroute(septemberBudget); }

@@ -1,8 +1,9 @@
-import React, { useId } from 'react';
+import React, { useId, useState } from 'react';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { NavIcon } from '../../components/ui/NavIcons';
 import { getJarActivityCopy } from './jarActivityCopy';
+import { jarsManagementText } from './jarsManagementCopy';
 import './jar-activity.css';
 
 import { Icon } from '../../components/ui/AppIcons';
@@ -12,7 +13,10 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
   const copy = getJarActivityCopy(lang);
   const titleId = useId();
   const shortDay = selectedDay ? `${selectedDay.slice(8, 10)}/${selectedDay.slice(5, 7)}` : '';
-  const scoped = selectedDay ? events.filter((event) => event.day === selectedDay) : events;
+  // Lọc nhanh Tất cả / Nạp / Rút ngay tại khối (JHS-03); cùng một lựa chọn áp lên cả danh sách và ngày đang chọn.
+  const [typeFilter, setTypeFilter] = useState('all');
+  const byDay = selectedDay ? events.filter((event) => event.day === selectedDay) : events;
+  const scoped = typeFilter === 'all' ? byDay : byDay.filter((event) => event.type === typeFilter);
   const shown = scoped.slice(0, limit);
   const hidden = scoped.length - shown.length;
 
@@ -25,6 +29,20 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
         </button>
       </header>
 
+      {events.length > 0 && <div className="jar-activity-type-filter" role="group" aria-label={jarsManagementText(lang, 'filterType')}>
+        {[['all', 'all'], ['deposit', 'deposit'], ['withdraw', 'withdraw']].map(([value, key]) => (
+          <button
+            key={value}
+            type="button"
+            className="jar-activity-type-chip"
+            aria-pressed={typeFilter === value}
+            onClick={() => setTypeFilter(value)}
+          >
+            {jarsManagementText(lang, key)}
+          </button>
+        ))}
+      </div>}
+
       {selectedDay && (
         <div className="jar-activity-filter">
           <button type="button" className="jar-activity-day-chip" aria-label={copy.clearDay(shortDay)} onClick={onClearDay}>
@@ -36,7 +54,7 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
 
       <div aria-live="polite">
         {shown.length === 0 ? (
-          <p className="jar-activity-empty">{selectedDay ? copy.emptyDay(shortDay) : copy.empty}</p>
+          <p className="jar-activity-empty">{selectedDay ? copy.emptyDay(shortDay) : typeFilter === 'all' ? copy.empty : jarsManagementText(lang, 'empty')}</p>
         ) : (
           <ul className="jar-activity-list">
             {shown.map((event) => {
@@ -45,7 +63,11 @@ export function JarRecentActivity({ id, events, selectedDay, onClearDay, onViewA
                 <li key={event.id} className="jar-activity-row">
                   <span className={`jar-activity-icon is-${event.type}`} aria-hidden="true">{deposit ? '+' : '−'}</span>
                   <div className="jar-activity-text">
-                    <span className="jar-activity-desc">{deposit ? copy.depositInto(event.jarName) : copy.withdrawFrom(event.jarName)}</span>
+                    {/* Dòng chính là tên hũ (cắt ở cuối, đủ chữ ở title); thao tác đã có icon +/−, người dùng đọc màn hình nghe qua phần ẩn. */}
+                    <span className="jar-activity-desc" title={deposit ? copy.depositInto(event.jarName) : copy.withdrawFrom(event.jarName)}>
+                      <span className="u-sr-only">{jarsManagementText(lang, deposit ? 'depositDirection' : 'withdrawDirection')}{' '}</span>
+                      {event.jarName}
+                    </span>
                     <span className="jar-activity-meta">
                       {formatDate(event.date, 'short', { locale: lang })}{event.reason ? ` · ${event.reason}` : ''}
                     </span>

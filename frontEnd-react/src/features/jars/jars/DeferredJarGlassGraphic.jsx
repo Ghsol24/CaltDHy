@@ -27,7 +27,7 @@ export function DeferredJarGlassGraphic(props) {
       {shouldRender ? (
         <JarGlassGraphic {...props} />
       ) : (
-        <span className="jar-graphic-deferred-placeholder">{Math.max(0, Math.min(100, Number(props.percent) || 0))}%</span>
+        <span className="jar-graphic-deferred-placeholder">{props.showPercent === false ? '' : `${Math.max(0, Math.min(100, Number(props.percent) || 0))}%`}</span>
       )}
     </div>
   );

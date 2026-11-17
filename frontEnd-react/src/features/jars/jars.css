@@ -512,13 +512,7 @@
 /* ── Section 4 Theme Overrides: Cream Theme ── */
 
 
-.jars-status-card--attention .jars-status-action-btn {
-  background: var(--jars-status-action-bg);
-}
-
-.jars-status-card--attention .jars-status-action-btn:hover {
-  background: var(--jars-status-action-hover-bg);
-}
+/* Nút "Nạp tiền" trong thẻ "Cần chú ý" giữ kiểu nút phụ trung tính ở mọi theme (cam là màu cảnh báo, JLS-04). */
 
 
 /* ============================================================
@@ -1173,97 +1167,6 @@
 }
 
 /* ============================================================
-   SECTION 7: THÔNG TIN HỮU ÍCH
-   ============================================================ */
-.jars-financial-tips-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.jars-tip-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-lg, 16px);
-  padding: 20px 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  transition: transform var(--dur-base) ease, border-color var(--dur-base) ease;
-  border-color: var(--card-outline);
-}
-
-.jars-tip-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--jars-tip-hover-border);
-}
-
-
-.jars-tip-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--jars-tip-icon-bg);
-  color: var(--color-accent-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-
-.jars-tip-body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.jars-tip-title {
-  font-size: var(--font-md);
-  font-weight: 700;
-  color: var(--color-text, #0F172A);
-  margin: 0;
-}
-
-.jars-tip-desc {
-  font-size: var(--font-sm);
-  color: var(--color-text-secondary, #64748B);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.jars-tip-link {
-  font-size: var(--font-xs);
-  font-weight: 700;
-  color: var(--jars-link-text);
-  background: none;
-  border: none;
-  padding: 0;
-  margin-top: 4px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  width: fit-content;
-}
-
-.jars-tip-link:hover {
-  text-decoration: underline;
-}
-
-/* Second tip card uses the success colour in every theme. */
-.jars-tip-card .jars-tip-icon-box.jars-tip-icon-box--success {
-  background: var(--color-success-bg);
-  color: var(--color-success);
-}
-
-.jars-tip-card .jars-tip-link.jars-tip-link--success {
-  color: var(--color-success);
-}
-
-/* ============================================================
    RESPONSIVE LAYOUT STYLES
    ============================================================ */
 @media (max-width: 1024px) {
@@ -1278,10 +1181,6 @@
 
 @media (max-width: 768px) {
   .jars-insights-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .jars-financial-tips-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1567,166 +1466,6 @@
   color: var(--jar-detail-history-item__strong-color);
 }
 
-/* ── Chuyển từ inline style của FinancialTipsModal.jsx (đợt 4) ── */
-.financial-tips-header__div--layout {
-  display: flex;
-  gap: 8px;
-}
-
-.financial-tips-tab-btn.financial-tips-tab-btn--layout {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.financial-tips-body__h4--text {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.financial-tips-body__p--text {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.financial-tips-body__div--layout {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.financial-tips-body__div--box {
-  padding: 12px 14px;
-  background: var(--surface-subtle);
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-
-.financial-tips-body__strong--tone {
-  color: var(--primary);
-  display: block;
-  font-size: 13px;
-  margin-bottom: 2px;
-}
-
-.financial-tips-body__span--text {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.financial-tips-body__div--box2 {
-  background: var(--surface-subtle);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.financial-tips-body__div--layout2 {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.financial-tips-body__label--text {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.financial-tips-input.financial-tips-input--box {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
-  outline: none;
-}
-
-.financial-tips-body__div--box3 {
-  height: 10px;
-  border-radius: 99px;
-  display: flex;
-  overflow: hidden;
-}
-
-.financial-tips-body__div--box4 {
-  width: 50%;
-  background: #3B82F6;
-}
-
-.financial-tips-body__div--box5 {
-  width: 30%;
-  background: #F59E0B;
-}
-
-.financial-tips-body__div--box6 {
-  width: 20%;
-  background: #10B981;
-}
-
-.financial-tips-body__div--layout3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.financial-tips-body__div--box7 {
-  background: var(--surface);
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-
-.financial-tips-body__span--text2 {
-  font-size: 12px;
-  color: #3B82F6;
-  font-weight: 700;
-  display: block;
-}
-
-.financial-tips-body__strong--text {
-  font-size: 14px;
-  color: var(--text-primary);
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
-}
-
-.financial-tips-body__span--text3 {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: block;
-  margin-top: 2px;
-}
-
-.financial-tips-body__span--text4 {
-  font-size: 12px;
-  color: #F59E0B;
-  font-weight: 700;
-  display: block;
-}
-
-.financial-tips-body__span--text5 {
-  font-size: 12px;
-  color: #10B981;
-  font-weight: 700;
-  display: block;
-}
-
-.financial-tips-body__strong--text2 {
-  font-size: 14px;
-  color: #10B981;
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
-}
-
 /* ── Chuyển từ inline style của JarsView.jsx (đợt 4) ── */
 .jars-metric-mini-fill.jars-metric-mini-fill--box {
   width: var(--jars-metric-mini-fill-width);
@@ -1800,10 +1539,6 @@
   width: var(--jar-list-fill-width);
 }
 
-.jars-tip-card.jars-tip-card--box {
-  cursor: pointer;
-}
-
 /* ── Chuyển từ inline style của JarGlassGraphic.jsx (đợt 4) ── */
 .jar-glass-graphic-wrapper.jar-glass-graphic-wrapper--layout {
   position: relative;
@@ -1839,4 +1574,194 @@
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--jar-glass-graphic-wrapper__span-color);
+}
+
+/* ============================================================
+   ĐỢT 10 (audit Phần 6) — Tổng quan hũ và thẻ hũ gọn
+   ============================================================ */
+
+/* Tiêu đề trang nằm ngoài thẻ, cùng mẫu các trang khác (JAR-04) */
+.jars-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jars-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* 3 ô số + một thanh tiến độ tổng trong một thẻ (JAR-01, JAR-02) */
+.jars-summary-card {
+  padding: 20px 24px;
+  gap: 16px;
+}
+
+.jars-summary-card .jars-hero-metrics-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.jars-summary-card .jars-metric-card {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: 4px;
+  min-width: 0;
+}
+
+.jars-summary-card .jars-metric-card:hover {
+  transform: none;
+  border-color: transparent;
+}
+
+.jars-summary-card .jars-metric-value {
+  font-size: var(--font-3xl);
+}
+
+.jars-summary-card .jars-global-progress-banner {
+  padding-top: 0;
+}
+
+.jars-summary-card .jars-global-progress-labels strong {
+  color: inherit;
+}
+
+@media (max-width: 768px) {
+  .jars-summary-card {
+    padding: 16px;
+  }
+
+  /* Điện thoại: ô số dạng lưới 2 cột thay cho 3 ô xếp dọc (JAR-03) */
+  .jars-summary-card .jars-hero-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+  }
+
+  .jars-summary-card .jars-metric-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .jars-overview-header .jars-hero-cta-btn {
+    width: auto;
+  }
+}
+
+/* Thẻ hũ gọn: hình hũ nhỏ cạnh tên, huy hiệu trạng thái, một dòng hạn (JLS-02, JLS-03) */
+.jar-card-top-row {
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.jar-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.jar-card-heading .jar-graphic-center-box {
+  padding: 0;
+  flex: none;
+}
+
+.jar-card-heading .jar-graphic-deferred-host {
+  width: 38px;
+  height: 46px;
+}
+
+.jar-card-heading .jar-graphic-deferred-placeholder {
+  min-width: 30px;
+  min-height: 30px;
+}
+
+.jar-card-heading__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.jar-card-heading .jar-name-title {
+  font-size: var(--font-md, 16px);
+}
+
+.jar-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: var(--font-xs);
+  font-weight: 700;
+}
+
+.jar-status-badge--ontrack,
+.jar-status-badge--done {
+  background: var(--jars-status-ontrack-tag-bg);
+  color: var(--jars-status-ontrack-text);
+}
+
+.jar-status-badge--attention {
+  background: var(--jars-status-attention-tag-bg);
+  color: var(--jars-status-attention-text);
+}
+
+.jar-progress-caption {
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, #64748B);
+  font-variant-numeric: tabular-nums;
+}
+
+.jar-due-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, #64748B);
+  min-height: 20px;
+}
+
+.jar-due-row strong {
+  color: var(--color-text, #1E293B);
+}
+
+.jar-due-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--jars-link-text, var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Vùng chạm 44×44 cho nút đổi lưới/danh sách và menu ⋮ (JLS-06); icon vẫn nhỏ */
+.jars-view-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.jar-card-menu-btn {
+  width: 44px;
+  height: 44px;
+  margin: -6px -8px 0 0;
+}
+
+@media (pointer: coarse) {
+  .jar-due-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
