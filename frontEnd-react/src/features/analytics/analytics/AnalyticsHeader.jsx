@@ -1,11 +1,58 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PageTitleIcon } from '../../../components/ui/NavIcons';
 import { Icon } from '../../../components/ui/AppIcons';
+import { MonthPanel } from '../../../components/ui/CustomDatePicker';
+import { useAnchoredPlacement } from '../../../hooks/useAnchoredPlacement';
+import { getLocalMonthString } from '../../../utils/formatters';
 
-export function AnalyticsHeader({ handleNextMonth, handlePrevMonth, handleSetLastMonth, handleSetThisMonth, isCurrentMonth, monthLabel }) {
+// One period selector for the whole Analytics page: the month shown here drives the
+// summary figures, the category split, the cash-flow chart and the report.
+function MonthPicker({ activeMonth, monthLabel, onSelect }) {
+  const rootRef = useRef(null);
+  const popoverRef = useRef(null);
+  const toggleRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const popoverStyle = useAnchoredPlacement(rootRef, popoverRef, open, { prefer: 'right' });
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
+
+  const close = (restoreFocus) => {
+    setOpen(false);
+    if (restoreFocus) toggleRef.current?.focus();
+  };
+
   return (
-    <div className="analytics-header-bar" id="analytics-overview">
-      <div className="page-title-lead">
+    <div className="analytics-month-picker" ref={rootRef}>
+      <button type="button" ref={toggleRef}
+        className="analytics-month-trigger month-current-display month-current-display--layout"
+        data-testid="analytics-month-trigger" title="Chọn tháng" aria-haspopup="dialog" aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}>
+        <Icon name="calendar" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <span aria-live="polite">{monthLabel}</span>
+        <Icon name="chevronDown" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </button>
+      {open && (
+        <div ref={popoverRef} className="calt-date-popover analytics-month-popover" style={popoverStyle || undefined}
+          role="dialog" aria-modal="false" aria-label="Chọn tháng" data-testid="analytics-month-popover">
+          <MonthPanel id="analytics-month" value={activeMonth} max={getLocalMonthString()} autoFocus
+            onSelect={(month) => { onSelect(month); close(true); }} onEscape={() => close(true)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function AnalyticsHeader({ activeMonth, compact = false, handleNextMonth, handlePrevMonth, handleSelectMonth, handleSetThisMonth, isCurrentMonth, monthLabel }) {
+  return (
+    <div className={`analytics-header-bar${compact ? ' analytics-header-bar--compact' : ''}`} id={compact ? undefined : 'analytics-overview'}>
+      {!compact && <div className="page-title-lead">
         <PageTitleIcon name="analyticsOverview" />
         <div className="analytics-title-group">
           <h1 className="analytics-view-title">Phân tích tài chính</h1>
@@ -13,33 +60,16 @@ export function AnalyticsHeader({ handleNextMonth, handlePrevMonth, handleSetLas
             Nhìn rõ dòng tiền theo thời gian
           </p>
         </div>
-      </div>
-    
+      </div>}
+
       <div className="analytics-header-controls">
-        <span className="page-guide-slot" data-guide-slot="" />
-        {/* Segmented Comparison: Tháng này | Tháng trước */}
-        <div className="analytics-segmented-switch" role="tablist" aria-label="Khoảng thời gian so sánh">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={isCurrentMonth}
-            className={`analytics-segment-btn ${isCurrentMonth ? 'active' : ''}`}
-            onClick={handleSetThisMonth}
-          >
-            Tháng này
+        {!compact && <span className="page-guide-slot" data-guide-slot="" />}
+        {!isCurrentMonth && (
+          <button type="button" className="analytics-this-month-btn" onClick={handleSetThisMonth}>
+            Về tháng này
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={!isCurrentMonth}
-            className={`analytics-segment-btn ${!isCurrentMonth ? 'active' : ''}`}
-            onClick={handleSetLastMonth}
-          >
-            Tháng trước
-          </button>
-        </div>
-    
-        {/* Month Stepper Control */}
+        )}
+
         <div className="analytics-month-stepper" role="group" aria-label="Chuyển tháng">
           <button
             type="button"
@@ -50,12 +80,9 @@ export function AnalyticsHeader({ handleNextMonth, handlePrevMonth, handleSetLas
           >
             <Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </button>
-    
-          <span className="month-current-display month-current-display--layout" aria-live="polite">
-            <Icon name="calendar" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <span>{monthLabel}</span>
-          </span>
-    
+
+          <MonthPicker activeMonth={activeMonth} monthLabel={monthLabel} onSelect={handleSelectMonth} />
+
           <button
             type="button"
             className="month-nav-btn"

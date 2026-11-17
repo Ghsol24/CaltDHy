@@ -340,9 +340,9 @@ async function check(name, work) {
 
   await check('homepage deletion of a previous-month entry explains historical impact and records deletion', async () => {
     await page.goto('/spending/home');
-    const row = page.locator('.home-txn-row').filter({ hasText: 'Xóa tháng 9' });
+    const row = page.locator('.txn-item').filter({ hasText: 'Xóa tháng 9' });
     await row.hover();
-    await row.locator('.home-txn-btn-action--delete').click();
+    await row.locator('.txn-item__action--delete').click();
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText('Tháng 9, 2026');
     await expect(confirmation.locator('.confirm-dialog-message')).toContainText(/5\.000\s*₫/);
     await confirmation.locator('.confirm-dialog-btn').last().click();
@@ -434,14 +434,14 @@ async function check(name, work) {
     await expect(addDialog).toHaveCount(0);
 
     // Keyboard: tab from "View all" onto the first row, then into its buttons.
-    const firstRow = page.locator('.home-txn-row[role="button"]').first();
+    const firstRow = page.locator('.txn-item[role="button"]').first();
     await page.locator('.home-txns-view-all-btn').focus();
     await page.keyboard.press('Tab');
     await expect(firstRow).toBeFocused();
-    await expect(firstRow.locator('.home-txn-actions')).toBeVisible();
+    await expect(firstRow.locator('.txn-item__actions')).toBeVisible();
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
-    await expect(firstRow.locator('.home-txn-btn-action--delete')).toBeFocused();
+    await expect(firstRow.locator('.txn-item__action--delete')).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(confirmation).toBeVisible();
     await expect(modal).toHaveCount(0, { message: 'Enter on the delete button must not also open the row' });
@@ -454,7 +454,7 @@ async function check(name, work) {
     try {
       const touch = await phone.newPage();
       await touch.goto('/spending/home');
-      const row = touch.locator('.home-txn-row[role="button"]').first();
+      const row = touch.locator('.txn-item[role="button"]').first();
       await row.tap();
       const sheet = touch.getByRole('dialog', { name: 'Chỉnh sửa giao dịch', exact: true });
       await expect(sheet).toBeVisible();
@@ -464,10 +464,10 @@ async function check(name, work) {
       await sheet.locator('.txn-modal-close-btn').tap();
       await expect(sheet).toHaveCount(0);
       // Visually hidden (1px, clipped) rather than display:none, so measure what is painted.
-      const actionsBox = await row.locator('.home-txn-actions').boundingBox();
+      const actionsBox = await row.locator('.txn-item__actions').boundingBox();
       assert.ok(!actionsBox || actionsBox.width <= 1, `Edit/delete stay hidden after a tap: ${JSON.stringify(actionsBox)}`);
       const tint = await row.evaluate(element => getComputedStyle(element).backgroundColor);
-      const plain = await touch.locator('.home-txn-row[role="button"]').nth(1).evaluate(element => getComputedStyle(element).backgroundColor);
+      const plain = await touch.locator('.txn-item[role="button"]').nth(1).evaluate(element => getComputedStyle(element).backgroundColor);
       assert.equal(tint, plain, 'The tapped row keeps no hover tint');
       await touch.screenshot({ path: path.join(evidenceDir, 'home-rows-after-tap-mobile.png') });
       // Adding on a touch phone does not focus the amount either: the person taps it when ready.

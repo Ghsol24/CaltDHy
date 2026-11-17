@@ -12,9 +12,9 @@ export function FinancialReportSection({ activeMonth, analyticsSubTab, curQuarte
     {/* Header & Controls */}
     <div className="panel-header">
       <div className="panel-titles">
-        <h3 className="panel-main-title panel-main-title--layout">
+        <h2 className="panel-main-title panel-main-title--layout">
           <NavIcon name="reports" size={18} /> Báo cáo tổng hợp tài chính
-        </h3>
+        </h2>
       </div>
   
       <div className="report-action-bar">
@@ -74,8 +74,9 @@ export function FinancialReportSection({ activeMonth, analyticsSubTab, curQuarte
       </span>
     </div>
   
-    {/* Executive Summary Cards */}
-    <ReportSummaryCards reportData={reportData} />
+    {/* The four headline figures live once, at the top of the page. This copy exists
+        only for the printed report (see print.css). */}
+    <div className="report-print-only"><ReportSummaryCards reportData={reportData} /></div>
   
     {/* Smart Financial Insights & Advice Banner */}
     {<ReportInsightsBanner reportData={reportData} />}

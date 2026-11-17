@@ -5,7 +5,7 @@ import { Bar } from 'react-chartjs-2';
 import { Icon } from '../../../components/ui/AppIcons';
 import { useTranslation } from '../../../i18n/useTranslation';
 
-export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, barChartData, barChartRef, barOptions, cashFlowActive, changeCashFlowMonth, changeCashFlowPeriod, chartContext, currentMonthNum, dailyTrend, drilldown, excludeRecurring, hasTrendData, highestSpendingDays, isCompactChart, openDay, periodLabel, pinnedDefault, saveCashFlowChoice, saveCashFlowDefault, savingCashFlowPreferences, savingExpectedDay, selectedWeekIndex, setMobileWeek, today, toggleExpectedDay, trendMode, trendSeries, trendSummary, unusualDays, viewCashFlowHistory, visibleDailyDays, weekCount, weekEnd, weekStart }) {
+export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, barChartData, barChartRef, barOptions, cashFlowActive, changeCashFlowPeriod, chartContext, currentMonthNum, dailyTrend, drilldown, excludeRecurring, hasTrendData, highestSpendingDays, isCompactChart, openDay, periodLabel, pinnedDefault, saveCashFlowChoice, saveCashFlowDefault, savingCashFlowPreferences, savingExpectedDay, selectedWeekIndex, setMobileWeek, today, toggleExpectedDay, trendMode, trendSeries, trendSummary, unusualDays, viewCashFlowHistory, visibleDailyDays, weekCount, weekEnd, weekStart }) {
   const { intlLocale, lang, t } = useTranslation();
   return (cashFlowActive && <CashFlowPanel
     t={t} lang={lang} intlLocale={intlLocale}
@@ -16,12 +16,12 @@ export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, ba
       ? t('analytics.cashflow.futureDays')
       : isCompactChart && trendMode === 'daily' && dailyTrend.hasAnyData
         ? t('analytics.noDataForRange') : t('analytics.noChartData')}
-    currentMonth={getLocalMonthString()} latestMonth={getLocalMonthString()}
+    currentMonth={getLocalMonthString()}
     savingPreferences={savingCashFlowPreferences} pinnedDefault={pinnedDefault}
     onPeriodModeChange={changeCashFlowPeriod}
     onSeriesChange={(series) => saveCashFlowChoice({ series })}
     onExcludeRecurringChange={(excludeRecurring) => saveCashFlowChoice({ excludeRecurring })}
-    onMonthChange={changeCashFlowMonth} onOpenDay={openDay}
+    onOpenDay={openDay}
     onViewHistory={viewCashFlowHistory}
     onPinDefault={() => saveCashFlowDefault(false)} onClearDefault={() => saveCashFlowDefault(true)}
     drilldownOrigin={drilldown} onBackToPeriod={backToCashFlowPeriod}

@@ -291,7 +291,8 @@ button.transaction-inspection-row:hover {
 .transaction-history-header p { margin: 6px 0 0; color: var(--color-text-secondary); }
 .transaction-filter-bar {
   position: relative;
-  z-index: 2;
+  /* above the sticky day headers (z-index 2) so open filter menus are never covered */
+  z-index: 5;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -412,45 +413,21 @@ button.transaction-inspection-row:hover {
 .transaction-filter-dropdown.is-filtering .transaction-filter-trigger svg { color: var(--color-link); }
 .transaction-filter-controls[hidden] { display: none !important; }
 .transaction-filter-toggle {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  padding: 0;
+  min-height: 44px;
+  padding: 0 16px;
   border: 1px solid var(--history-border);
   border-radius: var(--radius-full);
   background: var(--history-control);
   color: var(--color-text);
   font: 600 13px var(--font-sans, system-ui, sans-serif);
+  white-space: nowrap;
   cursor: pointer;
 }
-.transaction-filter-toggle.has-filters { border-color: var(--color-action-bg); background: var(--color-brand-50); color: var(--color-link); }
-.transaction-filter-toggle .transaction-filter-count { position: absolute; top: -5px; right: -5px; }
-.transaction-filter-count {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: var(--radius-full);
-  background: var(--color-action-bg);
-  color: var(--color-on-action, #fff);
-  font: 700 11px/20px var(--font-sans, system-ui, sans-serif);
-  text-align: center;
-}
-.transaction-filter-bar.is-compact .transaction-history-search { flex: 1 1 0; min-width: 0; }
-.transaction-filter-bar.is-compact .transaction-filter-controls {
-  flex: 1 1 100%;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  /* Room for focus rings, and the row runs to the panel edge to hint that it scrolls. */
-  margin: -4px -10px -4px -4px;
-  padding: 4px 10px 4px 4px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-}
-.transaction-filter-bar.is-compact .transaction-filter-controls::-webkit-scrollbar { display: none; }
+.transaction-filter-toggle.has-filters { border-color: var(--color-action-bg); background: var(--color-brand-50); color: var(--color-link); font-weight: 700; }
 .transaction-filter-menu {
   position: absolute;
   top: calc(100% + 7px);
@@ -591,66 +568,13 @@ button.transaction-inspection-row:hover {
 .transaction-history-summary strong { color: var(--color-text); }
 
 .transaction-ledger-table {
-  overflow: hidden;
+  /* clip (not hidden): the sticky day headers must keep sticking to the page scroll */
+  overflow: clip;
   border: 1px solid var(--history-border);
   border-radius: var(--radius-lg);
   background: var(--history-panel);
   box-shadow: var(--shadow-sm);
 }
-.transaction-ledger-head,
-.transaction-ledger-row {
-  display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(90px, .85fr) minmax(120px, 1fr);
-  align-items: center;
-  gap: 14px;
-}
-.transaction-ledger-head {
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--history-border);
-  background: var(--color-surface-muted);
-  color: var(--color-text-secondary);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: .02em;
-}
-.transaction-ledger-head span:last-child { text-align: right; }
-.transaction-ledger-row {
-  min-height: 68px;
-  padding: 11px 18px;
-  border: 0;
-  border-bottom: 1px solid var(--history-border);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.transaction-ledger-row:last-child { border-bottom: 0; }
-button.transaction-ledger-row:hover {
-  border-color: var(--history-border);
-  background: var(--history-hover);
-  box-shadow: none;
-  transform: none;
-}
-.transaction-ledger-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.transaction-ledger-row .transaction-inspection-icon { width: 36px; height: 36px; flex-basis: 36px; }
-.transaction-ledger-main { display: grid; gap: 4px; min-width: 0; }
-.transaction-ledger-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-sm); }
-.transaction-ledger-main small { color: var(--color-text-muted); font-size: var(--font-xs); }
-.transaction-ledger-category {
-  justify-self: start;
-  max-width: 100%;
-  /* Plain text, not a link-coloured pill: it is not separately clickable (TXN-04). */
-  padding: 0;
-  background: none;
-  color: var(--color-text-secondary);
-  font-size: var(--font-xs);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.transaction-ledger-date { color: var(--color-text-secondary); font-size: var(--font-xs); white-space: nowrap; }
-.transaction-ledger-row .transaction-inspection-amount { justify-self: end; margin: 0; font-size: var(--font-sm); }
-.transaction-ledger-row .transaction-inspection-wallet { justify-self: start; }
 
 .category-history-link:focus-visible,
 .day-drawer button:focus-visible,
@@ -672,17 +596,6 @@ button.transaction-ledger-row:hover {
   .transaction-filter-bar { align-items: stretch; flex-wrap: wrap; }
   .transaction-history-search { flex: 1 1 100%; }
   .transaction-filter-controls { flex: 1 1 100%; justify-content: flex-start; }
-  .transaction-ledger-head { display: none; }
-  .transaction-ledger-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "identity amount" "category date" "wallet wallet";
-    gap: 8px 12px;
-  }
-  .transaction-ledger-identity { grid-area: identity; }
-  .transaction-ledger-category { grid-area: category; margin-left: 48px; }
-  .transaction-ledger-row .transaction-inspection-wallet { grid-area: wallet; margin-left: 48px; }
-  .transaction-ledger-date { grid-area: date; text-align: right; }
-  .transaction-ledger-row .transaction-inspection-amount { grid-area: amount; }
 }
 
 @media (max-width: 640px) {
@@ -690,7 +603,6 @@ button.transaction-ledger-row:hover {
   .transaction-filter-controls { gap: 7px; }
   .transaction-filter-dropdown.is-compact .transaction-filter-trigger { min-height: 42px; }
   .transaction-inspection-row { gap: 10px; padding: 12px; }
-  .transaction-ledger-row { padding: var(--txn-ledger-row-padding-compact); }
   .transaction-inspection-icon { flex-basis: 38px; width: 38px; height: 38px; }
   .transaction-inspection-amount { font-size: var(--font-xs); }
   .analytics-unusual-row { align-items: stretch; flex-direction: column; }
@@ -701,10 +613,8 @@ button.transaction-ledger-row:hover {
   .transaction-filter-dropdown.is-compact .transaction-filter-value { max-width: 120px; }
   .transaction-history-checkbox { padding-right: 10px; }
   .transaction-filter-date-field { flex: 1 1 100%; }
-  .transaction-inspection-row:not(.transaction-ledger-row) { flex-wrap: wrap; }
-  .transaction-inspection-row:not(.transaction-ledger-row) .transaction-inspection-amount { flex-basis: 100%; text-align: right; }
-  .transaction-ledger-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .transaction-ledger-row .transaction-inspection-amount { font-size: var(--font-xs); }
+  .transaction-inspection-row { flex-wrap: wrap; }
+  .transaction-inspection-row .transaction-inspection-amount { flex-basis: 100%; text-align: right; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -781,4 +691,30 @@ button.transaction-ledger-row:hover {
   border: 0;
   background: var(--color-action-bg);
   color: var(--color-on-action, #fff);
+}
+
+/* Applied filters: one removable chip each, plus the clear-all button, under the filter row. */
+.transaction-applied-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.transaction-applied-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-action-bg);
+  border-radius: var(--radius-full);
+  background: var(--color-brand-50);
+  color: var(--color-link);
+  font: 600 var(--font-xs) var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+}
+.transaction-applied-chip:hover { background: var(--color-brand-100); }
+
+/* Totals of the filtered list: three figures, one size. */
+.transaction-history-summary .transaction-history-total { font-size: var(--font-sm); }
+.transaction-history-summary .transaction-history-total b { color: var(--color-text); font-size: inherit; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* "Bộ lọc" sheet: centred dialog on wide screens, bottom sheet on phones. */
+@media (min-width: 641px) {
+  .calt-sheet.transaction-filter-full-sheet { align-self: center; border-bottom: 1px solid var(--menu-border); border-radius: 20px; }
 }

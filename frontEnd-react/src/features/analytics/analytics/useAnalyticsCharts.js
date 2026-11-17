@@ -14,7 +14,7 @@ function darken(color) {
   return `#${part(16)}${part(8)}${part(0)}`;
 }
 
-export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactChart, label, lang, monthData, monthlyTrend, openDay, prefersReducedMotion, setDrilldown, setMobileWeek, setSelectedMonth, t, theme, trendMode, trendSeries, unusualDays = [], viewCategoryHistory, visibleDailyDays }) {
+export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactChart, lang, monthlyTrend, openDay, prefersReducedMotion, setDrilldown, setMobileWeek, setSelectedMonth, t, theme, trendMode, trendSeries, unusualDays = [], visibleDailyDays }) {
   const chartThemeTokens = useMemo(() => {
     const styles = getComputedStyle(document.documentElement);
     const read = (name) => styles.getPropertyValue(name).trim();
@@ -25,66 +25,9 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
       unusual: read('--color-danger'),
       tick: read('--color-text-muted'), grid: read('--color-border'),
       tooltipBg: read('--color-surface'), text: read('--color-text'),
-      sliceBorder: read('--color-surface'), future: read('--color-surface-muted'),
+      future: read('--color-surface-muted'),
     };
   }, [theme]);
-
-  // Doughnut Chart Configuration
-  const doughnutChartData = useMemo(() => {
-    if (monthData.categories.length === 0) return null;
-
-    return {
-      labels: monthData.categories.map((c) => label(c.name)),
-      datasets: [
-        {
-          data: monthData.categories.map((c) => c.amount),
-          backgroundColor: monthData.categories.map((c) => c.color),
-          borderColor: chartThemeTokens.sliceBorder,
-          borderWidth: 2,
-          hoverOffset: 6
-        }
-      ]
-    };
-  }, [monthData.categories, chartThemeTokens, label]);
-
-  const doughnutOptions = useMemo(() => {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      onClick: (_event, elements) => {
-        const category = monthData.categories[elements[0]?.index];
-        if (category) viewCategoryHistory(category.name);
-      },
-      onHover: (_event, elements, chart) => {
-        chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
-      },
-      animation: prefersReducedMotion ? false : {
-        duration: 850,
-        easing: 'easeOutQuart'
-      },
-      resizeDelay: 150,
-      cutout: '72%',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: chartThemeTokens.tooltipBg,
-          titleColor: chartThemeTokens.text,
-          bodyColor: chartThemeTokens.text,
-          titleFont: { family: 'Inter, sans-serif', size: 12, weight: '600' },
-          bodyFont: { family: 'Inter, sans-serif', size: 13, weight: 'bold' },
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: (context) => {
-              const val = context.parsed || 0;
-              const pct = monthData.expense > 0 ? Math.round((val / monthData.expense) * 100) : 0;
-              return ` ${formatCurrency(val)} (${pct}%)`;
-            }
-          }
-        }
-      }
-    };
-  }, [monthData.expense, monthData.categories, chartThemeTokens, prefersReducedMotion, viewCategoryHistory]);
 
   const chartRows = trendMode === 'daily' ? visibleDailyDays : monthlyTrend;
   const unusualDates = useMemo(() => new Set(unusualDays.map((day) => day.date)), [unusualDays]);
@@ -184,5 +127,5 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
     },
   }), [setDrilldown, setMobileWeek, drilldownRevision, trendMode, visibleDailyDays, monthlyTrend, chartRows, barChartData, activeMonth,
     chartThemeTokens, prefersReducedMotion, isCompactChart, openDay, setSelectedMonth, today, t, lang, unusualDates]);
-  return { barChartData, barOptions, chartContext, doughnutChartData, doughnutOptions, today };
+  return { barChartData, barOptions, chartContext, today };
 }

@@ -93,9 +93,17 @@ async function check(name, work) {
   async function selectMode(mode, month) {
     await closePopover(); await period.click();
     await popover.locator(`input[type=radio][value="${mode}"]`).locator('..').click();
-    if (month) await page.getByTestId('cashflow-month-input').locator(`[data-month="${month}"]`).click();
-    await closePopover(); await expect(chart).toHaveAttribute('data-mode', mode);
+    await closePopover();
+    if (month) await chooseMonth(month);
+    await expect(chart).toHaveAttribute('data-mode', mode);
   }
+  // The month is chosen once for the whole Analytics page, in its header.
+  async function chooseMonth(month) {
+    await page.getByTestId('analytics-month-trigger').click();
+    await page.getByTestId('analytics-month-popover').locator(`[data-month="${month}"]`).click();
+    await expect(page.getByTestId('analytics-month-popover')).toHaveCount(0);
+  }
+  const monthTrigger = page.getByTestId('analytics-month-trigger');
   async function selectSeries(series) {
     await closePopover(); await display.click();
     await popover.locator(`input[type=radio][value="${series}"]`).locator('..').click();
@@ -113,7 +121,7 @@ async function check(name, work) {
     await chart.click({ position: { x: point.x, y: point.y } });
     await expect(page.getByTestId('cashflow-back-period')).toBeVisible();
     await expect(chart).toHaveAttribute('data-mode', 'daily');
-    await expect(period).toContainText(/9/);
+    await expect(monthTrigger).toContainText(/9/);
   }
   async function failNextPreferences() {
     await page.route('**/api/auth/preferences', route => route.fulfill({ status: 500,
@@ -212,7 +220,7 @@ async function check(name, work) {
     assert.equal((await labels()).length, 6);
     await selectMode('3months', '2026-09');
     assert.equal((await labels()).length, 3);
-    await expect(period).toContainText(/9|09/);
+    await expect(monthTrigger).toContainText(/9|09/);
     await selectMode('daily', '2026-10');
     assert.equal((await labels()).length, 31);
     await expect.poll(() => chartAlpha(25)).toBeGreaterThan(100);
@@ -261,7 +269,7 @@ async function check(name, work) {
     await expect(drawer.locator('.day-drawer-summary')).toContainText(/định kỳ/i);
     await drawer.getByRole('button', { name: 'Xem đầy đủ trong lịch sử' }).click();
     await page.waitForURL(/transactions\?date=2026-10-05.*excludeRecurring=1/);
-    await expect(page.locator('.transaction-inspection-row')).toHaveCount(1);
+    await expect(page.locator('.transaction-ledger-row')).toHaveCount(1);
     await enter();
   });
 
@@ -302,7 +310,7 @@ async function check(name, work) {
     assert.deepEqual((await preferences()).cashFlow.lastUsed, remembered);
     await page.getByTestId('cashflow-back-period').click();
     await expect(chart).toHaveAttribute('data-mode', '6months');
-    await expect(period).toContainText(/10/);
+    await expect(monthTrigger).toContainText(/10/);
 
     await drillSeptember(); await display.click();
     const pinnedBefore = (await preferences()).cashFlow.pinnedDefault;
@@ -323,7 +331,7 @@ async function check(name, work) {
     await expect(page.getByTestId('cashflow-back-period')).toBeVisible();
     await page.getByTestId('cashflow-back-period').click();
     await expect(chart).toHaveAttribute('data-mode', '6months');
-    await expect(period).toContainText(/10/);
+    await expect(monthTrigger).toContainText(/10/);
     await display.click(); await page.getByTestId('cashflow-clear-default').click(); await closePopover();
     await expect.poll(async () => (await preferences()).cashFlow.pinnedDefault).toBe(null);
   });
@@ -491,7 +499,7 @@ async function check(name, work) {
         await enter();
         await expect(page.locator('html')).toHaveClass(new RegExp(`${theme}-theme`));
         await verifyFit(panel, `${theme}/${width} panel`);
-        await verifyTextContrast(panel, '.cashflow-header h3, .cashflow-control > span, .cashflow-summary dt, .cashflow-summary dd, .cashflow-day-date, .cashflow-top-days li strong', `${theme}/${width} panel`);
+        await verifyTextContrast(panel, '.cashflow-header h2, .cashflow-control > span, .cashflow-summary dt, .cashflow-summary dd, .cashflow-day-date, .cashflow-top-days li strong', `${theme}/${width} panel`);
         const chartBox = await chart.boundingBox();
         const topBox = await page.getByTestId('cashflow-top-days').boundingBox();
         layouts.push({ theme, width, chartBox, topBox });
