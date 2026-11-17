@@ -321,11 +321,14 @@
 
 /* Category split: donut + one button per category (colour dot, icon, name + share bar, amount, %). */
 .analytics-category-data-grid {
+  /* The donut and the list read as one block: capped width, centred, so the margins on both
+     sides match whatever the screen width. */
   display: grid;
-  grid-template-columns: 200px minmax(0, 620px);
-  justify-content: center;
-  gap: 28px 40px;
+  grid-template-columns: 240px minmax(0, 1fr);
   align-items: center;
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
 }
 
 @media (max-width: 860px) {
@@ -343,8 +346,8 @@
 
 .doughnut-canvas-box {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 240px;
+  height: 240px;
 }
 
 .doughnut-center-metric {
@@ -355,7 +358,7 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  padding: 0 38px;
+  padding: 0 46px;
   text-align: center;
   pointer-events: none;
 }
@@ -384,8 +387,15 @@
   display: flex;
   flex-direction: column;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 40px;
   list-style: none;
+  /* a thin rule ties the list to the chart instead of leaving two loose blocks */
+  border-left: 1px solid var(--color-border, #E3ECE7);
+  margin-left: 40px;
+}
+
+@media (max-width: 860px) {
+  .category-ranked-list { margin-left: 0; padding-left: 0; border-left: 0; }
 }
 
 
