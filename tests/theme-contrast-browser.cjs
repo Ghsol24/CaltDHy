@@ -35,7 +35,6 @@ const MENUS = [
   { route: '/spending/plan/wallets', open: ['.wallet-custom-dropdown-trigger'], menu: '.wallet-custom-dropdown-menu' },
   { route: '/spending/plan/recurring', open: ['.recurring-sort-custom-btn'], menu: '.recurring-sort-custom-menu' },
   { route: '/spending/plan/recurring', open: ['.recurring-menu-wrapper button'], menu: '.recurring-actions-dropdown' },
-  { route: '/spending/plan/recurring', open: ['button:has(.wallet-chip-name)'], menu: '.recurring-wallet-popover-menu' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=0 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=2 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },
   { route: '/spending/jars/goals', open: ['.jar-cal-card .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },

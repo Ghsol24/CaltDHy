@@ -6,11 +6,12 @@ import { detectBrandInfo } from '../../../utils/brandDetection';
 import { translateLegacyText } from '../../../i18n/legacyTranslations';
 import { BrandLogoIcon } from '../../../utils/brandIcons';
 import { Icon } from '../../../components/ui/AppIcons';
-import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { MenuPopover } from '../../../components/ui/MenuPopover';
 
-export function RecurringList({ currentMonthStr, displayItems, handleAssignWallet, handleDelete, handleOpenEdit, handlePay, handleToggle, isLoading, menuRef, menuTriggerRef, openActionMenuId, openWalletSelectorId, pendingActions, setOpenActionMenuId, setOpenWalletSelectorId, walletRef, wallets }) {
+// One row per item: name · category, then one line "Ngày 24 hằng tháng · còn 9 ngày · ZaloPay".
+// The wallet is plain text here; it is changed in the edit dialog, not by a stray tap (REC-02).
+export function RecurringList({ currentMonthStr, displayItems, handleDelete, handleOpenEdit, handlePay, handleToggle, isLoading, menuRef, menuTriggerRef, openActionMenuId, pendingActions, setOpenActionMenuId, wallets }) {
   const { label, lang, t } = useTranslation();
   return (!isLoading && displayItems.length > 0 && (
     <div className="recurring-rows-list">
@@ -19,185 +20,86 @@ export function RecurringList({ currentMonthStr, displayItems, handleAssignWalle
         const isEnded = isInstallmentEnded(item);
         const isIncome = isRecurringIncome(item);
         const tierInfo = getRecurringTier(item, currentMonthStr);
-        const cycleSuffix = CYCLE_SUFFIXES[item.cycle] || '/ tháng';
+        const cycleSuffix = CYCLE_SUFFIXES[item.cycle] || '/tháng';
         const brandInfo = isIncome
           ? { brandKey: 'default', categoryDefault: 'Salary', noteDefault: '' }
           : detectBrandInfo(item.name);
         const brandKey = item.brandKey || brandInfo.brandKey;
   
-        // Formatted due date
         const parsedDueDate = item.nextDueDate ? parseDate(item.nextDueDate) : null;
-        const formattedDueDate = parsedDueDate ? formatDate(parsedDueDate, 'day-date') : item.nextDueDate || 'Chưa định ngày';
         const formattedEndDate = item.endDate ? formatDate(item.endDate, 'day-date') : '';
-        const dayOfMonth = parsedDueDate ? String(parsedDueDate.getDate()).padStart(2, '0') : '01';
-  
-        // Assigned wallet
+        const dueDay = parsedDueDate ? parsedDueDate.getDate() : null;
+        const dayText = !parsedDueDate ? 'Chưa định ngày'
+          : item.cycle === 'yearly' ? `Ngày ${dueDay}/${parsedDueDate.getMonth() + 1} hằng năm`
+          : item.cycle === 'quarterly' ? `Ngày ${dueDay} hằng quý`
+          : `Ngày ${dueDay} hằng tháng`;
+
         const assignedWallet = wallets.find((w) => String(w.id) === String(item.walletId))
           || (item.walletId ? null : wallets[0]);
-        const walletLabel = assignedWallet?.name || (item.walletId ? 'Ví đã lưu trữ' : 'Chọn ví');
+        const walletLabel = assignedWallet?.name || (item.walletId ? 'Ví đã lưu trữ' : 'Chưa chọn ví');
         const categoryLabel = label(item.category || brandInfo.categoryDefault);
         const noteLabel = translateLegacyText(lang, item.note || item.desc || brandInfo.noteDefault || '');
-  
+
         const isPaidThisMonth = tierInfo.isPaidThisMonth;
         const walletColLabel = isIncome ? 'Ví nhận tiền' : 'Ví trừ tiền';
-        const paidText = isIncome && tierInfo.tier === 'paid' ? 'Đã nhận tháng này' : tierInfo.text;
+        // Red only when overdue; due today or within a few days is orange; paid is green.
+        let status;
+        if (isEnded) status = { tone: 'muted', text: 'Đã kết thúc' };
+        else if (!isActive) status = { tone: 'muted', text: 'Tạm dừng' };
+        else if (tierInfo.tier === 'paid') status = { tone: 'ok', text: isIncome ? 'Đã nhận tháng này' : tierInfo.text };
+        else if (tierInfo.isOverdue) status = { tone: 'danger', text: tierInfo.text };
+        else if (tierInfo.tier === 'danger' || tierInfo.tier === 'warning') status = { tone: 'warning', text: tierInfo.text };
+        else status = { tone: 'normal', text: tierInfo.text };
         // Xác nhận một chạm: chỉ hiện khi kỳ này đã tới gần (≤ 3 ngày), đến hạn hoặc quá hạn.
         const canQuickConfirm = isActive && !isEnded && !isPaidThisMonth && tierInfo.tier === 'danger';
-  
+
         const isMenuOpen = openActionMenuId === item.id;
-        const isWalletMenuOpen = openWalletSelectorId === item.id;
         const pendingAction = pendingActions[item.id];
-  
+
         return (
           <div
             key={item.id}
-            className={`recurring-row-card ${isIncome ? 'is-income' : ''} ${!isActive ? 'is-paused' : ''} ${isEnded ? 'is-ended' : ''} ${isWalletMenuOpen || isMenuOpen ? 'has-open-dropdown' : ''} ${pendingAction ? 'is-processing' : ''}`}
+            className={`recurring-row-card ${isIncome ? 'is-income' : ''} ${!isActive ? 'is-paused' : ''} ${isEnded ? 'is-ended' : ''} ${isMenuOpen ? 'has-open-dropdown' : ''} ${pendingAction ? 'is-processing' : ''}`}
             aria-busy={Boolean(pendingAction)}
           >
-            {/* 1. Brand Logo Tile */}
             <div className="recurring-row-logo-col">
               <BrandLogoIcon brandKey={brandKey} size={48} />
             </div>
-  
-            {/* 2. Title & Meta Info */}
+
             <div className="recurring-row-main-col">
               <div className="recurring-title-row">
-                <h4 className="recurring-main-name" title={item.name}>
+                <h4 className="recurring-main-name" title={noteLabel ? `${item.name} — ${noteLabel}` : item.name}>
                   {item.name}
                 </h4>
-                <span className="recurring-category-badge">
-                  {categoryLabel}
-                </span>
+                <span className="recurring-category-text">{categoryLabel}</span>
                 {isIncome && <span className="recurring-income-badge">Khoản thu</span>}
               </div>
-  
-              <div className="recurring-meta-row">
-                <span className="recurring-meta-item">
-                  <Icon name="calendar" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <span>{isIncome ? 'Ngày nhận:' : 'Ngày thanh toán:'} <strong>{dayOfMonth} hàng tháng</strong></span>
-                </span>
-  
-                {formattedEndDate && (
-                  <span className="recurring-meta-item recurring-term-meta">
-                    <Icon name="calendarAlt" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-                    <span>Kết thúc: <strong>{formattedEndDate}</strong></span>
-                  </span>
-                )}
-  
-                {noteLabel && (
-                  <span className="recurring-meta-item recurring-meta-note">
-                    <Icon name="tag" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <span>{noteLabel}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-  
-            {/* Wallet + due status: one footer row on phones; transparent to the desktop grid. */}
-            <div className="recurring-row-footer">
-            {/* 3. Ví trừ tiền (Custom Themed Dropdown Popover) */}
-            <div className="recurring-row-wallet-col">
-              <span className="row-col-label">{walletColLabel}</span>
-              <div className="recurring-wallet-custom-wrapper" ref={isWalletMenuOpen ? walletRef : null}>
-                <button
-                  type="button"
-                  className="recurring-wallet-chip-btn"
-                  onClick={() => setOpenWalletSelectorId(isWalletMenuOpen ? null : item.id)}
-                  disabled={Boolean(pendingAction)}
-                  aria-expanded={isWalletMenuOpen}
-                  title={assignedWallet?.name ? `${walletColLabel}: ${assignedWallet.name}` : walletLabel}
-                >
-                  <span className="wallet-chip-icon" aria-hidden="true">
-                    {pendingAction === 'wallet' ? <span className="btn-spinner" /> : <WalletOutlineIcon type={assignedWallet?.type} size={16} color="currentColor" />}
-                  </span>
-                  <span className="wallet-chip-name">{walletLabel}</span>
-                  <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </button>
-  
-                {isWalletMenuOpen && (
-                  <div
-                    className="recurring-wallet-popover-menu"
-                    role="menu"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="wallet-popover-header">{isIncome ? 'Chọn ví nhận tiền' : 'Chọn ví trừ tiền'}</div>
-                    {wallets.map((w) => (
-                      <button
-                        key={w.id}
-                        type="button"
-                        className={`wallet-popover-item ${String(w.id) === String(assignedWallet?.id) ? 'is-active' : ''}`}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAssignWallet(item, w.id);
-                        }}
-                      >
-                        <span className="wallet-popover-icon">
-                          <WalletOutlineIcon type={w.type} size={16} color="currentColor" />
-                        </span>
-                        <div className="wallet-popover-info">
-                          <span className="wallet-popover-name">{w.name}</span>
-                          <span className="wallet-popover-bal">{formatCurrency(w.currentBalance ?? 0)}</span>
-                        </div>
-                        {String(w.id) === String(assignedWallet?.id) && (
-                          <Icon name="check" className="wallet-check-icon" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-  
-            {/* 4. Due Status Countdown Pill */}
-            <div className="recurring-row-due-col">
-              <div className={`recurring-due-pill-box due-${isEnded ? 'ended' : tierInfo.tier}`}>
+
+              <p className="recurring-meta-line">
                 {(pendingAction === 'pay' || pendingAction === 'toggle') && <span className="btn-spinner" role="status" aria-label={t('common.processing')} />}
-                {isEnded ? (
+                <span>{dayText}</span>
+                <span className="recurring-meta-sep" aria-hidden="true">·</span>
+                <span className={`recurring-status-text is-${status.tone}`}>{status.text}</span>
+                {formattedEndDate && (
                   <>
-                    <div className="due-pill-top">
-                      <Icon name="minusCircle" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-                      <strong>Đã kết thúc</strong>
-                    </div>
-                    <span className="due-pill-sub">Kỳ hạn: {formattedEndDate}</span>
-                  </>
-                ) : tierInfo.tier === 'paid' ? (
-                  <>
-                    <div className="due-pill-top">
-                      <Icon name="check" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <strong>{paidText}</strong>
-                    </div>
-                    <span className="due-pill-sub">
-                      Kỳ tới: {formattedDueDate}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <div className="due-pill-top">
-                      {tierInfo.tier === 'danger' ? (
-                        <Icon name="alertCircle" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      ) : (
-                        <Icon name="clock" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      )}
-                      <strong>{tierInfo.text}</strong>
-                    </div>
-                    <span className="due-pill-sub">
-                      Đến hạn vào {formattedDueDate}
-                    </span>
+                    <span className="recurring-meta-sep" aria-hidden="true">·</span>
+                    <span>{isEnded ? formattedEndDate : `Kết thúc ${formattedEndDate}`}</span>
                   </>
                 )}
-              </div>
+                <span className="recurring-meta-sep" aria-hidden="true">·</span>
+                <span className="recurring-wallet-text" title={walletColLabel}>
+                  <span className="bdash-sr-only">{walletColLabel}: </span>{walletLabel}
+                </span>
+              </p>
             </div>
-  
-            </div>
-  
-            {/* 5. Amount */}
+
             <div className="recurring-row-amount-col">
-              <span className="row-col-label">Số tiền</span>
               <strong className="recurring-row-price">
-                {isIncome ? '+' : ''}{formatCurrency(item.amount)} <span className="price-cycle">{cycleSuffix}</span>
+                {isIncome ? '+' : ''}{formatCurrency(item.amount)}<span className="price-cycle">{cycleSuffix}</span>
               </strong>
+            </div>
+
+            <div className="recurring-row-confirm-col">
               {canQuickConfirm && (
                 <button
                   type="button"
@@ -211,7 +113,7 @@ export function RecurringList({ currentMonthStr, displayItems, handleAssignWalle
                 </button>
               )}
             </div>
-  
+
             {/* 6. Actions: 3-dots Menu ONLY with Pure Outline SVG Icons */}
             <div className="recurring-row-actions-col">
               <div className="recurring-menu-wrapper" ref={isMenuOpen ? menuRef : null}>

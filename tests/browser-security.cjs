@@ -317,8 +317,8 @@ function blendCssColor(color, background) {
       await modal.getByRole('button', { name: 'Tạo khoản định kỳ', exact: true }).click();
       await expect(modal).toHaveCount(0);
       const row = termPage.locator('.recurring-row-card').filter({ hasText: 'Finite term browser audit' });
-      await expect(row).toContainText('Kết thúc:');
-      await expect(row).toContainText('15/01/2030');
+      // One date line per row (UX REC-06): "Ngày 15 hằng tháng · … · Kết thúc 15/01/2030 · Ví".
+      await expect(row).toContainText('Kết thúc 15/01/2030');
 
       await row.locator('.recurring-dots-action-btn').click();
       await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
@@ -327,7 +327,7 @@ function blendCssColor(color, background) {
       await modal.locator('.recurring-term-toggle').click();
       await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
       await expect(modal).toHaveCount(0);
-      await expect(row).not.toContainText('Kết thúc:');
+      await expect(row).not.toContainText('Kết thúc');
 
       await row.locator('.recurring-dots-action-btn').click();
       await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
@@ -339,22 +339,29 @@ function blendCssColor(color, background) {
 
       await row.locator('.recurring-dots-action-btn').click();
       await row.getByRole('menuitem', { name: 'Đánh dấu đã trả kỳ này' }).click();
-      await expect(row.locator('.recurring-due-pill-box')).toContainText('Đã kết thúc');
+      // Ended items leave "Tất cả" and live under their own chip (UX REC-05).
+      const endedTab = termPage.getByRole('tab', { name: /Đã kết thúc/ });
+      await expect(row).toHaveCount(0);
+      await endedTab.click();
+      await expect(row.locator('.recurring-status-text')).toContainText('Đã kết thúc');
       await expect(row).toHaveClass(/is-ended/);
-      await expect(row).toContainText('Kỳ hạn: 15/01/2030');
+      await expect(row).toContainText('15/01/2030');
       await row.locator('.recurring-dots-action-btn').click();
       await expect(row.getByRole('menuitem', { name: /Đánh dấu đã trả/ })).toBeDisabled();
       await expect(row.getByRole('menuitem', { name: /Tiếp tục theo dõi|Tạm dừng theo dõi/ })).toBeDisabled();
 
       await termPage.reload();
-      await expect(row.locator('.recurring-due-pill-box')).toContainText('Đã kết thúc');
+      await endedTab.click();
+      await expect(row.locator('.recurring-status-text')).toContainText('Đã kết thúc');
       await row.locator('.recurring-dots-action-btn').click();
       await row.getByRole('menuitem', { name: 'Chỉnh sửa khoản định kỳ' }).click();
       await expect(modal.locator('#rec-end-date')).toHaveValue('15/01/2030');
       await modal.locator('.recurring-term-toggle').click();
       await modal.getByRole('button', { name: 'Lưu thay đổi' }).click();
+      await expect(modal).toHaveCount(0);
+      await termPage.getByRole('tab', { name: /Tất cả/ }).click();
       await expect(row).not.toHaveClass(/is-ended/);
-      await expect(row).not.toContainText('Kết thúc:');
+      await expect(row).not.toContainText('Kết thúc');
     } finally { await termContext.close(); }
   });
   await check('category analytics avoid prototype pollution and CSV downloads contain untrusted text', async () => {
@@ -1024,7 +1031,9 @@ function blendCssColor(color, background) {
     // its late answer cannot replace the month the person went back to.
     const nextMonth = shiftMonth(fixtureMonth, 1);
     const farMonth = shiftMonth(fixtureMonth, 2);
-    const shownByNextMonth = new RegExp(monthName(fixtureMonth), 'i'); // its "month before" line
+    // Its "month before" line; that line drops the year when it is this year ("Tháng 11 vượt …").
+    const previousLineName = (month) => month.slice(0, 4) === String(new Date().getFullYear()) ? `Tháng ${Number(month.slice(5))}` : monthName(month);
+    const shownByNextMonth = new RegExp(`^${previousLineName(fixtureMonth)} `, 'i');
     let releaseStaleBudget;
     const staleBudgetGate = new Promise((resolve) => { releaseStaleBudget = resolve; });
     const gatedMonth = (url) => url.pathname === '/api/spending/budget' && url.searchParams.get('month') === farMonth;

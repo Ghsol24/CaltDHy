@@ -253,7 +253,7 @@
 @media (pointer: coarse) {
   :is(.analytics-segment-btn, .transaction-filter-trigger, .cashflow-text-button, .btn-report-action,
     .history-chip-button, .calt-custom-select-trigger, .jar-next-strip-switch, .jar-next-strip-cta,
-    .home-btn-add-txn, .home-txns-view-all-btn, .jars-hero-cta-btn) {
+    .home-btn-add-txn, .home-txns-view-all-btn, .jars-hero-cta-btn, .bdash-sort select) {
     min-height: 44px;
   }
 
@@ -267,7 +267,7 @@
 
   /* Icon-only buttons. */
   :is(.recurring-dots-btn, .month-nav-btn, .jars-view-btn, .jar-card-menu-btn, .jar-btn-detail-icon,
-    .wallet-activity-info-trigger, .tip-close-btn, .bdash-hero__previous-link) {
+    .wallet-activity-info-trigger, .bdash-hero__previous-link) {
     min-width: 44px;
     min-height: 44px;
   }
@@ -275,4 +275,19 @@
   .jar-cal-cell {
     min-height: 44px;
   }
+}
+
+/* Category the person created: first letter in an outlined circle, same weight as the drawn icons. */
+.category-mark-letter {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--category-mark-size, 16px);
+  height: var(--category-mark-size, 16px);
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--font-sans);
+  font-size: calc(var(--category-mark-size, 16px) * 0.58);
+  font-weight: 800;
+  line-height: 1;
 }

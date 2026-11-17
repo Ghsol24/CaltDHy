@@ -2,8 +2,7 @@ import React from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useJarStore } from '../../stores/useJarStore';
-import { useWalletStore } from '../../stores/useWalletStore';
-import { calculateMonthlyStats, calculateAvailableToSpend, getBudgetStatus } from '../../utils/financeMath';
+import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
 import { TargetOutlineIcon } from '../../components/ui/AppIcons';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
@@ -15,15 +14,12 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
   const jars = useJarStore((s) => s.jars);
-  const installments = useJarStore((s) => s.installments);
-  const wallets = useWalletStore((s) => s.wallets);
 
   const currentMonthPrefix = getLocalMonthString();
 
   // Memoize all expensive aggregate metrics
   const {
     monthlyStats,
-    availableToSpend,
     categoryStatusList,
     hasBudgets,
     hasTransactions,
@@ -34,17 +30,11 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     dangerCategory,
     warningCategory,
     daysLeft,
-    upcomingBillsCount,
+    overCount,
     jarsCount
   } = React.useMemo(() => {
     const stats = calculateMonthlyStats(transactions, currentMonthPrefix);
 
-    const { availableToSpend: ats } = calculateAvailableToSpend({
-      wallets,
-      transactions,
-      jars,
-      currentMonthPrefix
-    });
 
     const catList = [];
     if (budgets && typeof budgets === 'object') {
@@ -88,30 +78,8 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const dLeft = Math.max(1, daysInMonth - now.getDate());
 
-    // Hóa đơn sắp tới (Hướng 1): Chỉ đếm các khoản định kỳ đang active,
-    // chưa thanh toán trong tháng hiện tại, và đến hạn trong tháng này (hoặc quá hạn / sắp tới hạn trong 7 ngày tới)
-    const upcomingCount = (installments || []).filter((item) => {
-      if (item.active === false || isInstallmentEnded(item) || isRecurringIncome(item)) return false;
-
-      // 1. Đã thanh toán trong tháng hiện tại chưa
-      const isPaidInMonth = Array.isArray(item.history) && item.history.some(
-        (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthPrefix)
-      );
-      if (isPaidInMonth) return false;
-
-      // 2. Kiểm tra hạn thanh toán: đến hạn trong tháng này (hoặc quá hạn) hoặc sắp tới hạn trong 7 ngày tới
-      const due = getDueStatus(item.nextDueDate);
-      const dueMonth = item.nextDueDate ? String(item.nextDueDate).slice(0, 7) : '';
-      const isDueThisMonth = dueMonth ? dueMonth <= currentMonthPrefix : true;
-
-      return isDueThisMonth || due.isSoon;
-    }).length;
-
-    const jCount = (jars || []).length;
-
     return {
       monthlyStats: stats,
-      availableToSpend: ats,
       categoryStatusList: catList,
       hasBudgets: hasB,
       hasTransactions: hasT,
@@ -122,17 +90,13 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
       dangerCategory: dangerCat,
       warningCategory: warningCat,
       daysLeft: dLeft,
-      upcomingBillsCount: upcomingCount,
-      jarsCount: jCount
+      overCount: catList.filter((c) => c.percent >= 100).length,
+      jarsCount: (jars || []).length
     };
-  }, [transactions, budgets, jars, installments, wallets, currentMonthPrefix]);
+  }, [transactions, budgets, jars, currentMonthPrefix]);
 
   const handleGoToBudgets = () => {
     navigateTo('plan', 'budgets');
-  };
-
-  const handleGoToRecurring = () => {
-    navigateTo('plan', 'recurring');
   };
 
   const handleGoToJars = () => {
@@ -174,14 +138,13 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
       cardClass: 'is-warning'
     };
   } else if (dangerCategory) {
+    const others = overCount - 1;
     calloutConfig = {
-      title: `Cảnh báo: ${label(dangerCategory.category)} vượt ngân sách`,
-      body: `Đã chi ${formatCurrency(dangerCategory.spent)} / ${formatCurrency(dangerCategory.limit)} (vượt +${formatCurrency(dangerCategory.spent - dangerCategory.limit)}) so với hạn mức bạn tự đặt cho danh mục này. ${
-        availableToSpend > 0
-          ? `Bạn vẫn còn ${formatCurrency(availableToSpend)} khả dụng nói chung, nhưng nên điều chỉnh hạn mức hoặc giảm chi ở đây.`
-          : 'Số dư khả dụng đã hết; nên điều chỉnh các khoản chi tiếp theo.'
+      title: `${label(dangerCategory.category)} vượt hạn mức`,
+      body: `Đã chi ${formatCurrency(dangerCategory.spent)} / ${formatCurrency(dangerCategory.limit)} (vượt ${formatCurrency(dangerCategory.spent - dangerCategory.limit)}).${
+        others > 0 ? ` Còn ${others} danh mục khác cũng vượt.` : ''
       }`,
-      ctaText: 'Xem và điều chỉnh ngân sách',
+      ctaText: 'Điều chỉnh ngân sách',
       ctaAction: handleGoToBudgets,
       cardClass: 'is-danger'
     };
@@ -212,118 +175,142 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     };
   }
 
+  const callout = (
+    <div className={`home-callout-warning-card ${calloutConfig.cardClass}`}>
+      <h3 className="home-callout-title">
+        {calloutConfig.title}
+      </h3>
+      <p className="home-callout-body">
+        {calloutConfig.body}
+      </p>
+      <button
+        type="button"
+        className="home-callout-link-btn"
+        onClick={calloutConfig.ctaAction}
+      >
+        <span>{calloutConfig.ctaText}</span>
+        <span aria-hidden="true"> →</span>
+      </button>
+    </div>
+  );
+
   return (
     <aside className="home-sidebar-panel" aria-label="Bảng kế hoạch và cảnh báo">
-      {/* ── CARD 1: KẾ HOẠCH THÁNG NÀY ── */}
+      {/* Alert first: on phones this sits right under the balance card. */}
+      {callout}
+
       <div className="home-plan-card">
         <h3 className="home-plan-card-title">Kế hoạch tháng này</h3>
-        
-        <div className="home-plan-items-list">
-          {/* Empty state if no budgets and no jars */}
-          {topCategories.length === 0 && !topJar && (
-            <div className="home-plan-empty-state">
-              <span className="home-plan-empty-icon home-plan-empty-icon--layout" aria-hidden="true">
-                <TargetOutlineIcon size={24} color="currentColor" />
-              </span>
-              <p className="home-plan-empty-text">
-                Chưa có hạn mức ngân sách hoặc hũ tiết kiệm nào được thiết lập.
-              </p>
-              <button
-                type="button"
-                className="home-plan-empty-btn"
-                onClick={handleGoToBudgets}
-              >
-                + Thiết lập ngay
-              </button>
+
+        {topCategories.length === 0 && !topJar && (
+          <div className="home-plan-empty-state">
+            <span className="home-plan-empty-icon home-plan-empty-icon--layout" aria-hidden="true">
+              <TargetOutlineIcon size={24} color="currentColor" />
+            </span>
+            <p className="home-plan-empty-text">
+              Chưa có hạn mức ngân sách hoặc hũ tiết kiệm nào được thiết lập.
+            </p>
+            <button
+              type="button"
+              className="home-plan-empty-btn"
+              onClick={handleGoToBudgets}
+            >
+              + Thiết lập ngay
+            </button>
+          </div>
+        )}
+
+        {topCategories.length > 0 && (
+          <div className="home-plan-group">
+            <h4 className="home-plan-group-title">Ngân sách</h4>
+            <div className="home-plan-items-list">
+              {topCategories.map((item, idx) => {
+                const isWarning = item.percent >= 75 && item.percent < 100;
+                const isDanger = item.percent >= 100;
+                const barClass = isDanger ? 'is-danger' : isWarning ? 'is-warning' : 'is-healthy';
+
+                return (
+                  <div key={item.category || idx} className="home-plan-item">
+                    <div className="home-plan-item-header">
+                      <span className="home-plan-item-name">{label(item.category)}</span>
+                      <span className="home-plan-item-amounts">
+                        {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
+                      </span>
+                    </div>
+                    <div className="home-plan-progress-track">
+                      <div
+                        className={`home-plan-progress-fill ${barClass} home-plan-progress-fill--box`}
+                        style={{ '--home-plan-progress-fill-width': `${Math.min(100, Math.max(4, item.percent))}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Top Budget Categories */}
-          {topCategories.map((item, idx) => {
-            const isWarning = item.percent >= 75 && item.percent < 100;
-            const isDanger = item.percent >= 100;
-            const barClass = isDanger ? 'is-danger' : isWarning ? 'is-warning' : 'is-healthy';
-
-            return (
-              <div key={item.category || idx} className="home-plan-item">
+        {topJar && (
+          <div className="home-plan-group">
+            <h4 className="home-plan-group-title">Hũ</h4>
+            <div className="home-plan-items-list">
+              <div className="home-plan-item">
                 <div className="home-plan-item-header">
-                  <span className="home-plan-item-name">{label(item.category)}</span>
+                  <span className="home-plan-item-name">{topJar.name}</span>
                   <span className="home-plan-item-amounts">
-                    {formatCurrency(item.spent)} / {formatCurrency(item.limit)}
+                    {formatCurrency(topJar.current)} / {formatCurrency(topJar.target)}
                   </span>
                 </div>
                 <div className="home-plan-progress-track">
                   <div
-                    className={`home-plan-progress-fill ${barClass} home-plan-progress-fill--box`}
-                    style={{ '--home-plan-progress-fill-width': `${Math.min(100, Math.max(4, item.percent))}%` }}
+                    className="home-plan-progress-fill is-jar home-plan-progress-fill--box"
+                    style={{ '--home-plan-progress-fill-width': `${Math.min(100, Math.max(4, Math.round((Number(topJar.current) / Number(topJar.target)) * 100)))}%` }}
                   />
                 </div>
               </div>
-            );
-          })}
-
-          {/* Top Savings Jar */}
-          {topJar && (
-            <div className="home-plan-item">
-              <div className="home-plan-item-header">
-                <span className="home-plan-item-name">{topJar.name}</span>
-                <span className="home-plan-item-amounts">
-                  {formatCurrency(topJar.current)} / {formatCurrency(topJar.target)}
-                </span>
-              </div>
-              <div className="home-plan-progress-track">
-                <div
-                  className="home-plan-progress-fill is-jar home-plan-progress-fill--box"
-                  style={{ '--home-plan-progress-fill-width': `${Math.min(100, Math.max(4, Math.round((Number(topJar.current) / Number(topJar.target)) * 100)))}%` }}
-                />
-              </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── CARD 2: ATTENTION CALLOUT CARD ── */}
-      <div className={`home-callout-warning-card ${calloutConfig.cardClass}`}>
-        <h4 className="home-callout-title">
-          {calloutConfig.title}
-        </h4>
-        <p className="home-callout-body">
-          {calloutConfig.body}
-        </p>
-        <button
-          type="button"
-          className="home-callout-link-btn"
-          onClick={calloutConfig.ctaAction}
-        >
-          <span>{calloutConfig.ctaText}</span>
-          <span aria-hidden="true"> →</span>
-        </button>
-      </div>
-
-      {/* ── CARD 3: 2 MINI STAT CARDS (BOTTOM) ── */}
-      <div className="home-mini-stats-grid">
-        <div
-          className="home-mini-stat-card"
-          role="button"
-          tabIndex={0}
-          onClick={handleGoToRecurring}
-          onKeyDown={(e) => e.key === 'Enter' && handleGoToRecurring()}
-        >
-          <span className="home-mini-stat-label">Khoản định kỳ sắp tới</span>
-          <strong className="home-mini-stat-val">{upcomingBillsCount}</strong>
-        </div>
-
-        <div
-          className="home-mini-stat-card"
-          role="button"
-          tabIndex={0}
-          onClick={handleGoToJars}
-          onKeyDown={(e) => e.key === 'Enter' && handleGoToJars()}
-        >
-          <span className="home-mini-stat-label">Hũ tiết kiệm</span>
-          <strong className="home-mini-stat-val">{jarsCount}</strong>
-        </div>
+          </div>
+        )}
       </div>
     </aside>
+  );
+});
+
+/** Two shortcuts that used to be two count-only cards: recurring items due soon and savings jars. */
+export const HomeQuickLinks = React.memo(function HomeQuickLinks() {
+  const navigateTo = useSpendingStore((s) => s.navigateTo);
+  const jars = useJarStore((s) => s.jars);
+  const installments = useJarStore((s) => s.installments);
+  const currentMonthPrefix = getLocalMonthString();
+
+  const upcomingCount = React.useMemo(() => (installments || []).filter((item) => {
+    if (item.active === false || isInstallmentEnded(item) || isRecurringIncome(item)) return false;
+
+    // 1. Đã thanh toán trong tháng hiện tại chưa
+    const isPaidInMonth = Array.isArray(item.history) && item.history.some(
+      (h) => h && typeof h.paidDate === 'string' && h.paidDate.startsWith(currentMonthPrefix)
+    );
+    if (isPaidInMonth) return false;
+
+    // 2. Kiểm tra hạn thanh toán: đến hạn trong tháng này (hoặc quá hạn) hoặc sắp tới hạn trong 7 ngày tới
+    const due = getDueStatus(item.nextDueDate);
+    const dueMonth = item.nextDueDate ? String(item.nextDueDate).slice(0, 7) : '';
+    const isDueThisMonth = dueMonth ? dueMonth <= currentMonthPrefix : true;
+
+    return isDueThisMonth || due.isSoon;
+  }).length, [installments, currentMonthPrefix]);
+  const jarsCount = (jars || []).length;
+
+  return (
+    <div className="home-quick-links">
+      <button type="button" className="home-quick-link" onClick={() => navigateTo('plan', 'recurring')}>
+        <span>{upcomingCount > 0 ? `${upcomingCount} khoản định kỳ sắp đến hạn` : 'Không có khoản định kỳ sắp đến hạn'}</span>
+        <span className="home-quick-link-chevron" aria-hidden="true">›</span>
+      </button>
+      <button type="button" className="home-quick-link" onClick={() => navigateTo('jars', 'goals')}>
+        <span>{jarsCount > 0 ? `${jarsCount} hũ tiết kiệm` : 'Chưa có hũ tiết kiệm'}</span>
+        <span className="home-quick-link-chevron" aria-hidden="true">›</span>
+      </button>
+    </div>
   );
 });

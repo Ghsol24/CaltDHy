@@ -221,18 +221,29 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-  flex: 1;
-  min-width: 260px;
+  flex: 0 1 240px;
+  min-width: 170px;
+}
+
+/* Wide screens: the filters and the view switch sit inline; the "Lọc" button is phone-only. */
+.wallets-filter-panel {
+  display: contents;
+}
+
+.wallets-filter-toggle {
+  display: none;
+}
+
+.wallets-filter-panel > .wallets-view-toggle-bar {
+  margin-left: auto;
 }
 
 .wallets-search-box {
   position: relative;
   display: flex;
   align-items: center;
-  min-width: 170px;
+  min-width: 0;
   flex: 1;
-  max-width: 240px;
 }
 
 .wallets-search-box svg {
@@ -371,7 +382,6 @@
   color: var(--menu-item-selected-text);
   flex-shrink: 0;
 }
-
 
 /* Green Theme Overrides */
 
@@ -802,133 +812,7 @@
   margin: 4px 0;
 }
 
-.wallet-add-card-dashed {
-  background: var(--color-surface, var(--surface));
-  border: 2px dashed var(--color-border, #CBD5E1);
-  border-radius: var(--radius-md, 12px);
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.wallet-add-card-dashed:hover {
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 6%, transparent);
-}
-
-.add-dashed-icon-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border, #CBD5E1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted, #8A98A9);
-  flex-shrink: 0;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.wallet-add-card-dashed:hover .add-dashed-icon-circle {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.add-dashed-text-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.add-dashed-title {
-  font-size: var(--font-base);
-  font-weight: 700;
-  color: var(--color-text, var(--text-primary));
-}
-
-.add-dashed-subtitle {
-  font-size: var(--font-xs);
-  color: var(--color-text-muted, #8A98A9);
-}
-
-.add-dashed-chevron {
-  color: var(--color-text-muted, #8A98A9);
-  margin-left: auto;
-}
-
-/* ── 2.3. Thao tác nhanh (Quick Actions) ── */
-.wallet-quick-actions-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.wallet-quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-@media (max-width: 640px) {
-  .wallet-quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.wallet-quick-action-card {
-  background: var(--color-surface, var(--surface));
-  border: 1px solid var(--color-border, var(--border));
-  border-radius: var(--radius-md, 12px);
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-  box-shadow: var(--shadow-card);
-}
-
-.wallet-quick-action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--primary);
-}
-
-.quick-action-icon-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.quick-action-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.quick-action-title {
-  font-size: var(--font-sm);
-  font-weight: 700;
-  color: var(--color-text, var(--text-primary));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Cột Phải: Phân bổ số dư, Hoạt động gần đây, Mẹo tài chính ── */
+/* ── Cột Phải: Phân bổ số dư, Hoạt động gần đây ── */
 .wallets-side-card {
   background: var(--color-surface, var(--surface));
   border: 1px solid var(--color-border, var(--border));
@@ -974,7 +858,6 @@
 /* ============================================================
    WALLET BALANCE DONUT CHART & BREAKDOWN TABLE (Theme Optimized)
    ============================================================ */
-
 
 /* ── Card Styling ── */
 .wallets-donut-card {
@@ -1388,7 +1271,6 @@
   border-color: var(--wallet-tooltip-arrow-border);
 }
 
-
 /* Green Theme Overrides for Tooltip */
 
 .wallet-activity-tooltip-wrapper:hover .wallet-activity-tooltip-popup,
@@ -1462,65 +1344,6 @@
   flex-shrink: 0;
 }
 
-/* ── Wallet Finance Tip Card (Theme-Aware) ── */
-.wallet-finance-tip-card {
-  background: var(--finance-tip-bg);
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  border-radius: var(--radius-lg, 16px);
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-  border-color: var(--finance-tip-border);
-}
-
-.tip-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.tip-title-lead {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--finance-tip-title-text);
-  font-size: var(--font-sm);
-}
-
-.tip-bulb {
-  font-size: var(--font-md);
-}
-
-.tip-title {
-  font-weight: 700;
-}
-
-.tip-close-btn {
-  border: none;
-  background: transparent;
-  color: var(--finance-tip-close-text);
-  cursor: pointer;
-  font-size: var(--font-base);
-  padding: 2px;
-  line-height: 1;
-  border-radius: 4px;
-  transition: background var(--dur-fast) ease;
-}
-
-.tip-close-btn:hover {
-  background: var(--finance-tip-close-hover-bg);
-}
-
-.tip-body-content {
-  font-size: var(--font-xs);
-  color: var(--finance-tip-body-text);
-  margin: 0;
-  line-height: 1.4;
-}
-
 /* ── Màu nhấn của từng ví: nền/viền ô biểu tượng pha từ --wallet-accent (đợt 4: thay cho nối chuỗi hex) ──
    8.24% ≈ alpha 0x15, 18.82% ≈ alpha 0x30 như trước. */
 .wallet-grid-icon-box,
@@ -1571,7 +1394,6 @@
   border-top-color: var(--wallet-grid-card-border-top-color);
 }
 
-
 .wallet-badge-default-pill.wallet-badge-default-pill--layout {
   display: inline-flex;
   align-items: center;
@@ -1591,27 +1413,6 @@
   border-left-color: var(--wallet-h-card-border-left-color);
 }
 
-
-.quick-action-icon-box.quick-action-icon-box--tone {
-  background: #10B98118;
-  color: var(--color-success);
-}
-
-.quick-action-icon-box.quick-action-icon-box--tone2 {
-  background: #06B6D418;
-  color: #06B6D4;
-}
-
-.quick-action-icon-box.quick-action-icon-box--tone3 {
-  background: #F9731618;
-  color: #F97316;
-}
-
-.quick-action-icon-box.quick-action-icon-box--tone4 {
-  background: #8B5CF618;
-  color: #8B5CF6;
-}
-
 .donut-row-dot.donut-row-dot--tone {
   background-color: var(--donut-row-dot-background-color);
 }
@@ -1619,11 +1420,6 @@
 .activity-icon-badge.activity-icon-badge--tone {
   background: var(--activity-icon-badge-background);
   color: var(--activity-icon-badge-color);
-}
-
-.tip-bulb.tip-bulb--layout {
-  display: inline-flex;
-  align-items: center;
 }
 
 .wallet-archived-section.wallet-archived-section--box {

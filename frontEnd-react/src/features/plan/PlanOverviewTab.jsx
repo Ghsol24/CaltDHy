@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { CategoryMark } from '../../components/ui/CategoryMark';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
@@ -10,7 +11,7 @@ import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath'
 import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { CategoryOutlineIcon, RefreshOutlineIcon } from '../../utils/categoryIcons';
+import { RefreshOutlineIcon } from '../../utils/categoryIcons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { getPlanCopy } from './planCopy';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
@@ -25,7 +26,6 @@ export function PlanOverviewTab() {
   const { label, lang } = useTranslation();
   const copy = getPlanCopy(lang);
   const setPlanSubTab = useSpendingStore((s) => s.setPlanSubTab);
-  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const wallets = useWalletStore((state) => state.wallets);
   const isWalletsLoading = useWalletStore((state) => state.isLoading);
   const transactions = useTransactionStore((state) => state.transactions);
@@ -167,11 +167,10 @@ export function PlanOverviewTab() {
       .slice(0, 4);
   }, [activeInstallments, currentMonthStr]);
 
-  // Find top spending category for Insight recommendation
-  const highestSpendCategory = useMemo(() => {
-    if (!categoryBudgets || categoryBudgets.length === 0) return null;
-    const sorted = [...categoryBudgets].sort((a, b) => b.spent - a.spent);
-    return sorted[0]?.spent > 0 ? sorted[0] : null;
+  // "Gợi ý dành cho bạn" only when a category is over its limit, with that category's numbers.
+  const mostOverCategory = useMemo(() => {
+    const over = (categoryBudgets || []).filter((c) => c.hasLimit && c.spent > c.limit);
+    return over.sort((a, b) => (b.spent - b.limit) - (a.spent - a.limit))[0] || null;
   }, [categoryBudgets]);
   const hasPlanData = hasAnyBudgetLimit || activeInstallments.length > 0;
 
@@ -425,15 +424,18 @@ export function PlanOverviewTab() {
             )}
           </div>
 
-          <div className="column-card-footer">
-            <button
-              type="button"
-              className="column-footer-action-btn"
-              onClick={() => setIsWalletModalOpen(true)}
-            >
-              <span>+ Thêm ví / tài khoản</span>
-            </button>
-          </div>
+          {/* Add button only while the column is empty; "Lập kế hoạch" covers the rest. */}
+          {!(isWalletsLoading && wallets.length === 0) && topWallets.length === 0 && (
+            <div className="column-card-footer">
+              <button
+                type="button"
+                className="column-footer-action-btn"
+                onClick={() => setIsWalletModalOpen(true)}
+              >
+                <span>+ Thêm ví / tài khoản</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── CỘT 2: Ngân sách tháng [X] ── */}
@@ -476,7 +478,7 @@ export function PlanOverviewTab() {
                       <div className="budget-item-top-row">
                         <div className="budget-item-title-group">
                           <span className="budget-item-icon" aria-hidden="true">
-                            <CategoryOutlineIcon name={cat.name || cat.category} size={16} />
+                            <CategoryMark name={cat.name || cat.category} size={16} />
                           </span>
                           <div className="budget-item-names">
                             <strong className="budget-item-name" title={cat.category}>{label(cat.category)}</strong>
@@ -513,15 +515,18 @@ export function PlanOverviewTab() {
             )}
           </div>
 
-          <div className="column-card-footer">
-            <button
-              type="button"
-              className="column-footer-action-btn"
-              onClick={() => setIsBudgetModalOpen(true)}
-            >
-              <span>+ Thiết lập ngân sách</span>
-            </button>
-          </div>
+          {/* Add button only while the column is empty; "Lập kế hoạch" covers the rest. */}
+          {!isTxnsLoading && (topBudgetCategories.length === 0 || !hasAnyBudgetLimit) && (
+            <div className="column-card-footer">
+              <button
+                type="button"
+                className="column-footer-action-btn"
+                onClick={() => setIsBudgetModalOpen(true)}
+              >
+                <span>+ Thiết lập ngân sách</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── CỘT 3: Khoản định kỳ ── */}
@@ -602,42 +607,45 @@ export function PlanOverviewTab() {
             )}
           </div>
 
-          <div className="column-card-footer">
-            <button
-              type="button"
-              className="column-footer-action-btn"
-              onClick={() => setIsRecurringModalOpen(true)}
-            >
-              <span>+ Thêm khoản định kỳ</span>
-            </button>
-          </div>
+          {/* Add button only while the column is empty; "Lập kế hoạch" covers the rest. */}
+          {!(isJarsLoading && topInstallments.length === 0) && topInstallments.length === 0 && (
+            <div className="column-card-footer">
+              <button
+                type="button"
+                className="column-footer-action-btn"
+                onClick={() => setIsRecurringModalOpen(true)}
+              >
+                <span>+ Thêm khoản định kỳ</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── 5. SECTION 4: PHÂN TÍCH & GỢI Ý (INSIGHT BANNER AT BOTTOM) ── */}
-      <div className="plan-insight-banner-card">
-        <div className="insight-banner-left">
-          <div className="insight-3d-icon-box" aria-hidden="true">
-            <Icon name="barChartSimple" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* ── 5. GỢI Ý: chỉ khi có danh mục vượt hạn mức ── */}
+      {mostOverCategory && (
+        <div className="plan-insight-banner-card">
+          <div className="insight-banner-left">
+            <div className="insight-3d-icon-box" aria-hidden="true">
+              <Icon name="barChartSimple" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </div>
+            <div className="insight-banner-text">
+              <strong className="insight-banner-title">Gợi ý dành cho bạn</strong>
+              <p className="insight-banner-desc">
+                {`${label(mostOverCategory.category)} đã chi ${formatCurrency(mostOverCategory.spent)}, vượt hạn mức ${formatCurrency(mostOverCategory.spent - mostOverCategory.limit)}. Nếu mức chi này là bình thường, hãy nâng hạn mức cho sát thực tế; nếu không, xem lại các khoản chi ở danh mục này.`}
+              </p>
+            </div>
           </div>
-          <div className="insight-banner-text">
-            <strong className="insight-banner-title">Gợi ý dành cho bạn</strong>
-            <p className="insight-banner-desc">
-              {highestSpendCategory
-                ? `Bạn có thể tiết kiệm thêm ${formatCurrency(Math.round(highestSpendCategory.spent * 0.2))} trong tháng này nếu tối ưu 20% chi tiêu ở danh mục ${label(highestSpendCategory.category)}.`
-                : 'Chưa đủ dữ liệu chi tiêu để đưa ra gợi ý cá nhân hóa. Hãy ghi nhận giao dịch đầu tiên hoặc thiết lập ngân sách.'}
-            </p>
-          </div>
-        </div>
 
-        <button
-          type="button"
-          className="insight-banner-btn"
-          onClick={() => navigateTo('analytics', 'overview')}
-        >
-          <span>Xem phân tích chi tiết</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            className="insight-banner-btn"
+            onClick={() => setPlanSubTab('budgets')}
+          >
+            <span>Điều chỉnh ngân sách</span>
+          </button>
+        </div>
+      )}
 
       {/* ── 6. In-Place Modals for Quick Creation ── */}
       {isWalletModalOpen && (

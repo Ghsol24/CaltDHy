@@ -3,12 +3,13 @@ import '../../i18n/homeTranslations';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { calculateMonthlyStats } from '../../utils/financeMath';
-import { formatMonthYear, formatTime, getLocalMonthString } from '../../utils/formatters';
+import { formatMonthYear, getLocalMonthString } from '../../utils/formatters';
 import { AvailableToSpendCard } from './AvailableToSpendCard';
 import { RecentTransactions } from './RecentTransactions';
-import { AttentionPanel } from './AttentionPanel';
+import { AttentionPanel, HomeQuickLinks } from './AttentionPanel';
 import { ReminderInviteCard } from './ReminderInviteCard';
 import { useTranslation } from '../../i18n/useTranslation';
+import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
 
 const ForecastCard = lazy(() => import('../forecast/ForecastCard').then((module) => ({ default: module.ForecastCard })));
 
@@ -23,7 +24,7 @@ export function HomeView() {
   const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
 
   const currentMonthStr = getLocalMonthString();
-  // "Tháng 11" opens a sentence, "tháng 11" sits inside one; the year shows only when it is not this year.
+  // "Tháng 11" is the headline, "tháng 11" sits inside a sentence; the year shows only when it is not this year.
   const monthTitle = formatMonthYear(`${currentMonthStr}-01`, { omitCurrentYear: true });
   const monthInline = formatMonthYear(`${currentMonthStr}-01`, { omitCurrentYear: true, lowercase: true });
 
@@ -37,16 +38,17 @@ export function HomeView() {
     }
   }, [budgetMonth, currentMonthStr, fetchBudgets, selectedMonth, setSelectedMonth]);
 
-  // Check finance health & context
-  const { greeting, displayTimeText } = React.useMemo(() => {
+  // The headline is just the month; the state of the month is one chip next to it and the
+  // details live in the alert card, so "over the limit" is said once, not four times.
+  const { status, isFreshStart } = React.useMemo(() => {
     const monthlyStats = calculateMonthlyStats(transactions, currentMonthStr);
     const hasTransactions = (transactions || []).some(
       (t) => (t.date || '').slice(0, 7) === currentMonthStr
     );
-    
+
     let hasAnyBudget = false;
-    let hasCriticalBudget = false;
-    let hasWarningBudget = false;
+    let overCount = 0;
+    let nearCount = 0;
 
     if (budgets && typeof budgets === 'object') {
       Object.entries(budgets).forEach(([category, limit]) => {
@@ -54,46 +56,36 @@ export function HomeView() {
         if (numLimit > 0) {
           hasAnyBudget = true;
           const spent = monthlyStats.byCategory[category] || 0;
-          if (spent >= numLimit) {
-            hasCriticalBudget = true;
-          } else if (spent >= numLimit * 0.75) {
-            hasWarningBudget = true;
-          }
+          if (spent >= numLimit) overCount += 1;
+          else if (spent >= numLimit * 0.75) nearCount += 1;
         }
       });
     }
 
-    // Dynamic context-aware greeting
-    let greetingKey = 'home.greetingOkay';
-    if (!hasTransactions && !hasAnyBudget) {
-      greetingKey = 'home.greetingStart';
-    } else if (!hasTransactions && hasAnyBudget) {
-      greetingKey = 'home.greetingReady';
-    } else if (hasCriticalBudget) {
-      greetingKey = 'home.greetingOver';
-    } else if (hasWarningBudget) {
-      greetingKey = 'home.greetingWarning';
-    } else if (!hasAnyBudget && monthlyStats.expense > 0) {
-      greetingKey = 'home.greetingSummary';
-    } else if (monthlyStats.income > 0 && monthlyStats.income > monthlyStats.expense * 1.5) {
-      greetingKey = 'home.greetingGrowing';
-    } else if (hasAnyBudget) {
-      greetingKey = 'home.greetingControlled';
-    }
+    let chip = null;
+    if (hasTransactions && overCount > 0) chip = { tone: 'danger', text: t('home.statusOver', { count: overCount }) };
+    else if (hasTransactions && nearCount > 0) chip = { tone: 'warning', text: t('home.statusNear', { count: nearCount }) };
 
-    const now = new Date();
-    const displayTimeText = t('home.lastUpdated', { time: formatTime(now) });
-
-    return { greeting: t(greetingKey, { Month: monthTitle, month: monthInline }), displayTimeText };
-  }, [transactions, budgets, currentMonthStr, monthTitle, monthInline, t]);
+    return { status: chip, isFreshStart: !hasTransactions && !hasAnyBudget };
+  }, [transactions, budgets, currentMonthStr, t]);
 
   return (
     <div className="home-dashboard-v2-container">
       {/* ── TOP HEADER ROW ── */}
       <div className="home-dashboard-header">
         <div className="home-dashboard-title-box">
-          <h1 className="home-dashboard-greeting">{greeting}</h1>
-          <p className="home-dashboard-updated">{displayTimeText}</p>
+          <div className="home-dashboard-title-row">
+            <h1 className="home-dashboard-greeting">{monthTitle}</h1>
+            {status && (
+              <span className={`home-status-chip is-${status.tone}`}>
+                <AlertTriangleOutlineIcon size={14} />
+                {status.text}
+              </span>
+            )}
+          </div>
+          {isFreshStart && (
+            <p className="home-dashboard-updated">{t('home.greetingStart', { month: monthInline })}</p>
+          )}
         </div>
 
         <div className="page-header-actions">
@@ -110,20 +102,19 @@ export function HomeView() {
         </div>
       </div>
 
-      {/* ── 2-COLUMN RESPONSIVE GRID ── */}
+      {/* Desktop: two columns (grid areas in home.css). DOM order is the phone order:
+          balance, alerts and this month's plan, then forecast and recent activity, then shortcuts. */}
       <div className="home-dashboard-grid">
-        {/* Left Column: Hero Card + Recent Transactions */}
-        <div className="home-col-main">
+        <div className="home-area-hero">
           <AvailableToSpendCard />
+        </div>
+        <AttentionPanel />
+        <div className="home-col-main">
           <Suspense fallback={null}><ForecastCard /></Suspense>
           <ReminderInviteCard />
           <RecentTransactions />
         </div>
-
-        {/* Right Column: Sidebar Attention & Plan */}
-        <div className="home-col-side">
-          <AttentionPanel />
-        </div>
+        <HomeQuickLinks />
       </div>
     </div>
   );

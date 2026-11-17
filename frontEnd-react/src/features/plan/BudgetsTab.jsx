@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import { CategoryMark } from '../../components/ui/CategoryMark';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { BudgetEditModal } from './BudgetEditModal';
-import { formatCurrency, formatPercent, formatDate, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, formatPercent, formatDate, formatMonthYear, getLocalMonthString } from '../../utils/formatters';
 import { monthPeriod, shiftMonth } from '../../utils/budgetPeriod';
 import { buildBudgetModel } from '../../utils/budgetModel';
-import { CategoryOutlineIcon, BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
+import { BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { useBudgetCopy } from './budgetCopy';
 import { useTranslation } from '../../i18n/useTranslation';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
@@ -55,7 +56,6 @@ function roundDownToThousand(value) {
   return value >= 1000 ? Math.floor(value / 1000) * 1000 : Math.floor(value);
 }
 
-const capitalize = (text) => (text ? text.charAt(0).toLocaleUpperCase() + text.slice(1) : text);
 
 function ChevronIcon() {
   return (
@@ -73,10 +73,11 @@ function LimitedRow({ item, editable, period, onEdit, t }) {
   return (
     <Tag className={`bdash-row tone-${tone}${item.isOver ? ' is-over' : ''}`} {...interactiveProps}>
       <span className="bdash-row__icon" aria-hidden="true">
-        <CategoryOutlineIcon name={item.category} size={18} />
+        <CategoryMark name={item.category} size={18} />
       </span>
       <span className="bdash-row__name">
         <span className="bdash-row__name-text" title={label(item.category)}>{label(item.category)}</span>
+        {tone === 'warn' && period !== 'past' && <span className="bdash-row__soon">{t('budgets.soon')}</span>}
         {item.isOver && (
           <span
             className="bdash-row__alert"
@@ -127,7 +128,7 @@ function UnsetRow({ item, editable, onEdit, t }) {
   return (
     <Tag className="bdash-row bdash-row--unset" {...interactiveProps}>
       <span className="bdash-row__icon" aria-hidden="true">
-        <CategoryOutlineIcon name={item.category} size={18} />
+        <CategoryMark name={item.category} size={18} />
       </span>
       <span className="bdash-row__name">
         <span className="bdash-row__name-text" title={label(item.category)}>{label(item.category)}</span>
@@ -157,6 +158,7 @@ export function BudgetsTab() {
   const [shownMonth, setShownMonth] = useState(null);
   const [failedMonth, setFailedMonth] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [sortBy, setSortBy] = useState('percent');
   const contentRef = useRef(null);
   const animatedMonthRef = useRef(null);
   const swipeRef = useRef(null);
@@ -316,7 +318,7 @@ export function BudgetsTab() {
     }
 
     // How the month before ended; the line keeps its height while that month loads.
-    const previousLabel = capitalize(formatDate(monthStartDate(previousMonth), 'month'));
+    const previousLabel = formatMonthYear(monthStartDate(previousMonth), { omitCurrentYear: true });
     let previous = null;
     if (previousModel && !previousModel.hasAnyLimit) {
       previous = { tone: 'muted', text: t('budgets.prevNoLimit', { month: previousLabel }) };
@@ -326,10 +328,17 @@ export function BudgetsTab() {
       previous = { tone: 'ok', text: t('budgets.prevLeftover', { month: previousLabel, amount: formatCurrency(previousModel.remaining) }) };
     }
 
-    return { heroTone, label, chip, marker, stats, previous, previousLabel, remaining, usedRaw, usedPercent, totalSpent, totalLimit };
+    const previousInline = formatMonthYear(monthStartDate(previousMonth), { omitCurrentYear: true, lowercase: true });
+    return { heroTone, label, chip, marker, stats, previous, previousInline, remaining, usedRaw, usedPercent, totalSpent, totalLimit };
   })() : null;
 
-  const limited = model?.limited || [];
+  const { label: categoryLabel } = useTranslation();
+  const limited = useMemo(() => {
+    const rows = model?.limited || [];
+    if (sortBy === 'remaining') return [...rows].sort((a, b) => (a.limit - a.spent) - (b.limit - b.spent));
+    if (sortBy === 'name') return [...rows].sort((a, b) => categoryLabel(a.category).localeCompare(categoryLabel(b.category), 'vi'));
+    return rows; // the model already orders by % used
+  }, [model, sortBy, categoryLabel]);
   const unbudgeted = model?.unbudgeted || [];
   const showToday = period === 'current' && Boolean(hero);
 
@@ -458,8 +467,8 @@ export function BudgetsTab() {
                   <span className="bdash-hero__previous-text" title={hero.previous?.text}>{hero.previous?.text || ' '}</span>
                   <button type="button" className={`bdash-hero__previous-link${hero.previous ? '' : ' is-pending'}`}
                     onClick={() => setSelectedMonth(previousMonth)} aria-hidden={hero.previous ? undefined : true}
-                    tabIndex={hero.previous ? undefined : -1} aria-label={t('budgets.viewMonthAria', { month: hero.previousLabel })}>
-                    {t('budgets.viewMonth')}
+                    tabIndex={hero.previous ? undefined : -1}>
+                    {t('budgets.viewMonth', { month: hero.previousInline })}
                   </button>
                 </p>
 
@@ -486,16 +495,15 @@ export function BudgetsTab() {
             <section className="bdash-card" aria-labelledby="bdash-list-title">
               <div className="bdash-card__head">
                 <h3 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h3>
-                {model && limited.length > 0 && (
-                  <div className="bdash-card__meta">
-                    {showToday && (
-                      <span className="bdash-legend">
-                        <i aria-hidden="true" />
-                        {t('budgets.today')}
-                      </span>
-                    )}
-                    {limited.length > 1 && <span className="bdash-card__hint">{t('budgets.sortHint')}</span>}
-                  </div>
+                {model && limited.length > 1 && (
+                  <label className="bdash-sort">
+                    <span>{t('budgets.sortLabel')}</span>
+                    <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                      <option value="percent">{t('budgets.sortPercent')}</option>
+                      <option value="remaining">{t('budgets.sortRemaining')}</option>
+                      <option value="name">{t('budgets.sortName')}</option>
+                    </select>
+                  </label>
                 )}
               </div>
 
@@ -536,6 +544,13 @@ export function BudgetsTab() {
                         ))}
                       </ul>
                     </>
+                  )}
+
+                  {showToday && limited.length > 0 && (
+                    <p className="bdash-legend">
+                      <i aria-hidden="true" />
+                      {t('budgets.todayLegend', { day: timeline.day, days: timeline.daysInMonth })}
+                    </p>
                   )}
 
                   {unbudgeted.length > 0 && (

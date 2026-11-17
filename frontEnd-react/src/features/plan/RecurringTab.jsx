@@ -6,7 +6,7 @@ import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { RecurringModal } from './RecurringModal';
-import { formatCurrency, getDueStatus, getRecurringTier, formatDate, getLocalMonthString } from '../../utils/formatters';
+import { formatCurrency, getRecurringTier, getLocalMonthString } from '../../utils/formatters';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useTranslation } from '../../i18n/useTranslation';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
@@ -14,13 +14,12 @@ import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
 import { SORT_OPTIONS } from './recurring/recurringOptions';
-import { RecurringSummaryBox } from './recurring/RecurringSummaryBox';
 import { RecurringList } from './recurring/RecurringList';
 import { RecurringFilterBar } from './recurring/RecurringFilterBar';
 import { RecurringHeaderCard } from './recurring/RecurringHeaderCard';
 export function RecurringTab() {
   const { t } = useTranslation();
-  const { installments, payInstallment, toggleInstallment, deleteInstallment, updateInstallment, isLoading } = useJarStore();
+  const { installments, payInstallment, toggleInstallment, deleteInstallment, isLoading } = useJarStore();
   const { wallets } = useWalletStore();
   const { confirm } = useConfirmStore();
   const { addToast } = useToastStore();
@@ -29,7 +28,7 @@ export function RecurringTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
 
-  // Active filter tab: 'all' | 'soon' | 'today' | 'overdue'
+  // Active filter tab: 'all' | 'soon' | 'today' | 'overdue' | 'ended' ('all' leaves ended items out)
   const [filterTab, setFilterTab] = useState('all');
 
   // Sort: 'due-asc' | 'amount-desc' | 'name-asc'
@@ -43,9 +42,6 @@ export function RecurringTab() {
   // Nút ⋮ đã mở menu: nhận lại focus khi đóng hộp thoại xác nhận (mục menu đã biến mất).
   const menuTriggerRef = useRef(null);
 
-  // Wallet inline selector popover state
-  const [openWalletSelectorId, setOpenWalletSelectorId] = useState(null);
-  const walletRef = useRef(null);
   const [pendingActions, setPendingActions] = useState({});
   const pendingIdsRef = useRef(new Set());
 
@@ -74,9 +70,6 @@ export function RecurringTab() {
       if (sortRef.current && !sortRef.current.contains(e.target)) {
         setIsSortDropdownOpen(false);
       }
-      if (walletRef.current && !walletRef.current.contains(e.target)) {
-        setOpenWalletSelectorId(null);
-      }
     };
     document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
@@ -84,7 +77,6 @@ export function RecurringTab() {
 
   // Current month string
   const currentMonthStr = selectedMonth || getLocalMonthString();
-  const monthDisplayLabel = currentMonthStr ? formatDate(new Date(`${currentMonthStr}-01`), 'month') : 'Tháng này';
 
   // Active items
   const activeItems = useMemo(() => {
@@ -117,11 +109,13 @@ export function RecurringTab() {
       else if (tierInfo.tier === 'danger' || tierInfo.tier === 'warning') soon++;
     });
 
+    const ended = installments.filter((item) => isInstallmentEnded(item)).length;
     return {
-      all: installments.length,
+      all: installments.length - ended,
       soon,
       today,
-      overdue
+      overdue,
+      ended
     };
   }, [installments, activeItems, currentMonthStr]);
 
@@ -129,8 +123,12 @@ export function RecurringTab() {
   const displayItems = useMemo(() => {
     let list = [...installments];
 
-    // Filter
-    if (filterTab === 'soon') {
+    // Filter: ended items only show under their own chip (REC-05).
+    if (filterTab === 'ended') {
+      list = list.filter((item) => isInstallmentEnded(item));
+    } else if (filterTab === 'all') {
+      list = list.filter((item) => !isInstallmentEnded(item));
+    } else if (filterTab === 'soon') {
       list = list.filter((item) => {
         if (isInstallmentEnded(item)) return false;
         const tierInfo = getRecurringTier(item, currentMonthStr);
@@ -185,8 +183,6 @@ export function RecurringTab() {
   const monthlyBreakdown = useMemo(() => {
     let paidAmount = 0;
     let paidCount = 0;
-    let upcomingSoonAmount = 0;
-    let upcomingSoonCount = 0;
     let remainingAmount = 0;
     let remainingCount = 0;
 
@@ -220,25 +216,14 @@ export function RecurringTab() {
       const isDueThisMonth = dueMonth ? dueMonth <= targetMonth : true;
       if (!isDueThisMonth) return;
 
-      const amt = Number(item.amount) || 0;
-      const due = getDueStatus(item.nextDueDate);
-
-      // Cộng dồn vào các khoản còn lại trong tháng
-      remainingAmount += amt;
+      // Cộng dồn vào các khoản còn phải trả trong tháng
+      remainingAmount += Number(item.amount) || 0;
       remainingCount++;
-
-      // Nếu khoản này đến hạn hôm nay, sắp đến hạn trong 10 ngày hoặc đã quá hạn -> tính vào Sắp thanh toán
-      if (due.isOverdue || due.isToday || (due.diffDays !== null && due.diffDays >= 1 && due.diffDays <= 10)) {
-        upcomingSoonAmount += amt;
-        upcomingSoonCount++;
-      }
     });
 
     return {
       paidAmount,
       paidCount,
-      upcomingSoonAmount,
-      upcomingSoonCount,
       remainingAmount,
       remainingCount
     };
@@ -326,30 +311,6 @@ export function RecurringTab() {
     });
   };
 
-  // Switch wallet directly from custom inline selector
-  const handleAssignWallet = async (item, newWalletId) => {
-    setOpenWalletSelectorId(null);
-    if (String(item.walletId) === String(newWalletId) || !beginAction(item.id, 'wallet')) return;
-    try {
-      await updateInstallment(item.id, { walletId: newWalletId });
-      addToast({
-        type: 'success',
-        message: isRecurringIncome(item)
-          ? `Đã cập nhật ví nhận tiền cho "${item.name}".`
-          : `Đã cập nhật ví trừ tiền cho "${item.name}".`,
-        duration: 3000
-      });
-    } catch (err) {
-      addToast({
-        type: 'error',
-        message: getUserErrorMessage(err, 'error.save'),
-        duration: 3000
-      });
-    } finally {
-      finishAction(item.id);
-    }
-  };
-
   const currentSortLabel = SORT_OPTIONS.find((s) => s.value === sortBy)?.label || 'Sắp đến hạn gần nhất';
 
   return (
@@ -372,8 +333,8 @@ export function RecurringTab() {
           </button>
         </div>
       </div>
-      {/* ── 1. Top Header Full-Width Card (Chuẩn 100% Ảnh 1) ── */}
-      <RecurringHeaderCard activeItems={activeItems} counts={counts} installments={installments} monthlyEstimatedCost={monthlyEstimatedCost} />
+      {/* ── 1. Three numbers for the month (REC-01) ── */}
+      <RecurringHeaderCard monthlyBreakdown={monthlyBreakdown} monthlyEstimatedCost={monthlyEstimatedCost} />
 
       {/* ── 2. Filter Pills & Custom Themed Sort Dropdown ── */}
       <RecurringFilterBar counts={counts} currentSortLabel={currentSortLabel} filterTab={filterTab} isSortDropdownOpen={isSortDropdownOpen} setFilterTab={setFilterTab} setIsSortDropdownOpen={setIsSortDropdownOpen} setSortBy={setSortBy} sortBy={sortBy} sortRef={sortRef} />
@@ -400,10 +361,7 @@ export function RecurringTab() {
       )}
 
       {/* ── 5. List of Recurring Cards ── */}
-      {<RecurringList currentMonthStr={currentMonthStr} displayItems={displayItems} handleAssignWallet={handleAssignWallet} handleDelete={handleDelete} handleOpenEdit={handleOpenEdit} handlePay={handlePay} handleToggle={handleToggle} isLoading={isLoading} menuRef={menuRef} menuTriggerRef={menuTriggerRef} openActionMenuId={openActionMenuId} openWalletSelectorId={openWalletSelectorId} pendingActions={pendingActions} setOpenActionMenuId={setOpenActionMenuId} setOpenWalletSelectorId={setOpenWalletSelectorId} walletRef={walletRef} wallets={wallets} />}
-
-      {/* ── 6. Bottom Summary Box: Tổng quan khoản định kỳ (Không có nút Lịch) ── */}
-      <RecurringSummaryBox monthDisplayLabel={monthDisplayLabel} monthlyBreakdown={monthlyBreakdown} monthlyEstimatedCost={monthlyEstimatedCost} />
+      {<RecurringList currentMonthStr={currentMonthStr} displayItems={displayItems} handleDelete={handleDelete} handleOpenEdit={handleOpenEdit} handlePay={handlePay} handleToggle={handleToggle} isLoading={isLoading} menuRef={menuRef} menuTriggerRef={menuTriggerRef} openActionMenuId={openActionMenuId} pendingActions={pendingActions} setOpenActionMenuId={setOpenActionMenuId} wallets={wallets} />}
 
       {/* ── Modal Add / Edit Recurring Item ── */}
       {isModalOpen && (
