@@ -253,7 +253,7 @@
 @media (pointer: coarse) {
   :is(.analytics-segment-btn, .analytics-this-month-btn, .analytics-month-trigger, .transaction-filter-trigger, .transaction-filter-toggle, .transaction-applied-chip, .cashflow-text-button, .btn-report-action,
     .calt-custom-select-trigger, .jar-next-strip-switch, .jar-next-strip-cta,
-    .home-btn-add-txn, .home-txns-view-all-btn, .jars-hero-cta-btn, .bdash-sort select) {
+    .home-btn-add-txn, .home-txns-view-all-btn, .jars-hero-cta-btn) {
     min-height: 44px;
   }
 

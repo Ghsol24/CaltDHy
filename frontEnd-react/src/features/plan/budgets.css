@@ -677,26 +677,6 @@
   color: var(--color-text, #101B36);
 }
 
-.bdash-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--font-sm);
-  color: var(--color-text-secondary, #607086);
-}
-
-.bdash-sort select {
-  min-height: 32px;
-  padding: 0 8px;
-  border: 1px solid var(--color-border, #E3ECE7);
-  border-radius: var(--radius-sm, 8px);
-  background: var(--color-surface, #FFFFFF);
-  color: var(--color-text, #101B36);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 /* "Sắp hết": the warning tone is said in words, not only by the orange amount. */
 .bdash-row__soon {
   flex-shrink: 0;

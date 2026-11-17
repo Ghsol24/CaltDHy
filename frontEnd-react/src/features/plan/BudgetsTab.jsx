@@ -13,6 +13,7 @@ import { PageTitleIcon } from '../../components/ui/NavIcons';
 
 import { Icon } from '../../components/ui/AppIcons';
 import { Button } from '../../components/ui/Button';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 // Colour follows how much of a limit is used, never the category itself.
 const WARN_PERCENT = 80;
 // How far (in percentage points) spending may run ahead of the calendar before
@@ -496,14 +497,21 @@ export function BudgetsTab() {
               <div className="bdash-card__head">
                 <h3 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h3>
                 {model && limited.length > 1 && (
-                  <label className="bdash-sort">
-                    <span>{t('budgets.sortLabel')}</span>
-                    <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                      <option value="percent">{t('budgets.sortPercent')}</option>
-                      <option value="remaining">{t('budgets.sortRemaining')}</option>
-                      <option value="name">{t('budgets.sortName')}</option>
-                    </select>
-                  </label>
+                  <CustomSelect
+                    className="bdash-sort"
+                    prefixLabel={`${t('budgets.sortLabel')}:`}
+                    options={[
+                      { value: 'percent', label: t('budgets.sortPercent') },
+                      { value: 'remaining', label: t('budgets.sortRemaining') },
+                      { value: 'name', label: t('budgets.sortName') },
+                    ]}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    size="sm"
+                    variant="subtle"
+                    align="right"
+                    ariaLabel={t('budgets.sortLabel')}
+                  />
                 )}
               </div>
 
