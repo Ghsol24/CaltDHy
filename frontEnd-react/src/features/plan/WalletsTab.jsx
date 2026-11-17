@@ -11,12 +11,9 @@ import { ArchiveWalletModal } from './ArchiveWalletModal';
 import { EmptyState } from '../../components/ui/EmptyState';
 
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
-import { Icon } from '../../components/ui/AppIcons';
 import { WalletsArchivedSection } from './wallets/WalletsArchivedSection';
-import { WalletTipCard } from './wallets/WalletTipCard';
 import { WalletRecentActivityCard } from './wallets/WalletRecentActivityCard';
 import { WalletBalanceDistributionCard } from './wallets/WalletBalanceDistributionCard';
-import { WalletQuickActions } from './wallets/WalletQuickActions';
 import { WalletListView } from './wallets/WalletListView';
 import { WalletGridView } from './wallets/WalletGridView';
 import { WalletsFilterToolbar } from './wallets/WalletsFilterToolbar';
@@ -50,8 +47,11 @@ export function WalletsTab() {
   const [unarchivingId, setUnarchivingId] = useState(null);
   const unarchivingRef = useRef(null);
 
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' (Thẻ) | 'list' (Danh sách)
-  const [showTip, setShowTip] = useState(true);
+  // 'grid' (Thẻ) | 'list' (Danh sách). Phones start with the one-line list: six tall cards
+  // took more than a screen before the third wallet showed.
+  const [viewMode, setViewMode] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia?.('(max-width: 599px)').matches ? 'list' : 'grid'
+  ));
 
   // Bộ lọc và tìm kiếm danh sách ví
   const [searchQuery, setSearchQuery] = useState('');
@@ -223,38 +223,16 @@ export function WalletsTab() {
 
             {/* ── LIST VIEW (Dạng thẻ ngang khi chọn Danh sách) ── */}
             {<WalletListView deletingWalletId={deletingWalletId} filteredWallets={filteredWallets} handleArchive={handleArchive} handleDelete={handleDelete} handleEdit={handleEdit} handleTransfer={handleTransfer} menuRef={menuRef} menuTriggerRef={menuTriggerRef} openAddTxnModal={openAddTxnModal} openMenuWalletId={openMenuWalletId} setOpenMenuWalletId={setOpenMenuWalletId} viewMode={viewMode} walletTxCountMap={walletTxCountMap} />}
-
-            {/* Card "+ Thêm ví / tài khoản mới" Dạng Empty State Chuẩn Ảnh 3 */}
-            <button
-              type="button"
-              className="wallet-add-card-dashed"
-              onClick={handleCreateNew}
-            >
-              <div className="add-dashed-icon-circle">
-                <Icon name="plus" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </div>
-              <div className="add-dashed-text-group">
-                <strong className="add-dashed-title">Thêm ví / tài khoản mới</strong>
-                <span className="add-dashed-subtitle">Tạo Ví/Tài khoản mới</span>
-              </div>
-              <Icon name="chevronRight" className="add-dashed-chevron" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </button>
           </div>
-
-          {/* ── 2.3. Thao tác nhanh (Quick Actions) ── */}
-          <WalletQuickActions defaultWallet={defaultWallet} handleGoToFullHistory={handleGoToFullHistory} handleTransfer={handleTransfer} openAddTxnModal={openAddTxnModal} />
         </div>
 
-        {/* ── CỘT PHẢI (~38%): Phân bổ số dư + Hoạt động gần đây + Mẹo tài chính ── */}
+        {/* ── CỘT PHẢI (~38%): Phân bổ số dư + Hoạt động gần đây ── */}
         <div className="wallets-v2-col-right">
           {/* Card 1: Phân bổ số dư */}
           <WalletBalanceDistributionCard chartTotal={chartTotal} distDropdownRef={distDropdownRef} distributionMode={distributionMode} donutSlices={donutSlices} hoveredSliceId={hoveredSliceId} isDistDropdownOpen={isDistDropdownOpen} setDistributionMode={setDistributionMode} setHoveredSliceId={setHoveredSliceId} setIsDistDropdownOpen={setIsDistDropdownOpen} />
 
           {/* Card 2: Hoạt động gần đây (CHỈ GIỮA CÁC VÍ) */}
           <WalletRecentActivityCard defaultWallet={defaultWallet} handleGoToFullHistory={handleGoToFullHistory} walletActivities={walletActivities} walletMap={walletMap} />
-
-          {/* Card 3: Mẹo quản lý tài chính */}
-          {<WalletTipCard setShowTip={setShowTip} showTip={showTip} />}
         </div>
       </div>
 

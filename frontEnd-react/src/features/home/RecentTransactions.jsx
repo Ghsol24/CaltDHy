@@ -1,9 +1,10 @@
 import React from 'react';
+import { CategoryMark } from '../../components/ui/CategoryMark';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { CategoryOutlineIcon, ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
+import { ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
 import { isLockedTransaction, useDeleteTransaction } from '../transactions/useDeleteTransaction';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -104,7 +105,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                 >
                   {/* Left Icon */}
                   <div className={`home-txn-icon-box ${isIncome ? 'is-income' : ''} ${isTransfer ? 'is-transfer' : ''}`} aria-hidden="true">
-                    <CategoryOutlineIcon name={isTransfer ? 'transfer' : txn.category} size={18} />
+                    <CategoryMark name={isTransfer ? 'transfer' : txn.category} size={18} />
                   </div>
 
                   {/* Middle Content */}

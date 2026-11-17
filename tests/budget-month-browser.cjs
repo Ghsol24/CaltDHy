@@ -258,7 +258,10 @@ const digits = (text) => String(text || '').replace(/\D/g, '');
     await expect(page.locator('.bdash-chip')).toContainText('Dư 20%');
     await expect(page.locator('.bdash-hero__previous-text')).toContainText('chưa đặt hạn mức');
     await page.getByRole('button', { name: 'Về tháng này', exact: true }).click();
-    await expect(page.locator('.bdash-hero__previous-text')).toContainText(`${monthLabel(previous).replace(/^./, c => c.toUpperCase())} còn dư 20.000`);
+    // The previous month is named without its year when it is this year ("Tháng 10 còn dư …").
+    const previousName = previous.slice(0, 4) === String(new Date().getFullYear()) ? `Tháng ${Number(previous.slice(5))}` : monthLabel(previous);
+    await expect(page.locator('.bdash-hero__previous-text')).toContainText(`${previousName} còn dư 20.000`);
+    await expect(page.locator('.bdash-hero__previous-link')).toHaveText(`Xem ${previousName.replace(/^T/, 't')}`);
     await page.locator('.bdash-hero__previous-link').click();
     await expect(page.locator('.month-name-text')).toHaveText(monthLabel(previous));
   });

@@ -1,5 +1,6 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { CategoryMark } from '../../components/ui/CategoryMark';
 import { Button } from '../../components/ui/Button';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
@@ -10,7 +11,7 @@ import { Dialog } from '../../components/ui/Dialog';
 import { useBudgetCopy } from './budgetCopy';
 import { useTranslation } from '../../i18n/useTranslation';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
-import { CategoryOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
+import { AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/financeMath';
 import { formatCurrency, formatDate, formatInputNumber, formatPercent, getLocalMonthString } from '../../utils/formatters';
 import { BREAKPOINTS } from '../../hooks/useMediaQuery';
@@ -80,6 +81,8 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
   // Draft rows: { name, icon, input } — `input` is the formatted amount string.
   const [rows, setRows] = useState([]);
   const [baseline, setBaseline] = useState('');
+  // Total when the dialog opened, shown as "before → after" once it changes.
+  const [baselineTotal, setBaselineTotal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [deletingName, setDeletingName] = useState(null);
@@ -143,6 +146,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
 
       setRows(initialRows);
       setBaseline(serializeDraft(initialRows));
+      setBaselineTotal(initialRows.reduce((sum, row) => sum + (parseAmount(row.input) || 0), 0));
       setErrorMsg('');
       setDeletingName(null);
       setIsAdding(false);
@@ -404,6 +408,12 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                 </span>
                 <span className="blimit-summary__label is-end">{t('budgetEditor.availableLabel')}</span>
                 <strong className={`blimit-summary__total${limitedCount === 0 ? ' is-unset' : ''}`}>
+                  {totalLimit !== baselineTotal && baselineTotal > 0 && (
+                    <span className="blimit-summary__before">
+                      {formatCurrency(baselineTotal)}<span aria-hidden="true"> → </span>
+                      <span className="bdash-sr-only">{t('budgetEditor.totalChangedTo')}</span>
+                    </span>
+                  )}
                   {limitedCount === 0 ? t('budgetEditor.notSet') : formatCurrency(totalLimit)}
                 </strong>
                 <strong className="blimit-summary__available">{formatCurrency(availableToSpend)}</strong>
@@ -453,7 +463,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                 return (
                   <li key={row.name} className={`blimit-row${isDeleting ? ' is-confirming' : ''}`}>
                     <span className="blimit-row__icon" aria-hidden="true">
-                      <CategoryOutlineIcon name={row.name} size={18} />
+                      <CategoryMark name={row.name} size={18} />
                     </span>
 
                     <div className="blimit-row__text">

@@ -49,6 +49,17 @@ export function RecurringFilterBar({ counts, currentSortLabel, filterTab, isSort
           <span>Quá hạn</span>
           <span className="pill-count-tag">{counts.overdue}</span>
         </button>
+
+        <button
+          type="button"
+          className={`filter-pill-btn ${filterTab === 'ended' ? 'active' : ''}`}
+          onClick={() => setFilterTab('ended')}
+          role="tab"
+          aria-selected={filterTab === 'ended'}
+        >
+          <span>Đã kết thúc</span>
+          <span className="pill-count-tag">{counts.ended}</span>
+        </button>
       </div>
     
       {/* Custom Themed Sort Dropdown */}

@@ -111,8 +111,11 @@ test('legacy rendered labels and interpolated financial messages pass through th
     'Vượt hạn mức +50.000 ₫',
     'Đã chuyển 1.000.000 ₫ từ Tiền mặt sang Ngân hàng.',
     'Đã tạo hũ "Quỹ khẩn cấp" với mục tiêu 30.000.000 ₫.',
-    'Cảnh báo: Ăn uống vượt ngân sách',
-    'Đã chi 150.000 ₫ / 100.000 ₫ (vượt +50.000 ₫) so với hạn mức bạn tự đặt cho danh mục này. Bạn vẫn còn 20.000 ₫ khả dụng nói chung, nhưng nên điều chỉnh hạn mức hoặc giảm chi ở đây.',
+    'Ăn uống vượt hạn mức',
+    'Đã chi 150.000 ₫ / 100.000 ₫ (vượt 50.000 ₫).',
+    'Đã chi 150.000 ₫ / 100.000 ₫ (vượt 50.000 ₫). Còn 2 danh mục khác cũng vượt.',
+    '1 khoản định kỳ sắp đến hạn',
+    '2 hũ tiết kiệm',
   ];
   for (const value of dynamic) {
     assert.notEqual(translateLegacyText('en', value), value);

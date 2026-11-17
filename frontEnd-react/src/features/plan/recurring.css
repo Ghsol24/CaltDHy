@@ -283,7 +283,8 @@
   border-radius: var(--radius-lg, 16px);
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 48px minmax(200px, 1fr) 160px 185px 135px 36px;
+  /* logo | name + date line | amount | "Đã trả" (fixed, so amounts line up) | ⋮ */
+  grid-template-columns: 48px minmax(0, 1fr) auto 104px 36px;
   align-items: center;
   gap: 16px;
   box-shadow: var(--shadow-card);
@@ -294,10 +295,7 @@
   min-width: 0;
 }
 
-/* Wallet + due share a footer row on phones (plan-mobile.css); on wide screens the
-   wrapper disappears so both stay cells of the card grid. */
-.recurring-row-footer { display: contents; }
-.recurring-row-footer > * { min-width: 0; }
+/* Wallet + due share a footer row on phones (plan-mobile.css);
 .sort-compact-icon { display: none; }
 
 .recurring-row-card:hover {
@@ -412,15 +410,6 @@
   text-overflow: ellipsis;
 }
 
-.recurring-category-badge {
-  font-size: var(--font-xs);
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: var(--recurring-category-badge-bg);
-  color: var(--color-link);
-}
-
 .recurring-income-badge {
   font-size: var(--font-xs);
   font-weight: 600;
@@ -470,279 +459,6 @@
 
 .recurring-modal-type-toggle {
   margin-bottom: 4px;
-}
-
-.recurring-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: var(--font-xs);
-  color: var(--color-text-secondary, var(--text-secondary));
-  flex-wrap: wrap;
-}
-
-.recurring-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.recurring-meta-note {
-  color: var(--color-text-muted, #8A98A9);
-}
-
-/* Custom Themed Wallet Selector Column */
-.recurring-row-wallet-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: relative;
-  width: 100%;
-  min-width: 0;
-}
-
-.row-col-label {
-  font-size: var(--font-xs);
-  color: var(--color-text-muted, #8A98A9);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: 0.2px;
-}
-
-.recurring-wallet-custom-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.recurring-wallet-chip-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  background: var(--surface-subtle, #F8FAFC);
-  border: 1px solid var(--color-border, #E2E8F0);
-  border-radius: var(--radius-sm, 8px);
-  color: var(--color-text, var(--text-primary));
-  font-size: var(--font-xs);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-  overflow: hidden;
-}
-
-.recurring-wallet-chip-btn:hover {
-  border-color: var(--wallet-chip-hover-border);
-  background: var(--wallet-chip-hover-bg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.wallet-chip-icon {
-  font-size: var(--font-sm);
-  line-height: 1;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wallet-chip-name {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: left;
-}
-
-.recurring-wallet-chip-btn svg {
-  flex-shrink: 0;
-  opacity: 0.7;
-  transition: transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
-}
-
-.recurring-wallet-chip-btn:hover svg {
-  opacity: 1;
-}
-
-.recurring-wallet-chip-btn[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-  opacity: 1;
-}
-
-.recurring-wallet-popover-menu {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 4px);
-  width: 220px;
-  min-width: 100%;
-  background: var(--menu-bg);
-  border: 1px solid var(--menu-border);
-  border-radius: var(--radius-md, 10px);
-  box-shadow: var(--menu-shadow);
-  z-index: 100;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  pointer-events: auto;
-}
-
-.wallet-popover-header {
-  font-size: var(--font-xs);
-  font-weight: 700;
-  color: var(--color-text-secondary, var(--text-secondary));
-  padding: 4px 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  user-select: none;
-}
-
-.wallet-popover-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm, 6px);
-  cursor: pointer;
-  text-align: left;
-  transition: background var(--dur-fast) ease;
-  pointer-events: auto;
-  user-select: none;
-}
-
-.wallet-popover-item:hover {
-  background: var(--menu-item-hover-bg);
-}
-
-.wallet-popover-item.is-active {
-  background: var(--menu-item-selected-bg);
-}
-
-.wallet-popover-icon {
-  font-size: var(--font-lg);
-}
-
-.wallet-popover-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.wallet-popover-name {
-  font-size: var(--font-xs);
-  font-weight: 700;
-  color: var(--color-text, var(--text-primary));
-}
-
-.wallet-popover-bal {
-  font-size: var(--font-xs);
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted, #8A98A9);
-}
-
-.wallet-check-icon {
-  color: var(--color-link);
-}
-
-/* Due Countdown Column */
-.recurring-row-due-col {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-}
-
-.recurring-due-pill-box {
-  border-radius: 10px;
-  padding: 6px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.due-pill-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--font-xs);
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.due-pill-sub {
-  font-size: var(--font-xs);
-  color: var(--color-text-muted, #8A98A9);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.due-paid {
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border, #A7F3D0);
-  color: var(--pill-success-text);
-  border-color: var(--color-success-border);
-}
-
-.due-danger {
-  background: var(--pill-danger-bg);
-  border: 1px solid var(--color-danger-border, #FECACA);
-  color: var(--pill-danger-text);
-  border-color: var(--pill-danger-border);
-}
-
-.due-warning,
-.due-soon {
-  background: var(--pill-warning-bg);
-  border: 1px solid var(--color-warning-border, #FDE68A);
-  color: var(--pill-warning-text);
-}
-
-.due-normal {
-  background: var(--pill-neutral-bg);
-  border: 1px solid var(--color-border, #E2E8F0);
-  color: var(--color-neutral-text);
-  border-color: var(--color-neutral-border);
-}
-
-.due-ended {
-  background: var(--color-neutral-bg);
-  border: 1px solid var(--color-neutral-border);
-  color: var(--color-neutral-text);
-}
-
-.due-ended .due-pill-sub {
-  color: var(--color-neutral-text);
-}
-
-.due-paid .due-pill-sub {
-  color: var(--due-paid-sub-text);
-  opacity: 0.85;
-}
-
-.due-warning .due-pill-sub,
-.due-soon .due-pill-sub {
-  color: var(--due-warning-sub-text);
-  opacity: 0.85;
-}
-
-.due-danger .due-pill-sub {
-  color: var(--due-danger-sub-text);
-  opacity: 0.85;
 }
 
 /* Amount Column */
@@ -868,151 +584,11 @@
   margin: 2px 0;
 }
 
-/* 4. Bottom Summary Card (No Tips Box) */
-.recurring-summary-bottom-card {
-  background: var(--color-surface, var(--surface));
-  border: 1px solid var(--color-border, var(--border));
-  border-radius: var(--radius-lg, 16px);
-  padding: 18px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: var(--shadow-card);
-}
-
-.summary-bottom-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.summary-bottom-title-lead {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.summary-bottom-icon-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--summary-icon-bg);
-  color: var(--summary-icon-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.summary-bottom-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.summary-bottom-title {
-  font-size: var(--font-md);
-  font-weight: 700;
-  color: var(--color-text, var(--text-primary));
-  margin: 0;
-}
-
-.summary-bottom-subtitle {
-  font-size: var(--font-xs);
-  color: var(--color-text-secondary, var(--text-secondary));
-}
-
-.summary-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
-  align-items: center;
-  gap: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border, var(--border));
-}
-
-.summary-grid-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.grid-cell-label {
-  font-size: var(--font-xs);
-  font-weight: 500;
-  color: var(--color-text-secondary, var(--text-secondary, #64748B));
-}
-
-.grid-cell-num {
-  font-size: var(--font-xl);
-  font-weight: 800;
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text, var(--text-primary));
-}
-
-.grid-cell-num.text-brand { color: var(--color-success, #10B981); }
-.grid-cell-num.text-warning { color: var(--color-warning, #F59E0B); }
-.grid-cell-num.text-blue { color: var(--color-info); }
-.grid-cell-num.text-purple { color: var(--color-accent-soft); }
-
-
-/* 1. Dark Theme */
-
-
-.due-warning,
-.due-soon {
-  border-color: var(--pill-warning-border);
-}
-
-
-/* 3. Green Theme */
-
-
-.grid-cell-sub {
-  font-size: var(--font-xs);
-  color: var(--color-text-muted, #8A98A9);
-}
-
-.summary-grid-divider {
-  width: 1px;
-  height: 36px;
-  background: var(--color-border, var(--border));
-}
-
 /* Responsive for Recurring */
-@media (max-width: 1180px) and (min-width: 961px) {
-  .recurring-row-card {
-    /* Thẻ chỉ rộng 700px ở màn 1024px (có thanh rail): cho cột tên, cột ví và cột số tiền
-       co trong khoảng minmax để không tràn; cột hạn thanh toán giữ 175px để huy hiệu
-       không bị cắt. Từ ~1100px trở lên các cột đạt bề rộng như trước. */
-    grid-template-columns: 44px minmax(120px, 1fr) minmax(112px, 140px) 175px minmax(104px, 120px) 36px;
-    gap: 12px;
-    padding: 14px 16px;
-  }
-
-  /* "/ tháng" xuống dòng như bố cục ≤960px: cả cụm số tiền (~140px) rộng hơn cột 120px
-     nên trước đây lấn sang huy hiệu hạn thanh toán. */
-  .recurring-row-card .price-cycle {
-    display: block;
-  }
-}
-
 @media (max-width: 960px) {
   .recurring-top-bar-card {
     flex-direction: column;
     align-items: stretch;
-  }
-  .recurring-row-card {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .summary-bottom-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .summary-grid-divider {
-    display: none;
   }
 }
 
@@ -1025,4 +601,72 @@
   width: 24px;
   height: 24px;
   margin-bottom: 8px;
+}
+
+/* ── Row text (REC-06): name · category, then one date line ── */
+.recurring-title-row .recurring-main-name {
+  min-width: 0;
+}
+
+.recurring-category-text {
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, var(--text-secondary));
+  white-space: nowrap;
+}
+
+.recurring-category-text::before {
+  content: "· ";
+}
+
+.recurring-meta-line {
+  margin: 0;
+  font-size: var(--font-sm);
+  line-height: 1.45;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+/* Inline flow, so a long line wraps between words rather than leaving a lone "·". */
+.recurring-meta-sep {
+  margin: 0 5px;
+  color: var(--color-text-muted, #8A98A9);
+}
+
+.recurring-meta-line .btn-spinner {
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+/* "Còn 9 ngày" reads "còn 9 ngày" mid-line. */
+.recurring-status-text {
+  display: inline-block;
+  font-weight: 600;
+}
+
+.recurring-status-text::first-letter {
+  text-transform: lowercase;
+}
+
+.recurring-status-text.is-danger { color: var(--color-danger); }
+.recurring-status-text.is-warning { color: var(--color-warning); }
+.recurring-status-text.is-ok { color: var(--pill-success-text, var(--color-success)); }
+.recurring-status-text.is-normal,
+.recurring-status-text.is-muted { font-weight: 500; }
+
+.recurring-wallet-text {
+  overflow-wrap: anywhere;
+}
+
+.recurring-row-confirm-col {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.recurring-row-confirm-col .recurring-quick-confirm-btn {
+  margin-top: 0;
+}
+
+.banner-stat-sub {
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary, var(--text-secondary));
 }

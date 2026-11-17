@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useId, useState } from 'react';
 import { CloseOutlineIcon, Icon } from '../../../components/ui/AppIcons';
 import { WalletFilterDropdown } from './WalletFilterDropdown';
 
 export function WalletsFilterToolbar({ filterStatus, filterType, searchQuery, setFilterStatus, setFilterType, setSearchQuery, setViewMode, viewMode }) {
+  // Phones: search + one "Lọc" button; the two filters and the view switch open beneath it.
+  // Wider screens show everything inline and never render the button.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const panelId = useId();
+  const activeFilters = (filterType !== 'all' ? 1 : 0) + (filterStatus !== 'all' ? 1 : 0);
+
   return (
-    <div className="wallets-filter-toolbar">
+    <div className={`wallets-filter-toolbar${filtersOpen ? ' is-filters-open' : ''}`}>
       <div className="wallets-filter-inputs-group">
         {/* 1. Ô tìm kiếm theo tên ví */}
         <div className="wallets-search-box">
@@ -28,7 +34,21 @@ export function WalletsFilterToolbar({ filterStatus, filterType, searchQuery, se
             </button>
           )}
         </div>
-    
+
+        <button
+          type="button"
+          className={`wallets-filter-toggle${activeFilters ? ' has-active' : ''}`}
+          aria-expanded={filtersOpen}
+          aria-controls={panelId}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          <Icon name="filterLines" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+          <span>Lọc</span>
+          {activeFilters > 0 && <span className="wallets-filter-count">{activeFilters}</span>}
+        </button>
+      </div>
+
+      <div className="wallets-filter-panel" id={panelId}>
         {/* 2. Lọc theo loại ví */}
         <WalletFilterDropdown
           value={filterType}
@@ -42,7 +62,7 @@ export function WalletsFilterToolbar({ filterStatus, filterType, searchQuery, se
           ]}
           label="Lọc theo loại ví"
         />
-    
+
         {/* 3. Lọc theo trạng thái */}
         <WalletFilterDropdown
           value={filterStatus}
@@ -55,28 +75,28 @@ export function WalletsFilterToolbar({ filterStatus, filterType, searchQuery, se
           ]}
           label="Lọc theo trạng thái"
         />
-      </div>
-    
-      {/* 4. Nhóm nút chuyển chế độ hiển thị: Thẻ (Card View) & Danh sách (List View) */}
-      <div className="wallets-view-toggle-bar" role="group" aria-label="Kiểu hiển thị danh sách ví">
-        <button
-          type="button"
-          className={`view-toggle-btn ${viewMode === 'grid' ? 'is-active' : ''}`}
-          onClick={() => setViewMode('grid')}
-          title="Hiển thị dạng thẻ (lưới)"
-        >
-          <Icon name="gridSquare" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-          <span>Thẻ</span>
-        </button>
-        <button
-          type="button"
-          className={`view-toggle-btn ${viewMode === 'list' ? 'is-active' : ''}`}
-          onClick={() => setViewMode('list')}
-          title="Hiển thị dạng danh sách"
-        >
-          <Icon name="list" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <span>Danh sách</span>
-        </button>
+
+        {/* 4. Nhóm nút chuyển chế độ hiển thị: Thẻ (Card View) & Danh sách (List View) */}
+        <div className="wallets-view-toggle-bar" role="group" aria-label="Kiểu hiển thị danh sách ví">
+          <button
+            type="button"
+            className={`view-toggle-btn ${viewMode === 'grid' ? 'is-active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            title="Hiển thị dạng thẻ (lưới)"
+          >
+            <Icon name="gridSquare" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+            <span>Thẻ</span>
+          </button>
+          <button
+            type="button"
+            className={`view-toggle-btn ${viewMode === 'list' ? 'is-active' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="Hiển thị dạng danh sách"
+          >
+            <Icon name="list" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <span>Danh sách</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -278,7 +278,7 @@ export const translations = {
     
     
     
-    'home.lastUpdated': 'Hiển thị lúc {time}', 'home.addTransaction': 'Thêm giao dịch',
+    'home.addTransaction': 'Thêm giao dịch',
     'home.availableOverview': 'Tổng quan tiền khả dụng', 'home.available': 'Có thể chi',
     'home.availableHint': 'Số dư ví khả dụng; khoản định kỳ chưa trả chưa được trừ trước.',
     'home.spentThisMonth': 'Đã chi tháng này', 'home.incomeThisMonth': 'Thu nhập tháng này',
@@ -569,7 +569,7 @@ export const translations = {
     
     
     
-    'home.lastUpdated': 'Shown at {time}', 'home.addTransaction': 'Add transaction',
+    'home.addTransaction': 'Add transaction',
     'home.availableOverview': 'Available-to-spend overview', 'home.available': 'Available to spend',
     'home.availableHint': 'Eligible wallet balances; unpaid recurring payments are not deducted in advance.',
     'home.spentThisMonth': 'Spent this month', 'home.incomeThisMonth': 'Income this month',
@@ -844,7 +844,7 @@ export const translations = {
     'common.closeWindow': '关闭窗口',
     
     
-    'home.lastUpdated': '显示于 {time}', 'home.addTransaction': '添加交易',
+    'home.addTransaction': '添加交易',
     'home.availableOverview': '可支配金额总览', 'home.available': '剩余可支配金额',
     'home.availableHint': '可用钱包余额，未付账单不会提前扣除。',
     'home.spentThisMonth': '本月已支出', 'home.incomeThisMonth': '本月收入',

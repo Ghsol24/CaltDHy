@@ -1,7 +1,7 @@
 export const CYCLE_SUFFIXES = {
-  monthly: '/ tháng',
-  quarterly: '/ quý',
-  yearly: '/ năm'
+  monthly: '/tháng',
+  quarterly: '/quý',
+  yearly: '/năm'
 };
 
 export const SORT_OPTIONS = [

@@ -9,7 +9,7 @@ import { estimateJarCompletion, forecastMonthEnd } from '../../utils/forecast';
 import { getForecastCopy } from './forecastCopy';
 import './forecast.css';
 
-/** Home card: projected month-end balance, savings rate, items still due and jar goal dates. */
+/** Home card: projected month-end balance, savings rate (or overspend), items still due; jar goal dates folded away. */
 export function ForecastCard() {
   const { lang } = useTranslation();
   const copy = getForecastCopy(lang);
@@ -31,6 +31,9 @@ export function ForecastCard() {
   const goals = useMemo(() => jars.filter((jar) => jar.target > 0)
     .map((jar) => ({ jar, estimate: estimateJarCompletion(jar) })).filter(({ estimate }) => !estimate.done).slice(0, 3), [jars]);
   const showDate = (iso) => formatDate(iso, 'short', { locale: lang });
+  // Spending above income reads better as an amount than as a large negative savings rate.
+  const overspent = forecast.expense > forecast.income ? forecast.expense - forecast.income : 0;
+  const nextDue = forecast.upcoming[0];
 
   return <section className="forecast-card" aria-labelledby="forecast-title">
     <h2 id="forecast-title">{copy.title}</h2>
@@ -41,27 +44,25 @@ export function ForecastCard() {
         <small>{!forecast.hasData ? copy.noData : forecast.remainingDays === 0 ? copy.lastDay
           : forecast.projectedBalance < 0 ? copy.negative : copy.projectedHint(formatCurrency(forecast.dailyPace), forecast.remainingDays)}</small>
       </div>
-      <div className="forecast-stat">
+      {overspent > 0 ? <div className="forecast-stat">
+        <span>{copy.overspent}</span>
+        <strong className="is-negative">{formatCurrency(overspent)}</strong>
+        <small>{forecast.income > 0 ? copy.savingsHint(formatCurrency(forecast.income), formatCurrency(forecast.expense)) : copy.savingsNoIncome}</small>
+      </div> : <div className="forecast-stat">
         <span>{copy.savingsRate}</span>
-        <strong className={forecast.savingsRate !== null && forecast.savingsRate < 0 ? 'is-negative' : ''}>
-          {forecast.savingsRate === null ? '—' : `${forecast.savingsRate}%`}</strong>
+        <strong>{forecast.savingsRate === null ? '—' : `${forecast.savingsRate}%`}</strong>
         <small>{forecast.savingsRate === null ? copy.savingsNoIncome
           : copy.savingsHint(formatCurrency(forecast.income), formatCurrency(forecast.expense))}</small>
-      </div>
+      </div>}
       <div className="forecast-stat">
         <span>{copy.upcoming}</span>
-        <strong>{forecast.upcoming.length ? formatCurrency(forecast.upcomingExpense - forecast.upcomingIncome) : '—'}</strong>
-        <small>{forecast.upcoming.length ? copy.upcomingCount(forecast.upcoming.length) : copy.upcomingNone}</small>
+        <strong>{nextDue ? formatCurrency(forecast.upcomingExpense - forecast.upcomingIncome) : '—'}</strong>
+        <small>{!nextDue ? copy.upcomingNone : forecast.upcoming.length === 1 ? `${showDate(nextDue.date)} · ${nextDue.name}`
+          : copy.upcomingMany(forecast.upcoming.length, showDate(nextDue.date))}</small>
       </div>
     </div>
-    {forecast.upcoming.length > 0 && <ul className="forecast-list">
-      {forecast.upcoming.slice(0, 4).map((item) => <li key={item.id}>
-        <time dateTime={item.date}>{showDate(item.date)}</time><span>{item.name}</span>
-        <strong>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount)}</strong>
-      </li>)}
-    </ul>}
-    {goals.length > 0 && <div className="forecast-goals">
-      <h3>{copy.goals}</h3>
+    {goals.length > 0 && <details className="forecast-goals">
+      <summary>{copy.goalsShow}<span className="forecast-goals-chevron" aria-hidden="true">›</span></summary>
       <ul className="forecast-list">
         {goals.map(({ jar, estimate }) => <li key={jar.id}>
           <span className="forecast-goal-name">{jar.name}</span>
@@ -71,7 +72,7 @@ export function ForecastCard() {
           </span>
         </li>)}
       </ul>
-    </div>}
+    </details>}
     {expectedDays.length > 0 && <p className="forecast-note">{copy.expectedNote}</p>}
   </section>;
 }

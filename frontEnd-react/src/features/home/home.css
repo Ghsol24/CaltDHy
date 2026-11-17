@@ -34,6 +34,39 @@
   gap: 4px;
 }
 
+.home-dashboard-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+/* One chip states the month's condition; the alert card holds the details. */
+.home-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.home-status-chip.is-danger {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+}
+
+.home-status-chip.is-warning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
 .home-dashboard-greeting {
   font-family: var(--font-display, var(--font-sans));
   font-size: clamp(26px, 2.5vw, 32px);
@@ -81,17 +114,34 @@
   line-height: 1;
 }
 
-/* ── 2-Column Grid (Full-Width Responsive) ── */
+/* ── 2-Column Grid (Full-Width Responsive) ──
+   DOM order is the phone order (balance → alerts/plan → forecast/recent → shortcuts).
+   On desktop the alerts column spans the first two rows, so the left column starts right
+   under the balance card and the shortcuts sit right under the alerts column; the last
+   (flexible) row absorbs the long left column. */
 .home-dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.85fr);
-  gap: 28px;
+  grid-template-rows: auto auto auto 1fr;
+  grid-template-areas:
+    "hero side"
+    "main side"
+    "main links"
+    "main .";
+  gap: 24px 28px;
   align-items: start;
 }
 
+.home-area-hero { grid-area: hero; min-width: 0; }
+.home-dashboard-grid > .home-sidebar-panel { grid-area: side; min-width: 0; }
+.home-dashboard-grid > .home-col-main { grid-area: main; }
+.home-dashboard-grid > .home-quick-links { grid-area: links; }
+
 @media (max-width: 1024px) {
   .home-dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: "hero" "side" "main" "links";
     gap: 24px;
   }
 }
@@ -499,6 +549,25 @@
   margin: 0;
 }
 
+.home-plan-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-plan-group + .home-plan-group {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border, var(--border));
+}
+
+.home-plan-group-title {
+  margin: 0;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
 .home-plan-items-list {
   display: flex;
   flex-direction: column;
@@ -661,45 +730,48 @@
   text-decoration: underline;
 }
 
-/* Card 3: 2 Mini Stat Cards */
-.home-mini-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.home-mini-stat-card {
+/* Shortcuts: recurring items due soon, savings jars (one card, one row each) */
+.home-quick-links {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface, var(--surface));
   border: 1px solid var(--color-border, var(--border));
   border-radius: 18px;
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--dur-quick) ease, box-shadow var(--dur-quick) ease, border-color var(--dur-quick) ease;
+  overflow: hidden;
 }
 
-.home-mini-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-brand-700, #B7E4C7);
-}
-
-.home-mini-stat-label {
-  font-size: var(--font-sm);
-  color: var(--color-text-secondary, var(--text-secondary));
-  font-weight: 500;
-}
-
-.home-mini-stat-val {
-  font-size: var(--font-5xl);
-  font-weight: 800;
+.home-quick-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 20px;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: var(--font-base);
+  font-weight: 600;
   color: var(--color-text, var(--text-primary));
-  line-height: 1.1;
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-quick) ease;
+}
+
+.home-quick-link + .home-quick-link {
+  border-top: 1px solid var(--color-border, var(--border));
+}
+
+.home-quick-link:hover {
+  background: var(--color-surface-muted, var(--control-muted-bg));
+}
+
+.home-quick-link-chevron {
+  flex: 0 0 auto;
+  font-size: var(--font-xl);
+  line-height: 1;
+  color: var(--color-text-secondary, var(--text-secondary));
 }
 
 /* ── Chuyển từ inline style của AttentionPanel.jsx (đợt 4) ── */

@@ -331,7 +331,8 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           await page.goto('/spending/plan/' + tab);
           await expect(page.locator('.plan-feature-view')).toBeVisible();
           // The route shell can render before the fixture data reaches its store.
-          if (tab === 'wallets') await expect(page.locator('.wallet-grid-name').filter({ hasText: wallet.name })).toBeVisible();
+          // Phones open the one-line list view by default (UX WAL-08); wider screens show cards.
+          if (tab === 'wallets') await expect(page.locator('.wallet-h-name, .wallet-grid-name').filter({ hasText: wallet.name })).toBeVisible();
           if (tab === 'budgets') await expect(page.locator('.bdash-row.is-over')).toHaveCount(2);
           if (tab === 'recurring') await expect(page.locator('.recurring-row-card')).toHaveCount(1);
           await fit(page.locator('.plan-feature-view'), `${theme}/${width} ${tab}`);
@@ -368,7 +369,8 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           assert.ok(layout.top >= 0 && layout.height >= 44);
           if (fraction > 0) assert.ok(layout.scrollY > 0, 'The long page actually scrolled');
           if (position === 'bottom') {
-            const contentBottom = await page.locator('.plan-insight-banner-card').evaluate(node => node.getBoundingClientRect().bottom);
+            // The tip card shows only when a category is over its limit (UX PLAN-07), so measure the last card.
+            const contentBottom = await page.locator('.plan-overview-container > :last-child').evaluate(node => node.getBoundingClientRect().bottom);
             assert.ok(contentBottom <= layout.top, 'The last planning card can scroll clear of navigation');
           }
           layouts.push({ theme, width, position, ...layout });

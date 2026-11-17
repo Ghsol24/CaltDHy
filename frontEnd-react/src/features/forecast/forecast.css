@@ -19,7 +19,14 @@
 .forecast-list li > span.is-late { color: var(--color-warning); }
 .forecast-list strong { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 .forecast-goals { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--color-border); }
-.forecast-goals h3 { margin: 0; font-size: var(--font-sm); font-weight: 700; }
+.forecast-goals > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px;
+  list-style: none; cursor: pointer; color: var(--color-link); font-size: var(--font-sm); font-weight: 600;
+}
+.forecast-goals > summary::-webkit-details-marker { display: none; }
+.forecast-goals > summary:hover { text-decoration: underline; }
+.forecast-goals-chevron { font-size: var(--font-lg); line-height: 1; transition: transform var(--dur-quick) ease; }
+.forecast-goals[open] .forecast-goals-chevron { transform: rotate(90deg); }
 .forecast-note { margin: 0; color: var(--color-text-secondary); font-size: var(--font-xs); }
 
 .budget-adv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
