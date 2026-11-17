@@ -1,0 +1,173 @@
+/* Shared transaction row (History + Home). Two lines on every width. */
+.txn-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 64px;
+  padding: 11px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border, var(--border));
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  transition: background var(--dur-quick) ease;
+}
+.txn-item:last-child { border-bottom: 0; }
+.txn-item.is-clickable { cursor: pointer; }
+
+/* Touch screens keep :hover after a tap; hover styling is for pointers only. */
+@media (hover: hover) {
+  .txn-item.is-clickable:hover { background: var(--color-brand-50, var(--surface-subtle)); }
+}
+.txn-item.is-clickable:active { background: var(--color-brand-50, var(--surface-subtle)); }
+
+.txn-item__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+.txn-item__icon.is-income { background: var(--color-brand-100, rgba(0, 204, 119, 0.15)); color: var(--color-success); }
+.txn-item__icon.is-transfer { background: var(--color-info-bg, rgba(37, 99, 235, 0.12)); }
+
+.txn-item__main { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.txn-item__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text, var(--text-primary));
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+.txn-item__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: var(--font-xs);
+}
+.txn-item__note { color: var(--color-text-muted); font-size: var(--font-xs); }
+
+.txn-item__side { display: flex; flex: 0 0 auto; align-items: center; gap: 10px; }
+.txn-item__amount {
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-md);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-align: right;
+  white-space: nowrap;
+}
+.txn-item__amount.is-income { color: var(--color-success); }
+/* Ordinary spending reads in the text colour with its "−" sign; red is kept for
+   over-limit / overdue / negative balances (X-07). */
+.txn-item__amount.is-expense { color: var(--color-text, var(--text-primary)); }
+.txn-item__amount.is-transfer { color: #2563EB; }
+.txn-item__amount small { margin-right: 4px; color: var(--color-text-muted); font-size: var(--font-xs); font-weight: 600; }
+
+.txn-item__actions { display: flex; align-items: center; gap: 4px; }
+/* Visually hidden, never display:none: Chrome checks the next Tab stop after the row has lost
+   focus, so display:none buttons could not be reached by keyboard. Kept in the tree, screen
+   readers on phones can reach them too. */
+.txn-item__actions:not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (hover: hover) {
+  .txn-item:hover .txn-item__actions {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+.txn-item:focus-visible .txn-item__actions {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+.txn-item__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 6px;
+  background: var(--color-surface, var(--surface));
+  color: var(--color-text-secondary, var(--text-secondary));
+  cursor: pointer;
+  transition: background-color var(--dur-quick) ease, border-color var(--dur-quick) ease, color var(--dur-quick) ease;
+}
+.txn-item__action:hover { background: var(--color-brand-50, var(--surface-subtle)); color: var(--color-text, var(--text-primary)); }
+.txn-item__action--delete:hover {
+  background: var(--color-danger-50, #FEE2E2);
+  border-color: var(--color-danger, #FECACA);
+  color: var(--color-danger, #DC2626);
+}
+
+/* Rows made by Jars / recurring payments cannot be edited here: the label says why. */
+.txn-item__locked {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: 6px;
+  background: var(--color-surface-subtle, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: var(--font-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+}
+.txn-item:hover .txn-item__locked { display: inline-flex; }
+
+/* History: transactions grouped by day, the day header stays under the page header. */
+.txn-day { position: relative; }
+.txn-day + .txn-day { border-top: 1px solid var(--color-border, var(--border)); }
+.txn-day__header {
+  position: sticky;
+  top: 72px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--color-border, var(--border));
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+.txn-day__total { font-family: var(--font-money); font-variant-numeric: tabular-nums; color: var(--color-text); font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .txn-item { gap: 12px; padding: 10px 14px; }
+  .txn-item__icon { flex-basis: 38px; width: 38px; height: 38px; }
+  .txn-day__header { padding: 8px 14px; }
+}
+/* Under the sticky topbar + section tabs (900px and below), or under the tabs alone once the topbar scrolls away. */
+@media (max-width: 900px) {
+  .txn-day__header { top: 133px; }
+}
+@media (max-width: 768px) {
+  .txn-day__header { top: 61px; }
+}
+@media (prefers-reduced-motion: reduce) { .txn-item { transition: none; } }

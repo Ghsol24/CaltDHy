@@ -17,7 +17,7 @@ import { formatDisplayDate } from '../../utils/datePicker';
 import { getHistoryFilterCopy } from './historyFilterCopy';
 import { PageTitleIcon } from '../../components/ui/NavIcons';
 import { getTransactionExtrasCopy } from './transactionExtrasCopy';
-import { AmountRangeFilter, AmountRangeInputs, SavedFiltersMenu } from './HistoryAdvancedFilters';
+import { AmountRangeInputs, SavedFiltersBody } from './HistoryAdvancedFilters';
 import { useFinanceSettingsStore } from '../../stores/useFinanceSettingsStore';
 import { useToastStore } from '../../stores/useToastStore';
 
@@ -54,7 +54,6 @@ export function TransactionHistoryView() {
   const isCompact = useMediaQuery('(max-width: 640px)');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const searchRef = useRef(null);
-  const controlsRef = useRef(null);
   const transactions = useTransactionStore((state) => state.transactions);
   const loadError = useTransactionStore((state) => state.error);
   const reloadTransactions = useTransactionStore((state) => state.fetchTransactions);
@@ -170,29 +169,16 @@ export function TransactionHistoryView() {
   const changePeriod = (value) => { chooseDatePreset(value); if (value === 'all') dropParams('date', 'from', 'to'); };
   const changeRecurring = (checked) => { setExcludeRecurring(checked); if (!checked) dropParams('excludeRecurring'); };
 
-  // One chip per filter: the name while unused, the chosen value while filtering.
-  const filterChips = [
-    { id: 'type', active: type !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={type !== 'all'}
-      label={t('history.filterType')} value={type} onChange={changeType} options={options.type} /> },
-    { id: 'category', active: category !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={category !== 'all'}
-      label={t('history.filterCategory')} value={category} onChange={changeCategory} options={options.category} /> },
-    { id: 'wallet', active: walletId !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={walletId !== 'all'}
-      label={t('history.filterWallet')} value={walletId} onChange={setWalletId} options={options.wallet} /> },
-    { id: 'period', active: datePreset !== 'all', node: <TransactionFilterDropdown sheet={isCompact} active={datePreset !== 'all'}
-      label={t('history.filterPeriod')} value={datePreset} onChange={changePeriod} options={options.period}
-      valueText={periodText || undefined} /> },
-    { id: 'amount', active: Boolean(minAmount || maxAmount), node: <AmountRangeFilter copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} sheet={isCompact} /> },
-    { id: 'recurring', active: excludeRecurring, node: <label className={`transaction-history-checkbox${excludeRecurring ? ' is-active' : ''}`}>
-      <input type="checkbox" checked={excludeRecurring} onChange={(event) => changeRecurring(event.target.checked)} />
-      <Icon name="checkAlt" className="transaction-history-check" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      <span>{t('history.excludeRecurring')}</span>
-    </label> }
-  ];
-  // On phones the chip row scrolls sideways, so what is filtering comes first.
-  const orderedChips = isCompact
-    ? [...filterChips.filter((chip) => chip.active), ...filterChips.filter((chip) => !chip.active)]
-    : filterChips;
-  const activeChipKey = orderedChips.filter((chip) => chip.active).map((chip) => chip.id).join();
+  // The row keeps two quick filters (period, type); everything else lives in "Bộ lọc (n)" and, once
+  // applied, shows as a removable chip under the row.
+  const panelCount = [category !== 'all', walletId !== 'all', Boolean(minAmount || maxAmount), excludeRecurring].filter(Boolean).length;
+  const walletName = [...wallets, ...archivedWallets].find((wallet) => wallet.id === walletId)?.name || '';
+  const appliedChips = [
+    category !== 'all' && { id: 'category', text: chipCopy.chipCategory(label(category)), clear: () => changeCategory('all') },
+    walletId !== 'all' && { id: 'wallet', text: chipCopy.chipWallet(walletName), clear: () => setWalletId('all') },
+    Boolean(minAmount || maxAmount) && { id: 'amount', text: extrasCopy.amountChip(minAmount ? formatCurrency(minAmount) : '', maxAmount ? formatCurrency(maxAmount) : ''), clear: () => changeAmount(null, null) },
+    excludeRecurring && { id: 'recurring', text: t('history.excludeRecurring'), clear: () => changeRecurring(false) },
+  ].filter(Boolean);
 
   const customDates = (idPrefix) => <div className="transaction-filter-custom-dates">
     <div className="transaction-filter-date-field">
@@ -204,11 +190,6 @@ export function TransactionHistoryView() {
       <CustomDatePicker id={`${idPrefix}-to`} value={endDate} min={startDate || undefined} onChange={setEndDate} />
     </div>
   </div>;
-
-  // Filtering moves a chip to the front; bring the row back so it (and "Xóa bộ lọc") is in view.
-  useEffect(() => {
-    if (isCompact) controlsRef.current?.scrollTo?.({ left: 0 });
-  }, [isCompact, activeChipKey]);
 
   const manageSource = (source) => navigateTo(source === 'jars' ? 'jars' : 'plan',
     source === 'jars' ? 'history' : 'recurring');
@@ -222,7 +203,7 @@ export function TransactionHistoryView() {
       <div className="page-header-actions page-header-actions--end"><span className="page-guide-slot" data-guide-slot="" /></div>
     </header>
 
-    <div className={`transaction-filter-bar${isCompact ? ' is-compact' : ''}`}>
+    <div className="transaction-filter-bar">
       <label className="transaction-history-search">
         <span className="transaction-filter-sr-only">{t('common.search')}</span>
         <span className="transaction-history-search-control">
@@ -231,45 +212,56 @@ export function TransactionHistoryView() {
             placeholder={t('history.searchPlaceholder')} />
         </span>
       </label>
-      {isCompact && <button type="button" className={`transaction-filter-toggle${filterCount ? ' has-filters' : ''}`}
-        aria-haspopup="dialog" aria-expanded={filtersOpen} aria-label={filterCount ? `${chipCopy.filters} (${filterCount})` : chipCopy.filters}
-        onClick={() => setFiltersOpen(true)}>
-        <Icon name="filterLines" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-        {filterCount > 0 && <span className="transaction-filter-count" aria-hidden="true">{filterCount}</span>}
-      </button>}
-      <div ref={controlsRef} className="transaction-filter-controls" role="group" aria-label={chipCopy.activeFilters}>
-        {hasActiveFilters && <button type="button" className="transaction-history-clear"
-          onClick={() => { clearFilters(); requestAnimationFrame(() => searchRef.current?.focus()); }}>
-          <Icon name="closeAlt" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />{t('history.clear')}{filterCount > 0 && ` (${filterCount})`}
-        </button>}
-        {orderedChips.map((chip) => <React.Fragment key={chip.id}>{chip.node}</React.Fragment>)}
-        <SavedFiltersMenu copy={extrasCopy} filters={savedFilters} canSave={hasActiveFilters && !invalidRange && !invalidAmount}
-          onApply={applySaved} onSave={saveCurrent} onDelete={deleteSaved} align="end" sheet={isCompact} />
+      <div className="transaction-filter-controls" role="group" aria-label={chipCopy.activeFilters}>
+        <TransactionFilterDropdown sheet={isCompact} active={datePreset !== 'all'} label={t('history.filterPeriod')}
+          value={datePreset} onChange={changePeriod} options={options.period} valueText={periodText || undefined} />
+        <TransactionFilterDropdown sheet={isCompact} active={type !== 'all'} label={t('history.filterType')}
+          value={type} onChange={changeType} options={options.type} />
+        <button type="button" className={`transaction-filter-toggle${panelCount ? ' has-filters' : ''}`}
+          aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}>
+          <Icon name="filterLines" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+          <span>{panelCount ? `${chipCopy.filters} (${panelCount})` : chipCopy.filters}</span>
+        </button>
       </div>
     </div>
 
+    {hasActiveFilters && <div className="transaction-applied-filters" role="group" aria-label={chipCopy.appliedFilters}>
+      {appliedChips.map((chip) => <button type="button" key={chip.id} className="transaction-applied-chip"
+        aria-label={chipCopy.removeFilter(chip.text)} onClick={chip.clear}>
+        <span>{chip.text}</span>
+        <Icon name="closeAlt" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+      </button>)}
+      <button type="button" className="transaction-history-clear"
+        onClick={() => { clearFilters(); requestAnimationFrame(() => searchRef.current?.focus()); }}>
+        <Icon name="closeAlt" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />{t('history.clear')}{filterCount > 0 && ` (${filterCount})`}
+      </button>
+    </div>}
+
     {datePreset === 'custom' && !filtersOpen && customDates('history-date')}
 
-    {isCompact && <BottomSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title={chipCopy.filters}
+    <BottomSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title={chipCopy.filters}
       className="transaction-filter-full-sheet" testId="history-filter-sheet"
       footer={<>
         <button type="button" className="transaction-sheet-reset" onClick={clearFilters} disabled={!hasActiveFilters}>{chipCopy.reset}</button>
         <button type="button" className="transaction-sheet-apply" onClick={() => setFiltersOpen(false)}>{chipCopy.showResults(summary.count)}</button>
       </>}>
-      <FilterOptionGroup title={t('history.filterType')} options={options.type} value={type} onChange={changeType} />
-      <FilterOptionGroup title={t('history.filterWallet')} options={options.wallet} value={walletId} onChange={setWalletId} />
-      <FilterOptionGroup title={t('history.filterPeriod')} options={options.period} value={datePreset} onChange={changePeriod} />
-      {datePreset === 'custom' && customDates('history-sheet-date')}
       <FilterOptionGroup title={t('history.filterCategory')} options={options.category} value={category} onChange={changeCategory} />
+      <FilterOptionGroup title={t('history.filterWallet')} options={options.wallet} value={walletId} onChange={setWalletId} />
       <fieldset className="transaction-sheet-group">
         <legend>{extrasCopy.amountRange}</legend>
         <AmountRangeInputs copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} className="history-sheet-amount" />
+        {invalidAmount && <p className="history-popover-error" role="alert">{extrasCopy.amountInvalid}</p>}
       </fieldset>
       <label className="transaction-sheet-switch">
         <span>{t('history.excludeRecurring')}</span>
         <input type="checkbox" role="switch" checked={excludeRecurring} onChange={(event) => changeRecurring(event.target.checked)} />
       </label>
-    </BottomSheet>}
+      <fieldset className="transaction-sheet-group">
+        <legend>{extrasCopy.savedFilters}</legend>
+        <SavedFiltersBody copy={extrasCopy} filters={savedFilters} canSave={hasActiveFilters && !invalidRange && !invalidAmount}
+          onApply={(filter) => { applySaved(filter); setFiltersOpen(false); }} onSave={saveCurrent} onDelete={deleteSaved} />
+      </fieldset>
+    </BottomSheet>
 
     {invalidRange && <p role="alert" className="transaction-history-error">{t('history.invalidRange')}</p>}
     {invalidAmount && <p role="alert" className="transaction-history-error">{extrasCopy.amountInvalid}</p>}
@@ -281,8 +273,9 @@ export function TransactionHistoryView() {
       <strong>{hasActiveFilters
         ? chipCopy.entriesFiltered({ count: summary.count, total: historyRows.length })
         : t('history.entries', { count: summary.count })}</strong>
-      <span>{t('type.expense')}: {formatCurrency(summary.expense)}</span>
-      <span>{t('type.income')}: {formatCurrency(summary.income)}</span>
+      <span className="transaction-history-total">{chipCopy.income} <b>{formatCurrency(summary.income)}</b></span>
+      <span className="transaction-history-total">{chipCopy.expense} <b>{formatCurrency(summary.expense)}</b></span>
+      <span className="transaction-history-total">{chipCopy.difference} <b>{`${summary.income - summary.expense < 0 ? '−' : '+'}${formatCurrency(Math.abs(summary.income - summary.expense))}`}</b></span>
     </div>
     {(!loadError || historyRows.length > 0) && <TransactionRows transactions={filtered.slice(0, visibleCount)}
       onEdit={openEditTransaction} onManage={manageSource} showDate variant="ledger"

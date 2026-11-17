@@ -281,6 +281,8 @@ const entries = [
   ['Chi phí ước tính / tháng', 'Estimated cost / month', '预计费用／月'],
   ['Chi tiêu kỳ này', 'Spending this period', '本期支出'],
   ['Chuyển tháng', 'Change month', '切换月份'],
+  ['Chọn tháng', 'Choose month', '选择月份'],
+  ['Chưa phát sinh giao dịch chi tiêu nào trong kỳ này.', 'No spending transactions in this period.', '本期暂无支出交易。'],
   ['Chuyển tiền từ ví này', 'Transfer money from this wallet', '从此钱包转账'],
   ['Chưa có dữ liệu phân bổ', 'No distribution data', '暂无分布数据'],
   ['Chưa có giao dịch chuyển tiền nào giữa các ví.', 'No wallet-to-wallet transfers yet.', '暂无钱包间转账。'],
@@ -470,6 +472,7 @@ const catalogs = {
 const templates = [
   [/^Còn (\d+) ngày$/, (locale, count) => locale === 'en' ? `${count} days left` : `还剩 ${count} 天`],
   [/^Quá hạn (\d+) ngày$/, (locale, count) => locale === 'en' ? `${count} days overdue` : `已逾期 ${count} 天`],
+  [/^(\d+)% hạn mức$/, (locale, value) => locale === 'en' ? `${value}% of limit` : `已用 ${value}% 限额`],
   [/^Còn lại (\d+)%$/, (locale, value) => locale === 'en' ? `${value}% left` : `剩余 ${value}%`],
   [/^Đã dùng (\d+)%$/, (locale, value) => locale === 'en' ? `${value}% used` : `已使用 ${value}%`],
   [/^Tháng (\d+)$/, (locale, value) => locale === 'en' ? `Month ${value}` : `${value} 月`],

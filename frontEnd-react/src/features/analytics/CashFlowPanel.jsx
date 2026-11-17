@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { CalendarPanel, MonthPanel } from '../../components/ui/CustomDatePicker';
+import { CalendarPanel } from '../../components/ui/CustomDatePicker';
 import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon } from '../../components/ui/AppIcons';
 import { NavIcon } from '../../components/ui/NavIcons';
 import { CashFlowPopover } from './CashFlowPopover';
@@ -30,9 +30,9 @@ function SearchIcon() {
 export function CashFlowPanel({
   t, lang, periodMode, series, excludeRecurring, activeMonth, periodLabel, summary,
   chart, weekNavigation, hasData, emptyMessage, topDays = [], unusualContent,
-  onPeriodModeChange, onSeriesChange, onExcludeRecurringChange, onMonthChange,
+  onPeriodModeChange, onSeriesChange, onExcludeRecurringChange,
   onOpenDay, onViewHistory, onPinDefault, onClearDefault, pinnedDefault,
-  savingPreferences = false, drilldownOrigin, onBackToPeriod, currentMonth, latestMonth, preferenceMode = periodMode,
+  savingPreferences = false, drilldownOrigin, onBackToPeriod, currentMonth, preferenceMode = periodMode,
 }) {
   const id = useId();
   const [popover, setPopover] = useState(null);
@@ -77,13 +77,13 @@ export function CashFlowPanel({
     <CashFlowPopover key={popover} id={`${id}-${popover}`} name={popover}
       triggersRef={triggersRef} onClose={closePopover}>
         <div className="cashflow-popover__heading">
-          <h4 id={`${id}-${popover}-title`}>{text(popover === 'date' ? 'daySearch' : popover)}</h4>
+          <h4 id={`${id}-${popover}-title`}>{text(popover === 'date' ? 'daySearch' : popover === 'period' ? 'range' : popover)}</h4>
           <button type="button" className="cashflow-icon-button" onClick={() => setPopover(null)}
             aria-label={t('common.close')}><CloseOutlineIcon size={18} /></button>
         </div>
         {popover === 'period' && <>
           <fieldset className="cashflow-options">
-            <legend className="cashflow-visually-hidden">{text('period')}</legend>
+            <legend className="cashflow-visually-hidden">{text('range')}</legend>
             {PERIOD_OPTIONS.map((option) => <label className="cashflow-option" key={option.value}>
               <input type="radio" name={`${id}-period`} value={option.value} checked={periodMode === option.value}
                 onChange={() => onPeriodModeChange(option.value)} />
@@ -91,12 +91,7 @@ export function CashFlowPanel({
               <CheckOutlineIcon className="cashflow-option__check" size={17} />
             </label>)}
           </fieldset>
-          <div className="cashflow-month-control">
-            <p className="cashflow-field-label" id={`${id}-month-label`}>{text(periodMode === 'daily' ? 'monthToView' : 'endMonth')}</p>
-            <div data-testid="cashflow-month-input" role="group" aria-labelledby={`${id}-month-label`}>
-              <MonthPanel id={`${id}-month`} value={activeMonth} max={latestMonth || undefined} onSelect={onMonthChange} />
-            </div>
-          </div>
+          <p className="cashflow-range-hint">{text('rangeHint')}</p>
         </>}
         {popover === 'display' && <>
           <fieldset className="cashflow-options">
@@ -154,14 +149,14 @@ export function CashFlowPanel({
   return <section className="analytics-section-panel cashflow-panel" id="analytics-cashflow" data-testid="cashflow-panel"
     aria-labelledby={`${id}-title`}>
     <header className="cashflow-header">
-      <h3 id={`${id}-title`}><NavIcon name="cashFlow" size={20} />{t('nav.cashFlowTrend')}</h3>
+      <h2 id={`${id}-title`}><NavIcon name="cashFlow" size={20} />{t('nav.cashFlowTrend')}</h2>
       <div className="cashflow-controls">
         <button type="button" className="cashflow-control" data-testid="cashflow-period-trigger"
           ref={(node) => { triggersRef.current.period = node; }} onClick={() => togglePopover('period')}
           aria-haspopup="dialog" aria-expanded={popover === 'period'} aria-controls={popover === 'period' ? `${id}-period` : undefined}
-          aria-label={`${text('period')}: ${periodLabel}`}>
+          aria-label={`${text('range')}: ${periodLabel}`}>
           <SmallIcon><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></SmallIcon>
-          <span>{periodLabel}</span><ChevronIcon />
+          <span>{text(PERIOD_OPTIONS.find((option) => option.value === periodMode)?.label || 'oneMonth')}</span><ChevronIcon />
         </button>
         <button type="button" className="cashflow-control" data-testid="cashflow-display-trigger"
           ref={(node) => { triggersRef.current.display = node; }} onClick={() => togglePopover('display')}
@@ -180,7 +175,7 @@ export function CashFlowPanel({
     </header>
     <div className="cashflow-context">
       <div className="cashflow-current-view" aria-live="polite">
-        <span>{text(series)} · {text(periodMode === 'daily' ? 'byDay' : 'byMonth')}</span>
+        <span>{text(series)} · {text(periodMode === 'daily' ? 'byDay' : 'byMonth')} · {periodLabel}</span>
         <span className="cashflow-scope"><ClockOutlineIcon size={13} />{text(excludeRecurring ? 'recurringExcluded' : 'recurringIncluded')}</span>
         {ongoing && <span className="cashflow-ongoing" title={text('ongoingHint')}>{text('ongoing')}</span>}
       </div>

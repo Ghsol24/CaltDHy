@@ -8,8 +8,8 @@
 }
 
 .cashflow-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-.cashflow-header h3 { display: flex; align-items: center; gap: 9px; margin: 0; color: var(--text-primary); font-size: var(--font-xl); font-weight: 700; }
-.cashflow-header h3 svg { color: var(--color-link); flex-shrink: 0; }
+.cashflow-header h2 { display: flex; align-items: center; gap: 9px; margin: 0; color: var(--text-primary); font-size: var(--font-xl); font-weight: 700; }
+.cashflow-header h2 svg { color: var(--color-link); flex-shrink: 0; }
 .cashflow-controls { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cashflow-control, .cashflow-date-trigger {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px;
@@ -124,7 +124,7 @@
 
 @container cashflow (max-width: 680px) {
   .cashflow-header { gap: 12px; }
-  .cashflow-header h3 { font-size: var(--font-xl); }
+  .cashflow-header h2 { font-size: var(--font-xl); }
   .cashflow-controls { width: 100%; }
   .cashflow-control { justify-content: flex-start; }
   .cashflow-control:first-child { flex: 1; min-width: 0; }
@@ -163,3 +163,5 @@
 @media (prefers-reduced-motion: reduce) {
   .cashflow-panel *, .cashflow-popover * { transition: none; }
 }
+
+.cashflow-range-hint { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: var(--font-xs); }

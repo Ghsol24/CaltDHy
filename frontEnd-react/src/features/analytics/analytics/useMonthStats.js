@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { getCategoryIcon } from '../../../utils/categories';
-import { CATEGORY_COLORS } from './categoryColors';
+import { colorVarForRank } from './categoryColors';
 
 export function useMonthStats({ activeMonth, transactions }) {
   const monthData = useMemo(() => {
@@ -30,15 +30,16 @@ export function useMonthStats({ activeMonth, transactions }) {
     const net = income - expense;
     const savingsRate = income > 0 ? ((income - expense) / income) * 100 : 0;
 
+    // Rank first, then colour by rank: the biggest category always gets the first hue.
     const categories = Object.entries(catMap)
-      .map(([name, amount], idx) => ({
+      .map(([name, amount]) => ({
         name,
         amount,
         percent: expense > 0 ? (amount / expense) * 100 : 0,
-        color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
         icon: getCategoryIcon(name, 'expense')
       }))
-      .sort((a, b) => b.amount - a.amount);
+      .sort((a, b) => b.amount - a.amount)
+      .map((category, rank) => ({ ...category, color: `var(${colorVarForRank(rank)})` }));
 
     return {
       income,

@@ -46,6 +46,11 @@
     color: #000000 !important;
   }
 
+  /* Screen shows the figures once at the top; the printed report keeps its own four cards. */
+  .report-print-only {
+    display: block !important;
+  }
+
   .report-table-wrapper {
     border: 1px solid #CCCCCC !important;
     box-shadow: none !important;

@@ -1,8 +1,20 @@
 import React from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { formatCurrency, formatPercent } from '../../../utils/formatters';
+import { formatChangePercent } from '../../../utils/compactFormatters';
+import { useTranslation } from '../../../i18n/useTranslation';
 
-export function AnalyticsKpiGrid({ monthData }) {
+// The only place the four headline figures appear on the page (the report block keeps
+// its own copy for printing only), each with the comparison against the previous month.
+function comparison(t, current, previous, previousMonth) {
+  if (previous > 0) {
+    return t('analytics.kpi.vsMonth', { change: formatChangePercent(((current - previous) / previous) * 100), month: previousMonth });
+  }
+  return current > 0 ? t('analytics.kpi.noPrevious', { month: previousMonth }) : t('analytics.kpi.none');
+}
+
+export function AnalyticsKpiGrid({ monthData, previousData, previousMonth }) {
+  const { t } = useTranslation();
   return (
     <div className="analytics-kpi-grid">
       {/* Card 1: Tổng thu nhập */}
@@ -17,7 +29,7 @@ export function AnalyticsKpiGrid({ monthData }) {
           {formatCurrency(monthData.income)}
         </div>
         <div className="kpi-card-meta">
-          <span>{monthData.incomeCount} giao dịch thu nhập</span>
+          <span>{comparison(t, monthData.income, previousData.income, previousMonth)}</span>
         </div>
       </div>
     
@@ -33,7 +45,7 @@ export function AnalyticsKpiGrid({ monthData }) {
           {formatCurrency(monthData.expense)}
         </div>
         <div className="kpi-card-meta">
-          <span>{monthData.expenseCount} giao dịch chi tiêu</span>
+          <span>{comparison(t, monthData.expense, previousData.expense, previousMonth)}</span>
         </div>
       </div>
     
@@ -42,7 +54,7 @@ export function AnalyticsKpiGrid({ monthData }) {
         <div className="kpi-card-header">
           <span className="kpi-card-label">Dòng tiền thuần</span>
           <div className="kpi-icon-badge badge-net" aria-hidden="true">
-            <Icon name="rangeVertical" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <Icon name="swapHorizontal" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </div>
         </div>
         <div className={`kpi-card-amount ${monthData.net > 0 ? 'text-success' : (monthData.net < 0 ? 'text-danger' : 'text-muted')}`}>

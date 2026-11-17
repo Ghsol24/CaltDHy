@@ -3,6 +3,15 @@
    ============================================================ */
 :root {
   /* ── Core Color Tokens (v2 Mint Clean Theme Spec) ── */
+  /* ── Chart categories (Analytics donut): six colour-blind-safe hues by rank + grey for the rest.
+     Every colour keeps >= 3:1 against the card surface in the Light, Cream and Green themes. ── */
+  --chart-cat-1: #2F8AC4;
+  --chart-cat-2: #1F6E5A;
+  --chart-cat-3: #9440DA;
+  --chart-cat-4: #6E6A22;
+  --chart-cat-5: #8C1F72;
+  --chart-cat-6: #25329A;
+  --chart-cat-other: #7A8594;
   --color-brand-700: #008B57;
   --color-action-bg: #007547;
   --color-action-hover-bg: #00663E;
@@ -447,6 +456,14 @@
 
 /* ── 1. DARK THEME (CaltDHy Dark Technical Panel — Obsidian & Cobalt Accent) ── */
 html.dark-theme {
+  /* Chart categories on the dark surface (>= 3:1 against #12131C) */
+  --chart-cat-1: #A5D7E9;
+  --chart-cat-2: #3BCE95;
+  --chart-cat-3: #9247C2;
+  --chart-cat-4: #E7E174;
+  --chart-cat-5: #E774E2;
+  --chart-cat-6: #5451EC;
+  --chart-cat-other: #8B95A5;
   --color-brand-700: #2563EB;
   --color-action-bg: #2563EB;
   --color-action-hover-bg: #1D4ED8;

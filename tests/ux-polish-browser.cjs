@@ -118,7 +118,7 @@ check('jar goal date uses the themed date picker (typing, calendar, keyboard, cl
 check('history custom date range uses linked themed pickers', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'dark' });
   await open('/spending/analytics/transactions');
-  const period = page.locator('.transaction-filter-dropdown').nth(3);
+  const period = page.locator('.transaction-filter-dropdown').nth(0);
   await period.locator('.transaction-filter-trigger').click();
   await period.getByRole('option', { name: 'Tùy chọn ngày' }).click();
   const range = page.locator('.transaction-filter-custom-dates');
@@ -148,35 +148,49 @@ async function pick(page, index, option) {
   return dropdown;
 }
 
-check('history chips show the chosen value and a single clear button', async ({ browser, server }) => {
+check('history keeps two quick filters; the rest show as removable chips with a single clear button', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'green' });
   await open('/spending/analytics/transactions');
   const clear = page.locator('.transaction-history-clear');
   await expect(clear).toHaveCount(0);
+  await expect(page.locator('.transaction-filter-dropdown')).toHaveCount(2);
   const summary = page.locator('.transaction-history-summary strong');
   const total = Number((await summary.textContent()).match(/\d+/)[0]);
-  const typeDropdown = await pick(page, 0, 'Chi tiêu');
-  const walletDropdown = await pick(page, 2, 'ZaloPay');
-  // A chip names its filter while unused and shows the chosen value while filtering.
+  // Quick filters: a dropdown shows the chosen value while filtering.
+  const typeDropdown = await pick(page, 1, 'Chi tiêu');
   await expect(typeDropdown.locator('.transaction-filter-value')).toHaveText('Chi tiêu');
-  await expect(walletDropdown.locator('.transaction-filter-value')).toHaveText('ZaloPay');
-  await expect(page.locator('.transaction-filter-dropdown').nth(1).locator('.transaction-filter-value')).toHaveText('Danh mục');
   await expect(typeDropdown).toHaveClass(/is-filtering/);
+  // Everything else is in the "Bộ lọc" sheet, and once applied shows as a chip under the row.
+  const toggle = page.locator('.transaction-filter-toggle');
+  await expect(toggle).toHaveText('Bộ lọc');
+  await toggle.click();
+  const sheet = page.getByTestId('history-filter-sheet');
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: 'ZaloPay', exact: true }).click();
+  await sheet.locator('.transaction-sheet-apply').click();
+  await expect(sheet).toHaveCount(0);
+  const chip = page.locator('.transaction-applied-chip');
+  await expect(chip).toHaveText('Ví: ZaloPay');
+  await expect(toggle).toHaveText('Bộ lọc (1)');
   await expect(summary).toHaveText(new RegExp(`^\\d+ / ${total} mục$`));
-  // One clear button, first in the row, with the number of filters.
+  // One clear button with the number of filters (type + wallet).
   await expect(clear).toHaveText('Xóa bộ lọc (2)');
-  await expect(page.locator('.transaction-filter-controls > *').first()).toHaveClass(/transaction-history-clear/);
   await expect(page.getByRole('button', { name: 'Xóa tất cả' })).toHaveCount(0);
-  await pick(page, 0, 'Mọi loại');
+  await pick(page, 1, 'Mọi loại');
   await expect(typeDropdown).not.toHaveClass(/is-filtering/);
   await expect(clear).toHaveText('Xóa bộ lọc (1)');
+  // A chip removes its own filter.
+  await chip.click();
+  await expect(chip).toHaveCount(0);
+  await expect(clear).toHaveCount(0);
+  await expect(toggle).toHaveText('Bộ lọc');
   await page.getByPlaceholder('Tìm mô tả hoặc danh mục').fill('cơm');
   await clear.click();
   await expect(clear).toHaveCount(0);
   await expect(page.getByPlaceholder('Tìm mô tả hoặc danh mục')).toHaveValue('');
   await expect(summary).toHaveText(`${total} mục`);
-  // A custom range is summarised on the period chip.
-  const period = await pick(page, 3, 'Tùy chọn ngày');
+  // A custom range is summarised on the period dropdown.
+  const period = await pick(page, 0, 'Tùy chọn ngày');
   await page.getByLabel('Từ ngày').fill('01/10/2026');
   await page.getByLabel('Từ ngày').press('Tab');
   await expect(period.locator('.transaction-filter-value')).toHaveText('Từ 01/10/2026');
@@ -190,7 +204,7 @@ check('history chips show the chosen value and a single clear button', async ({ 
 check('wide-screen filter menus stay on screen whichever side of the row they open from', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 700 });
   await open('/spending/analytics/transactions');
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < 2; index += 1) {
     const dropdown = page.locator('.transaction-filter-dropdown').nth(index);
     await dropdown.locator('.transaction-filter-trigger').click();
     const box = await dropdown.locator('.transaction-filter-menu').boundingBox();
@@ -201,39 +215,41 @@ check('wide-screen filter menus stay on screen whichever side of the row they op
   await context.close();
 });
 
-check('on phones the filters are one chip row; menus and the full filter list open as sheets', async ({ browser, server }) => {
+check('on phones the quick filters and the full "Bộ lọc" list open as sheets', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 390 });
   await open('/spending/analytics/transactions');
   const chipNamed = (name) => page.locator('.transaction-filter-dropdown').filter({
     has: page.locator('.transaction-filter-label', { hasText: name })
   });
-  // The wallet chip sits on the left; its options open in a sheet that fits the screen.
-  await chipNamed('Ví').locator('.transaction-filter-trigger').click();
+  // The type dropdown opens its options in a sheet that fits the screen.
+  await chipNamed('Loại').locator('.transaction-filter-trigger').click();
   const listbox = page.getByRole('listbox');
   await expect(listbox).toBeVisible();
   const box = await listbox.boundingBox();
-  assert.ok(box.x >= 0 && box.x + box.width <= 390, 'wallet options stay on screen');
-  await listbox.getByRole('option', { name: 'ZaloPay', exact: true }).click();
+  assert.ok(box.x >= 0 && box.x + box.width <= 390, 'type options stay on screen');
+  await listbox.getByRole('option', { name: 'Chi tiêu', exact: true }).click();
   await expect(listbox).toHaveCount(0);
-  await expect(chipNamed('Ví').locator('.transaction-filter-value')).toHaveText('ZaloPay');
-  // The full filter sheet edits the same filters and shows the live result count.
+  await expect(chipNamed('Loại').locator('.transaction-filter-value')).toHaveText('Chi tiêu');
+  // The full filter sheet holds the other filters and shows the live result count.
   const toggle = page.locator('.transaction-filter-toggle');
-  await expect(toggle.locator('.transaction-filter-count')).toHaveText('1');
+  await expect(toggle).toHaveText('Bộ lọc');
   await toggle.click();
   const sheet = page.getByTestId('history-filter-sheet');
   await expect(sheet).toBeVisible();
-  await sheet.getByRole('button', { name: 'Tháng này', exact: true }).click();
+  await sheet.getByRole('button', { name: 'ZaloPay', exact: true }).click();
   await sheet.getByRole('switch', { name: 'Ẩn khoản định kỳ' }).check();
   await expect(sheet.locator('.transaction-sheet-apply')).toHaveText(/^Xem \d+ giao dịch$/);
   await sheet.locator('.transaction-sheet-apply').click();
   await expect(sheet).toHaveCount(0);
-  await expect(toggle.locator('.transaction-filter-count')).toHaveText('3');
-  // Active chips come first in the sideways row, right after the clear button.
-  const firstChips = page.locator('.transaction-filter-controls > *');
-  await expect(firstChips.nth(0)).toHaveText('Xóa bộ lọc (3)');
-  await expect(firstChips.nth(1)).toContainText('ZaloPay');
+  await expect(toggle).toHaveText('Bộ lọc (2)');
+  // Applied filters are chips under the row, next to the clear button.
+  const chips = page.locator('.transaction-applied-chip');
+  await expect(chips).toHaveCount(2);
+  await expect(chips.nth(0)).toContainText('ZaloPay');
+  await expect(page.getByRole('button', { name: /Xóa bộ lọc/ })).toHaveText('Xóa bộ lọc (3)');
   await page.getByRole('button', { name: /Xóa bộ lọc/ }).click();
-  await expect(toggle.locator('.transaction-filter-count')).toHaveCount(0);
+  await expect(toggle).toHaveText('Bộ lọc');
+  await expect(chips).toHaveCount(0);
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   assert.equal(overflows, false, 'no sideways scrolling on a phone');
   assert.deepEqual(errors, []);

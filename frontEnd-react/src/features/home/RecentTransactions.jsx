@@ -1,5 +1,5 @@
 import React from 'react';
-import { CategoryMark } from '../../components/ui/CategoryMark';
+import { TransactionItem } from '../transactions/TransactionItem';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
@@ -85,78 +85,38 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                   ? walletMap[txn.toWalletId].name
                   : (isTransfer ? t('type.transfer') : t('home.cash')));
               
-              const relativeDate = formatRelativeDate(txn.date);
-              const metaText = `${label(txn.category || 'Other Expense')} · ${walletName} · ${relativeDate}`;
+              const amountText = isIncome ? `+${formatCurrency(txn.amount)}` : isTransfer ? `⇄ ${formatCurrency(txn.amount)}` : `−${formatCurrency(txn.amount)}`;
+              const tone = isIncome ? 'income' : isTransfer ? 'transfer' : 'expense';
 
               return (
-                <div
+                <TransactionItem
                   key={txn.id || index}
-                  className="home-txn-row"
-                  onClick={isLocked ? undefined : () => openEditTransaction(txn)}
-                  role={isLocked ? undefined : 'button'}
-                  tabIndex={isLocked ? undefined : 0}
-                  onKeyDown={isLocked ? undefined : (e) => {
-                    // Keys pressed on the edit/delete buttons inside belong to those buttons.
-                    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
-                    e.preventDefault();
-                    openEditTransaction(txn);
-                  }}
-                  aria-label={t('home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
-                >
-                  {/* Left Icon */}
-                  <div className={`home-txn-icon-box ${isIncome ? 'is-income' : ''} ${isTransfer ? 'is-transfer' : ''}`} aria-hidden="true">
-                    <CategoryMark name={isTransfer ? 'transfer' : txn.category} size={18} />
-                  </div>
-
-                  {/* Middle Content */}
-                  <div className="home-txn-info">
-                    <span className="home-txn-name" title={txn.desc || txn.category}>
-                      {txn.desc || label(txn.category)}
+                  markName={isTransfer ? 'transfer' : txn.category}
+                  tone={tone}
+                  title={txn.desc || label(txn.category)}
+                  meta={[label(txn.category || 'Other Expense'), walletName, formatRelativeDate(txn.date)]}
+                  amount={<span className={`txn-item__amount is-${tone}`}>{amountText}</span>}
+                  onOpen={isLocked ? undefined : () => openEditTransaction(txn)}
+                  ariaLabel={isLocked ? undefined : t('home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
+                  lockedHint={isLocked ? (
+                    <span className="txn-item__locked" title={t(txn.jarId ? 'home.jarLocked' : 'home.recurringLocked')}>
+                      <Icon name="lock" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <span>{t(txn.jarId ? 'nav.jarShort' : 'nav.recurring')}</span>
                     </span>
-                    <span className="home-txn-meta">
-                      {metaText}
-                    </span>
-                  </div>
-
-                  {/* Right Amount & Actions */}
-                  <div className="home-txn-amount-box">
-                    <span className={`home-txn-amount ${isIncome ? 'is-income' : isTransfer ? 'is-transfer' : 'is-expense'}`}>
-                      {isIncome ? `+${formatCurrency(txn.amount)}` : isTransfer ? `⇄ ${formatCurrency(txn.amount)}` : `−${formatCurrency(txn.amount)}`}
-                    </span>
-                    
-                    {/* Actions */}
-                    {isLocked ? (
-                      <span
-                        className="home-txn-locked-hint"
-                        title={t(txn.jarId ? 'home.jarLocked' : 'home.recurringLocked')}
-                      >
-                        <Icon name="lock" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <span>{t(txn.jarId ? 'nav.jarShort' : 'nav.recurring')}</span>
-                      </span>
-                    ) : (
-                      <div className="home-txn-actions" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          className="home-txn-btn-action"
-                          onClick={(e) => handleEdit(e, txn)}
-                          title={t('transaction.edit')}
-                          aria-label={t('transaction.edit')}
-                        >
-                          <Icon name="editSquare" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          className="home-txn-btn-action home-txn-btn-action--delete"
-                          onClick={(e) => handleDelete(e, txn)}
-                          title={t('home.deleteTitle')}
-                          aria-label={t('home.deleteTitle')}
-                        >
-                          <Icon name="trash" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  ) : undefined}
+                  actions={isLocked ? undefined : (
+                    <div className="txn-item__actions" onClick={(e) => e.stopPropagation()}>
+                      <button type="button" className="txn-item__action" onClick={(e) => handleEdit(e, txn)}
+                        title={t('transaction.edit')} aria-label={t('transaction.edit')}>
+                        <Icon name="editSquare" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+                      </button>
+                      <button type="button" className="txn-item__action txn-item__action--delete" onClick={(e) => handleDelete(e, txn)}
+                        title={t('home.deleteTitle')} aria-label={t('home.deleteTitle')}>
+                        <Icon name="trash" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </button>
+                    </div>
+                  )}
+                />
               );
             })}
           </div>

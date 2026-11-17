@@ -197,19 +197,15 @@ export function AnalyticsView() {
   const handleSetThisMonth = () => {
     changeCashFlowMonth(getLocalMonthString());
   };
-  const handleSetLastMonth = () => {
-    const now = new Date();
-    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    changeCashFlowMonth(getLocalMonthString(lastMonthDate));
-  };
 
-  // 1. Current Month Stats & Breakdown
+  // 1. Current Month Stats & Breakdown (plus the previous month for the headline comparison)
   const { monthData } = useMonthStats({ activeMonth, transactions });
+  const { monthData: previousMonthData } = useMonthStats({ activeMonth: prevMonthStr, transactions });
 
   const { backToCashFlowPeriod, changeCashFlowMonth, changeCashFlowPeriod, dailyTrend, hasTrendData, highestSpendingDays, manageTransactionSource, monthlyTrend, openDay, periodLabel, saveCashFlowChoice, saveCashFlowDefault, selectedWeekIndex, trendSummary, unusualDays, viewCashFlowHistory, viewCategoryHistory, viewDayHistory, visibleDailyDays, weekCount, weekEnd, weekStart } = useCashFlowTrend({ activeMonth, addToast, barChartRef, clearDefault, drilldown, drilldownRevision, excludeRecurring, expectedDays, intlLocale, isCompactChart, lang, mobileWeek, monthLabel, navigate, navigateTo, pinDefault, setCashFlowView, setDrilldown, setMobileWeek, setSelectedDay, setSelectedMonth, t, transactions, trendMode, trendSeries });
 
   // Resolve semantic tokens for canvas, which cannot interpret CSS variables.
-  const { barChartData, barOptions, chartContext, doughnutChartData, doughnutOptions, today } = useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactChart, label, lang, monthData, monthlyTrend, openDay, prefersReducedMotion, setDrilldown, setMobileWeek, setSelectedMonth, t, theme, trendMode, trendSeries, unusualDays, viewCategoryHistory, visibleDailyDays });
+  const { barChartData, barOptions, chartContext, today } = useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactChart, lang, monthlyTrend, openDay, prefersReducedMotion, setDrilldown, setMobileWeek, setSelectedMonth, t, theme, trendMode, trendSeries, unusualDays, visibleDailyDays });
 
   // ── Financial Report Statistics & Comparison ──
   const { handleExportCSV, handlePrint, reportData } = useFinancialReport({ activeMonth, addToast, budgets, curQuarterMonths, label, lang, monthLabel, prevMonthStr, prevQuarterLabel, prevQuarterMonths, quarterLabel, reportPeriodType, t, transactions });
@@ -234,19 +230,24 @@ export function AnalyticsView() {
       {(!isMobile || analyticsSubTab === 'overview') && (
         <>
       {/* ── 1. Page Header & Comparison Segmented / Month Selector ── */}
-      <AnalyticsHeader handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSetLastMonth={handleSetLastMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
+      <AnalyticsHeader activeMonth={activeMonth} handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSelectMonth={changeCashFlowMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
 
       {/* ── 2. 4 KPI Grid Cards ── */}
-      <AnalyticsKpiGrid monthData={monthData} />
+      <AnalyticsKpiGrid monthData={monthData} previousData={previousMonthData} previousMonth={parseInt(prevMonthStr.slice(5), 10)} />
 
         </>
       )}
 
+      {/* On phones every analytics screen is its own page, so each one carries the period control. */}
+      {isMobile && analyticsSubTab !== 'overview' && analyticsSubTab !== 'transactions' && (
+        <AnalyticsHeader compact activeMonth={activeMonth} handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSelectMonth={changeCashFlowMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
+      )}
+
       {/* ── 3. Spending By Category Section ── */}
-      {<AnalyticsCategorySection analyticsSubTab={analyticsSubTab} doughnutChartData={doughnutChartData} doughnutOptions={doughnutOptions} isMobile={isMobile} monthData={monthData} monthLabel={monthLabel} openAddTxnModal={openAddTxnModal} viewCategoryHistory={viewCategoryHistory} />}
+      {<AnalyticsCategorySection analyticsSubTab={analyticsSubTab} isMobile={isMobile} monthData={monthData} monthLabel={monthLabel} openAddTxnModal={openAddTxnModal} prefersReducedMotion={prefersReducedMotion} theme={theme} viewCategoryHistory={viewCategoryHistory} />}
 
       {/* Cash-flow controls and layout adapt to the available content width. */}
-      {<AnalyticsCashFlowSection activeMonth={activeMonth} backToCashFlowPeriod={backToCashFlowPeriod} barChartData={barChartData} barChartRef={barChartRef} barOptions={barOptions} cashFlowActive={cashFlowActive} changeCashFlowMonth={changeCashFlowMonth} changeCashFlowPeriod={changeCashFlowPeriod} chartContext={chartContext} currentMonthNum={currentMonthNum} dailyTrend={dailyTrend} drilldown={drilldown} excludeRecurring={excludeRecurring} hasTrendData={hasTrendData} highestSpendingDays={highestSpendingDays} isCompactChart={isCompactChart} openDay={openDay} periodLabel={periodLabel} pinnedDefault={pinnedDefault} saveCashFlowChoice={saveCashFlowChoice} saveCashFlowDefault={saveCashFlowDefault} savingCashFlowPreferences={savingCashFlowPreferences} savingExpectedDay={savingExpectedDay} selectedWeekIndex={selectedWeekIndex} setMobileWeek={setMobileWeek} today={today} toggleExpectedDay={toggleExpectedDay} trendMode={trendMode} trendSeries={trendSeries} trendSummary={trendSummary} unusualDays={unusualDays} viewCashFlowHistory={viewCashFlowHistory} visibleDailyDays={visibleDailyDays} weekCount={weekCount} weekEnd={weekEnd} weekStart={weekStart} />}
+      {<AnalyticsCashFlowSection activeMonth={activeMonth} backToCashFlowPeriod={backToCashFlowPeriod} barChartData={barChartData} barChartRef={barChartRef} barOptions={barOptions} cashFlowActive={cashFlowActive} changeCashFlowPeriod={changeCashFlowPeriod} chartContext={chartContext} currentMonthNum={currentMonthNum} dailyTrend={dailyTrend} drilldown={drilldown} excludeRecurring={excludeRecurring} hasTrendData={hasTrendData} highestSpendingDays={highestSpendingDays} isCompactChart={isCompactChart} openDay={openDay} periodLabel={periodLabel} pinnedDefault={pinnedDefault} saveCashFlowChoice={saveCashFlowChoice} saveCashFlowDefault={saveCashFlowDefault} savingCashFlowPreferences={savingCashFlowPreferences} savingExpectedDay={savingExpectedDay} selectedWeekIndex={selectedWeekIndex} setMobileWeek={setMobileWeek} today={today} toggleExpectedDay={toggleExpectedDay} trendMode={trendMode} trendSeries={trendSeries} trendSummary={trendSummary} unusualDays={unusualDays} viewCashFlowHistory={viewCashFlowHistory} visibleDailyDays={visibleDailyDays} weekCount={weekCount} weekEnd={weekEnd} weekStart={weekStart} />}
 
       {/* ── 5. Detailed Financial Report Section (Báo cáo tài chính chuyên sâu) ── */}
       {<FinancialReportSection activeMonth={activeMonth} analyticsSubTab={analyticsSubTab} curQuarterMonths={curQuarterMonths} handleExportCSV={handleExportCSV} handlePrint={handlePrint} isMobile={isMobile} reportData={reportData} reportPeriodType={reportPeriodType} setReportPeriodType={setReportPeriodType} viewCategoryHistory={viewCategoryHistory} />}
