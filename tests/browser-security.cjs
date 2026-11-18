@@ -1375,35 +1375,49 @@ function blendCssColor(color, background) {
     await expect(targetWalletCard).not.toHaveClass(/is-deleting/);
     await deleteWalletDialog.getByRole('button', { name: 'Hủy' }).click();
     await expect(deleteWalletDialog).toHaveCount(0);
+    // Desktop (đợt 11, NAV-05): mỗi mục menu là một màn hình; riêng "Tóm tắt thu chi" giữ trang
+    // cuộn đầy đủ và menu/URL đứng yên ở mục đó khi cuộn (không còn scroll-spy).
     await mobilePage.goto('/spending/analytics/cash-flow');
-    for (const sectionId of ['analytics-overview', 'analytics-spending', 'analytics-cashflow', 'analytics-reports']) {
-      await expect(mobilePage.locator(`#${sectionId}`)).toBeVisible();
-    }
-    await mobilePage.waitForTimeout(700);
+    await expect(mobilePage.locator('#analytics-overview')).toBeVisible();
+    await expect(mobilePage.locator('#analytics-cashflow')).toBeVisible();
+    await expect(mobilePage.locator('#analytics-spending, #analytics-reports')).toHaveCount(0);
+    await expect(mobilePage.locator('.analytics-kpi-grid')).toHaveCount(0);
     const desktopReportsNav = mobilePage.getByRole('button', { name: 'Báo cáo', exact: true });
     await desktopReportsNav.click();
     await mobilePage.waitForURL('**/spending/analytics/reports');
     await expect(desktopReportsNav).toHaveAttribute('aria-current', 'page');
-    await mobilePage.locator('#analytics-cashflow').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
-    await expect(mobilePage.getByRole('button', { name: 'Dòng tiền', exact: true })).toHaveAttribute('aria-current', 'page');
-    await expect(mobilePage).toHaveURL(/\/spending\/analytics\/reports$/);
+    await expect(mobilePage).toHaveTitle('Phân tích · Báo cáo – CaltDHy');
+    await expect(mobilePage.locator('#analytics-reports')).toBeVisible();
+    await expect(mobilePage.locator('#analytics-cashflow, #analytics-spending')).toHaveCount(0);
+    await mobilePage.getByRole('button', { name: 'Tóm tắt thu chi', exact: true }).click();
+    await mobilePage.waitForURL('**/spending/analytics/overview');
+    for (const sectionId of ['analytics-overview', 'analytics-spending', 'analytics-cashflow', 'analytics-reports']) {
+      await expect(mobilePage.locator(`#${sectionId}`)).toBeVisible();
+    }
+    await mobilePage.waitForTimeout(700);
     await mobilePage.locator('#analytics-reports').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
-    await expect(desktopReportsNav).toHaveAttribute('aria-current', 'page');
+    await mobilePage.waitForTimeout(300);
+    await expect(mobilePage.getByRole('button', { name: 'Tóm tắt thu chi', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(desktopReportsNav).not.toHaveAttribute('aria-current', 'page');
+    await expect(mobilePage).toHaveURL(/\/spending\/analytics\/overview$/);
     await mobilePage.getByTestId('cashflow-display-trigger').click();
     await mobilePage.getByTestId('cashflow-recurring-input').uncheck();
     await expect(mobilePage.getByTestId('cashflow-recurring-input')).not.toBeChecked();
     await mobilePage.keyboard.press('Escape');
 
     await mobilePage.goto('/spending/jars/list');
-    for (const sectionId of ['jars-section-goals', 'jars-section-list', 'jars-section-history']) {
-      await expect(mobilePage.locator(`#${sectionId}`)).toBeVisible();
-    }
+    await expect(mobilePage.locator('#jars-section-list')).toBeVisible();
+    await expect(mobilePage.locator('#jars-section-list h1')).toHaveText('Danh sách hũ');
+    await expect(mobilePage.locator('#jars-section-goals, #jars-section-history')).toHaveCount(0);
     await expect(mobilePage.locator('.jar-premium-card')).toHaveCount(12);
-    await mobilePage.waitForTimeout(700);
-    await mobilePage.locator('#jars-section-history').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
-    await expect(mobilePage.locator('button.sidebar-nav-item.active').filter({ hasText: 'Lịch sử' })).toHaveAttribute('aria-current', 'page');
+    await expect(mobilePage.locator('button.sidebar-nav-item.active')).toHaveText('Danh sách hũ');
+    await mobilePage.getByRole('button', { name: 'Lịch sử nạp/rút', exact: true }).click();
+    await mobilePage.waitForURL('**/spending/jars/history');
+    await expect(mobilePage.locator('#jars-section-history h1')).toHaveText('Lịch sử nạp/rút');
+    await expect(mobilePage.locator('#jars-section-goals, #jars-section-list')).toHaveCount(0);
+    await expect(mobilePage.locator('button.sidebar-nav-item.active')).toHaveText('Lịch sử nạp/rút');
     assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false,
-      'Trang desktop không được tràn ngang khi dựng đồng thời mọi khu vực');
+      'Trang desktop Lịch sử nạp/rút không được tràn ngang');
 
     const themeVisuals = new Map();
     for (const theme of ['dark', 'cream', 'green', 'light']) {

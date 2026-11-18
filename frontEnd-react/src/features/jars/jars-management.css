@@ -1,5 +1,4 @@
 .jar-management-dialog { width: min(100%, 610px); }
-.jar-history-management-dialog { width: min(100%, 760px); }
 .jm-form { display: flex; flex-direction: column; gap: 20px; }
 .jm-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .jm-field > label, .jm-colors > legend { color: var(--color-text); font-size: var(--font-sm); font-weight: 650; line-height: 1.5; }
@@ -30,7 +29,6 @@
   font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .jm-error { margin: 0; padding: 10px 12px; border: 1px solid var(--color-danger-border); background: var(--color-danger-bg); border-radius: 10px; color: var(--color-danger); font-size: var(--font-sm); line-height: 1.5; }
 .jm-history-type-button:focus-visible { outline: 3px solid var(--color-brand-600); outline-offset: 3px; }
-.jar-history-management-dialog .jar-dialog-body { padding: 0; display: flex; overflow: hidden; }
 .jm-history { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
 .jm-history-toolbar { flex-shrink: 0; padding: 18px 24px 16px; display: flex; flex-direction: column; gap: 14px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
 .jm-history-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: 12px; }
@@ -52,8 +50,7 @@
 .jm-history-search { display: flex; align-items: center; min-width: 0; border: 1px solid var(--color-border); border-radius: 10px; padding: 0 11px; background: var(--color-surface); color: var(--color-text-muted); gap: 8px; }
 .jm-history-search svg { flex-shrink: 0; width: 17px; height: 17px; }
 .jm-history-search input { min-width: 0; width: 100%; min-height: 44px; border: 0; padding: 8px 0; background: transparent; color: var(--color-text); font: inherit; font-size: var(--font-sm); outline: none; box-sizing: border-box; }
-.jm-history-list { flex: 1; min-height: 90px; max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; padding: 6px 24px 16px; scrollbar-gutter: stable; }
-.jm-history-list:focus-visible { outline: 2px solid var(--color-brand-600); outline-offset: -3px; }
+.jm-history-list { padding: 6px 24px 16px; }
 .jm-history-day h3 { font-size: var(--font-xs); line-height: 1.5; color: var(--color-text-muted); margin: 13px 0 6px; font-weight: 600; }
 .jm-history-day ul { padding: 0; margin: 0; list-style: none; }
 .jm-history-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
@@ -68,7 +65,12 @@
   font-variant-numeric: tabular-nums; font-size: var(--font-sm); line-height: 1.5; font-weight: 700; color: var(--color-text); text-align: right; padding-top: 1px; overflow-wrap: anywhere; max-width: 220px; }
 .jm-history-row.is-deposit .jm-history-amount { color: var(--color-success); }
 .jm-history-empty { padding: 28px 8px; margin: 0; color: var(--color-text-muted); text-align: center; font-size: var(--font-sm); line-height: 1.6; }
-.jm-history-count { color: var(--color-text-muted); font-size: var(--font-xs); line-height: 1.5; margin-right: auto; }
+/* Trang "Lịch sử nạp/rút": một thẻ, danh sách dài theo trang (không cuộn trong khung như hộp thoại cũ). */
+.jars-history-page { display: flex; flex-direction: column; gap: 16px; }
+.jm-history--page { box-sizing: border-box; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg, 20px); box-shadow: var(--shadow-sm); }
+.jm-history--page .jm-history-toolbar { border-radius: var(--radius-lg, 20px) var(--radius-lg, 20px) 0 0; }
+.jm-history-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; margin: 0; padding: 12px 24px 16px; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--font-xs); line-height: 1.5; }
+.jm-history-count { color: var(--color-text-muted); font-size: var(--font-xs); line-height: 1.5; }
 .jm-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 @media (max-width: 480px) {
   .jm-two-columns { grid-template-columns: 1fr; gap: 18px; }
@@ -84,12 +86,7 @@
   .jm-history-amount { grid-column: 2; text-align: left; padding-top: 0; max-width: 100%; }
   .jm-history-type-button { gap: 5px; font-size: var(--font-xs); }
   .jm-history-type-count { min-width: 14px; padding: 1px 3px; }
-  .jm-history-count { max-width: 55%; }
-}
-@media (max-height: 600px) and (min-width: 481px) {
-  .jm-history-toolbar { padding-top: 10px; padding-bottom: 10px; gap: 9px; }
-  .jm-history-totals dt { margin-bottom: 0; }
-  .jm-history-list { min-height: 48px; }
+  .jm-history-footer { padding: 10px 14px 12px; }
 }
 
 /* ── Chuyển từ inline style của JarModal.jsx (đợt 4) ── */

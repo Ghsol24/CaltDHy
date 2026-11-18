@@ -40,7 +40,7 @@ function CategoryRow({ active, ariaLabel, colorVar, expanded, icon, nested = fal
   );
 }
 
-export function AnalyticsCategorySection({ analyticsSubTab, isMobile, monthData, monthLabel, openAddTxnModal, prefersReducedMotion, theme, viewCategoryHistory }) {
+export function AnalyticsCategorySection({ visible, monthData, monthLabel, openAddTxnModal, prefersReducedMotion, theme, viewCategoryHistory }) {
   const { t, label } = useTranslation();
   const [activeKey, setActiveKey] = useState(null);
   const [showOthers, setShowOthers] = useState(false);
@@ -60,7 +60,7 @@ export function AnalyticsCategorySection({ analyticsSubTab, isMobile, monthData,
   }, [slices, viewCategoryHistory]);
   const describe = (slice, action) => `${action ? `${action} ` : ''}${sliceTitle(slice)}: ${formatCurrency(slice.amount)}, ${formatPercent(slice.percent)}`;
 
-  return ((!isMobile || analyticsSubTab === 'spending') && (
+  return (visible && (
   <>
   <div className="analytics-section-panel" id="analytics-spending">
     <div className="panel-header">

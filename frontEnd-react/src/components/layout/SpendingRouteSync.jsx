@@ -16,17 +16,9 @@ function focusRouteContent(route) {
       // readers announce the new page without a ring drawn around it (NAV-06).
       const heading = target.matches('h1, h2, h3') ? target : target.querySelector('h1, h2, h3') || target;
       if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
-      // Standalone pages start at the top; long views keep their section links.
-      // Account for both sticky bars before placing a section below them.
-      const isStandalone = route.view === 'home' || route.view === 'plan' || route.subTab === 'transactions';
-      const stickyBottom = [...document.querySelectorAll('.topbar, .mobile-section-nav')]
-        .reduce((bottom, bar) => {
-          const style = getComputedStyle(bar);
-          if (!['sticky', 'fixed'].includes(style.position) || bar.getClientRects().length === 0) return bottom;
-          return Math.max(bottom, (parseFloat(style.top) || 0) + bar.getBoundingClientRect().height);
-        }, 0);
+      // Every menu item is a screen of its own (NAV-05), so each one starts at the top.
       window.scrollTo({
-        top: isStandalone ? 0 : Math.max(0, window.scrollY + target.getBoundingClientRect().top - stickyBottom - 24),
+        top: 0,
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
       });
       heading.focus({ preventScroll: true });

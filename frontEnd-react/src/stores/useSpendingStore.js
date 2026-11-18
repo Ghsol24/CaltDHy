@@ -28,12 +28,8 @@ export const useSpendingStore = create((set) => ({
   setPlanSubTab: (subTab, options = {}) =>
     set((state) => (state.planSubTab === subTab ? state : {
       planSubTab: subTab,
-      ...(options.syncRoute === false ? {} : { routeRevision: state.routeRevision + 1, routeMode: options.replace ? 'replace' : 'push' })
-    })),
-  setAnalyticsSubTab: (subTab, options = {}) =>
-    set((state) => (state.analyticsSubTab === subTab ? state : {
-      analyticsSubTab: subTab,
-      ...(options.syncRoute === false ? {} : { routeRevision: state.routeRevision + 1, routeMode: options.replace ? 'replace' : 'push' })
+      routeRevision: state.routeRevision + 1,
+      routeMode: options.replace ? 'replace' : 'push'
     })),
   setAnalyticsExcludeRecurring: (excludeRecurring) =>
     set((state) => (state.analyticsExcludeRecurring === Boolean(excludeRecurring) ? state : {
@@ -46,11 +42,6 @@ export const useSpendingStore = create((set) => ({
         analyticsExcludeRecurring: nextValue,
       };
     }),
-  setJarsSubTab: (subTab, options = {}) =>
-    set((state) => (state.jarsSubTab === subTab ? state : {
-      jarsSubTab: subTab,
-      ...(options.syncRoute === false ? {} : { routeRevision: state.routeRevision + 1, routeMode: options.replace ? 'replace' : 'push' })
-    })),
   navigateTo: (view, subTab = null, options = {}) =>
     set((state) => ({
       activeView: view,

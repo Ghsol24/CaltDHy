@@ -1595,6 +1595,11 @@
   gap: 16px;
 }
 
+/* Trang "Danh sách hũ" dùng cùng hàng tiêu đề (đợt 11, NAV-05) */
+.jars-list-section > .jars-overview-header {
+  margin-bottom: 16px;
+}
+
 /* 3 ô số + một thanh tiến độ tổng trong một thẻ (JAR-01, JAR-02) */
 .jars-summary-card {
   padding: 20px 24px;
