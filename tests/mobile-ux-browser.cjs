@@ -337,7 +337,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           await expect(page.locator('.plan-feature-view')).toBeVisible();
           // The route shell can render before the fixture data reaches its store.
           // Phones open the one-line list view by default (UX WAL-08); wider screens show cards.
-          if (tab === 'wallets') await expect(page.locator('.wallet-h-name, .wallet-grid-name').filter({ hasText: wallet.name })).toBeVisible();
+          if (tab === 'wallets') await expect(page.locator('.wallet-row-name').filter({ hasText: wallet.name })).toBeVisible();
           if (tab === 'budgets') await expect(page.locator('.bdash-row.is-over')).toHaveCount(2);
           if (tab === 'recurring') await expect(page.locator('.recurring-row-card')).toHaveCount(1);
           await fit(page.locator('.plan-feature-view'), `${theme}/${width} ${tab}`);

@@ -146,7 +146,7 @@ export const legacyAdditionalEntries = [
   ['Không thể xóa ví.', 'Unable to delete the wallet.', '无法删除钱包。'],
   ['Cần ít nhất 2 ví để chuyển tiền', 'At least two wallets are required for a transfer', '至少需要两个钱包才能转账'],
   ['Chưa đặt', 'Not set', '未设置'], ['Lọc theo loại ví', 'Filter by wallet type', '按钱包类型筛选'],
-  ['Không tính vào tổng', 'Excluded from total', '不计入总额'], ['Lọc theo trạng thái', 'Filter by status', '按状态筛选'],
+  ['Không tính vào tổng', 'Excluded from total', '不计入总额'], ['Không có giao dịch trong 30 ngày qua', 'No transactions in the last 30 days', '最近 30 天没有交易'], ['Không tìm thấy ví nào phù hợp.', 'No wallets match your search.', '没有符合搜索的钱包。'], ['Chuyển tiền gần đây', 'Recent transfers', '最近转账'], ['Lọc theo trạng thái', 'Filter by status', '按状态筛选'],
   ['Tổng giao dịch', 'Total transactions', '交易总数'], ['Ví nguồn', 'Source wallet', '转出钱包'], ['Ví đích', 'Destination wallet', '收款钱包'],
 
   ['Lỗi lấy dữ liệu giao dịch', 'Unable to load transactions', '无法加载交易'],
