@@ -5,11 +5,10 @@ import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { JarModal } from './JarModal';
 import { JarTransactionModal } from './JarTransactionModal';
 import { JarDetailModal } from './JarDetailModal';
-import { JarHistoryModal } from './JarHistoryModal';
+import { JarHistoryPage } from './JarHistoryPage';
 import { formatCurrency, formatMonthYear, getLocalDateString } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -26,14 +25,10 @@ import { JarsGridView } from './jars/JarsGridView';
 import { JarsListToolbar } from './jars/JarsListToolbar';
 import { JarsProgressSection } from './jars/JarsProgressSection';
 import { JarsOverviewSection } from './jars/JarsOverviewSection';
+import { JarsPageHeader } from './jars/JarsPageHeader';
 import { useJarsOverview } from './jars/useJarsOverview';
 import { JARS_PER_PAGE } from './jars/useJarsOverview';
 const PROGRESS_OVERVIEW_MIN_JARS = 4;
-const JARS_SCROLL_SECTIONS = Object.freeze([
-  ['jars-section-goals', 'goals'],
-  ['jars-section-list', 'jars'],
-  ['jars-section-history', 'history'],
-]);
 
 // Display preference only. The hyphenated name keeps it out of the sign-in
 // cleanup that clears private `caltdhy_*` data, without growing the first-load bundle.
@@ -43,7 +38,7 @@ const readCalendarView = () => {
 };
 
 export function JarsView() {
-  const { lang, intlLocale } = useTranslation();
+  const { lang, intlLocale, t } = useTranslation();
   const jars = useJarStore((s) => s.jars);
   const isLoading = useJarStore((s) => s.isLoading);
   const hasLoaded = useJarStore((s) => s.hasLoaded);
@@ -53,7 +48,6 @@ export function JarsView() {
   const confirm = useConfirmStore((s) => s.confirm);
   const addToast = useToastStore((s) => s.addToast);
   const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
-  const setJarsSubTab = useSpendingStore((s) => s.setJarsSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const isMobile = useIsMobile();
 
@@ -68,8 +62,6 @@ export function JarsView() {
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDetailJar, setSelectedDetailJar] = useState(null);
-
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   // Toolbar & view settings
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'progress_desc' | 'deadline_asc' | 'name_asc'
@@ -183,16 +175,6 @@ export function JarsView() {
     });
   };
 
-  useSectionScrollSpy({
-    disabled: isMobile || jars.length === 0,
-    sections: JARS_SCROLL_SECTIONS,
-    onActiveChange: (activeTab) => {
-      if (activeTab && useSpendingStore.getState().jarsSubTab !== activeTab) {
-        setJarsSubTab(activeTab, { syncRoute: false });
-      }
-    },
-  });
-
   if (!hasLoaded || (isLoading && jars.length === 0)) {
     return (
       <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
@@ -222,11 +204,8 @@ export function JarsView() {
       : jarsSubTab === 'history'
         ? 'jars-section-history'
         : 'jars-section-goals';
-    const emptyHeading = jarsSubTab === 'jars'
-      ? 'Danh sách hũ'
-      : jarsSubTab === 'history'
-        ? 'Lịch sử hũ'
-        : 'Tổng quan hũ';
+    // Tiêu đề trống cũng đúng tên mục menu đang sáng.
+    const emptyHeading = t(jarsSubTab === 'jars' ? 'nav.jarList' : jarsSubTab === 'history' ? 'nav.history' : 'nav.goals');
     return (
       <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
         <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card">
@@ -266,7 +245,9 @@ export function JarsView() {
         </div>
       )}
 
-      {(!isMobile || jarsSubTab === 'goals') && (
+      {/* Mỗi mục menu là một màn hình riêng, trên điện thoại lẫn máy tính (NAV-05, JLS-01):
+          URL, tiêu đề tab, mục menu sáng và nội dung luôn cùng một mục. */}
+      {jarsSubTab === 'goals' && (
         <>
       {/* ── SECTION 1: HEADER & OVERVIEW (#jars-section-goals) ── */}
       <JarsOverviewSection datedJarsCount={datedJarsCount} handleCreateNew={handleCreateNew} jarsCount={jars.length} thisMonthNet={thisMonthNet} totalCurrent={totalCurrent} totalPercent={totalPercent} totalRemaining={totalRemaining} totalTarget={totalTarget} />
@@ -284,12 +265,12 @@ export function JarsView() {
           onSelectDay={setSelectedDay}
           today={today}
         />
+        {/* Bản xem nhanh; lịch sử đầy đủ là trang "Lịch sử nạp/rút". */}
         <JarRecentActivity
-          id={isMobile ? undefined : 'jars-section-history'}
           events={jarEvents}
           selectedDay={selectedDay}
           onClearDay={() => setSelectedDay(null)}
-          onViewAll={() => (isMobile ? navigateTo('jars', 'history') : setIsHistoryModalOpen(true))}
+          onViewAll={() => navigateTo('jars', 'history')}
           limit={isMobile ? 3 : 6}
           compact={isMobile}
         />
@@ -316,9 +297,12 @@ export function JarsView() {
       )}
 
       {/* ── SECTION 5: CÁC HŨ CỦA BẠN (#jars-section-list) ── */}
-      {(!isMobile || jarsSubTab === 'jars') && (
+      {jarsSubTab === 'jars' && (
       <>
       <section id="jars-section-list" className="jars-list-section">
+        {/* Điện thoại giữ màn hình như cũ: dải mục ở trên đã nói tên trang, thẻ "Tạo hũ mới" nằm trong lưới. */}
+        {!isMobile && <JarsPageHeader icon="jarList" title={t('nav.jarList')} onCreate={handleCreateNew} />}
+
         {/* Toolbar Header */}
         <JarsListToolbar jars={jars} setCurrentPage={setCurrentPage} setSortBy={setSortBy} setViewMode={setViewMode} sortBy={sortBy} viewMode={viewMode} />
 
@@ -369,19 +353,8 @@ export function JarsView() {
       </>
       )}
 
-      {/* ── SECTION 6: LỊCH SỬ HŨ ──
-          Desktop shows recent activity beside the calendar (id jars-section-history
-          lives there). On phones the "Lịch sử nạp/rút" tab shows the longer list here. */}
-      {isMobile && jarsSubTab === 'history' && (
-        <JarRecentActivity
-          id="jars-section-history"
-          events={jarEvents}
-          selectedDay={selectedDay}
-          onClearDay={() => setSelectedDay(null)}
-          onViewAll={() => setIsHistoryModalOpen(true)}
-          limit={30}
-        />
-      )}
+      {/* ── SECTION 6: LỊCH SỬ NẠP/RÚT (#jars-section-history): toàn bộ lịch sử, trang thật (JHS-01) ── */}
+      {jarsSubTab === 'history' && <JarHistoryPage jars={jars} />}
 
       {/* ── MODALS ── */}
       {isJarModalOpen && (
@@ -421,13 +394,6 @@ export function JarsView() {
         />
       )}
 
-      {isHistoryModalOpen && (
-        <JarHistoryModal
-          isOpen={isHistoryModalOpen}
-          onClose={() => setIsHistoryModalOpen(false)}
-          jars={jars}
-        />
-      )}
     </div>
   );
 }

@@ -293,7 +293,8 @@ check('Goals page: savings calendar beside recent activity, no invented figures'
   const activity = page.locator('.jars-insights-grid--calendar .jar-activity-card');
   await expect(calendar).toBeVisible();
   await expect(activity).toBeVisible();
-  await expect(activity).toHaveAttribute('id', 'jars-section-history');
+  // Bản xem nhanh: lịch sử đầy đủ là trang riêng (#jars-section-history), không nằm ở đây.
+  await expect(page.locator('#jars-section-history')).toHaveCount(0);
   // Calendar and list sit side by side on desktop.
   const [a, b] = await Promise.all([calendar.boundingBox(), activity.boundingBox()]);
   assert.ok(b.x > a.x + a.width - 1 && Math.abs(a.y - b.y) < 2, 'activity sits to the right of the calendar');
@@ -330,11 +331,20 @@ check('Goals page: savings calendar beside recent activity, no invented figures'
   await expect(calendar.locator('.jar-cal-title')).toHaveText('12 tháng qua bạn đã tiết kiệm');
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.locator('.jar-cal-card .jar-cal-months, .jar-cal-card .jar-cal-year')).toBeVisible();
+  // "Xem tất cả" mở trang Lịch sử nạp/rút (URL, menu, tiêu đề tab cùng một mục), không mở hộp thoại.
+  await page.locator('.jar-activity-card .jar-activity-view-all').click();
+  await page.waitForURL('**/spending/jars/history');
+  await expect(page.locator('[role="dialog"]')).toHaveCount(0);
+  await expect(page.locator('#jars-section-history h1')).toHaveText('Lịch sử nạp/rút');
+  await expect(page).toHaveTitle('Hũ tiết kiệm · Lịch sử nạp/rút – CaltDHy');
+  await expect(page.locator('.app-sidebar-nav [aria-current="page"]')).toHaveText('Lịch sử nạp/rút');
+  await expect(page.locator('#jars-section-history .jm-history-row')).toHaveCount(6);
+  await expect(page.locator('.jar-cal-card, #jars-section-list')).toHaveCount(0);
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-check('Goals page on phones: compact list on Mục tiêu, full list on Lịch sử', async ({ browser, server }) => {
+check('Goals page on phones: compact list on Tổng quan hũ, full history page on Lịch sử', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 390 });
   await open('/spending/jars/goals');
   const calendar = page.locator('.jar-cal-card');
@@ -343,7 +353,8 @@ check('Goals page on phones: compact list on Mục tiêu, full list on Lịch s�
   await expect(page.locator('.jar-activity-card .jar-activity-row')).toHaveCount(3);
   await page.locator('.jar-activity-card .jar-activity-view-all').click();
   await page.waitForURL('**/spending/jars/history');
-  await expect(page.locator('#jars-section-history .jar-activity-row')).toHaveCount(6);
+  await expect(page.locator('#jars-section-history .jm-history-row')).toHaveCount(6);
+  await expect(page.locator('#jars-section-history .jm-history-search input')).toBeVisible();
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   assert.equal(overflows, false, 'no sideways scrolling on a phone');
   assert.deepEqual(errors, []);

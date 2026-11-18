@@ -1,9 +1,8 @@
 import React, { useId, useMemo, useState } from 'react';
-import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { JarDialog } from './JarDialog';
+import { JarsPageHeader } from './jars/JarsPageHeader';
 import { jarsManagementText } from './jarsManagementCopy';
 import './jars-management.css';
 import { Icon } from '../../components/ui/AppIcons';
@@ -19,8 +18,12 @@ function activityDay(date) {
   return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
-export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
-  const { lang, label } = useTranslation();
+/**
+ * Trang "Lịch sử nạp/rút" (/spending/jars/history): toàn bộ lịch sử của mọi hũ, có lọc loại,
+ * lọc hũ và tìm kiếm. Trước đây nội dung này nằm trong hộp thoại "Lịch sử hũ" (JHS-01).
+ */
+export function JarHistoryPage({ jars = [] }) {
+  const { lang, label, t } = useTranslation();
   const text = (key, values) => jarsManagementText(lang, key, values);
   const id = useId();
   const [filterType, setFilterType] = useState('all');
@@ -67,11 +70,9 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
   const net = totals.deposit - totals.withdraw;
 
   return (
-    <JarDialog isOpen={isOpen} onClose={onClose} title={text('historyTitle')}
-      subtitle={text('historyCap')} className="jar-history-management-dialog"
-      footer={<><span className="jm-history-count" role="status">{text('resultCount', { count: filteredActivities.length })}</span>
-        <Button variant="primary" size="lg" onClick={onClose}>{text('close')}</Button></>}>
-      <div className="jm-history">
+    <section id="jars-section-history" className="jars-history-page">
+      <JarsPageHeader icon="jarHistory" title={t('nav.history')} />
+      <div className="jm-history jm-history--page">
         <div className="jm-history-toolbar">
           <dl className="jm-history-totals" aria-label={text('filteredSummary')}>
             <div><dt>{text('totalDeposit')}</dt><dd className="jm-deposit">+{formatCurrency(totals.deposit, { locale: lang })}</dd></div>
@@ -96,7 +97,7 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
             </label>
           </div>
         </div>
-        <div className="jm-history-list" tabIndex={0} aria-label={text('historyTitle')}>
+        <div className="jm-history-list">
           {dayGroups.length === 0 ? <p className="jm-history-empty">{text('empty')}</p> : dayGroups.map(([day, activities]) => (
             <section className="jm-history-day" key={day || 'unknown'} aria-labelledby={`${id}-day-${day || 'unknown'}`}>
               <h3 id={`${id}-day-${day || 'unknown'}`}>{day ? formatDate(day, 'full', { locale: lang }) : text('unknownDate')}</h3>
@@ -116,7 +117,11 @@ export function JarHistoryModal({ isOpen, onClose, jars = [] }) {
             </section>
           ))}
         </div>
+        <p className="jm-history-footer">
+          <span className="jm-history-count" role="status">{text('resultCount', { count: filteredActivities.length })}</span>
+          <span>{text('historyCap')}</span>
+        </p>
       </div>
-    </JarDialog>
+    </section>
   );
 }

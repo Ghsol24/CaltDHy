@@ -23,6 +23,8 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
       { type: 'deposit', amount: 120000, reason: 'UX nạp riêng ngày khác', date: new Date('2026-09-17T05:00:00Z') },
     ] });
   const dialog = page.locator('.jar-dialog');
+  // "Lịch sử nạp/rút" là một trang (đợt 11, JHS-01), không còn là hộp thoại.
+  const historyPage = page.locator('#jars-section-history');
   const amountInput = () => dialog.locator('.jar-transfer-amount-box input');
   const noteInput = () => dialog.locator('.jar-transfer-note textarea');
   const card = () => page.locator('.jar-premium-card').filter({ has: page.locator('.jar-name-title', { hasText: name }) });
@@ -37,12 +39,21 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     }, { theme, locale });
   }
   async function open(kind) {
-    const section = kind === 'history' ? 'history' : kind === 'create' ? 'goals' : 'list';
+    if (kind === 'history') {
+      // Lối vào từ bản xem nhanh ở Tổng quan hũ: "Xem tất cả" đi tới trang, có URL riêng.
+      await page.goto('/spending/jars/goals');
+      const viewAll = page.locator('.jar-activity-card .jar-activity-view-all');
+      await viewAll.click();
+      await page.waitForURL('**/spending/jars/history');
+      await expect(historyPage.locator('.jm-history')).toBeVisible();
+      await expect(dialog).toHaveCount(0);
+      return { page: true };
+    }
+    const section = kind === 'create' ? 'goals' : 'list';
     await page.goto('/spending/jars/' + section);
     await expect(page.locator('.jars-page-root')).toBeVisible();
     let trigger;
     if (kind === 'create') trigger = page.locator('.jars-hero-cta-btn');
-    else if (kind === 'history') trigger = page.locator('#jars-section-history .jar-activity-view-all');
     else {
       await expect(card()).toBeVisible();
       // Sửa hũ nằm trong menu ⋮ của thẻ (thẻ chỉ còn hai nút Nạp / Rút, đợt 10).
@@ -59,6 +70,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     return { trigger: kind === 'edit' ? card().locator('.jar-card-menu-btn') : trigger, backgroundScroll };
   }
   async function close(opened, verifyFocus = false) {
+    if (opened.page) return;
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
@@ -99,18 +111,19 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     await layout(label + ' with note visible');
   }
   async function verifyHistory(label) {
-    const filters = dialog.locator('.jm-history-type-button');
+    await fit(historyPage, label + ' history page');
+    const filters = historyPage.locator('.jm-history-type-button');
     await expect(filters).toHaveCount(3);
     const widths = await filters.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().width));
     assert.ok(Math.max(...widths) - Math.min(...widths) <= 1, label + ': type filters have equal width');
     for (let index = 0; index < 3; index++) {
       await filters.nth(index).click();
       await expect(filters.nth(index)).toHaveAttribute('aria-pressed', 'true');
-      await expect(dialog.locator('.jm-history-type-button[aria-pressed="true"]')).toHaveCount(1);
-      const emptyGroups = await dialog.locator('.jm-history-day').evaluateAll(groups => groups.filter(group => !group.querySelector('.jm-history-row')).length);
+      await expect(historyPage.locator('.jm-history-type-button[aria-pressed="true"]')).toHaveCount(1);
+      const emptyGroups = await historyPage.locator('.jm-history-day').evaluateAll(groups => groups.filter(group => !group.querySelector('.jm-history-row')).length);
       assert.equal(emptyGroups, 0, label + ': filtered dates never have empty groups');
-      if (index === 1) await expect(dialog.locator('.jm-history-row.is-withdraw')).toHaveCount(0);
-      if (index === 2) await expect(dialog.locator('.jm-history-row.is-deposit')).toHaveCount(0);
+      if (index === 1) await expect(historyPage.locator('.jm-history-row.is-withdraw')).toHaveCount(0);
+      if (index === 2) await expect(historyPage.locator('.jm-history-row.is-deposit')).toHaveCount(0);
     }
     await filters.first().click();
   }
@@ -217,7 +230,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
         for (const kind of ['create', 'edit', 'deposit', 'withdraw', 'history', 'detail']) {
           const opened = await open(kind);
           const label = `${theme}/${width}x${height}/${kind}`;
-          await layout(label);
+          if (kind !== 'history') await layout(label);
           if (kind === 'deposit' || kind === 'withdraw') await verifyNote(label);
           if (kind === 'history') await verifyHistory(label);
           if (kind === 'deposit' || kind === 'history' || (theme === 'green' && kind === 'create')) {
@@ -231,25 +244,29 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
 
   await check('jars UX history filters and three languages fit phones landscape and enlarged text', async () => {
     const titles = {
-      vi: ['Tạo hũ tiết kiệm', 'Nạp tiền vào hũ', 'Lịch sử hũ'],
-      en: ['Create a savings jar', 'Add money to jar', 'Jar history'],
-      'zh-CN': ['创建储蓄罐', '存入储蓄罐', '储蓄罐记录'],
+      // Hai hộp thoại, rồi tiêu đề H1 của trang lịch sử (đúng tên mục menu).
+      vi: ['Tạo hũ tiết kiệm', 'Nạp tiền vào hũ', 'Lịch sử nạp/rút'],
+      en: ['Create a savings jar', 'Add money to jar', 'Jar activity'],
+      'zh-CN': ['创建储蓄罐', '存入储蓄罐', '存取记录'],
     };
     for (const locale of ['vi', 'en', 'zh-CN']) {
       for (const [width, height] of [[1440, 900], [390, 844]]) {
         await configure('green', locale, width, height);
         for (const [index, kind] of ['create', 'deposit', 'history'].entries()) {
           const opened = await open(kind);
-          await expect(dialog.locator('.jar-dialog-header h2')).toHaveText(titles[locale][index]);
-          await layout(`${locale}/${width}/${kind}`);
+          if (kind === 'history') await expect(historyPage.locator('h1')).toHaveText(titles[locale][index]);
+          else {
+            await expect(dialog.locator('.jar-dialog-header h2')).toHaveText(titles[locale][index]);
+            await layout(`${locale}/${width}/${kind}`);
+          }
           if (kind === 'deposit') await verifyNote(`${locale}/${width}`);
           if (kind === 'history') {
             await verifyHistory(`${locale}/${width}`);
-            await dialog.locator('.jm-history-search input').fill('UX chỉ có rút ngày này');
-            await expect(dialog.locator('.jm-history-row')).toHaveCount(1);
-            await dialog.locator('.jm-history-type-button').nth(1).click();
-            await expect(dialog.locator('.jm-history-day')).toHaveCount(0);
-            await expect(dialog.locator('.jm-history-empty')).toBeVisible();
+            await historyPage.locator('.jm-history-search input').fill('UX chỉ có rút ngày này');
+            await expect(historyPage.locator('.jm-history-row')).toHaveCount(1);
+            await historyPage.locator('.jm-history-type-button').nth(1).click();
+            await expect(historyPage.locator('.jm-history-day')).toHaveCount(0);
+            await expect(historyPage.locator('.jm-history-empty')).toBeVisible();
           }
           if (width === 390) await page.screenshot({ path: path.join(evidence, `jars-${kind}-${locale}-390.png`) });
           await close(opened);
@@ -263,7 +280,6 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     await configure('green', 'vi', 640, 360);
     opened = await open('history');
     // A viewport halved in both axes represents the CSS layout space at 200% zoom.
-    await layout('1280x720 at 200% layout scale');
     await verifyHistory('200% layout scale');
     await close(opened);
     fs.writeFileSync(path.join(evidence, 'jars-dialog-layouts.json'), JSON.stringify(layouts, null, 2));

@@ -21,7 +21,6 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { formatDate, getLocalMonthString } from '../../utils/formatters';
 import { BREAKPOINTS, useIsMobile } from '../../hooks/useMediaQuery';
-import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { useTranslation } from '../../i18n/useTranslation';
 import { spendingService } from '../../services/spendingService';
 import { DailyTransactionsDrawer } from './DailyTransactionsDrawer';
@@ -50,13 +49,6 @@ ChartJS.register(
   Filler
 );
 
-const ANALYTICS_SCROLL_SECTIONS = Object.freeze([
-  ['analytics-overview', 'overview'],
-  ['analytics-spending', 'spending'],
-  ['analytics-cashflow', 'cash-flow'],
-  ['analytics-reports', 'reports'],
-]);
-
 function usePrefersReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => (
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -82,7 +74,6 @@ export function AnalyticsView() {
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
-  const setAnalyticsSubTab = useSpendingStore((s) => s.setAnalyticsSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
@@ -91,7 +82,11 @@ export function AnalyticsView() {
   const isCompactChart = useIsMobile(BREAKPOINTS.phone);
   const navigate = useNavigate();
 
-  const cashFlowActive = !isMobile || analyticsSubTab === 'cash-flow';
+  // Each menu item is its own screen. On a computer "Tóm tắt thu chi" stays the long
+  // page with every block (the user's choice); on a phone it is the four figures only.
+  const showsAllSections = !isMobile && analyticsSubTab === 'overview';
+  const showsSection = (tab) => showsAllSections || analyticsSubTab === tab;
+  const cashFlowActive = showsSection('cash-flow');
   const { view: cashFlowView, setView: setCashFlowView, pinnedDefault,
     pinDefault, clearDefault, saving: savingCashFlowPreferences } = useCashFlowPreferences({ active: cashFlowActive });
   const [drilldown, setDrilldown] = useState(null);
@@ -210,47 +205,26 @@ export function AnalyticsView() {
   // ── Financial Report Statistics & Comparison ──
   const { handleExportCSV, handlePrint, reportData } = useFinancialReport({ activeMonth, addToast, budgets, curQuarterMonths, label, lang, monthLabel, prevMonthStr, prevQuarterLabel, prevQuarterMonths, quarterLabel, reportPeriodType, t, transactions });
 
-  const handleActiveAnalyticsSection = useCallback((activeTab) => {
-    const currentTab = useSpendingStore.getState().analyticsSubTab;
-    // A queued scroll/layout callback may run while the history chunk loads.
-    if (currentTab === 'transactions' || window.location.pathname.endsWith('/transactions')) return;
-    if (activeTab && currentTab !== activeTab) {
-      setAnalyticsSubTab(activeTab, { syncRoute: false });
-    }
-  }, [setAnalyticsSubTab]);
-
-  useSectionScrollSpy({
-    disabled: isMobile || analyticsSubTab === 'transactions',
-    sections: ANALYTICS_SCROLL_SECTIONS,
-    onActiveChange: handleActiveAnalyticsSection,
-  });
-
   return (
     <div className="analytics-feature-view" role="region" aria-label="Báo cáo phân tích thu chi">
-      {(!isMobile || analyticsSubTab === 'overview') && (
-        <>
-      {/* ── 1. Page Header & Comparison Segmented / Month Selector ── */}
-      <AnalyticsHeader activeMonth={activeMonth} handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSelectMonth={changeCashFlowMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
+      {/* ── 1. Page Header & Month Selector ──
+          Every screen carries the period control. Computers keep the full title row
+          (with the "Gợi ý" slot) on all four screens; phones use the compact bar below the first. */}
+      <AnalyticsHeader compact={isMobile && analyticsSubTab !== 'overview'} activeMonth={activeMonth} handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSelectMonth={changeCashFlowMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
 
       {/* ── 2. 4 KPI Grid Cards ── */}
-      <AnalyticsKpiGrid monthData={monthData} previousData={previousMonthData} previousMonth={parseInt(prevMonthStr.slice(5), 10)} />
-
-        </>
-      )}
-
-      {/* On phones every analytics screen is its own page, so each one carries the period control. */}
-      {isMobile && analyticsSubTab !== 'overview' && analyticsSubTab !== 'transactions' && (
-        <AnalyticsHeader compact activeMonth={activeMonth} handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSelectMonth={changeCashFlowMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
+      {analyticsSubTab === 'overview' && (
+        <AnalyticsKpiGrid monthData={monthData} previousData={previousMonthData} previousMonth={parseInt(prevMonthStr.slice(5), 10)} />
       )}
 
       {/* ── 3. Spending By Category Section ── */}
-      {<AnalyticsCategorySection analyticsSubTab={analyticsSubTab} isMobile={isMobile} monthData={monthData} monthLabel={monthLabel} openAddTxnModal={openAddTxnModal} prefersReducedMotion={prefersReducedMotion} theme={theme} viewCategoryHistory={viewCategoryHistory} />}
+      {<AnalyticsCategorySection visible={showsSection('spending')} monthData={monthData} monthLabel={monthLabel} openAddTxnModal={openAddTxnModal} prefersReducedMotion={prefersReducedMotion} theme={theme} viewCategoryHistory={viewCategoryHistory} />}
 
       {/* Cash-flow controls and layout adapt to the available content width. */}
       {<AnalyticsCashFlowSection activeMonth={activeMonth} backToCashFlowPeriod={backToCashFlowPeriod} barChartData={barChartData} barChartRef={barChartRef} barOptions={barOptions} cashFlowActive={cashFlowActive} changeCashFlowPeriod={changeCashFlowPeriod} chartContext={chartContext} currentMonthNum={currentMonthNum} dailyTrend={dailyTrend} drilldown={drilldown} excludeRecurring={excludeRecurring} hasTrendData={hasTrendData} highestSpendingDays={highestSpendingDays} isCompactChart={isCompactChart} openDay={openDay} periodLabel={periodLabel} pinnedDefault={pinnedDefault} saveCashFlowChoice={saveCashFlowChoice} saveCashFlowDefault={saveCashFlowDefault} savingCashFlowPreferences={savingCashFlowPreferences} savingExpectedDay={savingExpectedDay} selectedWeekIndex={selectedWeekIndex} setMobileWeek={setMobileWeek} today={today} toggleExpectedDay={toggleExpectedDay} trendMode={trendMode} trendSeries={trendSeries} trendSummary={trendSummary} unusualDays={unusualDays} viewCashFlowHistory={viewCashFlowHistory} visibleDailyDays={visibleDailyDays} weekCount={weekCount} weekEnd={weekEnd} weekStart={weekStart} />}
 
       {/* ── 5. Detailed Financial Report Section (Báo cáo tài chính chuyên sâu) ── */}
-      {<FinancialReportSection activeMonth={activeMonth} analyticsSubTab={analyticsSubTab} curQuarterMonths={curQuarterMonths} handleExportCSV={handleExportCSV} handlePrint={handlePrint} isMobile={isMobile} reportData={reportData} reportPeriodType={reportPeriodType} setReportPeriodType={setReportPeriodType} viewCategoryHistory={viewCategoryHistory} />}
+      {<FinancialReportSection activeMonth={activeMonth} curQuarterMonths={curQuarterMonths} handleExportCSV={handleExportCSV} handlePrint={handlePrint} visible={showsSection('reports')} reportData={reportData} reportPeriodType={reportPeriodType} setReportPeriodType={setReportPeriodType} viewCategoryHistory={viewCategoryHistory} />}
       {selectedDay && <DailyTransactionsDrawer key={`${selectedDay.date}:${selectedDay.type}:${selectedDay.excludeRecurring}`}
         date={selectedDay.date} initialType={selectedDay.type} transactions={transactions}
         excludeRecurring={selectedDay.excludeRecurring} expected={expectedDays.includes(selectedDay.date)}

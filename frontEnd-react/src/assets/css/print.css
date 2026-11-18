@@ -37,6 +37,12 @@
     gap: 16px !important;
   }
 
+  /* "In báo cáo" prints the report only, even from the long "Tóm tắt thu chi" page on a
+     computer: the title row stays, the other blocks (figures, categories, cash flow) do not. */
+  .analytics-feature-view:has(#analytics-reports) > :not(#analytics-reports, .analytics-header-bar) {
+    display: none !important;
+  }
+
   .analytics-section-panel {
     box-shadow: none !important;
     border: 1px solid #CCCCCC !important;

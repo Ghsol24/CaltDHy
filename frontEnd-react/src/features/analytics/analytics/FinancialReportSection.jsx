@@ -5,8 +5,8 @@ import { ReportSummaryCards } from './ReportSummaryCards';
 import { ReportInsightsBanner } from './ReportInsightsBanner';
 import { ReportCategoryTable } from './ReportCategoryTable';
 
-export function FinancialReportSection({ activeMonth, analyticsSubTab, curQuarterMonths, handleExportCSV, handlePrint, isMobile, reportData, reportPeriodType, setReportPeriodType, viewCategoryHistory }) {
-  return ((!isMobile || analyticsSubTab === 'reports') && (
+export function FinancialReportSection({ activeMonth, curQuarterMonths, handleExportCSV, handlePrint, visible, reportData, reportPeriodType, setReportPeriodType, viewCategoryHistory }) {
+  return (visible && (
   <>
   <div className="analytics-section-panel analytics-report-section" id="analytics-reports">
     {/* Header & Controls */}

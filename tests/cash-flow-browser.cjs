@@ -81,8 +81,10 @@ async function check(name, work) {
   const drawer = page.getByRole('dialog', { name: /Giao dịch ngày/ });
   const period = page.getByTestId('cashflow-period-trigger');
   const display = page.getByTestId('cashflow-display-trigger');
-  async function enter() {
-    await page.goto('/spending/analytics/cash-flow');
+  // `route`: trang Dòng tiền là màn hình riêng (đợt 11); trên máy tính, "Tóm tắt thu chi" vẫn là
+  // trang cuộn dài chứa cùng khối, dùng cho kiểm thử cần cuộn trang.
+  async function enter(route = '/spending/analytics/cash-flow') {
+    await page.goto(route);
     await expect(panel).toBeVisible();
     await expect(chart).toBeVisible();
     await expect(chart).toHaveAttribute('data-scale-min', '0');
@@ -338,7 +340,7 @@ async function check(name, work) {
 
   await check('desktop menu follows page scrolling while its own scrolling leaves the anchor and page stable', async () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
-    await enter();
+    await enter('/spending/analytics/overview');
     await display.evaluate(trigger => window.scrollTo({
       top: window.scrollY + trigger.getBoundingClientRect().top - 200, behavior: 'instant',
     }));
