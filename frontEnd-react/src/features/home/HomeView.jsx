@@ -15,7 +15,6 @@ const ForecastCard = lazy(() => import('../forecast/ForecastCard').then((module)
 
 export function HomeView() {
   const { t } = useTranslation();
-  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const setSelectedMonth = useSpendingStore((s) => s.setSelectedMonth);
   const transactions = useTransactionStore((s) => s.transactions);
@@ -90,15 +89,6 @@ export function HomeView() {
 
         <div className="page-header-actions">
           <span className="page-guide-slot" data-guide-slot="" />
-          <button
-            type="button"
-            className="home-btn-add-txn"
-            onClick={openAddTxnModal}
-            aria-label={t('home.addTransaction')}
-          >
-            <span className="home-btn-add-plus" aria-hidden="true">+</span>
-            <span>{t('home.addTransaction')}</span>
-          </button>
         </div>
       </div>
 

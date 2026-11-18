@@ -838,3 +838,13 @@
 .plan-icon-gap {
   margin-right: 4px;
 }
+
+/* Responsive adjustments for Plan Overview */
+@media (max-width: 960px) {
+  .plan-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .plan-columns-container {
+    grid-template-columns: 1fr;
+  }
+}

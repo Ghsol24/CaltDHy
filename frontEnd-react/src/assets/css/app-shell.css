@@ -551,6 +551,37 @@
   white-space: nowrap;
 }
 
+/* ── Add transaction button on Topbar (desktop; phones get the bottom-bar "+") ── */
+.tb-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  background: var(--color-brand-700, #078A59);
+  color: #FFFFFF;
+  border: 1px solid var(--color-brand-600, #056C46);
+  border-radius: var(--radius-sm, 8px);
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+
+.tb-add-btn:hover {
+  background: var(--color-brand-600, #056C46);
+  box-shadow: var(--shadow-md, var(--shadow-sm));
+  transform: translateY(-1px);
+}
+
+.tb-add-btn:active {
+  transform: translateY(0);
+}
+
 /* ── Settings Button on Topbar ── */
 .tb-settings-btn {
   display: inline-flex;
@@ -629,7 +660,8 @@
 
 /* Responsive adjustments for Topbar & Sidebar */
 @media (max-width: 900px) {
-  .tb-date {
+  .tb-date,
+  .tb-add-btn {
     display: none;
   }
   .app-sidebar-nav {
@@ -653,7 +685,8 @@
     min-height: 68px;
     padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-right, 0px));
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
     gap: 4px;
     background: color-mix(in srgb, var(--color-surface, #fff) 96%, transparent);
     border-top: 1px solid var(--color-border, #E3ECE7);
@@ -676,6 +709,45 @@
     font: 700 11px/1.1 var(--font-sans);
     cursor: pointer;
     transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+
+  /* Centre slot: the fixed "add transaction" button, wherever you are in the app. */
+  .mobile-primary-nav__add {
+    justify-self: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-full, 999px);
+    background: var(--color-brand-700, #078A59);
+    color: #FFFFFF;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 27, 54, 0.28);
+    transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+  }
+
+  .mobile-primary-nav__add:hover {
+    background: var(--color-brand-600, #056C46);
+  }
+
+  .mobile-primary-nav__add:active {
+    transform: scale(0.94);
+  }
+
+  /* Five slots on the narrowest phones: tighter padding keeps each label on one line. */
+  @media (max-width: 340px) {
+    .mobile-primary-nav {
+      padding-left: max(4px, env(safe-area-inset-left, 0px));
+      padding-right: max(4px, env(safe-area-inset-right, 0px));
+      gap: 2px;
+    }
+
+    .mobile-primary-nav__item {
+      padding: 5px 1px;
+      font-size: 10.5px;
+    }
   }
 
   .mobile-primary-nav__item.is-active {

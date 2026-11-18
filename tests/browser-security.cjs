@@ -956,7 +956,9 @@ function blendCssColor(color, background) {
     await expect(primaryNav).toBeVisible();
     await expect(mobilePage.locator('.app-sidebar-nav')).toBeHidden();
     const primaryItems = primaryNav.getByRole('button');
-    await expect(primaryItems).toHaveCount(4);
+    // 4 destinations + the centred add-transaction button (7b).
+    await expect(primaryItems).toHaveCount(5);
+    await expect(primaryNav.getByRole('button', { name: 'Thêm giao dịch', exact: true })).toHaveCount(1);
     for (const item of await primaryItems.all()) {
       const box = await item.boundingBox();
       assert.ok(box && box.height >= 44, 'Mỗi mục điều hướng mobile phải cao ít nhất 44px');
@@ -1511,7 +1513,7 @@ function blendCssColor(color, background) {
           `${locale} ${path}: nội dung không được tràn ngang trên mobile`);
       }
       await mobilePage.goto('/spending/home');
-      await mobilePage.locator('.home-btn-add-txn').click();
+      await mobilePage.locator('.mobile-primary-nav__add').click();
       await expect(mobilePage.getByRole('dialog', { name: transactionLabel })).toBeVisible();
       await mobilePage.locator('.txn-modal-close-btn').click();
     }

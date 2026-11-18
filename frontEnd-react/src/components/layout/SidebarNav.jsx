@@ -33,7 +33,6 @@ export function SidebarNav() {
   const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
-  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
 
   useEffect(() => {
@@ -242,27 +241,6 @@ export function SidebarNav() {
             </div>
           );
         })}
-
-        {/* ── Quick Record Widget Card (Bottom Sidebar) ── */}
-        {!isSidebarCollapsed && (
-          <div className="sidebar-quick-record-card">
-            <div className="quick-record-header">
-              <div className="quick-record-icon-box" aria-hidden="true">
-                <Icon name="edit" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </div>
-              <div className="quick-record-text">
-                <strong className="quick-record-title">{t('nav.quickRecord')}</strong>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="quick-record-btn"
-              onClick={openAddTxnModal}
-            >
-              <span>{t('nav.addTransaction')}</span>
-            </button>
-          </div>
-        )}
       </div>
     </aside>
   );
