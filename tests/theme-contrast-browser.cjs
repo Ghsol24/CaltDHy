@@ -31,8 +31,6 @@ const ROUTES = [
 const MENUS = [
   { route: '/spending/plan/overview', open: ['.plan-btn-create-primary'], menu: '.plan-create-dropdown' },
   { route: '/spending/plan/wallets', open: ['.wallet-dots-btn'], menu: '.wallet-actions-popover' },
-  { route: '/spending/plan/wallets', open: ['.donut-dist-dropdown-trigger'], menu: '.donut-dist-dropdown-menu' },
-  { route: '/spending/plan/wallets', open: ['.wallet-custom-dropdown-trigger'], menu: '.wallet-custom-dropdown-menu' },
   { route: '/spending/plan/recurring', open: ['.recurring-sort-custom-btn'], menu: '.recurring-sort-custom-menu' },
   { route: '/spending/plan/recurring', open: ['.recurring-menu-wrapper button'], menu: '.recurring-actions-dropdown' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=0 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },

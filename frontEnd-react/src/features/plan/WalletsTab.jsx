@@ -1,5 +1,6 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
@@ -13,11 +14,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
 import { WalletsArchivedSection } from './wallets/WalletsArchivedSection';
 import { WalletRecentActivityCard } from './wallets/WalletRecentActivityCard';
-import { WalletBalanceDistributionCard } from './wallets/WalletBalanceDistributionCard';
-import { WalletListView } from './wallets/WalletListView';
-import { WalletGridView } from './wallets/WalletGridView';
-import { WalletsFilterToolbar } from './wallets/WalletsFilterToolbar';
-import { WalletStatsCard } from './wallets/WalletStatsCard';
+import { WalletsSummary } from './wallets/WalletsSummary';
+import { WalletGroupedList } from './wallets/WalletGroupedList';
 import { WalletsPageHeader } from './wallets/WalletsPageHeader';
 import { useWalletInsights } from './wallets/useWalletInsights';
 export { WalletOutlineIcon };
@@ -29,7 +27,7 @@ export function WalletsTab() {
   const unarchiveWallet = useWalletStore((state) => state.unarchiveWallet);
   const isLoading = useWalletStore((state) => state.isLoading);
   const transactions = useTransactionStore((state) => state.transactions);
-  const navigateTo = useSpendingStore((s) => s.navigateTo);
+  const navigate = useNavigate();
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const confirm = useConfirmStore((state) => state.confirm);
   const addToast = useToastStore((state) => state.addToast);
@@ -47,17 +45,9 @@ export function WalletsTab() {
   const [unarchivingId, setUnarchivingId] = useState(null);
   const unarchivingRef = useRef(null);
 
-  // 'grid' (Thẻ) | 'list' (Danh sách). Phones start with the one-line list: six tall cards
-  // took more than a screen before the third wallet showed.
-  const [viewMode, setViewMode] = useState(() => (
-    typeof window !== 'undefined' && window.matchMedia?.('(max-width: 599px)').matches ? 'list' : 'grid'
-  ));
-
-  // Bộ lọc và tìm kiếm danh sách ví
+  // Search only earns its row once the list is long enough to need it.
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [hoveredSliceId, setHoveredSliceId] = useState(null);
+  const showSearch = wallets.length >= 8;
 
   // 3-dots action menu popover
   const [openMenuWalletId, setOpenMenuWalletId] = useState(null);
@@ -66,18 +56,10 @@ export function WalletsTab() {
   // hand focus back to it, since the menu item itself is gone by then.
   const menuTriggerRef = useRef(null);
 
-  // Phân bổ số dư: chế độ xem ('balance' | 'txCount') và popover dropdown
-  const [distributionMode, setDistributionMode] = useState('balance');
-  const [isDistDropdownOpen, setIsDistDropdownOpen] = useState(false);
-  const distDropdownRef = useRef(null);
-
   useEffect(() => {
     const handleOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpenMenuWalletId(null);
-      }
-      if (distDropdownRef.current && !distDropdownRef.current.contains(e.target)) {
-        setIsDistDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutside);
@@ -85,8 +67,13 @@ export function WalletsTab() {
   }, []);
 
   const {
-    totalBalance, allAssets, defaultWallet, walletMap, walletTxCountMap, donutSlices, chartTotal, getWalletUsagePercent, filteredWallets, walletActivities,
-  } = useWalletInsights({ wallets, transactions, distributionMode, searchQuery, filterType, filterStatus });
+    totalBalance, includedCount, walletMap, slices, colorByWalletId, groups, getWalletNote, walletActivities,
+  } = useWalletInsights({ wallets, transactions, searchQuery: showSearch ? searchQuery : '' });
+
+  // A wallet row opens that wallet's own transactions in the history screen.
+  const handleOpenHistory = (wallet) => {
+    navigate(`/spending/analytics/transactions?${new URLSearchParams({ wallet: wallet.id }).toString()}`);
+  };
 
   // Actions
   const handleCreateNew = () => {
@@ -156,17 +143,8 @@ export function WalletsTab() {
     }
   };
 
-  // Điều hướng tới Lịch sử giao dịch TOÀN BỘ của User
   const handleGoToFullHistory = () => {
-    navigateTo('home');
-    setTimeout(() => {
-      const el =
-        document.querySelector('.home-recent-txns-card') ||
-        document.getElementById('recent-transactions-section');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 120);
+    navigate(`/spending/analytics/transactions?${new URLSearchParams({ type: 'transfer' }).toString()}`);
   };
 
   return (
@@ -174,66 +152,65 @@ export function WalletsTab() {
       {/* ── 1. Page Header: Title + Actions ── */}
       <WalletsPageHeader handleCreateNew={handleCreateNew} handleTransfer={handleTransfer} wallets={wallets} />
 
-      {/* ── 2. Responsive 2-Column Main Layout ── */}
       <div className="wallets-v2-layout">
-        {/* ── CỘT TRÁI (~62%) ── */}
         <div className="wallets-v2-col-left">
-          <WalletStatsCard allAssets={allAssets} defaultWallet={defaultWallet} totalBalance={totalBalance} wallets={wallets} />
+          <WalletsSummary totalBalance={totalBalance} includedCount={includedCount} slices={slices} />
 
-          <div className="wallets-list-section">
-            {/* ── Search & Filter Toolbar (Chuẩn Ảnh 1) ── */}
-            <WalletsFilterToolbar filterStatus={filterStatus} filterType={filterType} searchQuery={searchQuery} setFilterStatus={setFilterStatus} setFilterType={setFilterType} setSearchQuery={setSearchQuery} setViewMode={setViewMode} viewMode={viewMode} />
-
-            {isLoading && wallets.length === 0 && (
-              <div className="wallets-loading">
-                <span className="spinner spinner--box" />
-                <p>Đang tải danh sách ví...</p>
-              </div>
-            )}
-
-            {!isLoading && wallets.length === 0 && (
-              <EmptyState
-                icon={<WalletOutlineIcon type="cash" size={44} color="#10B981" />}
-                title="Chưa có ví hoặc tài khoản nào"
-                description="Tạo ví tiền mặt, tài khoản ngân hàng hoặc thẻ tín dụng để ghi nhận số dư và giao dịch."
-                actionLabel="+ Tạo ví đầu tiên"
-                onAction={handleCreateNew}
+          {showSearch && (
+            <label className="wallets-search">
+              <span className="u-sr-only">Tìm kiếm ví</span>
+              <input
+                type="search"
+                className="wallets-search-input"
+                placeholder="Tìm kiếm ví..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            )}
+            </label>
+          )}
 
-            {!isLoading && wallets.length > 0 && filteredWallets.length === 0 && (
-              <div className="wallets-no-results">
-                <p>Không tìm thấy ví nào phù hợp với bộ lọc tìm kiếm hiện tại.</p>
-                <button
-                  type="button"
-                  className="wallets-btn-reset-filters"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setFilterType('all');
-                    setFilterStatus('all');
-                  }}
-                >
-                  Xóa bộ lọc
-                </button>
-              </div>
-            )}
+          {isLoading && wallets.length === 0 && (
+            <div className="wallets-loading">
+              <span className="spinner spinner--box" />
+              <p>Đang tải danh sách ví...</p>
+            </div>
+          )}
 
-            {/* ── CARD VIEW (Dạng thẻ lưới chuẩn Ảnh 1 & Ảnh 2) ── */}
-            {<WalletGridView deletingWalletId={deletingWalletId} filteredWallets={filteredWallets} getWalletUsagePercent={getWalletUsagePercent} handleArchive={handleArchive} handleDelete={handleDelete} handleEdit={handleEdit} handleTransfer={handleTransfer} menuRef={menuRef} menuTriggerRef={menuTriggerRef} openAddTxnModal={openAddTxnModal} openMenuWalletId={openMenuWalletId} setOpenMenuWalletId={setOpenMenuWalletId} viewMode={viewMode} walletTxCountMap={walletTxCountMap} />}
+          {!isLoading && wallets.length === 0 && (
+            <EmptyState
+              icon={<WalletOutlineIcon type="cash" size={44} color="#10B981" />}
+              title="Chưa có ví hoặc tài khoản nào"
+              description="Tạo ví tiền mặt, tài khoản ngân hàng hoặc thẻ tín dụng để ghi nhận số dư và giao dịch."
+              actionLabel="+ Tạo ví đầu tiên"
+              onAction={handleCreateNew}
+            />
+          )}
 
-            {/* ── LIST VIEW (Dạng thẻ ngang khi chọn Danh sách) ── */}
-            {<WalletListView deletingWalletId={deletingWalletId} filteredWallets={filteredWallets} handleArchive={handleArchive} handleDelete={handleDelete} handleEdit={handleEdit} handleTransfer={handleTransfer} menuRef={menuRef} menuTriggerRef={menuTriggerRef} openAddTxnModal={openAddTxnModal} openMenuWalletId={openMenuWalletId} setOpenMenuWalletId={setOpenMenuWalletId} viewMode={viewMode} walletTxCountMap={walletTxCountMap} />}
-          </div>
+          {wallets.length > 0 && groups.length === 0 && (
+            <p className="wallets-no-results">Không tìm thấy ví nào phù hợp.</p>
+          )}
+
+          <WalletGroupedList
+            groups={groups}
+            colorByWalletId={colorByWalletId}
+            getWalletNote={getWalletNote}
+            deletingWalletId={deletingWalletId}
+            openMenuWalletId={openMenuWalletId}
+            setOpenMenuWalletId={setOpenMenuWalletId}
+            menuRef={menuRef}
+            menuTriggerRef={menuTriggerRef}
+            onOpenHistory={handleOpenHistory}
+            handleTransfer={handleTransfer}
+            handleEdit={handleEdit}
+            handleArchive={handleArchive}
+            handleDelete={handleDelete}
+            openAddTxnModal={openAddTxnModal}
+          />
         </div>
 
-        {/* ── CỘT PHẢI (~38%): Phân bổ số dư + Hoạt động gần đây ── */}
-        <div className="wallets-v2-col-right">
-          {/* Card 1: Phân bổ số dư */}
-          <WalletBalanceDistributionCard chartTotal={chartTotal} distDropdownRef={distDropdownRef} distributionMode={distributionMode} donutSlices={donutSlices} hoveredSliceId={hoveredSliceId} isDistDropdownOpen={isDistDropdownOpen} setDistributionMode={setDistributionMode} setHoveredSliceId={setHoveredSliceId} setIsDistDropdownOpen={setIsDistDropdownOpen} />
-
-          {/* Card 2: Hoạt động gần đây (CHỈ GIỮA CÁC VÍ) */}
-          <WalletRecentActivityCard defaultWallet={defaultWallet} handleGoToFullHistory={handleGoToFullHistory} walletActivities={walletActivities} walletMap={walletMap} />
-        </div>
+        <aside className="wallets-v2-col-right" aria-label="Chuyển tiền gần đây">
+          <WalletRecentActivityCard handleGoToFullHistory={handleGoToFullHistory} walletActivities={walletActivities} walletMap={walletMap} />
+        </aside>
       </div>
 
       {/* ── 3. Khu vực Ví đã lưu trữ (Archived Wallets Accordion) ── */}

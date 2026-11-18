@@ -163,129 +163,15 @@
   .plan-feature-view .insight-3d-icon-box svg { width: 20px; height: 20px; }
   .plan-feature-view .insight-banner-btn { max-width: 100%; white-space: normal; }
 
-  /* Wallets: readable totals and balanced controls at narrow widths. */
+  /* Wallets: header buttons wrap; long names wrap instead of truncating. */
   .plan-feature-view .wallets-v2-header-actions { gap: 8px; flex-wrap: wrap; }
-  .plan-feature-view .wallets-top-stats-card { gap: 10px; padding: 12px; }
-  .plan-feature-view .stat-card-cell { grid-column: 1 / -1; }
-  .plan-feature-view .stat-cell-icon-wrap { display: none; }
-  .plan-feature-view .stat-cell-info {
-    display: grid;
-    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-    align-items: baseline;
-    gap: 8px;
-    width: 100%;
-    overflow: visible;
-  }
-  .plan-feature-view .stat-cell-label { font-size: var(--font-xs); white-space: normal; }
-  .plan-feature-view .stat-cell-val {
-    white-space: normal;
-    overflow: visible;
-    overflow-wrap: anywhere;
-    text-align: end;
-    font-family: var(--font-sans);
-    font-variant-numeric: tabular-nums;
-  }
-  .plan-feature-view .stat-cell-val.text-brand-default { justify-content: flex-end; }
-  /* Search + "Lọc"; the two filters and the view switch open beneath (WAL-08). */
-  .plan-feature-view .wallets-filter-inputs-group { min-width: 0; width: 100%; flex-basis: 100%; }
-  .plan-feature-view .wallets-search-box { flex: 1 1 auto; }
-  .plan-feature-view .wallets-search-input { min-height: 44px; font-size: var(--font-lg); }
-  .plan-feature-view .wallets-filter-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-    min-height: 44px;
-    padding: 0 14px;
-    border: 1px solid var(--color-border, var(--border));
-    border-radius: var(--radius-sm, 8px);
-    background: var(--color-surface, var(--surface));
-    color: var(--color-text, var(--text-primary));
-    font: inherit;
-    font-size: var(--font-sm);
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .plan-feature-view .wallets-filter-toggle[aria-expanded="true"],
-  .plan-feature-view .wallets-filter-toggle.has-active { border-color: var(--color-link); color: var(--color-link); }
-  .plan-feature-view .wallets-filter-count {
-    display: inline-grid;
-    place-items: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 999px;
-    background: var(--color-action-bg, var(--primary));
-    color: var(--color-action-text, #FFFFFF);
-    font-size: var(--font-xs);
-    line-height: 1;
-  }
-  .plan-feature-view .wallets-filter-panel { display: none; }
-  .plan-feature-view .is-filters-open .wallets-filter-panel {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-  }
-  .plan-feature-view .wallet-custom-dropdown { flex: 1 1 140px; min-width: 0; }
-  .plan-feature-view .wallet-custom-dropdown-trigger { width: 100%; }
-  .plan-feature-view .wallets-view-toggle-bar { margin-left: auto; }
-  .plan-feature-view .wallet-grid-card { padding: 12px; gap: 8px; box-shadow: none; }
-  .plan-feature-view .wallet-grid-name { max-width: none; white-space: normal; overflow-wrap: anywhere; }
-  .plan-feature-view .wallet-grid-card-body { gap: 7px; padding: 0; }
-  .plan-feature-view .wallet-grid-balance,
-  .plan-feature-view .wallet-h-balance-val {
-    white-space: normal;
-    overflow: visible;
-    overflow-wrap: anywhere;
-    font-family: var(--font-sans);
-    font-variant-numeric: tabular-nums;
-  }
-  .plan-feature-view .wallet-grid-card-footer { gap: 8px; flex-wrap: wrap; }
-  .plan-feature-view .wallet-h-card {
-    grid-template-columns: 32px minmax(0, 1fr) auto 44px;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-  }
-  .plan-feature-view .wallet-h-icon-container { width: 32px; height: 32px; }
-  .plan-feature-view .wallet-h-name { white-space: normal; overflow-wrap: anywhere; }
-  /* One line per wallet: icon, name + type, balance, ⋮ (WAL-08). */
-  .plan-feature-view .wallet-h-balance-col { grid-column: 3; grid-row: 1; align-items: flex-end; text-align: end; }
-  .plan-feature-view .wallet-h-balance-label,
-  .plan-feature-view .wallet-h-meta-row { display: none; }
-  .plan-feature-view .wallet-h-action-col { grid-column: 4; grid-row: 1; }
+  .plan-feature-view .wallet-row-main { padding: 8px 6px; gap: 10px; }
+  .plan-feature-view .wallet-row-name-text { white-space: normal; overflow-wrap: anywhere; }
+  .plan-feature-view .wallet-row .wallet-dots-btn { width: 40px; height: 40px; }
   .plan-feature-view .wallet-actions-popover { max-width: calc(100vw - 48px); }
+  .plan-feature-view .wallets-search-input { max-width: none; min-height: 44px; font-size: var(--font-lg); }
   .plan-feature-view .wallets-side-card { padding: 12px; gap: 12px; min-width: 0; }
   .plan-feature-view .side-card-header { flex-wrap: wrap; gap: 8px; }
-  .plan-feature-view .donut-card-title-group { min-width: 0; }
-  .plan-feature-view .donut-card-title { white-space: normal; font-size: var(--font-md); }
-  .plan-feature-view .donut-dist-dropdown-wrap { margin-left: auto; max-width: 100%; }
-  .plan-feature-view .donut-dist-dropdown-trigger { max-width: 100%; }
-  .plan-feature-view .wallet-donut-svg-wrapper {
-    width: min(220px, 100%);
-    height: auto;
-    aspect-ratio: 1;
-    margin: 0;
-  }
-  .plan-feature-view .wallet-donut-svg { max-width: 100%; height: auto; }
-  .plan-feature-view .donut-center-val { font-size: var(--font-lg); white-space: normal; overflow-wrap: anywhere; }
-  .plan-feature-view .donut-center-label { font-size: var(--font-xs); }
-  .plan-feature-view .donut-table-header,
-  .plan-feature-view .donut-table-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 6px 8px;
-    padding: 10px;
-  }
-  .plan-feature-view .donut-th-cat,
-  .plan-feature-view .donut-row-cat { grid-column: 1 / -1; }
-  .plan-feature-view .donut-th-pct,
-  .plan-feature-view .donut-row-pct { text-align: left; }
-  .plan-feature-view .donut-row-name { white-space: normal; overflow-wrap: anywhere; font-size: var(--font-sm); }
-  .plan-feature-view .donut-row-val { white-space: normal; overflow-wrap: anywhere; font-size: var(--font-sm); }
-  .plan-feature-view .donut-th-spacer,
-  .plan-feature-view .donut-row-chevron { display: none; }
   .plan-feature-view .side-card-title-group { position: relative; }
   .plan-feature-view .wallet-activity-tooltip-wrapper { position: static; }
   .plan-feature-view .wallet-activity-tooltip-popup {

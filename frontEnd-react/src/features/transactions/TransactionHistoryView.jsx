@@ -46,7 +46,7 @@ export function TransactionHistoryView() {
   const [type, setType] = useState(['income', 'expense', 'transfer', 'wallet_created'].includes(searchParams.get('type'))
     ? searchParams.get('type') : 'all');
   const [category, setCategory] = useState(searchParams.get('category') || 'all');
-  const [walletId, setWalletId] = useState('all');
+  const [walletId, setWalletId] = useState(searchParams.get('wallet') || 'all');
   const [excludeRecurring, setExcludeRecurring] = useState(searchParams.get('excludeRecurring') === '1');
   const [minAmount, setMinAmount] = useState(null);
   const [maxAmount, setMaxAmount] = useState(null);
@@ -167,6 +167,7 @@ export function TransactionHistoryView() {
   const changeType = (value) => { setType(value); if (value === 'all') dropParams('type'); };
   const changeCategory = (value) => { setCategory(value); if (value === 'all') dropParams('category'); };
   const changePeriod = (value) => { chooseDatePreset(value); if (value === 'all') dropParams('date', 'from', 'to'); };
+  const changeWallet = (value) => { setWalletId(value); if (value === 'all') dropParams('wallet'); };
   const changeRecurring = (checked) => { setExcludeRecurring(checked); if (!checked) dropParams('excludeRecurring'); };
 
   // The row keeps two quick filters (period, type); everything else lives in "Bộ lọc (n)" and, once
@@ -175,7 +176,7 @@ export function TransactionHistoryView() {
   const walletName = [...wallets, ...archivedWallets].find((wallet) => wallet.id === walletId)?.name || '';
   const appliedChips = [
     category !== 'all' && { id: 'category', text: chipCopy.chipCategory(label(category)), clear: () => changeCategory('all') },
-    walletId !== 'all' && { id: 'wallet', text: chipCopy.chipWallet(walletName), clear: () => setWalletId('all') },
+    walletId !== 'all' && { id: 'wallet', text: chipCopy.chipWallet(walletName), clear: () => changeWallet('all') },
     Boolean(minAmount || maxAmount) && { id: 'amount', text: extrasCopy.amountChip(minAmount ? formatCurrency(minAmount) : '', maxAmount ? formatCurrency(maxAmount) : ''), clear: () => changeAmount(null, null) },
     excludeRecurring && { id: 'recurring', text: t('history.excludeRecurring'), clear: () => changeRecurring(false) },
   ].filter(Boolean);
@@ -246,7 +247,7 @@ export function TransactionHistoryView() {
         <button type="button" className="transaction-sheet-apply" onClick={() => setFiltersOpen(false)}>{chipCopy.showResults(summary.count)}</button>
       </>}>
       <FilterOptionGroup title={t('history.filterCategory')} options={options.category} value={category} onChange={changeCategory} />
-      <FilterOptionGroup title={t('history.filterWallet')} options={options.wallet} value={walletId} onChange={setWalletId} />
+      <FilterOptionGroup title={t('history.filterWallet')} options={options.wallet} value={walletId} onChange={changeWallet} />
       <fieldset className="transaction-sheet-group">
         <legend>{extrasCopy.amountRange}</legend>
         <AmountRangeInputs copy={extrasCopy} min={minAmount} max={maxAmount} onChange={changeAmount} className="history-sheet-amount" />

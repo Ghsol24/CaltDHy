@@ -584,6 +584,12 @@ const templates = [
   [/^Tùy chọn ví (.+)$/, (locale, name) => locale === 'en' ? `Wallet options: ${name}` : `钱包选项：${name}`],
   [/^Nạp tiền vào (.+)$/, (locale, name) => locale === 'en' ? `Add money to ${name}` : `向 ${name} 存入资金`],
   [/^Rút tiền từ (.+)$/, (locale, name) => locale === 'en' ? `Withdraw from ${name}` : `从 ${name} 取款`],
+  [/^Tổng số dư · (\d+) ví$/, (locale, count) => locale === 'en' ? `Total balance · ${count} ${Number(count) === 1 ? 'wallet' : 'wallets'}` : `总余额 · ${count} 个钱包`],
+  [/^Phân bổ số dư: (.+)$/, (locale, list) => locale === 'en' ? `Balance distribution: ${list}` : `余额分布：${list}`],
+  [/^Còn (.+) hạn mức$/, (locale, amount) => locale === 'en' ? `${amount} of credit left` : `剩余额度 ${amount}`],
+  [/^Xem giao dịch của (.+)$/, (locale, name) => locale === 'en' ? `View transactions for ${name}` : `查看 ${name} 的交易`],
+  [/^Chuyển tiền từ (.+)$/, (locale, name) => locale === 'en' ? `Transfer from ${name}` : `从 ${name} 转账`],
+  [/^Thêm giao dịch vào (.+)$/, (locale, name) => locale === 'en' ? `Add a transaction to ${name}` : `向 ${name} 添加交易`],
   [/^(.+): (.+)%, (.+)$/, (locale, name, percent, value) => locale === 'en' ? `${name}: ${percent}%, ${value}` : `${name}：${percent}%，${value}`],
 
   [/^Đã bỏ "(.+)" khỏi bản nháp\. Nhấn Lưu để xác nhận\.$/, (locale, name) => locale === 'en' ? `Removed “${name}” from the draft. Select Save to confirm.` : `已从草稿移除“${name}”。点击保存以确认。`],

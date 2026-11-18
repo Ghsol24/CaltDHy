@@ -1331,7 +1331,7 @@ function blendCssColor(color, background) {
       userId: mobileUser._id, name: 'Archive target', type: 'cash', initialBalance: 0, isDefault: false
     });
     await mobilePage.goto('/spending/plan/wallets');
-    const targetWalletCard = mobilePage.locator('.wallet-grid-card').filter({ hasText: 'Archive target' });
+    const targetWalletCard = mobilePage.locator('.wallet-row').filter({ hasText: 'Archive target' });
     await expect(targetWalletCard).toBeVisible();
     await targetWalletCard.getByRole('button', { name: 'Tùy chọn ví Archive target' }).click();
     await mobilePage.getByRole('menuitem', { name: 'Lưu trữ / Đóng ví' }).click();
