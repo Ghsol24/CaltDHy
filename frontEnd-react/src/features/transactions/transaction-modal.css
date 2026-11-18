@@ -374,36 +374,6 @@
   box-shadow: var(--category-card-active-shadow);
 }
 
-/* Thu nhập: thẻ đang chọn, huy hiệu tick và nút Lưu dùng họ màu success của theme. */
-.txn-category-card.active--income {
-  background: var(--color-success-bg);
-  border-color: var(--color-success);
-  color: var(--color-success);
-  box-shadow: 0 0 0 1px var(--color-success), 0 4px 12px color-mix(in srgb, var(--color-success) 18%, transparent);
-}
-
-/* Check Badge on top right of selected card */
-.txn-card-check-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--color-accent-solid);
-  color: #FFFFFF;
-  font-size: var(--font-xs);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.txn-card-check-badge--income {
-  background: var(--color-income-solid);
-}
-
 /* Icon */
 .txn-card-icon {
   font-size: var(--font-2xl);
@@ -428,66 +398,6 @@
 .txn-category-card.active .txn-card-name {
   color: var(--color-accent);
   font-weight: 700;
-}
-
-.txn-category-card.active--income .txn-card-name {
-  color: var(--color-success);
-}
-
-/* Remaining Amount */
-.txn-card-amount {
-  font-family: var(--font-money);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--font-sm);
-  font-weight: 700;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  color: var(--color-text);
-  letter-spacing: -0.01em;
-  margin-bottom: 3px;
-}
-
-/* Subtitle: "Còn lại 88%", "Hết hạn mức", "Chưa đặt hạn mức" */
-.txn-card-subtitle {
-  font-family: var(--font-sans);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  color: var(--text-muted, #718096);
-  margin-bottom: 6px;
-}
-
-/* Mini Progress Bar */
-.txn-card-progress-track {
-  width: 100%;
-  height: 4px;
-  background: var(--color-neutral-border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: auto;
-}
-
-.txn-card-progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width var(--dur-slower) cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Income card tag */
-.txn-card-income-tag {
-  margin-top: auto;
-  font-size: var(--font-xs);
-  font-weight: 600;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  color: #10B981;
-  background: rgba(16, 185, 129, 0.12);
-  padding: 2px 8px;
-  border-radius: 6px;
 }
 
 @media (max-width: 599px) {
@@ -534,27 +444,6 @@
     padding-inline-end: 20px;
     font-size: var(--font-base);
     font-weight: 600;
-  }
-
-  .txn-card-amount,
-  .txn-card-income-tag {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: start;
-  }
-
-  .txn-card-amount {
-    font-size: var(--font-base);
-  }
-
-  .txn-card-subtitle {
-    grid-column: 1 / -1;
-    font-size: var(--font-xs);
-  }
-
-  .txn-card-progress-track {
-    grid-column: 1 / -1;
-    margin-top: 4px;
   }
 }
 
@@ -1137,15 +1026,6 @@
   align-items: center;
 }
 
-.txn-card-subtitle.txn-card-subtitle--danger {
-  color: var(--color-danger);
-}
-
-.txn-card-progress-fill.txn-card-progress-fill--box {
-  width: var(--txn-card-progress-fill-width);
-  background-color: var(--txn-card-progress-fill-background-color);
-}
-
 /* ── Chuyển từ inline style của TransactionMobileFields.jsx (đợt 4) ── */
 .txn-budget-track__fill.txn-budget-track__fill--box {
   width: var(--txn-budget-track__fill-width);
@@ -1155,4 +1035,137 @@
 .txn-budget-track__pending.txn-budget-track__pending--box {
   width: var(--txn-budget-track__pending-width);
   background: var(--txn-budget-track__pending-background);
+}
+
+/* ============================================================
+   ĐỢT 10 (audit Phần 6) — form giao dịch gọn: chip danh mục, một dòng ngân sách
+   ============================================================ */
+
+/* Desktop: hộp thoại ~600px thay vì ~870px (FORM-01) */
+@media (min-width: 600px) {
+  .txn-modal-header {
+    padding: 16px 24px 12px;
+  }
+
+  .txn-modal-body {
+    gap: 12px;
+    padding: 14px 24px;
+  }
+
+  .txn-modal-footer {
+    padding: 14px 24px 16px;
+  }
+}
+
+/* Ví và Ngày chung một hàng; điện thoại xếp dọc như cũ */
+.txn-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 599px) {
+  .txn-field-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+}
+
+/* Chip danh mục chi tiêu: 5 cột × 2 hàng, mỗi hàng cùng chiều cao (tối thiểu 58px, tăng khi chữ cỡ lớn),
+   tên tối đa 2 dòng (đủ chữ ở tooltip) */
+.txn-category-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: minmax(58px, auto);
+  gap: 8px;
+}
+
+.txn-category-card {
+  min-height: 58px;
+  padding: 6px 4px;
+  gap: 3px;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.txn-category-card .txn-card-icon {
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+.txn-category-card .txn-card-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--font-xs);
+  line-height: 1.2;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.txn-category-card--more {
+  border-style: dashed;
+  background: transparent;
+}
+
+/* Một dòng ngân sách cho danh mục đang chọn; giữ chiều cao để form không nhảy khi đổi danh mục */
+.txn-budget-line {
+  margin: 8px 0 0;
+  min-height: 20px;
+  font-size: var(--font-sm);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.txn-budget-line.is-danger {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.txn-budget-line.is-danger svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.txn-budget-line__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--color-link);
+  cursor: pointer;
+}
+
+.txn-budget-line__link:hover {
+  text-decoration: underline;
+}
+
+.txn-budget-line__link:focus-visible {
+  outline: 2px solid var(--color-action-bg);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* FORM-09: "Xóa" là chữ đỏ không viền, đứng tách bên trái; vẫn qua hộp xác nhận */
+.txn-modal-footer .txn-btn-delete {
+  color: var(--color-danger);
+  background: transparent;
+  border-color: transparent;
+  padding-inline: 12px;
+}
+
+@media (hover: hover) {
+  .txn-modal-footer .txn-btn-delete:hover:not(:disabled) {
+    background: var(--color-danger-50);
+    border-color: transparent;
+  }
 }

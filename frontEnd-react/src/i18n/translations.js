@@ -47,7 +47,7 @@ export const translations = {
     'nav.jars': 'Hũ tiết kiệm', 'nav.overview': 'Tổng quan', 'nav.analyticsOverview': 'Tóm tắt thu chi',
     'nav.wallets': 'Ví & Tài khoản', 'nav.budgets': 'Ngân sách',
     'nav.recurring': 'Khoản định kỳ', 'nav.spending': 'Chi tiêu',
-    'nav.cashFlow': 'Dòng tiền', 'nav.reports': 'Báo cáo', 'nav.goals': 'Mục tiêu',
+    'nav.cashFlow': 'Dòng tiền', 'nav.reports': 'Báo cáo', 'nav.goals': 'Tổng quan hũ',
     'nav.jarList': 'Danh sách hũ', 'nav.history': 'Lịch sử nạp/rút', 'nav.transactionHistory': 'Lịch sử giao dịch',
     'nav.mainNavigation': 'Điều hướng chính', 'nav.mobileNavigation': 'Điều hướng chính trên thiết bị di động',
     'nav.sectionNavigation': 'Điều hướng {section}', 'nav.expand': 'Mở rộng thanh điều hướng',
@@ -231,7 +231,6 @@ export const translations = {
     "transaction.walletImpact": "Số dư hiện tại của {wallet}: {amount}",
     "transaction.changeRecorded": "Thay đổi sẽ được lưu trong lịch sử chỉnh sửa.",
     "transaction.budgetForPeriod": "Ngân sách {month}",
-    "transaction.budgetPreview": "Dự kiến sau khi lưu",
     "transaction.budgetLoading": "Đang tải hạn mức…",
     "transaction.budgetFailed": "Không tải được hạn mức của tháng này.",
     "transaction.budgetUnavailable": "Chưa tải được hạn mức",
@@ -258,8 +257,7 @@ export const translations = {
     'transaction.amountPositive': 'Số tiền phải lớn hơn 0.',
     'transaction.limitLeft': 'Còn lại {percent}%', 'transaction.limitReached': 'Hết hạn mức',
     'transaction.limitUnset': 'Chưa đặt hạn mức', 'transaction.save': 'Lưu giao dịch',
-    'transaction.saveWithAmount': 'Lưu · {amount}', 'transaction.budgetLeftAmount': 'Còn lại {percent}% · {amount}',
-    'transaction.budgetAfterSave': 'Sau khi lưu còn {amount} · {percent}%', 'transaction.budgetOver': 'Vượt ngân sách {amount}',
+    'transaction.saveWithAmount': 'Lưu · {amount}',
     'transaction.incomeCategoryHint': 'Danh mục thu nhập', 'transaction.searchCategory': 'Tìm danh mục…',
     'transaction.noCategoryMatch': 'Không có danh mục nào khớp.', 'transaction.pickDate': 'Chọn ngày giao dịch',
     'transaction.futureDateHint': 'Không ghi được giao dịch cho ngày trong tương lai.',
@@ -273,10 +271,6 @@ export const translations = {
     'transaction.revisionSummary': 'Đã sửa {count} lần', 'transaction.revisionSummaryOne': 'Đã sửa 1 lần',
     'transaction.revisionShow': 'Xem lịch sử', 'transaction.revisionHide': 'Ẩn lịch sử',
     'common.closeWindow': 'Đóng cửa sổ',
-    
-    
-    
-    
     'home.addTransaction': 'Thêm giao dịch',
     'home.availableOverview': 'Tổng quan tiền khả dụng', 'home.available': 'Có thể chi',
     'home.availableHint': 'Số dư ví khả dụng; khoản định kỳ chưa trả chưa được trừ trước.',
@@ -339,7 +333,7 @@ export const translations = {
     'nav.jars': 'Savings jars', 'nav.overview': 'Overview', 'nav.analyticsOverview': 'Income & spending summary',
     'nav.wallets': 'Wallets & Accounts', 'nav.budgets': 'Budgets',
     'nav.recurring': 'Recurring items', 'nav.spending': 'Spending',
-    'nav.cashFlow': 'Cash flow', 'nav.reports': 'Reports', 'nav.goals': 'Goals',
+    'nav.cashFlow': 'Cash flow', 'nav.reports': 'Reports', 'nav.goals': 'Jar overview',
     'nav.jarList': 'Jar list', 'nav.history': 'Jar activity', 'nav.transactionHistory': 'Transaction history',
     'nav.mainNavigation': 'Main navigation', 'nav.mobileNavigation': 'Main mobile navigation',
     'nav.sectionNavigation': '{section} navigation', 'nav.expand': 'Expand navigation',
@@ -521,7 +515,6 @@ export const translations = {
     "transaction.walletImpact": "Current balance of {wallet}: {amount}",
     "transaction.changeRecorded": "The change will be recorded in the edit history.",
     "transaction.budgetForPeriod": "Budget for {month}",
-    "transaction.budgetPreview": "Preview after saving",
     "transaction.budgetLoading": "Loading limits…",
     "transaction.budgetFailed": "Unable to load limits for this month.",
     "transaction.budgetUnavailable": "Limits unavailable",
@@ -548,8 +541,7 @@ export const translations = {
     'transaction.amountPositive': 'The amount must be greater than zero.',
     'transaction.limitLeft': '{percent}% left', 'transaction.limitReached': 'Limit reached',
     'transaction.limitUnset': 'No limit set', 'transaction.save': 'Save transaction',
-    'transaction.saveWithAmount': 'Save · {amount}', 'transaction.budgetLeftAmount': '{percent}% left · {amount}',
-    'transaction.budgetAfterSave': 'After saving: {amount} left · {percent}%', 'transaction.budgetOver': 'Over budget by {amount}',
+    'transaction.saveWithAmount': 'Save · {amount}',
     'transaction.incomeCategoryHint': 'Income category', 'transaction.searchCategory': 'Search categories…',
     'transaction.noCategoryMatch': 'No matching categories.', 'transaction.pickDate': 'Choose transaction date',
     'transaction.futureDateHint': "Transactions can't be recorded for future dates.",
@@ -563,10 +555,6 @@ export const translations = {
     'transaction.revisionSummary': 'Edited {count} times', 'transaction.revisionSummaryOne': 'Edited once',
     'transaction.revisionShow': 'View history', 'transaction.revisionHide': 'Hide history',
     'common.closeWindow': 'Close window',
-    
-    
-    
-    
     'home.addTransaction': 'Add transaction',
     'home.availableOverview': 'Available-to-spend overview', 'home.available': 'Available to spend',
     'home.availableHint': 'Eligible wallet balances; unpaid recurring payments are not deducted in advance.',
@@ -627,7 +615,7 @@ export const translations = {
     'nav.home': '首页', 'nav.plan': '计划', 'nav.analytics': '分析', 'nav.jars': '储蓄罐',
     'nav.overview': '总览', 'nav.analyticsOverview': '收支概要', 'nav.wallets': '钱包与账户',
     'nav.budgets': '预算', 'nav.recurring': '周期项目', 'nav.spending': '支出',
-    'nav.cashFlow': '现金流', 'nav.reports': '报告', 'nav.goals': '目标',
+    'nav.cashFlow': '现金流', 'nav.reports': '报告', 'nav.goals': '储蓄罐总览',
     'nav.jarList': '储蓄罐列表', 'nav.history': '存取记录', 'nav.transactionHistory': '交易记录',
     'nav.mainNavigation': '主导航', 'nav.mobileNavigation': '移动端主导航',
     'nav.sectionNavigation': '{section}导航', 'nav.expand': '展开导航', 'nav.collapse': '收起导航',
@@ -799,7 +787,6 @@ export const translations = {
     "transaction.walletImpact": "{wallet}当前余额：{amount}",
     "transaction.changeRecorded": "更改将保存在编辑历史中。",
     "transaction.budgetForPeriod": "{month}预算",
-    "transaction.budgetPreview": "保存后的预览",
     "transaction.budgetLoading": "正在加载额度…",
     "transaction.budgetFailed": "无法加载该月份的额度。",
     "transaction.budgetUnavailable": "额度暂不可用",
@@ -824,8 +811,7 @@ export const translations = {
     'transaction.amountPositive': '金额必须大于零。', 'transaction.limitLeft': '剩余 {percent}%',
     'transaction.limitReached': '额度已用完', 'transaction.limitUnset': '未设置额度',
     'transaction.save': '保存交易', 'transaction.update': '更新交易',
-    'transaction.saveWithAmount': '保存 · {amount}', 'transaction.budgetLeftAmount': '剩余 {percent}% · {amount}',
-    'transaction.budgetAfterSave': '保存后剩余 {amount} · {percent}%', 'transaction.budgetOver': '超出预算 {amount}',
+    'transaction.saveWithAmount': '保存 · {amount}',
     'transaction.incomeCategoryHint': '收入分类', 'transaction.searchCategory': '搜索分类…',
     'transaction.noCategoryMatch': '没有匹配的分类。', 'transaction.pickDate': '选择交易日期',
     'transaction.futureDateHint': '不能记录未来日期的交易。',
@@ -839,8 +825,6 @@ export const translations = {
     'transaction.revisionSummary': '已修改 {count} 次', 'transaction.revisionSummaryOne': '已修改 1 次',
     'transaction.revisionShow': '查看记录', 'transaction.revisionHide': '收起记录',
     'common.closeWindow': '关闭窗口',
-    
-    
     'home.addTransaction': '添加交易',
     'home.availableOverview': '可支配金额总览', 'home.available': '剩余可支配金额',
     'home.availableHint': '可用钱包余额，未付账单不会提前扣除。',

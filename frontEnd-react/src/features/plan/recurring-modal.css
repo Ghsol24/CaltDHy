@@ -416,3 +416,30 @@
     max-width: none;
   }
 }
+
+/* ── Đợt 10 (FORM-10): phần ghi chú gập mặc định ── */
+.recurring-notes-toggle {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 0 6px;
+  border: 0;
+  border-bottom: 1px dashed var(--color-border, var(--border));
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.recurring-notes-chevron {
+  margin-left: auto;
+  color: var(--color-link);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.recurring-notes-toggle[aria-expanded="false"] {
+  min-height: 32px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}

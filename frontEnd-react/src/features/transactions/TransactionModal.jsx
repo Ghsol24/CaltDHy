@@ -78,7 +78,8 @@ export function TransactionModal() {
   const [picker, setPicker] = useState(null); // phones: 'category' | 'date' | null
   const isPhone = useMediaQuery(PHONE_QUERY);
   const isTouch = useMediaQuery(TOUCH_QUERY);
-  const activePicker = isOpen && isPhone ? picker : null;
+  // Điện thoại: tờ chọn ngày và danh mục; desktop: tờ chọn danh mục đầy đủ từ chip "Thêm…".
+  const activePicker = isOpen ? picker : null;
 
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
@@ -142,13 +143,14 @@ export function TransactionModal() {
   }, [type, draftAmount, category, date, selectedPeriod, transactions, applicableBudgets,
       activeExpenseCats, editingTransaction, budgetReady, budgetError, t]);
 
-  // Phones compare "left now" with "left after saving", so they also need the budgets without the draft.
+  // The budget line compares "left now" with "left after saving" (and tells apart a category that was
+  // already over from one this entry pushes over), so it also needs the budgets without the draft.
   const baselineMetrics = useMemo(() => {
-    if (!isPhone || type !== 'expense' || !budgetReady || budgetError) return {};
+    if (type !== 'expense' || !budgetReady || budgetError) return {};
     const metrics = previewCategoryBudgets({ transactions, budgets: applicableBudgets,
       categories: activeExpenseCats, month: selectedPeriod, editingId: editingTransaction?.id, draft: null });
     return describeBudgetMetrics(metrics, t);
-  }, [isPhone, type, selectedPeriod, transactions, applicableBudgets, activeExpenseCats,
+  }, [type, selectedPeriod, transactions, applicableBudgets, activeExpenseCats,
       editingTransaction, budgetReady, budgetError, t]);
 
   // Sắp xếp danh mục: Ưu tiên có hạn mức trước, sau đó là chưa đặt hạn mức (giữ nguyên trật tự cấu hình)
@@ -492,7 +494,8 @@ export function TransactionModal() {
             {/* 3. Smart Category Selection Grid */}
             <TransactionCategoryField baselineMetrics={baselineMetrics} budgetError={budgetError} budgetReady={budgetReady} category={category} categoryMetrics={categoryMetrics} close={close} draftAmount={draftAmount} isPhone={isPhone} navigateTo={navigateTo} selectedPeriod={selectedPeriod} setBudgetRetry={setBudgetRetry} setCategory={setCategory} setPicker={setPicker} sortedCategories={sortedCategories} type={type} />
 
-            {/* 4. Wallet Selection (Chi từ / Nhận vào) */}
+            {/* 4. Ví và 5. Ngày: chung một hàng trên desktop (hộp thoại ~600px), xếp dọc trên điện thoại */}
+            <div className="txn-field-row">
             <div className="txn-field-group">
               <label htmlFor="txn-wallet-select" className="txn-label">
                 <span>{t(type === 'expense' ? 'transaction.expenseWallet' : 'transaction.incomeWallet')}</span>
@@ -510,8 +513,8 @@ export function TransactionModal() {
               )}
             </div>
 
-            {/* 5. Date Field */}
             <TransactionDateField date={date} isPhone={isPhone} maxDate={maxDate} setDate={setDate} setPicker={setPicker} />
+            </div>
 
             {/* 6. Description Note */}
             <div className="txn-field-group">

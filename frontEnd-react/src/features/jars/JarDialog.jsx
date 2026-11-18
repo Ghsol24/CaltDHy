@@ -11,7 +11,7 @@ import './jar-dialog.css';
  * header/footer layout and keeps the dialog inside the visual viewport while
  * the on-screen keyboard is open.
  */
-export function JarDialog({ isOpen, onClose, title, subtitle, children, footer, className = '', busy = false, initialFocusRef }) {
+export function JarDialog({ isOpen, onClose, title, subtitle, children, footer, className = '', busy = false, initialFocusRef, returnFocusRef }) {
   const { t } = useTranslation();
   const titleId = useId();
   const subtitleId = useId();
@@ -47,6 +47,7 @@ export function JarDialog({ isOpen, onClose, title, subtitle, children, footer, 
       labelledBy={titleId}
       describedBy={subtitle ? subtitleId : undefined}
       initialFocusRef={initialFocusRef}
+      returnFocusRef={returnFocusRef}
       autoFocus="container"
     >
       <header className="jar-dialog-header">

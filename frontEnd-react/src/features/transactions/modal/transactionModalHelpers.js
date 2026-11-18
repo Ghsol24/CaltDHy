@@ -20,3 +20,45 @@ export function recentCategoryName(transactions, type, categories) {
   }
   return best?.name || '';
 }
+
+/** Số chip danh mục tối đa trên hai hàng của lưới desktop; nhiều hơn thì có chip "Thêm…". */
+export const CATEGORY_CHIP_SLOTS = 10;
+
+/**
+ * Các danh mục hiện thành chip (desktop). Vừa 10 ô thì hiện hết; nhiều hơn thì 9 chip + "Thêm…",
+ * và danh mục đang chọn luôn nằm trong hàng chip (thay ô cuối nếu nó nằm ngoài 9 chip đầu).
+ */
+export function pickVisibleCategories(categories, selectedName) {
+  if (categories.length <= CATEGORY_CHIP_SLOTS) return { visible: categories, hasMore: false };
+  const visible = categories.slice(0, CATEGORY_CHIP_SLOTS - 1);
+  const selected = String(selectedName || '').toLowerCase();
+  if (selected && !visible.some((cat) => cat.name.toLowerCase() === selected)) {
+    const chosen = categories.find((cat) => cat.name.toLowerCase() === selected);
+    if (chosen) visible[visible.length - 1] = chosen;
+  }
+  return { visible, hasMore: true };
+}
+
+/**
+ * Dòng ngân sách của danh mục đang chọn (FORM-11).
+ * - `metric` đã gồm số tiền đang nhập, `baseline` thì không.
+ * - Đỏ (`tone: 'danger'`) chỉ khi đã có số tiền VÀ chính khoản này làm vượt hạn mức.
+ * - Danh mục đã vượt từ trước thì chỉ ghi trung tính "đã vượt …", không đổi theo số đang gõ.
+ * Trả về `{ text, tone, kind }`; `text` rỗng nghĩa là không có gì để nói.
+ */
+export function describeBudgetLine({ copy, formatMoney, baseline, category, hasDraft, limit, metric }) {
+  if (!metric) return { text: '', kind: 'none' };
+  const lead = (phrase) => (category ? `${category}${copy.colon}${phrase}` : phrase.charAt(0).toLocaleUpperCase() + phrase.slice(1));
+  if (!metric.hasLimit) return { text: lead(copy.unset), kind: 'unset' };
+  if (baseline?.hasLimit && baseline.rawRemaining < 0n) {
+    return { text: lead(copy.over({ amount: formatMoney(-baseline.rawRemaining), limit })), kind: 'over' };
+  }
+  if (hasDraft && metric.rawRemaining < 0n) {
+    return { text: lead(copy.exceed({ amount: formatMoney(-metric.rawRemaining) })), tone: 'danger', kind: 'exceed' };
+  }
+  if (metric.rawRemaining === 0n) return { text: lead(copy.reached({ limit })), kind: 'reached' };
+  const amount = formatMoney(metric.rawRemaining);
+  return hasDraft
+    ? { text: lead(copy.leftAfter({ amount })), kind: 'after' }
+    : { text: lead(copy.left({ amount, limit })), kind: 'left' };
+}

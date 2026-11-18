@@ -7,6 +7,8 @@ import { formatCurrency } from '../../utils/formatters';
 import { formatDisplayDate, parseIsoDate } from '../../utils/datePicker';
 import { moneyNumber } from '../../utils/moneyPrecision.js';
 import { useTranslation } from '../../i18n/useTranslation';
+import { getBudgetLineCopy } from './transactionBudgetCopy';
+import { describeBudgetLine } from './modal/transactionModalHelpers';
 
 import { Icon } from '../../components/ui/AppIcons';
 /*
@@ -73,30 +75,30 @@ export function TransactionSheet({ title, onClose, children }) {
 }
 
 /** Text + bar for the selected category; `metric` already includes the draft, `baseline` does not. */
-function describeSelectedBudget({ t, type, metric, baseline, hasDraft, budgetReady, budgetError }) {
+function describeSelectedBudget({ t, lang, type, metric, baseline, hasDraft, budgetReady, budgetError, limitText }) {
   if (type !== 'expense') return { line: t('transaction.incomeCategoryHint') };
   if (budgetError) return { line: t('transaction.budgetUnavailable') };
   if (!budgetReady) return { line: t('transaction.budgetLoading') };
   if (!metric) return { line: '' };
-  if (!metric.hasLimit) return { line: t('transaction.limitUnset') };
 
+  // FORM-11: đỏ chỉ khi đã có số tiền và chính khoản này làm vượt hạn mức; đã vượt từ trước thì trung tính.
+  const { text, tone, kind } = describeBudgetLine({
+    copy: getBudgetLineCopy(lang),
+    formatMoney: (raw) => formatCurrency(moneyNumber(raw)),
+    baseline, hasDraft, limit: limitText, metric
+  });
+  if (!metric.hasLimit) return { line: text };
   const pending = Math.max(0, (baseline?.percent ?? metric.percent) - metric.percent);
-  const bar = { filled: metric.percent, pending, color: metric.color };
-  if (metric.rawRemaining < 0n) {
-    return { line: t('transaction.budgetOver', { amount: formatCurrency(moneyNumber(-metric.rawRemaining)) }), tone: 'danger', bar };
-  }
-  if (metric.rawRemaining === 0n) return { line: t('transaction.limitReached'), tone: 'danger', bar };
-  if (!hasDraft) {
-    return { line: t('transaction.budgetLeftAmount', { percent: metric.percent, amount: formatCurrency(metric.remaining) }), bar };
-  }
-  return { line: t('transaction.budgetAfterSave', { amount: formatCurrency(metric.remaining), percent: metric.percent }), bar };
+  // Vượt từ trước: thanh đầy nhưng không tô đỏ.
+  const color = kind === 'over' ? 'var(--color-border-strong)' : metric.color;
+  return { line: text, tone, bar: { filled: metric.percent, pending, color } };
 }
 
-export function CategorySummaryButton({ labelId, type, category, metric, baseline, hasDraft, budgetReady, budgetError, onOpen }) {
-  const { t, label } = useTranslation();
+export function CategorySummaryButton({ labelId, type, category, metric, baseline, hasDraft, budgetReady, budgetError, limitText, onOpen }) {
+  const { t, label, lang } = useTranslation();
   const nameId = useId();
   const lineId = useId();
-  const { line, tone, bar } = describeSelectedBudget({ t, type, metric, baseline, hasDraft, budgetReady, budgetError });
+  const { line, tone, bar } = describeSelectedBudget({ t, lang, type, metric, baseline, hasDraft, budgetReady, budgetError, limitText });
 
   return (
     <button

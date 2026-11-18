@@ -18,7 +18,7 @@ const PRESET_COLORS = [
 ];
 const parseAmount = (value) => Number(String(value).replace(/\D/g, '')) || 0;
 
-export function JarModal({ isOpen, onClose, jarToEdit = null }) {
+export function JarModal({ isOpen, onClose, jarToEdit = null, returnFocusRef }) {
   const { createJar, updateJar } = useJarStore();
   const { addToast } = useToastStore();
   const { lang } = useTranslation();
@@ -95,7 +95,7 @@ export function JarModal({ isOpen, onClose, jarToEdit = null }) {
   };
 
   return (
-    <JarDialog isOpen={isOpen} onClose={onClose} title={text(isEditing ? 'editTitle' : 'createTitle')}
+    <JarDialog isOpen={isOpen} onClose={onClose} returnFocusRef={returnFocusRef} title={text(isEditing ? 'editTitle' : 'createTitle')}
       subtitle={text(isEditing ? 'editSubtitle' : 'createSubtitle')} className="jar-management-dialog"
       busy={isSubmitting} initialFocusRef={nameInputRef}
       footer={<>

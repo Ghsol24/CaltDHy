@@ -10,7 +10,6 @@ import { JarModal } from './JarModal';
 import { JarTransactionModal } from './JarTransactionModal';
 import { JarDetailModal } from './JarDetailModal';
 import { JarHistoryModal } from './JarHistoryModal';
-import { FinancialTipsModal } from './FinancialTipsModal';
 import { formatCurrency, formatMonthYear, getLocalDateString } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -22,7 +21,6 @@ import { Icon, AlertTriangleOutlineIcon, JarOutlineIcon } from '../../components
 import './jars.css';
 
 import { Button } from '../../components/ui/Button';
-import { JarsTipsSection } from './jars/JarsTipsSection';
 import { JarsListView } from './jars/JarsListView';
 import { JarsGridView } from './jars/JarsGridView';
 import { JarsListToolbar } from './jars/JarsListToolbar';
@@ -30,6 +28,7 @@ import { JarsProgressSection } from './jars/JarsProgressSection';
 import { JarsOverviewSection } from './jars/JarsOverviewSection';
 import { useJarsOverview } from './jars/useJarsOverview';
 import { JARS_PER_PAGE } from './jars/useJarsOverview';
+const PROGRESS_OVERVIEW_MIN_JARS = 4;
 const JARS_SCROLL_SECTIONS = Object.freeze([
   ['jars-section-goals', 'goals'],
   ['jars-section-list', 'jars'],
@@ -71,8 +70,6 @@ export function JarsView() {
   const [selectedDetailJar, setSelectedDetailJar] = useState(null);
 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [isTipsModalOpen, setIsTipsModalOpen] = useState(false);
-  const [tipsTopic, setTipsTopic] = useState('smart'); // 'smart' | '50-30-20'
 
   // Toolbar & view settings
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'progress_desc' | 'deadline_asc' | 'name_asc'
@@ -118,7 +115,7 @@ export function JarsView() {
   }, []);
 
   // ── 1. Aggregate Financial Metrics ──
-  const { activeJarsCount, currentSuggestion, jarDays, jarEvents, pageCount, progressOverview, smartSuggestions, splitSuggestion, suggestionCopy, suggestionPercent, thisMonthComparison, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget, visibleJars } = useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, today });
+  const { currentSuggestion, datedJarsCount, jarDays, jarEvents, jarStatuses, pageCount, progressOverview, smartSuggestions, splitSuggestion, suggestionCopy, suggestionPercent, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget, visibleJars } = useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, today });
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, pageCount));
@@ -186,11 +183,6 @@ export function JarsView() {
     });
   };
 
-  const handleOpenTips = (topic) => {
-    setTipsTopic(topic);
-    setIsTipsModalOpen(true);
-  };
-
   useSectionScrollSpy({
     disabled: isMobile || jars.length === 0,
     sections: JARS_SCROLL_SECTIONS,
@@ -234,7 +226,7 @@ export function JarsView() {
       ? 'Danh sách hũ'
       : jarsSubTab === 'history'
         ? 'Lịch sử hũ'
-        : 'Mục tiêu';
+        : 'Tổng quan hũ';
     return (
       <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
         <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card">
@@ -257,6 +249,7 @@ export function JarsView() {
             isOpen={isJarModalOpen}
             onClose={() => setIsJarModalOpen(false)}
             jarToEdit={editingJar}
+          returnFocusRef={menuTriggerRef}
           />
         )}
       </div>
@@ -276,7 +269,7 @@ export function JarsView() {
       {(!isMobile || jarsSubTab === 'goals') && (
         <>
       {/* ── SECTION 1: HEADER & OVERVIEW (#jars-section-goals) ── */}
-      <JarsOverviewSection activeJarsCount={activeJarsCount} handleCreateNew={handleCreateNew} thisMonthComparison={thisMonthComparison} thisMonthNet={thisMonthNet} totalCurrent={totalCurrent} totalPercent={totalPercent} totalRemaining={totalRemaining} totalTarget={totalTarget} />
+      <JarsOverviewSection datedJarsCount={datedJarsCount} handleCreateNew={handleCreateNew} jarsCount={jars.length} thisMonthNet={thisMonthNet} totalCurrent={totalCurrent} totalPercent={totalPercent} totalRemaining={totalRemaining} totalTarget={totalTarget} />
 
       {/* ── SECTIONS 2 & 3: LỊCH TIẾT KIỆM + HOẠT ĐỘNG GẦN ĐÂY, rồi MỐC KẾ TIẾP ── */}
       <section className="jars-insights-grid jars-insights-grid--calendar">
@@ -314,8 +307,11 @@ export function JarsView() {
         onCreate={handleCreateNew}
       />
 
-      {/* ── SECTION 4: TỔNG QUAN TIẾN ĐỘ (#jars-section-progress) ── */}
-      <JarsProgressSection handleDeposit={handleDeposit} navigateTo={navigateTo} progressOverview={progressOverview} />
+      {/* ── SECTION 4: TỔNG QUAN TIẾN ĐỘ (#jars-section-progress) ──
+          Chỉ hiện khi có từ 4 hũ: ít hơn thì nó nhắc lại đúng các hũ ngay bên dưới. */}
+      {jars.length >= PROGRESS_OVERVIEW_MIN_JARS && (
+        <JarsProgressSection handleDeposit={handleDeposit} navigateTo={navigateTo} progressOverview={progressOverview} />
+      )}
         </>
       )}
 
@@ -348,7 +344,7 @@ export function JarsView() {
         )}
 
         {/* LOADED STATE: GRID VIEW */}
-        {<JarsGridView activeMenuJarId={activeMenuJarId} deletingJarId={deletingJarId} handleCreateNew={handleCreateNew} handleDelete={handleDelete} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jars={jars} menuTriggerRef={menuTriggerRef} setActiveMenuJarId={setActiveMenuJarId} viewMode={viewMode} visibleJars={visibleJars} />}
+        {<JarsGridView activeMenuJarId={activeMenuJarId} deletingJarId={deletingJarId} handleCreateNew={handleCreateNew} handleDelete={handleDelete} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jarStatuses={jarStatuses} jars={jars} menuTriggerRef={menuTriggerRef} setActiveMenuJarId={setActiveMenuJarId} viewMode={viewMode} visibleJars={visibleJars} />}
 
         {/* LOADED STATE: LIST VIEW */}
         {<JarsListView handleCreateNew={handleCreateNew} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jars={jars} viewMode={viewMode} visibleJars={visibleJars} />}
@@ -387,15 +383,13 @@ export function JarsView() {
         />
       )}
 
-      {/* ── SECTION 7: THÔNG TIN HỮU ÍCH ── */}
-      {<JarsTipsSection handleOpenTips={handleOpenTips} isMobile={isMobile} jarsSubTab={jarsSubTab} />}
-
       {/* ── MODALS ── */}
       {isJarModalOpen && (
         <JarModal
           isOpen={isJarModalOpen}
           onClose={() => setIsJarModalOpen(false)}
           jarToEdit={editingJar}
+          returnFocusRef={menuTriggerRef}
         />
       )}
 
@@ -432,14 +426,6 @@ export function JarsView() {
           isOpen={isHistoryModalOpen}
           onClose={() => setIsHistoryModalOpen(false)}
           jars={jars}
-        />
-      )}
-
-      {isTipsModalOpen && (
-        <FinancialTipsModal
-          isOpen={isTipsModalOpen}
-          onClose={() => setIsTipsModalOpen(false)}
-          initialTopic={tipsTopic}
         />
       )}
     </div>
