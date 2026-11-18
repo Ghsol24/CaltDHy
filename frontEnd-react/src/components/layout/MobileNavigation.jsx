@@ -10,6 +10,9 @@ const PRIMARY_ITEMS = [
   { id: 'jars', labelKey: 'nav.jarShort', icon: <><path d="M6 5h12" /><path d="M7 5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2" /><path d="M5 9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V9Z" /></> }
 ];
 
+// The "+" sits between the second and third destination: the middle of the five bar slots.
+const ADD_BUTTON_INDEX = 2;
+
 const SECTION_ITEMS = {
   plan: [
     { id: 'overview', labelKey: 'nav.overview' }, { id: 'wallets', labelKey: 'nav.wallets' },
@@ -37,6 +40,7 @@ export function MobilePrimaryNavigation() {
   const { t } = useTranslation();
   const activeView = useSpendingStore((state) => state.activeView);
   const navigateTo = useSpendingStore((state) => state.navigateTo);
+  const openAddTxnModal = useSpendingStore((state) => state.openAddTxnModal);
 
   const activate = (id) => {
     navigateTo(id);
@@ -45,13 +49,20 @@ export function MobilePrimaryNavigation() {
 
   return (
     <nav className="mobile-primary-nav" aria-label={t('nav.mobileNavigation')}>
-      {PRIMARY_ITEMS.map((item) => {
+      {PRIMARY_ITEMS.map((item, index) => {
         const isActive = activeView === item.id;
         return (
-          <button key={item.id} type="button" className={`mobile-primary-nav__item ${isActive ? 'is-active' : ''}`} onClick={() => activate(item.id)} aria-current={isActive ? 'page' : undefined}>
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{item.icon}</svg>
-            <span>{t(item.labelKey)}</span>
-          </button>
+          <React.Fragment key={item.id}>
+            {index === ADD_BUTTON_INDEX && (
+              <button type="button" className="mobile-primary-nav__add" onClick={openAddTxnModal} aria-label={t('home.addTransaction')}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              </button>
+            )}
+            <button type="button" className={`mobile-primary-nav__item ${isActive ? 'is-active' : ''}`} onClick={() => activate(item.id)} aria-current={isActive ? 'page' : undefined}>
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{item.icon}</svg>
+              <span>{t(item.labelKey)}</span>
+            </button>
+          </React.Fragment>
         );
       })}
     </nav>

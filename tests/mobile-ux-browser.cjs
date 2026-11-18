@@ -165,6 +165,11 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         await page.waitForURL('**/spending/analytics/transactions');
         layouts.push({ theme, width, route: 'analytics/transactions', ...await readableRouteHeading('#transaction-history-title', `${theme}/${width}/history`, '.transaction-history-header') });
         await page.screenshot({ path: path.join(evidence, `route-history-${theme}-${width}.png`) });
+        // 7b: Lịch sử used to have no way to record; the fixed add button opens the form from here too.
+        await page.locator(desktop ? '.tb-add-btn' : '.mobile-primary-nav__add').click();
+        await expect(page.getByRole('dialog', { name: 'Thêm giao dịch mới' })).toBeVisible();
+        await page.locator('.txn-modal-close-btn').click();
+        await expect(page.getByRole('dialog', { name: 'Thêm giao dịch mới' })).toHaveCount(0);
         await page.goBack();
         if (!desktop) await page.goBack();
         await page.waitForURL('**/spending/plan/recurring');
@@ -194,7 +199,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         await page.setViewportSize({ width, height });
         await page.evaluate(value => localStorage.setItem('caltdhy_lang', value), locale);
         await page.goto('/spending/home');
-        await expect(page.locator('.home-btn-add-txn')).toBeVisible();
+        await expect(page.locator('.tb-add-btn, .mobile-primary-nav__add').filter({ visible: true })).toHaveCount(1);
         await openGuide();
         await expect(guide.getByRole('tab')).toHaveCount(6);
         await expect(guide.getByRole('tab').first()).toHaveAttribute('aria-selected', 'true');
@@ -367,6 +372,18 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           });
           assert.equal(layout.position, 'fixed');
           assert.ok(layout.top >= 0 && layout.height >= 44);
+          // 7b: the bottom bar has five slots; the centred "+" is a 44px+ target that never overlaps its neighbours.
+          const slots = await page.locator('.mobile-primary-nav > *').evaluateAll(nodes => nodes.map(node => {
+            const rect = node.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, width: rect.width, height: rect.height, label: node.getAttribute('aria-label') || node.textContent.trim() };
+          }));
+          assert.equal(slots.length, 5, `${theme}/${width}: bottom bar has 4 destinations + the add button`);
+          assert.equal(slots[2].label, 'Thêm giao dịch');
+          assert.ok(Math.abs((slots[2].left + slots[2].right) / 2 - width / 2) <= 1, `${theme}/${width}: the add button is centred`);
+          for (const [index, slot] of slots.entries()) {
+            assert.ok(slot.width >= 44 && slot.height >= 44, `${theme}/${width}: slot ${index} is a 44px target (${slot.width}x${slot.height})`);
+            if (index) assert.ok(slot.left >= slots[index - 1].right - 0.5, `${theme}/${width}: slot ${index} does not overlap the previous one`);
+          }
           if (fraction > 0) assert.ok(layout.scrollY > 0, 'The long page actually scrolled');
           if (position === 'bottom') {
             // The tip card shows only when a category is over its limit (UX PLAN-07), so measure the last card.

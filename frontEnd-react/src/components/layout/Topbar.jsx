@@ -11,6 +11,7 @@ export function Topbar() {
   const user = useAuthStore((s) => s.user);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const openSettingsModal = useSpendingStore((s) => s.openSettingsModal);
+  const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
 
   // Format initials and display name
   const userName = user?.name || user?.email?.split('@')[0] || t('common.user');
@@ -45,6 +46,12 @@ export function Topbar() {
 
       {/* ── Right Actions ── */}
       <div className="tb-right">
+        {/* Add transaction: the one fixed way to record on every page (desktop; phones use the bottom bar). */}
+        <button type="button" className="tb-add-btn" onClick={openAddTxnModal}>
+          <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+          <span>{t('home.addTransaction')}</span>
+        </button>
+
         {/* Date Display */}
         <div className="tb-date" title={todayFull}>
           <Icon name="calendarRounded" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
