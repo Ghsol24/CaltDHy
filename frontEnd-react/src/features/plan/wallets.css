@@ -619,7 +619,7 @@
 .wallet-row:hover,
 .wallet-row:focus-within,
 .wallet-row.is-menu-open { background: var(--surface-subtle, var(--color-surface-muted)); }
-.wallet-row.is-deleting { opacity: 0.5; pointer-events: none; }
+.wallet-row.is-deleting { opacity: 0.4; pointer-events: none; }
 
 .wallet-row-main {
   flex: 1;
