@@ -81,7 +81,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     const result = await dialog.evaluate(element => {
       const box = element.getBoundingClientRect();
       const footer = element.querySelector('.jar-dialog-footer')?.getBoundingClientRect();
-      const header = element.querySelector('.jar-dialog-header').getBoundingClientRect();
+      const header = element.querySelector('.txn-modal-header').getBoundingClientRect();
       return { left: box.left, top: box.top, right: box.right, bottom: box.bottom,
         width: box.width, height: box.height, viewportWidth: innerWidth, viewportHeight: innerHeight,
         headerTop: header.top, headerBottom: header.bottom,
@@ -90,10 +90,17 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
         bodyLocked: getComputedStyle(document.body).overflow === 'hidden' };
     });
     assert.ok(result.portal && result.bodyLocked, label + ': portal dialog locks background scrolling');
-    assert.ok(result.top >= 9 && result.bottom <= result.viewportHeight - 9, label + ': dialog clears viewport edges ' + JSON.stringify(result));
-    assert.ok(Math.abs((result.top + result.bottom - result.viewportHeight) / 2) <= 2,
-      label + ': dialog centers vertically ' + JSON.stringify(result));
-    assert.ok(Math.abs((result.left + result.right - result.viewportWidth) / 2) <= 2, label + ': dialog centers horizontally');
+    if (result.viewportWidth < 600) {
+      // Điện thoại: vỏ hộp thoại chung là tờ trượt từ đáy, rộng hết màn hình (7d).
+      assert.ok(Math.abs(result.left) <= 1 && Math.abs(result.right - result.viewportWidth) <= 1
+        && Math.abs(result.bottom - result.viewportHeight) <= 1 && result.top >= 8,
+      label + ': phones show the dialog as a full-width bottom sheet ' + JSON.stringify(result));
+    } else {
+      assert.ok(result.top >= 9 && result.bottom <= result.viewportHeight - 9, label + ': dialog clears viewport edges ' + JSON.stringify(result));
+      assert.ok(Math.abs((result.top + result.bottom - result.viewportHeight) / 2) <= 2,
+        label + ': dialog centers vertically ' + JSON.stringify(result));
+      assert.ok(Math.abs((result.left + result.right - result.viewportWidth) / 2) <= 2, label + ': dialog centers horizontally');
+    }
     assert.ok(result.headerTop >= result.top && result.headerBottom <= result.bottom
       && result.footerTop >= result.headerBottom && result.footerBottom <= result.bottom + 1, label + ': header and actions stay visible');
     layouts.push({ label, ...result });
@@ -163,7 +170,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
       await started;
       await expect(dialog).toHaveAttribute('aria-busy', 'true');
       await expect(dialog.locator('.jar-transfer-submit')).toBeDisabled();
-      await expect(dialog.locator('.jar-dialog-close')).toBeDisabled();
+      await expect(dialog.locator('.txn-modal-close-btn')).toBeDisabled();
       await page.keyboard.press('Enter');
       await page.keyboard.press('Enter');
       await page.keyboard.press('Escape');
@@ -184,7 +191,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     await amountInput().fill('999999999');
     await amountInput().blur();
     await expect(dialog.locator('.jar-transfer-submit')).toBeDisabled();
-    await expect(dialog.locator('.jar-transfer-error[role="alert"]').first()).toBeVisible();
+    await expect(dialog.locator('.form-field-error[role="alert"]').first()).toBeVisible();
     await amountInput().fill('20000');
     await noteInput().fill('UX rút đã xác nhận');
     await dialog.locator('.jar-transfer-submit').click();
@@ -211,7 +218,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     await dialog.locator('input[id$="-name"]').fill('UX Hũ tạo qua giao diện');
     await dialog.locator('input[id$="-target"]').fill('1000000');
     await dialog.locator('input[id$="-initial"]').fill('123000');
-    await expect(dialog.locator('.jm-field-hint')).toBeVisible();
+    await expect(dialog.locator('.txn-field-hint')).toBeVisible();
     await dialog.locator('.jar-dialog-footer button[type="submit"]').click();
     await expect(dialog).toHaveCount(0);
     const created = await Jar.findOne({ userId: user._id, name: 'UX Hũ tạo qua giao diện' }).lean();
@@ -220,7 +227,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     assert.equal(await Transaction.countDocuments({ userId: user._id, jarId: created._id }), 0);
   });
 
-  await check('jars UX dialogs center and retain readable notes and actions in four themes', async () => {
+  await check('jars UX dialogs center (bottom sheet on phones) and retain readable notes and actions in four themes', async () => {
     for (const [theme, viewports] of [
       ['dark', [[1440, 1000], [390, 844]]], ['light', [[1280, 720], [320, 568]]],
       ['cream', [[1440, 900], [390, 844]]], ['green', [[1280, 720], [320, 568]]],
@@ -256,7 +263,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
           const opened = await open(kind);
           if (kind === 'history') await expect(historyPage.locator('h1')).toHaveText(titles[locale][index]);
           else {
-            await expect(dialog.locator('.jar-dialog-header h2')).toHaveText(titles[locale][index]);
+            await expect(dialog.locator('.txn-modal-title')).toHaveText(titles[locale][index]);
             await layout(`${locale}/${width}/${kind}`);
           }
           if (kind === 'deposit') await verifyNote(`${locale}/${width}`);

@@ -43,7 +43,7 @@ check('jar deposit dialog uses the themed wallet dropdown', async ({ browser, se
   await dialog.locator('input[inputmode="numeric"]').focus();
   await trigger.click();
   await expect(dialog.locator('.custom-wallet-menu')).toBeVisible();
-  assert.equal(await dialog.locator('.jar-transfer-error').count(), 0, 'no error before the person types or confirms');
+  assert.equal(await dialog.locator('.form-field-error').count(), 0, 'no error before the person types or confirms');
   await dialog.locator('.custom-wallet-item', { hasText: 'MBbank' }).click();
   await expect(trigger).toContainText('MBbank');
   await expect(dialog.locator('.custom-wallet-menu')).toHaveCount(0);

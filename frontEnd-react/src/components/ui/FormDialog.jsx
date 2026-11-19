@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { Dialog } from './Dialog';
 import { Icon } from './AppIcons';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -7,6 +7,8 @@ import { useSheetDrag } from '../../hooks/useSheetDrag';
 
 // Matches the CSS breakpoint where the dialog becomes a bottom sheet (form-dialog-shell.css).
 const PHONE_QUERY = `(max-width: ${BREAKPOINTS.phone}px)`;
+// Where an on-screen keyboard can shrink the visible area (same query as the CSS that reads the variables).
+const KEYBOARD_QUERY = `${PHONE_QUERY}, (pointer: coarse)`;
 
 const cx = (...names) => names.filter(Boolean).join(' ');
 
@@ -17,6 +19,9 @@ const cx = (...names) => names.filter(Boolean).join(' ');
  * Desktop: a 500px card. Phones: a bottom sheet with a grabber that can be
  * dragged down to dismiss. Always portalled to <body>, so the topbar and the
  * bottom navigation never sit on top of it.
+ *
+ * On touch screens the backdrop follows window.visualViewport, so an open
+ * on-screen keyboard never hides the header or the footer buttons.
  *
  * Behaviour (focus trap, Escape, backdrop click, scroll lock) comes from
  * <Dialog>. Children are the body and footer, usually inside a <form>:
@@ -53,6 +58,27 @@ export function FormDialog({
   const subtitleId = useId();
   const headingId = titleId || ownTitleId;
   const isPhone = useMediaQuery(PHONE_QUERY);
+  const fitsKeyboard = useMediaQuery(KEYBOARD_QUERY);
+  const ownOverlayRef = useRef(null);
+  const backdropRef = overlayRef || ownOverlayRef;
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!isOpen || !fitsKeyboard || !viewport) return undefined;
+    const fitViewport = () => {
+      const overlay = backdropRef.current;
+      if (!overlay) return;
+      overlay.style.setProperty('--dialog-viewport-height', `${viewport.height}px`);
+      overlay.style.setProperty('--dialog-viewport-top', `${viewport.offsetTop}px`);
+    };
+    fitViewport();
+    viewport.addEventListener('resize', fitViewport);
+    viewport.addEventListener('scroll', fitViewport);
+    return () => {
+      viewport.removeEventListener('resize', fitViewport);
+      viewport.removeEventListener('scroll', fitViewport);
+    };
+  }, [isOpen, fitsKeyboard, backdropRef]);
   const dismiss = () => {
     if (!busy) onClose?.();
   };
@@ -69,7 +95,7 @@ export function FormDialog({
       onEscape={onEscape}
       busy={busy}
       panelRef={panelRef}
-      overlayRef={overlayRef}
+      overlayRef={backdropRef}
       returnFocusRef={returnFocusRef}
       initialFocusRef={initialFocusRef}
       autoFocus={autoFocus}
