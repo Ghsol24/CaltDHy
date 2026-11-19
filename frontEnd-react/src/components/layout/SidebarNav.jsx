@@ -29,6 +29,7 @@ export function SidebarNav() {
   const navigateTo = useSpendingStore((s) => s.navigateTo);
   const planSubTab = useSpendingStore((s) => s.planSubTab);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
+  const analyticsInViewSection = useSpendingStore((s) => s.analyticsInViewSection);
   const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
   const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
@@ -56,6 +57,12 @@ export function SidebarNav() {
       setSidebarCollapsed(true);
     }
   };
+
+  // On the long "Tóm tắt thu chi" page the highlight follows the block being read, so only
+  // one item ever looks selected. The page keeps aria-current (the URL does not move) and
+  // clicking an item still opens its own screen.
+  const overviewInView = activeView === 'analytics' && analyticsSubTab === 'overview'
+    ? analyticsInViewSection : null;
 
   const navGroups = [
     {
@@ -95,19 +102,24 @@ export function SidebarNav() {
       items: [
         {
           id: 'analytics_overview', viewId: 'analytics', subTabId: 'overview', label: t('nav.analyticsOverview'), icon: 'analyticsOverview',
-          isActive: activeView === 'analytics' && (analyticsSubTab === 'overview' || !analyticsSubTab)
+          isActive: activeView === 'analytics' && (analyticsSubTab === 'overview' || !analyticsSubTab),
+          // Reading a block below: the highlight moves to that block's item, this one fades.
+          isShadowed: Boolean(overviewInView)
         },
         {
           id: 'analytics_spending', viewId: 'analytics', subTabId: 'spending', label: t('nav.spending'), icon: 'spending',
-          isActive: activeView === 'analytics' && analyticsSubTab === 'spending'
+          isActive: activeView === 'analytics' && analyticsSubTab === 'spending',
+          isInView: overviewInView === 'spending'
         },
         {
           id: 'analytics_cashflow', viewId: 'analytics', subTabId: 'cash-flow', label: t('nav.cashFlow'), icon: 'cashFlow',
-          isActive: activeView === 'analytics' && analyticsSubTab === 'cash-flow'
+          isActive: activeView === 'analytics' && analyticsSubTab === 'cash-flow',
+          isInView: overviewInView === 'cash-flow'
         },
         {
           id: 'analytics_reports', viewId: 'analytics', subTabId: 'reports', label: t('nav.reports'), icon: 'reports',
-          isActive: activeView === 'analytics' && analyticsSubTab === 'reports'
+          isActive: activeView === 'analytics' && analyticsSubTab === 'reports',
+          isInView: overviewInView === 'reports'
         },
         {
           id: 'analytics_transactions', viewId: 'analytics', subTabId: 'transactions', label: t('nav.transactionHistory'), icon: 'transactions',
@@ -139,7 +151,7 @@ export function SidebarNav() {
     <button
       key={item.id}
       type="button"
-      className={`sidebar-nav-item ${item.isActive ? 'active' : ''}`}
+      className={`sidebar-nav-item ${item.isActive ? 'active' : ''}${item.isInView ? ' is-in-view' : ''}${item.isShadowed ? ' is-shadowed' : ''}`}
       onClick={() => handleNavClick(item.viewId, item.subTabId)}
       aria-current={item.isActive ? 'page' : undefined}
       title={isSidebarCollapsed ? item.label : undefined}

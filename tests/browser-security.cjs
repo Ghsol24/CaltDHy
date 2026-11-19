@@ -1380,12 +1380,15 @@ function blendCssColor(color, background) {
     await deleteWalletDialog.getByRole('button', { name: 'Hủy' }).click();
     await expect(deleteWalletDialog).toHaveCount(0);
     // Desktop (đợt 11, NAV-05): mỗi mục menu là một màn hình; riêng "Tóm tắt thu chi" giữ trang
-    // cuộn đầy đủ và menu/URL đứng yên ở mục đó khi cuộn (không còn scroll-spy).
+    // cuộn đầy đủ, URL và aria-current đứng yên ở mục đó khi cuộn. Đợt 13b: phần sáng chuyển sang
+    // mục của khối đang xem (is-in-view), "Tóm tắt thu chi" mờ đi (is-shadowed); màn hình riêng không đổi.
     await mobilePage.goto('/spending/analytics/cash-flow');
     await expect(mobilePage.locator('#analytics-overview')).toBeVisible();
     await expect(mobilePage.locator('#analytics-cashflow')).toBeVisible();
     await expect(mobilePage.locator('#analytics-spending, #analytics-reports')).toHaveCount(0);
     await expect(mobilePage.locator('.analytics-kpi-grid')).toHaveCount(0);
+    await expect(mobilePage.getByRole('button', { name: 'Dòng tiền', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(mobilePage.locator('.sidebar-nav-item.is-in-view')).toHaveCount(0);
     const desktopReportsNav = mobilePage.getByRole('button', { name: 'Báo cáo', exact: true });
     await desktopReportsNav.click();
     await mobilePage.waitForURL('**/spending/analytics/reports');
@@ -1398,10 +1401,26 @@ function blendCssColor(color, background) {
     for (const sectionId of ['analytics-overview', 'analytics-spending', 'analytics-cashflow', 'analytics-reports']) {
       await expect(mobilePage.locator(`#${sectionId}`)).toBeVisible();
     }
+    const desktopOverviewNav = mobilePage.getByRole('button', { name: 'Tóm tắt thu chi', exact: true });
+    const desktopCashFlowNav = mobilePage.getByRole('button', { name: 'Dòng tiền', exact: true });
     await mobilePage.waitForTimeout(700);
-    await mobilePage.locator('#analytics-reports').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
-    await mobilePage.waitForTimeout(300);
-    await expect(mobilePage.getByRole('button', { name: 'Tóm tắt thu chi', exact: true })).toHaveAttribute('aria-current', 'page');
+    // Đầu trang (tiêu đề + 4 ô số): chỉ "Tóm tắt thu chi" sáng.
+    await expect(mobilePage.locator('.sidebar-nav-item.is-in-view')).toHaveCount(0);
+    await expect(desktopOverviewNav).not.toHaveClass(/(^|\s)is-shadowed(\s|$)/);
+    await mobilePage.locator('#analytics-cashflow').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
+    await expect(desktopCashFlowNav).toHaveClass(/(^|\s)is-in-view(\s|$)/);
+    await expect(mobilePage.locator('.sidebar-nav-item.is-in-view')).toHaveCount(1);
+    await expect(desktopOverviewNav).toHaveAttribute('aria-current', 'page');
+    await expect(desktopOverviewNav).toHaveClass(/(^|\s)is-shadowed(\s|$)/);
+    await expect(desktopCashFlowNav).not.toHaveAttribute('aria-current', 'page');
+    await expect(desktopReportsNav).not.toHaveAttribute('aria-current', 'page');
+    await expect(mobilePage).toHaveURL(/\/spending\/analytics\/overview$/);
+    // Chạm đáy trang → khối cuối ("Báo cáo") sáng phụ, trang hiện tại vẫn là Tóm tắt.
+    await mobilePage.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' }));
+    await expect(desktopReportsNav).toHaveClass(/(^|\s)is-in-view(\s|$)/);
+    await expect(desktopCashFlowNav).not.toHaveClass(/(^|\s)is-in-view(\s|$)/);
+    await expect(desktopOverviewNav).toHaveClass(/(^|\s)is-shadowed(\s|$)/);
+    await expect(desktopOverviewNav).toHaveAttribute('aria-current', 'page');
     await expect(desktopReportsNav).not.toHaveAttribute('aria-current', 'page');
     await expect(mobilePage).toHaveURL(/\/spending\/analytics\/overview$/);
     await mobilePage.getByTestId('cashflow-display-trigger').click();
