@@ -20,28 +20,6 @@
   gap: 20px;
 }
 
-.plan-overview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.plan-header-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.plan-overview-title {
-  font-size: var(--font-3xl);
-  font-weight: 800;
-  color: var(--color-text, var(--text-primary));
-  margin: 0;
-  line-height: 1.2;
-}
-
 /* Quick Creation Dropdown */
 .plan-create-menu-wrapper {
   position: relative;

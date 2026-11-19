@@ -55,17 +55,7 @@
   .plan-feature-view :is(.plan-overview-container, .wallets-v2-container,
     .budgets-tab-container, .budget-month-data, .recurring-view-v2-container) { gap: 14px; }
 
-  .plan-feature-view :is(.plan-overview-header, .wallets-v2-header, .budgets-page-header) {
-    gap: 10px;
-    align-items: center;
-  }
-  .plan-feature-view :is(.plan-overview-title, .wallets-v2-heading, .budgets-view-title, .recurring-route-heading) {
-    font-size: var(--font-2xl);
-    line-height: 1.35;
-  }
   .plan-feature-view .plan-overview-header { flex-wrap: nowrap; }
-  .plan-feature-view .plan-header-titles { min-width: 0; flex: 1; }
-  .plan-feature-view .plan-header-lead { min-width: 0; flex: 1; }
   .plan-feature-view .plan-create-menu-wrapper { flex-shrink: 0; }
   .plan-feature-view .plan-btn-create-primary { padding: 8px 10px; gap: 6px; }
   .plan-feature-view .plan-btn-create-primary .dropdown-chevron-icon { display: none; }
@@ -164,7 +154,9 @@
   .plan-feature-view .insight-banner-btn { max-width: 100%; white-space: normal; }
 
   /* Wallets: header buttons wrap; long names wrap instead of truncating. */
-  .plan-feature-view .wallets-v2-header-actions { gap: 8px; flex-wrap: wrap; }
+  /* Two header buttons share one full row under the title. */
+  .plan-feature-view .wallets-v2-header .page-header__actions { order: 3; flex-basis: 100%; margin-left: 0; }
+  .plan-feature-view .wallets-v2-header .page-header__actions > button { flex: 1 1 0; justify-content: center; min-width: 0; }
   .plan-feature-view .wallet-row-main { padding: 8px 6px; gap: 10px; }
   .plan-feature-view .wallet-row-name-text { white-space: normal; overflow-wrap: anywhere; }
   .plan-feature-view .wallet-row .wallet-dots-btn { width: 40px; height: 40px; }
@@ -216,7 +208,6 @@
   .plan-feature-view .banner-stat-divider { display: none; }
   .plan-feature-view .banner-stat-val { overflow-wrap: anywhere; font-family: var(--font-sans); }
   /* "Thêm" sits in the title row (it is part of the page header). */
-  .plan-feature-view .recurring-page-header { min-height: 44px; }
   .plan-feature-view .recurring-btn-create-primary {
     justify-content: center;
     min-height: 44px;

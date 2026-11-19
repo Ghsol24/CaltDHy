@@ -8,12 +8,6 @@
   gap: 20px;
 }
 
-.recurring-page-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 /* Page title + its sidebar icon (shared by every page header). */
 .page-title-lead {
   display: flex;
@@ -52,14 +46,6 @@
 :is(h1, h2, h3)[tabindex="-1"]:focus {
   outline: none;
   box-shadow: none;
-}
-
-.recurring-route-heading {
-  margin: 0;
-  font-size: var(--font-3xl);
-  font-weight: 800;
-  line-height: 1.2;
-  color: var(--color-text, var(--text-primary));
 }
 
 /* 1. Top Header Bar Card (Full-width card chuẩn Ảnh 1) */

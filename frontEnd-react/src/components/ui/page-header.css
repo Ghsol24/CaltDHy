@@ -72,8 +72,10 @@
     gap: 12px 10px;
   }
 
+  /* The title block shrinks (subtitle wraps) so the buttons stay on row 1. */
   .page-header__lead {
     gap: 10px;
+    flex: 1 1 0;
   }
 
   .page-header__title {

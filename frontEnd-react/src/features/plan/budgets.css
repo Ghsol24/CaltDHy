@@ -65,39 +65,6 @@
   .budget-skeleton-line { animation: none; }
 }
 
-/* Page title */
-.budgets-header-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.budgets-view-title {
-  font-size: var(--font-4xl);
-  font-weight: 700;
-  color: var(--color-text, #101B36);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.budgets-view-subtitle {
-  font-size: var(--font-sm);
-  color: var(--color-text-secondary, #607086);
-  margin: 0;
-}
-
-/* One line, so the title block keeps its height whatever sits in the action
-   slot (edit button, closed-month badge, tips button). */
-.bdash-header .budgets-view-subtitle {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bdash-header .budgets-header-titles {
-  min-width: 0;
-}
-
 /* Month switcher — also used by the analytics view */
 .budget-month-selector {
   display: inline-flex;
@@ -232,21 +199,9 @@
 /* ── 1b. BUDGET DASHBOARD — hero summary + category table ──
    The container query switches the table to two-line rows wherever the
    content column is narrow (phones, or tablets with the sidebar open). */
-.budgets-page-header {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  grid-template-areas: "title . month action";
-  align-items: center;
-  gap: 12px 20px;
-}
-
-.bdash-header__title {
-  grid-area: title;
-  min-width: 0;
-}
-
+/* Title row: shared PageHeader (components/ui/page-header.css); the month
+   switcher is its period slot, the edit button / closed badge its action. */
 .bdash-header__month {
-  grid-area: month;
   min-width: 0;
 }
 
@@ -278,16 +233,6 @@
     min-width: 9.5em;
     justify-content: center;
   }
-}
-
-.bdash-header__action {
-  grid-area: action;
-  justify-self: end;
-  /* Tips button + main action stay on one row so the header height never
-     depends on which of them is shown (month switching must not move the table). */
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .bdash-edit-btn {
@@ -999,11 +944,20 @@ button.bdash-row:focus-visible .bdash-row__chevron {
 }
 
 @container budgets (max-width: 760px) {
-  .budgets-page-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "title action"
-      "month month";
+  /* Narrow column (phones, or tablets with the sidebar open): the month
+     switcher gets its own full row under the title. */
+  .budgets-page-header .page-header__period {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .budgets-page-header .page-header__actions {
+    margin-left: auto;
+  }
+
+  .bdash-header__month {
+    width: 100%;
   }
 
   .bdash-header__month .budget-month-selector {

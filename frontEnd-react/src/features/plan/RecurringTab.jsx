@@ -10,7 +10,7 @@ import { formatCurrency, getRecurringTier, getLocalMonthString } from '../../uti
 import { EmptyState } from '../../components/ui/EmptyState';
 import { useTranslation } from '../../i18n/useTranslation';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
-import { PageTitleIcon } from '../../components/ui/NavIcons';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 import { Icon } from '../../components/ui/AppIcons';
 import { SORT_OPTIONS } from './recurring/recurringOptions';
@@ -315,11 +315,13 @@ export function RecurringTab() {
 
   return (
     <div className="recurring-view-v2-container" role="region" aria-label="Khoản chi định kỳ và trả góp">
-      <div className="recurring-page-header">
-        <PageTitleIcon name="recurring" />
-        <h1 className="recurring-route-heading">{t('nav.recurring')}</h1>
-        {/* The page's main action sits in the title row, as on every other page (REC-03). */}
-        <div className="page-header-actions page-header-actions--end">
+      {/* The page's main action sits in the title row, as on every other page (REC-03). */}
+      <PageHeader
+        icon="recurring"
+        className="recurring-page-header"
+        title={t('nav.recurring')}
+        titleClassName="recurring-route-heading"
+        actions={(
           <button
             type="button"
             className="recurring-btn-create-primary"
@@ -330,8 +332,8 @@ export function RecurringTab() {
             <span className="plan-wide-copy">Thêm khoản định kỳ</span>
             <span className="plan-mobile-copy">Thêm</span>
           </button>
-        </div>
-      </div>
+        )}
+      />
       {/* ── 1. Three numbers for the month (REC-01) ── */}
       <RecurringHeaderCard monthlyBreakdown={monthlyBreakdown} monthlyEstimatedCost={monthlyEstimatedCost} />
 
