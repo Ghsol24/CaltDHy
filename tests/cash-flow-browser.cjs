@@ -14,6 +14,9 @@ const backend = createRequire(path.resolve(__dirname, '../backEnd/server/package
 const mongoose = backend('mongoose');
 const { MongoMemoryReplSet } = backend('mongodb-memory-server');
 const evidenceDir = process.env.CASH_FLOW_QA_DIR || path.join(os.tmpdir(), 'caltdhy-cash-flow-evidence');
+// Evidence screenshots are for reviewing a UI change by eye; the assertions never read them. Encoding
+// dozens of PNGs on every run costs CPU, so they are written only on request (failure shots always are).
+const saveEvidence = process.env.SAVE_QA_EVIDENCE === '1' || Boolean(process.env.CASH_FLOW_QA_DIR);
 let server, db, browser, auditPage, passed = 0;
 async function check(name, work) {
   if (process.env.CASH_FLOW_SCENARIO && !name.includes(process.env.CASH_FLOW_SCENARIO)) return;
@@ -137,7 +140,7 @@ async function check(name, work) {
     fs.mkdirSync(evidenceDir, { recursive: true });
     // A fixed phone navigation bar otherwise appears halfway through a tall element capture.
     // This affects the capture only; all viewport/menu captures retain the real navigation.
-    await panel.screenshot({ path: path.join(evidenceDir, name), animations: 'disabled',
+    if (saveEvidence) await panel.screenshot({ path: path.join(evidenceDir, name), animations: 'disabled',
       style: '.mobile-primary-nav { visibility: hidden !important; }' });
   }
   async function chartAlpha(dayIndex) {
@@ -512,7 +515,7 @@ async function check(name, work) {
           await verifyTextContrast(popover, 'h4, label strong, label small, p', `${theme}/${width} menu`);
           assert.ok(layout.top >= -1 && layout.bottom <= layout.viewportHeight + 1,
             `${theme}/${width}: menu remains inside the viewport`);
-          await page.screenshot({ path: path.join(evidenceDir, `${width}-${theme}-${await popover.getAttribute('data-popover')}.png`), animations: 'disabled' });
+          if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${width}-${theme}-${await popover.getAttribute('data-popover')}.png`), animations: 'disabled' });
           await page.keyboard.press('Escape'); await expect(popover).toHaveCount(0);
           await expect(trigger).toBeFocused();
           if (width <= 768) {

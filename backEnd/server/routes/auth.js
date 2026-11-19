@@ -17,6 +17,7 @@ const PushSubscription = require('../models/PushSubscription');
 const { validPushEndpoint, vapidConfig } = require('../utils/webPush');
 const { applyReminderChoice } = require('../utils/reminders');
 const totp = require('../utils/totp');
+const { passwordHashCost } = require('../utils/passwordHash');
 const router = express.Router();
 
 const validPassword = value => typeof value === 'string' && value.length >= 12 &&
@@ -123,7 +124,7 @@ router.post('/register', async (req, res) => {
         if (inviteOnly && (typeof inviteToken !== 'string' || !/^[a-f0-9]{64}$/.test(inviteToken))) {
             return res.status(403).json({ success: false, message: 'Cần liên kết mời hợp lệ để tạo tài khoản.' });
         }
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash = await bcrypt.hash(password, passwordHashCost());
         const result = await runWithTransaction(async session => {
             if (inviteOnly) {
                 const invitation = await Invitation.findOneAndUpdate({
@@ -244,7 +245,7 @@ router.post('/reset-password', async (req, res) => {
         if (!validToken(token) || !validEmail(email) || !validPassword(newPassword)) {
             return res.status(400).json({ success: false, message: 'Thông tin không hợp lệ. Mật khẩu cần 12 ký tự, tối đa 72 byte.' });
         }
-        const password = await bcrypt.hash(newPassword, 12);
+        const password = await bcrypt.hash(newPassword, passwordHashCost());
         // One atomic consume: concurrent requests cannot both use the same token.
         const user = await User.findOneAndUpdate({
             email: normalizeEmail(email), resetPasswordToken: hash(token),
@@ -443,7 +444,7 @@ router.put('/profile', protect, async (req, res) => {
                 user.resetPasswordToken = undefined;
                 user.resetPasswordExpiry = undefined;
             }
-            if (newPassword) user.password = await bcrypt.hash(newPassword, 12);
+            if (newPassword) user.password = await bcrypt.hash(newPassword, passwordHashCost());
             if (changedEmail) {
                 user.email = normalizeEmail(email); user.emailVerified = false;
                 user.emailVerificationToken = undefined; user.emailVerificationExpiry = undefined;

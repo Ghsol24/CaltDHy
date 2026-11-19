@@ -3,6 +3,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+
+// Evidence screenshots are written only on request; see mobile-ux-browser.cjs, which runs these scenarios.
+const saveEvidence = process.env.SAVE_QA_EVIDENCE === '1' || Boolean(process.env.MOBILE_UX_QA_DIR);
 const { expect } = require('@playwright/test');
 
 // Reuses the mobile harness's authenticated browser and isolated database.
@@ -241,7 +244,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
           if (kind === 'deposit' || kind === 'withdraw') await verifyNote(label);
           if (kind === 'history') await verifyHistory(label);
           if (kind === 'deposit' || kind === 'history' || (theme === 'green' && kind === 'create')) {
-            await page.screenshot({ path: path.join(evidence, `jars-${kind}-${theme}-${width}.png`) });
+            if (saveEvidence) await page.screenshot({ path: path.join(evidence, `jars-${kind}-${theme}-${width}.png`) });
           }
           await close(opened, kind !== 'detail');
         }
@@ -275,7 +278,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
             await expect(historyPage.locator('.jm-history-day')).toHaveCount(0);
             await expect(historyPage.locator('.jm-history-empty')).toBeVisible();
           }
-          if (width === 390) await page.screenshot({ path: path.join(evidence, `jars-${kind}-${locale}-390.png`) });
+          if (saveEvidence && width === 390) await page.screenshot({ path: path.join(evidence, `jars-${kind}-${locale}-390.png`) });
           await close(opened);
         }
       }

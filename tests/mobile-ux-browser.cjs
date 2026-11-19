@@ -13,6 +13,9 @@ const backend = createRequire(path.resolve(__dirname, '../backEnd/server/package
 const mongoose = backend('mongoose');
 const { MongoMemoryReplSet } = backend('mongodb-memory-server');
 const evidence = process.env.MOBILE_UX_QA_DIR || path.join(os.tmpdir(), 'caltdhy-mobile-ux');
+// Evidence screenshots are for reviewing a UI change by eye; the assertions never read them. Encoding
+// dozens of PNGs on every run costs CPU, so they are written only on request (failure shots always are).
+const saveEvidence = process.env.SAVE_QA_EVIDENCE === '1' || Boolean(process.env.MOBILE_UX_QA_DIR);
 let server, database, browser, page, passed = 0;
 async function check(name, work) {
   if (process.env.MOBILE_UX_SCENARIO && !name.includes(process.env.MOBILE_UX_SCENARIO)) return;
@@ -154,7 +157,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           await page.waitForURL('**/spending/plan/' + tab);
           const layout = await readableRouteHeading(selector, `${theme}/${width}/${tab}`, header);
           layouts.push({ theme, width, route: 'plan/' + tab, ...layout });
-          if (tab !== 'budgets') await page.screenshot({ path: path.join(evidence, `route-${tab}-${theme}-${width}.png`) });
+          if (saveEvidence && tab !== 'budgets') await page.screenshot({ path: path.join(evidence, `route-${tab}-${theme}-${width}.png`) });
         }
         await scrollDown();
         if (desktop) await page.locator('.sidebar-nav-group').nth(2).getByRole('button', { name: 'Lịch sử giao dịch', exact: true }).click();
@@ -164,7 +167,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         }
         await page.waitForURL('**/spending/analytics/transactions');
         layouts.push({ theme, width, route: 'analytics/transactions', ...await readableRouteHeading('#transaction-history-title', `${theme}/${width}/history`, '.transaction-history-header') });
-        await page.screenshot({ path: path.join(evidence, `route-history-${theme}-${width}.png`) });
+        if (saveEvidence) await page.screenshot({ path: path.join(evidence, `route-history-${theme}-${width}.png`) });
         // 7b: Lịch sử used to have no way to record; the fixed add button opens the form from here too.
         await page.locator(desktop ? '.tb-add-btn' : '.mobile-primary-nav__add').click();
         await expect(page.getByRole('dialog', { name: 'Thêm giao dịch mới' })).toBeVisible();
@@ -215,7 +218,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height + 1, 'Guide fits vertically');
           await expect(guide.locator('.guide-modal-footer button')).toBeInViewport();
           if (locale === 'vi' && width === 390 && /Hũ/.test(await tab.innerText())) {
-            await guide.screenshot({ path: path.join(evidence, 'guide-jars-mobile.png') });
+            if (saveEvidence) await guide.screenshot({ path: path.join(evidence, 'guide-jars-mobile.png') });
           }
         }
         await guide.getByRole('tab').first().focus();
@@ -224,7 +227,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         await expect(guide.getByRole('tab').last()).toHaveAttribute('aria-selected', 'true');
         await page.keyboard.press('Home');
         await expect(guide.getByRole('tab').first()).toBeFocused();
-        if (locale === 'vi' && width === 1440) await guide.screenshot({ path: path.join(evidence, 'guide-quickstart-desktop.png') });
+        if (saveEvidence && locale === 'vi' && width === 1440) await guide.screenshot({ path: path.join(evidence, 'guide-quickstart-desktop.png') });
         await page.keyboard.press('Escape');
         await expect(guide).toHaveCount(0);
         assert.notEqual(await page.locator('body').evaluate(node => node.style.overflow), 'hidden');
@@ -320,7 +323,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           const box = await button.boundingBox();
           assert.ok(box.height >= 44 && box.width >= 44, 'Theme touch target');
         }
-        if (width === 390) await dialog.screenshot({ path: path.join(evidence, `settings-${theme}.png`) });
+        if (saveEvidence && width === 390) await dialog.screenshot({ path: path.join(evidence, `settings-${theme}.png`) });
         await closeSettings();
         await goPlan();
         await fit(page.locator('.plan-feature-view'), `${theme}/${width} plan`);
@@ -331,7 +334,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         assert.deepEqual(clipped, [], 'Summary amounts must remain fully readable');
         // Capture the phone viewport: full-page images place fixed navigation
         // in the middle of a tall image and misrepresent the actual screen.
-        if (width === 390) await page.screenshot({ path: path.join(evidence, `plan-${theme}.png`) });
+        if (saveEvidence && width === 390) await page.screenshot({ path: path.join(evidence, `plan-${theme}.png`) });
         for (const tab of ['wallets', 'budgets', 'recurring']) {
           await page.goto('/spending/plan/' + tab);
           await expect(page.locator('.plan-feature-view')).toBeVisible();
@@ -341,7 +344,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           if (tab === 'budgets') await expect(page.locator('.bdash-row.is-over')).toHaveCount(2);
           if (tab === 'recurring') await expect(page.locator('.recurring-row-card')).toHaveCount(1);
           await fit(page.locator('.plan-feature-view'), `${theme}/${width} ${tab}`);
-          if (width === 390) await page.screenshot({ path: path.join(evidence, `${tab}-${theme}.png`) });
+          if (saveEvidence && width === 390) await page.screenshot({ path: path.join(evidence, `${tab}-${theme}.png`) });
         }
       }
     }
@@ -392,7 +395,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           }
           layouts.push({ theme, width, position, ...layout });
           if (theme === 'cream' && width === 390) {
-            await page.screenshot({ path: path.join(evidence, `plan-cream-${position}.png`) });
+            if (saveEvidence) await page.screenshot({ path: path.join(evidence, `plan-cream-${position}.png`) });
           }
         }
       }
@@ -436,7 +439,7 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         await expect(errorPage.getByRole('heading', { name: 'Đã xảy ra lỗi hiển thị', exact: true })).toBeVisible();
         assert.doesNotMatch(await errorPage.locator('body').innerText(), /getPixelForValue|undefined|TypeError/);
         await fit(errorPage.locator('.app-container'), theme + ' error');
-        await errorPage.screenshot({ path: path.join(evidence, `error-${theme}.png`) });
+        if (saveEvidence) await errorPage.screenshot({ path: path.join(evidence, `error-${theme}.png`) });
         await errorPage.locator('.mobile-primary-nav').getByRole('button', { name: 'Trang chủ' }).click();
         await expect(errorPage.locator('.home-txns-view-all-btn')).toBeVisible();
         await expect(errorPage.getByRole('heading', { name: 'Đã xảy ra lỗi hiển thị', exact: true })).toHaveCount(0);

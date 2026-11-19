@@ -313,6 +313,32 @@ describe('Financial regression cases on a temporary replica set', { concurrency:
         assert.equal(await Transaction.countDocuments({ installmentId: id }), 1);
     });
 
+    it('reopening an archived wallet is owner-only and restores it without touching money', async () => {
+        const c = await client(), other = await client();
+        const defaultWallet = await wallet(c, 0, { isDefault: true });
+        const source = await wallet(c, 0);
+        assert.equal((await c.send('post', '/api/wallets/' + source + '/archive', {})).status, 200);
+        const active = await wallet(c, 50);
+
+        assert.equal((await c.send('post', '/api/wallets/not-an-id/unarchive', {})).status, 400);
+        assert.equal((await c.send('post', '/api/wallets/' + active + '/unarchive', {})).status, 404,
+            'an active wallet is not reopened');
+        assert.equal((await other.send('post', '/api/wallets/' + source + '/unarchive', {})).status, 404,
+            'another account cannot reopen it');
+        assert.equal((await Wallet.findById(source)).archived, true);
+
+        const reopened = await c.send('post', '/api/wallets/' + source + '/unarchive', {});
+        assert.equal(reopened.status, 200, JSON.stringify(reopened.body));
+        assert.equal(reopened.body.data.archived, false);
+        const stored = await Wallet.findById(source);
+        assert.equal(stored.archived, false);
+        assert.equal(stored.archivedAt, null);
+        assert.equal(stored.isDefault, false, 'reopening never takes over the default wallet');
+        assert.equal((await Wallet.findById(defaultWallet)).isDefault, true);
+        assert.equal((await getAllWalletBalances(c.userId))[source], 0);
+        assert.equal(await Transaction.countDocuments({ userId: c.userId }), 0);
+    });
+
     it('a finite term stays ended when the next cycle crosses year 9999', async () => {
         const c = await client(), defaultWallet = await wallet(c, 0, { isDefault: true });
         const source = await wallet(c, 100);
