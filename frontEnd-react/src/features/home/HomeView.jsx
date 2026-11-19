@@ -86,10 +86,6 @@ export function HomeView() {
             <p className="home-dashboard-updated">{t('home.greetingStart', { month: monthInline })}</p>
           )}
         </div>
-
-        <div className="page-header-actions">
-          <span className="page-guide-slot" data-guide-slot="" />
-        </div>
       </div>
 
       {/* Desktop: two columns (grid areas in home.css). DOM order is the phone order:

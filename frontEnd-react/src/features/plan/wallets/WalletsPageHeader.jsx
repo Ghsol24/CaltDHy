@@ -15,7 +15,6 @@ export function WalletsPageHeader({ handleCreateNew, handleTransfer, wallets }) 
       </div>
     
       <div className="wallets-v2-header-actions">
-        <span className="page-guide-slot" data-guide-slot="" />
         <button
           type="button"
           className="wallets-btn-transfer-outline"

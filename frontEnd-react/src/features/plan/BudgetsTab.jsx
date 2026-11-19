@@ -388,7 +388,6 @@ export function BudgetsTab() {
         </div>
 
         <div className="bdash-header__action">
-          <span className="page-guide-slot" data-guide-slot="" />
           {isPastMonth ? (
             <span className="bdash-closed" title={t('budgets.closedPeriodHint')}>
               <Icon name="lock" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

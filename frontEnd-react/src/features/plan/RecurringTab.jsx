@@ -320,7 +320,6 @@ export function RecurringTab() {
         <h1 className="recurring-route-heading">{t('nav.recurring')}</h1>
         {/* The page's main action sits in the title row, as on every other page (REC-03). */}
         <div className="page-header-actions page-header-actions--end">
-          <span className="page-guide-slot" data-guide-slot="" />
           <button
             type="button"
             className="recurring-btn-create-primary"

@@ -233,7 +233,7 @@ export function AnalyticsView() {
     <div className="analytics-feature-view" role="region" aria-label="Báo cáo phân tích thu chi">
       {/* ── 1. Page Header & Month Selector ──
           Every screen carries the period control. Computers keep the full title row
-          (with the "Gợi ý" slot) on all four screens; phones use the compact bar below the first. */}
+          on all four screens; phones use the compact bar below the first. */}
       <AnalyticsHeader compact={isMobile && analyticsSubTab !== 'overview'} activeMonth={activeMonth} handleNextMonth={handleNextMonth} handlePrevMonth={handlePrevMonth} handleSelectMonth={changeCashFlowMonth} handleSetThisMonth={handleSetThisMonth} isCurrentMonth={isCurrentMonth} monthLabel={monthLabel} />
 
       {/* ── 2. 4 KPI Grid Cards ── */}

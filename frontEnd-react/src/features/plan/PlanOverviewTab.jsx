@@ -190,7 +190,6 @@ export function PlanOverviewTab() {
 
         {/* Action Button with Dropdown */}
         <div className="page-header-actions">
-        <span className="page-guide-slot" data-guide-slot="" />
         <div className="plan-create-menu-wrapper" ref={dropdownRef}>
           <button
             type="button"

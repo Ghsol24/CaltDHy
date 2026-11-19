@@ -65,10 +65,6 @@ export function getGuideContent(lang) {
     open: pick(['Mở mục này →', 'Open this section →', '打开此功能 →']),
     close: pick(['Đóng hướng dẫn', 'Close guide', '关闭指南']),
     done: pick(['Đã hiểu & Đóng', 'Done & close', '完成并关闭']),
-    more: pick(['Xem hướng dẫn', 'View guide', '查看指南']),
-    understood: pick(['Đã hiểu', 'Got it', '明白了']),
-    hint: pick(['Gợi ý cho', 'Tips for', '使用提示']),
-    button: pick(['Gợi ý', 'Tips', '提示']),
     tabs: sections.map(([id, title, items]) => ({ id, title: pick(title),
       sections: items.map(([heading, body, action]) => ({ title: pick(heading), body: pick(body), action })) }))
   };

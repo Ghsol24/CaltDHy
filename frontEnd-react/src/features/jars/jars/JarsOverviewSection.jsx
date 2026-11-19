@@ -16,7 +16,6 @@ export function JarsOverviewSection({ datedJarsCount, handleCreateNew, jarsCount
           <h1 className="jars-hero-heading">Tổng quan hũ</h1>
         </div>
         <div className="page-header-actions">
-          <span className="page-guide-slot" data-guide-slot="" />
           <button
             type="button"
             className="jars-hero-cta-btn"

@@ -211,7 +211,6 @@ export function TransactionHistoryView() {
         <PageTitleIcon name="transactions" />
         <h1 id="transaction-history-title">{t('history.title')}</h1>
       </div>
-      <div className="page-header-actions page-header-actions--end"><span className="page-guide-slot" data-guide-slot="" /></div>
     </header>
 
     <div className="transaction-filter-bar">

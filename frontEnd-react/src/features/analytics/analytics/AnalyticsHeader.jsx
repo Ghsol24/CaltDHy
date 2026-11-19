@@ -63,7 +63,6 @@ export function AnalyticsHeader({ activeMonth, compact = false, handleNextMonth,
       </div>}
 
       <div className="analytics-header-controls">
-        {!compact && <span className="page-guide-slot" data-guide-slot="" />}
         {!isCurrentMonth && (
           <button type="button" className="analytics-this-month-btn" onClick={handleSetThisMonth}>
             Về tháng này

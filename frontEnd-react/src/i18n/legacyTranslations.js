@@ -256,7 +256,6 @@ const entries = [
   ['Không tải được dữ liệu', 'Could not load your data', '无法加载数据'],
   ['Số liệu đang được ẩn để tránh hiện sai. Kiểm tra kết nối rồi thử lại.', 'Figures are hidden so nothing wrong is shown. Check your connection and try again.', '为避免显示错误数字，相关数据已隐藏。请检查网络后重试。'],
   ['Đang thử lại…', 'Retrying…', '正在重试…'],
-  ['Gợi ý', 'Tips', '提示'],
   ['+ Thêm khoản định kỳ', '+ Add recurring item', '+ 添加周期项目'],
   ['0 đ', '₫0', '₫0'],
   ['Loại ví / tài khoản', 'Wallet / account type', '钱包／账户类型'],
