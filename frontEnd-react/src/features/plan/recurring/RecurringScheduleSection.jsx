@@ -4,42 +4,33 @@ import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { formatCurrency } from '../../../utils/formatters';
 import { CYCLE_OPTIONS } from './cycleOptions';
 import { CustomDatePicker } from '../../../components/ui/CustomDatePicker';
+import { FormField } from '../../../components/ui/FormField';
 
-export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handleAmountChange, hasArchivedWallet, hasEndDate, installmentToEdit, isCycleDropdownOpen, isIncome = false, isWalletDropdownOpen, nextDueDate, selectedCycleLabel, selectedWallet, setCycle, setEndDate, setHasEndDate, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNextDueDate, setWalletId, walRef, wallets }) {
+export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, endDate, handleAmountChange, hasArchivedWallet, hasEndDate, installmentToEdit, isCycleDropdownOpen, isIncome = false, isWalletDropdownOpen, nextDueDate, selectedCycleLabel, selectedWallet, setCycle, setEndDate, setHasEndDate, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNextDueDate, setWalletId, walRef, wallets }) {
   return (
-    <div className="recurring-form-section">
-      <div className="recurring-section-header">
-        <Icon name="creditCard" className="section-header-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <span className="section-header-title">Thiết lập dòng tiền & Chu kỳ</span>
-      </div>
-    
-      <div className="recurring-section-content">
+    <>
         <div className="recurring-form-grid-2col">
-          {/* Số tiền mỗi kỳ */}
-          <div className="txn-field-group">
-            <label htmlFor="rec-amount" className="txn-label">
-              <span>Số tiền mỗi kỳ</span>
-            </label>
-            <div className="txn-amount-box">
-              <input
-                id="rec-amount"
-                type="text"
-                inputMode="numeric"
-                className="txn-amount-input"
-                placeholder="0"
-                value={amount}
-                onChange={handleAmountChange}
-                required
-              />
-              <span className="txn-amount-suffix">₫</span>
-            </div>
-          </div>
-    
-          {/* Ví trừ tiền mặc định */}
-          <div className="txn-field-group" ref={walRef}>
-            <label className="txn-label">
-              <span>{isIncome ? 'Ví nhận tiền' : 'Ví trừ tiền'}</span>
-            </label>
+          <FormField label="Số tiền mỗi kỳ" htmlFor="rec-amount" error={errors.amount}>
+            {({ describedBy, invalid }) => (
+              <div className={`txn-amount-box${invalid ? ' has-error' : ''}`}>
+                <input
+                  id="rec-amount"
+                  type="text"
+                  inputMode="numeric"
+                  className="txn-amount-input"
+                  placeholder="0"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  required
+                  aria-invalid={invalid || undefined}
+                  aria-describedby={describedBy}
+                />
+                <span className="txn-amount-suffix">₫</span>
+              </div>
+            )}
+          </FormField>
+
+          <FormField label={isIncome ? 'Ví nhận tiền' : 'Ví trừ tiền'} ref={walRef} error={errors.wallet}>
             <div className="modal-custom-dropdown-wrap">
               <button
                 type="button"
@@ -90,18 +81,14 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
                 </div>
               )}
             </div>
-            {hasArchivedWallet && (
+            {hasArchivedWallet && !errors.wallet && (
               <span className="recurring-term-hint" role="note">
                 Ví trước đây đã lưu trữ. Hãy chọn ví mới trước khi gia hạn khoản này.
               </span>
             )}
-          </div>
-    
-          {/* Chu kỳ thanh toán */}
-          <div className="txn-field-group" ref={cycRef}>
-            <label className="txn-label">
-              <span>Chu kỳ lặp</span>
-            </label>
+          </FormField>
+
+          <FormField label="Chu kỳ lặp" ref={cycRef}>
             <div className="modal-custom-dropdown-wrap">
               <button
                 type="button"
@@ -148,13 +135,9 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
                 </div>
               )}
             </div>
-          </div>
-    
-          {/* Ngày đến hạn tiếp theo */}
-          <div className="txn-field-group">
-            <label htmlFor="rec-date" className="txn-label">
-              <span>Ngày đến hạn tiếp theo</span>
-            </label>
+          </FormField>
+
+          <FormField label="Ngày đến hạn tiếp theo" htmlFor="rec-date" error={errors.date}>
             <CustomDatePicker
               id="rec-date"
               inputClassName="txn-input"
@@ -162,7 +145,7 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
               onChange={setNextDueDate}
               required
             />
-          </div>
+          </FormField>
         </div>
         <div className="recurring-term-control">
           <label className="recurring-term-toggle" htmlFor="rec-has-end-date">
@@ -181,10 +164,14 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
             <span className="recurring-term-switch" aria-hidden="true" />
           </label>
           {hasEndDate && (
-            <div className="txn-field-group recurring-term-date-field" id="rec-term-date">
-              <label htmlFor="rec-end-date" className="txn-label">
-                <span>Ngày kết thúc</span>
-              </label>
+            <FormField
+              id="rec-term-date"
+              className="recurring-term-date-field"
+              label="Ngày kết thúc"
+              htmlFor="rec-end-date"
+              hint="Kỳ đến hạn đúng ngày này vẫn được tính."
+              error={errors.endDate}
+            >
               <CustomDatePicker
                 id="rec-end-date"
                 inputClassName="txn-input"
@@ -193,11 +180,9 @@ export function RecurringScheduleSection({ amount, cycRef, cycle, endDate, handl
                 onChange={setEndDate}
                 required
               />
-              <span className="recurring-term-hint">Kỳ đến hạn đúng ngày này vẫn được tính.</span>
-            </div>
+            </FormField>
           )}
         </div>
-      </div>
-    </div>
+    </>
   );
 }
