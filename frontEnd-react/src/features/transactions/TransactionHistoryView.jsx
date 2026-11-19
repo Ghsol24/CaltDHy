@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useLocation, useSearchParams } from 'react-router';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useWalletStore } from '../../stores/useWalletStore';
@@ -100,6 +100,16 @@ export function TransactionHistoryView() {
     setSearchParams({}, { replace: true });
   };
   const changeAmount = (min, max) => { setMinAmount(min); setMaxAmount(max); };
+
+  // A search from the command palette arrives as router state, also while this page is already open:
+  // it replaces whatever filters were set, so the result is exactly what was asked for.
+  const commandSearch = useLocation().state?.commandSearch;
+  useEffect(() => {
+    if (!commandSearch) return;
+    setQuery(commandSearch.query || ''); setCategory(commandSearch.category || 'all');
+    setStartDate(''); setEndDate(''); setDatePreset('all'); setType('all'); setWalletId('all');
+    setExcludeRecurring(false); setMinAmount(null); setMaxAmount(null);
+  }, [commandSearch]);
 
   // A saved filter stores the preset ("this month"), not its dates, so it stays current when reused later.
   const currentCriteria = () => ({ query: query.trim(), type, category, walletId, tag: 'all', minAmount, maxAmount,

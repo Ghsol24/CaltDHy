@@ -1,0 +1,234 @@
+/* Bảng lệnh Ctrl/Cmd + K (đợt 11 · 7c, NAV-12). Tải cùng CommandPalette.jsx, chỉ desktop.
+   Kiểu kính (Liquid Glass): lớp điều khiển nổi trên trang, thấy mờ nội dung phía sau.
+   Màu kính trộn từ --surface của theme nên cả 4 theme tự ăn theo; khi người dùng giảm độ
+   trong suốt hoặc trình duyệt không có backdrop-filter thì quay về nền đặc. */
+.cmdk-overlay {
+  --cmdk-glass: color-mix(in srgb, var(--surface) 88%, transparent);
+  --cmdk-glass-deep: color-mix(in srgb, var(--surface) 84%, transparent);
+  --cmdk-edge: rgb(255 255 255 / 0.65);
+  --cmdk-shine: rgb(255 255 255 / 0.95);
+  --cmdk-glow: rgb(255 255 255 / 0.55);
+  --cmdk-well: color-mix(in srgb, var(--surface) 55%, transparent);
+  --cmdk-well-ring: rgb(255 255 255 / 0.7);
+  --cmdk-row: color-mix(in srgb, var(--surface) 75%, transparent);
+  --cmdk-row-shine: rgb(255 255 255 / 1);
+  --cmdk-line: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  --cmdk-shadow: 0 30px 70px -10px rgb(15 23 42 / 0.28), 0 4px 14px rgb(15 23 42 / 0.08);
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 11vh 24px 24px;
+  background: rgb(15 23 42 / 0.1);
+  animation: fadeIn 120ms ease;
+}
+
+.dark-theme .cmdk-overlay {
+  --cmdk-glass: color-mix(in srgb, var(--surface) 78%, transparent);
+  --cmdk-glass-deep: color-mix(in srgb, var(--surface) 70%, transparent);
+  --cmdk-edge: rgb(255 255 255 / 0.14);
+  --cmdk-shine: rgb(255 255 255 / 0.2);
+  --cmdk-glow: rgb(255 255 255 / 0.1);
+  --cmdk-well: rgb(255 255 255 / 0.07);
+  --cmdk-well-ring: rgb(255 255 255 / 0.08);
+  --cmdk-row: rgb(255 255 255 / 0.12);
+  --cmdk-row-shine: rgb(255 255 255 / 0.16);
+  --cmdk-line: rgb(255 255 255 / 0.07);
+  --cmdk-shadow: 0 30px 80px -10px rgb(0 0 0 / 0.6), 0 4px 14px rgb(0 0 0 / 0.3);
+  background: rgb(0 0 0 / 0.28);
+}
+
+.cmdk-panel {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: min(560px, 76vh);
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--cmdk-glass), var(--cmdk-glass-deep));
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  backdrop-filter: blur(32px) saturate(140%);
+  color: var(--text-primary);
+  border: 1px solid var(--cmdk-edge);
+  border-radius: 24px;
+  box-shadow: inset 0 1px 0 var(--cmdk-shine), inset 0 0 0 0.5px var(--cmdk-glow), var(--cmdk-shadow);
+  font-family: var(--font-sans);
+}
+
+/* Vệt sáng mép trên-trái và dưới-phải, như ánh đèn phản trên kính. */
+.cmdk-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 15% -10%, var(--cmdk-glow), transparent 55%),
+    radial-gradient(80% 40% at 100% 110%, color-mix(in srgb, var(--cmdk-glow) 45%, transparent), transparent 60%);
+}
+
+.cmdk-panel:focus { outline: none; }
+
+.cmdk-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 10px 4px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--cmdk-well);
+  box-shadow: inset 0 1px 2px rgb(15 23 42 / 0.06), inset 0 0 0 1px var(--cmdk-well-ring);
+  color: var(--text-muted);
+}
+
+.cmdk-search > svg { flex: none; }
+
+.cmdk-input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--font-lg);
+}
+
+.cmdk-input::placeholder { color: var(--text-secondary); }
+
+/* The whole capsule is the field; the panel already frames it. */
+.cmdk-input:focus,
+.cmdk-input:focus-visible { outline: none; box-shadow: none; }
+
+.cmdk-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 10px 10px;
+}
+
+.cmdk-list:empty { display: none; }
+
+.cmdk-group + .cmdk-group { margin-top: 4px; }
+
+.cmdk-group-title {
+  padding: 10px 10px 4px;
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.cmdk-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: var(--font-base);
+  cursor: pointer;
+  scroll-margin: 32px 0 8px;
+}
+
+.cmdk-option.is-active {
+  background: var(--cmdk-row);
+  box-shadow: inset 0 1px 0 var(--cmdk-row-shine), 0 1px 2px rgb(15 23 42 / 0.08), 0 6px 16px -8px rgb(15 23 42 / 0.18);
+}
+
+.cmdk-option-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--cmdk-well);
+  box-shadow: inset 0 0 0 1px var(--cmdk-well-ring);
+  color: var(--text-secondary);
+}
+
+.cmdk-option.is-active .cmdk-option-icon {
+  background: var(--primary);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  color: #fff;
+}
+
+.cmdk-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmdk-option-detail {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+}
+
+.cmdk-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--cmdk-line);
+  border-radius: 7px;
+  background: var(--cmdk-well);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.cmdk-empty {
+  padding: 28px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+}
+
+.cmdk-empty p { margin: 0; }
+.cmdk-empty .cmdk-empty-hint { margin-top: 4px; color: var(--text-secondary); font-size: var(--font-xs); }
+
+.cmdk-footer {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--cmdk-line);
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+}
+
+.cmdk-footer span { display: inline-flex; align-items: center; gap: 4px; }
+.cmdk-footer .cmdk-kbd { min-width: 20px; height: 20px; padding: 0 4px; }
+.cmdk-footer span .cmdk-kbd:last-of-type { margin-right: 2px; }
+
+/* Nền đặc khi không có kính: người dùng giảm độ trong suốt, hoặc trình duyệt thiếu backdrop-filter. */
+@media (prefers-reduced-transparency: reduce) {
+  .cmdk-overlay { background: var(--color-overlay); }
+  .cmdk-panel { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .cmdk-panel::before { display: none; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cmdk-overlay { background: var(--color-overlay); }
+  .cmdk-panel { background: var(--surface); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmdk-overlay { animation: none; }
+}
