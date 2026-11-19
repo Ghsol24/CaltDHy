@@ -7,6 +7,7 @@ import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { getUserErrorMessage } from '../../utils/userErrors';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { JarDialog } from './JarDialog';
+import { FormField } from '../../components/ui/FormField';
 import { jarsManagementText } from './jarsManagementCopy';
 import './jars-management.css';
 
@@ -105,25 +106,29 @@ export function JarModal({ isOpen, onClose, jarToEdit = null, returnFocusRef }) 
         </Button>
       </>}>
       <form id={formId} onSubmit={handleSubmit} className="jm-form" noValidate>
-        <div className="jm-field">
-          <label htmlFor={`${id}-name`}>{text('name')}</label>
-          <input id={`${id}-name`} ref={nameInputRef} className="jm-input" value={name}
-            onChange={(event) => setName(event.target.value)} placeholder={text('namePlaceholder')}
-            maxLength={40} required disabled={isSubmitting} aria-invalid={error?.field === 'name'}
-            aria-describedby={error?.field === 'name' ? `${id}-error` : undefined} />
-        </div>
+        <FormField label={text('name')} htmlFor={`${id}-name`} id={`${id}-name-field`} error={error?.field === 'name' ? error.message : undefined}>
+          {({ describedBy, invalid }) => (
+            <input id={`${id}-name`} ref={nameInputRef} className="jm-input" value={name}
+              onChange={(event) => setName(event.target.value)} placeholder={text('namePlaceholder')}
+              maxLength={40} required disabled={isSubmitting} aria-invalid={invalid || undefined}
+              aria-describedby={describedBy} />
+          )}
+        </FormField>
         <div className="jm-two-columns">
-          <div className="jm-field">
-            <label htmlFor={`${id}-target`}>{text('target')} <span className="jm-unit">₫</span></label>
-            <input id={`${id}-target`} ref={targetInputRef} className="jm-input jm-money-input" inputMode="numeric"
-              value={target} onChange={updateAmount(setTarget)} placeholder="0" required disabled={isSubmitting}
-              aria-invalid={error?.field === 'target'} aria-describedby={error?.field === 'target' ? `${id}-error` : undefined} />
-          </div>
-          <div className="jm-field">
-            <label htmlFor={`${id}-date`}>{text('date')} <span className="jm-optional">{text('optional')}</span></label>
+          <FormField label={text('target')} htmlFor={`${id}-target`} id={`${id}-target-field`} error={error?.field === 'target' ? error.message : undefined}>
+            {({ describedBy, invalid }) => (
+              <div className="jm-money-box">
+                <input id={`${id}-target`} ref={targetInputRef} className="jm-input jm-money-input" inputMode="numeric"
+                  value={target} onChange={updateAmount(setTarget)} placeholder="0" required disabled={isSubmitting}
+                  aria-invalid={invalid || undefined} aria-describedby={describedBy} />
+                <span className="jm-money-suffix" aria-hidden="true">₫</span>
+              </div>
+            )}
+          </FormField>
+          <FormField label={text('date')} htmlFor={`${id}-date`} optional>
             <CustomDatePicker id={`${id}-date`} inputClassName="jm-input" value={targetDate}
               onChange={setTargetDate} disabled={isSubmitting} />
-          </div>
+          </FormField>
         </div>
         {isEditing ? (
           <div className="jm-balance-readonly" role="note">
@@ -131,13 +136,17 @@ export function JarModal({ isOpen, onClose, jarToEdit = null, returnFocusRef }) 
             <p>{text('changeBalanceHint')}</p>
           </div>
         ) : (
-          <div className="jm-field">
-            <label htmlFor={`${id}-initial`}>{text('initial')} <span className="jm-optional">{text('optional')}</span> <span className="jm-unit">₫</span></label>
-            <input id={`${id}-initial`} ref={initialInputRef} className="jm-input jm-money-input" inputMode="numeric"
-              value={initialAmount} onChange={updateAmount(setInitialAmount)} placeholder="0" disabled={isSubmitting}
-              aria-invalid={error?.field === 'initial'} aria-describedby={`${id}-initial-hint${error?.field === 'initial' ? ` ${id}-error` : ''}`} />
-            <p className="jm-field-hint" id={`${id}-initial-hint`}>{text('initialHint')}</p>
-          </div>
+          <FormField label={text('initial')} htmlFor={`${id}-initial`} id={`${id}-initial-field`} optional
+            hint={text('initialHint')} error={error?.field === 'initial' ? error.message : undefined}>
+            {({ describedBy, invalid }) => (
+              <div className="jm-money-box">
+                <input id={`${id}-initial`} ref={initialInputRef} className="jm-input jm-money-input" inputMode="numeric"
+                  value={initialAmount} onChange={updateAmount(setInitialAmount)} placeholder="0" disabled={isSubmitting}
+                  aria-invalid={invalid || undefined} aria-describedby={describedBy} />
+                <span className="jm-money-suffix" aria-hidden="true">₫</span>
+              </div>
+            )}
+          </FormField>
         )}
         <fieldset className="jm-colors" disabled={isSubmitting}>
           <legend>{text('color')}</legend>
@@ -156,7 +165,8 @@ export function JarModal({ isOpen, onClose, jarToEdit = null, returnFocusRef }) 
         {cleanTarget > 0 && Number.isSafeInteger(cleanTarget) && (
           <div className="jm-remaining" aria-live="polite"><span>{text('remaining')}</span><strong>{formatCurrency(remaining, { locale: lang })}</strong></div>
         )}
-        {error && <p id={`${id}-error`} className="jm-error" role="alert">{error.message}</p>}
+        {/* Lỗi lưu từ máy chủ; lỗi nhập nằm dưới từng ô */}
+        {error?.field === 'save' && <p className="jm-error" role="alert">{error.message}</p>}
       </form>
     </JarDialog>
   );

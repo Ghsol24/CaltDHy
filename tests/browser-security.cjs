@@ -513,7 +513,7 @@ function blendCssColor(color, background) {
           return {
             body: getComputedStyle(element).backgroundColor,
             input: style('.jm-input').backgroundColor,
-            subtitle: style('.jar-dialog-header p').color
+            subtitle: style('.txn-modal-subtitle').color
           };
         });
         assert.equal(colors.body, expectedSurface[theme], `${theme}: phần thân modal phải theo bề mặt theme`);

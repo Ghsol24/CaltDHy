@@ -212,7 +212,7 @@
 
   .txn-modal-card {
     max-width: none;
-    max-height: calc(100dvh - 16px);
+    max-height: calc(var(--dialog-viewport-height, 100dvh) - 16px);
     border-width: 1px 0 0;
     border-radius: 20px 20px 0 0;
     animation: txnSheetIn 260ms var(--ease-smooth, ease-out);
@@ -313,4 +313,13 @@
 .txn-field-group .input-shell:has([aria-invalid="true"]) {
   border-color: var(--color-danger);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+/* Bàn phím ảo thu hẹp vùng nhìn: lớp nền bám window.visualViewport (biến do FormDialog đặt),
+   nên đầu và nút ở chân luôn thấy được. Không có biến thì giống inset: 0. */
+@media (max-width: 599px), (pointer: coarse) {
+  .txn-modal-backdrop {
+    inset: var(--dialog-viewport-top, 0px) 0 auto;
+    height: var(--dialog-viewport-height, 100dvh);
+  }
 }

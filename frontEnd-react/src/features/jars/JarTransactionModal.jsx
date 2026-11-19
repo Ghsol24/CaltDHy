@@ -7,9 +7,10 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { getUserErrorMessage } from '../../utils/userErrors.js';
-import { JarOutlineIcon, Icon } from '../../components/ui/AppIcons';
+import { JarOutlineIcon } from '../../components/ui/AppIcons';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { JarDialog } from './JarDialog';
+import { FormField } from '../../components/ui/FormField';
 import { getJarTransactionCopy } from './jarTransactionCopy';
 import './jar-transaction.css';
 
@@ -146,53 +147,50 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
       </>}
     >
       <form id={formId} onSubmit={handleSubmit} noValidate className="jar-transfer-form" aria-busy={isSubmitting}>
-        <div className="jar-transfer-route" aria-label={isDeposit ? copy.depositRoute : copy.withdrawRoute}>
-          <span>{isDeposit ? copy.wallet : copy.jar}</span>
-          <Icon name="arrowRightAlt" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" />
-          <span>{isDeposit ? copy.jar : copy.wallet}</span>
-          <small>{copy.internalTransfer}</small>
-        </div>
+        <FormField label={isDeposit ? copy.depositAmountLabel : copy.withdrawAmountLabel} htmlFor={amountId} id={`${amountId}-field`}
+          className="jar-transfer-field" error={showAmountError && amountError ? amountError : undefined}>
+          {({ describedBy, invalid }) => (
+            <>
+              <div className={`jar-transfer-amount-box input-shell${invalid ? ' is-invalid' : ''}`}>
+                <input id={amountId} ref={amountInputRef} type="text" inputMode="numeric" autoComplete="off"
+                  value={amount} placeholder="0" required disabled={isSubmitting}
+                  aria-invalid={invalid || undefined} aria-describedby={describedBy}
+                  onChange={(event) => { setAmount(formatInputNumber(event.target.value)); setErrorMsg(''); }} />
+                <span>₫</span>
+              </div>
+              <div className="jar-transfer-presets" role="group" aria-label={copy.quickAmounts}>
+                {QUICK_AMOUNTS.map((value) => <button key={value} type="button"
+                  className={enteredAmount === value ? 'is-selected' : ''} disabled={isSubmitting}
+                  onClick={() => setEnteredAmount(value)}>{presetMoney(value)}</button>)}
+                {(isDeposit ? remaining > 0 : currentBalance > 0) && <button type="button"
+                  className="jar-transfer-preset-goal" disabled={isSubmitting}
+                  onClick={() => setEnteredAmount(isDeposit ? remaining : currentBalance)}>
+                  {isDeposit ? copy.fillGoal : copy.withdrawAll}
+                </button>}
+              </div>
+            </>
+          )}
+        </FormField>
 
-        <div className="jar-transfer-field">
-          <label htmlFor={amountId}>{isDeposit ? copy.depositAmountLabel : copy.withdrawAmountLabel}</label>
-          <div className={`jar-transfer-amount-box input-shell${showAmountError && amountError ? ' is-invalid' : ''}`}>
-            <input id={amountId} ref={amountInputRef} type="text" inputMode="numeric" autoComplete="off"
-              value={amount} placeholder="0" required disabled={isSubmitting}
-              aria-invalid={Boolean(showAmountError && amountError)}
-              aria-describedby={showAmountError && amountError ? `${amountId}-error` : undefined}
-              onChange={(event) => { setAmount(formatInputNumber(event.target.value)); setErrorMsg(''); }} />
-            <span>₫</span>
-          </div>
-          <div className="jar-transfer-presets" role="group" aria-label={copy.quickAmounts}>
-            {QUICK_AMOUNTS.map((value) => <button key={value} type="button"
-              className={enteredAmount === value ? 'is-selected' : ''} disabled={isSubmitting}
-              onClick={() => setEnteredAmount(value)}>{presetMoney(value)}</button>)}
-            {(isDeposit ? remaining > 0 : currentBalance > 0) && <button type="button"
-              className="jar-transfer-preset-goal" disabled={isSubmitting}
-              onClick={() => setEnteredAmount(isDeposit ? remaining : currentBalance)}>
-              {isDeposit ? copy.fillGoal : copy.withdrawAll}
-            </button>}
-          </div>
-          {showAmountError && amountError && <p id={`${amountId}-error`} className="jar-transfer-error" role="alert">{amountError}</p>}
-        </div>
-
-        <div className={`jar-transfer-wallet-box${showWalletError && walletError ? ' is-invalid' : ''}`}>
-          <label id={`${walletId}-label`} htmlFor={walletId}>{isDeposit ? copy.sourceWallet : copy.destinationWallet} <span>{copy.required}</span></label>
-          {activeWallets.length > 0 ? <>
+        <FormField label={isDeposit ? copy.sourceWallet : copy.destinationWallet} htmlFor={walletId} labelId={`${walletId}-label`}
+          id={`${walletId}-field`} className="jar-transfer-wallet-box"
+          hint={activeWallets.length > 0 ? (isDeposit ? copy.depositHint : copy.withdrawHint) : undefined}
+          error={activeWallets.length > 0 && showWalletError && walletError ? walletError : undefined}>
+          {({ describedBy, invalid }) => (activeWallets.length > 0 ? (
             <CustomWalletDropdown id={walletId} inputRef={walletInputRef} className="jar-transfer-wallet-select"
               wallets={activeWallets} value={selectedWallet ? selectedWalletId : ''}
               placeholder={copy.chooseWallet} defaultLabel={copy.defaultWallet} balanceLabel={copy.balance}
-              formatBalance={money} disabled={isSubmitting} invalid={Boolean(showWalletError && walletError)}
-              describedBy={`${walletId}-hint${showWalletError && walletError ? ` ${walletId}-error` : ''}`}
+              formatBalance={money} disabled={isSubmitting} invalid={invalid}
+              describedBy={describedBy}
               ariaLabel={`${isDeposit ? copy.sourceWallet : copy.destinationWallet}: ${selectedWallet?.name || copy.chooseWallet}`}
               onChange={(nextId) => { setSelectedWalletId(nextId); setWalletTouched(true); setErrorMsg(''); }} />
-            <p id={`${walletId}-hint`}>{isDeposit ? copy.depositHint : copy.withdrawHint}</p>
-            {showWalletError && walletError && <p id={`${walletId}-error`} className="jar-transfer-error" role="alert">{walletError}</p>}
-          </> : <div className="jar-transfer-no-wallet" role="status">
-            <p>{copy.noWallet}</p>
-            <button type="button" onClick={openWallets}>{copy.openWallets} <span aria-hidden="true">→</span></button>
-          </div>}
-        </div>
+          ) : (
+            <div className="jar-transfer-no-wallet" role="status">
+              <p>{copy.noWallet}</p>
+              <button type="button" onClick={openWallets}>{copy.openWallets} <span aria-hidden="true">→</span></button>
+            </div>
+          ))}
+        </FormField>
 
         <section className="jar-transfer-preview" aria-labelledby={`${formId}-preview`}>
           <h3 id={`${formId}-preview`}>{copy.afterConfirmation}</h3>
@@ -212,12 +210,11 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
           </div>
         </section>
 
-        <div className="jar-transfer-field jar-transfer-note">
-          <label htmlFor={noteId}>{copy.note} <span>{copy.optional}</span></label>
+        <FormField label={copy.note} htmlFor={noteId} optional className="jar-transfer-note">
           <textarea id={noteId} rows={2} maxLength={200} value={reason} disabled={isSubmitting}
             placeholder={isDeposit ? copy.depositNotePlaceholder : copy.withdrawNotePlaceholder}
             onChange={(event) => { setReason(event.target.value); setErrorMsg(''); }} />
-        </div>
+        </FormField>
         {errorMsg && <div className="jar-transfer-server-error" role="alert">{errorMsg}</div>}
       </form>
     </JarDialog>

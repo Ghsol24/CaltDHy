@@ -1,54 +1,18 @@
-.jar-dialog-backdrop {
-  position: fixed;
-  inset: var(--jar-viewport-top, 0px) 0 auto;
-  height: var(--jar-viewport-height, 100dvh);
-  z-index: var(--z-dialog);
-  display: grid;
-  place-items: center;
-  padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-  box-sizing: border-box;
-  background: var(--color-overlay);
-  overscroll-behavior: contain;
-}
-.jar-dialog {
-  display: flex;
-  flex-direction: column;
-  width: min(100%, 620px);
-  max-height: min(740px, 100%);
-  min-height: 0;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: var(--surface);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-dialog);
-  overflow: hidden;
-  outline: none;
-  font-size: var(--font-base);
-  line-height: 1.5;
-}
+/* Hộp thoại Hũ: vỏ (lớp nền, thẻ 500px, đầu, ✕, thân, chân, tờ trượt trên điện thoại)
+   là FormDialog chung — components/ui/form-dialog-shell.css (7d). Ở đây chỉ còn phần riêng
+   của nội dung hũ. */
 .jar-dialog *, .jar-dialog *::before, .jar-dialog *::after { box-sizing: border-box; }
-.jar-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 26px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.jar-dialog-header > div { min-width: 0; }
-.jar-dialog-header h2 { margin: 0; font-size: var(--font-3xl); font-weight: 750; line-height: 1.35; overflow-wrap: anywhere; }
-.jar-dialog-header p { margin: 6px 0 0; font-size: var(--font-sm); color: var(--text-secondary); overflow-wrap: anywhere; }
-.jar-dialog-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 12px; background: var(--surface-subtle); color: var(--text-secondary); cursor: pointer; }
-.jar-dialog-close:hover { color: var(--primary); background: var(--primary-light); }
-.jar-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 22px 26px; }
-.jar-dialog-footer { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 16px 26px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.jar-dialog-body { font-size: var(--font-base); line-height: 1.5; color: var(--text-primary); }
 .jar-dialog button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .jar-dialog button:disabled { opacity: .55; cursor: not-allowed; }
 .jar-dialog input, .jar-dialog select, .jar-dialog textarea { max-width: 100%; min-width: 0; }
 .jar-dialog-footer button { white-space: normal; }
 .jar-dialog .jar-detail-body { overflow: visible; padding: 0; }
 .jar-dialog .jar-detail-footer { border-style: none; padding: 0; width: 100%; flex-wrap: wrap; gap: 10px; }
+/* Chi tiết hũ đặt cả hàng nút trong một khối riêng: chân giữ flex thay vì lưới [Hủy | Chính] của điện thoại. */
+.jar-dialog-footer:has(> .jar-detail-footer) { display: flex; }
 .jar-dialog .jar-detail-history-item { gap: 12px; overflow-wrap: anywhere; }
 .jar-dialog .jar-detail-history-item > div { min-width: 0; }
 @media (max-width: 599px) {
-  .jar-dialog-backdrop { padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
-  .jar-dialog { border-radius: 18px; }
-  .jar-dialog-header { padding: 18px 18px 16px; gap: 10px; }
-  .jar-dialog-header h2 { font-size: var(--font-2xl); }
-  .jar-dialog-body { padding: 18px; }
-  .jar-dialog-footer { padding: 14px 18px; }
   .jar-dialog input, .jar-dialog select, .jar-dialog textarea { font-size: var(--font-lg); }
 }
