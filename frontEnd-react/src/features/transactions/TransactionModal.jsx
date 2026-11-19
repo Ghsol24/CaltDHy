@@ -11,14 +11,14 @@ import { isLockedTransaction, useDeleteTransaction } from './useDeleteTransactio
 import { previewCategoryBudgets, requiresHistoricalConfirmation, transactionMonth } from '../../utils/transactionEditing';
 import { historicalImpactMessage } from '../../utils/transactionMessages';
 import { useToastStore } from '../../stores/useToastStore';
-import { Dialog } from '../../components/ui/Dialog';
+import { FormDialog, DialogBody } from '../../components/ui/FormDialog';
+import { FormField } from '../../components/ui/FormField';
 import { DEFAULT_INCOME_CATEGORIES } from '../../utils/categories';
 import { ArrowUpRightOutlineIcon, ArrowDownLeftOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatInputNumber, formatDate, getLocalDateString, getLocalMonthString } from '../../utils/formatters';
 import { CustomWalletDropdown } from '../../components/ui/CustomWalletDropdown';
 import { useTranslation } from '../../i18n/useTranslation';
 import { BREAKPOINTS, useMediaQuery } from '../../hooks/useMediaQuery';
-import { useSheetDrag } from '../../hooks/useSheetDrag';
 import { CategoryPickerList, DateSheetContent, TransactionSheet } from './TransactionMobileFields';
 
 import { Icon } from '../../components/ui/AppIcons';
@@ -72,6 +72,8 @@ export function TransactionModal() {
   const [desc, setDesc] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // Lỗi nhập gắn vào ô (date / category); errorMsg chỉ còn cho lỗi lưu.
+  const [fieldErrors, setFieldErrors] = useState({});
   const [amountError, setAmountError] = useState('');
   const [periodBudgets, setPeriodBudgets] = useState({ month: '', data: {}, error: false });
   const [budgetRetry, setBudgetRetry] = useState(0);
@@ -198,6 +200,7 @@ export function TransactionModal() {
         );
         setDesc(editingTransaction.desc || '');
         setErrorMsg('');
+        setFieldErrors({});
         setAmountError('');
       } else {
         // New transaction default state
@@ -220,6 +223,7 @@ export function TransactionModal() {
         setDate(getLocalDateString());
         setDesc(addTxnInitialState?.desc || '');
         setErrorMsg('');
+        setFieldErrors({});
         setAmountError('');
 
         // Preselect wallet: prioritize addTxnInitialState.walletId, then default wallet, then first wallet
@@ -273,6 +277,7 @@ export function TransactionModal() {
     closeEditTransaction();
     setPicker(null);
     setErrorMsg('');
+    setFieldErrors({});
     setAmountError('');
   }, [closeAddTxnModal, closeEditTransaction]);
   const closePicker = useCallback(() => setPicker(null), []);
@@ -284,7 +289,10 @@ export function TransactionModal() {
   const requestDismiss = useCallback(() => {
     if (!isSubmitting && !confirmationOpen) close();
   }, [close, isSubmitting, confirmationOpen]);
-  const sheetDrag = useSheetDrag(requestDismiss, { enabled: isPhone && !activePicker });
+  // Đổi ngày / danh mục thì lỗi của ô đó không còn đúng nữa.
+  useEffect(() => {
+    setFieldErrors((prev) => (prev.date || prev.category ? {} : prev));
+  }, [date, category]);
 
   // Escape closes an open phone sheet first, then the modal.
   const handleEscape = () => {
@@ -315,6 +323,7 @@ export function TransactionModal() {
     if (num > 0) {
       setAmountError('');
       setErrorMsg('');
+      setFieldErrors({});
     }
   };
 
@@ -322,6 +331,7 @@ export function TransactionModal() {
     e.preventDefault();
     if (isSubmitting || confirmationOpen) return;
     setErrorMsg('');
+    setFieldErrors({});
     setAmountError('');
 
     const cleanAmountStr = String(amount).replace(/\D/g, '');
@@ -338,16 +348,16 @@ export function TransactionModal() {
       return;
     }
     if (!selectedPeriod || !date) {
-      setErrorMsg(t('transaction.dateRequired'));
+      setFieldErrors({ date: t('transaction.dateRequired') });
       return;
     }
     if (date > maxDate && date !== editingTransaction?.date?.slice?.(0, 10)) {
-      setErrorMsg(t('transaction.dateFuture'));
+      setFieldErrors({ date: t('transaction.dateFuture') });
       return;
     }
 
     if (!category) {
-      setErrorMsg(t('transaction.chooseCategory'));
+      setFieldErrors({ category: t('transaction.chooseCategory') });
       return;
     }
 
@@ -422,46 +432,27 @@ export function TransactionModal() {
   if (!isOpen) return null;
 
   return (
-    <Dialog
-      isOpen
+    <FormDialog
       onClose={requestDismiss}
+      onCloseButton={close}
+      closeDisabled={confirmationOpen}
       onEscape={handleEscape}
       busy={isSubmitting}
-      portal={false}
       panelRef={modalRef}
-      overlayClassName="txn-modal-backdrop"
-      className={`txn-modal-card${sheetDrag.offset ? ' is-dragging' : ''}`}
-      labelledBy="txn-modal-title"
-      panelProps={sheetDrag.offset ? { style: { '--sheet-drag-offset': `${sheetDrag.offset}px` } } : undefined}
+      titleId="txn-modal-title"
+      swipeToClose={!activePicker}
+      headerInert={Boolean(activePicker)}
+      title={isEditing
+        ? t('transaction.edit')
+        : addTxnInitialState?.title && type === addTxnInitialState?.type
+          ? addTxnInitialState.title
+          : type === 'income'
+            ? t('transaction.addIncome')
+            : t('transaction.add')}
     >
-        {/* Header (phones: grabber + drag down to dismiss) */}
-        <div className="txn-modal-handle-zone" inert={activePicker ? true : undefined} {...(isPhone ? sheetDrag.handlers : {})}>
-          <span className="txn-modal-grabber" aria-hidden="true" />
-          <div className="txn-modal-header">
-            <h2 id="txn-modal-title" className="txn-modal-title">
-              {isEditing
-                ? t('transaction.edit')
-                : addTxnInitialState?.title && type === addTxnInitialState?.type
-                  ? addTxnInitialState.title
-                  : type === 'income'
-                    ? t('transaction.addIncome')
-                    : t('transaction.add')}
-            </h2>
-            <button
-              type="button"
-              className="txn-modal-close-btn"
-              onClick={close}
-              disabled={isSubmitting || confirmationOpen}
-              aria-label={t('common.closeWindow')}
-            >
-              <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </button>
-          </div>
-        </div>
-
         {/* Form Body */}
         <form onSubmit={handleSubmit} noValidate inert={activePicker ? true : undefined}>
-          <div className="txn-modal-body txn-modal-body--transaction">
+          <DialogBody className="txn-modal-body--transaction">
             {historicalPeriod.length > 0 && <div className="txn-period-notice" role="status">
               <strong>{t('transaction.historicalPeriod', { month: formatDate(`${historicalPeriod[0]}-01`, 'month', { locale: lang }) })}</strong>
               <span>{t('transaction.historicalHint')}</span>
@@ -492,15 +483,13 @@ export function TransactionModal() {
             <TransactionAmountField type={type} amount={amount} amountError={amountError} amountInputRef={amountInputRef} handleAmountChange={handleAmountChange} />
 
             {/* 3. Smart Category Selection Grid */}
-            <TransactionCategoryField baselineMetrics={baselineMetrics} budgetError={budgetError} budgetReady={budgetReady} category={category} categoryMetrics={categoryMetrics} close={close} draftAmount={draftAmount} isPhone={isPhone} navigateTo={navigateTo} selectedPeriod={selectedPeriod} setBudgetRetry={setBudgetRetry} setCategory={setCategory} setPicker={setPicker} sortedCategories={sortedCategories} type={type} />
+            <TransactionCategoryField error={fieldErrors.category} baselineMetrics={baselineMetrics} budgetError={budgetError} budgetReady={budgetReady} category={category} categoryMetrics={categoryMetrics} close={close} draftAmount={draftAmount} isPhone={isPhone} navigateTo={navigateTo} selectedPeriod={selectedPeriod} setBudgetRetry={setBudgetRetry} setCategory={setCategory} setPicker={setPicker} sortedCategories={sortedCategories} type={type} />
 
             {/* 4. Ví và 5. Ngày: chung một hàng trên desktop (hộp thoại ~600px), xếp dọc trên điện thoại */}
             <div className="txn-field-row">
-            <div className="txn-field-group">
-              <label htmlFor="txn-wallet-select" className="txn-label">
-                <span>{t(type === 'expense' ? 'transaction.expenseWallet' : 'transaction.incomeWallet')}</span>
-              </label>
+            <FormField label={t(type === 'expense' ? 'transaction.expenseWallet' : 'transaction.incomeWallet')} htmlFor="txn-wallet-select">
               <CustomWalletDropdown
+                id="txn-wallet-select"
                 wallets={wallets}
                 value={walletId}
                 onChange={setWalletId}
@@ -511,17 +500,13 @@ export function TransactionModal() {
                   {t('transaction.balanceAfterIncome', { amount: formatCurrency(incomeBalanceAfter) })}
                 </p>
               )}
-            </div>
+            </FormField>
 
-            <TransactionDateField date={date} isPhone={isPhone} maxDate={maxDate} setDate={setDate} setPicker={setPicker} />
+            <TransactionDateField error={fieldErrors.date} date={date} isPhone={isPhone} maxDate={maxDate} setDate={setDate} setPicker={setPicker} />
             </div>
 
             {/* 6. Description Note */}
-            <div className="txn-field-group">
-              <label htmlFor="txn-desc-input" className="txn-label">
-                <span>{t('transaction.note')}</span>
-                <span className="txn-label-optional">{t('transaction.optional')}</span>
-              </label>
+            <FormField label={t('transaction.note')} htmlFor="txn-desc-input" optional>
               <input
                 id="txn-desc-input"
                 type="text"
@@ -531,19 +516,19 @@ export function TransactionModal() {
                 onChange={(e) => setDesc(e.target.value)}
                 maxLength={100}
               />
-            </div>
+            </FormField>
 
             {isEditing && <TransactionRevisionHistory key={editingTransaction.id}
               transactionId={editingTransaction.id} wallets={[...wallets, ...archivedWallets]} />}
 
-            {/* Error Message */}
+            {/* Lỗi lưu từ máy chủ; lỗi nhập nằm dưới từng ô */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
                 <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
-          </div>
+          </DialogBody>
 
           {/* 7. Footer CTA Actions */}
           <TransactionFooterActions canDelete={canDelete} close={close} draftAmount={draftAmount} handleDelete={handleDelete} isEditing={isEditing} isPhone={isPhone} isSubmitting={isSubmitting} type={type} />
@@ -570,6 +555,6 @@ export function TransactionModal() {
             />
           </TransactionSheet>
         )}
-    </Dialog>
+    </FormDialog>
   );
 }

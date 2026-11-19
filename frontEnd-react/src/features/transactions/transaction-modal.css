@@ -88,18 +88,6 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 
-.txn-amount-error-inline {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-sans);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  color: #EF4444;
-  margin-top: 5px;
-  padding-left: 2px;
-  animation: fadeIn 0.15s ease-out;
-}
 
 .txn-amount-suffix {
   position: absolute;
