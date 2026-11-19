@@ -18,29 +18,6 @@
   gap: 24px;
 }
 
-/* ── Top Header Row ── */
-.home-dashboard-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 0;
-}
-
-.home-dashboard-title-box {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.home-dashboard-title-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-}
-
 /* One chip states the month's condition; the alert card holds the details. */
 .home-status-chip {
   display: inline-flex;
@@ -67,22 +44,7 @@
   border-color: var(--color-warning-border);
 }
 
-.home-dashboard-greeting {
-  font-family: var(--font-display, var(--font-sans));
-  font-size: clamp(26px, 2.5vw, 32px);
-  font-weight: 800;
-  color: var(--color-text, var(--text-primary));
-  letter-spacing: -0.025em;
-  margin: 0;
-  line-height: 1.2;
-}
 
-.home-dashboard-updated {
-  font-size: var(--font-base);
-  color: var(--color-text-secondary, var(--text-secondary));
-  font-weight: 400;
-  margin: 0;
-}
 
 /* ── 2-Column Grid (Full-Width Responsive) ──
    DOM order is the phone order (balance → alerts/plan → forecast/recent → shortcuts).

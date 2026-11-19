@@ -10,6 +10,7 @@ import { AttentionPanel, HomeQuickLinks } from './AttentionPanel';
 import { ReminderInviteCard } from './ReminderInviteCard';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 const ForecastCard = lazy(() => import('../forecast/ForecastCard').then((module) => ({ default: module.ForecastCard })));
 
@@ -71,22 +72,18 @@ export function HomeView() {
   return (
     <div className="home-dashboard-v2-container">
       {/* ── TOP HEADER ROW ── */}
-      <div className="home-dashboard-header">
-        <div className="home-dashboard-title-box">
-          <div className="home-dashboard-title-row">
-            <h1 className="home-dashboard-greeting">{monthTitle}</h1>
-            {status && (
-              <span className={`home-status-chip is-${status.tone}`}>
-                <AlertTriangleOutlineIcon size={14} />
-                {status.text}
-              </span>
-            )}
-          </div>
-          {isFreshStart && (
-            <p className="home-dashboard-updated">{t('home.greetingStart', { month: monthInline })}</p>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        icon="home"
+        title={monthTitle}
+        titleClassName="home-dashboard-greeting"
+        meta={status && (
+          <span className={`home-status-chip is-${status.tone}`}>
+            <AlertTriangleOutlineIcon size={14} />
+            {status.text}
+          </span>
+        )}
+        subtitle={isFreshStart ? t('home.greetingStart', { month: monthInline }) : null}
+      />
 
       {/* Desktop: two columns (grid areas in home.css). DOM order is the phone order:
           balance, alerts and this month's plan, then forecast and recent activity, then shortcuts. */}
