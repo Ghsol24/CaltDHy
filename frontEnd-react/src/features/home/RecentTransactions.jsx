@@ -3,6 +3,7 @@ import { TransactionItem } from '../transactions/TransactionItem';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useConfirmStore } from '../../stores/useConfirmStore';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ArrowUpRightOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency, formatRelativeDate } from '../../utils/formatters';
@@ -19,6 +20,7 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
   const wallets = useWalletStore((s) => s.wallets);
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
+  const confirm = useConfirmStore((s) => s.confirm);
 
   // Create a map of walletId -> wallet object
   const walletMap = React.useMemo(() => {
@@ -48,6 +50,20 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
     e.stopPropagation();
     if (isLockedTransaction(txn)) return;
     openEditTransaction(txn);
+  };
+
+  // A locked row explains why it cannot be edited here and offers the screen that can.
+  const openLockedSource = (txn) => {
+    const isJar = Boolean(txn.jarId);
+    const key = isJar ? 'Jar' : 'Recurring';
+    void confirm({
+      title: t(`home.locked${key}Title`),
+      message: t(`home.locked${key}Body`),
+      confirmText: t(`home.locked${key}Action`),
+      cancelText: t('common.close'),
+      confirmVariant: 'info',
+      onConfirm: () => (isJar ? navigateTo('jars', 'history') : navigateTo('plan', 'recurring')),
+    });
   };
 
   return (
@@ -96,8 +112,8 @@ export const RecentTransactions = React.memo(function RecentTransactions() {
                   title={txn.desc || label(txn.category)}
                   meta={[label(txn.category || 'Other Expense'), walletName, formatRelativeDate(txn.date)]}
                   amount={<span className={`txn-item__amount is-${tone}`}>{amountText}</span>}
-                  onOpen={isLocked ? undefined : () => openEditTransaction(txn)}
-                  ariaLabel={isLocked ? undefined : t('home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
+                  onOpen={isLocked ? () => openLockedSource(txn) : () => openEditTransaction(txn)}
+                  ariaLabel={t(isLocked ? 'home.lockedOpenAria' : 'home.transactionAria', { name: txn.desc || label(txn.category), amount: formatCurrency(txn.amount) })}
                   lockedHint={isLocked ? (
                     <span className="txn-item__locked" title={t(txn.jarId ? 'home.jarLocked' : 'home.recurringLocked')}>
                       <Icon name="lock" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
