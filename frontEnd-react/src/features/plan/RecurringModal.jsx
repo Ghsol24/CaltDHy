@@ -4,7 +4,7 @@ import { useJarStore } from '../../stores/useJarStore';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { Dialog } from '../../components/ui/Dialog';
+import { FormDialog, DialogBody, DialogFooter } from '../../components/ui/FormDialog';
 import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, getCategoryIcon } from '../../utils/categories';
@@ -103,6 +103,8 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // Lỗi nhập gắn vào từng ô (name / amount / date / endDate / wallet); errorMsg chỉ còn cho lỗi lưu.
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Dropdowns open state
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -119,6 +121,13 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const cycRef = useRef(null);
   const newCatInputRef = useRef(null);
 
+
+  // Đổi ngày / ví thì lỗi của các ô đó không còn đúng nữa.
+  useEffect(() => {
+    setFieldErrors((prev) => (prev.date || prev.endDate || prev.wallet
+      ? { ...prev, date: undefined, endDate: undefined, wallet: undefined }
+      : prev));
+  }, [nextDueDate, endDate, hasEndDate, walletId]);
 
   // Close custom dropdowns on click outside
   useEffect(() => {
@@ -175,6 +184,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
     setIsAddingNewCategory(false);
     setNewCatInputName('');
     setErrorMsg('');
+    setFieldErrors({});
 
     const timer = setTimeout(() => {
       nameInputRef.current?.focus();
@@ -187,6 +197,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const handleNameChange = (e) => {
     const val = e.target.value;
     setName(val);
+    setFieldErrors((prev) => (prev.name ? { ...prev, name: undefined } : prev));
 
     if (!installmentToEdit && !isIncome) {
       const brand = detectBrandInfo(val);
@@ -255,6 +266,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   };
 
   const handleAmountChange = (e) => {
+    setFieldErrors((prev) => (prev.amount ? { ...prev, amount: undefined } : prev));
     const rawVal = e.target.value.replace(/\D/g, '');
     if (!rawVal) {
       setAmount('');
@@ -267,31 +279,33 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setFieldErrors({});
 
     if (!name.trim()) {
-      setErrorMsg(isIncome ? 'Vui lòng nhập tên khoản thu định kỳ.' : 'Vui lòng nhập tên khoản định kỳ hoặc trả góp.');
+      setFieldErrors({ name: isIncome ? 'Vui lòng nhập tên khoản thu định kỳ.' : 'Vui lòng nhập tên khoản định kỳ hoặc trả góp.' });
       nameInputRef.current?.focus();
       return;
     }
 
     const cleanAmount = parseInt(String(amount).replace(/\D/g, ''), 10);
     if (!cleanAmount || cleanAmount <= 0) {
-      setErrorMsg('Vui lòng nhập số tiền hợp lệ (> 0).');
+      setFieldErrors({ amount: 'Vui lòng nhập số tiền hợp lệ (> 0).' });
+      document.getElementById('rec-amount')?.focus();
       return;
     }
 
     if (!nextDueDate) {
-      setErrorMsg(isIncome ? 'Vui lòng chọn ngày nhận tiền.' : 'Vui lòng chọn ngày đến hạn thanh toán.');
+      setFieldErrors({ date: isIncome ? 'Vui lòng chọn ngày nhận tiền.' : 'Vui lòng chọn ngày đến hạn thanh toán.' });
       return;
     }
 
     if (hasEndDate && !isValidInstallmentEndDate(endDate)) {
-      setErrorMsg('Vui lòng chọn ngày kết thúc hợp lệ.');
+      setFieldErrors({ endDate: 'Vui lòng chọn ngày kết thúc hợp lệ.' });
       return;
     }
 
     if (!installmentToEdit && hasEndDate && endDate < nextDueDate) {
-      setErrorMsg('Ngày kết thúc không được trước ngày đến hạn đầu tiên.');
+      setFieldErrors({ endDate: 'Ngày kết thúc không được trước ngày đến hạn đầu tiên.' });
       return;
     }
 
@@ -299,7 +313,7 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
       && !wallets.some((wallet) => String(wallet.id) === String(installmentToEdit.walletId));
     const willBeEnded = isInstallmentEnded({ nextDueDate, endDate: hasEndDate ? endDate : null });
     if (savedWalletUnavailable && !walletId && !willBeEnded) {
-      setErrorMsg('Vui lòng chọn ví đang hoạt động trước khi tiếp tục khoản định kỳ.');
+      setFieldErrors({ wallet: 'Vui lòng chọn ví đang hoạt động trước khi tiếp tục khoản định kỳ.' });
       return;
     }
 
@@ -354,38 +368,15 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
   const categoryDisplayName = category ? label(category) : translateLegacyText(lang, 'Chọn danh mục');
 
   return (
-    <Dialog
-      isOpen
+    <FormDialog
       onClose={onClose}
       busy={isSubmitting}
-      overlayClassName="txn-modal-backdrop"
-      className="txn-modal-card recurring-modal-dialog"
-      labelledBy="recurring-modal-title"
+      className="recurring-modal-dialog"
+      titleId="recurring-modal-title"
+      title={installmentToEdit ? 'Chỉnh sửa khoản định kỳ' : 'Thêm khoản định kỳ'}
     >
-        {/* Header (Pure Outline SVG, No Emojis) */}
-        <div className="txn-modal-header">
-          <div className="recurring-modal-header-lead">
-            <div className="modal-header-icon-box" aria-hidden="true">
-              <Icon name={installmentToEdit ? 'pencil' : 'plus'} width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </div>
-            <h2 id="recurring-modal-title" className="txn-modal-title">
-              {installmentToEdit ? 'Chỉnh sửa khoản định kỳ' : 'Thêm khoản định kỳ'}
-            </h2>
-          </div>
-
-          <button
-            type="button"
-            className="txn-modal-close-btn"
-            onClick={onClose}
-            disabled={isSubmitting}
-            aria-label="Đóng cửa sổ"
-          >
-            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body recurring-modal-body-grouped">
+          <DialogBody>
             {/* Loại khoản định kỳ: chỉ chọn khi tạo mới */}
             {!installmentToEdit && (
               <div className="txn-type-toggle recurring-modal-type-toggle" role="group" aria-label="Loại khoản định kỳ">
@@ -399,34 +390,30 @@ export function RecurringModal({ isOpen, onClose, installmentToEdit = null }) {
                 </button>
               </div>
             )}
-            {/* ── Section 1: Định danh & Phân loại ── */}
-            <RecurringIdentitySection isIncome={isIncome} catRef={catRef} category={category} categoryDisplayName={categoryDisplayName} handleCreateNewCategory={handleCreateNewCategory} handleNameChange={handleNameChange} isAddingNewCategory={isAddingNewCategory} isCategoryDropdownOpen={isCategoryDropdownOpen} name={name} nameInputRef={nameInputRef} newCatInputName={newCatInputName} newCatInputRef={newCatInputRef} setCategory={setCategory} setIsAddingNewCategory={setIsAddingNewCategory} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNewCatInputName={setNewCatInputName} syncedExpenseCategories={activeCategories} />
+            <RecurringIdentitySection errors={fieldErrors} isIncome={isIncome} catRef={catRef} category={category} categoryDisplayName={categoryDisplayName} handleCreateNewCategory={handleCreateNewCategory} handleNameChange={handleNameChange} isAddingNewCategory={isAddingNewCategory} isCategoryDropdownOpen={isCategoryDropdownOpen} name={name} nameInputRef={nameInputRef} newCatInputName={newCatInputName} newCatInputRef={newCatInputRef} setCategory={setCategory} setIsAddingNewCategory={setIsAddingNewCategory} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNewCatInputName={setNewCatInputName} syncedExpenseCategories={activeCategories} />
 
-            {/* ── Section 2: Thiết lập dòng tiền & Chu kỳ ── */}
-            <RecurringScheduleSection isIncome={isIncome} amount={amount} cycRef={cycRef} cycle={cycle} endDate={endDate} handleAmountChange={handleAmountChange} hasArchivedWallet={hasArchivedWallet} hasEndDate={hasEndDate} installmentToEdit={installmentToEdit} isCycleDropdownOpen={isCycleDropdownOpen} isWalletDropdownOpen={isWalletDropdownOpen} nextDueDate={nextDueDate} selectedCycleLabel={selectedCycleLabel} selectedWallet={selectedWallet} setCycle={setCycle} setEndDate={setEndDate} setHasEndDate={setHasEndDate} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNextDueDate={setNextDueDate} setWalletId={setWalletId} walRef={walRef} wallets={wallets} />
+            <RecurringScheduleSection errors={fieldErrors} isIncome={isIncome} amount={amount} cycRef={cycRef} cycle={cycle} endDate={endDate} handleAmountChange={handleAmountChange} hasArchivedWallet={hasArchivedWallet} hasEndDate={hasEndDate} installmentToEdit={installmentToEdit} isCycleDropdownOpen={isCycleDropdownOpen} isWalletDropdownOpen={isWalletDropdownOpen} nextDueDate={nextDueDate} selectedCycleLabel={selectedCycleLabel} selectedWallet={selectedWallet} setCycle={setCycle} setEndDate={setEndDate} setHasEndDate={setHasEndDate} setIsCategoryDropdownOpen={setIsCategoryDropdownOpen} setIsCycleDropdownOpen={setIsCycleDropdownOpen} setIsWalletDropdownOpen={setIsWalletDropdownOpen} setNextDueDate={setNextDueDate} setWalletId={setWalletId} walRef={walRef} wallets={wallets} />
 
-            {/* ── Section 3: Ghi chú & Thông tin bổ sung ── */}
             <RecurringNotesSection note={note} setNote={setNote} />
 
-            {/* Error Message */}
+            {/* Lỗi lưu từ máy chủ; lỗi nhập nằm dưới từng ô */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
                 <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          {/* Footer */}
-          <div className="txn-modal-footer">
+          <DialogFooter>
             <Button variant="secondary" size="lg" className="txn-btn-cancel" onClick={onClose} disabled={isSubmitting}>
               Hủy
             </Button>
             <Button type="submit" variant="primary" size="lg" className="txn-btn-submit" loading={isSubmitting}>
               {isSubmitting ? 'Đang lưu...' : installmentToEdit ? 'Lưu thay đổi' : 'Tạo khoản định kỳ'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-    </Dialog>
+    </FormDialog>
   );
 }

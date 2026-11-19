@@ -11,11 +11,14 @@ import { useTranslation } from '../../i18n/useTranslation';
  *   itself with via aria-labelledby.
  * - `optional` adds a muted "Tùy chọn" at the right end of the label row;
  *   required fields say nothing.
+ * - `id` names the field's root element and prefixes its hint/error ids.
+ * - `ref` (React 19 prop) lands on the field's root element, e.g. for an
+ *   outside-click check around a custom dropdown.
  * - `error` replaces the hint, is announced (role="alert") and should be
  *   paired with aria-invalid on the control. Pass a function as children to
  *   get `{ describedBy, invalid }` for the control's ARIA attributes.
  */
-export function FormField({ label, htmlFor, labelId, optional = false, hint, error, id, className, children }) {
+export function FormField({ label, htmlFor, labelId, optional = false, hint, error, id, className, ref, children }) {
   const { t } = useTranslation();
   const autoId = useId();
   const base = id || autoId;
@@ -25,7 +28,7 @@ export function FormField({ label, htmlFor, labelId, optional = false, hint, err
   const Label = htmlFor ? 'label' : 'div';
 
   return (
-    <div className={className ? `txn-field-group ${className}` : 'txn-field-group'}>
+    <div ref={ref} id={id} className={className ? `txn-field-group ${className}` : 'txn-field-group'}>
       {label && (
         <Label className="txn-label" htmlFor={htmlFor} id={labelId}>
           <span>{label}</span>

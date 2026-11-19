@@ -2,22 +2,14 @@ import React from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { CategoryOutlineIcon } from '../../../utils/categoryIcons';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { FormField } from '../../../components/ui/FormField';
 
-export function RecurringIdentitySection({ catRef, category, categoryDisplayName, handleCreateNewCategory, handleNameChange, isAddingNewCategory, isCategoryDropdownOpen, isIncome = false, name, nameInputRef, newCatInputName, newCatInputRef, setCategory, setIsAddingNewCategory, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNewCatInputName, syncedExpenseCategories }) {
+export function RecurringIdentitySection({ errors = {}, catRef, category, categoryDisplayName, handleCreateNewCategory, handleNameChange, isAddingNewCategory, isCategoryDropdownOpen, isIncome = false, name, nameInputRef, newCatInputName, newCatInputRef, setCategory, setIsAddingNewCategory, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNewCatInputName, syncedExpenseCategories }) {
   const { label } = useTranslation();
   return (
-    <div className="recurring-form-section">
-      <div className="recurring-section-header">
-        <Icon name="tag" className="section-header-icon" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <span className="section-header-title">Định danh & Phân loại</span>
-      </div>
-    
-      <div className="recurring-section-content">
-        {/* 1. Tên khoản chi / dịch vụ */}
-        <div className="txn-field-group">
-          <label htmlFor="rec-name" className="txn-label">
-            <span>{isIncome ? 'Tên khoản thu' : 'Tên khoản chi / dịch vụ'}</span>
-          </label>
+    <>
+      <FormField label={isIncome ? 'Tên khoản thu' : 'Tên khoản chi / dịch vụ'} htmlFor="rec-name" error={errors.name}>
+        {({ describedBy, invalid }) => (
           <input
             id="rec-name"
             ref={nameInputRef}
@@ -28,14 +20,13 @@ export function RecurringIdentitySection({ catRef, category, categoryDisplayName
             onChange={handleNameChange}
             maxLength={60}
             required
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
           />
-        </div>
-    
-        {/* 2. Danh mục chi tiêu */}
-        <div className="txn-field-group" ref={catRef}>
-          <label className="txn-label">
-            <span>{isIncome ? 'Danh mục thu nhập' : 'Danh mục chi tiêu'}</span>
-          </label>
+        )}
+      </FormField>
+
+      <FormField label={isIncome ? 'Danh mục thu nhập' : 'Danh mục chi tiêu'} ref={catRef}>
           <div className="modal-custom-dropdown-wrap">
             <button
               type="button"
@@ -141,9 +132,7 @@ export function RecurringIdentitySection({ catRef, category, categoryDisplayName
               </div>
             )}
           </div>
-        </div>
-    
-      </div>
-    </div>
+      </FormField>
+    </>
   );
 }

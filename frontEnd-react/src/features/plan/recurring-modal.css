@@ -2,27 +2,6 @@
    (tách từ assets/css/dialogs.css — đợt 4; thứ tự nạp giữ nguyên trong main.jsx) */
 
 /* ── Recurring Modal Custom Themed Selects & Dropdowns ── */
-.recurring-modal-dialog {
-  max-width: 540px;
-}
-
-.recurring-modal-header-lead {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.modal-header-icon-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(99, 102, 241, 0.12);
-  color: var(--color-link);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
 
 .modal-custom-dropdown-wrap {
   position: relative;
@@ -36,8 +15,9 @@
   justify-content: space-between;
   gap: 8px;
   padding: 10px 14px;
-  background: var(--surface-subtle, #EDF5F0);
-  border: 1px solid var(--border, #E2ECE6);
+  /* Cùng nền / viền với ô nhập bên cạnh (từ khi bỏ khung nhóm, 7d) */
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-md, 10px);
   color: var(--text-primary, #173126);
   font-family: var(--font-sans);
@@ -248,61 +228,7 @@
   cursor: pointer;
 }
 
-/* ── Recurring Modal Grouped Sections (Senior UX Layout) ── */
-.recurring-modal-dialog {
-  max-width: 560px;
-}
-
-.recurring-modal-body-grouped {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px 20px;
-}
-
-.recurring-form-section {
-  background: var(--surface-subtle, var(--color-brand-50));
-  border: 1px solid var(--color-border, var(--border));
-  border-radius: var(--radius-md, 12px);
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
-}
-
-.recurring-form-section:focus-within {
-  border-color: var(--color-brand-700, var(--primary));
-  box-shadow: 0 0 0 1px var(--color-brand-700, var(--primary));
-}
-
-.recurring-section-header {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--color-link);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  padding-bottom: 6px;
-  border-bottom: 1px dashed var(--color-border, var(--border));
-}
-
-.section-header-icon {
-  flex-shrink: 0;
-  color: var(--color-link);
-}
-
-.section-header-title {
-  color: var(--color-link);
-}
-
-.recurring-section-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+/* ── Lưới 2 cột, công tắc kỳ hạn (vỏ và nhãn trường: form-dialog-shell.css) ── */
 
 .recurring-form-grid-2col {
   display: grid;
@@ -419,27 +345,30 @@
 
 /* ── Đợt 10 (FORM-10): phần ghi chú gập mặc định ── */
 .recurring-notes-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   min-height: 44px;
   margin: 0;
-  padding: 0 0 6px;
-  border: 0;
-  border-bottom: 1px dashed var(--color-border, var(--border));
+  padding: 0 12px;
+  border: 1px dashed var(--color-border-strong, var(--color-border));
+  border-radius: var(--radius-md, 12px);
   background: none;
-  font-family: inherit;
+  color: var(--color-text);
+  font: 600 var(--font-sm) var(--font-sans);
   cursor: pointer;
   text-align: left;
 }
 
+.recurring-notes-toggle:hover {
+  border-color: var(--color-link);
+}
+
 .recurring-notes-chevron {
   margin-left: auto;
-  color: var(--color-link);
+  color: var(--color-text-secondary);
   font-size: 16px;
   line-height: 1;
 }
 
-.recurring-notes-toggle[aria-expanded="false"] {
-  min-height: 32px;
-  padding-bottom: 0;
-  border-bottom: 0;
-}
