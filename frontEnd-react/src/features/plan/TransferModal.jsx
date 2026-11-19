@@ -2,7 +2,8 @@ import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { Dialog } from '../../components/ui/Dialog';
+import { FormDialog, DialogBody, DialogFooter } from '../../components/ui/FormDialog';
+import { FormField } from '../../components/ui/FormField';
 import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatInputNumber, getLocalDateString } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
@@ -24,6 +25,8 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const [desc, setDesc] = useState('Chuyển tiền ví');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // Lỗi nhập gắn vào từng ô (from / to / amount); errorMsg chỉ còn cho lỗi lưu.
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const modalRef = useRef(null);
   const amountInputRef = useRef(null);
@@ -58,6 +61,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
     setDate(getLocalDateString());
     setDesc('Chuyển tiền ví');
     setErrorMsg('');
+    setFieldErrors({});
 
     const timer = setTimeout(() => {
       amountInputRef.current?.focus();
@@ -90,25 +94,26 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setFieldErrors({});
 
     if (!fromWalletId) {
-      setErrorMsg('Vui lòng chọn ví nguồn (tài khoản chuyển).');
+      setFieldErrors({ from: 'Vui lòng chọn ví nguồn (tài khoản chuyển).' });
       return;
     }
 
     if (!toWalletId) {
-      setErrorMsg('Vui lòng chọn ví đích (tài khoản nhận).');
+      setFieldErrors({ to: 'Vui lòng chọn ví đích (tài khoản nhận).' });
       return;
     }
 
     if (fromWalletId === toWalletId) {
-      setErrorMsg('Ví nguồn và ví đích không được trùng nhau.');
+      setFieldErrors({ to: 'Ví nguồn và ví đích không được trùng nhau.' });
       return;
     }
 
     const cleanAmount = parseInt(String(amount).replace(/\D/g, ''), 10);
     if (!cleanAmount || cleanAmount <= 0) {
-      setErrorMsg('Vui lòng nhập số tiền chuyển hợp lệ (> 0).');
+      setFieldErrors({ amount: 'Vui lòng nhập số tiền chuyển hợp lệ (> 0).' });
       amountInputRef.current?.focus();
       return;
     }
@@ -146,44 +151,19 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
   const toWallet = wallets.find((w) => w.id === toWalletId);
 
   return (
-    <Dialog
-      isOpen
+    <FormDialog
       onClose={onClose}
       busy={isSubmitting}
-      portal={false}
       panelRef={modalRef}
-      overlayClassName="txn-modal-backdrop"
-      className="txn-modal-card"
-      labelledBy="transfer-modal-title"
+      titleId="transfer-modal-title"
+      title="Chuyển tiền giữa các ví"
     >
-        {/* Header */}
-        <div className="txn-modal-header modal-pro-header">
-          <div className="modal-pro-header-left">
-            <div className="modal-header-icon-badge transfer" aria-hidden="true">
-              <Icon name="swapHorizontal" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </div>
-            <div className="modal-pro-header-titles">
-              <h2 id="transfer-modal-title" className="txn-modal-title modal-pro-title">
-                Chuyển tiền giữa các ví
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="txn-modal-close-btn"
-            onClick={onClose}
-            aria-label="Đóng cửa sổ"
-          >
-            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body modal-pro-body">
+          <DialogBody>
             {/* Transfer Visual Direction Banner */}
             <div className="transfer-route-banner-pro">
               <div className="transfer-route-col">
-                <span className="transfer-route-label">TỪ VÍ</span>
+                <span className="transfer-route-label">Từ ví</span>
                 <div className="transfer-route-wallet">
                   <WalletOutlineIcon type={fromWallet?.type} size={18} color="currentColor" />
                   <span className="transfer-route-name">{fromWallet?.name || 'Chọn ví'}</span>
@@ -198,7 +178,7 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
               </div>
 
               <div className="transfer-route-col">
-                <span className="transfer-route-label">ĐẾN VÍ</span>
+                <span className="transfer-route-label">Đến ví</span>
                 <div className="transfer-route-wallet">
                   <WalletOutlineIcon type={toWallet?.type} size={18} color="currentColor" />
                   <span className="transfer-route-name">{toWallet?.name || 'Chọn ví'}</span>
@@ -209,101 +189,109 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
               </div>
             </div>
 
-            {/* Select From Wallet & To Wallet */}
             <div className="modal-two-cols-row">
-              <div className="txn-field-group">
-                <label htmlFor="from-wallet-select" className="modal-section-label">
-                  <span>Từ ví nguồn</span>
-                </label>
-                <CustomWalletDropdown
-                  id="from-wallet-select"
-                  wallets={sortedWallets}
-                  value={fromWalletId}
-                  onChange={(val) => {
-                    setFromWalletId(val);
-                    if (toWalletId === val) {
-                      const nextTo = wallets.find((w) => w.id !== val);
-                      if (nextTo) setToWalletId(nextTo.id);
-                    }
-                  }}
-                  placeholder="Chọn ví nguồn..."
-                />
-              </div>
+              <FormField label="Từ ví nguồn" htmlFor="from-wallet-select" error={fieldErrors.from}>
+                {({ describedBy, invalid }) => (
+                  <CustomWalletDropdown
+                    id="from-wallet-select"
+                    wallets={sortedWallets}
+                    value={fromWalletId}
+                    onChange={(val) => {
+                      setFromWalletId(val);
+                      setFieldErrors((prev) => ({ ...prev, from: undefined, to: undefined }));
+                      if (toWalletId === val) {
+                        const nextTo = wallets.find((w) => w.id !== val);
+                        if (nextTo) setToWalletId(nextTo.id);
+                      }
+                    }}
+                    placeholder="Chọn ví nguồn..."
+                    invalid={invalid}
+                    describedBy={describedBy}
+                  />
+                )}
+              </FormField>
 
-              <div className="txn-field-group">
-                <label htmlFor="to-wallet-select" className="modal-section-label">
-                  <span>Đến ví nhận</span>
-                </label>
-                <CustomWalletDropdown
-                  id="to-wallet-select"
-                  wallets={sortedWallets.filter((w) => w.id !== fromWalletId)}
-                  value={toWalletId}
-                  onChange={setToWalletId}
-                  placeholder="Chọn ví nhận..."
-                />
-              </div>
+              <FormField label="Đến ví nhận" htmlFor="to-wallet-select" error={fieldErrors.to}>
+                {({ describedBy, invalid }) => (
+                  <CustomWalletDropdown
+                    id="to-wallet-select"
+                    wallets={sortedWallets.filter((w) => w.id !== fromWalletId)}
+                    value={toWalletId}
+                    onChange={(val) => {
+                      setToWalletId(val);
+                      setFieldErrors((prev) => ({ ...prev, to: undefined }));
+                    }}
+                    placeholder="Chọn ví nhận..."
+                    invalid={invalid}
+                    describedBy={describedBy}
+                  />
+                )}
+              </FormField>
             </div>
 
-            {/* Amount & Fee */}
             <div className="modal-two-cols-row">
-              <div className="txn-field-group">
-                <label htmlFor="transfer-amount" className="modal-section-label">
-                  <span>Số tiền chuyển</span>
-                </label>
-                <div className="modal-pro-amount-box input-shell">
-                  <div className="amount-prefix-badge banknote" aria-hidden="true">
-                    <Icon name="banknote" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <FormField label="Số tiền chuyển" htmlFor="transfer-amount" hint="Số tiền sẽ được trừ từ ví nguồn" error={fieldErrors.amount}>
+                {({ describedBy, invalid }) => (
+                  <div className="modal-pro-amount-box input-shell">
+                    <div className="amount-prefix-badge banknote" aria-hidden="true">
+                      <Icon name="banknote" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </div>
+                    <input
+                      id="transfer-amount"
+                      ref={amountInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      className="modal-pro-amount-input"
+                      placeholder="0"
+                      value={amount}
+                      onChange={(e) => {
+                        handleAmountChange(e);
+                        if (fieldErrors.amount) setFieldErrors((prev) => ({ ...prev, amount: undefined }));
+                      }}
+                      required
+                      aria-invalid={invalid || undefined}
+                      aria-describedby={describedBy}
+                    />
+                    <span className="modal-pro-amount-suffix">₫</span>
                   </div>
-                  <input
-                    id="transfer-amount"
-                    ref={amountInputRef}
-                    type="text"
-                    inputMode="numeric"
-                    className="modal-pro-amount-input"
-                    placeholder="0"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    required
-                  />
-                  <span className="modal-pro-amount-suffix">₫</span>
-                </div>
-                <p className="modal-field-hint">Số tiền sẽ được trừ từ ví nguồn</p>
-              </div>
+                )}
+              </FormField>
 
-              <div className="txn-field-group">
-                <div className="modal-label-row">
-                  <label htmlFor="transfer-fee" className="modal-section-label">
-                    <span>Phí giao dịch</span>
+              <FormField
+                label={(
+                  <>
+                    Phí giao dịch
                     <span className="modal-info-tooltip" title="Chi phí chuyển khoản hoặc phí dịch vụ phát sinh" aria-label="Thông tin thêm">
                       <Icon name="info" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </span>
-                  </label>
-                  <span className="modal-label-optional">Tùy chọn</span>
-                </div>
-                <div className="modal-pro-amount-box input-shell">
-                  <div className="amount-prefix-badge tag" aria-hidden="true">
-                    <Icon name="tag" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </>
+                )}
+                htmlFor="transfer-fee"
+                optional
+                hint="Phí giao dịch sẽ được trừ thêm vào ví gửi"
+              >
+                {({ describedBy }) => (
+                  <div className="modal-pro-amount-box input-shell">
+                    <div className="amount-prefix-badge tag" aria-hidden="true">
+                      <Icon name="tag" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </div>
+                    <input
+                      id="transfer-fee"
+                      type="text"
+                      inputMode="numeric"
+                      className="modal-pro-amount-input"
+                      placeholder="0"
+                      value={fee}
+                      onChange={handleFeeChange}
+                      aria-describedby={describedBy}
+                    />
+                    <span className="modal-pro-amount-suffix">₫</span>
                   </div>
-                  <input
-                    id="transfer-fee"
-                    type="text"
-                    inputMode="numeric"
-                    className="modal-pro-amount-input"
-                    placeholder="0"
-                    value={fee}
-                    onChange={handleFeeChange}
-                  />
-                  <span className="modal-pro-amount-suffix">₫</span>
-                </div>
-                <p className="modal-field-hint">Phí giao dịch sẽ được trừ thêm vào ví gửi</p>
-              </div>
+                )}
+              </FormField>
             </div>
 
-            {/* Date */}
-            <div className="txn-field-group">
-              <label htmlFor="transfer-date" className="modal-section-label">
-                <span>Ngày chuyển</span>
-              </label>
+            <FormField label="Ngày chuyển" htmlFor="transfer-date">
               <CustomDatePicker
                 id="transfer-date"
                 inputClassName="modal-pro-input"
@@ -312,16 +300,9 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                 max={getLocalDateString()}
                 required
               />
-            </div>
+            </FormField>
 
-            {/* Note with Character Count */}
-            <div className="txn-field-group">
-              <div className="modal-label-row">
-                <label htmlFor="transfer-desc" className="modal-section-label">
-                  <span>Ghi chú</span>
-                </label>
-                <span className="modal-label-optional">Tùy chọn</span>
-              </div>
+            <FormField label="Ghi chú" htmlFor="transfer-desc" optional>
               <div className="modal-input-icon-wrap">
                 <span className="modal-input-prefix-icon note" aria-hidden="true">
                   <Icon name="pencilAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -339,30 +320,26 @@ export function TransferModal({ isOpen, onClose, initialFromWalletId = null }) {
                   {desc.length}/100
                 </span>
               </div>
-            </div>
+            </FormField>
 
-            {/* Error Message */}
+            {/* Lỗi lưu từ máy chủ; lỗi nhập nằm dưới từng ô */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
                 <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          {/* Footer */}
-          <div className="txn-modal-footer modal-pro-footer">
+          <DialogFooter>
             <Button variant="secondary" size="lg" className="txn-btn-cancel" onClick={onClose} disabled={isSubmitting}>
               Hủy
             </Button>
             <Button type="submit" variant="primary" size="lg" className="txn-btn-submit" loading={isSubmitting}>
-              {!isSubmitting && (
-                <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              )}
-              <span>{isSubmitting ? 'Đang xử lý...' : 'Xác nhận chuyển tiền'}</span>
+              {isSubmitting ? 'Đang xử lý...' : 'Chuyển tiền'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-    </Dialog>
+    </FormDialog>
   );
 }

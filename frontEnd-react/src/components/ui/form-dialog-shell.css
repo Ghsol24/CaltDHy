@@ -307,8 +307,9 @@
   margin-top: 1px;
 }
 
-.txn-field-group [aria-invalid="true"],
-.txn-field-group [aria-invalid="true"]:focus,
+/* Ô nằm trong khung .input-shell (tiền tố icon + hậu tố ₫): khung mang viền đỏ, không phải ô. */
+.txn-field-group [aria-invalid="true"]:not(.input-shell *),
+.txn-field-group [aria-invalid="true"]:not(.input-shell *):focus,
 .txn-field-group .input-shell:has([aria-invalid="true"]) {
   border-color: var(--color-danger);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
