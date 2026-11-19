@@ -21,6 +21,9 @@ const { MongoMemoryReplSet } = backend('mongodb-memory-server');
 let server, db, browser;
 let passed = 0;
 const evidenceDir = process.env.BUDGET_QA_DIR || path.join(os.tmpdir(), 'caltdhy-budget-month-evidence');
+// Evidence screenshots are for reviewing a UI change by eye; the assertions never read them. Encoding
+// dozens of PNGs on every run costs CPU, so they are written only on request (failure shots always are).
+const saveEvidence = process.env.SAVE_QA_EVIDENCE === '1' || Boolean(process.env.BUDGET_QA_DIR);
 async function check(name, work) {
   await work();
   passed += 1;
@@ -169,11 +172,11 @@ const digits = (text) => String(text || '').replace(/\D/g, '');
       assert.ok(cold.some(frame => frame.label === monthLabel(previous) && frame.pair === expected[current]),
         `${device}: while loading, the label moves on and the old month stays whole`);
       assert.ok(cold.some(frame => frame.loading), `${device}: a slow month shows the switcher spinner`);
-      await target.screenshot({ path: path.join(evidenceDir, `${device}-previous.png`) });
+      if (saveEvidence) await target.screenshot({ path: path.join(evidenceDir, `${device}-previous.png`) });
       assertSmooth(await record(target, () => press('Xem tháng sau')), current, `${device} back (cached)`);
       await target.waitForTimeout(700); // neighbours are prefetched once a month settles
       assertSmooth(await record(target, () => press('Xem tháng sau')), next, `${device} next (prefetched)`);
-      await target.screenshot({ path: path.join(evidenceDir, `${device}-next.png`) });
+      if (saveEvidence) await target.screenshot({ path: path.join(evidenceDir, `${device}-next.png`) });
       assertSmooth(await record(target, () => press('Xem tháng trước')), current, `${device} current again`);
       assertSmooth(await record(target, () => press('Xem tháng trước')), previous, `${device} previous again`);
       assert.equal(budgetRequests.filter(month => month === previous).length, 1, `${device}: a revisit within a minute uses the cache`);

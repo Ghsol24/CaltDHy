@@ -1,23 +1,7 @@
 // Shared harness for the store tests: loads the real Zustand stores in Node and
 // replaces only the network boundary (globalThis.fetch) with a scripted API.
-import { registerHooks } from 'node:module';
-import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import './vite-resolve.mjs';
 import assert from 'node:assert/strict';
-
-// The app is bundled by Vite, so its sources import siblings without an
-// extension ('./useWalletStore'). Node needs the extension spelled out.
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    if (specifier.startsWith('.') && context.parentURL?.includes('/frontEnd-react/src/')) {
-      const candidate = new URL(specifier + '.js', context.parentURL);
-      if (!/\.\w+$/.test(specifier) && existsSync(fileURLToPath(candidate))) {
-        return nextResolve(candidate.href, context);
-      }
-    }
-    return nextResolve(specifier, context);
-  }
-});
 
 const { useTransactionStore } = await import('../../src/stores/useTransactionStore.js');
 const { useWalletStore } = await import('../../src/stores/useWalletStore.js');

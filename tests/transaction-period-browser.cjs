@@ -16,6 +16,9 @@ const { MongoMemoryReplSet } = backend('mongodb-memory-server');
 let server, db, browser;
 let passed = 0;
 const evidenceDir = process.env.TRANSACTION_QA_DIR || path.join(os.tmpdir(), 'caltdhy-transaction-period-evidence');
+// Evidence screenshots are for reviewing a UI change by eye; the assertions never read them. Encoding
+// dozens of PNGs on every run costs CPU, so they are written only on request (failure shots always are).
+const saveEvidence = process.env.SAVE_QA_EVIDENCE === '1' || Boolean(process.env.TRANSACTION_QA_DIR);
 async function check(name, work) {
   await work();
   passed += 1;
@@ -291,14 +294,14 @@ async function check(name, work) {
         assert.ok(layout.left >= -1 && layout.right <= layout.width + 1, `${theme}/${device}: modal fits horizontally`);
         assert.ok(layout.footerTop >= 0 && layout.footerBottom <= layout.height + 1, `${theme}/${device}: save actions remain reachable`);
         assert.ok(layout.bodyOverflow <= 1 && layout.documentOverflow <= 1, `${theme}/${device}: no horizontal overflow`);
-        await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-period.png`), animations: 'disabled' });
+        if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-period.png`), animations: 'disabled' });
         await modal.locator('.txn-revisions-toggle').click();
         await expect(modal.locator('.txn-revision-entry')).toHaveCount(2);
         await expect(modal.locator('.txn-revision-entry').first()).toContainText(actorName);
         await modal.locator('.txn-revision-entry').last().scrollIntoViewIfNeeded();
         assert.equal(await modal.locator('.txn-revisions-content').evaluate(element => element.scrollWidth > element.clientWidth + 1), false,
           `${theme}/${device}: audit values must wrap inside the modal`);
-        await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-audit.png`), animations: 'disabled' });
+        if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-audit.png`), animations: 'disabled' });
         await modal.locator('#txn-amount-input').fill('50000');
         await modal.locator('.txn-btn-submit').click();
         await expect(confirmation).toBeVisible();
@@ -311,7 +314,7 @@ async function check(name, work) {
         assert.ok(confirmLayout.left >= -1 && confirmLayout.right <= confirmLayout.width + 1
           && confirmLayout.top >= -1 && confirmLayout.bottom <= confirmLayout.height + 1
           && confirmLayout.overflow <= 1, `${theme}/${device}: historical confirmation must fit the viewport`);
-        await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-confirm.png`), animations: 'disabled' });
+        if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-confirm.png`), animations: 'disabled' });
         await confirmation.locator('.confirm-dialog-btn').first().click();
         await expect(confirmation).toHaveCount(0);
         await modal.locator('.txn-modal-close-btn').click();
@@ -380,14 +383,14 @@ async function check(name, work) {
     const deleteButton = modal.getByRole('button', { name: 'Xóa giao dịch này', exact: true });
     await expect(deleteButton).toContainText('Xóa');
     await settle();
-    await page.screenshot({ path: path.join(evidenceDir, 'delete-button-desktop.png') });
+    if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'delete-button-desktop.png') });
     await deleteButton.click();
     const message = confirmation.locator('.confirm-dialog-message');
     await expect(message).toContainText('chi tiêu “Nhập nhầm”');
     await expect(message).toContainText('Ví chính');
     await expect(message).not.toContainText('tháng', { message: 'A current-month delete has no impact paragraph' });
     await settle();
-    await page.screenshot({ path: path.join(evidenceDir, 'delete-confirm-desktop.png') });
+    if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'delete-confirm-desktop.png') });
     await confirmation.locator('.confirm-dialog-btn').last().click();
     await expect(modal).toHaveCount(0);
     await expect(historyRow('Nhập nhầm')).toHaveCount(0);
@@ -422,7 +425,7 @@ async function check(name, work) {
       await page.waitForTimeout(120);
       assert.equal(await focusedField(), false, 'No phone keyboard opens when editing');
       await settle();
-      await page.screenshot({ path: path.join(evidenceDir, 'delete-button-mobile.png') });
+      if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'delete-button-mobile.png') });
       await modal.locator('.txn-modal-close-btn').click();
     } finally { await page.setViewportSize({ width: 1440, height: 1000 }); }
   });
@@ -472,7 +475,7 @@ async function check(name, work) {
       const tint = await row.evaluate(element => getComputedStyle(element).backgroundColor);
       const plain = await touch.locator('.txn-item[role="button"]').nth(1).evaluate(element => getComputedStyle(element).backgroundColor);
       assert.equal(tint, plain, 'The tapped row keeps no hover tint');
-      await touch.screenshot({ path: path.join(evidenceDir, 'home-rows-after-tap-mobile.png') });
+      if (saveEvidence) await touch.screenshot({ path: path.join(evidenceDir, 'home-rows-after-tap-mobile.png') });
       // Adding on a touch phone does not focus the amount either: the person taps it when ready.
       await touch.getByRole('button', { name: 'Thêm giao dịch', exact: true }).first().tap();
       const addSheet = touch.getByRole('dialog', { name: 'Thêm giao dịch mới', exact: true });
@@ -480,7 +483,7 @@ async function check(name, work) {
       await touch.waitForTimeout(150);
       assert.equal(await touch.evaluate(() => ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)), false,
         'Opening the add sheet must not open the phone keyboard');
-      await touch.screenshot({ path: path.join(evidenceDir, 'add-sheet-no-keyboard-mobile.png') });
+      if (saveEvidence) await touch.screenshot({ path: path.join(evidenceDir, 'add-sheet-no-keyboard-mobile.png') });
       await addSheet.locator('#txn-amount-input').tap();
       await expect(addSheet.locator('#txn-amount-input')).toBeFocused();
       await addSheet.locator('.txn-modal-close-btn').tap();
@@ -649,7 +652,7 @@ async function check(name, work) {
     assert.deepEqual(picker.nestedScrollers, [], `${name}: the sheet body is the only scroll region of the sheet`);
     assert.ok(picker.bodyOverflow <= 1, `${name}: no horizontal overflow in the category sheet`);
     assertRowsContained(`${name} (sheet)`, picker.options);
-    await page.screenshot({ path: path.join(evidenceDir, `${name.replace(/[^a-z0-9]+/gi, '-')}-picker.png`), animations: 'disabled' });
+    if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${name.replace(/[^a-z0-9]+/gi, '-')}-picker.png`), animations: 'disabled' });
     await sheet.locator('.txn-sheet__close').click();
     await expect(sheet).toHaveCount(0);
     return { form, picker };
@@ -728,7 +731,7 @@ async function check(name, work) {
         const layout = await assertCategoryLayout(`${theme}/${device}`, columns);
         if (columns === 5) assert.ok(layout.cards.some(card => card.textRects.length > 1),
           `${theme}/${device}: long-name fixture must exercise multiline wrapping`);
-        await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-categories.png`), animations: 'disabled' });
+        if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-categories.png`), animations: 'disabled' });
         await modal.locator('.txn-modal-close-btn').click();
       }
     }
@@ -763,7 +766,7 @@ async function check(name, work) {
     await openCategoryLayout('cream', { width: 390, height: 568 });
     await assertCategoryLayout('cream/390px short mobile', 1);
     // Capture the natural opening position before scrolling to the final category.
-    await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-opening.png'), animations: 'disabled' });
+    if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-opening.png'), animations: 'disabled' });
     // CSS font pressure is deliberate fixture emulation, not a claim that Chrome's
     // minimum-font-size preference or an old Windows installation was exercised.
     const largeText = await page.addStyleTag({ content:
@@ -771,14 +774,14 @@ async function check(name, work) {
       + ' .txn-cat-option__name, .txn-cat-option__meta { font-size: 20px !important; }' });
     try {
       await assertCategoryLayout('cream/390px simulated 20px text', 1);
-      await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-large-text.png'), animations: 'disabled' });
+      if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-large-text.png'), animations: 'disabled' });
       await page.setViewportSize({ width: 800, height: 480 });
       await assertCategoryLayout('cream/800px short desktop simulated 20px text', 5);
     } finally { await largeText.evaluate(element => element.remove()); }
     await page.setViewportSize({ width: 320, height: 480 });
     await assertCategoryLayout('cream/320px narrow mobile', 1);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories.png'), animations: 'disabled' });
+    if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories.png'), animations: 'disabled' });
     await modal.locator('.txn-modal-close-btn').click();
   });
 
@@ -795,7 +798,7 @@ async function check(name, work) {
     // Picking a category applies it and closes the sheet; there is no separate confirm step.
     await expect(sheet).toHaveCount(0);
     await expect(modal.locator('.txn-category-summary__name')).toHaveText(lastName);
-    await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-last-category-selected.png'), animations: 'disabled' });
+    if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-last-category-selected.png'), animations: 'disabled' });
     await modal.locator('.txn-btn-submit').click();
     await expect(modal).toHaveCount(0);
     await expect(confirmation).toHaveCount(0);

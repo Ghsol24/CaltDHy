@@ -7,6 +7,11 @@ const { MongoMemoryReplSet } = require('mongodb-memory-server');
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = crypto.randomBytes(32).toString('hex');
 process.env.CLIENT_URL = 'https://finance.example.test';
+process.env.AUTH_RATE_LIMIT_MAX = '1000';
+process.env.API_RATE_LIMIT_MAX = '100000';
+for (const name of ['MONGODB_URI', 'GMAIL_USER', 'GMAIL_PASS', 'CORS_WHITELIST', 'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY']) delete process.env[name];
+const request = require('supertest');
+const app = require('../server');
 const User = require('../models/User');
 const Installment = require('../models/Installment');
 const Transaction = require('../models/Transaction');
@@ -31,6 +36,38 @@ const recorded = (userId, createdAt, date = createdAt) => Transaction.collection
     userId, type: 'expense', amount: 1000, category: 'Food', desc: '', fee: 0, date: new Date(date), createdAt: new Date(createdAt), updatedAt: new Date(createdAt)
 });
 const collect = () => { const mails = []; return { mails, send: async mail => { mails.push(mail); } }; };
+// A signed-in browser session against the real Express app, for the HTTP routes.
+async function client() {
+    const agent = request.agent(app);
+    let csrf = (await agent.get('/api/auth/csrf')).body.csrfToken;
+    const response = await agent.post('/api/auth/register').set('X-CSRF-Token', csrf).send({
+        name: 'Push test', email: crypto.randomUUID() + '@example.test', password: 'Test-password-1234'
+    });
+    assert.equal(response.status, 201, JSON.stringify(response.body));
+    csrf = response.body.csrfToken;
+    return { agent, userId: response.body.user.id, post: (url, body) => agent.post(url).set('X-CSRF-Token', csrf).send(body) };
+}
+async function anonymous() {
+    const agent = request.agent(app);
+    const csrf = (await agent.get('/api/auth/csrf')).body.csrfToken;
+    return { post: (url, body) => agent.post(url).set('X-CSRF-Token', csrf).send(body) };
+}
+// supertest speaks plain http, and an https CLIENT_URL makes session cookies Secure (__Host-),
+// so the HTTP cases run without it; the helpers above read cookie settings per request.
+async function overHttp(run) {
+    const clientUrl = process.env.CLIENT_URL;
+    delete process.env.CLIENT_URL;
+    try { await run(); } finally { process.env.CLIENT_URL = clientUrl; }
+}
+function withVapid() {
+    const { privateKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
+    const jwk = privateKey.export({ format: 'jwk' });
+    process.env.VAPID_PUBLIC_KEY = Buffer.concat([Buffer.from([4]), Buffer.from(jwk.x, 'base64url'), Buffer.from(jwk.y, 'base64url')]).toString('base64url');
+    process.env.VAPID_PRIVATE_KEY = jwk.d;
+    process.env.VAPID_SUBJECT = 'mailto:push@example.test';
+    return () => { for (const name of ['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT']) delete process.env[name]; };
+}
+const fcm = suffix => 'https://fcm.googleapis.com/fcm/send/' + suffix;
 
 describe('Reminder emails and daily push', { concurrency: false }, () => {
     let db;
@@ -209,6 +246,61 @@ describe('Reminder emails and daily push', { concurrency: false }, () => {
                 Buffer.from(signature, 'base64url')), true);
         } finally { delete process.env.VAPID_PUBLIC_KEY; delete process.env.VAPID_PRIVATE_KEY; }
     });
+
+    it('POST /api/auth/email-reminders applies a signed choice without signing in and refuses anything else', () => overHttp(async () => {
+        const owner = await user({ dueEmail: true, inactivityEmail: true });
+        const token = reminderToken(owner._id);
+        const visitor = await anonymous();
+        for (const body of [{}, { token, action: 'delete' }, { token: token.slice(0, -1) + (token.endsWith('0') ? '1' : '0'), action: 'off' },
+            { token: [token], action: 'off' }]) {
+            const response = await visitor.post('/api/auth/email-reminders', body);
+            assert.equal(response.status, 400, JSON.stringify(body));
+        }
+        assert.equal((await User.findById(owner._id)).preferences.notifications.dueEmail, true, 'refused requests change nothing');
+
+        const off = await visitor.post('/api/auth/email-reminders', { token, action: 'off' });
+        assert.equal(off.status, 200, JSON.stringify(off.body));
+        const stored = (await User.findById(owner._id)).preferences.notifications;
+        assert.deepEqual([stored.dueEmail, stored.inactivityEmail], [false, false]);
+    }));
+
+    it('POST /api/auth/push-subscriptions needs a session and VAPID, keeps 10 devices and moves a shared browser to the newest account', () => overHttp(async () => {
+        const visitor = await anonymous();
+        assert.equal((await visitor.post('/api/auth/push-subscriptions', { endpoint: fcm('anon') })).status, 401);
+        const a = await client(), b = await client();
+        assert.equal((await a.post('/api/auth/push-subscriptions', { endpoint: fcm('a0') })).status, 503, 'not configured');
+        assert.equal(await PushSubscription.countDocuments({ userId: a.userId }), 0);
+
+        const restore = withVapid();
+        try {
+            for (const endpoint of ['https://evil.example/x', 'http://fcm.googleapis.com/x', null]) {
+                assert.equal((await a.post('/api/auth/push-subscriptions', { endpoint })).status, 400, String(endpoint));
+            }
+            for (let index = 0; index < 10; index += 1) {
+                assert.equal((await a.post('/api/auth/push-subscriptions', { endpoint: fcm('a' + index) })).status, 200);
+            }
+            assert.equal((await a.post('/api/auth/push-subscriptions', { endpoint: fcm('a3') })).status, 200, 'repeat is a no-op');
+            assert.equal(await PushSubscription.countDocuments({ userId: a.userId }), 10);
+            assert.equal((await a.post('/api/auth/push-subscriptions', { endpoint: fcm('a10') })).status, 200);
+            const mine = (await PushSubscription.find({ userId: a.userId }).lean()).map(item => item.endpoint);
+            assert.equal(mine.length, 10);
+            assert.ok(!mine.includes(fcm('a0')), 'the oldest device makes room');
+            assert.ok(mine.includes(fcm('a10')));
+
+            // The same browser signs in to account B: notifications follow the newest account.
+            assert.equal((await b.post('/api/auth/push-subscriptions', { endpoint: fcm('a5') })).status, 200);
+            assert.equal(String((await PushSubscription.findOne({ endpoint: fcm('a5') })).userId), b.userId);
+            assert.equal(await PushSubscription.countDocuments({ endpoint: fcm('a5') }), 1);
+
+            // Removing only ever touches the caller's own devices.
+            assert.equal((await a.post('/api/auth/push-subscriptions/remove', { endpoint: fcm('a5') })).status, 200);
+            assert.equal(await PushSubscription.countDocuments({ endpoint: fcm('a5') }), 1);
+            assert.equal((await b.post('/api/auth/push-subscriptions/remove', { endpoint: fcm('a5') })).status, 200);
+            assert.equal(await PushSubscription.countDocuments({ endpoint: fcm('a5') }), 0);
+            assert.equal((await a.post('/api/auth/push-subscriptions/remove', { endpoint: { $ne: null } })).status, 200);
+            assert.equal(await PushSubscription.countDocuments({ userId: a.userId }), 9, 'an operator object removes nothing');
+        } finally { restore(); }
+    }));
 
     it('validates and stores notification preferences', () => {
         for (const good of [{ dueEmail: true, locale: 'en' }, { inactivityEmail: false }, { promptDismissed: true },

@@ -68,7 +68,8 @@ export function estimateJarCompletion(jar, now = new Date()) {
   const daily = net / days;
   if (daily <= 0) return { stalled: true };
   const date = new Date(now.getTime() + Math.ceil(remaining / daily) * 86400000);
-  if (date.getFullYear() - now.getFullYear() > 30) return { stalled: true };
+  // A pace so slow that the date overflows Date's range is "stalled" too, not 'NaN-NaN-NaN'.
+  if (Number.isNaN(date.getTime()) || date.getFullYear() - now.getFullYear() > 30) return { stalled: true };
   return { date: iso(date), monthly: Math.round(daily * 30), late: Boolean(jar.targetDate && iso(date) > jar.targetDate) };
 }
 
