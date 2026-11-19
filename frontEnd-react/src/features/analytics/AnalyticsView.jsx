@@ -25,6 +25,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { spendingService } from '../../services/spendingService';
 import { DailyTransactionsDrawer } from './DailyTransactionsDrawer';
 import { useCashFlowPreferences } from '../../hooks/useCashFlowPreferences';
+import { useCommandRequest } from '../../hooks/useCommandRequest';
 
 import { FinancialReportSection } from './analytics/FinancialReportSection';
 import { AnalyticsCashFlowSection } from './analytics/AnalyticsCashFlowSection';
@@ -204,6 +205,7 @@ export function AnalyticsView() {
 
   // ── Financial Report Statistics & Comparison ──
   const { handleExportCSV, handlePrint, reportData } = useFinancialReport({ activeMonth, addToast, budgets, curQuarterMonths, label, lang, monthLabel, prevMonthStr, prevQuarterLabel, prevQuarterMonths, quarterLabel, reportPeriodType, t, transactions });
+  useCommandRequest('export-csv', () => handleExportCSV());
 
   return (
     <div className="analytics-feature-view" role="region" aria-label="Báo cáo phân tích thu chi">

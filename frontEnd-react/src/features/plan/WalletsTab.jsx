@@ -18,6 +18,7 @@ import { WalletsSummary } from './wallets/WalletsSummary';
 import { WalletGroupedList } from './wallets/WalletGroupedList';
 import { WalletsPageHeader } from './wallets/WalletsPageHeader';
 import { useWalletInsights } from './wallets/useWalletInsights';
+import { useCommandRequest } from '../../hooks/useCommandRequest';
 export { WalletOutlineIcon };
 
 export function WalletsTab() {
@@ -92,6 +93,7 @@ export function WalletsTab() {
     setTransferFromWalletId(walletId);
     setIsTransferModalOpen(true);
   };
+  useCommandRequest('transfer', () => handleTransfer(null));
 
   const handleDelete = (wallet) => {
     setOpenMenuWalletId(null);

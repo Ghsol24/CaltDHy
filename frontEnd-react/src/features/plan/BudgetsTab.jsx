@@ -14,6 +14,7 @@ import { PageTitleIcon } from '../../components/ui/NavIcons';
 import { Icon } from '../../components/ui/AppIcons';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { useCommandRequest } from '../../hooks/useCommandRequest';
 // Colour follows how much of a limit is used, never the category itself.
 const WARN_PERCENT = 80;
 // How far (in percentage points) spending may run ahead of the calendar before
@@ -265,6 +266,8 @@ export function BudgetsTab() {
     setSelectedCategoryToEdit(category);
     setIsEditModalOpen(true);
   };
+  // "Sửa hạn mức" from the command palette; a past month cannot be edited, so it just shows the page.
+  useCommandRequest('edit-budgets', () => handleOpenEdit(), !isSwitching && (Boolean(model) || Boolean(loadError)));
 
   const monthDisplayLabel = formatDate(monthStartDate(selectedMonth), 'month');
   const hero = model && model.hasAnyLimit ? (() => {

@@ -487,9 +487,11 @@ function blendCssColor(color, background) {
       await expect(dialog.locator('.txn-btn-submit')).toBeVisible();
       await auditPage.setViewportSize({ width: 390, height: 430 });
       await dialog.locator('.txn-input').first().focus();
-      const compactFooter = await dialog.locator('.txn-modal-footer').boundingBox();
-      assert.ok(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430,
-        'Các nút giao dịch phải còn truy cập được khi bàn phím thu hẹp viewport');
+      // Measure once the sheet has re-laid out for the shorter viewport.
+      await expect.poll(async () => {
+        const compactFooter = await dialog.locator('.txn-modal-footer').boundingBox();
+        return Boolean(compactFooter && compactFooter.y >= 0 && compactFooter.y + compactFooter.height <= 430);
+      }, { message: 'Các nút giao dịch phải còn truy cập được khi bàn phím thu hẹp viewport', timeout: 2000 }).toBe(true);
     } finally {
       await auditPage.close();
     }

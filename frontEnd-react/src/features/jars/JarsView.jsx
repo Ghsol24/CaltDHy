@@ -5,6 +5,7 @@ import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useIsMobile } from '../../hooks/useMediaQuery';
+import { useCommandRequest } from '../../hooks/useCommandRequest';
 import { JarModal } from './JarModal';
 import { JarTransactionModal } from './JarTransactionModal';
 import { JarDetailModal } from './JarDetailModal';
@@ -136,6 +137,10 @@ export function JarsView() {
     setTxInitialAmount(typeof initialAmount === 'number' && Number.isFinite(initialAmount) && initialAmount > 0 ? initialAmount : null);
     setIsTxModalOpen(true);
   };
+  useCommandRequest('jar-deposit', ({ jarId }) => {
+    const jar = jars.find((item) => item.id === jarId);
+    if (jar) handleDeposit(jar);
+  }, hasLoaded);
 
   const handleWithdraw = (jar) => {
     setActiveJar(jar);

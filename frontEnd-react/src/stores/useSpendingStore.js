@@ -21,6 +21,9 @@ export const useSpendingStore = create((set) => ({
   isSettingsHome: true,
   settingsNavigationRequest: null,
   isHelpOpen: false,
+  // One-shot hand-off from the command palette to a screen that owns the dialog,
+  // e.g. { action: 'transfer' } opens WalletsTab's transfer form once it mounts.
+  commandRequest: null,
 
   routeRevision: 0,
   routeMode: 'push',
@@ -92,6 +95,11 @@ export const useSpendingStore = create((set) => ({
   setSettingsSection: (section) => set({ settingsSection: section, isSettingsHome: false }),
   showSettingsHome: () => set({ isSettingsHome: true }),
   closeSettingsModal: () => set({ isSettingsOpen: false, settingsNavigationRequest: null }),
+
+  requestCommand: (action, payload = {}) => set({ commandRequest: { ...payload, action, at: Date.now() } }),
+  consumeCommandRequest: (request) => set((state) => (
+    state.commandRequest === request ? { commandRequest: null } : state
+  )),
 
   openHelpModal: () => set({ isHelpOpen: true }),
   closeHelpModal: () => set({ isHelpOpen: false })

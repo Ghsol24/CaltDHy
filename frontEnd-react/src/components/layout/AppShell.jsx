@@ -8,6 +8,7 @@ import { SidebarNav } from './SidebarNav';
 import { MobilePrimaryNavigation, MobileSectionNavigation } from './MobileNavigation';
 import { ToastRegion } from '../ui/ToastRegion';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { CommandPaletteHost } from './CommandPaletteHost';
 
 // Moves keyboard focus past the topbar and sidebar without adding a #hash
 // entry to the router history.
@@ -48,6 +49,7 @@ export function AppShell({ children }) {
       <MobilePrimaryNavigation />
       <ToastRegion />
       <ConfirmDialog />
+      <CommandPaletteHost />
     </div>
   );
 }
