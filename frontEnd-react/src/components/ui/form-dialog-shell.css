@@ -1,0 +1,315 @@
+/* Vỏ hộp thoại form dùng chung (audit 7d, X-12 / FORM-03): FormDialog, DialogBody,
+   DialogFooter, FormField trong components/ui/. Tách từ features/transactions/transaction-modal.css
+   (vỏ của form Giao dịch đã duyệt ở Phần 6); nạp ngay trước file đó trong main.jsx nên thứ tự
+   cascade giữ nguyên. Tên lớp txn-modal-* giữ nguyên cho test và các hộp thoại cũ. */
+
+/* ── Transaction Modal (CaltDHy v2) ── */
+.txn-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  backdrop-filter: var(--dialog-overlay-blur);
+  -webkit-backdrop-filter: var(--dialog-overlay-blur);
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: overlayFadeIn 150ms ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.txn-modal-card {
+  background: var(--color-surface);
+  border: 1px solid var(--border, #E2ECE6);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--dialog-card-shadow);
+  width: 100%;
+  max-width: 500px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  animation: modalIn 200ms var(--ease-smooth);
+  overflow: hidden;
+}
+
+.txn-modal-card > form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.txn-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border, #E2ECE6);
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-color: var(--dialog-divider);
+}
+
+.txn-modal-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.txn-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--dialog-close-text);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease, opacity var(--dur-fast) ease;
+}
+
+.txn-modal-close-btn:hover {
+  background: var(--control-track-bg);
+  color: var(--color-text);
+}
+
+.txn-modal-body {
+  padding: 20px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Field Groups */
+.txn-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.txn-label {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary, #173126);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.txn-label-optional {
+  font-size: var(--font-xs);
+  font-weight: 400;
+  color: var(--text-muted, #8FA297);
+}
+
+.txn-field-hint {
+  margin: 6px 0 0;
+  font-size: var(--font-xs);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.txn-error-banner {
+  background: var(--danger-bg, #FEE2E2);
+  color: var(--danger-text, #991B1B);
+  border: 1px solid var(--danger, #C94B45);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 12px;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Modal Footer */
+.txn-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+  border-color: var(--dialog-divider);
+}
+
+@media (max-width: 480px) {
+  .txn-modal-backdrop {
+    padding: 8px;
+  }
+
+  .txn-modal-card {
+    max-height: 100%;
+  }
+
+  .txn-modal-header {
+    padding: 14px 16px;
+  }
+
+  .txn-modal-body {
+    padding: 16px;
+  }
+
+  .txn-modal-footer {
+    flex-wrap: wrap;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .txn-modal-footer > button {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
+
+/* Phones: the card becomes a bottom sheet with a grabber (drag down to dismiss). */
+.txn-modal-card {
+  position: relative;
+  /* `hidden` still lets focus() scroll the card while a sheet slides in from below,
+     which leaves the form shifted up; `clip` forbids any scrolling. */
+  overflow: clip;
+  border-color: var(--color-border);
+}
+
+.txn-modal-card.is-dragging {
+  animation: none;
+  transition: none;
+  transform: translateY(var(--sheet-drag-offset, 0px));
+}
+
+.txn-modal-handle-zone {
+  flex-shrink: 0;
+}
+
+.txn-modal-grabber {
+  display: none;
+}
+
+@keyframes txnSheetIn {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@media (max-width: 599px) {
+  .txn-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    overflow: clip;
+  }
+
+  .txn-modal-card {
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    border-width: 1px 0 0;
+    border-radius: 20px 20px 0 0;
+    animation: txnSheetIn 260ms var(--ease-smooth, ease-out);
+  }
+
+  .txn-modal-handle-zone {
+    touch-action: none;
+  }
+
+  .txn-modal-grabber {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 8px auto 0;
+    border-radius: 3px;
+    background: var(--color-border-strong, #C9DED3);
+  }
+
+  .txn-modal-header {
+    padding: 6px 16px 12px;
+  }
+
+  .txn-modal-body {
+    gap: 14px;
+    padding: 14px 16px 16px;
+  }
+
+  .txn-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .txn-modal-footer > button {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txn-modal-card {
+    animation: none;
+  }
+}
+
+/* Desktop: hộp thoại ~600px thay vì ~870px (FORM-01) */
+@media (min-width: 600px) {
+  .txn-modal-header {
+    padding: 16px 24px 12px;
+  }
+
+  .txn-modal-body {
+    gap: 12px;
+    padding: 14px 24px;
+  }
+
+  .txn-modal-footer {
+    padding: 14px 24px 16px;
+  }
+}
+
+/* ── Đầu hộp thoại: tiêu đề + phụ đề tùy chọn (FormDialog) ── */
+.txn-modal-heading {
+  min-width: 0;
+}
+
+.txn-modal-header--subtitle {
+  align-items: flex-start;
+}
+
+.txn-modal-subtitle {
+  margin: 2px 0 0;
+  font-size: var(--font-sm);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* ── Lỗi ngay dưới ô (FormField) ── */
+.form-field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-danger);
+}
+
+.form-field-error svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.txn-field-group [aria-invalid="true"],
+.txn-field-group [aria-invalid="true"]:focus,
+.txn-field-group .input-shell:has([aria-invalid="true"]) {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
