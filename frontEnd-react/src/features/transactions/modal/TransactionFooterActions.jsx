@@ -1,13 +1,14 @@
 import React from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { Button } from '../../../components/ui/Button';
+import { DialogFooter } from '../../../components/ui/FormDialog';
 import { formatCurrency } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 export function TransactionFooterActions({ canDelete, close, draftAmount, handleDelete, isEditing, isPhone, isSubmitting, type }) {
   const { t } = useTranslation();
   return (
-    <div className={`txn-modal-footer${canDelete ? ' txn-modal-footer--with-delete' : ''}`}>
+    <DialogFooter className={canDelete ? 'txn-modal-footer--with-delete' : undefined}>
       {canDelete && (
         <Button
           variant="danger-outline"
@@ -40,6 +41,6 @@ export function TransactionFooterActions({ canDelete, close, draftAmount, handle
               ? t('transaction.saveWithAmount', { amount: formatCurrency(draftAmount) })
               : t('transaction.save')}
       </Button>
-    </div>
+    </DialogFooter>
   );
 }

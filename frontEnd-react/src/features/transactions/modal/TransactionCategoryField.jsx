@@ -8,6 +8,7 @@ import { Icon } from '../../../components/ui/AppIcons';
 import { CategorySummaryButton } from '../TransactionMobileFields';
 import { getBudgetLineCopy } from '../transactionBudgetCopy';
 import { describeBudgetLine, pickVisibleCategories } from './transactionModalHelpers';
+import { FormField } from '../../../components/ui/FormField';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 const ARROW_STEP = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
@@ -29,7 +30,7 @@ function useRadioArrows() {
   return { groupRef, onKeyDown };
 }
 
-export function TransactionCategoryField({ baselineMetrics, budgetError, budgetReady, category, categoryMetrics, close, draftAmount, isPhone, navigateTo, selectedPeriod, setBudgetRetry, setCategory, setPicker, sortedCategories, type }) {
+export function TransactionCategoryField({ error, baselineMetrics, budgetError, budgetReady, category, categoryMetrics, close, draftAmount, isPhone, navigateTo, selectedPeriod, setBudgetRetry, setCategory, setPicker, sortedCategories, type }) {
   const { label, lang, t } = useTranslation();
   const { groupRef, onKeyDown } = useRadioArrows();
   const budgetCopy = getBudgetLineCopy(lang);
@@ -54,10 +55,7 @@ export function TransactionCategoryField({ baselineMetrics, budgetError, budgetR
     : null;
 
   return (
-    <div className="txn-field-group">
-      <label className="txn-label" id="txn-category-label">
-        <span>{t('transaction.category')}</span>
-      </label>
+    <FormField label={t('transaction.category')} labelId="txn-category-label" error={error}>
 
       {type === 'expense' && selectedPeriod && !isCurrentPeriod && <p className="txn-budget-period">
         {t('transaction.budgetForPeriod', { month: periodLabel })}
@@ -187,6 +185,6 @@ export function TransactionCategoryField({ baselineMetrics, budgetError, budgetR
           </p>
         </>
       )}
-    </div>
+    </FormField>
   );
 }
