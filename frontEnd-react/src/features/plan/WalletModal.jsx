@@ -2,7 +2,8 @@ import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useEffect, useRef, useId } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { Dialog } from '../../components/ui/Dialog';
+import { FormDialog, DialogBody, DialogFooter } from '../../components/ui/FormDialog';
+import { FormField } from '../../components/ui/FormField';
 import { Button } from '../../components/ui/Button';
 import { formatCurrency, formatInputNumber } from '../../utils/formatters';
 import { WalletOutlineIcon } from './WalletsTab';
@@ -41,6 +42,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
   const [isExcludedFromTotal, setIsExcludedFromTotal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [nameError, setNameError] = useState('');
 
   const modalRef = useRef(null);
   const nameInputRef = useRef(null);
@@ -66,6 +68,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
       setIsDefault(Boolean(walletToEdit.isDefault));
       setIsExcludedFromTotal(Boolean(walletToEdit.isExcludedFromTotal));
       setErrorMsg('');
+      setNameError('');
     } else {
       // New wallet defaults
       setName('');
@@ -76,6 +79,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
       setIsDefault(false);
       setIsExcludedFromTotal(false);
       setErrorMsg('');
+      setNameError('');
     }
 
     const timer = setTimeout(() => {
@@ -116,7 +120,7 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
     setErrorMsg('');
 
     if (!name.trim()) {
-      setErrorMsg('Vui lòng nhập tên ví hoặc tài khoản.');
+      setNameError('Vui lòng nhập tên ví hoặc tài khoản.');
       nameInputRef.current?.focus();
       return;
     }
@@ -163,47 +167,18 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
   };
 
   return (
-    <Dialog
-      isOpen
+    <FormDialog
       onClose={onClose}
       returnFocusRef={returnFocusRef}
       busy={isSubmitting}
       panelRef={modalRef}
-      overlayClassName="txn-modal-backdrop"
-      className="txn-modal-card modal-pro-card"
-      labelledBy="wallet-modal-title"
+      titleId="wallet-modal-title"
+      title={isEditing ? 'Chỉnh sửa ví / tài khoản' : 'Thêm ví / tài khoản mới'}
     >
-        {/* Header */}
-        <div className="txn-modal-header modal-pro-header">
-          <div className="modal-pro-header-left">
-            <div className="modal-header-icon-badge" aria-hidden="true">
-              <Icon name="edit" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </div>
-            <div className="modal-pro-header-titles">
-              <h2 id="wallet-modal-title" className="txn-modal-title modal-pro-title">
-                {isEditing ? 'Chỉnh sửa ví / tài khoản' : 'Thêm ví / tài khoản mới'}
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="txn-modal-close-btn"
-            onClick={onClose}
-            disabled={isSubmitting}
-            aria-label="Đóng cửa sổ"
-          >
-            <Icon name="close" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit} noValidate>
-          <div className="txn-modal-body modal-pro-body">
-            {/* 1. Loại ví / tài khoản */}
-            <div className="txn-field-group">
-              <label className="modal-section-label">
-                <span>1. Loại ví / tài khoản</span>
-              </label>
-              <div className="wallet-type-grid-pro" role="radiogroup" aria-label="Loại ví">
+          <DialogBody>
+            <FormField label="Loại ví / tài khoản" labelId={`${optionId}-type-label`}>
+              <div className="wallet-type-grid-pro" role="radiogroup" aria-labelledby={`${optionId}-type-label`}>
                 {[
                   { id: 'cash', label: 'Tiền mặt' },
                   { id: 'bank', label: 'Ngân hàng' },
@@ -225,76 +200,74 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   </button>
                 ))}
               </div>
-            </div>
+            </FormField>
 
-            {/* 2. Tên ví / tài khoản */}
-            <div className="txn-field-group">
-              <label htmlFor="wallet-name" className="modal-section-label">
-                <span>2. Tên ví / tài khoản</span>
-              </label>
-              <div className="modal-input-icon-wrap">
-                <span className="modal-input-prefix-icon tag" aria-hidden="true">
-                  <Icon name="tag" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </span>
-                <input
-                  id="wallet-name"
-                  ref={nameInputRef}
-                  type="text"
-                  className="modal-pro-input with-prefix with-clear"
-                  placeholder="VD: Ví tiền mặt, MB Bank, MoMo, Techcom Visa..."
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={40}
-                  required
-                />
-                {name && (
-                  <button
-                    type="button"
-                    className="modal-input-clear-btn"
-                    onClick={() => {
-                      setName('');
-                      nameInputRef.current?.focus();
+            <FormField label="Tên ví / tài khoản" htmlFor="wallet-name" error={nameError}>
+              {({ describedBy, invalid }) => (
+                <div className="modal-input-icon-wrap">
+                  <span className="modal-input-prefix-icon tag" aria-hidden="true">
+                    <Icon name="tag" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </span>
+                  <input
+                    id="wallet-name"
+                    ref={nameInputRef}
+                    type="text"
+                    className="modal-pro-input with-prefix with-clear"
+                    placeholder="VD: Ví tiền mặt, MB Bank, MoMo, Techcom Visa..."
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (nameError) setNameError('');
                     }}
-                    aria-label="Xóa tên ví"
-                  >
-                    <Icon name="xCircleSoft" width="15" height="15" fill="currentColor" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* 3. Số dư khởi tạo */}
-            <div className="txn-field-group">
-              <label htmlFor="wallet-balance" className="modal-section-label">
-                <span>3. Số dư khởi tạo</span>
-              </label>
-              <div className="modal-pro-amount-box input-shell">
-                <div className="amount-prefix-badge wallet" aria-hidden="true">
-                  <Icon name="wallet" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    maxLength={40}
+                    required
+                    aria-invalid={invalid || undefined}
+                    aria-describedby={describedBy}
+                  />
+                  {name && (
+                    <button
+                      type="button"
+                      className="modal-input-clear-btn"
+                      onClick={() => {
+                        setName('');
+                        nameInputRef.current?.focus();
+                      }}
+                      aria-label="Xóa tên ví"
+                    >
+                      <Icon name="xCircleSoft" width="15" height="15" fill="currentColor" />
+                    </button>
+                  )}
                 </div>
-                <input
-                  id="wallet-balance"
-                  type="text"
-                  inputMode="numeric"
-                  className="modal-pro-amount-input"
-                  placeholder="0"
-                  value={initialBalance}
-                  onChange={handleBalanceChange}
-                />
-                <div className="amount-currency-pill" title="Đơn vị tiền tệ">
-                  <span>₫</span>
-                  <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                </div>
-              </div>
-              <p className="modal-field-hint">Nhập số dư hiện có khi tạo ví</p>
-            </div>
+              )}
+            </FormField>
 
-            {/* Hạn mức thẻ tín dụng (Chỉ hiển thị khi chọn loại thẻ tín dụng) */}
+            <FormField label="Số dư khởi tạo" htmlFor="wallet-balance" hint="Nhập số dư hiện có khi tạo ví">
+              {({ describedBy }) => (
+                <div className="modal-pro-amount-box input-shell">
+                  <div className="amount-prefix-badge wallet" aria-hidden="true">
+                    <Icon name="wallet" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </div>
+                  <input
+                    id="wallet-balance"
+                    type="text"
+                    inputMode="numeric"
+                    className="modal-pro-amount-input"
+                    placeholder="0"
+                    value={initialBalance}
+                    onChange={handleBalanceChange}
+                    aria-describedby={describedBy}
+                  />
+                  <div className="amount-currency-pill" title="Đơn vị tiền tệ">
+                    <span>₫</span>
+                    <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </div>
+                </div>
+              )}
+            </FormField>
+
+            {/* Hạn mức thẻ tín dụng (chỉ khi chọn loại thẻ tín dụng) */}
             {type === 'credit' && (
-              <div className="txn-field-group">
-                <label htmlFor="wallet-limit" className="modal-section-label">
-                  <span>Hạn mức thẻ tín dụng</span>
-                </label>
+              <FormField label="Hạn mức thẻ tín dụng" htmlFor="wallet-limit">
                 <div className="modal-pro-amount-box input-shell">
                   <div className="amount-prefix-badge credit-card" aria-hidden="true">
                     <Icon name="creditCardAlt" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -312,15 +285,11 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                     <span>₫</span>
                   </div>
                 </div>
-              </div>
+              </FormField>
             )}
 
-            {/* 4. Màu nhận diện */}
-            <div className="txn-field-group">
-              <label className="modal-section-label">
-                <span>4. Màu nhận diện</span>
-              </label>
-              <div className="wallet-color-presets-pro">
+            <FormField label="Màu nhận diện" labelId={`${optionId}-color-label`}>
+              <div className="wallet-color-presets-pro" role="group" aria-labelledby={`${optionId}-color-label`}>
                 {PRESET_COLORS.map((hex) => {
                   const isSelected = color.toLowerCase() === hex.toLowerCase();
                   return (
@@ -335,124 +304,115 @@ export function WalletModal({ isOpen, onClose, walletToEdit = null, returnFocusR
                   );
                 })}
               </div>
-            </div>
+            </FormField>
 
-            {/* 5. Tùy chọn */}
-            <div className="txn-field-group">
-              <label className="modal-section-label">
-                <span>5. Tùy chọn</span>
-              </label>
-              <div className="wallet-options-stack">
-                {/* Option 1: Đặt làm ví mặc định */}
-                <div
-                  className={`wallet-option-card-pro ${isDefault ? 'active' : ''}`}
-                  onClick={() => setIsDefault(!isDefault)}
-                  role="checkbox"
-                  aria-checked={isDefault}
-                  aria-labelledby={`${optionId}-default-title`}
-                  aria-describedby={`${optionId}-default-desc`}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      e.preventDefault();
-                      setIsDefault(!isDefault);
-                    }
-                  }}
-                >
-                  <div className="option-check-wrap">
-                    <input
-                      type="checkbox"
-                      checked={isDefault}
-                      onChange={(e) => setIsDefault(e.target.checked)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="option-native-checkbox"
-                      aria-hidden="true"
-                      tabIndex={-1}
-                    />
-                    <span className={`option-custom-checkbox ${isDefault ? 'checked' : ''}`}>
-                      {isDefault && (
-                        <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="option-icon-symbol sparkle" aria-hidden="true">
-                    <Icon name="sparkle" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </div>
-
-                  <div className="option-content">
-                    <strong className="option-title" id={`${optionId}-default-title`}>Đặt làm ví mặc định</strong>
-                    <p className="option-desc" id={`${optionId}-default-desc`}>Tự động chọn ví này khi mở popup thêm giao dịch mới</p>
-                  </div>
+            {/* Hai ô đánh dấu tự có tên và mô tả: không cần nhãn nhóm */}
+            <div className="wallet-options-stack">
+              {/* Option 1: Đặt làm ví mặc định */}
+              <div
+                className={`wallet-option-card-pro ${isDefault ? 'active' : ''}`}
+                onClick={() => setIsDefault(!isDefault)}
+                role="checkbox"
+                aria-checked={isDefault}
+                aria-labelledby={`${optionId}-default-title`}
+                aria-describedby={`${optionId}-default-desc`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    setIsDefault(!isDefault);
+                  }
+                }}
+              >
+                <div className="option-check-wrap">
+                  <input
+                    type="checkbox"
+                    checked={isDefault}
+                    onChange={(e) => setIsDefault(e.target.checked)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="option-native-checkbox"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                  <span className={`option-custom-checkbox ${isDefault ? 'checked' : ''}`}>
+                    {isDefault && (
+                      <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                  </span>
                 </div>
 
-                {/* Option 2: Không tính vào tổng tài sản chi tiêu */}
-                <div
-                  className={`wallet-option-card-pro ${isExcludedFromTotal ? 'active' : ''}`}
-                  onClick={() => setIsExcludedFromTotal(!isExcludedFromTotal)}
-                  role="checkbox"
-                  aria-checked={isExcludedFromTotal}
-                  aria-labelledby={`${optionId}-excluded-title`}
-                  aria-describedby={`${optionId}-excluded-desc`}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      e.preventDefault();
-                      setIsExcludedFromTotal(!isExcludedFromTotal);
-                    }
-                  }}
-                >
-                  <div className="option-check-wrap">
-                    <input
-                      type="checkbox"
-                      checked={isExcludedFromTotal}
-                      onChange={(e) => setIsExcludedFromTotal(e.target.checked)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="option-native-checkbox"
-                      aria-hidden="true"
-                      tabIndex={-1}
-                    />
-                    <span className={`option-custom-checkbox ${isExcludedFromTotal ? 'checked' : ''}`}>
-                      {isExcludedFromTotal && (
-                        <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      )}
-                    </span>
-                  </div>
+                <div className="option-icon-symbol sparkle" aria-hidden="true">
+                  <Icon name="sparkle" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </div>
 
-                  <div className="option-icon-symbol lock" aria-hidden="true">
-                    <Icon name="lock" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </div>
+                <div className="option-content">
+                  <strong className="option-title" id={`${optionId}-default-title`}>Đặt làm ví mặc định</strong>
+                  <p className="option-desc" id={`${optionId}-default-desc`}>Tự động chọn ví này khi mở popup thêm giao dịch mới</p>
+                </div>
+              </div>
 
-                  <div className="option-content">
-                    <strong className="option-title" id={`${optionId}-excluded-title`}>Không tính vào tổng tài sản chi tiêu</strong>
-                    <p className="option-desc" id={`${optionId}-excluded-desc`}>Phù hợp cho tài khoản tiết kiệm dài hạn hoặc tài khoản doanh nghiệp</p>
-                  </div>
+              {/* Option 2: Không tính vào tổng tài sản chi tiêu */}
+              <div
+                className={`wallet-option-card-pro ${isExcludedFromTotal ? 'active' : ''}`}
+                onClick={() => setIsExcludedFromTotal(!isExcludedFromTotal)}
+                role="checkbox"
+                aria-checked={isExcludedFromTotal}
+                aria-labelledby={`${optionId}-excluded-title`}
+                aria-describedby={`${optionId}-excluded-desc`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    setIsExcludedFromTotal(!isExcludedFromTotal);
+                  }
+                }}
+              >
+                <div className="option-check-wrap">
+                  <input
+                    type="checkbox"
+                    checked={isExcludedFromTotal}
+                    onChange={(e) => setIsExcludedFromTotal(e.target.checked)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="option-native-checkbox"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                  <span className={`option-custom-checkbox ${isExcludedFromTotal ? 'checked' : ''}`}>
+                    {isExcludedFromTotal && (
+                      <Icon name="check" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                  </span>
+                </div>
+
+                <div className="option-icon-symbol lock" aria-hidden="true">
+                  <Icon name="lock" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </div>
+
+                <div className="option-content">
+                  <strong className="option-title" id={`${optionId}-excluded-title`}>Không tính vào tổng tài sản chi tiêu</strong>
+                  <p className="option-desc" id={`${optionId}-excluded-desc`}>Phù hợp cho tài khoản tiết kiệm dài hạn hoặc tài khoản doanh nghiệp</p>
                 </div>
               </div>
             </div>
 
-            {/* Error Message */}
+            {/* Lỗi lưu từ máy chủ; lỗi nhập nằm dưới từng ô */}
             {errorMsg && (
               <div className="txn-error-banner" role="alert">
                 <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 <span>{errorMsg}</span>
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          {/* Footer */}
-          <div className="txn-modal-footer">
+          <DialogFooter>
             <Button variant="secondary" size="lg" className="txn-btn-cancel" onClick={onClose} disabled={isSubmitting}>
               Hủy
             </Button>
             <Button type="submit" variant="primary" size="lg" className="txn-btn-submit" loading={isSubmitting}>
-              {!isSubmitting && (
-                <Icon name="check" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              )}
-              <span>{isSubmitting ? 'Đang lưu...' : isEditing ? 'Cập nhật ví' : 'Tạo ví mới'}</span>
+              {isSubmitting ? 'Đang lưu...' : isEditing ? 'Cập nhật ví' : 'Tạo ví mới'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-    </Dialog>
+    </FormDialog>
   );
 }
