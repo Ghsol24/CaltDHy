@@ -334,7 +334,7 @@
 }
 
 .bdash-hero__value {
-  font-size: 34px;
+  font-size: var(--font-6xl);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.025em;

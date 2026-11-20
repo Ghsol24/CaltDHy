@@ -368,7 +368,7 @@
 .recurring-notes-chevron {
   margin-left: auto;
   color: var(--color-text-secondary);
-  font-size: 16px;
+  font-size: var(--font-lg);
   line-height: 1;
 }
 

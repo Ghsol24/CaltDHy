@@ -395,11 +395,11 @@
 }
 
 .wallet-archived-section__strong--text {
-  font-size: 0.95rem;
+  font-size: var(--font-lg);
 }
 
 .wallet-archived-section__div--text2 {
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   color: var(--text-secondary, #6b7280);
 }
 
@@ -441,12 +441,12 @@
 }
 
 .wallet-archived-section__strong--text2 {
-  font-size: 0.92rem;
+  font-size: var(--font-base);
   color: var(--text-primary, #111827);
 }
 
 .wallet-archived-section__span--text {
-  font-size: 0.72rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
@@ -455,7 +455,7 @@
 }
 
 .wallet-archived-section__div--text3 {
-  font-size: 0.8rem;
+  font-size: var(--font-xs);
   color: var(--text-muted, #9ca3af);
   margin-top: 2px;
 }
@@ -488,7 +488,7 @@
   margin: 0;
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
-  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+  font-size: var(--font-6xl);
   font-weight: 700;
   line-height: 1.15;
   color: var(--color-text, var(--text-primary));

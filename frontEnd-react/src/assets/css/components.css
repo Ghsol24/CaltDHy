@@ -85,17 +85,3 @@
    ONBOARDING & WELCOME COMPONENTS
    ============================================================ */
 
-/* ============================================================
-   PAGE HEADER ACTIONS — title-row buttons
-   ============================================================ */
-.page-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.page-header-actions--end {
-  margin-left: auto;
-}

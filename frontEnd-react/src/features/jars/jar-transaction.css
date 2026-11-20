@@ -2,7 +2,7 @@
 .jar-transfer-field { min-width: 0; }
 .jar-transfer-amount-box { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 15px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface); }
 .jar-transfer-amount-box:focus-within { border-color: var(--color-link); box-shadow: var(--focus-ring); }
-.jar-transfer-amount-box > input { min-width: 0; width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-text); font: 650 clamp(22px, 5vw, 30px)/1.25 var(--font-money); font-variant-numeric: tabular-nums; outline: none; }
+.jar-transfer-amount-box > input { min-width: 0; width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-text); font: 650 24px/1.25 var(--font-money); font-variant-numeric: tabular-nums; outline: none; }
 .jar-transfer-amount-box > span { flex: 0 0 auto; color: var(--color-text-secondary); font-size: var(--font-xs); font-weight: 600; }
 .jar-transfer-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .jar-transfer-presets > button { min-height: 32px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text-secondary); font: 500 12px/1.4 var(--font-sans); cursor: pointer; }
@@ -12,7 +12,7 @@
 .jar-transfer-wallet-select .custom-wallet-trigger { min-height: 52px; }
 .jar-transfer-wallet-select .custom-wallet-trigger[aria-invalid="true"] { border-color: var(--color-danger); }
 .jar-transfer-no-wallet > p { margin: 0; color: var(--color-text-secondary); font-size: var(--font-xs); line-height: 1.55; }
-.jar-transfer-no-wallet > button { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--color-link); font: 600 13px/1.5 var(--font-sans); text-align: left; cursor: pointer; }
+.jar-transfer-no-wallet > button { margin-top: 10px; padding: 0; border: 0; background: none; color: var(--color-link); font: 600 14px/1.5 var(--font-sans); text-align: left; cursor: pointer; }
 .jar-transfer-preview { min-width: 0; padding: 14px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-brand-50); }
 .jar-transfer-preview > h3 { margin: 0 0 12px; color: var(--color-text); font-size: var(--font-sm); font-weight: 650; }
 .jar-transfer-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }

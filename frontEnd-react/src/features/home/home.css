@@ -145,7 +145,7 @@
 
 .hero-card-main-amount {
   font-family: var(--font-display, var(--font-sans));
-  font-size: clamp(34px, 3.2vw, 42px);
+  font-size: var(--font-6xl);
   font-weight: 800;
   letter-spacing: -0.025em;
   color: #FFFFFF;

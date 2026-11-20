@@ -105,7 +105,7 @@
   display: flex;
   align-items: baseline;
   gap: 10px;
-  font-size: 1px; /* reset; children sized individually */
+  font-size: 1px; /* reset; children sized individually — scale-exempt */
 }
 
 

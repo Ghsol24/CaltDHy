@@ -63,7 +63,7 @@
 .calt-custom-select--sm .calt-custom-select-trigger {
   min-height: 32px;
   padding: 5px 10px;
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   border-radius: var(--radius-sm, 8px);
   gap: 6px;
 }

@@ -121,7 +121,7 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
         autoSkip: !(isCompactChart && trendMode === 'daily'),
       } },
       y: { min: 0, grid: { color: chartThemeTokens.grid }, ticks: {
-        color: chartThemeTokens.tick, font: { family: 'Inter, sans-serif', size: 11 },
+        color: chartThemeTokens.tick, font: { family: 'Inter, sans-serif', size: 12 },
         maxTicksLimit: 6, callback: (value) => formatCompactCurrency(value),
       } },
     },

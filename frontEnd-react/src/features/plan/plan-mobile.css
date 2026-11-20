@@ -7,7 +7,7 @@
 }
 
 .plan-feature-view .plan-metric-value {
-  font: 800 22px/1.25 var(--font-sans);
+  font: 800 20px/1.25 var(--font-sans);
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
   overflow-wrap: anywhere;
@@ -156,7 +156,9 @@
   /* Wallets: header buttons wrap; long names wrap instead of truncating. */
   /* Two header buttons share one full row under the title. */
   .plan-feature-view .wallets-v2-header .page-header__actions { order: 3; flex-basis: 100%; margin-left: 0; }
-  .plan-feature-view .wallets-v2-header .page-header__actions > button { flex: 1 1 0; justify-content: center; min-width: 0; }
+  .plan-feature-view .wallets-v2-header .page-header__actions > button { flex: 0 0 auto; justify-content: center; padding-inline: 12px; white-space: nowrap; }
+  /* One line from 390px up; on narrower phones only this label wraps (no sideways scroll). */
+  .plan-feature-view .wallets-v2-header .page-header__actions > .wallets-btn-create-primary { flex: 1 1 0; min-width: 0; white-space: normal; text-align: center; }
   .plan-feature-view .wallet-row-main { padding: 8px 6px; gap: 10px; }
   .plan-feature-view .wallet-row-name-text { white-space: normal; overflow-wrap: anywhere; }
   .plan-feature-view .wallet-row .wallet-dots-btn { width: 40px; height: 40px; }
@@ -261,7 +263,7 @@
   .plan-feature-view .recurring-meta-line { grid-area: meta; font-size: var(--font-xs); }
   .plan-feature-view .recurring-main-name { white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
   .plan-feature-view .recurring-row-amount-col { grid-area: amount; }
-  .plan-feature-view .recurring-row-price { font: 700 15px/1.35 var(--font-sans); }
+  .plan-feature-view .recurring-row-price { font: 700 16px/1.35 var(--font-sans); }
   .plan-feature-view .recurring-row-confirm-col { display: none; }
   .plan-feature-view .recurring-row-actions-col { grid-area: actions; width: 44px; }
 }

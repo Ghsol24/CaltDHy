@@ -9,7 +9,7 @@
   width: 100%; min-height: 44px; padding: 10px 12px;
   display: flex; align-items: center; justify-content: center; gap: 10px;
   border-radius: var(--radius-md); cursor: pointer; text-decoration: none;
-  font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .1px;
+  font-size: var(--font-base); line-height: 20px; font-weight: 500; letter-spacing: .1px;
   transition: filter var(--dur-quick) ease, box-shadow var(--dur-quick) ease, transform var(--dur-quick) ease;
 }
 .btn-social .brand-logo { flex: 0 0 auto; width: auto; height: 20px; }

@@ -20,8 +20,8 @@
   color: var(--color-danger);
   background: var(--color-danger-bg);
 }
-.display-error h2 { margin: 0 0 .5rem; font-size: 1.125rem; line-height: 1.4; }
-.display-error p { margin: 0 0 1.25rem; color: var(--text-secondary); line-height: 1.5; font-size: .9375rem; }
+.display-error h2 { margin: 0 0 .5rem; font-size: var(--font-xl); line-height: 1.4; }
+.display-error p { margin: 0 0 1.25rem; color: var(--text-secondary); line-height: 1.5; font-size: var(--font-lg); }
 .display-error__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .625rem; }
 .display-error__actions .btn { min-height: 44px; min-width: 7rem; }
 .display-error__actions .btn:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 3px; }

@@ -18,6 +18,32 @@
   min-width: 0;
 }
 
+/* Icon of the page (same glyph as its menu item). */
+.page-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--color-action-bg, #10B981);
+  background: color-mix(in srgb, var(--color-action-bg, #10B981) 12%, transparent);
+}
+
+@media (max-width: 599px) {
+  .page-title-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .page-title-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .page-header__titles {
   display: flex;
   flex-direction: column;

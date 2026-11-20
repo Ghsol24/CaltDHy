@@ -87,7 +87,7 @@
   }
   .analytics-kpi-card .kpi-card-label { font-size: var(--font-xs); }
   .analytics-kpi-card .kpi-icon-badge { width: 26px; height: 26px; }
-  .analytics-kpi-card .kpi-card-amount { font-size: 1.1rem; line-height: 1.2; }
+  .analytics-kpi-card .kpi-card-amount { font-size: var(--font-xl); line-height: 1.2; }
   .analytics-kpi-card .kpi-card-meta { line-height: 1.35; }
 }
 
@@ -993,7 +993,7 @@
 }
 
 .analytics-section-panel__span--text {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--color-text-secondary, #607086);
 }
 
