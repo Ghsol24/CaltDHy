@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { PageTitleIcon } from '../../../components/ui/NavIcons';
+import { PageHeader } from '../../../components/ui/PageHeader';
 import { Icon } from '../../../components/ui/AppIcons';
 import { MonthPanel } from '../../../components/ui/CustomDatePicker';
 import { useAnchoredPlacement } from '../../../hooks/useAnchoredPlacement';
@@ -50,49 +50,50 @@ function MonthPicker({ activeMonth, monthLabel, onSelect }) {
 }
 
 export function AnalyticsHeader({ activeMonth, compact = false, handleNextMonth, handlePrevMonth, handleSelectMonth, handleSetThisMonth, isCurrentMonth, monthLabel }) {
+  // Phones on Chi tiêu / Tóm tắt thu chi / Báo cáo show only the month control; the H1 stays
+  // for screen readers. Only the full header carries #analytics-overview (scroll/focus target).
   return (
-    <div className={`analytics-header-bar${compact ? ' analytics-header-bar--compact' : ''}`} id={compact ? undefined : 'analytics-overview'}>
-      {!compact && <div className="page-title-lead">
-        <PageTitleIcon name="analyticsOverview" />
-        <div className="analytics-title-group">
-          <h1 className="analytics-view-title">Phân tích tài chính</h1>
-          <p className="analytics-view-subtitle">
-            Nhìn rõ dòng tiền theo thời gian
-          </p>
+    <PageHeader
+      id={compact ? undefined : 'analytics-overview'}
+      className={`analytics-header-bar${compact ? ' analytics-header-bar--compact' : ''}`}
+      hideTitle={compact}
+      icon="analyticsOverview"
+      title="Phân tích tài chính"
+      titleClassName="analytics-view-title"
+      subtitle="Nhìn rõ dòng tiền theo thời gian"
+      period={(
+        <div className="analytics-header-controls">
+          {!isCurrentMonth && (
+            <button type="button" className="analytics-this-month-btn" onClick={handleSetThisMonth}>
+              Về tháng này
+            </button>
+          )}
+
+          <div className="analytics-month-stepper" role="group" aria-label="Chuyển tháng">
+            <button
+              type="button"
+              className="month-nav-btn"
+              onClick={handlePrevMonth}
+              title="Tháng trước"
+              aria-label="Xem tháng trước"
+            >
+              <Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </button>
+
+            <MonthPicker activeMonth={activeMonth} monthLabel={monthLabel} onSelect={handleSelectMonth} />
+
+            <button
+              type="button"
+              className="month-nav-btn"
+              onClick={handleNextMonth}
+              title="Tháng sau"
+              aria-label="Xem tháng sau"
+            >
+              <Icon name="chevronRight" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </button>
+          </div>
         </div>
-      </div>}
-
-      <div className="analytics-header-controls">
-        {!isCurrentMonth && (
-          <button type="button" className="analytics-this-month-btn" onClick={handleSetThisMonth}>
-            Về tháng này
-          </button>
-        )}
-
-        <div className="analytics-month-stepper" role="group" aria-label="Chuyển tháng">
-          <button
-            type="button"
-            className="month-nav-btn"
-            onClick={handlePrevMonth}
-            title="Tháng trước"
-            aria-label="Xem tháng trước"
-          >
-            <Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </button>
-
-          <MonthPicker activeMonth={activeMonth} monthLabel={monthLabel} onSelect={handleSelectMonth} />
-
-          <button
-            type="button"
-            className="month-nav-btn"
-            onClick={handleNextMonth}
-            title="Tháng sau"
-            aria-label="Xem tháng sau"
-          >
-            <Icon name="chevronRight" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    />
   );
 }

@@ -11,34 +11,6 @@
   width: 100%;
 }
 
-.analytics-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.analytics-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.analytics-view-title {
-  font-size: var(--font-3xl);
-  font-weight: 800;
-  color: var(--text-primary, #173126);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.analytics-view-subtitle {
-  font-size: var(--font-sm);
-  color: var(--text-secondary, #60766A);
-  margin: 0;
-}
-
 .month-nav-btn {
   width: 28px;
   height: 28px;

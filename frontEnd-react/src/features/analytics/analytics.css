@@ -9,39 +9,17 @@
   width: 100%;
 }
 
-.analytics-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.analytics-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.analytics-view-title {
-  font-size: var(--font-4xl);
-  font-weight: 700;
-  color: var(--color-text, #101B36);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.analytics-view-subtitle {
-  font-size: var(--font-sm);
-  color: var(--color-text-secondary, #607086);
-  margin: 0;
-}
-
 .analytics-header-controls {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+/* Phones, sub-screens: the month control sits on the right and wraps if it must. */
+.analytics-header-bar--compact .analytics-header-controls {
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .analytics-segmented-switch {
@@ -1103,7 +1081,6 @@
 }
 .analytics-this-month-btn:hover { background: var(--color-surface-muted, var(--surface-subtle)); }
 
-.analytics-header-bar--compact { justify-content: flex-end; }
 
 .analytics-cat-item-row.is-active .cat-avatar-tile { background: var(--color-surface); }
 

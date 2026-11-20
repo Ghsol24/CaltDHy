@@ -15,7 +15,7 @@ import { BottomSheet } from '../../components/ui/BottomSheet';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatDisplayDate } from '../../utils/datePicker';
 import { getHistoryFilterCopy } from './historyFilterCopy';
-import { PageTitleIcon } from '../../components/ui/NavIcons';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { getTransactionExtrasCopy } from './transactionExtrasCopy';
 import { AmountRangeInputs, SavedFiltersBody } from './HistoryAdvancedFilters';
 import { useFinanceSettingsStore } from '../../stores/useFinanceSettingsStore';
@@ -206,12 +206,8 @@ export function TransactionHistoryView() {
     source === 'jars' ? 'history' : 'recurring');
 
   return <section className="transaction-history" aria-labelledby="transaction-history-title">
-    <header className="transaction-history-header">
-      <div className="page-title-lead">
-        <PageTitleIcon name="transactions" />
-        <h1 id="transaction-history-title">{t('history.title')}</h1>
-      </div>
-    </header>
+    <PageHeader icon="transactions" className="transaction-history-header"
+      title={t('history.title')} titleId="transaction-history-title" />
 
     <div className="transaction-filter-bar">
       <label className="transaction-history-search">
