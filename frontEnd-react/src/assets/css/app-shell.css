@@ -397,6 +397,44 @@
   background: var(--primary);
 }
 
+/* Long "Tóm tắt thu chi" page: while a block below is read, the highlight
+   moves to that block's item (Chi tiêu / Dòng tiền / Báo cáo) and the page item
+   fades back to a plain item, so only one item looks selected. The page item
+   keeps aria-current because the URL does not change. */
+.sidebar-nav-item.is-in-view,
+.sidebar-nav-item.is-in-view:hover {
+  position: relative;
+  background: var(--color-brand-50, #F1FBF6);
+  color: var(--color-active-text);
+  font-weight: 600;
+}
+
+.sidebar-nav-item.is-in-view::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+
+.sidebar-nav-item.active.is-shadowed {
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.sidebar-nav-item.active.is-shadowed:hover {
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--text-primary);
+}
+
+.sidebar-nav-item.active.is-shadowed::before {
+  content: none;
+}
+
 /* Items sit inside a clipped (foldable) box, so the focus ring is drawn
    inside the item instead of around it. */
 .sidebar-nav-item:focus-visible {

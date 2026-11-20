@@ -6,6 +6,10 @@ export const useSpendingStore = create((set) => ({
   planSubTab: 'overview', // 'overview' | 'wallets' | 'budgets' | 'recurring'
   analyticsSubTab: 'overview', // 'overview' | 'spending' | 'cash-flow' | 'reports'
   analyticsExcludeRecurring: false,
+  // Block being read on the long computer "Tóm tắt thu chi" page ('spending' |
+  // 'cash-flow' | 'reports' | null). Only a secondary sidebar cue: it never
+  // changes analyticsSubTab, the URL or the current page (đợt 13b).
+  analyticsInViewSection: null,
   jarsSubTab: 'goals', // 'goals' | 'jars' | 'history'
   isSidebarCollapsed: false,
   selectedMonth: getLocalMonthString(), // 'YYYY-MM' theo giờ địa phương
@@ -37,6 +41,10 @@ export const useSpendingStore = create((set) => ({
   setAnalyticsExcludeRecurring: (excludeRecurring) =>
     set((state) => (state.analyticsExcludeRecurring === Boolean(excludeRecurring) ? state : {
       analyticsExcludeRecurring: Boolean(excludeRecurring),
+    })),
+  setAnalyticsInViewSection: (section) =>
+    set((state) => (state.analyticsInViewSection === (section ?? null) ? state : {
+      analyticsInViewSection: section ?? null,
     })),
   hydrateAnalyticsExcludeRecurring: (excludeRecurring) =>
     set((state) => {

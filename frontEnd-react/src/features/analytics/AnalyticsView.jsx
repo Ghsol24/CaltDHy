@@ -21,6 +21,7 @@ import { useToastStore } from '../../stores/useToastStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { formatDate, getLocalMonthString } from '../../utils/formatters';
 import { BREAKPOINTS, useIsMobile } from '../../hooks/useMediaQuery';
+import { useSectionScrollSpy } from '../../hooks/useSectionScrollSpy';
 import { useTranslation } from '../../i18n/useTranslation';
 import { spendingService } from '../../services/spendingService';
 import { DailyTransactionsDrawer } from './DailyTransactionsDrawer';
@@ -36,6 +37,15 @@ import { useFinancialReport } from './analytics/useFinancialReport';
 import { useAnalyticsCharts } from './analytics/useAnalyticsCharts';
 import { useCashFlowTrend } from './analytics/useCashFlowTrend';
 import { useMonthStats } from './analytics/useMonthStats';
+// Blocks of the long computer "Tóm tắt thu chi" page and the sidebar item each one
+// lights up as a secondary cue. The header and four figures have no item.
+const OVERVIEW_IN_VIEW_SECTIONS = Object.freeze([
+  ['analytics-overview', null],
+  ['analytics-spending', 'spending'],
+  ['analytics-cashflow', 'cash-flow'],
+  ['analytics-reports', 'reports'],
+]);
+
 // Register Chart.js components
 ChartJS.register(
   ArcElement,
@@ -76,6 +86,7 @@ export function AnalyticsView() {
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const navigateTo = useSpendingStore((s) => s.navigateTo);
+  const setAnalyticsInViewSection = useSpendingStore((s) => s.setAnalyticsInViewSection);
   const addToast = useToastStore((s) => s.addToast);
   const theme = useThemeStore((s) => s.theme);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -87,6 +98,17 @@ export function AnalyticsView() {
   // page with every block (the user's choice); on a phone it is the four figures only.
   const showsAllSections = !isMobile && analyticsSubTab === 'overview';
   const showsSection = (tab) => showsAllSections || analyticsSubTab === tab;
+  // While reading the long page, the sidebar also marks the block in view. It is a
+  // separate value: "Tóm tắt thu chi" stays the current page and the URL never moves.
+  useSectionScrollSpy({
+    disabled: !showsAllSections,
+    sections: OVERVIEW_IN_VIEW_SECTIONS,
+    onActiveChange: setAnalyticsInViewSection,
+  });
+  useEffect(() => {
+    if (!showsAllSections) return undefined;
+    return () => setAnalyticsInViewSection(null);
+  }, [showsAllSections, setAnalyticsInViewSection]);
   const cashFlowActive = showsSection('cash-flow');
   const { view: cashFlowView, setView: setCashFlowView, pinnedDefault,
     pinDefault, clearDefault, saving: savingCashFlowPreferences } = useCashFlowPreferences({ active: cashFlowActive });
