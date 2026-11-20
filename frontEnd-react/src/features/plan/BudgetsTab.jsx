@@ -493,7 +493,7 @@ export function BudgetsTab() {
             {/* ── Categories: one table on wide screens, two-line rows on phones ── */}
             <section className="bdash-card" aria-labelledby="bdash-list-title">
               <div className="bdash-card__head">
-                <h3 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h3>
+                <h2 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h2>
                 {model && limited.length > 1 && (
                   <CustomSelect
                     className="bdash-sort"
@@ -561,10 +561,10 @@ export function BudgetsTab() {
 
                   {unbudgeted.length > 0 && (
                     <>
-                      <h4 className="bdash-group-title">
+                      <h3 className="bdash-group-title">
                         {t('budgets.unsetGroup')}
                         <span className="bdash-group-title__total">{formatCurrency(model.unbudgetedTotal)}</span>
-                      </h4>
+                      </h3>
                       <ul className="bdash-rows">
                         {unbudgeted.map((item) => (
                           <li key={item.category} className="bdash-item">

@@ -45,7 +45,7 @@
   min-width: 0;
 }
 
-.plan-attention-heading h3 {
+.plan-attention-heading h2 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -55,7 +55,7 @@
 }
 
 
-.plan-attention.is-watch h3 { color: var(--attention-watch-text); }
+.plan-attention.is-watch h2 { color: var(--attention-watch-text); }
 
 .plan-attention-count {
   min-width: 22px;
@@ -176,12 +176,12 @@
 
 /* Sheet: grouped rows, most severe group first. */
 .plan-attention-group + .plan-attention-group { margin-top: 14px; }
-.plan-attention-group h4 {
+.plan-attention-group h3 {
   margin: 6px 0 2px;
   font: 700 12px/1.4 var(--font-sans);
   color: var(--attention-critical-text);
 }
-.plan-attention-group.is-watch h4 { color: var(--attention-watch-text); }
+.plan-attention-group.is-watch h3 { color: var(--attention-watch-text); }
 .plan-attention-group ul { margin: 0; padding: 0; list-style: none; }
 
 .plan-attention-row {
@@ -241,7 +241,7 @@
 @media (max-width: 599px) {
   .plan-attention { gap: 10px; padding: 12px; }
   .plan-attention-bell { width: 34px; height: 34px; border-radius: 10px; }
-  .plan-attention-heading h3 { font-size: var(--font-md); }
+  .plan-attention-heading h2 { font-size: var(--font-md); }
   .plan-attention-list { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .plan-alert-card { min-height: 0; padding: 10px 36px 10px 12px; }
   .plan-attention-more {

@@ -34,7 +34,7 @@ export function ReminderInviteCard() {
         <Icon name="clock" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </span>
       <div className="home-reminder-invite__text">
-        <h3 id="home-reminder-invite-title">{t('notify.inviteTitle')}</h3>
+        <h2 id="home-reminder-invite-title">{t('notify.inviteTitle')}</h2>
         <p>{t('notify.inviteBody')}</p>
       </div>
       <div className="home-reminder-invite__actions">

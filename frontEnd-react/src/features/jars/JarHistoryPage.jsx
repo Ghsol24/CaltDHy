@@ -100,7 +100,7 @@ export function JarHistoryPage({ jars = [] }) {
         <div className="jm-history-list">
           {dayGroups.length === 0 ? <p className="jm-history-empty">{text('empty')}</p> : dayGroups.map(([day, activities]) => (
             <section className="jm-history-day" key={day || 'unknown'} aria-labelledby={`${id}-day-${day || 'unknown'}`}>
-              <h3 id={`${id}-day-${day || 'unknown'}`}>{day ? formatDate(day, 'full', { locale: lang }) : text('unknownDate')}</h3>
+              <h2 id={`${id}-day-${day || 'unknown'}`}>{day ? formatDate(day, 'full', { locale: lang }) : text('unknownDate')}</h2>
               <ul>
                 {activities.map((activity) => {
                   const isDeposit = activity.type === 'deposit';

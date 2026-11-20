@@ -551,7 +551,7 @@
   min-width: 0;
 }
 
-.home-reminder-invite__text h3 {
+.home-reminder-invite__text h2 {
   margin: 0;
   font-size: var(--font-base);
   font-weight: 700;

@@ -177,9 +177,9 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
 
   const callout = (
     <div className={`home-callout-warning-card ${calloutConfig.cardClass}`}>
-      <h3 className="home-callout-title">
+      <h2 className="home-callout-title">
         {calloutConfig.title}
-      </h3>
+      </h2>
       <p className="home-callout-body">
         {calloutConfig.body}
       </p>
@@ -200,7 +200,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
       {callout}
 
       <div className="home-plan-card">
-        <h3 className="home-plan-card-title">Kế hoạch tháng này</h3>
+        <h2 className="home-plan-card-title">Kế hoạch tháng này</h2>
 
         {topCategories.length === 0 && !topJar && (
           <div className="home-plan-empty-state">
@@ -222,7 +222,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
 
         {topCategories.length > 0 && (
           <div className="home-plan-group">
-            <h4 className="home-plan-group-title">Ngân sách</h4>
+            <h3 className="home-plan-group-title">Ngân sách</h3>
             <div className="home-plan-items-list">
               {topCategories.map((item, idx) => {
                 const isWarning = item.percent >= 75 && item.percent < 100;
@@ -252,7 +252,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
 
         {topJar && (
           <div className="home-plan-group">
-            <h4 className="home-plan-group-title">Hũ</h4>
+            <h3 className="home-plan-group-title">Hũ</h3>
             <div className="home-plan-items-list">
               <div className="home-plan-item">
                 <div className="home-plan-item-header">

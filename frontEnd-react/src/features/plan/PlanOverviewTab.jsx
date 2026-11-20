@@ -356,7 +356,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 1: Ví & Tài khoản ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h4 className="column-card-title">Ví & Tài khoản</h4>
+            <h2 className="column-card-title">Ví & Tài khoản</h2>
             <button
               type="button"
               className="column-card-view-all"
@@ -439,7 +439,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 2: Ngân sách tháng [X] ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h4 className="column-card-title">Ngân sách tháng {currentMonthNum}</h4>
+            <h2 className="column-card-title">Ngân sách tháng {currentMonthNum}</h2>
             <button
               type="button"
               className="column-card-view-all"
@@ -530,7 +530,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 3: Khoản định kỳ ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h4 className="column-card-title">Khoản định kỳ</h4>
+            <h2 className="column-card-title">Khoản định kỳ</h2>
             <button
               type="button"
               className="column-card-view-all"
