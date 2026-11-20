@@ -1,26 +1,27 @@
 import React from 'react';
-import { PageTitleIcon } from '../../../components/ui/NavIcons';
+import { PageHeader } from '../../../components/ui/PageHeader';
 import { Icon } from '../../../components/ui/AppIcons';
 
 /**
- * Hàng tiêu đề của một trang Hũ: icon + H1 (đúng tên mục menu) và nút "Tạo hũ mới"
- * khi trang cần. Cùng mẫu với "Tổng quan hũ".
+ * Hàng tiêu đề của một trang Hũ: hàng tiêu đề dùng chung (PageHeader) với icon + H1
+ * đúng tên mục menu, và nút "Tạo hũ mới" khi trang cần.
+ * `hideTitle`: H1 chỉ để trình đọc màn hình (Danh sách hũ trên điện thoại, nơi dải mục
+ * ở trên đã nói tên trang).
  */
-export function JarsPageHeader({ icon, title, onCreate }) {
+export function JarsPageHeader({ icon, title, onCreate, hideTitle = false }) {
   return (
-    <div className="jars-overview-header">
-      <div className="page-title-lead">
-        <PageTitleIcon name={icon} />
-        <h1 className="jars-hero-heading">{title}</h1>
-      </div>
-      <div className="page-header-actions">
-        {onCreate && (
-          <button type="button" className="jars-hero-cta-btn" onClick={onCreate}>
-            <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <span>Tạo hũ mới</span>
-          </button>
-        )}
-      </div>
-    </div>
+    <PageHeader
+      icon={icon}
+      className="jars-overview-header"
+      title={title}
+      titleClassName="jars-hero-heading"
+      hideTitle={hideTitle}
+      actions={onCreate && (
+        <button type="button" className="jars-hero-cta-btn" onClick={onCreate}>
+          <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <span>Tạo hũ mới</span>
+        </button>
+      )}
+    />
   );
 }

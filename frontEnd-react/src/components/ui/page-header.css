@@ -68,6 +68,10 @@
 }
 
 /* Title kept for screen readers only; the row shows just the period / actions. */
+.page-header--title-hidden {
+  min-height: 0;
+}
+
 .page-header--title-hidden .page-header__lead {
   position: absolute;
   width: 1px;
