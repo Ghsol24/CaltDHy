@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import { formatCurrency } from '../../utils/formatters';
+import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 import { WalletOutlineIcon } from './WalletOutlineIcon';
 
 import { Icon } from './AppIcons';
@@ -58,19 +59,26 @@ export function CustomWalletDropdown({
     };
   }, [isOpen]);
 
-  // Keep the opened list on screen inside scrolling dialogs.
-  useEffect(() => {
-    if (!isOpen || !menuRef.current?.scrollIntoView) return undefined;
-    const frame = requestAnimationFrame(() => menuRef.current?.scrollIntoView({ block: 'nearest' }));
-    return () => cancelAnimationFrame(frame);
-  }, [isOpen]);
+  // Fixed to the screen, as wide as the trigger, flipping above when there is no room below:
+  // inside a dialog the list can then never be clipped by, or scroll, the dialog body.
+  const menuStyle = useAnchoredPlacement(containerRef, menuRef, isOpen, {
+    strategy: 'fixed',
+    matchWidth: true,
+    maxHeight: 240,
+    onAnchorHidden: () => setIsOpen(false),
+  });
 
-  // Scroll highlighted item into view
+  // Keep the highlighted item visible by scrolling the list only (scrollIntoView would
+  // also scroll whatever contains the dropdown).
   useEffect(() => {
-    if (isOpen && highlightedIndex >= 0 && itemRefs.current[highlightedIndex]) {
-      itemRefs.current[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+    const menu = menuRef.current;
+    const item = itemRefs.current[highlightedIndex];
+    if (!isOpen || !menu || !item) return;
+    if (item.offsetTop < menu.scrollTop) menu.scrollTop = item.offsetTop;
+    else if (item.offsetTop + item.offsetHeight > menu.scrollTop + menu.clientHeight) {
+      menu.scrollTop = item.offsetTop + item.offsetHeight - menu.clientHeight;
     }
-  }, [isOpen, highlightedIndex]);
+  }, [isOpen, highlightedIndex, menuStyle]);
 
   const openDropdown = () => {
     if (disabled) return;
@@ -185,6 +193,7 @@ export function CustomWalletDropdown({
           ref={menuRef}
           id={listboxId}
           className="custom-wallet-menu"
+          style={menuStyle || undefined}
           role="listbox"
           tabIndex={-1}
           aria-activedescendant={highlightedIndex >= 0 ? `${triggerId}-opt-${highlightedIndex}` : undefined}

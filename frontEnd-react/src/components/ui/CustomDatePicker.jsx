@@ -121,9 +121,10 @@ export function CalendarPanel({
   const weeks = useMemo(() => buildWeeks(viewYear, viewMonth), [viewYear, viewMonth]);
   const isDisabledDay = (iso) => Boolean((min && iso < min) || (max && iso > max));
 
-  // Move keyboard focus to the active day when the grid owns focus.
+  // Move keyboard focus to the active day when the grid owns focus. preventScroll: this runs
+  // before the popover is placed, and a scrolling focus would shift the dialog behind it.
   useLayoutEffect(() => {
-    if (focusGridRef.current) gridRef.current?.querySelector(`[data-iso="${focusedIso}"]`)?.focus();
+    if (focusGridRef.current) gridRef.current?.querySelector(`[data-iso="${focusedIso}"]`)?.focus({ preventScroll: true });
   }, [focusedIso]);
 
   const select = (iso) => {
@@ -219,7 +220,7 @@ export function MonthPanel({ id: explicitId, value = '', onSelect, min, max, cla
   }, [value]);
 
   useLayoutEffect(() => {
-    if (focusGridRef.current) gridRef.current?.querySelector(`[data-month="${focused}"]`)?.focus();
+    if (focusGridRef.current) gridRef.current?.querySelector(`[data-month="${focused}"]`)?.focus({ preventScroll: true });
   }, [focused]);
 
   const { year } = parseIsoMonth(focused);
@@ -317,7 +318,12 @@ export function CustomDatePicker({
   const [isOpen, setIsOpen] = useState(false);
   const [focusGrid, setFocusGrid] = useState(false);
   const [text, setText] = useState(() => formatDisplayDate(value, labels.order));
-  const popoverStyle = useAnchoredPlacement(rootRef, popoverRef, isOpen);
+  // Fixed to the screen so a dialog's scroll area can neither clip the calendar nor scroll
+  // sideways to show it (the old in-flow popover hid the labels of two-column dialogs).
+  const popoverStyle = useAnchoredPlacement(rootRef, popoverRef, isOpen, {
+    strategy: 'fixed',
+    onAnchorHidden: () => setIsOpen(false),
+  });
   // A required date can't be emptied, so "Clear" would only ever be a dead end.
   const canClear = clearable && !required;
 
@@ -350,12 +356,6 @@ export function CustomDatePicker({
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const frame = requestAnimationFrame(() => popoverRef.current?.scrollIntoView?.({ block: 'nearest' }));
-    return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
   const isOutOfRange = (iso) => Boolean((min && iso < min) || (max && iso > max));
