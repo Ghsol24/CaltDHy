@@ -538,9 +538,9 @@ async function check(name, work) {
       await expect(modal.locator('.txn-category-card')).toHaveCount(0);
       return;
     }
-    // Desktop: 9 chip + chip "Thêm…" (mở bộ chọn đầy đủ) thay cho 18 thẻ.
-    await expect(modal.locator('.txn-category-card')).toHaveCount(10);
-    await expect(modal.locator('.txn-category-card--more')).toHaveCount(1);
+    // Máy tính, "Phương án 3" (đợt 13): 4 chip nhanh + dòng "Danh mục" mở popover đầy đủ, thay lưới chip.
+    await expect(modal.locator('.txn-quick-chip')).toHaveCount(4);
+    await expect(modal.locator('.txn-category-card')).toHaveCount(0);
   }
 
   const categorySheet = () => page.getByRole('dialog', { name: 'Chọn danh mục', exact: true });
@@ -660,63 +660,61 @@ async function check(name, work) {
 
   async function assertCategoryLayout(name, columns) {
     if (columns === 1) return assertMobileCategoryLayout(name);
-    await expect(modal.locator('.txn-category-grid')).toBeVisible();
+    await expect(modal.locator('.txn-list-group')).toBeVisible();
     const layout = await modal.evaluate(element => {
       const bounds = node => {
         const { left, right, top, bottom, width, height } = node.getBoundingClientRect();
         return { left, right, top, bottom, width, height };
       };
       const body = element.querySelector('.txn-modal-body');
-      const grid = element.querySelector('.txn-category-grid');
-      const cards = [...grid.querySelectorAll('.txn-category-card')].map(card => {
-        const name = card.querySelector('.txn-card-name');
-        const range = document.createRange();
-        range.selectNodeContents(name);
-        return { box: bounds(card), name: bounds(name), text: name.textContent, title: card.getAttribute('title'),
-          textRects: [...range.getClientRects()].map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
-          children: [...card.querySelectorAll('.txn-card-icon, .txn-card-name')]
-            .map(child => ({ selector: child.className, box: bounds(child) })) };
-      });
-      const originalBodyScroll = body.scrollTop;
-      body.scrollTop = 32;
-      const bodyCanScroll = body.scrollTop > 0;
-      body.scrollTop = originalBodyScroll;
-      // Probe actual scroll behavior, including overflow:hidden containers that can
-      // still scroll programmatically. This detects nested clipping without copying CSS.
+      const chips = [...element.querySelectorAll('.txn-quick-chip')].map(chip => ({
+        box: bounds(chip), text: chip.textContent, title: chip.getAttribute('title'), checked: chip.getAttribute('aria-checked'),
+        children: [...chip.querySelectorAll('.txn-quick-chip__icon, .txn-quick-chip__name')]
+          .map(child => ({ selector: child.className, box: bounds(child) })) }));
+      const rows = [...element.querySelectorAll('.txn-list-group > .txn-row')].map(row => ({
+        box: bounds(row), text: row.textContent.trim(),
+        children: [...row.querySelectorAll('.txn-row__icon, .txn-row__label, .txn-row__value, .txn-row__input, .custom-wallet-row__value')]
+          .filter(child => child.getClientRects().length).map(child => ({ selector: child.className, box: bounds(child) })) }));
       const nestedScrollers = [...element.querySelectorAll('*')].filter(node => {
-        if (node === body || node.classList.contains('txn-card-name') || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
+        if (node === body || !node.clientHeight || node.scrollHeight <= node.clientHeight + 1) return false;
         const previous = node.scrollTop;
         node.scrollTop = 1;
         const scrolls = node.scrollTop > 0;
         node.scrollTop = previous;
         return scrolls;
       }).map(node => node.className);
-      return { cards, grid: bounds(grid), bodyCanScroll, nestedScrollers,
+      return { chips, rows, body: bounds(body), nestedScrollers,
         bodyOverflow: body.scrollWidth - body.clientWidth,
         documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         modal: bounds(element), footer: bounds(element.querySelector('.txn-modal-footer')),
         viewport: { width: innerWidth, height: innerHeight } };
     });
-    const firstRow = layout.cards.filter(card => Math.abs(card.box.top - layout.cards[0].box.top) <= 1);
-    assert.equal(firstRow.length, columns, `${name}: expected ${columns} cards in the first row`);
+    assert.equal(layout.rows.length, 4, `${name}: four list rows (category, wallet, date, note)`);
+    assert.equal(layout.chips.filter(chip => chip.checked === 'true').length, 1, `${name}: one chip is the chosen category`);
     assert.deepEqual(layout.nestedScrollers, [], `${name}: the body is the only vertical scroll region`);
     assert.ok(layout.bodyOverflow <= 1 && layout.documentOverflow <= 1, `${name}: no horizontal page/body overflow`);
-    assert.ok(layout.modal.left >= -1 && layout.modal.right <= layout.viewport.width + 1,
-      `${name}: modal fits the viewport width`);
+    assert.ok(layout.modal.left >= -1 && layout.modal.right <= layout.viewport.width + 1, `${name}: modal fits the viewport width`);
     assert.ok(layout.footer.top >= 0 && layout.footer.bottom <= layout.viewport.height + 1,
       `${name}: save actions stay visible on short screens`);
-    for (const card of layout.cards) {
-      // Chip cao cố định: tên tối đa 2 dòng, phần dài hơn được cắt và đủ chữ ở tooltip (title).
-      assert.ok(card.name.height > 0 && card.textRects.length > 0, `${name}: ${card.text} has visible text`);
-      assert.ok(card.title && card.title.length > 0, `${name}: ${card.text} keeps its full name in a tooltip`);
-      assert.ok(layout.cards.filter(other => Math.abs(other.box.top - card.box.top) <= 1)
-        .every(other => Math.abs(other.box.height - card.box.height) <= 1), `${name}: chips of a row share one height`);
-      for (const child of card.children) {
-        assert.ok(child.box.left >= card.box.left - 1 && child.box.right <= card.box.right + 1
-          && child.box.top >= card.box.top - 1 && child.box.bottom <= card.box.bottom + 1,
-        `${name}: ${child.selector} stays inside ${card.text}`);
+    for (const item of [...layout.chips, ...layout.rows]) {
+      assert.ok(item.box.left >= layout.body.left - 1 && item.box.right <= layout.body.right + 1, `${name}: ${item.text} stays inside the body`);
+      for (const child of item.children) {
+        assert.ok(child.box.left >= item.box.left - 1 && child.box.right <= item.box.right + 1
+          && child.box.top >= item.box.top - 1 && child.box.bottom <= item.box.bottom + 1,
+        `${name}: ${child.selector} stays inside ${item.text}`);
       }
     }
+    for (const chip of layout.chips) assert.ok(chip.title, `${name}: ${chip.text} keeps its full name in a tooltip`);
+    // The full list opens in a popover fixed to the screen: every category, nothing clipped.
+    await modal.locator('#txn-category-row').click();
+    const popover = modal.locator('.txn-row-popover');
+    await expect(popover.locator('.txn-cat-option')).toHaveCount(layoutCategories.length);
+    const box = await popover.boundingBox();
+    assert.ok(box.x >= 15 && box.y >= 15 && box.x + box.width <= layout.viewport.width - 15
+      && box.y + box.height <= layout.viewport.height - 15, `${name}: the category popover fits the screen`);
+    await page.keyboard.press('Escape');
+    await expect(popover).toHaveCount(0);
+    await expect(modal).toBeVisible();
     return layout;
   }
 
@@ -728,30 +726,31 @@ async function check(name, work) {
         ['mobile-boundary', { width: 599, height: 600 }, 1]
       ]) {
         await openCategoryLayout(theme, viewport);
-        const layout = await assertCategoryLayout(`${theme}/${device}`, columns);
-        if (columns === 5) assert.ok(layout.cards.some(card => card.textRects.length > 1),
-          `${theme}/${device}: long-name fixture must exercise multiline wrapping`);
+        await assertCategoryLayout(`${theme}/${device}`, columns);
         if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, `${device}-${theme}-categories.png`), animations: 'disabled' });
         await modal.locator('.txn-modal-close-btn').click();
       }
     }
   });
 
-  await check('desktop chips: "Thêm…" opens the full list, the chosen category stays in the chips and arrows move the choice', async () => {
+  await check('desktop: the category popover lists every category, a pick joins the quick chips and arrows move the choice', async () => {
     await openCategoryLayout('light', { width: 1280, height: 900 });
-    const chosen = () => modal.locator('.txn-category-card[aria-checked="true"]');
+    const chosen = () => modal.locator('.txn-quick-chip[aria-checked="true"]');
     await expect(chosen()).toHaveCount(1);
-    await modal.locator('.txn-category-card--more').click();
-    const sheet = categorySheet();
-    await expect(sheet.locator('.txn-cat-option')).toHaveCount(layoutCategories.length);
+    await modal.locator('#txn-category-row').click();
+    const popover = modal.locator('.txn-row-popover');
+    await expect(popover.locator('.txn-cat-option')).toHaveCount(layoutCategories.length);
+    await expect(popover.locator('input[type="search"]')).toBeFocused();
     const lastName = layoutCategories.at(-1);
-    await sheet.locator('.txn-cat-option').last().click();
-    await expect(sheet).toHaveCount(0);
-    // Danh mục vừa chọn nằm ngoài 9 chip đầu nên được đưa vào hàng chip (ô cuối), vẫn là radio đang chọn.
+    await popover.locator('.txn-cat-option').last().click();
+    await expect(popover).toHaveCount(0);
+    await expect(modal.locator('#txn-category-row')).toBeFocused();
+    await expect(modal.locator('#txn-category-row .txn-row__value')).toHaveText(lastName);
+    // Danh mục vừa chọn không nằm trong 4 chip hay dùng nên thay vào chip cuối, vẫn là radio đang chọn.
     await expect(chosen()).toHaveAttribute('title', lastName);
-    await expect(modal.locator('.txn-category-card')).toHaveCount(10);
+    await expect(modal.locator('.txn-quick-chip')).toHaveCount(4);
     // Nhóm radio: một điểm dừng Tab, mũi tên đổi lựa chọn và chuyển focus theo.
-    assert.equal(await modal.locator('.txn-category-card[role="radio"][tabindex="0"]').count(), 1);
+    assert.equal(await modal.locator('.txn-quick-chip[role="radio"][tabindex="0"]').count(), 1);
     await chosen().focus();
     await page.keyboard.press('ArrowLeft');
     await expect(chosen()).not.toHaveAttribute('title', lastName);
@@ -771,7 +770,7 @@ async function check(name, work) {
     // minimum-font-size preference or an old Windows installation was exercised.
     const largeText = await page.addStyleTag({ content:
       '.txn-card-name, .txn-card-amount, .txn-card-subtitle, .txn-category-summary__name, .txn-category-summary__line,'
-      + ' .txn-cat-option__name, .txn-cat-option__meta { font-size: 20px !important; }' });
+      + ' .txn-cat-option__name, .txn-cat-option__meta, .txn-quick-chip__name, .txn-row__value, .txn-row__label { font-size: 20px !important; }' });
     try {
       await assertCategoryLayout('cream/390px simulated 20px text', 1);
       if (saveEvidence) await page.screenshot({ path: path.join(evidenceDir, 'mobile-cream-categories-large-text.png'), animations: 'disabled' });

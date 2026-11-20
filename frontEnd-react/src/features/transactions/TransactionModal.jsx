@@ -22,7 +22,10 @@ import { BREAKPOINTS, useMediaQuery } from '../../hooks/useMediaQuery';
 import { CategoryPickerList, DateSheetContent, TransactionSheet } from './TransactionMobileFields';
 
 import { Icon } from '../../components/ui/AppIcons';
-import { describeBudgetMetrics, recentCategoryName } from './modal/transactionModalHelpers';
+import { describeBudgetMetrics, pickQuickCategories, recentCategoryName } from './modal/transactionModalHelpers';
+import { TransactionHero } from './modal/TransactionHero';
+import { TransactionCategoryRow, TransactionDateRow, TransactionNoteRow, TransactionQuickChips, TransactionWalletRow } from './modal/TransactionListRows';
+import { getTransactionFormCopy } from './modal/transactionFormCopy';
 import { TransactionFooterActions } from './modal/TransactionFooterActions';
 import { TransactionDateField } from './modal/TransactionDateField';
 import { TransactionCategoryField } from './modal/TransactionCategoryField';
@@ -78,6 +81,8 @@ export function TransactionModal() {
   const [periodBudgets, setPeriodBudgets] = useState({ month: '', data: {}, error: false });
   const [budgetRetry, setBudgetRetry] = useState(0);
   const [picker, setPicker] = useState(null); // phones: 'category' | 'date' | null
+  // Máy tính: popover danh mục của danh sách nhóm đang mở.
+  const [categoryRowOpen, setCategoryRowOpen] = useState(false);
   const isPhone = useMediaQuery(PHONE_QUERY);
   const isTouch = useMediaQuery(TOUCH_QUERY);
   // Điện thoại: tờ chọn ngày và danh mục; desktop: tờ chọn danh mục đầy đủ từ chip "Thêm…".
@@ -276,6 +281,7 @@ export function TransactionModal() {
     closeAddTxnModal();
     closeEditTransaction();
     setPicker(null);
+    setCategoryRowOpen(false);
     setErrorMsg('');
     setFieldErrors({});
     setAmountError('');
@@ -297,6 +303,7 @@ export function TransactionModal() {
   // Escape closes an open phone sheet first, then the modal.
   const handleEscape = () => {
     if (activePicker) setPicker(null);
+    else if (categoryRowOpen) setCategoryRowOpen(false);
     else close();
   };
 
@@ -429,6 +436,18 @@ export function TransactionModal() {
     }
   };
 
+  const formCopy = getTransactionFormCopy(lang);
+  const quickCategories = useMemo(
+    () => pickQuickCategories(type === 'expense' ? sortedCategories : activeIncomeCats, transactions, type, category),
+    [type, sortedCategories, activeIncomeCats, transactions, category]
+  );
+  const incomeWalletNow = type === 'income' ? wallets.find((wallet) => String(wallet.id) === String(walletId)) : null;
+  const incomeLine = incomeBalanceAfter !== null
+    ? formCopy.balanceAfter({ wallet: incomeWallet.name, amount: formatCurrency(incomeBalanceAfter) })
+    : incomeWalletNow
+      ? formCopy.balanceNow({ wallet: incomeWalletNow.name, amount: formatCurrency(incomeWalletNow.currentBalance ?? incomeWalletNow.initialBalance ?? 0) })
+      : '';
+
   if (!isOpen) return null;
 
   return (
@@ -452,7 +471,8 @@ export function TransactionModal() {
     >
         {/* Form Body */}
         <form onSubmit={handleSubmit} noValidate inert={activePicker ? true : undefined}>
-          <DialogBody className="txn-modal-body--transaction">
+          <DialogBody className={`txn-modal-body--transaction${isPhone ? '' : ' txn-p3'}`}>
+          {isPhone ? (<>
             {historicalPeriod.length > 0 && <div className="txn-period-notice" role="status">
               <strong>{t('transaction.historicalPeriod', { month: formatDate(`${historicalPeriod[0]}-01`, 'month', { locale: lang }) })}</strong>
               <span>{t('transaction.historicalHint')}</span>
@@ -528,6 +548,82 @@ export function TransactionModal() {
                 <span>{errorMsg}</span>
               </div>
             )}
+          </>) : (<>
+            {/* Máy tính, "Phương án 3": số tiền lớn → chip nhanh → danh sách nhóm. Điện thoại giữ bố cục cũ. */}
+            <div className="txn-type-toggle txn-type-toggle--segmented" role="group" aria-label={t('transaction.type')}>
+              <button
+                type="button"
+                className={`txn-type-btn txn-type-btn--expense ${type === 'expense' ? 'active' : ''}`}
+                onClick={() => handleTypeChange('expense')}
+                aria-pressed={type === 'expense'}
+              >
+                <span>{t('type.expense')}</span>
+              </button>
+              <button
+                type="button"
+                className={`txn-type-btn txn-type-btn--income ${type === 'income' ? 'active' : ''}`}
+                onClick={() => handleTypeChange('income')}
+                aria-pressed={type === 'income'}
+              >
+                <span>{t('type.income')}</span>
+              </button>
+            </div>
+
+            <TransactionHero
+              type={type} amount={amount} amountError={amountError} amountInputRef={amountInputRef}
+              handleAmountChange={handleAmountChange} category={category} categoryMetrics={categoryMetrics}
+              baselineMetrics={baselineMetrics} budgetReady={budgetReady} budgetError={budgetError}
+              selectedPeriod={selectedPeriod} draftAmount={draftAmount} setBudgetRetry={setBudgetRetry}
+              onSetLimit={() => { close(); navigateTo('plan', 'budgets'); }}
+              incomeLine={incomeLine}
+              periodNotice={historicalPeriod.length > 0 && <div className="txn-period-notice" role="status">
+                <strong>{t('transaction.historicalPeriod', { month: formatDate(`${historicalPeriod[0]}-01`, 'month', { locale: lang }) })}</strong>
+                <span>{t('transaction.historicalHint')}</span>
+              </div>}
+            />
+
+            <TransactionQuickChips categories={quickCategories} category={category} setCategory={setCategory}
+              ariaLabel={formCopy.quickCategories} />
+
+            {type === 'expense' && sortedCategories.length === 0 && (
+              <div className="txn-empty-categories" role="status">
+                <h4 className="txn-empty-title">{t('transaction.noCategory')}</h4>
+                <p className="txn-empty-desc">{t('transaction.noCategoryHint')}</p>
+                <button type="button" className="txn-empty-cta-btn" onClick={() => { close(); navigateTo('plan', 'budgets'); }}>
+                  {t('transaction.setupCategory')}
+                </button>
+              </div>
+            )}
+
+            <div className="txn-list-group">
+              <TransactionCategoryRow type={type} category={category} categories={sortedCategories}
+                metrics={baselineMetrics} setCategory={setCategory} open={categoryRowOpen} setOpen={setCategoryRowOpen}
+                invalid={Boolean(fieldErrors.category)} describedBy={fieldErrors.category ? 'txn-list-error' : undefined}
+                copy={formCopy} />
+              <TransactionWalletRow type={type} wallets={wallets} walletId={walletId} setWalletId={setWalletId}
+                placeholder={t('transaction.chooseWallet')} copy={formCopy} />
+              <TransactionDateRow date={date} setDate={setDate} maxDate={maxDate}
+                invalid={Boolean(fieldErrors.date)} describedBy={fieldErrors.date ? 'txn-list-error' : undefined}
+                copy={formCopy} />
+              <TransactionNoteRow desc={desc} setDesc={setDesc} copy={formCopy} />
+            </div>
+            {(fieldErrors.category || fieldErrors.date) && (
+              <p id="txn-list-error" className="form-field-error" role="alert">
+                <Icon name="alertCircle" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <span>{fieldErrors.category || fieldErrors.date}</span>
+              </p>
+            )}
+
+            {isEditing && <TransactionRevisionHistory key={editingTransaction.id}
+              transactionId={editingTransaction.id} wallets={[...wallets, ...archivedWallets]} />}
+
+            {errorMsg && (
+              <div className="txn-error-banner" role="alert">
+                <Icon name="alertCircle" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+          </>)}
           </DialogBody>
 
           {/* 7. Footer CTA Actions */}

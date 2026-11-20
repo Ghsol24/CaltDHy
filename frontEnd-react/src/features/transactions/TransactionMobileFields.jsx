@@ -4,11 +4,12 @@ import { useSheetDrag } from '../../hooks/useSheetDrag';
 import { CalendarPanel } from '../../components/ui/CustomDatePicker';
 import { CategoryOutlineIcon, CheckOutlineIcon } from '../../utils/categoryIcons';
 import { formatCurrency } from '../../utils/formatters';
-import { formatDisplayDate, parseIsoDate } from '../../utils/datePicker';
+import { formatDisplayDate } from '../../utils/datePicker';
 import { moneyNumber } from '../../utils/moneyPrecision.js';
 import { useTranslation } from '../../i18n/useTranslation';
 import { getBudgetLineCopy } from './transactionBudgetCopy';
 import { describeBudgetLine } from './modal/transactionModalHelpers';
+import { relativeDayLabel, shiftIsoDays } from './modal/relativeDay';
 
 import { Icon } from '../../components/ui/AppIcons';
 /*
@@ -20,14 +21,6 @@ import { Icon } from '../../components/ui/AppIcons';
 
 const SEARCH_THRESHOLD = 8;
 
-const pad = (value) => String(value).padStart(2, '0');
-
-function shiftIsoDays(iso, days) {
-  const parts = parseIsoDate(iso);
-  if (!parts) return '';
-  const date = new Date(parts.year, parts.month, parts.day + days);
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
 
 const foldText = (text) => String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/đ/gi, 'd').toLowerCase().trim();
@@ -128,10 +121,10 @@ export function CategorySummaryButton({ labelId, type, category, metric, baselin
   );
 }
 
-export function CategoryPickerList({ type, categories, selected, metrics, onPick }) {
+export function CategoryPickerList({ type, categories, selected, metrics, onPick, alwaysSearch = false, searchPlaceholder, searchRef }) {
   const { t, label } = useTranslation();
   const [query, setQuery] = useState('');
-  const showSearch = categories.length > SEARCH_THRESHOLD;
+  const showSearch = alwaysSearch || categories.length > SEARCH_THRESHOLD;
   const visible = useMemo(() => {
     const needle = foldText(query);
     if (!needle) return categories;
@@ -143,9 +136,10 @@ export function CategoryPickerList({ type, categories, selected, metrics, onPick
       {showSearch && (
         <div className="txn-sheet-search">
           <input
+            ref={searchRef}
             type="search"
             className="txn-input"
-            placeholder={t('transaction.searchCategory')}
+            placeholder={searchPlaceholder || t('transaction.searchCategory')}
             aria-label={t('transaction.searchCategory')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -189,15 +183,6 @@ export function CategoryPickerList({ type, categories, selected, metrics, onPick
   );
 }
 
-function relativeDayLabel(iso, todayIso, t, intlLocale) {
-  if (iso === todayIso) return t('date.today');
-  if (iso === shiftIsoDays(todayIso, -1)) return t('date.yesterday');
-  const parts = parseIsoDate(iso);
-  if (!parts) return '';
-  const weekday = new Intl.DateTimeFormat(intlLocale || 'vi-VN', { weekday: 'long' })
-    .format(new Date(parts.year, parts.month, parts.day));
-  return weekday.charAt(0).toLocaleUpperCase(intlLocale || 'vi-VN') + weekday.slice(1);
-}
 
 export function MobileDateField({ id, labelId, value, todayIso, onOpen }) {
   const { t, lang, intlLocale } = useTranslation();

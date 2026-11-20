@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { formatCurrency, formatDate, getLocalMonthString } from '../../../utils/formatters';
 import { moneyNumber } from '../../../utils/moneyPrecision.js';
 import { CheckOutlineIcon, FolderOutlineIcon } from '../../../utils/categoryIcons';
@@ -10,25 +10,8 @@ import { getBudgetLineCopy } from '../transactionBudgetCopy';
 import { describeBudgetLine, pickVisibleCategories } from './transactionModalHelpers';
 import { FormField } from '../../../components/ui/FormField';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { useRadioArrows } from './useRadioArrows';
 
-const ARROW_STEP = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
-
-/** Nhóm chọn một (radio): một điểm dừng Tab, mũi tên đổi danh mục và chuyển focus theo. */
-function useRadioArrows() {
-  const groupRef = useRef(null);
-  const onKeyDown = (event) => {
-    const step = ARROW_STEP[event.key];
-    if (!step || event.altKey || event.ctrlKey || event.metaKey) return;
-    const radios = [...(groupRef.current?.querySelectorAll('[role="radio"]') || [])];
-    const index = radios.indexOf(document.activeElement);
-    if (index < 0) return;
-    event.preventDefault();
-    const next = radios[(index + step + radios.length) % radios.length];
-    next.focus();
-    next.click();
-  };
-  return { groupRef, onKeyDown };
-}
 
 export function TransactionCategoryField({ error, baselineMetrics, budgetError, budgetReady, category, categoryMetrics, close, draftAmount, isPhone, navigateTo, selectedPeriod, setBudgetRetry, setCategory, setPicker, sortedCategories, type }) {
   const { label, lang, t } = useTranslation();

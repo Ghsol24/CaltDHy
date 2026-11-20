@@ -23,6 +23,8 @@ export function CustomWalletDropdown({
   invalid = false,
   describedBy,
   inputRef,
+  // Row look (transaction dialog on computers): "label ……… name · balance ›" in one line.
+  rowLabel,
 }) {
   const generatedId = useId();
   const triggerId = explicitId || generatedId;
@@ -156,10 +158,28 @@ export function CustomWalletDropdown({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
-        aria-label={ariaLabel || (selectedWallet ? selectedWallet.name : placeholder)}
+        aria-label={ariaLabel || (rowLabel
+          ? `${rowLabel}: ${selectedWallet ? selectedWallet.name : placeholder}`
+          : (selectedWallet ? selectedWallet.name : placeholder))}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
       >
+        {rowLabel ? (
+          <span className="custom-wallet-row" aria-hidden="true">
+            <span className="custom-wallet-row__icon">
+              <WalletOutlineIcon type={selectedWallet?.type} size={18} color="currentColor" />
+            </span>
+            <span className="custom-wallet-row__label">{rowLabel}</span>
+            <span className="custom-wallet-row__value">
+              {selectedWallet ? (
+                <>
+                  <strong>{selectedWallet.name}</strong>
+                  <span className="custom-wallet-row__balance"> · {formatBalance(selectedWallet.currentBalance ?? selectedWallet.initialBalance ?? 0)}</span>
+                </>
+              ) : placeholder}
+            </span>
+          </span>
+        ) : (
         <div className="custom-wallet-selected-info">
           {selectedWallet ? (
             <>
@@ -182,6 +202,7 @@ export function CustomWalletDropdown({
             <span className="custom-wallet-placeholder">{placeholder}</span>
           )}
         </div>
+        )}
 
         {/* Animated Chevron */}
         <Icon name="chevronDown" className={`custom-wallet-chevron ${isOpen ? 'rotate-180' : ''}`} width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
