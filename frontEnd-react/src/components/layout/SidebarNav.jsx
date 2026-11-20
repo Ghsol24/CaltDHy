@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { NavIcon } from '../ui/NavIcons';
+import { scrollToSection } from '../../utils/scrollToSection';
 
 import { Icon } from '../../components/ui/AppIcons';
 // Which sidebar groups the viewer folded away. A per-browser convenience:
@@ -50,7 +51,13 @@ export function SidebarNav() {
       : [...current, groupId]));
   };
 
-  const handleNavClick = (viewId, subTabId) => {
+  const handleNavClick = (viewId, subTabId, sectionId) => {
+    // On the long computer "Tóm tắt thu chi" page the block is already here: glide to it
+    // (the highlight follows) instead of opening its own screen. Elsewhere it is a page.
+    if (sectionId && activeView === 'analytics'
+      && analyticsSubTab === 'overview' && window.innerWidth > 900 && scrollToSection(sectionId)) {
+      return;
+    }
     navigateTo(viewId, subTabId);
 
     if (window.innerWidth <= 900) {
@@ -60,7 +67,7 @@ export function SidebarNav() {
 
   // On the long "Tóm tắt thu chi" page the highlight follows the block being read, so only
   // one item ever looks selected. The page keeps aria-current (the URL does not move) and
-  // clicking an item still opens its own screen.
+  // clicking an item scrolls to its block here (see handleNavClick).
   const overviewInView = activeView === 'analytics' && analyticsSubTab === 'overview'
     ? analyticsInViewSection : null;
 
@@ -109,17 +116,20 @@ export function SidebarNav() {
         {
           id: 'analytics_spending', viewId: 'analytics', subTabId: 'spending', label: t('nav.spending'), icon: 'spending',
           isActive: activeView === 'analytics' && analyticsSubTab === 'spending',
-          isInView: overviewInView === 'spending'
+          isInView: overviewInView === 'spending',
+          sectionId: 'analytics-spending'
         },
         {
           id: 'analytics_cashflow', viewId: 'analytics', subTabId: 'cash-flow', label: t('nav.cashFlow'), icon: 'cashFlow',
           isActive: activeView === 'analytics' && analyticsSubTab === 'cash-flow',
-          isInView: overviewInView === 'cash-flow'
+          isInView: overviewInView === 'cash-flow',
+          sectionId: 'analytics-cashflow'
         },
         {
           id: 'analytics_reports', viewId: 'analytics', subTabId: 'reports', label: t('nav.reports'), icon: 'reports',
           isActive: activeView === 'analytics' && analyticsSubTab === 'reports',
-          isInView: overviewInView === 'reports'
+          isInView: overviewInView === 'reports',
+          sectionId: 'analytics-reports'
         },
         {
           id: 'analytics_transactions', viewId: 'analytics', subTabId: 'transactions', label: t('nav.transactionHistory'), icon: 'transactions',
@@ -152,7 +162,7 @@ export function SidebarNav() {
       key={item.id}
       type="button"
       className={`sidebar-nav-item ${item.isActive ? 'active' : ''}${item.isInView ? ' is-in-view' : ''}${item.isShadowed ? ' is-shadowed' : ''}`}
-      onClick={() => handleNavClick(item.viewId, item.subTabId)}
+      onClick={() => handleNavClick(item.viewId, item.subTabId, item.sectionId)}
       aria-current={item.isActive ? 'page' : undefined}
       title={isSidebarCollapsed ? item.label : undefined}
     >

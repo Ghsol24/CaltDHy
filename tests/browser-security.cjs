@@ -1382,6 +1382,7 @@ function blendCssColor(color, background) {
     // Desktop (đợt 11, NAV-05): mỗi mục menu là một màn hình; riêng "Tóm tắt thu chi" giữ trang
     // cuộn đầy đủ, URL và aria-current đứng yên ở mục đó khi cuộn. Đợt 13b: phần sáng chuyển sang
     // mục của khối đang xem (is-in-view), "Tóm tắt thu chi" mờ đi (is-shadowed); màn hình riêng không đổi.
+    // Bấm Chi tiêu/Dòng tiền/Báo cáo khi đang ở trang Tóm tắt thì trượt tới khối; ở nơi khác thì mở màn hình.
     await mobilePage.goto('/spending/analytics/cash-flow');
     await expect(mobilePage.locator('#analytics-overview')).toBeVisible();
     await expect(mobilePage.locator('#analytics-cashflow')).toBeVisible();
@@ -1407,8 +1408,12 @@ function blendCssColor(color, background) {
     // Đầu trang (tiêu đề + 4 ô số): chỉ "Tóm tắt thu chi" sáng.
     await expect(mobilePage.locator('.sidebar-nav-item.is-in-view')).toHaveCount(0);
     await expect(desktopOverviewNav).not.toHaveClass(/(^|\s)is-shadowed(\s|$)/);
-    await mobilePage.locator('#analytics-cashflow').evaluate((section) => section.scrollIntoView({ behavior: 'auto', block: 'start' }));
+    // Đợt 13c: ở trang Tóm tắt, bấm "Dòng tiền" trượt tới khối (không mở màn hình riêng)
+    // và đưa focus vào tiêu đề khối.
+    await desktopCashFlowNav.click();
     await expect(desktopCashFlowNav).toHaveClass(/(^|\s)is-in-view(\s|$)/);
+    await expect(mobilePage.locator('#analytics-cashflow h2')).toBeFocused();
+    await expect(mobilePage.locator('#analytics-spending')).toBeVisible();
     await expect(mobilePage.locator('.sidebar-nav-item.is-in-view')).toHaveCount(1);
     await expect(desktopOverviewNav).toHaveAttribute('aria-current', 'page');
     await expect(desktopOverviewNav).toHaveClass(/(^|\s)is-shadowed(\s|$)/);
