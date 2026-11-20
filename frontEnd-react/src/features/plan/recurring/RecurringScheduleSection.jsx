@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { WalletOutlineIcon } from '../../../components/ui/WalletOutlineIcon';
 import { formatCurrency } from '../../../utils/formatters';
 import { CYCLE_OPTIONS } from './cycleOptions';
 import { CustomDatePicker } from '../../../components/ui/CustomDatePicker';
 import { FormField } from '../../../components/ui/FormField';
+import { AnchoredMenu } from '../../../components/ui/AnchoredMenu';
 
 export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, endDate, handleAmountChange, hasArchivedWallet, hasEndDate, installmentToEdit, isCycleDropdownOpen, isIncome = false, isWalletDropdownOpen, nextDueDate, selectedCycleLabel, selectedWallet, setCycle, setEndDate, setHasEndDate, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNextDueDate, setWalletId, walRef, wallets }) {
+  const walletAnchorRef = useRef(null);
+  const cycleAnchorRef = useRef(null);
   return (
     <>
         <div className="recurring-form-grid-2col">
@@ -31,7 +34,7 @@ export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, e
           </FormField>
 
           <FormField label={isIncome ? 'Ví nhận tiền' : 'Ví trừ tiền'} ref={walRef} error={errors.wallet}>
-            <div className="modal-custom-dropdown-wrap">
+            <div className="modal-custom-dropdown-wrap" ref={walletAnchorRef}>
               <button
                 type="button"
                 className={`modal-custom-dropdown-btn ${isWalletDropdownOpen ? 'is-open' : ''}`}
@@ -50,7 +53,8 @@ export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, e
               </button>
     
               {isWalletDropdownOpen && (
-                <div className="modal-custom-dropdown-menu" role="listbox">
+                <AnchoredMenu anchorRef={walletAnchorRef} onAnchorHidden={() => setIsWalletDropdownOpen(false)}
+                  className="modal-custom-dropdown-menu" role="listbox">
                   {wallets.map((w) => {
                     const isSelected = String(w.id) === String(selectedWallet?.id || '');
                     return (
@@ -78,7 +82,7 @@ export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, e
                       </button>
                     );
                   })}
-                </div>
+                </AnchoredMenu>
               )}
             </div>
             {hasArchivedWallet && !errors.wallet && (
@@ -89,7 +93,7 @@ export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, e
           </FormField>
 
           <FormField label="Chu kỳ lặp" ref={cycRef}>
-            <div className="modal-custom-dropdown-wrap">
+            <div className="modal-custom-dropdown-wrap" ref={cycleAnchorRef}>
               <button
                 type="button"
                 className={`modal-custom-dropdown-btn ${isCycleDropdownOpen ? 'is-open' : ''}`}
@@ -108,7 +112,8 @@ export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, e
               </button>
     
               {isCycleDropdownOpen && (
-                <div className="modal-custom-dropdown-menu" role="listbox">
+                <AnchoredMenu anchorRef={cycleAnchorRef} onAnchorHidden={() => setIsCycleDropdownOpen(false)}
+                  className="modal-custom-dropdown-menu" role="listbox">
                   {CYCLE_OPTIONS.map((opt) => {
                     const isSelected = opt.value === cycle;
                     return (
@@ -132,7 +137,7 @@ export function RecurringScheduleSection({ errors = {}, amount, cycRef, cycle, e
                       </button>
                     );
                   })}
-                </div>
+                </AnchoredMenu>
               )}
             </div>
           </FormField>

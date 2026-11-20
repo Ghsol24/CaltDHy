@@ -62,3 +62,36 @@ export function describeBudgetLine({ copy, formatMoney, baseline, category, hasD
     ? { text: lead(copy.leftAfter({ amount })), kind: 'after' }
     : { text: lead(copy.left({ amount, limit })), kind: 'left' };
 }
+
+/** Số chip danh mục nhanh dưới số tiền (bố cục máy tính "Phương án 3"). */
+export const QUICK_CHIP_COUNT = 4;
+
+/**
+ * Chip nhanh: các danh mục dùng nhiều nhất (rồi gần nhất) trong những giao dịch tự ghi cùng loại,
+ * thiếu thì lấy theo thứ tự danh sách. Danh mục đang chọn luôn có chip (thay chip cuối nếu cần),
+ * nên chọn từ danh sách đầy đủ vẫn thấy ngay trên hàng chip.
+ */
+export function pickQuickCategories(categories, transactions, type, selectedName, count = QUICK_CHIP_COUNT) {
+  const byKey = new Map(categories.map((cat) => [cat.name.toLowerCase(), cat]));
+  const stats = new Map();
+  for (const txn of transactions || []) {
+    if (txn.type !== type || txn.installmentId || txn.jarId || !txn.category) continue;
+    const key = String(txn.category).toLowerCase();
+    if (!byKey.has(key)) continue;
+    const entry = stats.get(key) || { count: 0, last: '' };
+    entry.count += 1;
+    if (String(txn.date) > entry.last) entry.last = String(txn.date);
+    stats.set(key, entry);
+  }
+  const ranked = categories
+    .map((cat, index) => ({ cat, index, stat: stats.get(cat.name.toLowerCase()) }))
+    .sort((a, b) => (b.stat?.count || 0) - (a.stat?.count || 0)
+      || (b.stat?.last || '').localeCompare(a.stat?.last || '') || a.index - b.index)
+    .map(({ cat }) => cat);
+  const visible = ranked.slice(0, count);
+  const selected = String(selectedName || '').toLowerCase();
+  if (selected && byKey.has(selected) && visible.length && !visible.some((cat) => cat.name.toLowerCase() === selected)) {
+    visible[visible.length - 1] = byKey.get(selected);
+  }
+  return visible;
+}

@@ -244,7 +244,7 @@ export const translations = {
     "transaction.amountRange": "Số tiền vượt giới hạn cho phép.",
     "transaction.dateRequired": "Vui lòng chọn ngày giao dịch.",
     "transaction.dateFuture": "Không thể ghi giao dịch cho ngày trong tương lai.",
-    'transaction.edit': 'Chỉnh sửa giao dịch', 'transaction.addIncome': 'Nạp tiền / Thêm thu nhập',
+    'transaction.edit': 'Chỉnh sửa giao dịch', 'transaction.addIncome': 'Thêm thu nhập mới',
     'transaction.add': 'Thêm giao dịch mới', 'transaction.type': 'Loại giao dịch',
     'transaction.amount': 'Số tiền', 'transaction.category': 'Danh mục',
     'transaction.noCategory': 'Chưa có danh mục',

@@ -57,3 +57,26 @@ test('the category chip grid shows 10 chips or 9 + "Thêm…" and always keeps t
   assert.equal(many.visible.at(-1).name, 'C12');
   assert.deepEqual(pickVisibleCategories(names(14), 'C2').visible.map((cat) => cat.name), names(9).map((cat) => cat.name));
 });
+
+// Đợt 13, máy tính "Phương án 3": chip danh mục nhanh dưới số tiền.
+test('quick chips rank by how often a category is used, then by recency, then by list order', async () => {
+  const { pickQuickCategories } = await import('../src/features/transactions/modal/transactionModalHelpers.js');
+  const cats = ['Ăn uống', 'Mua sắm', 'Cà phê', 'Di chuyển', 'Giải trí'].map((name) => ({ name }));
+  const txns = [
+    { type: 'expense', category: 'Cà phê', date: '2026-11-18' },
+    { type: 'expense', category: 'Cà phê', date: '2026-11-10' },
+    { type: 'expense', category: 'Di chuyển', date: '2026-11-19' },
+    { type: 'expense', category: 'Mua sắm', date: '2026-11-01' },
+    { type: 'expense', category: 'Giải trí', date: '2026-11-20', installmentId: 'i1' },
+    { type: 'income', category: 'Ăn uống', date: '2026-11-20' }
+  ];
+  assert.deepEqual(pickQuickCategories(cats, txns, 'expense', 'Cà phê').map((c) => c.name),
+    ['Cà phê', 'Di chuyển', 'Mua sắm', 'Ăn uống']);
+});
+
+test('the chosen category always has a quick chip, replacing the last one', async () => {
+  const { pickQuickCategories } = await import('../src/features/transactions/modal/transactionModalHelpers.js');
+  const cats = ['A', 'B', 'C', 'D', 'E', 'F'].map((name) => ({ name }));
+  assert.deepEqual(pickQuickCategories(cats, [], 'expense', 'f').map((c) => c.name), ['A', 'B', 'C', 'F']);
+  assert.deepEqual(pickQuickCategories(cats.slice(0, 2), [], 'expense', 'A').map((c) => c.name), ['A', 'B']);
+});

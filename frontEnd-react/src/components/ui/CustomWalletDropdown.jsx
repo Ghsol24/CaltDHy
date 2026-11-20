@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useId } from 'react';
 import { formatCurrency } from '../../utils/formatters';
+import { useAnchoredPlacement } from '../../hooks/useAnchoredPlacement';
 import { WalletOutlineIcon } from './WalletOutlineIcon';
 
 import { Icon } from './AppIcons';
@@ -22,6 +23,8 @@ export function CustomWalletDropdown({
   invalid = false,
   describedBy,
   inputRef,
+  // Row look (transaction dialog on computers): "label ……… name · balance ›" in one line.
+  rowLabel,
 }) {
   const generatedId = useId();
   const triggerId = explicitId || generatedId;
@@ -58,19 +61,26 @@ export function CustomWalletDropdown({
     };
   }, [isOpen]);
 
-  // Keep the opened list on screen inside scrolling dialogs.
-  useEffect(() => {
-    if (!isOpen || !menuRef.current?.scrollIntoView) return undefined;
-    const frame = requestAnimationFrame(() => menuRef.current?.scrollIntoView({ block: 'nearest' }));
-    return () => cancelAnimationFrame(frame);
-  }, [isOpen]);
+  // Fixed to the screen, as wide as the trigger, flipping above when there is no room below:
+  // inside a dialog the list can then never be clipped by, or scroll, the dialog body.
+  const menuStyle = useAnchoredPlacement(containerRef, menuRef, isOpen, {
+    strategy: 'fixed',
+    matchWidth: true,
+    maxHeight: 240,
+    onAnchorHidden: () => setIsOpen(false),
+  });
 
-  // Scroll highlighted item into view
+  // Keep the highlighted item visible by scrolling the list only (scrollIntoView would
+  // also scroll whatever contains the dropdown).
   useEffect(() => {
-    if (isOpen && highlightedIndex >= 0 && itemRefs.current[highlightedIndex]) {
-      itemRefs.current[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+    const menu = menuRef.current;
+    const item = itemRefs.current[highlightedIndex];
+    if (!isOpen || !menu || !item) return;
+    if (item.offsetTop < menu.scrollTop) menu.scrollTop = item.offsetTop;
+    else if (item.offsetTop + item.offsetHeight > menu.scrollTop + menu.clientHeight) {
+      menu.scrollTop = item.offsetTop + item.offsetHeight - menu.clientHeight;
     }
-  }, [isOpen, highlightedIndex]);
+  }, [isOpen, highlightedIndex, menuStyle]);
 
   const openDropdown = () => {
     if (disabled) return;
@@ -148,10 +158,28 @@ export function CustomWalletDropdown({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
-        aria-label={ariaLabel || (selectedWallet ? selectedWallet.name : placeholder)}
+        aria-label={ariaLabel || (rowLabel
+          ? `${rowLabel}: ${selectedWallet ? selectedWallet.name : placeholder}`
+          : (selectedWallet ? selectedWallet.name : placeholder))}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
       >
+        {rowLabel ? (
+          <span className="custom-wallet-row" aria-hidden="true">
+            <span className="custom-wallet-row__icon">
+              <WalletOutlineIcon type={selectedWallet?.type} size={18} color="currentColor" />
+            </span>
+            <span className="custom-wallet-row__label">{rowLabel}</span>
+            <span className="custom-wallet-row__value">
+              {selectedWallet ? (
+                <>
+                  <strong>{selectedWallet.name}</strong>
+                  <span className="custom-wallet-row__balance"> · {formatBalance(selectedWallet.currentBalance ?? selectedWallet.initialBalance ?? 0)}</span>
+                </>
+              ) : placeholder}
+            </span>
+          </span>
+        ) : (
         <div className="custom-wallet-selected-info">
           {selectedWallet ? (
             <>
@@ -174,6 +202,7 @@ export function CustomWalletDropdown({
             <span className="custom-wallet-placeholder">{placeholder}</span>
           )}
         </div>
+        )}
 
         {/* Animated Chevron */}
         <Icon name="chevronDown" className={`custom-wallet-chevron ${isOpen ? 'rotate-180' : ''}`} width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -185,6 +214,7 @@ export function CustomWalletDropdown({
           ref={menuRef}
           id={listboxId}
           className="custom-wallet-menu"
+          style={menuStyle || undefined}
           role="listbox"
           tabIndex={-1}
           aria-activedescendant={highlightedIndex >= 0 ? `${triggerId}-opt-${highlightedIndex}` : undefined}

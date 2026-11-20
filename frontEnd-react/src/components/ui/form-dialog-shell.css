@@ -84,6 +84,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Without this, overflow-y: auto makes the x axis scrollable too, and anything wider than
+     the body (an old in-flow calendar) shifted the whole form sideways. Popovers are fixed now. */
+  overflow-x: hidden;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;

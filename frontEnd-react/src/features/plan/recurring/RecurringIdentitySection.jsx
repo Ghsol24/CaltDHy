@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { CategoryOutlineIcon } from '../../../utils/categoryIcons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { FormField } from '../../../components/ui/FormField';
+import { AnchoredMenu } from '../../../components/ui/AnchoredMenu';
 
 export function RecurringIdentitySection({ errors = {}, catRef, category, categoryDisplayName, handleCreateNewCategory, handleNameChange, isAddingNewCategory, isCategoryDropdownOpen, isIncome = false, name, nameInputRef, newCatInputName, newCatInputRef, setCategory, setIsAddingNewCategory, setIsCategoryDropdownOpen, setIsCycleDropdownOpen, setIsWalletDropdownOpen, setNewCatInputName, syncedExpenseCategories }) {
   const { label } = useTranslation();
+  const categoryAnchorRef = useRef(null);
   return (
     <>
       <FormField label={isIncome ? 'Tên khoản thu' : 'Tên khoản chi / dịch vụ'} htmlFor="rec-name" error={errors.name}>
@@ -27,7 +29,7 @@ export function RecurringIdentitySection({ errors = {}, catRef, category, catego
       </FormField>
 
       <FormField label={isIncome ? 'Danh mục thu nhập' : 'Danh mục chi tiêu'} ref={catRef}>
-          <div className="modal-custom-dropdown-wrap">
+          <div className="modal-custom-dropdown-wrap" ref={categoryAnchorRef}>
             <button
               type="button"
               className={`modal-custom-dropdown-btn ${isCategoryDropdownOpen ? 'is-open' : ''}`}
@@ -47,7 +49,8 @@ export function RecurringIdentitySection({ errors = {}, catRef, category, catego
             </button>
     
             {isCategoryDropdownOpen && (
-              <div className="modal-custom-dropdown-menu" role="listbox">
+              <AnchoredMenu anchorRef={categoryAnchorRef} onAnchorHidden={() => setIsCategoryDropdownOpen(false)}
+                className="modal-custom-dropdown-menu" role="listbox">
                 <div className="modal-dropdown-scroll-list">
                   {syncedExpenseCategories.map((c) => {
                     const isSelected = c.name.toLowerCase() === category.toLowerCase();
@@ -129,7 +132,7 @@ export function RecurringIdentitySection({ errors = {}, catRef, category, catego
                     </div>
                   )}
                 </div>}
-              </div>
+              </AnchoredMenu>
             )}
           </div>
       </FormField>
