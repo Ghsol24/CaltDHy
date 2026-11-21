@@ -142,9 +142,11 @@
   background-color: var(--color-canvas, #F5FCF8);
 }
 
-/* ── Sidebar Navigation (260px, hết chiều cao, không topbar phía trên — đợt 15b) ── */
+/* ── Sidebar Navigation (hết chiều cao, không topbar phía trên — đợt 15b) ──
+   Độ rộng kéo được (đợt 15c): --sidebar-width do SidebarNav đặt, mặc định 260px, hẹp nhất 200px,
+   rộng nhất 1/5 chiều ngang trang (màn dưới 1300px thì trần là 260px). Khớp sidebarWidth.js. */
 .app-sidebar-nav {
-  width: 260px;
+  width: clamp(200px, var(--sidebar-width, 260px), max(260px, 20vw));
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -160,6 +162,60 @@
 
 .app-sidebar-nav.is-collapsed {
   width: 72px;
+}
+
+/* Mép kéo: vùng bấm 10px vắt qua viền trái của tấm nội dung. Chỉ hiện vạch màu khi trỏ vào
+   (sau một nhịp, để lướt chuột qua không nháy), khi đang kéo hoặc khi focus bằng bàn phím —
+   không vẽ khung focus. Vạch bắt đầu dưới góc bo của tấm. */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -5px;
+  width: 10px;
+  z-index: 1;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: var(--shell-panel-radius, 24px);
+  bottom: 0;
+  left: 4px;
+  width: 3px;
+  border-radius: 99px;
+  background: var(--color-action-bg);
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+}
+
+.sidebar-resize-handle:hover::after {
+  opacity: 1;
+  transition-delay: 150ms;
+}
+
+.sidebar-resize-handle.is-dragging::after,
+.sidebar-resize-handle:focus-visible::after {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.app-sidebar-nav .sidebar-resize-handle:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+}
+
+/* Đang kéo: con trỏ giữ dạng ↔ ở mọi chỗ, không bôi chọn chữ, sidebar bám chuột không trễ. */
+html.is-resizing-sidebar,
+html.is-resizing-sidebar * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+html.is-resizing-sidebar .app-sidebar-nav {
+  transition: none;
 }
 
 /* Logo + nút thu gọn. Cao 84px để logo thẳng hàng với tâm viên kính bên phải. */
@@ -684,14 +740,16 @@
    Điện thoại/tablet (≤900px) giữ nguyên topbar + thanh dưới.
    ============================================================ */
 @media (min-width: 901px) {
+  /* Hàng viên kính cao 74px: viên kính cách mép trên 22px, tâm ngang tâm logo sidebar (47px). */
   .app-shell {
-    --shell-sticky-top: 64px;
+    --shell-sticky-top: 74px;
   }
 
+  /* Tấm sát mép trên cửa sổ (đợt 15c, trước cách 10px): viền cong bo thẳng vào mép, không chừa
+     dải trống phía trên. Viên kính cũng hết nhảy lên ~11px khi bắt đầu cuộn. */
   .app-column {
-    margin-top: 10px;
-    min-height: calc(100vh - 10px);
-    min-height: calc(100dvh - 10px);
+    min-height: 100vh;
+    min-height: 100dvh;
     background-color: var(--shell-panel-bg);
     border: 1px solid var(--shell-panel-border);
     border-right: 0;
@@ -701,10 +759,10 @@
 
   /* Hàng của viên kính: trong suốt, không chặn chuột ở phần trống (nội dung trôi qua bên dưới). */
   .topbar {
-    height: 64px;
+    height: 74px;
     max-width: 1440px;
     margin: 0 auto;
-    padding: 12px 32px 0;
+    padding: 21px 32px 0;
     align-items: flex-start;
     justify-content: flex-end;
     background: transparent;

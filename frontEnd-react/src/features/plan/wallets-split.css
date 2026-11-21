@@ -1,0 +1,474 @@
+/* ============================================================
+   VÍ — CHIA ĐÔI TRÊN MÁY TÍNH (đợt 15d)
+   Danh sách ví bên trái, chi tiết ví bên phải. Bật bằng .is-split do useWalletSplit đo
+   khung trang (≥ 860px); điện thoại / màn hẹp giữ một cột như cũ.
+   ============================================================ */
+.wallets-v2-container.is-split .wallets-v2-layout {
+  grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+  gap: 28px;
+}
+
+/* Cột trái đứng yên khi cuộn phần chi tiết; danh sách rất dài thì tự cuộn trong cột. */
+.wallets-v2-container.is-split .wallets-v2-col-left {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  gap: 16px;
+}
+
+.is-split .wallets-summary-total {
+  font-size: var(--font-4xl);
+}
+
+/* Màu từng đoạn trùng màu ô biểu tượng của ví ngay bên dưới, nên bỏ chú thích cho gọn. */
+.is-split .wallets-alloc-legend {
+  display: none;
+}
+
+.is-split .wallets-alloc-bar {
+  height: 8px;
+  margin-top: 10px;
+}
+
+.is-split .wallet-group-head {
+  padding-top: 14px;
+}
+
+.is-split .wallet-row-main {
+  min-height: 46px;
+  padding: 6px 10px;
+  gap: 10px;
+}
+
+.is-split .wallet-row-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+/* Dòng "Tất cả ví": số ví thẳng cột với số dư (chừa chỗ của nút ⋮ ở các dòng khác). */
+.wallet-row--all {
+  margin: 8px 0 2px;
+}
+
+.wallet-row--all .wallet-row-main {
+  padding-right: 52px;
+}
+
+.wallet-row-count {
+  flex: none;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: var(--font-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ví đang chọn: nền tint + chữ màu đang mở như mục sidebar, không vẽ khung (đợt 15). */
+.is-split .wallet-row.is-selected,
+.is-split .wallet-row.is-selected:hover {
+  background: var(--color-brand-50, #F1FBF6);
+}
+
+.is-split .wallet-row.is-selected .wallet-row-name {
+  color: var(--color-active-text);
+}
+
+.is-split .wallet-row.is-selected .wallet-row-count {
+  background: var(--color-surface, var(--surface));
+}
+
+/* Thao tác nằm ở khung chi tiết; dòng chỉ còn ⋮, hiện khi rê chuột / focus / đang mở menu. */
+.is-split .wallet-row .wallet-dots-btn {
+  width: 28px;
+  height: 28px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+
+/* :has(:focus-visible) chứ không :focus-within — bấm chuột chọn ví không làm hiện ⋮ thừa
+   (khung chi tiết đã có ⋮ của ví đang chọn). */
+.is-split .wallet-row:hover .wallet-dots-btn,
+.is-split .wallet-row:has(:focus-visible) .wallet-dots-btn,
+.is-split .wallet-row.is-menu-open .wallet-dots-btn {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .is-split .wallet-row .wallet-dots-btn {
+    opacity: 1;
+  }
+}
+
+/* ── Khung chi tiết ── */
+.wallet-pane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 22px 24px;
+  background: var(--color-surface, var(--surface));
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-card);
+}
+
+.wallet-pane-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.wallet-pane-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.wallet-pane-titles {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wallet-pane-kicker {
+  margin: 0;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.wallet-pane-title {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text, var(--text-primary));
+  overflow-wrap: anywhere;
+}
+
+.wallet-pane-balance {
+  margin: 4px 0 0;
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-4xl);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-text, var(--text-primary));
+}
+
+.wallet-pane-balance.is-negative {
+  color: var(--color-danger);
+}
+
+.wallet-pane-actions {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-pane-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border, var(--border));
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface, var(--surface));
+  color: var(--color-text, var(--text-primary));
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.wallet-pane-btn:hover:not(:disabled) {
+  background: var(--color-brand-50, var(--surface-subtle));
+  border-color: var(--color-action-bg);
+}
+
+.wallet-pane-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wallet-pane-actions .wallet-dots-btn {
+  width: 36px;
+  height: 36px;
+}
+
+/* Thẻ tín dụng: thanh hạn mức đã dùng. */
+.wallet-pane-credit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-pane-credit-bar {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-surface-muted, var(--surface-subtle));
+}
+
+.wallet-pane-credit-bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: var(--color-danger);
+}
+
+.wallet-pane-credit p {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.wallet-pane-credit strong {
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, var(--text-primary));
+}
+
+.wallet-pane-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.wallet-pane-stats > div {
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--color-surface-muted, var(--surface-subtle));
+}
+
+.wallet-pane-stats dt {
+  margin-bottom: 4px;
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.wallet-pane-stats dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+}
+
+.wallet-pane-stats dd.is-positive {
+  color: var(--color-success);
+}
+
+.wallet-pane-stats dd.wallet-pane-stat-text {
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.wallet-pane-stat-sub {
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+/* ── Đường số dư ── */
+.wallet-chart {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--font-sm);
+}
+
+.wallet-chart-title {
+  font-weight: 600;
+  color: var(--color-text, var(--text-primary));
+}
+
+.wallet-chart-change {
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.wallet-chart-change.is-positive { color: var(--color-success); }
+.wallet-chart-change.is-negative { color: var(--color-danger); }
+
+.wallet-chart-plot {
+  position: relative;
+  height: 120px;
+  cursor: crosshair;
+}
+
+.wallet-chart-plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.wallet-chart-area {
+  fill: color-mix(in srgb, var(--color-action-bg) 10%, transparent);
+}
+
+.wallet-chart-line {
+  fill: none;
+  stroke: var(--color-action-bg);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.wallet-chart-cursor {
+  stroke: var(--color-text-secondary, var(--text-secondary));
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.wallet-chart-tip {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--menu-border, var(--color-border));
+  border-radius: 8px;
+  background: var(--menu-bg, var(--color-surface));
+  box-shadow: var(--menu-shadow, var(--shadow-sm));
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, var(--text-secondary));
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.wallet-chart-tip strong {
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, var(--text-primary));
+}
+
+.wallet-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-xs);
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+/* ── Giao dịch trong khung: dòng tràn sát mép thẻ, như "Giao dịch gần đây" ở Trang chủ ── */
+.wallet-pane-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: -8px;
+}
+
+.wallet-pane-section-head h3 {
+  margin: 0;
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: var(--color-text, var(--text-primary));
+}
+
+.wallet-pane-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--color-link);
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wallet-pane-link:hover {
+  text-decoration: underline;
+}
+
+/* Bo góc dưới theo thẻ ở chính danh sách: thẻ không được overflow: hidden, kẻo cắt menu ⋮. */
+.wallet-pane-txns {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -24px -22px;
+  border-top: 1px solid var(--color-border, var(--border));
+  border-radius: 0 0 var(--radius-lg, 16px) var(--radius-lg, 16px);
+  overflow: hidden;
+}
+
+.wallet-pane-txns .txn-item {
+  padding-inline: 24px;
+}
+
+.wallet-pane-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed var(--color-border, var(--border));
+  border-radius: var(--radius-md, 12px);
+  font-size: var(--font-sm);
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.wallet-pane-empty p {
+  margin: 0;
+}
+
+/* Khung chi tiết hẹp (màn ~1100–1300px, sidebar kéo rộng): nút xuống dòng dưới tiêu đề. */
+.wallets-v2-container.is-split .wallets-v2-col-right {
+  container-type: inline-size;
+}
+
+@container (max-width: 600px) {
+  .wallet-pane-head {
+    flex-wrap: wrap;
+  }
+
+  .wallet-pane-actions {
+    width: 100%;
+  }
+}
