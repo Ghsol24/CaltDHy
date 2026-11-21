@@ -18,7 +18,8 @@ import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTe
 import { buildPlanAlerts } from '../../utils/planAlerts';
 import { PlanAttentionBar } from './PlanAttentionBar';
 import { WALLET_TYPE_LABELS, displayWalletColor } from './wallets/walletLabels';
-import { NavIcon, PageTitleIcon } from '../../components/ui/NavIcons';
+import { NavIcon } from '../../components/ui/NavIcons';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 import { Icon } from '../../components/ui/AppIcons';
 
@@ -176,96 +177,93 @@ export function PlanOverviewTab() {
 
   return (
     <div className="plan-overview-container" role="region" aria-label="Tổng quan kế hoạch tài chính">
-      {/* ── 1. Page Header: Title, Subtitle, and + Tạo kế hoạch Dropdown ── */}
-      <div className="plan-overview-header">
-        <div className="page-title-lead plan-header-lead">
-          <PageTitleIcon name="planOverview" />
-          <div className="plan-header-titles">
-            <h1 className="plan-overview-title">
-              <span className="plan-wide-copy">{copy.overview}</span>
-              <span className="plan-mobile-copy">{copy.mobileOverview}</span>
-            </h1>
+      {/* ── 1. Page Header: title + "Tạo kế hoạch" dropdown ── */}
+      <PageHeader
+        icon="planOverview"
+        className="plan-overview-header"
+        titleClassName="plan-overview-title"
+        title={(
+          <>
+            <span className="plan-wide-copy">{copy.overview}</span>
+            <span className="plan-mobile-copy">{copy.mobileOverview}</span>
+          </>
+        )}
+        actions={(
+          <div className="plan-create-menu-wrapper" ref={dropdownRef}>
+            <button
+              type="button"
+              className="plan-btn-create-primary"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              aria-expanded={isDropdownOpen}
+              aria-haspopup="true"
+              aria-label="Lập kế hoạch tài chính"
+            >
+              <Icon name="plus" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <span className="plan-wide-copy">{copy.create}</span>
+              <span className="plan-mobile-copy">{copy.mobileCreate}</span>
+              <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`dropdown-chevron-icon ${isDropdownOpen ? 'is-open' : ''}`} />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="plan-create-dropdown" role="menu" aria-label="Lựa chọn loại kế hoạch tạo mới">
+                <button
+                  type="button"
+                  className="plan-dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setIsWalletModalOpen(true);
+                  }}
+                >
+                  <div className="dropdown-item-icon-tile dropdown-icon--purple" aria-hidden="true">
+                    <Icon name="creditCard" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </div>
+                  <div className="dropdown-item-info">
+                    <strong className="dropdown-item-title">Ví / Tài khoản</strong>
+                    <span className="dropdown-item-desc">Thêm ví tiền mặt, ngân hàng hoặc thẻ tín dụng</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className="plan-dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setIsBudgetModalOpen(true);
+                  }}
+                >
+                  <div className="dropdown-item-icon-tile dropdown-icon--emerald" aria-hidden="true">
+                    <NavIcon name="budgets" size={18} />
+                  </div>
+                  <div className="dropdown-item-info">
+                    <strong className="dropdown-item-title">Ngân sách</strong>
+                    <span className="dropdown-item-desc">Thiết lập hạn mức chi tiêu cho danh mục</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className="plan-dropdown-item"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setIsRecurringModalOpen(true);
+                  }}
+                >
+                  <div className="dropdown-item-icon-tile dropdown-icon--orange" aria-hidden="true">
+                    <Icon name="calendar" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </div>
+                  <div className="dropdown-item-info">
+                    <strong className="dropdown-item-title">Khoản định kỳ</strong>
+                    <span className="dropdown-item-desc">Thêm khoản chi cố định, hóa đơn hoặc trả góp</span>
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Action Button with Dropdown */}
-        <div className="page-header-actions">
-        <span className="page-guide-slot" data-guide-slot="" />
-        <div className="plan-create-menu-wrapper" ref={dropdownRef}>
-          <button
-            type="button"
-            className="plan-btn-create-primary"
-            onClick={() => setIsDropdownOpen((prev) => !prev)}
-            aria-expanded={isDropdownOpen}
-            aria-haspopup="true"
-            aria-label="Lập kế hoạch tài chính"
-          >
-            <Icon name="plus" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <span className="plan-wide-copy">{copy.create}</span>
-            <span className="plan-mobile-copy">{copy.mobileCreate}</span>
-            <Icon name="chevronDown" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`dropdown-chevron-icon ${isDropdownOpen ? 'is-open' : ''}`} />
-          </button>
-
-          {isDropdownOpen && (
-            <div className="plan-create-dropdown" role="menu" aria-label="Lựa chọn loại kế hoạch tạo mới">
-              <button
-                type="button"
-                className="plan-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  setIsWalletModalOpen(true);
-                }}
-              >
-                <div className="dropdown-item-icon-tile dropdown-icon--purple" aria-hidden="true">
-                  <Icon name="creditCard" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </div>
-                <div className="dropdown-item-info">
-                  <strong className="dropdown-item-title">Ví / Tài khoản</strong>
-                  <span className="dropdown-item-desc">Thêm ví tiền mặt, ngân hàng hoặc thẻ tín dụng</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className="plan-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  setIsBudgetModalOpen(true);
-                }}
-              >
-                <div className="dropdown-item-icon-tile dropdown-icon--emerald" aria-hidden="true">
-                  <NavIcon name="budgets" size={18} />
-                </div>
-                <div className="dropdown-item-info">
-                  <strong className="dropdown-item-title">Ngân sách</strong>
-                  <span className="dropdown-item-desc">Thiết lập hạn mức chi tiêu cho danh mục</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className="plan-dropdown-item"
-                role="menuitem"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  setIsRecurringModalOpen(true);
-                }}
-              >
-                <div className="dropdown-item-icon-tile dropdown-icon--orange" aria-hidden="true">
-                  <Icon name="calendar" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </div>
-                <div className="dropdown-item-info">
-                  <strong className="dropdown-item-title">Khoản định kỳ</strong>
-                  <span className="dropdown-item-desc">Thêm khoản chi cố định, hóa đơn hoặc trả góp</span>
-                </div>
-              </button>
-            </div>
-          )}
-        </div>
-        </div>
-      </div>
+        )}
+      />
 
       {/* ── 2. SECTION 1: CẢNH BÁO / SẮP ĐẾN HẠN (NGAY TRÊN CÙNG) ── */}
       <PlanAttentionBar alerts={activeAlerts} hasPlanData={hasPlanData} copy={copy} label={label} onOpen={setPlanSubTab} />
@@ -358,7 +356,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 1: Ví & Tài khoản ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h4 className="column-card-title">Ví & Tài khoản</h4>
+            <h2 className="column-card-title">Ví & Tài khoản</h2>
             <button
               type="button"
               className="column-card-view-all"
@@ -441,7 +439,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 2: Ngân sách tháng [X] ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h4 className="column-card-title">Ngân sách tháng {currentMonthNum}</h4>
+            <h2 className="column-card-title">Ngân sách tháng {currentMonthNum}</h2>
             <button
               type="button"
               className="column-card-view-all"
@@ -532,7 +530,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 3: Khoản định kỳ ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h4 className="column-card-title">Khoản định kỳ</h4>
+            <h2 className="column-card-title">Khoản định kỳ</h2>
             <button
               type="button"
               className="column-card-view-all"

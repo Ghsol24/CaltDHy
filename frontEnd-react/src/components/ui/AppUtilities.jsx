@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { captureLinkReturn } from '../../services/oauthFlow';
 import { GuideModal } from '../../features/guide/GuideModal';
-import { ContextualSectionGuide } from '../../features/guide/ContextualSectionGuide';
 import { AccountModal } from '../../features/account/AccountModal';
 import { OfflineSyncNotice } from '../layout/OfflineSyncNotice';
 
@@ -23,7 +22,6 @@ export const AppUtilities = React.memo(function AppUtilities() {
   return (
     <>
       {isSettingsOpen && <AccountModal />}
-      <ContextualSectionGuide />
       <GuideModal />
       <OfflineSyncNotice />
     </>

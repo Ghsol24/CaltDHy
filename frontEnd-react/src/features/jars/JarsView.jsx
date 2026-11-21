@@ -211,14 +211,12 @@ export function JarsView() {
         : 'jars-section-goals';
     // Tiêu đề trống cũng đúng tên mục menu đang sáng.
     const emptyHeading = t(jarsSubTab === 'jars' ? 'nav.jarList' : jarsSubTab === 'history' ? 'nav.history' : 'nav.goals');
+    const emptyIcon = jarsSubTab === 'jars' ? 'jarList' : jarsSubTab === 'history' ? 'jarHistory' : 'goals';
     return (
       <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
-        <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card">
-          <div className="jars-hero-top-row">
-            <div className="jars-hero-titles">
-              <h1 className="jars-hero-heading">{emptyHeading}</h1>
-            </div>
-          </div>
+        {/* Tiêu đề nằm ngoài thẻ như mọi trang; nút tạo hũ là nút của trạng thái trống. */}
+        <JarsPageHeader icon={emptyIcon} title={emptyHeading} />
+        <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card" aria-label={emptyHeading}>
           <EmptyState
             icon={<JarOutlineIcon size={36} />}
             title="Bạn chưa có hũ tiết kiệm"
@@ -305,8 +303,9 @@ export function JarsView() {
       {jarsSubTab === 'jars' && (
       <>
       <section id="jars-section-list" className="jars-list-section">
-        {/* Điện thoại giữ màn hình như cũ: dải mục ở trên đã nói tên trang, thẻ "Tạo hũ mới" nằm trong lưới. */}
-        {!isMobile && <JarsPageHeader icon="jarList" title={t('nav.jarList')} onCreate={handleCreateNew} />}
+        {/* Điện thoại: dải mục ở trên đã nói tên trang, thẻ "Tạo hũ mới" nằm trong lưới;
+            H1 vẫn còn cho trình đọc màn hình. */}
+        <JarsPageHeader icon="jarList" title={t('nav.jarList')} onCreate={isMobile ? undefined : handleCreateNew} hideTitle={isMobile} />
 
         {/* Toolbar Header */}
         <JarsListToolbar jars={jars} setCurrentPage={setCurrentPage} setSortBy={setSortBy} setViewMode={setViewMode} sortBy={sortBy} viewMode={viewMode} />

@@ -84,28 +84,6 @@
   gap: 20px;
 }
 
-.jars-hero-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.jars-hero-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.jars-hero-heading {
-  font-size: var(--font-3xl);
-  font-weight: 800;
-  color: var(--color-text, #0F172A);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
 .jars-hero-cta-btn {
   background: var(--btn-primary-bg);
   color: #FFFFFF;
@@ -774,7 +752,7 @@
   border-radius: 50%;
   background: color-mix(in srgb, var(--jar-accent-color, #5356F1) 8%, transparent);
   color: var(--jar-accent-color, #5356F1);
-  font: 800 11px/1 var(--font-money);
+  font: 800 12px/1 var(--font-money);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1138,7 +1116,7 @@
   border-radius: 9px;
   background: var(--color-surface, #FFFFFF);
   color: var(--color-text, #0F172A);
-  font: 700 13px/1 var(--font-sans);
+  font: 700 14px/1 var(--font-sans);
   cursor: pointer;
   transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
 }
@@ -1194,11 +1172,6 @@
 
   .jars-hero-metrics-grid {
     grid-template-columns: 1fr;
-  }
-
-  .jars-hero-top-row {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .jars-hero-cta-btn {
@@ -1280,7 +1253,7 @@
 }
 
 .jar-detail-stats-banner__span--text {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -1288,13 +1261,13 @@
 .jar-detail-stats-banner__span--text2 {
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
-  font-size: 24px;
+  font-size: var(--font-4xl);
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .jar-detail-stats-banner__span--text3 {
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-secondary);
 }
 
@@ -1326,7 +1299,7 @@
 .jar-detail-body__div--layout2 {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-secondary);
 }
 
@@ -1345,14 +1318,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--primary);
 }
 
 .jar-detail-roadmap-box__p--text {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-secondary);
   line-height: 1.5;
 }
@@ -1377,13 +1350,13 @@
 }
 
 .jar-detail-roadmap-box__span--text {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-secondary);
   display: block;
 }
 
 .jar-detail-roadmap-box__strong--text {
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--primary);
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
@@ -1403,7 +1376,7 @@
 
 .jar-detail-body__h4--text {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1412,7 +1385,7 @@
   padding: 20px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-base);
   background: var(--surface-subtle);
   border-radius: 10px;
 }
@@ -1436,7 +1409,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 800;
   background: var(--jar-detail-history-item__span-background);
   color: var(--jar-detail-history-item__span-color);
@@ -1448,20 +1421,20 @@
 }
 
 .jar-detail-history-item__span--text {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .jar-detail-history-item__span--text2 {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
 }
 
 .jar-detail-history-item__strong--text {
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 700;
   color: var(--jar-detail-history-item__strong-color);
 }
@@ -1522,7 +1495,7 @@
 
 .jars-list-section__p--box {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-base);
 }
 
 
@@ -1567,7 +1540,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 99px;
   padding: 2px 7px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 800;
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
@@ -1587,16 +1560,8 @@
   gap: 16px;
 }
 
-.jars-overview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
 /* Trang "Danh sách hũ" dùng cùng hàng tiêu đề (đợt 11, NAV-05) */
-.jars-list-section > .jars-overview-header {
+.jars-list-section > .jars-overview-header:not(.page-header--title-hidden) {
   margin-bottom: 16px;
 }
 
@@ -1694,7 +1659,7 @@
 }
 
 .jar-card-heading .jar-name-title {
-  font-size: var(--font-md, 16px);
+  font-size: var(--font-lg);
 }
 
 .jar-status-badge {
@@ -1720,7 +1685,7 @@
 }
 
 .jar-progress-caption {
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   color: var(--color-text-secondary, #64748B);
   font-variant-numeric: tabular-nums;
 }
@@ -1769,4 +1734,9 @@
     align-items: center;
     min-height: 44px;
   }
+}
+
+/* Trạng thái chưa có hũ: tiêu đề ngoài thẻ, sát thẻ như các trang khác (7e) */
+.jars-page-root > .jars-overview-header + .jars-first-run-card {
+  margin-top: -12px;
 }

@@ -85,26 +85,3 @@
    ONBOARDING & WELCOME COMPONENTS
    ============================================================ */
 
-/* ============================================================
-   PAGE HEADER ACTIONS — title-row buttons, incl. the page tips slot
-   ============================================================ */
-.page-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.page-header-actions--end {
-  margin-left: auto;
-}
-
-/* The tips button is portaled in only while a page has unseen tips. */
-.page-guide-slot:empty {
-  display: none;
-}
-
-.page-guide-slot {
-  display: inline-flex;
-}

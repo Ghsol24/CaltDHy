@@ -84,10 +84,10 @@ export function PlanAttentionBar({ alerts, hasPlanData, copy, label, onOpen }) {
           <Icon name="bell" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </span>
         <div className="plan-attention-heading">
-          <h3>
+          <h2>
             {copy.attention}
             {alerts.length > 0 && <span className="plan-attention-count" aria-hidden="true">{alerts.length}</span>}
-          </h3>
+          </h2>
           <span className="plan-attention-summary">
             {alerts.length > 0 ? summary : hasPlanData ? copy.noAlerts : copy.noPlanData}
           </span>
@@ -130,7 +130,7 @@ export function PlanAttentionBar({ alerts, hasPlanData, copy, label, onOpen }) {
         testId="plan-attention-sheet">
         {ALERT_TIERS.filter((tier) => counts[tier] > 0).map((tier) => (
           <section key={tier} className={`plan-attention-group is-${tier}`}>
-            <h4>{copy.tierHeadings[tier]} ({counts[tier]})</h4>
+            <h3>{copy.tierHeadings[tier]} ({counts[tier]})</h3>
             <ul>
               {alerts.filter((alert) => alert.tier === tier).map((alert) => (
                 <li key={alert.id}>

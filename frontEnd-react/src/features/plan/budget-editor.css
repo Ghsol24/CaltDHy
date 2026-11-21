@@ -135,7 +135,7 @@
 }
 
 .blimit-summary__total {
-  font-size: 26px;
+  font-size: var(--font-4xl);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -432,7 +432,7 @@
   padding: 0 12px;
   border: 0;
   border-radius: 8px;
-  font: 600 12.5px/1 var(--font-sans);
+  font: 600 12px/1 var(--font-sans);
   cursor: pointer;
 }
 
@@ -836,7 +836,7 @@ body:has(.blimit-overlay) .toast-region {
 /* "3.900.000 ₫ → 4.200.000 ₫" while the total differs from when the dialog opened (BUD-07). */
 .blimit-summary__before {
   margin-right: 6px;
-  font-size: 0.6em;
+  font-size: 0.6em; /* suffix sized to its amount — scale-exempt */
   font-weight: 600;
   color: var(--color-text-secondary, #607086);
   white-space: nowrap;

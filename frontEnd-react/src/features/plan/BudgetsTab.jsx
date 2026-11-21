@@ -9,7 +9,7 @@ import { buildBudgetModel } from '../../utils/budgetModel';
 import { BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
 import { useBudgetCopy } from './budgetCopy';
 import { useTranslation } from '../../i18n/useTranslation';
-import { PageTitleIcon } from '../../components/ui/NavIcons';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 import { Icon } from '../../components/ui/AppIcons';
 import { Button } from '../../components/ui/Button';
@@ -349,64 +349,59 @@ export function BudgetsTab() {
   return (
     <div className="budgets-tab-container" role="region" aria-label="Quản lý ngân sách">
       {/* ── Header: title, month, one action ── */}
-      <div className="budgets-page-header bdash-header">
-        <div className="page-title-lead bdash-header__title">
-          <PageTitleIcon name="budgets" />
-          <div className="budgets-header-titles">
-            <h1 className="budgets-view-title">Ngân sách</h1>
-            <p className="budgets-view-subtitle">{t('budgets.subtitle')}</p>
-          </div>
-        </div>
-
-        <div className="bdash-header__month">
-          <div className="budget-month-selector" role="group" aria-label={t('budgets.monthPicker')}
-            aria-keyshortcuts="ArrowLeft ArrowRight" onKeyDown={handleMonthKeys}>
-            <button type="button" className="month-nav-btn month-nav-btn--prev" onClick={handlePrevMonth}
-              onPointerEnter={() => warmMonths(-1)} onFocus={() => warmMonths(-1)}
-              aria-label={t('budgets.prevMonth')} title={t('budgets.prevMonth')}>
-              <Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </button>
-            <div className="month-current-display" aria-live="polite">
-              <span className={`month-icon${isSwitching ? ' is-loading' : ''}`} aria-hidden="true">
-                <Icon name="calendar" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <span className="month-spinner" />
-              </span>
-              <strong className="month-name-text">{monthDisplayLabel}</strong>
+      <PageHeader
+        icon="budgets"
+        className="budgets-page-header bdash-header"
+        title="Ngân sách"
+        titleClassName="budgets-view-title"
+        subtitle={t('budgets.subtitle')}
+        period={(
+          <div className="bdash-header__month">
+            <div className="budget-month-selector" role="group" aria-label={t('budgets.monthPicker')}
+              aria-keyshortcuts="ArrowLeft ArrowRight" onKeyDown={handleMonthKeys}>
+              <button type="button" className="month-nav-btn month-nav-btn--prev" onClick={handlePrevMonth}
+                onPointerEnter={() => warmMonths(-1)} onFocus={() => warmMonths(-1)}
+                aria-label={t('budgets.prevMonth')} title={t('budgets.prevMonth')}>
+                <Icon name="chevronLeft" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </button>
+              <div className="month-current-display" aria-live="polite">
+                <span className={`month-icon${isSwitching ? ' is-loading' : ''}`} aria-hidden="true">
+                  <Icon name="calendar" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <span className="month-spinner" />
+                </span>
+                <strong className="month-name-text">{monthDisplayLabel}</strong>
+              </div>
+              <button type="button" className="month-nav-btn month-nav-btn--next" onClick={handleNextMonth}
+                onPointerEnter={() => warmMonths(1)} onFocus={() => warmMonths(1)}
+                aria-label={t('budgets.nextMonth')} title={t('budgets.nextMonth')}>
+                <Icon name="chevronRight" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </button>
+              {/* Always rendered so the switcher never changes size; idle on the current month. */}
+              <button type="button" className={`month-today-btn${onCurrentMonth ? ' is-idle' : ''}`}
+                onClick={handleResetToCurrentMonth} aria-hidden={onCurrentMonth || undefined}
+                tabIndex={onCurrentMonth ? -1 : undefined}>
+                {t('budgets.backToCurrent')}
+              </button>
             </div>
-            <button type="button" className="month-nav-btn month-nav-btn--next" onClick={handleNextMonth}
-              onPointerEnter={() => warmMonths(1)} onFocus={() => warmMonths(1)}
-              aria-label={t('budgets.nextMonth')} title={t('budgets.nextMonth')}>
-              <Icon name="chevronRight" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </button>
-            {/* Always rendered so the switcher never changes size; idle on the current month. */}
-            <button type="button" className={`month-today-btn${onCurrentMonth ? ' is-idle' : ''}`}
-              onClick={handleResetToCurrentMonth} aria-hidden={onCurrentMonth || undefined}
-              tabIndex={onCurrentMonth ? -1 : undefined}>
-              {t('budgets.backToCurrent')}
-            </button>
           </div>
-        </div>
-
-        <div className="bdash-header__action">
-          <span className="page-guide-slot" data-guide-slot="" />
-          {isPastMonth ? (
-            <span className="bdash-closed" title={t('budgets.closedPeriodHint')}>
-              <Icon name="lock" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <span>{t('budgets.closed')}</span>
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="bdash-edit-btn"
-              onClick={() => handleOpenEdit(null)}
-              disabled={!canEdit}
-            >
-              <Icon name="pencil" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <span>{model?.hasAnyLimit ? t('budgets.editLimits') : t('budgets.setupLimits')}</span>
-            </button>
-          )}
-        </div>
-      </div>
+        )}
+        actions={isPastMonth ? (
+          <span className="bdash-closed" title={t('budgets.closedPeriodHint')}>
+            <Icon name="lock" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <span>{t('budgets.closed')}</span>
+          </span>
+        ) : (
+          <button
+            type="button"
+            className="bdash-edit-btn"
+            onClick={() => handleOpenEdit(null)}
+            disabled={!canEdit}
+          >
+            <Icon name="pencil" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <span>{model?.hasAnyLimit ? t('budgets.editLimits') : t('budgets.setupLimits')}</span>
+          </button>
+        )}
+      />
 
       <div
         ref={contentRef}
@@ -498,7 +493,7 @@ export function BudgetsTab() {
             {/* ── Categories: one table on wide screens, two-line rows on phones ── */}
             <section className="bdash-card" aria-labelledby="bdash-list-title">
               <div className="bdash-card__head">
-                <h3 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h3>
+                <h2 id="bdash-list-title" className="bdash-card__title">{t('budgets.categoriesTitle')}</h2>
                 {model && limited.length > 1 && (
                   <CustomSelect
                     className="bdash-sort"
@@ -566,10 +561,10 @@ export function BudgetsTab() {
 
                   {unbudgeted.length > 0 && (
                     <>
-                      <h4 className="bdash-group-title">
+                      <h3 className="bdash-group-title">
                         {t('budgets.unsetGroup')}
                         <span className="bdash-group-title__total">{formatCurrency(model.unbudgetedTotal)}</span>
-                      </h4>
+                      </h3>
                       <ul className="bdash-rows">
                         {unbudgeted.map((item) => (
                           <li key={item.category} className="bdash-item">

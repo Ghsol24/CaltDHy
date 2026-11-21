@@ -68,9 +68,9 @@ export function RecurringList({ currentMonthStr, displayItems, handleDelete, han
 
             <div className="recurring-row-main-col">
               <div className="recurring-title-row">
-                <h4 className="recurring-main-name" title={noteLabel ? `${item.name} — ${noteLabel}` : item.name}>
+                <h2 className="recurring-main-name" title={noteLabel ? `${item.name} — ${noteLabel}` : item.name}>
                   {item.name}
-                </h4>
+                </h2>
                 <span className="recurring-category-text">{categoryLabel}</span>
                 {isIncome && <span className="recurring-income-badge">Khoản thu</span>}
               </div>

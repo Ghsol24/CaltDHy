@@ -161,7 +161,7 @@
   justify-content: center;
   color: #FFFFFF;
   font-family: var(--font-sans);
-  font-size: 26px;
+  font-size: var(--font-4xl);
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(7, 138, 89, 0.25);
   flex-shrink: 0;
@@ -175,7 +175,7 @@
 }
 
 .account-avatar-emoji {
-  font-size: 38px;
+  font-size: var(--font-6xl);
   line-height: 1;
 }
 
@@ -1789,12 +1789,12 @@
 }
 
 .account-panel-label.account-panel-label--text {
-  font-size: 14px;
+  font-size: var(--font-base);
   color: var(--text-primary, #173126);
 }
 
 .account-card-panel__span--text {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-muted, #7E9287);
 }
 
@@ -1810,7 +1810,7 @@
 
 .account-card-panel__p--text {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-muted, #7E9287);
   line-height: 1.4;
 }
@@ -1830,14 +1830,14 @@
 }
 
 .account-card-panel-row__div--text {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--text-muted, #7E9287);
   margin-top: 2px;
 }
 
 .account-reset-dialog__p--box {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-primary, #173126);
 }
 

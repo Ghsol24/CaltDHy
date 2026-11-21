@@ -110,7 +110,7 @@
 .calt-date-weekdays span {
   padding: 4px 0;
   text-align: center;
-  font: 700 11px/1.4 var(--font-sans);
+  font: 700 12px/1.4 var(--font-sans);
   color: var(--menu-text-muted);
 }
 
@@ -126,7 +126,7 @@
   border-radius: 10px;
   background: transparent;
   color: var(--menu-text);
-  font: 500 13px/1 var(--font-sans);
+  font: 500 14px/1 var(--font-sans);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
@@ -231,7 +231,7 @@
   border-radius: 8px;
   background: transparent;
   color: var(--color-link);
-  font: 600 13px/1 var(--font-sans);
+  font: 600 14px/1 var(--font-sans);
   cursor: pointer;
 }
 

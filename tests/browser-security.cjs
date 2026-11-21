@@ -946,13 +946,9 @@ function blendCssColor(color, background) {
       }
     ]);
 
-    const guideDisclosure = mobilePage.getByRole('button', { name: 'Gợi ý cho trang chủ' });
-    await expect(guideDisclosure).toBeVisible();
-    await expect(mobilePage.locator('#contextual-section-guide')).toHaveCount(0);
-    await guideDisclosure.click();
-    await expect(mobilePage.getByRole('complementary', { name: 'Hướng dẫn sử dụng CaltDHy' })).toBeVisible();
-    await mobilePage.getByRole('button', { name: 'Đóng hướng dẫn' }).click();
-    await expect(mobilePage.locator('#contextual-section-guide')).toHaveCount(0);
+    // Nút "Gợi ý" ở hàng tiêu đề đã bỏ hẳn (đợt 11, 7e): không còn nút hay thẻ gợi ý nào.
+    await expect(mobilePage.getByRole('button', { name: /^Gợi ý cho/ })).toHaveCount(0);
+    await expect(mobilePage.locator('#contextual-section-guide, [data-guide-slot]')).toHaveCount(0);
 
     const primaryNav = mobilePage.getByRole('navigation', { name: 'Điều hướng chính trên thiết bị di động' });
     await expect(primaryNav).toBeVisible();

@@ -124,20 +124,22 @@
   --font-money: var(--font-sans);
   --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* ── Font Scale ──
-     Every font-size uses one of these. 12px is the floor for readable text;
-     only decorative glyphs and the miniature phone mock-up on the landing
-     page go smaller. Large display numbers (26–38px) stay page-specific. */
+  /* ── Font Scale (đợt 11, 7e; X-13) ──
+     Seven steps only: 12 / 14 / 16 / 18 / 20 / 24 / 32px. Body text is 14px;
+     12px is for secondary labels only. The in-between names (sm, md, 3xl, 5xl)
+     are kept as aliases so existing rules need no rename.
+     frontEnd-react/tests/type-scale.test.mjs fails on any other font size; only the landing
+     page mock-up, the signature loader and lines marked "scale-exempt" go outside. */
   --font-xs:   12px;  /* captions, badges, meta */
-  --font-sm:   13px;  /* secondary text, table cells */
+  --font-sm:   14px;  /* = base (7-step scale: 12/14/16/18/20/24/32) */
   --font-base: 14px;  /* body, controls */
-  --font-md:   15px;
+  --font-md:   16px;  /* = lg */
   --font-lg:   16px;  /* form fields on touch devices, card titles */
   --font-xl:   18px;
   --font-2xl:  20px;
-  --font-3xl:  22px;  /* page titles */
+  --font-3xl:  20px;  /* = 2xl */
   --font-4xl:  24px;
-  --font-5xl:  28px;
+  --font-5xl:  32px;  /* = 6xl */
   --font-6xl:  32px;
 
   /* ── Spacing Scale ── */

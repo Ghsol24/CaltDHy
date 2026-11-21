@@ -1,6 +1,5 @@
 import React from 'react';
-import { PageTitleIcon } from '../../../components/ui/NavIcons';
-import { Icon } from '../../../components/ui/AppIcons';
+import { JarsPageHeader } from './JarsPageHeader';
 import { formatCurrency, formatPercent } from '../../../utils/formatters';
 
 /**
@@ -10,23 +9,7 @@ import { formatCurrency, formatPercent } from '../../../utils/formatters';
 export function JarsOverviewSection({ datedJarsCount, handleCreateNew, jarsCount, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget }) {
   return (
     <section id="jars-section-goals" className="jars-overview">
-      <div className="jars-overview-header">
-        <div className="page-title-lead">
-          <PageTitleIcon name="goals" />
-          <h1 className="jars-hero-heading">Tổng quan hũ</h1>
-        </div>
-        <div className="page-header-actions">
-          <span className="page-guide-slot" data-guide-slot="" />
-          <button
-            type="button"
-            className="jars-hero-cta-btn"
-            onClick={handleCreateNew}
-          >
-            <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <span>Tạo hũ mới</span>
-          </button>
-        </div>
-      </div>
+      <JarsPageHeader icon="goals" title="Tổng quan hũ" onCreate={handleCreateNew} />
 
       <div className="jars-hero-overview-card jars-summary-card">
         <div className="jars-hero-metrics-grid">

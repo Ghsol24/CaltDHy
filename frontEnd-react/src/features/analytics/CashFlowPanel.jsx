@@ -203,7 +203,7 @@ export function CashFlowPanel({
       </div>
       {!isIncomeOnly && topDays.length > 0 && <aside className="cashflow-top-days" data-testid="cashflow-top-days"
         aria-labelledby={`${id}-top-days`}>
-        <h4 id={`${id}-top-days`}>{t('analytics.highestDays')}</h4>
+        <h3 id={`${id}-top-days`}>{t('analytics.highestDays')}</h3>
         <p>{text('topDaysPeriod', { period: periodLabel })}</p>
         <ol>
           {visibleDays.map((day, index) => <li key={day.date}>

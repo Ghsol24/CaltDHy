@@ -20,28 +20,6 @@
   gap: 20px;
 }
 
-.plan-overview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.plan-header-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.plan-overview-title {
-  font-size: var(--font-3xl);
-  font-weight: 800;
-  color: var(--color-text, var(--text-primary));
-  margin: 0;
-  line-height: 1.2;
-}
-
 /* Quick Creation Dropdown */
 .plan-create-menu-wrapper {
   position: relative;
@@ -258,12 +236,12 @@
 }
 
 .metric-sub-left {
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   color: var(--color-text-muted, #8A98A9);
 }
 
 .metric-sub-trend {
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -483,7 +461,7 @@
 }
 
 .budget-item-amounts {
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
   color: var(--color-text, var(--text-primary));
@@ -610,7 +588,7 @@
 }
 
 .recurring-amount-text {
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-text-secondary, var(--text-secondary));
   font-family: var(--font-money);

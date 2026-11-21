@@ -7,7 +7,7 @@ export function WalletRecentActivityCard({ handleGoToFullHistory, walletActiviti
     <div className="wallets-side-card">
       <div className="side-card-header">
         <div className="side-card-title-group">
-          <h3 className="side-card-title">Hoạt động gần đây</h3>
+          <h2 className="side-card-title">Hoạt động gần đây</h2>
           <div className="wallet-activity-tooltip-wrapper">
             <span
               className="wallet-activity-info-trigger"

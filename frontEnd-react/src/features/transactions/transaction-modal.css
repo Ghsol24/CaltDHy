@@ -703,7 +703,7 @@
   border-radius: 999px;
   background: transparent;
   color: var(--text-primary);
-  font: 600 13px/1 var(--font-sans);
+  font: 600 14px/1 var(--font-sans);
   cursor: pointer;
 }
 
@@ -736,7 +736,7 @@
 @media (max-width: 599px) {
   .txn-amount-input {
     padding-block: 14px;
-    font-size: 30px;
+    font-size: var(--font-6xl);
   }
 
   /* Delete shrinks to an icon-only square so Cancel/Update keep their widths. */
@@ -964,7 +964,7 @@
 }
 
 .txn-hero__sign {
-  font-size: 34px;
+  font-size: 34px; /* hero amount (13d, Phương án 3) — scale-exempt */
   font-weight: 600;
   line-height: 1;
 }
@@ -979,7 +979,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 44px;
+  font-size: 44px; /* hero amount (13d, Phương án 3) — scale-exempt */
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
