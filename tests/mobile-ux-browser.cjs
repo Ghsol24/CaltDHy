@@ -142,9 +142,15 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
         await expect(page.locator('.home-txns-view-all-btn')).toBeVisible();
         const desktop = width > 900;
         const planNavigation = desktop ? page.locator('.sidebar-nav-group').nth(1) : page.locator('.mobile-section-nav');
+        const ensureDesktopGroupOpen = async (group) => {
+          const toggle = group.locator('.sidebar-group-toggle');
+          if (await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
+        };
         await scrollDown();
-        if (desktop) await planNavigation.getByRole('button', { name: 'Tổng quan', exact: true }).click();
-        else await page.locator('.mobile-primary-nav').getByRole('button', { name: 'Kế hoạch', exact: true }).click();
+        if (desktop) {
+          await ensureDesktopGroupOpen(planNavigation);
+          await planNavigation.getByRole('button', { name: 'Tổng quan', exact: true }).click();
+        } else await page.locator('.mobile-primary-nav').getByRole('button', { name: 'Kế hoạch', exact: true }).click();
         await page.waitForURL('**/spending/plan/overview');
         layouts.push({ theme, width, route: 'plan/overview', ...await readableRouteHeading('.plan-overview-title', `${theme}/${width}/overview`, '.plan-overview-header') });
         for (const [tab, name, selector, header] of [
@@ -160,8 +166,11 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
           if (saveEvidence && tab !== 'budgets') await page.screenshot({ path: path.join(evidence, `route-${tab}-${theme}-${width}.png`) });
         }
         await scrollDown();
-        if (desktop) await page.locator('.sidebar-nav-group').nth(2).getByRole('button', { name: 'Lịch sử giao dịch', exact: true }).click();
-        else {
+        if (desktop) {
+          const analyticsGroup = page.locator('.sidebar-nav-group').nth(2);
+          await ensureDesktopGroupOpen(analyticsGroup);
+          await analyticsGroup.getByRole('button', { name: 'Lịch sử giao dịch', exact: true }).click();
+        } else {
           await page.locator('.mobile-primary-nav').getByRole('button', { name: 'Phân tích', exact: true }).click();
           await page.locator('.mobile-section-nav').getByRole('button', { name: 'Lịch sử giao dịch', exact: true }).click();
         }

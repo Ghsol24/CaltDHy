@@ -312,7 +312,7 @@ html.is-resizing-sidebar .app-sidebar-nav {
 .sidebar-group-toggle {
   flex: 1;
   min-width: 0;
-  height: 28px;
+  min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -334,7 +334,7 @@ html.is-resizing-sidebar .app-sidebar-nav {
 .sidebar-group-chevron {
   flex-shrink: 0;
   color: var(--color-text-secondary, var(--text-secondary));
-  transition: transform var(--dur-mid) ease, color var(--dur-fast) ease;
+  transition: transform var(--dur-mid) var(--ease-smooth), color var(--dur-fast) ease;
 }
 
 .sidebar-group-toggle:hover .sidebar-group-chevron {
@@ -351,15 +351,25 @@ html.is-resizing-sidebar .app-sidebar-nav {
   color: var(--color-active-text);
 }
 
-/* Height animates by moving the single grid row between 1fr and 0fr. */
+/* Height animates by moving the single grid row between 1fr and 0fr.
+   Visibility flips discretely at the end of collapse so hidden items stay
+   out of hit-testing and assistive tech once folded away. */
 .sidebar-group-collapse {
   display: grid;
   grid-template-rows: 1fr;
-  transition: grid-template-rows var(--dur-mid) ease;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--dur-mid) var(--ease-smooth),
+    opacity var(--dur-fast) ease,
+    visibility var(--dur-mid);
+  transition-behavior: allow-discrete;
 }
 
 .sidebar-nav-group.is-group-collapsed .sidebar-group-collapse {
   grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .sidebar-group-collapse > .sidebar-group-items {

@@ -361,6 +361,95 @@ check('Goals page on phones: compact list on Tổng quan hũ, full history page 
   await context.close();
 });
 
+check('Desktop sidebar groups start collapsed, preview on hover, collapse on mouse leave, and stay fixed only when clicked', async ({ browser, server }) => {
+  const { context, page, errors, open } = await newPage(browser, server, { theme: 'green', width: 1440 });
+  await open('/spending/analytics/overview');
+
+  const planGroup = page.locator('.sidebar-nav-group').nth(1);
+  const analyticsGroup = page.locator('.sidebar-nav-group').nth(2);
+  const jarsGroup = page.locator('.sidebar-nav-group').nth(3);
+  const planToggle = planGroup.locator('.sidebar-group-toggle');
+  const analyticsToggle = analyticsGroup.locator('.sidebar-group-toggle');
+  const jarsToggle = jarsGroup.locator('.sidebar-group-toggle');
+
+  // 1. Default state: every group starts collapsed (even the group holding the active page).
+  await expect(planGroup).toHaveClass(/is-group-collapsed/);
+  await expect(analyticsGroup).toHaveClass(/is-group-collapsed/);
+  await expect(analyticsGroup).toHaveClass(/has-active-item/);
+  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(analyticsToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
+
+  // 2. Hover into "Kế hoạch" expands it temporarily without pinning.
+  await planToggle.hover();
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(planGroup).not.toHaveClass(/is-group-collapsed/);
+  await expect(planGroup).toHaveClass(/is-hover-open/);
+  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
+
+  // 3. Moving mouse onto a sub-item keeps it open; clicking navigates without pinning.
+  const walletsBtn = planGroup.getByRole('button', { name: 'Ví & Tài khoản', exact: true });
+  await walletsBtn.hover();
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await walletsBtn.click();
+  await page.waitForURL('**/spending/plan/wallets');
+  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
+
+  // 4. Moving mouse away from the sidebar collapses the unpinned group back.
+  await page.mouse.move(720, 300);
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(planGroup).toHaveClass(/is-group-collapsed/);
+  await expect(planGroup).toHaveClass(/has-active-item/);
+
+  // 5. Hovering then clicking the group header pins it open; leaving the sidebar keeps it open.
+  await planToggle.hover();
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await planToggle.click();
+  await expect(planGroup).toHaveAttribute('data-pinned', 'true');
+  await expect(planGroup).toHaveClass(/is-group-pinned/);
+  await page.mouse.move(720, 300);
+  await page.waitForTimeout(220);
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(planGroup).not.toHaveClass(/is-group-collapsed/);
+
+  // 6. Reload preserves the pinned group while others remain collapsed.
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(planGroup).toHaveAttribute('data-pinned', 'true');
+  await expect(analyticsToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
+
+  // 7. Clicking a pinned group header while hovering over it immediately unpins and collapses it.
+  await planToggle.hover();
+  await planToggle.click();
+  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(planGroup).toHaveClass(/is-group-collapsed/);
+  // Staying on the header must not immediately bounce open again.
+  await page.waitForTimeout(180);
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  // Leaving and re-entering re-enables hover preview.
+  await page.mouse.move(720, 300);
+  await page.waitForTimeout(60);
+  await planToggle.hover();
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await page.mouse.move(720, 300);
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+
+  // 8. Keyboard Enter toggles pinned open/closed cleanly.
+  await jarsToggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(jarsGroup).toHaveAttribute('data-pinned', 'true');
+  await page.keyboard.press('Enter');
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(jarsGroup).not.toHaveAttribute('data-pinned', 'true');
+
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 module.exports = { check, checks, newPage };
 
 if (require.main === module) {
