@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatCurrency, formatDate, formatRelativeDate } from '../../utils/formatters';
@@ -64,9 +64,33 @@ export function TransactionRows({ transactions, onEdit, onManage, showDate = fal
   </div>;
 }
 
+/**
+ * Đánh dấu `data-stuck` trên tiêu đề ngày đang dính dưới viên kính (đợt 15b). Trên máy tính
+ * không còn topbar che phía trên, nên transaction-item.css dùng dấu này để che khoảng trống
+ * phía trên tiêu đề — các dòng đã cuộn qua không lộ lên trên nó.
+ */
+function useStuckDayHeaders(ref, transactions) {
+  useEffect(() => {
+    const headers = [...(ref.current?.querySelectorAll('.txn-day__header') || [])];
+    if (!headers.length || typeof IntersectionObserver === 'undefined') return undefined;
+    const top = parseFloat(getComputedStyle(headers[0]).top) || 0;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const stuck = entry.intersectionRatio < 1 && entry.boundingClientRect.top <= top + 1;
+        if (stuck) entry.target.dataset.stuck = '';
+        else delete entry.target.dataset.stuck;
+      }
+    }, { rootMargin: `-${Math.ceil(top) + 1}px 0px 0px 0px`, threshold: [0, 1] });
+    headers.forEach((header) => observer.observe(header));
+    return () => observer.disconnect();
+  }, [ref, transactions]);
+}
+
 /** History: transactions grouped by day, each day with its net total, built on the shared row. */
 function LedgerDays({ transactions, onEdit, onManage, walletNames }) {
   const { t, label, lang } = useTranslation();
+  const tableRef = useRef(null);
+  useStuckDayHeaders(tableRef, transactions);
   const groups = [];
   for (const transaction of transactions) {
     const last = groups[groups.length - 1];
@@ -77,7 +101,7 @@ function LedgerDays({ transactions, onEdit, onManage, walletNames }) {
   const netOf = (rows) => rows.reduce((sum, row) => (row.type === 'income' ? sum + (Number(row.amount) || 0)
     : row.type === 'expense' ? sum - transactionTotal(row) : sum), 0);
 
-  return <div className="transaction-ledger-table">
+  return <div className="transaction-ledger-table" ref={tableRef}>
     {groups.map((group) => {
       const relative = formatRelativeDate(group.date, { locale: lang });
       const short = formatDate(group.date, 'short', { locale: lang });

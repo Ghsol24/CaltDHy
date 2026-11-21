@@ -632,9 +632,9 @@
   background: var(--menu-item-hover-bg);
 }
 
+/* Mục đang chọn: nền tint + dấu ✓ là đủ, không thêm viền (đợt 15a). */
 .txn-cat-option.is-selected {
   background: color-mix(in srgb, var(--color-action-bg) 12%, transparent);
-  box-shadow: inset 0 0 0 1.5px var(--color-action-bg);
 }
 
 .txn-cat-option:focus-visible,
@@ -986,6 +986,12 @@
   text-align: center;
 }
 
+/* Focus của số tiền là gạch chân của .txn-hero__amount, không phải vòng sáng chung
+   của base.css quanh ô (đợt 15a). */
+.txn-hero__input:focus-visible {
+  box-shadow: none;
+}
+
 .txn-hero__input::placeholder {
   color: var(--color-text-muted);
 }
@@ -1121,8 +1127,17 @@
   border-radius: 0 0 11px 11px;
 }
 
+/* Dòng đang được chọn (chuột hay bàn phím): nền nhạt + icon/nhãn màu link — giống
+   trạng thái "đang mở". Không vẽ khung/vòng nào trong dòng (đợt 15a). */
 .txn-row:focus-within {
   background: var(--menu-item-hover-bg);
+}
+
+.txn-row:focus-within .txn-row__icon,
+.txn-row:focus-within .txn-row__label,
+.txn-row:focus-within .custom-wallet-row__icon,
+.txn-row:focus-within .custom-wallet-row__label {
+  color: var(--color-link);
 }
 
 .txn-row__icon,
@@ -1189,10 +1204,22 @@
   color: var(--color-link);
 }
 
-.txn-row__trigger:focus-visible,
-.custom-wallet-dropdown--row .custom-wallet-trigger:focus-visible {
-  outline: 2px solid var(--color-link);
-  outline-offset: -2px;
+/* Vòng outline chung (base.css, !important) nhường cho nền dòng + nhãn màu link ở trên. */
+.txn-row .txn-row__trigger:focus-visible,
+.txn-row .custom-wallet-dropdown--row .custom-wallet-trigger:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+}
+
+/* Tài khoản đang mở: như Danh mục / Ngày — chữ màu link, không vòng sáng quanh dòng. */
+.txn-row--wallet .custom-wallet-dropdown--row.is-open .custom-wallet-trigger {
+  box-shadow: none;
+}
+
+.txn-row--wallet .custom-wallet-dropdown--row.is-open .custom-wallet-row__icon,
+.txn-row--wallet .custom-wallet-dropdown--row.is-open .custom-wallet-row__label,
+.txn-row--wallet .custom-wallet-dropdown--row.is-open .custom-wallet-row__value {
+  color: var(--color-link);
 }
 
 .txn-row__trigger[aria-invalid="true"] {
@@ -1435,6 +1462,11 @@
 
 .txn-row-popover .txn-sheet-search {
   margin-bottom: 6px;
+}
+
+/* Ô tìm tự nhận focus khi popover mở: chỉ đổi màu viền, không thêm vòng 3px. */
+.txn-row-popover .txn-sheet-search .txn-input:focus {
+  box-shadow: none;
 }
 
 .txn-row-popover .txn-cat-options {

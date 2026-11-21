@@ -138,12 +138,13 @@
 }
 .txn-item:hover .txn-item__locked { display: inline-flex; }
 
-/* History: transactions grouped by day, the day header stays under the page header. */
+/* History: transactions grouped by day, the day header stays under the topbar (phone)
+   or the floating glass pill (computer, đợt 15b — --shell-sticky-top). */
 .txn-day { position: relative; }
 .txn-day + .txn-day { border-top: 1px solid var(--color-border, var(--border)); }
 .txn-day__header {
   position: sticky;
-  top: 72px;
+  top: var(--shell-sticky-top, 72px);
   z-index: 2;
   display: flex;
   align-items: center;
@@ -155,6 +156,21 @@
   color: var(--color-text-secondary, var(--text-secondary));
   font-size: var(--font-sm);
   font-weight: 600;
+}
+/* Máy tính: không còn topbar che phía trên, nên khi tiêu đề đang dính (data-stuck, do
+   TransactionRows.jsx đặt) thì phủ màu nền thẻ lên khoảng trống phía trên nó. */
+@media (min-width: 901px) {
+  .txn-day__header[data-stuck]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: var(--shell-sticky-top);
+    /* Thẻ Lịch sử hơi trong suốt (--history-panel): phủ nó lên nền tấm để dải che đặc hẳn. */
+    background: linear-gradient(var(--history-panel, var(--color-surface)), var(--history-panel, var(--color-surface))), var(--shell-panel-bg);
+    pointer-events: none;
+  }
 }
 .txn-day__total { font-family: var(--font-money); font-variant-numeric: tabular-nums; color: var(--color-text); font-weight: 700; white-space: nowrap; }
 

@@ -170,7 +170,9 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
 
     const findTarget = () => {
       const cube = cubeNode;
-      const icon = document.querySelector('.topbar .tb-logo-link .tb-logo-icon');
+      // Logo đang hiển thị: trong sidebar trên máy tính, trên topbar ở điện thoại (đợt 15b).
+      const icon = [...document.querySelectorAll('[data-brand-mark]')]
+        .find((node) => node.getClientRects().length > 0);
       if (!cube || !icon) return;
       observer?.disconnect();
       window.clearTimeout(fallbackTimer);

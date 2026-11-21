@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { NavIcon } from '../ui/NavIcons';
@@ -180,40 +181,40 @@ export function SidebarNav() {
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
       aria-label={t('nav.mainNavigation')}
     >
-      {/* Collapsed Top Toggle Button */}
-      {isSidebarCollapsed && (
-        <div className="sidebar-collapsed-header">
-          <button
-            type="button"
-            className="sidebar-hamburger-btn"
-            onClick={toggleSidebar}
-            aria-label={t('nav.expand')}
-            title={t('nav.expand')}
-          >
-            <HamburgerIcon size={18} />
-          </button>
-        </div>
-      )}
+      {/* Logo + nút thu gọn ở đầu sidebar: máy tính không còn topbar (đợt 15b). Thu gọn thì
+          chỉ còn ô "C", nút mở rộng nằm ngay dưới. */}
+      <div className="sidebar-brand">
+        <Link
+          to="/spending/home"
+          className="sidebar-brand__link"
+          aria-label={t('topbar.home')}
+          title={isSidebarCollapsed ? t('topbar.home') : undefined}
+          onClick={() => navigateTo('home')}
+        >
+          <span className="tb-logo-icon" data-brand-mark="">C</span>
+          {!isSidebarCollapsed && (
+            <span className="tb-logo">
+              Calt<span className="tb-logo-accent">D</span>Hy
+            </span>
+          )}
+        </Link>
+        <button
+          type="button"
+          className="sidebar-hamburger-btn"
+          onClick={toggleSidebar}
+          aria-label={isSidebarCollapsed ? t('nav.expand') : t('nav.collapse')}
+          title={isSidebarCollapsed ? t('nav.expand') : t('nav.collapse')}
+        >
+          <HamburgerIcon size={17} />
+        </button>
+      </div>
 
       <div className="sidebar-scrollable-content">
-        {navGroups.map((group, gIdx) => {
+        {navGroups.map((group) => {
           if (group.standalone && !isSidebarCollapsed) {
             return (
               <div key={group.id} className="sidebar-nav-group sidebar-nav-group--standalone">
-                <div className="sidebar-standalone-row">
-                  <div className="sidebar-group-items">{group.items.map(renderItem)}</div>
-                  {gIdx === 0 && (
-                    <button
-                      type="button"
-                      className="sidebar-hamburger-btn"
-                      onClick={toggleSidebar}
-                      aria-label={t('nav.collapse')}
-                      title={t('nav.collapse')}
-                    >
-                      <HamburgerIcon size={17} />
-                    </button>
-                  )}
-                </div>
+                <div className="sidebar-group-items">{group.items.map(renderItem)}</div>
               </div>
             );
           }
@@ -236,23 +237,9 @@ export function SidebarNav() {
                     aria-expanded={isGroupOpen}
                     aria-controls={itemsId}
                   >
-                    <span className="sidebar-group-label">
-                      <span className="sidebar-group-dot" aria-hidden="true" />
-                      <span>{group.groupLabel}</span>
-                    </span>
+                    <span className="sidebar-group-label">{group.groupLabel}</span>
                     <Icon name="chevronDownAlt" className="sidebar-group-chevron" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
                   </button>
-                  {gIdx === 0 && (
-                    <button
-                      type="button"
-                      className="sidebar-hamburger-btn"
-                      onClick={toggleSidebar}
-                      aria-label={t('nav.collapse')}
-                      title={t('nav.collapse')}
-                    >
-                      <HamburgerIcon size={17} />
-                    </button>
-                  )}
                 </div>
               )}
               <div id={itemsId} className="sidebar-group-collapse" inert={!isGroupOpen}>

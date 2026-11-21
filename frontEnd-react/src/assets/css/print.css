@@ -22,9 +22,20 @@
     min-height: auto !important;
   }
 
+  .app-column,
   .app-main {
     padding: 0 !important;
     background: transparent !important;
+  }
+
+  .app-column {
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .app-shell {
+    background: #FFFFFF !important;
   }
 
   .app-container {

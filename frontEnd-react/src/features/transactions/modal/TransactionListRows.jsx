@@ -214,7 +214,7 @@ export function TransactionDateRow({ date, setDate, maxDate, invalid, describedB
 
   return (
     <div className={`txn-row-group txn-row-group--date${open ? ' is-open' : ''}`} ref={groupRef}>
-      <div className="txn-row txn-row--date">
+      <div className="txn-row txn-row--date input-shell">
         <span className="txn-row__icon" aria-hidden="true">
           <Icon name="calendarCompact" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </span>
@@ -261,7 +261,7 @@ export function TransactionDateRow({ date, setDate, maxDate, invalid, describedB
 
 export function TransactionNoteRow({ desc, setDesc, copy }) {
   return (
-    <div className="txn-row txn-row--note">
+    <div className="txn-row txn-row--note input-shell">
       <span className="txn-row__icon" aria-hidden="true">
         <Icon name="pencil" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </span>
