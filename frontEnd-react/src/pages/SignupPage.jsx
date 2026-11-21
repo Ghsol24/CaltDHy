@@ -2,13 +2,14 @@ import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
-import { authService } from '../services/authService';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import { Icon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 import { SocialLogin } from '../components/auth/SocialLogin';
 import { LegalLinks } from '../components/auth/LegalLinks';
+import { getCachedOAuthProviders, hasFreshOAuthProviders, loadOAuthProviders } from '../services/oauthFlow';
+import { getCachedRegistrationStatus, loadRegistrationStatus, prefetchLoginRoute } from '../services/authBootstrap';
 import './auth.css';
 
 function getPasswordStrength(pw, t) {
@@ -34,19 +35,62 @@ export const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [registrationStatus, setRegistrationStatus] = useState('checking');
+  const [registrationStatus, setRegistrationStatus] = useState(() => getCachedRegistrationStatus() || 'checking');
+  const [socialProviders, setSocialProviders] = useState(() => getCachedOAuthProviders());
+  const [ready, setReady] = useState(
+    () => (getCachedRegistrationStatus() !== null && getCachedOAuthProviders() !== null) || navigator.onLine === false,
+  );
 
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;
-    authService.registration().then(data => {
-      if (active) setRegistrationStatus(data.inviteOnly === true ? 'invite' : 'open');
-    }).catch(() => {
-      if (active) setRegistrationStatus('error');
+    const needsFreshRegistration = getCachedRegistrationStatus() === null;
+    const needsFreshProviders = !hasFreshOAuthProviders();
+
+    if (!needsFreshRegistration && !needsFreshProviders) {
+      setRegistrationStatus(getCachedRegistrationStatus());
+      setSocialProviders(getCachedOAuthProviders() || []);
+      setReady(true);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (active) setReady(true);
+    }, 450);
+
+    const tasks = [];
+    if (needsFreshRegistration) {
+      tasks.push(
+        loadRegistrationStatus()
+          .then((status) => {
+            if (active) setRegistrationStatus(status);
+          })
+          .catch(() => {
+            if (active) setRegistrationStatus('error');
+          }),
+      );
+    }
+    if (needsFreshProviders) {
+      tasks.push(
+        loadOAuthProviders()
+          .then((list) => {
+            if (active) setSocialProviders(list);
+          })
+          .catch(() => { /* keep cached or empty social providers */ }),
+      );
+    }
+
+    Promise.allSettled(tasks).finally(() => {
+      window.clearTimeout(timer);
+      if (active) setReady(true);
     });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => { if (invitedEmail) setEmail(invitedEmail); }, [invitedEmail]);
@@ -85,6 +129,10 @@ export const SignupPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!ready) {
+    return <div className="auth-page" aria-busy="true" />;
+  }
 
   return (
     <div className="auth-page">
@@ -164,7 +212,7 @@ export const SignupPage = () => {
           )}
           {/* A new Google/Facebook account follows the same rule as the form: open sign-up, or a valid invite. */}
           {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
-            <SocialLogin inviteToken={validInviteLink ? inviteToken : ''} />
+            <SocialLogin inviteToken={validInviteLink ? inviteToken : ''} providers={socialProviders || []} />
           )}
 
           <div className="divider">
@@ -178,7 +226,7 @@ export const SignupPage = () => {
 
           <p className="mod-footer">
             {t('auth.haveAccount')}{' '}
-            <Link to="/login" className="lnk">
+            <Link to="/login" className="lnk" onPointerEnter={prefetchLoginRoute} onFocus={prefetchLoginRoute}>
               {t('auth.login')}
             </Link>
           </p>

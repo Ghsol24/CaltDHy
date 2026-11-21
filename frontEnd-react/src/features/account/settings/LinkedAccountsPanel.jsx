@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../stores/useAuthStore';
-import { oauthService, takeLinkReturn } from '../../../services/oauthFlow';
+import {
+  getCachedOAuthProviders,
+  KNOWN_OAUTH_PROVIDERS,
+  loadOAuthProviders,
+  oauthService,
+  takeLinkReturn,
+} from '../../../services/oauthFlow';
 import { BrandLogo } from '../../../components/auth/BrandLogo';
 import { Button } from '../../../components/ui/Button';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { getUserErrorMessage } from '../../../utils/userErrors';
 import { getLinkedAccountsCopy, linkErrorText, PROVIDER_NAMES } from './linkedAccountsCopy';
 import './security-extras.css';
-
-const KNOWN = ['google', 'facebook'];
 
 /**
  * Settings > Data & privacy: link or unlink Google / Facebook for the signed-in account.
@@ -21,7 +25,7 @@ export function LinkedAccountsPanel() {
   const user = useAuthStore((state) => state.user);
   const hasPassword = user?.hasPassword !== false;
   const linked = Array.isArray(user?.linkedProviders) ? user.linkedProviders : [];
-  const [enabled, setEnabled] = useState(null); // null while loading
+  const [enabled, setEnabled] = useState(() => getCachedOAuthProviders()); // null while loading
   const [action, setAction] = useState(null); // { provider, kind: 'link' | 'unlink' }
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -36,19 +40,20 @@ export function LinkedAccountsPanel() {
 
   useEffect(() => {
     let active = true;
-    oauthService.providers().then((data) => {
-      if (!active) return;
-      // A provider only finishes when the browser is at the address it returns to.
-      const usable = data.origin === window.location.origin && Array.isArray(data.providers) ? data.providers : [];
-      setEnabled(KNOWN.filter((provider) => usable.includes(provider)));
-    }).catch(() => { if (active) setEnabled([]); });
+    loadOAuthProviders()
+      .then((list) => {
+        if (active) setEnabled(list);
+      })
+      .catch(() => {
+        if (active) setEnabled((prev) => prev ?? []);
+      });
     const restore = () => setBusy(false);
     window.addEventListener('pageshow', restore);
     return () => { active = false; window.removeEventListener('pageshow', restore); };
   }, []);
 
   // Show providers that can be linked here, plus any already linked (so they can always be removed).
-  const rows = enabled === null ? [] : KNOWN.filter((provider) => enabled.includes(provider) || linked.includes(provider));
+  const rows = enabled === null ? [] : KNOWN_OAUTH_PROVIDERS.filter((provider) => enabled.includes(provider) || linked.includes(provider));
   const isLast = (provider) => !hasPassword && linked.length === 1 && linked[0] === provider;
   const open = (provider, kind) => { setAction({ provider, kind }); setPassword(''); setError(''); setNotice(null); };
   const close = () => { setAction(null); setPassword(''); setError(''); };
