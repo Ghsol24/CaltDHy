@@ -8,6 +8,8 @@ import { useLangStore } from '../stores/useLangStore';
 import { useCurrencyStore } from '../stores/useCurrencyStore';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { translate } from '../i18n/translations';
+import { prefetchOAuthProviders } from '../services/oauthFlow';
+import { prefetchLoginRoute, prefetchRegistrationStatus, prefetchSignupRoute } from '../services/authBootstrap';
 import './landing.css';
 import { Icon } from '../components/ui/AppIcons';
 
@@ -37,6 +39,24 @@ export function LandingPage() {
   const handleSetLang = (newLang) => {
     setLang(newLang);
   };
+
+  // Warm OAuth providers, registration mode, and the login chunk before the user clicks CTA.
+  useEffect(() => {
+    prefetchOAuthProviders();
+    prefetchRegistrationStatus();
+    if (typeof window.requestIdleCallback === 'function') {
+      const idleId = window.requestIdleCallback(() => {
+        prefetchLoginRoute();
+      });
+      return () => {
+        window.cancelIdleCallback?.(idleId);
+      };
+    }
+    const timer = window.setTimeout(() => {
+      prefetchLoginRoute();
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // Close modal on Escape
   useEffect(() => {
@@ -154,11 +174,13 @@ export function LandingPage() {
 
           {/* PRIMARY CTAs */}
           <div className="cta-row">
-            <Link to="/login" className="btn-login" role="button" onClick={handleButtonClick}>
+            <Link to="/login" className="btn-login" role="button" onClick={handleButtonClick}
+              onPointerEnter={prefetchLoginRoute} onFocus={prefetchLoginRoute} onTouchStart={prefetchLoginRoute}>
               <Icon name="logIn" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
               <span>{t.loginBtn}</span>
             </Link>
-            <Link to="/signup" className="btn-signup" role="button" onClick={handleButtonClick}>
+            <Link to="/signup" className="btn-signup" role="button" onClick={handleButtonClick}
+              onPointerEnter={prefetchSignupRoute} onFocus={prefetchSignupRoute} onTouchStart={prefetchSignupRoute}>
               {t.signupBtn}
             </Link>
           </div>

@@ -15,5 +15,5 @@ export function BrandLogo({ provider, variant = 'primary', size = 20 }) {
   const src = SOURCES[provider]?.[variant];
   if (!src) return null;
   return <img className={`brand-logo brand-logo--${provider}`} src={src} alt="" aria-hidden="true"
-    height={size} style={{ height: size, width: 'auto' }} draggable="false" />;
+    width={size} height={size} style={{ height: size, width: 'auto' }} draggable="false" />;
 }

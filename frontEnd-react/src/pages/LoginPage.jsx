@@ -11,6 +11,8 @@ import { SocialLogin } from '../components/auth/SocialLogin';
 import { LegalLinks } from '../components/auth/LegalLinks';
 import { OAuthConfirm } from '../components/auth/OAuthConfirm';
 import { getSocialCopy, socialErrorText } from '../components/auth/socialLoginCopy';
+import { getCachedOAuthProviders, hasFreshOAuthProviders, loadOAuthProviders } from '../services/oauthFlow';
+import { prefetchSignupRoute } from '../services/authBootstrap';
 import './auth.css';
 
 const OFFLINE_COPY = {
@@ -51,12 +53,45 @@ export const LoginPage = () => {
   const [needsCode, setNeedsCode] = useState(false);
   const [totpCode, setTotpCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [socialProviders, setSocialProviders] = useState(() => getCachedOAuthProviders());
+  const [providersSettled, setProvidersSettled] = useState(
+    () => getCachedOAuthProviders() !== null || navigator.onLine === false,
+  );
 
   const login = useAuthStore((state) => state.login);
   const beginSignature = useSignatureLoginStore((state) => state.begin);
   const succeedSignature = useSignatureLoginStore((state) => state.succeed);
   const failSignature = useSignatureLoginStore((state) => state.fail);
   const attemptRef = useRef(null);
+
+  useEffect(() => {
+    if (oauthStep === 'link' || oauthStep === 'verify' || oauthStep === 'done') return undefined;
+    if (hasFreshOAuthProviders()) {
+      setSocialProviders(getCachedOAuthProviders());
+      setProvidersSettled(true);
+      return undefined;
+    }
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (active) setProvidersSettled(true);
+    }, 450);
+    loadOAuthProviders()
+      .then((list) => {
+        if (!active) return;
+        setSocialProviders(list);
+        setProvidersSettled(true);
+      })
+      .catch(() => {
+        if (active) setProvidersSettled(true);
+      })
+      .finally(() => {
+        window.clearTimeout(timer);
+      });
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [oauthStep]);
 
   useEffect(() => () => {
     const attempt = attemptRef.current;
@@ -135,6 +170,9 @@ export const LoginPage = () => {
         <p className="oauth-note" role="status" aria-live="polite">{socialCopy.finishing}</p>
       </IndustrialPanel></main></div>
     );
+  }
+  if (!providersSettled) {
+    return <div className="auth-page" aria-busy="true" />;
   }
 
   return (
@@ -215,7 +253,7 @@ export const LoginPage = () => {
 
           </form>
 
-          <SocialLogin />
+          <SocialLogin providers={socialProviders || []} />
 
           <div className="divider">
             <span>{t('auth.or')}</span>
@@ -228,7 +266,7 @@ export const LoginPage = () => {
 
           <p className="mod-footer">
             {t('auth.noAccount')}{' '}
-            <Link to="/signup" className="lnk">
+            <Link to="/signup" className="lnk" onPointerEnter={prefetchSignupRoute} onFocus={prefetchSignupRoute}>
               {t('auth.signup')}
             </Link>
           </p>
