@@ -66,12 +66,21 @@ export function describeBudgetLine({ copy, formatMoney, baseline, category, hasD
 /** Số chip danh mục nhanh dưới số tiền (bố cục máy tính "Phương án 3"). */
 export const QUICK_CHIP_COUNT = 4;
 
+/** Chip nhanh chỉ đếm số lần dùng trong chừng này ngày gần nhất, để danh mục bỏ lâu tự rời hàng chip. */
+export const QUICK_CHIP_WINDOW_DAYS = 90;
+
+function isoDaysAgo(days, now = new Date()) {
+  const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 /**
- * Chip nhanh: các danh mục dùng nhiều nhất (rồi gần nhất) trong những giao dịch tự ghi cùng loại,
- * thiếu thì lấy theo thứ tự danh sách. Danh mục đang chọn luôn có chip (thay chip cuối nếu cần),
- * nên chọn từ danh sách đầy đủ vẫn thấy ngay trên hàng chip.
+ * Chip nhanh: các danh mục dùng nhiều nhất trong QUICK_CHIP_WINDOW_DAYS ngày gần nhất (rồi dùng gần
+ * nhất) trong những giao dịch tự ghi cùng loại, thiếu thì lấy theo thứ tự danh sách. Danh mục đang
+ * chọn luôn có chip (thay chip cuối nếu cần), nên chọn từ danh sách đầy đủ vẫn thấy ngay trên hàng chip.
  */
-export function pickQuickCategories(categories, transactions, type, selectedName, count = QUICK_CHIP_COUNT) {
+export function pickQuickCategories(categories, transactions, type, selectedName, count = QUICK_CHIP_COUNT, now = new Date()) {
+  const since = isoDaysAgo(QUICK_CHIP_WINDOW_DAYS, now);
   const byKey = new Map(categories.map((cat) => [cat.name.toLowerCase(), cat]));
   const stats = new Map();
   for (const txn of transactions || []) {
@@ -79,8 +88,9 @@ export function pickQuickCategories(categories, transactions, type, selectedName
     const key = String(txn.category).toLowerCase();
     if (!byKey.has(key)) continue;
     const entry = stats.get(key) || { count: 0, last: '' };
-    entry.count += 1;
-    if (String(txn.date) > entry.last) entry.last = String(txn.date);
+    const date = String(txn.date || '');
+    if (date >= since) entry.count += 1;
+    if (date > entry.last) entry.last = date;
     stats.set(key, entry);
   }
   const ranked = categories
@@ -94,4 +104,13 @@ export function pickQuickCategories(categories, transactions, type, selectedName
     visible[visible.length - 1] = byKey.get(selected);
   }
   return visible;
+}
+
+/**
+ * Danh mục chọn sẵn khi mở form hay đổi loại: điện thoại chỉ thấy danh mục đang chọn nên lấy mục dùng
+ * gần nhất; máy tính lấy chip nhanh đứng đầu (dùng nhiều nhất), để mục chọn sẵn trùng chip đầu tiên.
+ */
+export function defaultCategoryName(transactions, type, categories, isPhone) {
+  if (isPhone) return recentCategoryName(transactions, type, categories);
+  return pickQuickCategories(categories, transactions, type, '', 1)[0]?.name || '';
 }

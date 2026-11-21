@@ -70,8 +70,21 @@ test('quick chips rank by how often a category is used, then by recency, then by
     { type: 'expense', category: 'Giải trí', date: '2026-11-20', installmentId: 'i1' },
     { type: 'income', category: 'Ăn uống', date: '2026-11-20' }
   ];
-  assert.deepEqual(pickQuickCategories(cats, txns, 'expense', 'Cà phê').map((c) => c.name),
+  assert.deepEqual(pickQuickCategories(cats, txns, 'expense', 'Cà phê', 4, new Date(2026, 10, 20)).map((c) => c.name),
     ['Cà phê', 'Di chuyển', 'Mua sắm', 'Ăn uống']);
+});
+
+test('quick chips only count uses from the last 90 days; older uses still beat never-used ones', async () => {
+  const { pickQuickCategories } = await import('../src/features/transactions/modal/transactionModalHelpers.js');
+  const cats = ['Ăn uống', 'Mua sắm', 'Cà phê', 'Di chuyển'].map((name) => ({ name }));
+  const txns = [
+    { type: 'expense', category: 'Mua sắm', date: '2026-05-02' },
+    { type: 'expense', category: 'Mua sắm', date: '2026-05-01' },
+    { type: 'expense', category: 'Mua sắm', date: '2026-04-30' },
+    { type: 'expense', category: 'Cà phê', date: '2026-11-19' }
+  ];
+  assert.deepEqual(pickQuickCategories(cats, txns, 'expense', '', 3, new Date(2026, 10, 20)).map((c) => c.name),
+    ['Cà phê', 'Mua sắm', 'Ăn uống']);
 });
 
 test('the chosen category always has a quick chip, replacing the last one', async () => {
