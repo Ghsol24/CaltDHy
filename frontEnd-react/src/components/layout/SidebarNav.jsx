@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -6,19 +6,17 @@ import { NavIcon } from '../ui/NavIcons';
 import { scrollToSection } from '../../utils/scrollToSection';
 import { SidebarResizeHandle } from './SidebarResizeHandle';
 import { readSidebarWidth, saveSidebarWidth } from './sidebarWidth';
+import { readPinnedGroups, savePinnedGroups } from './sidebarGroups';
 
 import { Icon } from '../../components/ui/AppIcons';
-// Which sidebar groups the viewer folded away. A per-browser convenience:
-// if storage is blocked every group simply starts open.
-const COLLAPSED_GROUPS_KEY = 'caltdhy_sidebar_collapsed_groups';
 
-function readCollapsedGroups() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(COLLAPSED_GROUPS_KEY) || '[]');
-    return Array.isArray(stored) ? stored.filter((id) => typeof id === 'string') : [];
-  } catch {
-    return [];
-  }
+// Nhịp chờ ngắn khi di chuột trên máy tính: lướt ngang qua nhóm không làm menu bung nhầm
+// đẩy các mục bên dưới, và trượt nhẹ ra mép 1–2px rồi quay lại không bị sập đột ngột.
+const HOVER_OPEN_DELAY_MS = 80;
+const HOVER_CLOSE_DELAY_MS = 120;
+
+function isMousePointer(event) {
+  return !event?.pointerType || event.pointerType === 'mouse';
 }
 
 function HamburgerIcon({ size }) {
@@ -38,8 +36,52 @@ export function SidebarNav() {
   const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
-  const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
+  const [pinnedGroups, setPinnedGroups] = useState(readPinnedGroups);
+  const [hoveredGroupId, setHoveredGroupId] = useState(null);
   const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth);
+
+  const pinnedGroupsRef = useRef(pinnedGroups);
+  const hoveredGroupIdRef = useRef(hoveredGroupId);
+  const openTimerRef = useRef(null);
+  const closeTimerRef = useRef(null);
+  const closingGroupIdRef = useRef(null);
+  const pointerInsideGroupRef = useRef(null);
+  const suppressedHoverRef = useRef(null);
+
+  pinnedGroupsRef.current = pinnedGroups;
+  hoveredGroupIdRef.current = hoveredGroupId;
+
+  const clearOpenTimer = () => {
+    if (openTimerRef.current !== null) {
+      clearTimeout(openTimerRef.current);
+      openTimerRef.current = null;
+    }
+  };
+
+  const clearCloseTimer = () => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    closingGroupIdRef.current = null;
+  };
+
+  const setHoveredGroup = (nextGroupId) => {
+    hoveredGroupIdRef.current = nextGroupId;
+    setHoveredGroupId(nextGroupId);
+  };
+
+  const scheduleCloseHover = (groupId) => {
+    clearCloseTimer();
+    closingGroupIdRef.current = groupId;
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null;
+      closingGroupIdRef.current = null;
+      if (hoveredGroupIdRef.current === groupId) {
+        setHoveredGroup(null);
+      }
+    }, HOVER_CLOSE_DELAY_MS);
+  };
 
   const commitSidebarWidth = (width) => {
     setSidebarWidth(width);
@@ -47,17 +89,101 @@ export function SidebarNav() {
   };
 
   useEffect(() => {
-    try {
-      localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(collapsedGroups));
-    } catch {
-      // Storage unavailable: the choice lasts for this visit only.
-    }
-  }, [collapsedGroups]);
+    savePinnedGroups(pinnedGroups);
+  }, [pinnedGroups]);
 
+  useEffect(() => {
+    if (!isSidebarCollapsed) return;
+    clearOpenTimer();
+    clearCloseTimer();
+    pointerInsideGroupRef.current = null;
+    suppressedHoverRef.current = null;
+    setHoveredGroup(null);
+  }, [isSidebarCollapsed]);
+
+  useEffect(() => () => {
+    clearOpenTimer();
+    clearCloseTimer();
+  }, []);
+
+  // Bấm vào tiêu đề nhóm: ghim cố định mở (kể cả khi đang mở tạm bằng hover),
+  // hoặc bấm lần nữa khi đã ghim để bỏ ghim và thu gọn ngay lập tức dù chuột vẫn đang trên nút.
   const toggleGroup = (groupId) => {
-    setCollapsedGroups((current) => (current.includes(groupId)
-      ? current.filter((id) => id !== groupId)
-      : [...current, groupId]));
+    clearOpenTimer();
+    if (closingGroupIdRef.current === groupId) {
+      clearCloseTimer();
+    }
+
+    const isCurrentlyPinned = pinnedGroupsRef.current.includes(groupId);
+    if (isCurrentlyPinned) {
+      const next = pinnedGroupsRef.current.filter((id) => id !== groupId);
+      pinnedGroupsRef.current = next;
+      setPinnedGroups(next);
+      if (hoveredGroupIdRef.current === groupId) {
+        setHoveredGroup(null);
+      }
+      if (pointerInsideGroupRef.current === groupId) {
+        suppressedHoverRef.current = groupId;
+      }
+      return;
+    }
+
+    const next = [...pinnedGroupsRef.current, groupId];
+    pinnedGroupsRef.current = next;
+    setPinnedGroups(next);
+    suppressedHoverRef.current = null;
+    if (hoveredGroupIdRef.current === groupId) {
+      setHoveredGroup(null);
+    }
+  };
+
+  const handleGroupPointerEnter = (groupId, event) => {
+    if (isSidebarCollapsed || !isMousePointer(event)) return;
+    if (document.documentElement.classList.contains('is-resizing-sidebar')) return;
+
+    pointerInsideGroupRef.current = groupId;
+    if (closingGroupIdRef.current === groupId) {
+      clearCloseTimer();
+    }
+    clearOpenTimer();
+
+    if (suppressedHoverRef.current === groupId) return;
+    if (pinnedGroupsRef.current.includes(groupId) || hoveredGroupIdRef.current === groupId) return;
+
+    openTimerRef.current = window.setTimeout(() => {
+      openTimerRef.current = null;
+      if (pointerInsideGroupRef.current !== groupId) return;
+      if (pinnedGroupsRef.current.includes(groupId)) return;
+      clearCloseTimer();
+      setHoveredGroup(groupId);
+    }, HOVER_OPEN_DELAY_MS);
+  };
+
+  const handleGroupPointerLeave = (groupId, event) => {
+    if (!isMousePointer(event)) return;
+
+    if (pointerInsideGroupRef.current === groupId) {
+      pointerInsideGroupRef.current = null;
+    }
+    if (suppressedHoverRef.current === groupId) {
+      suppressedHoverRef.current = null;
+    }
+    clearOpenTimer();
+
+    if (hoveredGroupIdRef.current === groupId) {
+      scheduleCloseHover(groupId);
+    }
+  };
+
+  const handleSidebarPointerLeave = (event) => {
+    if (!isMousePointer(event)) return;
+    clearOpenTimer();
+    pointerInsideGroupRef.current = null;
+    suppressedHoverRef.current = null;
+    const activeHover = hoveredGroupIdRef.current;
+    if (activeHover && closingGroupIdRef.current !== activeHover) {
+      scheduleCloseHover(activeHover);
+    }
   };
 
   const handleNavClick = (viewId, subTabId, sectionId) => {
@@ -189,6 +315,7 @@ export function SidebarNav() {
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
       style={{ '--sidebar-width': `${sidebarWidth}px` }}
       aria-label={t('nav.mainNavigation')}
+      onPointerLeave={handleSidebarPointerLeave}
     >
       {/* Logo + nút thu gọn ở đầu sidebar: máy tính không còn topbar (đợt 15b). Thu gọn thì
           chỉ còn ô "C", nút mở rộng nằm ngay dưới. */}
@@ -228,14 +355,19 @@ export function SidebarNav() {
             );
           }
           // The icon-only rail has no group headers, so every item stays reachable there.
-          const isGroupOpen = isSidebarCollapsed || !collapsedGroups.includes(group.id);
+          const isPinned = pinnedGroups.includes(group.id);
+          const isHoverOpen = !isSidebarCollapsed && !isPinned && hoveredGroupId === group.id;
+          const isGroupOpen = isSidebarCollapsed || isPinned || isHoverOpen;
           const hasActiveItem = group.items.some((item) => item.isActive);
           const itemsId = `sidebar-${group.id}-items`;
 
           return (
             <div
               key={group.id}
-              className={`sidebar-nav-group${isGroupOpen ? '' : ' is-group-collapsed'}${hasActiveItem ? ' has-active-item' : ''}`}
+              className={`sidebar-nav-group${isGroupOpen ? '' : ' is-group-collapsed'}${!isSidebarCollapsed && isPinned ? ' is-group-pinned' : ''}${isHoverOpen ? ' is-hover-open' : ''}${hasActiveItem ? ' has-active-item' : ''}`}
+              data-pinned={!isSidebarCollapsed && isPinned ? 'true' : undefined}
+              onPointerEnter={(event) => handleGroupPointerEnter(group.id, event)}
+              onPointerLeave={(event) => handleGroupPointerLeave(group.id, event)}
             >
               {!isSidebarCollapsed && (
                 <div className="sidebar-group-header-row">

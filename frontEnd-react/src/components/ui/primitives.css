@@ -227,11 +227,19 @@
   margin-bottom: 18px;
 }
 
+.sidebar-scrollable-content .sidebar-nav-group.sidebar-nav-group--box.is-group-collapsed {
+  margin-bottom: 8px;
+}
+
 /* Cao bằng hàng tiêu đề nhóm thật (28px + 4px). */
 .sidebar-group-label.sidebar-group-label--box {
   min-height: 28px;
   margin-bottom: 4px;
   padding-left: 12px;
+}
+
+.sidebar-nav-group.is-group-collapsed .sidebar-group-label.sidebar-group-label--box {
+  margin-bottom: 0;
 }
 
 .sidebar-nav-item.sidebar-nav-item--box {

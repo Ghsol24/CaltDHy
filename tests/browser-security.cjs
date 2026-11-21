@@ -1384,6 +1384,9 @@ function blendCssColor(color, background) {
     await expect(mobilePage.locator('#analytics-cashflow')).toBeVisible();
     await expect(mobilePage.locator('#analytics-spending, #analytics-reports')).toHaveCount(0);
     await expect(mobilePage.locator('.analytics-kpi-grid')).toHaveCount(0);
+    // Nhóm sidebar mặc định thu gọn trên máy tính: bấm tiêu đề để ghim mở trước khi kiểm tra mục con.
+    const analyticsGroupToggle = mobilePage.locator('.sidebar-group-toggle', { hasText: 'Phân tích' });
+    if (await analyticsGroupToggle.getAttribute('aria-expanded') !== 'true') await analyticsGroupToggle.click();
     await expect(mobilePage.getByRole('button', { name: 'Dòng tiền', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(mobilePage.locator('.sidebar-nav-item.is-in-view')).toHaveCount(0);
     const desktopReportsNav = mobilePage.getByRole('button', { name: 'Báo cáo', exact: true });
@@ -1435,6 +1438,8 @@ function blendCssColor(color, background) {
     await expect(mobilePage.locator('#jars-section-goals, #jars-section-history')).toHaveCount(0);
     await expect(mobilePage.locator('.jar-premium-card')).toHaveCount(12);
     await expect(mobilePage.locator('button.sidebar-nav-item.active')).toHaveText('Danh sách hũ');
+    const jarsGroupToggle = mobilePage.locator('.sidebar-group-toggle', { hasText: 'Hũ tiết kiệm' });
+    if (await jarsGroupToggle.getAttribute('aria-expanded') !== 'true') await jarsGroupToggle.click();
     await mobilePage.getByRole('button', { name: 'Lịch sử nạp/rút', exact: true }).click();
     await mobilePage.waitForURL('**/spending/jars/history');
     await expect(mobilePage.locator('#jars-section-history h1')).toHaveText('Lịch sử nạp/rút');
