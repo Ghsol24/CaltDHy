@@ -46,7 +46,11 @@ import './assets/css/spa-overrides.css'  // Must be LAST — fixes body conflict
 
 // Restore the saved theme on public routes as well as authenticated pages.
 import './stores/useThemeStore'
+import { trackInputModality } from './utils/inputModality'
 import App from './App.jsx'
+
+// Vòng focus của nút chỉ hiện khi dùng bàn phím (đợt 15a).
+trackInputModality()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

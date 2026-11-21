@@ -132,6 +132,13 @@ html, body {
   outline-offset: 2px !important;
 }
 
+/* …but only while the keyboard is in use. After a click or tap, focus that code hands
+   back (closing a popover, picking an option) still counts as :focus-visible in Chrome
+   and drew a box nobody asked for (đợt 15a). utils/inputModality.js sets data-input. */
+html[data-input="pointer"] :is(button, a[href], summary, [role="button"], [role="tab"], [role="switch"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="gridcell"], [tabindex="0"]):focus-visible {
+  outline: none !important;
+}
+
 /* Headings and regions focused by code (route changes, skip link) are not
    controls: no ring, or it reads as a rendering glitch (NAV-06). */
 :where([tabindex="-1"]:not(button, a, input, select, textarea, [role="option"], [role="gridcell"], [role="menuitem"])):is(:focus, :focus-visible) {
