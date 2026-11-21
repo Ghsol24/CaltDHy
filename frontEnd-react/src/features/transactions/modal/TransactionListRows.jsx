@@ -1,13 +1,13 @@
-import React, { useEffect, useId, useRef } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '../../../components/ui/AppIcons';
 import { CategoryMark } from '../../../components/ui/CategoryMark';
-import { CustomDatePicker } from '../../../components/ui/CustomDatePicker';
+import { CalendarPanel, CustomDatePicker } from '../../../components/ui/CustomDatePicker';
 import { CustomWalletDropdown } from '../../../components/ui/CustomWalletDropdown';
 import { useAnchoredPlacement } from '../../../hooks/useAnchoredPlacement';
 import { CategoryOutlineIcon, CheckOutlineIcon } from '../../../utils/categoryIcons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { CategoryPickerList } from '../TransactionMobileFields';
-import { relativeDayLabel } from './relativeDay';
+import { shiftIsoDays } from './relativeDay';
 import { useRadioArrows } from './useRadioArrows';
 
 /*
@@ -162,27 +162,99 @@ export function TransactionWalletRow({ type, wallets, walletId, setWalletId, pla
   );
 }
 
+// Khớp thời lượng hiệu ứng .txn-row__calendar trong transaction-modal.css.
+const CALENDAR_OPEN_MS = 200;
+const CALENDAR_CLOSE_MS = 160;
+
+/**
+ * Ngày: hai nút nhanh Hôm nay / Hôm qua, ô gõ ngày, và lịch xổ ngay dưới dòng (trong danh sách,
+ * đẩy Ghi chú xuống) thay vì nổi lên trên — cùng hướng mở xuống với Danh mục và Tài khoản.
+ */
 export function TransactionDateRow({ date, setDate, maxDate, invalid, describedBy, copy }) {
-  const { t, intlLocale } = useTranslation();
-  const relative = relativeDayLabel(date, maxDate, t, intlLocale);
+  const { t } = useTranslation();
+  const groupRef = useRef(null);
+  const panelRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  // Lịch còn trên trang trong lúc gập lại (hiệu ứng 160ms), rồi mới gỡ khỏi DOM.
+  const [panelShown, setPanelShown] = useState(false);
+  const yesterday = shiftIsoDays(maxDate, -1);
+  const quickDays = [{ iso: maxDate, label: t('date.today') }, { iso: yesterday, label: t('date.yesterday') }];
+  const reduceMotion = () => Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const revealPanel = () => panelRef.current?.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+
+  // Hẹn giờ thay cho animationend: sự kiện đó không tới khi tab bị ẩn giữa chừng, lịch sẽ kẹt.
+  useEffect(() => {
+    if (open) {
+      setPanelShown(true);
+      return undefined;
+    }
+    const timer = setTimeout(() => setPanelShown(false), reduceMotion() ? 0 : CALENDAR_CLOSE_MS);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  // Mở xong thì cuộn cho thấy đủ lịch (lúc bắt đầu mở nó còn cao 0); click ra ngoài thì gấp lại.
+  useEffect(() => {
+    if (!open) return undefined;
+    const reveal = reduceMotion() ? 0 : CALENDAR_OPEN_MS + 60;
+    const timer = setTimeout(revealPanel, reveal);
+    // Dự phòng: cuộn mượt có lúc bị trình duyệt bỏ qua; 'nearest' không làm gì nếu lịch đã thấy đủ.
+    const fallback = setTimeout(() => panelRef.current?.scrollIntoView({ block: 'nearest' }), reveal + 400);
+    const onPointerDown = (event) => {
+      if (!groupRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fallback);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [open]);
+
+  const focusInput = () => document.getElementById('txn-date-input')?.focus({ preventScroll: true });
+
   return (
-    <div className="txn-row txn-row--date">
-      <span className="txn-row__icon" aria-hidden="true">
-        <Icon name="calendarCompact" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </span>
-      <label className="txn-row__label" htmlFor="txn-date-input">{copy.rowDate}</label>
-      {relative && <span className="txn-row__hint" aria-hidden="true">{relative}</span>}
-      <CustomDatePicker
-        id="txn-date-input"
-        className="calt-date-picker--row"
-        inputClassName="txn-row__input"
-        value={date}
-        onChange={setDate}
-        max={maxDate}
-        required
-        invalid={invalid}
-        ariaDescribedBy={describedBy}
-      />
+    <div className={`txn-row-group txn-row-group--date${open ? ' is-open' : ''}`} ref={groupRef}>
+      <div className="txn-row txn-row--date">
+        <span className="txn-row__icon" aria-hidden="true">
+          <Icon name="calendarCompact" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </span>
+        <label className="txn-row__label" htmlFor="txn-date-input">{copy.rowDate}</label>
+        <div className="txn-day-chips" role="group" aria-label={copy.quickDays}>
+          {quickDays.map((day) => (
+            <button key={day.iso} type="button" className={`txn-day-chip${date === day.iso ? ' is-selected' : ''}`}
+              aria-pressed={date === day.iso} onClick={() => { setDate(day.iso); setOpen(false); }}>
+              {day.label}
+            </button>
+          ))}
+        </div>
+        <CustomDatePicker
+          id="txn-date-input"
+          className="calt-date-picker--row"
+          inputClassName="txn-row__input"
+          value={date}
+          onChange={setDate}
+          max={maxDate}
+          required
+          invalid={invalid}
+          ariaDescribedBy={describedBy}
+          inlinePanel
+          open={open}
+          onOpenChange={setOpen}
+          toggleIconName={open ? 'chevronUpAlt' : 'chevronDown'}
+        />
+      </div>
+      {(open || panelShown) && (
+        <div ref={panelRef} id="txn-date-input-calendar" className={`txn-row__calendar${open ? '' : ' is-closing'}`}
+          role="region" aria-label={copy.rowDate} inert={open ? undefined : true}>
+          <div className="txn-row__calendar-clip">
+            <div className="txn-row__calendar-body">
+              <CalendarPanel id="txn-date-input" value={date} max={maxDate}
+                onSelect={(iso) => { setDate(iso); setOpen(false); focusInput(); }}
+                onEscape={() => { setOpen(false); focusInput(); }} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

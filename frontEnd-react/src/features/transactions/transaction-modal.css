@@ -1036,7 +1036,7 @@
   text-align: left;
 }
 
-/* Chip nhanh: một hàng ở giữa, tên dài cắt bằng "…" (đủ chữ ở tooltip) */
+/* Chip nhanh: ở giữa, tự xuống dòng, hiện đủ tên; chỉ tên dài hơn cả hộp thoại mới cắt bằng "…" */
 .txn-quick-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1048,7 +1048,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  max-width: 150px;
+  max-width: 100%;
   min-height: 30px;
   padding: 4px 11px;
   border: 1px solid var(--color-border-strong);
@@ -1139,12 +1139,6 @@
   flex: none;
   color: var(--color-text-secondary);
   font-weight: 500;
-}
-
-.txn-row__hint {
-  flex: none;
-  margin-left: auto;
-  color: var(--color-text-secondary);
 }
 
 .txn-row__value,
@@ -1261,13 +1255,150 @@
   flex: 1;
 }
 
-.txn-row--date .calt-date-picker--row {
-  flex: 0 1 150px;
+/* Máy tính: hộp thoại ghim mép trên thay vì canh giữa, nên khi lịch xổ ra chỉ mép dưới kéo
+   xuống; tiêu đề, số tiền và chip đứng yên. */
+@media (min-width: 600px) {
+  .txn-modal-card--pinned {
+    --txn-pinned-top: clamp(0px, 8vh - 16px, 56px);
+    align-self: flex-start;
+    margin-top: var(--txn-pinned-top);
+    max-height: calc(100% - var(--txn-pinned-top));
+  }
+}
+
+/* Ngày: dòng + lịch xổ bên dưới là một khối trong danh sách nhóm */
+.txn-row-group {
+  border-top: 1px solid var(--color-border);
+}
+
+.txn-row-group:last-child {
+  border-radius: 0 0 11px 11px;
+}
+
+.txn-row-group > .txn-row {
+  border-top: 0;
+  border-radius: 0;
+}
+
+.txn-row-group.is-open > .txn-row,
+.txn-row-group.is-open > .txn-row .txn-row__icon,
+.txn-row-group.is-open > .txn-row .txn-row__label {
+  color: var(--color-link);
+}
+
+.txn-row-group.is-open > .txn-row .calt-date-input {
+  color: var(--color-link);
+}
+
+.txn-day-chips {
+  display: flex;
+  gap: 6px;
   margin-left: auto;
 }
 
-.txn-row__hint + .calt-date-picker--row {
+.txn-day-chip {
+  min-height: 26px;
+  padding: 2px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.txn-day-chip:hover:not(.is-selected) {
+  background: var(--menu-item-hover-bg);
+  color: var(--color-text);
+}
+
+.txn-day-chip.is-selected {
+  border-color: var(--color-link);
+  background: var(--menu-item-selected-bg);
+  color: var(--menu-item-selected-text);
+  font-weight: 600;
+}
+
+.txn-day-chip:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+}
+
+.txn-row--date .calt-date-picker--row {
+  flex: 0 1 132px;
+  margin-left: auto;
+}
+
+.txn-day-chips + .calt-date-picker--row {
   margin-left: 0;
+}
+
+/* Lịch gọn trong dòng: ô ngày 30px, không có chân "Hôm nay" (đã có nút nhanh ở trên) */
+/* Lịch mở / gập bằng cách kéo hàng lưới từ 0fr lên 1fr (0,2 giây); giảm chuyển động thì hiện ngay. */
+.txn-row__calendar {
+  display: grid;
+  grid-template-rows: 1fr;
+  scroll-margin-bottom: 12px;
+  animation: txnCalendarOpen 200ms var(--ease-smooth, ease-out);
+}
+
+.txn-row__calendar.is-closing {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  animation: txnCalendarClose 160ms ease-in;
+}
+
+.txn-row__calendar-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.txn-row__calendar-body {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+@keyframes txnCalendarOpen {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to { grid-template-rows: 1fr; opacity: 1; }
+}
+
+@keyframes txnCalendarClose {
+  from { grid-template-rows: 1fr; opacity: 1; }
+  to { grid-template-rows: 0fr; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .txn-row__calendar,
+  .txn-row__calendar.is-closing {
+    animation: none;
+  }
+}
+
+.txn-row__calendar .calt-date-panel {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.txn-row__calendar .calt-date-header {
+  margin-bottom: 4px;
+}
+
+.txn-row__calendar .calt-date-nav {
+  width: 28px;
+  height: 28px;
+}
+
+.txn-row__calendar .calt-date-day {
+  height: 30px;
+}
+
+.txn-row__calendar .calt-date-footer {
+  display: none;
 }
 
 .calt-date-picker--row .calt-date-input.txn-row__input {

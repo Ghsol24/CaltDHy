@@ -14,7 +14,9 @@ const toIso = (year, monthIndex, day) => `${year}-${pad(monthIndex + 1)}-${pad(d
  * Values stay ISO strings ("YYYY-MM-DD" / "YYYY-MM", or "") so callers and the API
  * keep working unchanged. The native browser popups cannot follow the app theme.
  *
- * - CustomDatePicker: typed input + calendar popover.
+ * - CustomDatePicker: typed input + calendar popover. With `inlinePanel` it draws no popover:
+ *   the caller controls `open` / `onOpenChange` and renders a CalendarPanel in the flow itself
+ *   (the desktop transaction form unfolds the calendar inside its list instead of floating it).
  * - CalendarPanel / MonthPanel: the bare grids, for places that already sit inside
  *   a popover (no popover-in-popover).
  */
@@ -306,6 +308,10 @@ export function CustomDatePicker({
   inputClassName = '',
   inputRef: externalInputRef,
   testId,
+  open: openProp,
+  onOpenChange,
+  inlinePanel = false,
+  toggleIconName = 'calendarCompact',
 }) {
   const { lang } = useTranslation();
   const labels = labelsFor(lang);
@@ -315,12 +321,21 @@ export function CustomDatePicker({
   const rootRef = useRef(null);
   const inputRef = useRef(null);
   const popoverRef = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const isOpen = openProp ?? openState;
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
+  const setIsOpen = useCallback((next) => {
+    setOpenState(next);
+    onOpenChangeRef.current?.(next);
+  }, []);
   const [focusGrid, setFocusGrid] = useState(false);
   const [text, setText] = useState(() => formatDisplayDate(value, labels.order));
+  // The last date applied from typing: only that one may keep the person's own text in the box.
+  const typedRef = useRef(null);
   // Fixed to the screen so a dialog's scroll area can neither clip the calendar nor scroll
   // sideways to show it (the old in-flow popover hid the labels of two-column dialogs).
-  const popoverStyle = useAnchoredPlacement(rootRef, popoverRef, isOpen, {
+  const popoverStyle = useAnchoredPlacement(rootRef, popoverRef, isOpen && !inlinePanel, {
     strategy: 'fixed',
     onAnchorHidden: () => setIsOpen(false),
   });
@@ -333,15 +348,17 @@ export function CustomDatePicker({
     else if (externalInputRef) externalInputRef.current = node;
   };
 
-  // Show the formatted value unless the person is in the middle of typing.
+  // Show the formatted value unless the person is in the middle of typing it.
   useEffect(() => {
-    if (document.activeElement !== inputRef.current) setText(formatDisplayDate(value, labels.order));
+    if (document.activeElement !== inputRef.current || value !== typedRef.current) {
+      setText(formatDisplayDate(value, labels.order));
+    }
   }, [value, labels.order]);
 
   const close = useCallback((returnFocus) => {
     setIsOpen(false);
     if (returnFocus) inputRef.current?.focus();
-  }, []);
+  }, [setIsOpen]);
 
   const open = (withGridFocus) => {
     if (disabled) return;
@@ -349,14 +366,15 @@ export function CustomDatePicker({
     setIsOpen(true);
   };
 
+  // An inline panel lives outside this root, so its owner decides when a click outside closes it.
   useEffect(() => {
-    if (!isOpen) return undefined;
+    if (!isOpen || inlinePanel) return undefined;
     const onPointerDown = (event) => {
       if (!rootRef.current?.contains(event.target)) setIsOpen(false);
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [isOpen]);
+  }, [isOpen, inlinePanel, setIsOpen]);
 
   const isOutOfRange = (iso) => Boolean((min && iso < min) || (max && iso > max));
 
@@ -408,7 +426,10 @@ export function CustomDatePicker({
           setText(next);
           // A complete, valid date applies at once so previews follow the typing.
           const parsed = parseTypedDate(next);
-          if (parsed && parsed !== value && !isOutOfRange(parsed)) onChange?.(parsed);
+          if (parsed && parsed !== value && !isOutOfRange(parsed)) {
+            typedRef.current = parsed;
+            onChange?.(parsed);
+          }
         }}
         onClick={() => { if (!isOpen) open(false); }}
         onBlur={(event) => { if (!rootRef.current?.contains(event.relatedTarget)) commitTyped(); }}
@@ -416,15 +437,15 @@ export function CustomDatePicker({
           if (event.key === 'ArrowDown' && (event.altKey || !isOpen)) { event.preventDefault(); open(true); }
           else if (event.key === 'Escape' && isOpen) { event.preventDefault(); event.stopPropagation(); close(false); }
           else if (event.key === 'Enter') { event.preventDefault(); commitTyped(); }
-          else if (event.key === 'Tab') setIsOpen(false);
+          else if (event.key === 'Tab' && !inlinePanel) setIsOpen(false);
         }}
       />
       <button type="button" className="calt-date-toggle" tabIndex={-1} disabled={disabled}
         aria-label={labels.open} onClick={() => (isOpen ? close(true) : open(true))}>
-        <Icon name="calendarCompact" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+        <Icon name={toggleIconName} width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
       </button>
 
-      {isOpen && (
+      {isOpen && !inlinePanel && (
         <div ref={popoverRef} id={calendarId} className="calt-date-popover" style={popoverStyle || undefined}
           role="dialog" aria-modal="false" aria-label={labels.dialog}>
           <CalendarPanel id={inputId} value={value} min={min} max={max} clearable={canClear}

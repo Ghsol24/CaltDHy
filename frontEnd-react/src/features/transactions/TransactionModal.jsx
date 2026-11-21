@@ -22,7 +22,7 @@ import { BREAKPOINTS, useMediaQuery } from '../../hooks/useMediaQuery';
 import { CategoryPickerList, DateSheetContent, TransactionSheet } from './TransactionMobileFields';
 
 import { Icon } from '../../components/ui/AppIcons';
-import { describeBudgetMetrics, pickQuickCategories, recentCategoryName } from './modal/transactionModalHelpers';
+import { defaultCategoryName, describeBudgetMetrics, pickQuickCategories } from './modal/transactionModalHelpers';
 import { TransactionHero } from './modal/TransactionHero';
 import { TransactionCategoryRow, TransactionDateRow, TransactionNoteRow, TransactionQuickChips, TransactionWalletRow } from './modal/TransactionListRows';
 import { getTransactionFormCopy } from './modal/transactionFormCopy';
@@ -220,9 +220,9 @@ export function TransactionModal() {
           targetType === 'income'
             ? activeIncomeCats
             : (sortedCategories.length > 0 ? sortedCategories : activeExpenseCats);
-        // Phones show only the chosen category, so start from the one used last instead of the first in the list.
-        const recentCat = isPhone ? recentCategoryName(transactions, targetType, initialCats) : '';
-        const defaultCat = addTxnInitialState?.category || recentCat || initialCats[0]?.name || '';
+        // Phone: the category used last; desktop: the first quick chip (used most), not the first in the list.
+        const preferredCat = defaultCategoryName(transactions, targetType, initialCats, isPhone);
+        const defaultCat = addTxnInitialState?.category || preferredCat || initialCats[0]?.name || '';
         setCategory(defaultCat);
         setPicker(null);
         setDate(getLocalDateString());
@@ -247,7 +247,7 @@ export function TransactionModal() {
     if (isOpen && !isEditing && !category) {
       const list = type === 'expense' ? sortedCategories : activeIncomeCats;
       if (list.length > 0) {
-        setCategory((isPhone && recentCategoryName(transactions, type, list)) || list[0]?.name || '');
+        setCategory(defaultCategoryName(transactions, type, list, isPhone) || list[0]?.name || '');
       }
     }
   }, [isOpen, isEditing, category, type, sortedCategories, activeIncomeCats, isPhone, transactions]);
@@ -314,7 +314,7 @@ export function TransactionModal() {
     const newCategories = newType === 'expense' ? activeExpenseCats : activeIncomeCats;
     const exists = newCategories.some((c) => c.name.toLowerCase() === category.toLowerCase());
     if (!exists) {
-      setCategory((isPhone && recentCategoryName(transactions, newType, newCategories)) || newCategories[0]?.name || '');
+      setCategory(defaultCategoryName(transactions, newType, newCategories, isPhone) || newCategories[0]?.name || '');
     }
   };
 
@@ -452,6 +452,7 @@ export function TransactionModal() {
 
   return (
     <FormDialog
+      className={isPhone ? undefined : 'txn-modal-card--pinned'}
       onClose={requestDismiss}
       onCloseButton={close}
       closeDisabled={confirmationOpen}
