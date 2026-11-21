@@ -1,6 +1,6 @@
 import { getUserErrorMessage } from '../../utils/userErrors';
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useWalletStore } from '../../stores/useWalletStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
@@ -18,6 +18,9 @@ import { WalletsSummary } from './wallets/WalletsSummary';
 import { WalletGroupedList } from './wallets/WalletGroupedList';
 import { WalletsPageHeader } from './wallets/WalletsPageHeader';
 import { useWalletInsights } from './wallets/useWalletInsights';
+import { useWalletSplit } from './wallets/useWalletSplit';
+import { WalletDetailPane } from './wallets/WalletDetailPane';
+import { WalletsOverviewPane } from './wallets/WalletsOverviewPane';
 import { useCommandRequest } from '../../hooks/useCommandRequest';
 export { WalletOutlineIcon };
 
@@ -28,6 +31,7 @@ export function WalletsTab() {
   const unarchiveWallet = useWalletStore((state) => state.unarchiveWallet);
   const isLoading = useWalletStore((state) => state.isLoading);
   const transactions = useTransactionStore((state) => state.transactions);
+  const openEditTransaction = useTransactionStore((state) => state.openEditTransaction);
   const navigate = useNavigate();
   const openAddTxnModal = useSpendingStore((s) => s.openAddTxnModal);
   const confirm = useConfirmStore((state) => state.confirm);
@@ -68,8 +72,24 @@ export function WalletsTab() {
   }, []);
 
   const {
-    totalBalance, includedCount, walletMap, slices, colorByWalletId, groups, getWalletNote, walletActivities,
+    totalBalance, includedCount, walletMap, slices, colorByWalletId, groups, getWalletNote, walletActivities, lastTxDateMap,
   } = useWalletInsights({ wallets, transactions, searchQuery: showSearch ? searchQuery : '' });
+
+  // Máy tính đủ rộng: danh sách ví bên trái, chi tiết ví bên phải (đợt 15d). Ví đang chọn nằm
+  // trên URL (?wallet=…) để tải lại hoặc quay lại vẫn giữ; không có / không còn ví đó = "Tất cả ví".
+  const containerRef = useRef(null);
+  const isSplit = useWalletSplit(containerRef);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedWallet = isSplit ? walletMap[searchParams.get('wallet')] || null : null;
+  const selectedId = selectedWallet ? selectedWallet.id : 'all';
+  const handleSelect = (id) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (id === 'all') next.delete('wallet');
+      else next.set('wallet', id);
+      return next;
+    }, { replace: true });
+  };
 
   // A wallet row opens that wallet's own transactions in the history screen.
   const handleOpenHistory = (wallet) => {
@@ -149,8 +169,12 @@ export function WalletsTab() {
     navigate(`/spending/analytics/transactions?${new URLSearchParams({ type: 'transfer' }).toString()}`);
   };
 
+  const archivedSection = (
+    <WalletsArchivedSection archivedWallets={archivedWallets} handleUnarchive={handleUnarchive} isArchivedSectionExpanded={isArchivedSectionExpanded} setIsArchivedSectionExpanded={setIsArchivedSectionExpanded} unarchivingId={unarchivingId} />
+  );
+
   return (
-    <div className="wallets-v2-container" role="region" aria-label="Quản lý ví và tài khoản">
+    <div ref={containerRef} className={`wallets-v2-container${isSplit ? ' is-split' : ''}`} role="region" aria-label="Quản lý ví và tài khoản">
       {/* ── 1. Page Header: Title + Actions ── */}
       <WalletsPageHeader handleCreateNew={handleCreateNew} handleTransfer={handleTransfer} wallets={wallets} />
 
@@ -207,16 +231,58 @@ export function WalletsTab() {
             handleArchive={handleArchive}
             handleDelete={handleDelete}
             openAddTxnModal={openAddTxnModal}
+            isSplit={isSplit}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+            walletCount={wallets.length}
           />
+
+          {/* Chia đôi: ví đã lưu trữ nằm ngay dưới danh sách ví. */}
+          {isSplit && archivedSection}
         </div>
 
-        <aside className="wallets-v2-col-right" aria-label="Chuyển tiền gần đây">
-          <WalletRecentActivityCard handleGoToFullHistory={handleGoToFullHistory} walletActivities={walletActivities} walletMap={walletMap} />
-        </aside>
+        {isSplit ? (
+          <div className="wallets-v2-col-right">
+            {selectedWallet ? (
+              <WalletDetailPane
+                wallet={selectedWallet}
+                walletCount={wallets.length}
+                transactions={transactions}
+                walletMap={walletMap}
+                accent={colorByWalletId[selectedWallet.id]}
+                lastTxDate={lastTxDateMap[selectedWallet.id]}
+                onOpenHistory={handleOpenHistory}
+                onOpenTxn={openEditTransaction}
+                openAddTxnModal={openAddTxnModal}
+                handleTransfer={handleTransfer}
+                handleEdit={handleEdit}
+                handleArchive={handleArchive}
+                handleDelete={handleDelete}
+                openMenuWalletId={openMenuWalletId}
+                setOpenMenuWalletId={setOpenMenuWalletId}
+                menuRef={menuRef}
+                menuTriggerRef={menuTriggerRef}
+              />
+            ) : (
+              <WalletsOverviewPane
+                wallets={wallets}
+                transactions={transactions}
+                walletMap={walletMap}
+                includedCount={includedCount}
+                onOpenFullHistory={() => navigate('/spending/analytics/transactions')}
+                onOpenTxn={openEditTransaction}
+              />
+            )}
+          </div>
+        ) : (
+          <aside className="wallets-v2-col-right" aria-label="Chuyển tiền gần đây">
+            <WalletRecentActivityCard handleGoToFullHistory={handleGoToFullHistory} walletActivities={walletActivities} walletMap={walletMap} />
+          </aside>
+        )}
       </div>
 
       {/* ── 3. Khu vực Ví đã lưu trữ (Archived Wallets Accordion) ── */}
-      {<WalletsArchivedSection archivedWallets={archivedWallets} handleUnarchive={handleUnarchive} isArchivedSectionExpanded={isArchivedSectionExpanded} setIsArchivedSectionExpanded={setIsArchivedSectionExpanded} unarchivingId={unarchivingId} />}
+      {!isSplit && archivedSection}
 
       {/* Global Modals for Wallets */}
       <WalletModal

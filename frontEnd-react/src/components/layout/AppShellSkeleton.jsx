@@ -1,6 +1,7 @@
 import React from 'react';
 import { PageSkeleton } from '../ui/PageSkeleton';
 import { useTranslation } from '../../i18n/useTranslation';
+import { readSidebarWidth } from './sidebarWidth';
 
 // Cùng khung với AppShell (đợt 15b): logo trong sidebar, tấm nội dung bo góc, viên kính góc
 // trên-phải trên máy tính; điện thoại vẫn là topbar có logo. Tải xong không nhảy bố cục.
@@ -18,7 +19,12 @@ export function AppShellSkeleton() {
   return (
     <div className="app-shell" aria-busy="true" aria-label={t('common.loading')}>
       <div className="app-body-container">
-        <aside className="app-sidebar-nav" aria-label={t('common.loading')}>
+        {/* Cùng độ rộng người dùng đã kéo, để tải xong sidebar không đổi cỡ. */}
+        <aside
+          className="app-sidebar-nav"
+          style={{ '--sidebar-width': `${readSidebarWidth()}px` }}
+          aria-label={t('common.loading')}
+        >
           <div className="sidebar-brand">
             <div className="sidebar-brand__link">{brand}</div>
           </div>

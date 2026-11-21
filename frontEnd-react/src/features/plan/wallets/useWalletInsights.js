@@ -102,5 +102,5 @@ export function useWalletInsights({ wallets, transactions, searchQuery = '' }) {
 
   const includedCount = wallets.filter((w) => !w.isExcludedFromTotal).length;
 
-  return { totalBalance, includedCount, walletMap, slices, colorByWalletId, groups, getWalletNote, walletActivities };
+  return { totalBalance, includedCount, walletMap, slices, colorByWalletId, groups, getWalletNote, walletActivities, lastTxDateMap };
 }

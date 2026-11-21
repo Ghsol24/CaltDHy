@@ -4,6 +4,8 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { NavIcon } from '../ui/NavIcons';
 import { scrollToSection } from '../../utils/scrollToSection';
+import { SidebarResizeHandle } from './SidebarResizeHandle';
+import { readSidebarWidth, saveSidebarWidth } from './sidebarWidth';
 
 import { Icon } from '../../components/ui/AppIcons';
 // Which sidebar groups the viewer folded away. A per-browser convenience:
@@ -37,6 +39,12 @@ export function SidebarNav() {
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
   const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
+  const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth);
+
+  const commitSidebarWidth = (width) => {
+    setSidebarWidth(width);
+    saveSidebarWidth(width);
+  };
 
   useEffect(() => {
     try {
@@ -179,6 +187,7 @@ export function SidebarNav() {
   return (
     <aside
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
+      style={{ '--sidebar-width': `${sidebarWidth}px` }}
       aria-label={t('nav.mainNavigation')}
     >
       {/* Logo + nút thu gọn ở đầu sidebar: máy tính không còn topbar (đợt 15b). Thu gọn thì
@@ -251,6 +260,15 @@ export function SidebarNav() {
           );
         })}
       </div>
+
+      {/* Kéo mép phải để đổi độ rộng (đợt 15c); dạng thu gọn giữ cố định 72px. */}
+      {!isSidebarCollapsed && (
+        <SidebarResizeHandle
+          width={sidebarWidth}
+          onChange={setSidebarWidth}
+          onCommit={commitSidebarWidth}
+        />
+      )}
     </aside>
   );
 }
