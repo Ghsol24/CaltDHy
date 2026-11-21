@@ -123,24 +123,34 @@
   box-sizing: border-box;
 }
 
-/* ── App Body Container (Sidebar + Main) ── */
+/* ── App Body Container (Sidebar + cột nội dung) ── */
 .app-body-container {
   display: flex;
   flex: 1;
   width: 100%;
-  min-height: calc(100vh - 72px);
-  min-height: calc(100dvh - 72px);
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* ── Sidebar Navigation (260px Sticky) ── */
+/* Cột nội dung: Topbar + <main>. Điện thoại: tấm phẳng nền canvas như cũ. Máy tính: tấm bo góc
+   trên-trái cạnh sidebar (xem khối min-width: 901px bên dưới). Không overflow: hidden — sticky. */
+.app-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-canvas, #F5FCF8);
+}
+
+/* ── Sidebar Navigation (260px, hết chiều cao, không topbar phía trên — đợt 15b) ── */
 .app-sidebar-nav {
   width: 260px;
   flex-shrink: 0;
   position: sticky;
-  top: 72px;
-  height: calc(100dvh - 72px);
-  background: var(--surface, #FFFFFF);
-  border-right: 1px solid var(--border, #E3ECE7);
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--shell-frame-bg, var(--surface, #FFFFFF));
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -152,12 +162,55 @@
   width: 72px;
 }
 
+/* Logo + nút thu gọn. Cao 84px để logo thẳng hàng với tâm viên kính bên phải. */
+.sidebar-brand {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 22px 14px 12px 20px;
+}
+
+.sidebar-brand__link {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--dur-fast) ease;
+}
+
+.sidebar-brand__link:hover {
+  opacity: 0.85;
+}
+
+.sidebar-brand__link:hover .tb-logo-accent {
+  text-shadow: 0 0 16px color-mix(in srgb, var(--primary) 80%, transparent);
+}
+
+.sidebar-brand .tb-logo {
+  font-size: var(--font-xl);
+}
+
+.app-sidebar-nav.is-collapsed .sidebar-brand {
+  height: auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 0 10px;
+}
+
 .sidebar-scrollable-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: auto;
-  padding: 24px 14px;
+  padding: 4px 14px 24px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
@@ -172,15 +225,11 @@
 }
 
 .sidebar-nav-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   transition: margin-bottom var(--dur-mid) ease;
 }
 
-.sidebar-nav-group:not(:first-child) {
-  margin-top: 6px;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border, var(--border));
-}
+/* Gọn kiểu Lurn: nhóm tách nhau bằng khoảng trống, không kẻ đường (đợt 15b). */
 
 .sidebar-nav-group:last-child {
   margin-bottom: 8px;
@@ -190,23 +239,11 @@
   margin-bottom: 8px;
 }
 
-/* A one-item group ("Trang chủ") shows its item directly, with the collapse button beside it. */
-.sidebar-standalone-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sidebar-standalone-row > .sidebar-group-items {
-  flex: 1;
-  min-width: 0;
-}
-
 .sidebar-group-header-row {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 4px 8px 0;
+  padding: 0 0 4px;
   min-height: 28px;
   transition: padding-bottom var(--dur-mid) ease;
 }
@@ -224,7 +261,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 8px 0 6px;
+  padding: 0 8px 0 12px;
   border: 0;
   border-radius: var(--radius-sm, 6px);
   background: transparent;
@@ -274,27 +311,16 @@
   overflow: hidden;
 }
 
+/* Nhãn nhóm: chữ nhỏ màu phụ, không viết hoa, không chấm màu (đợt 15b). Màu phụ chứ không
+   muted để vẫn đủ tương phản (theme-contrast-browser). */
 .sidebar-group-label {
   font-family: var(--font-sans);
   font-size: var(--font-xs);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text, var(--text-primary));
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
   display: inline-flex;
   align-items: center;
-  gap: 7px;
   line-height: 1;
-}
-
-.sidebar-group-dot {
-  width: 3.5px;
-  height: 11px;
-  border-radius: 99px;
-  background: var(--color-brand-700, var(--primary));
-  display: inline-block;
-  flex-shrink: 0;
-  box-shadow: 0 0 6px var(--color-brand-100, rgba(79, 70, 229, 0.4));
 }
 
 .sidebar-hamburger-btn {
@@ -318,35 +344,14 @@
   border-color: var(--color-border, var(--border));
 }
 
-.sidebar-collapsed-header {
-  padding: 14px 0 10px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid var(--color-border, var(--border));
-}
-
-.sidebar-collapsed-header .sidebar-hamburger-btn {
-  width: 36px;
-  height: 36px;
-  background: var(--color-surface-muted, var(--surface-subtle));
-  border: 1px solid var(--color-border, var(--border));
-}
-
-.sidebar-collapsed-header .sidebar-hamburger-btn:hover {
-  background: var(--color-brand-100, var(--primary-light));
-  color: var(--color-active-text);
-  border-color: var(--color-border-strong, var(--primary-border));
-}
-
 .sidebar-group-items {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .sidebar-nav-item {
-  height: 44px;
+  height: 40px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -371,8 +376,9 @@
   padding: 0;
 }
 
-/* Hover is a neutral tint; only the current page gets the brand tint and a
-   left bar, so pointing never looks like a second selected item (NAV-08). */
+/* Hover is a neutral tint; only the current page gets the brand tint, so
+   pointing never looks like a second selected item (NAV-08). Đợt 15b: bỏ vạch
+   trái — chỉ còn nền tint bo tròn như Lurn. */
 .sidebar-nav-item:hover {
   background: var(--color-surface-muted, var(--surface-subtle));
   color: var(--text-primary);
@@ -384,17 +390,6 @@
   background: var(--color-brand-50, #F1FBF6);
   color: var(--color-active-text);
   font-weight: 600;
-}
-
-.sidebar-nav-item.active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--primary);
 }
 
 /* Long "Tóm tắt thu chi" page: while a block below is read, the highlight
@@ -409,17 +404,6 @@
   font-weight: 600;
 }
 
-.sidebar-nav-item.is-in-view::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--primary);
-}
-
 .sidebar-nav-item.active.is-shadowed {
   background: transparent;
   color: var(--text-secondary);
@@ -429,10 +413,6 @@
 .sidebar-nav-item.active.is-shadowed:hover {
   background: var(--color-surface-muted, var(--surface-subtle));
   color: var(--text-primary);
-}
-
-.sidebar-nav-item.active.is-shadowed::before {
-  content: none;
 }
 
 /* Items sit inside a clipped (foldable) box, so the focus ring is drawn
@@ -672,13 +652,14 @@
 }
 
 /* ── Main App Content Layout (Fluid max 1440px centered) ── */
+/* Nền do .app-column vẽ (tấm bo góc trên máy tính). */
 .app-main {
   flex: 1;
   min-width: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-canvas, #F5FCF8);
+  background-color: transparent;
 }
 
 .app-container {
@@ -693,6 +674,126 @@
 @media (min-width: 1440px) {
   .app-container {
     padding: 32px 40px;
+  }
+}
+
+/* ============================================================
+   MÁY TÍNH (>900px) — đợt 15b: không còn topbar. Sidebar hết chiều cao,
+   nội dung là một tấm bo góc trên-trái; Thêm giao dịch · Ngày · Cài đặt ·
+   Tài khoản nằm trong viên kính nổi góc trên-phải, đứng yên khi cuộn.
+   Điện thoại/tablet (≤900px) giữ nguyên topbar + thanh dưới.
+   ============================================================ */
+@media (min-width: 901px) {
+  .app-shell {
+    --shell-sticky-top: 64px;
+  }
+
+  .app-column {
+    margin-top: 10px;
+    min-height: calc(100vh - 10px);
+    min-height: calc(100dvh - 10px);
+    background-color: var(--shell-panel-bg);
+    border: 1px solid var(--shell-panel-border);
+    border-right: 0;
+    border-bottom: 0;
+    border-top-left-radius: var(--shell-panel-radius);
+  }
+
+  /* Hàng của viên kính: trong suốt, không chặn chuột ở phần trống (nội dung trôi qua bên dưới). */
+  .topbar {
+    height: 64px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 12px 32px 0;
+    align-items: flex-start;
+    justify-content: flex-end;
+    background: transparent;
+    border-bottom: 0;
+    box-shadow: none;
+    pointer-events: none;
+  }
+
+  .topbar::after,
+  .tb-brand {
+    display: none;
+  }
+
+  .tb-right {
+    pointer-events: auto;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full, 999px);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
+  }
+
+  .tb-add-btn {
+    height: 36px;
+    padding: 0 16px 0 14px;
+    border-radius: var(--radius-full, 999px);
+  }
+
+  .tb-date {
+    height: 36px;
+    padding: 0 12px;
+    border-right: 1px solid var(--glass-border);
+  }
+
+  /* Cài đặt chỉ còn icon trong viên kính (nút đã có aria-label + title). */
+  .tb-settings-label {
+    display: none;
+  }
+
+  .tb-settings-btn,
+  .user-chip {
+    height: 36px;
+    border-color: transparent;
+    border-radius: var(--radius-full, 999px);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .tb-settings-btn {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .user-chip {
+    padding: 3px 12px 3px 3px;
+  }
+
+  .tb-settings-btn:hover,
+  .user-chip:hover,
+  .user-chip[aria-expanded="true"] {
+    background: var(--menu-item-hover-bg);
+    border-color: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .app-container {
+    padding-top: 12px;
+  }
+}
+
+/* Không có backdrop-filter, hoặc người dùng muốn bớt trong suốt: viên kính thành nền đặc. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  @media (min-width: 901px) {
+    .tb-right {
+      background: var(--color-surface);
+    }
+  }
+}
+
+@media (min-width: 901px) and (prefers-reduced-transparency: reduce) {
+  .tb-right {
+    background: var(--color-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
@@ -871,9 +972,15 @@
   }
 }
 
-@media (min-width: 769px) and (max-width: 1100px) {
+@media (min-width: 769px) and (max-width: 900px) {
   .topbar {
     padding: 0 20px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .topbar {
+    padding-inline: 40px;
   }
 }
 

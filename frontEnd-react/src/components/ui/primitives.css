@@ -205,21 +205,33 @@
   align-items: center;
 }
 
+/* Viên kính lúc tải: cao như viên thật (36px + đệm 6px). */
+@media (min-width: 901px) {
+  .tb-right.tb-right--layout {
+    min-height: 50px;
+    box-sizing: border-box;
+    padding: 6px 6px 6px 16px;
+  }
+}
+
 .skeleton-item.skeleton-text.skeleton-item--shell-title {
   width: 120px;
   height: 20px;
 }
 
 .sidebar-scrollable-content.sidebar-scrollable-content--box {
-  padding: 16px 12px;
+  padding: 4px 14px 24px;
 }
 
 .sidebar-scrollable-content .sidebar-nav-group.sidebar-nav-group--box {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
+/* Cao bằng hàng tiêu đề nhóm thật (28px + 4px). */
 .sidebar-group-label.sidebar-group-label--box {
-  margin-bottom: 8px;
+  min-height: 28px;
+  margin-bottom: 4px;
+  padding-left: 12px;
 }
 
 .sidebar-nav-item.sidebar-nav-item--box {

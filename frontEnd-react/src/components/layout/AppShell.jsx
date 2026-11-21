@@ -10,7 +10,7 @@ import { ToastRegion } from '../ui/ToastRegion';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CommandPaletteHost } from './CommandPaletteHost';
 
-// Moves keyboard focus past the topbar and sidebar without adding a #hash
+// Moves keyboard focus past the sidebar and topbar without adding a #hash
 // entry to the router history.
 function skipToMainContent(event) {
   const target = document.getElementById('main-content');
@@ -36,15 +36,19 @@ export function AppShell({ children }) {
       <a className="skip-link" href="#main-content" onClick={skipToMainContent}>
         {t('common.skipToContent')}
       </a>
-      <Topbar />
       <div className="app-body-container">
         <SidebarNav />
-        <main id="main-content" className="app-main" tabIndex={-1} aria-busy={isFirstLoad || undefined}>
-          <MobileSectionNavigation />
-          <div className="app-container">
-            {children || <Outlet />}
-          </div>
-        </main>
+        {/* Máy tính: tấm nội dung bo góc cạnh sidebar; Topbar thành viên kính nổi bên trong
+            (đợt 15b). Điện thoại: tấm phẳng, Topbar vẫn là thanh trên cùng như cũ. */}
+        <div className="app-column">
+          <Topbar />
+          <main id="main-content" className="app-main" tabIndex={-1} aria-busy={isFirstLoad || undefined}>
+            <MobileSectionNavigation />
+            <div className="app-container">
+              {children || <Outlet />}
+            </div>
+          </main>
+        </div>
       </div>
       <MobilePrimaryNavigation />
       <ToastRegion />

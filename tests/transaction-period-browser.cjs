@@ -671,7 +671,8 @@ async function check(name, work) {
         box: bounds(chip), text: chip.textContent, title: chip.getAttribute('title'), checked: chip.getAttribute('aria-checked'),
         children: [...chip.querySelectorAll('.txn-quick-chip__icon, .txn-quick-chip__name')]
           .map(child => ({ selector: child.className, box: bounds(child) })) }));
-      const rows = [...element.querySelectorAll('.txn-list-group > .txn-row')].map(row => ({
+      // Dòng Ngày nằm trong .txn-row-group (lịch xổ ngay dưới dòng, đợt 14a).
+      const rows = [...element.querySelectorAll('.txn-list-group > .txn-row, .txn-list-group > .txn-row-group > .txn-row')].map(row => ({
         box: bounds(row), text: row.textContent.trim(),
         children: [...row.querySelectorAll('.txn-row__icon, .txn-row__label, .txn-row__value, .txn-row__input, .custom-wallet-row__value')]
           .filter(child => child.getClientRects().length).map(child => ({ selector: child.className, box: bounds(child) })) }));

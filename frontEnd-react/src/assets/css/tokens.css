@@ -222,6 +222,18 @@
   --user-chip-border: var(--border);
   --user-chip-shadow: var(--shadow-press);
   --user-chip-text: var(--text-primary);
+  /* Khung máy tính (đợt 15b): sidebar hết chiều cao, tấm nội dung bo góc, viên kính nổi.
+     Đọc token màu của theme nên tự đổi theo theme; theme nào cần khác thì ghi đè bên dưới. */
+  --shell-frame-bg: var(--color-surface);
+  --shell-panel-bg: var(--color-canvas);
+  --shell-panel-border: var(--color-border);
+  --shell-panel-radius: 24px;
+  --shell-sticky-top: 72px;
+  --glass-bg: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-border) 80%, transparent);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 12px 32px -14px rgba(16, 27, 54, 0.24), 0 2px 6px -2px rgba(16, 27, 54, 0.08);
+  --glass-filter: blur(18px) saturate(180%);
   /* Điều khiển & hộp thoại dùng chung */
   --btn-primary-bg: var(--primary);
   --btn-primary-hover-bg: var(--primary-hover);
@@ -540,6 +552,11 @@ html.dark-theme {
   --menu-item-hover-bg: rgba(255, 255, 255, 0.07);
 
   /* ══ Token cấp component ══ */
+  /* Khung máy tính (đợt 15b): viên kính trên nền tối */
+  --glass-bg: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.65), 0 2px 6px -2px rgba(0, 0, 0, 0.45);
   /* Điều khiển & hộp thoại dùng chung */
   --btn-primary-bg: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
   --btn-primary-hover-bg: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);

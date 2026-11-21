@@ -54,3 +54,10 @@ body {
   background-color: var(--bg, #F5FAF7);
 }
 
+/* Máy tính: phần khung quanh tấm nội dung bo góc cùng màu sidebar (đợt 15b). */
+@media (min-width: 901px) {
+  .app-shell {
+    background-color: var(--shell-frame-bg, var(--bg, #F5FAF7));
+  }
+}
+

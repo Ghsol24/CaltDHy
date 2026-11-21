@@ -37,7 +37,7 @@ export function Topbar() {
           aria-label={t('topbar.home')}
           onClick={() => navigateTo('home')}
         >
-          <div className="tb-logo-icon">C</div>
+          <div className="tb-logo-icon" data-brand-mark="">C</div>
           <span className="tb-logo">
             Calt<span className="tb-logo-accent">D</span>Hy
           </span>
