@@ -42,7 +42,7 @@ export function CategoryDonut({ activeIndex, ariaLabel, label, onActiveChange, o
       chart.canvas.style.cursor = elements.length ? 'pointer' : 'default';
       onActiveChange(elements.length ? elements[0].index : null);
     },
-    animation: prefersReducedMotion ? false : { duration: 350, easing: 'easeOutQuart' },
+    animation: prefersReducedMotion ? false : { duration: 550, easing: 'easeOutQuart' },
     resizeDelay: 150,
     plugins: { legend: { display: false }, tooltip: { enabled: false } },
   }), [onActiveChange, onSelect, prefersReducedMotion]);
