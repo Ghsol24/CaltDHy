@@ -95,6 +95,7 @@ const userSchema = new mongoose.Schema(
                 lastUsed: { type: cashFlowViewSchema, default: null },
                 pinnedDefault: { type: cashFlowViewSchema, default: null }
             },
+            sidebarPinnedGroups: { type: [String], default: undefined },
             // Thông báo: mọi loại đều mặc định tắt, người dùng tự bật trong Cài đặt > Thông báo.
             notifications: {
                 dueEmail: { type: Boolean, default: false },         // email khoản định kỳ sắp đến hạn

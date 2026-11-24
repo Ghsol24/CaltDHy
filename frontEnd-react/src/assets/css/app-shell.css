@@ -282,7 +282,7 @@ html.is-resizing-sidebar .app-sidebar-nav {
 
 .sidebar-nav-group {
   margin-bottom: 18px;
-  transition: margin-bottom var(--dur-mid) ease;
+  transition: margin-bottom var(--dur-sidebar-open) var(--ease-sidebar-open);
 }
 
 /* Gọn kiểu Lurn: nhóm tách nhau bằng khoảng trống, không kẻ đường (đợt 15b). */
@@ -293,6 +293,7 @@ html.is-resizing-sidebar .app-sidebar-nav {
 
 .sidebar-nav-group.is-group-collapsed {
   margin-bottom: 8px;
+  transition: margin-bottom var(--dur-sidebar-close) var(--ease-sidebar-close);
 }
 
 .sidebar-group-header-row {
@@ -301,11 +302,12 @@ html.is-resizing-sidebar .app-sidebar-nav {
   gap: 4px;
   padding: 0 0 4px;
   min-height: 28px;
-  transition: padding-bottom var(--dur-mid) ease;
+  transition: padding-bottom var(--dur-sidebar-open) var(--ease-sidebar-open);
 }
 
 .sidebar-nav-group.is-group-collapsed .sidebar-group-header-row {
   padding-bottom: 0;
+  transition: padding-bottom var(--dur-sidebar-close) var(--ease-sidebar-close);
 }
 
 /* The whole group header folds its items away, like an accordion. */
@@ -334,15 +336,20 @@ html.is-resizing-sidebar .app-sidebar-nav {
 .sidebar-group-chevron {
   flex-shrink: 0;
   color: var(--color-text-secondary, var(--text-secondary));
-  transition: transform var(--dur-mid) var(--ease-smooth), color var(--dur-fast) ease;
+  transition: transform var(--dur-sidebar-open) var(--ease-sidebar-open), color var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 .sidebar-group-toggle:hover .sidebar-group-chevron {
   color: var(--color-text, var(--text-primary));
 }
 
+.sidebar-nav-group[data-open-reason="preview"] .sidebar-group-chevron {
+  opacity: .5;
+}
+
 .sidebar-nav-group.is-group-collapsed .sidebar-group-chevron {
   transform: rotate(-90deg);
+  transition: transform var(--dur-sidebar-close) var(--ease-sidebar-close), color var(--dur-fast) ease, opacity var(--dur-fast) ease;
 }
 
 /* A folded group that holds the open page keeps its label in the active
@@ -360,9 +367,9 @@ html.is-resizing-sidebar .app-sidebar-nav {
   opacity: 1;
   visibility: visible;
   transition:
-    grid-template-rows var(--dur-mid) var(--ease-smooth),
-    opacity var(--dur-fast) ease,
-    visibility var(--dur-mid);
+    grid-template-rows var(--dur-sidebar-open) var(--ease-sidebar-open),
+    opacity 200ms ease-out 40ms,
+    visibility var(--dur-sidebar-open);
   transition-behavior: allow-discrete;
 }
 
@@ -370,6 +377,11 @@ html.is-resizing-sidebar .app-sidebar-nav {
   grid-template-rows: 0fr;
   opacity: 0;
   visibility: hidden;
+  transition:
+    grid-template-rows var(--dur-sidebar-close) var(--ease-sidebar-close),
+    opacity 120ms ease-in,
+    visibility var(--dur-sidebar-close);
+  transition-behavior: allow-discrete;
 }
 
 .sidebar-group-collapse > .sidebar-group-items {
