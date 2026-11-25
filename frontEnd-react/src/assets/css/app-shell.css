@@ -860,6 +860,23 @@ html.is-resizing-sidebar .app-sidebar-nav {
   }
 }
 
+/* Đang cuộn (html[data-scrolling], utils/scrollActivity.js — đợt 15h): viên kính tạm thành nền
+   gần đặc để khỏi làm mờ lại mỗi frame, và tấm nội dung ngừng nhận hover để nội dung trượt
+   dưới con trỏ không bật hiệu ứng hover / mouseenter liên tục. Dừng cuộn 150ms là trở lại. */
+@media (min-width: 901px) {
+  html[data-scrolling] .tb-right {
+    background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (hover: hover) {
+  html[data-scrolling] .app-container {
+    pointer-events: none;
+  }
+}
+
 /* Không có backdrop-filter, hoặc người dùng muốn bớt trong suốt: viên kính thành nền đặc. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   @media (min-width: 901px) {
