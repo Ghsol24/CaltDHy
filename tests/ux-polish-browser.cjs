@@ -506,6 +506,16 @@ check('Desktop sidebar keeps active group open, lingers previews inside rail, an
   await expect(analyticsGroup).not.toHaveAttribute('data-pinned', 'true');
   await expect(analyticsGroup).toHaveClass(/is-group-collapsed/);
 
+  // 11. Keyboard: Enter on a closed header pins it open, Enter again unpins and closes it.
+  await page.mouse.move(720, 300);
+  await jarsToggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'pinned');
+  await page.keyboard.press('Enter');
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(jarsGroup).not.toHaveAttribute('data-pinned', 'true');
+
   assert.deepEqual(errors, []);
   await context.close();
 });

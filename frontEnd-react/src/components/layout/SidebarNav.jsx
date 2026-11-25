@@ -45,14 +45,9 @@ export function SidebarNav() {
   const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth);
 
   const activeViewGroupId = groupIdForView(activeView);
-  const prevActiveGroupRef = useRef(activeViewGroupId);
-  if (prevActiveGroupRef.current !== activeViewGroupId) {
-    prevActiveGroupRef.current = activeViewGroupId;
-    if (dismissedGroupId !== null) {
-      setDismissedGroupId(null);
-    }
-  }
-  const effectiveDismissedId = prevActiveGroupRef.current === activeViewGroupId ? dismissedGroupId : null;
+  // Thu gọn nhóm đang xem chỉ có hiệu lực tới khi sang nhóm khác; quay lại thì nhóm tự mở như cũ.
+  useEffect(() => { setDismissedGroupId(null); }, [activeViewGroupId]);
+  const effectiveDismissedId = dismissedGroupId === activeViewGroupId ? dismissedGroupId : null;
 
   const pinnedGroupsRef = useRef(pinnedGroups);
   const previewGroupIdsRef = useRef(previewGroupIds);

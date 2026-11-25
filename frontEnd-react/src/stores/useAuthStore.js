@@ -5,6 +5,7 @@ import { apiFetch, clearApiSession } from '../services/api';
 import { invalidateSession, sessionEpoch, assertSession, sessionChangedError } from '../services/sessionRuntime';
 import { consumeOAuthSignIn } from '../services/oauthReturn.js';
 import { normalizeCashFlowPreferences, isCashFlowView } from '../utils/cashFlowPreferences';
+import { normalizePinnedGroups } from '../components/layout/sidebarGroups';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
 import { useJarStore } from './useJarStore';
@@ -167,9 +168,8 @@ export const useAuthStore = create((set, get) => ({
       const cashFlow = received?.cashFlow;
       const pinned = received?.sidebarPinnedGroups;
       if (typeof received?.analyticsExcludeRecurring !== 'boolean' ||
-          (pinned !== undefined && (!Array.isArray(pinned) || pinned.length > 3 ||
-            new Set(pinned).size !== pinned.length ||
-            pinned.some(id => !['group_plan', 'group_analytics', 'group_jars'].includes(id)))) ||
+          (pinned !== undefined && (!Array.isArray(pinned) || new Set(pinned).size !== pinned.length ||
+            normalizePinnedGroups(pinned).length !== pinned.length)) ||
           (cashFlow !== undefined && (!cashFlow || Array.isArray(cashFlow) ||
             Object.keys(cashFlow).length !== 2 ||
             !Object.prototype.hasOwnProperty.call(cashFlow, 'lastUsed') ||
@@ -179,7 +179,7 @@ export const useAuthStore = create((set, get) => ({
         throw new Error('Invalid preferences response.');
       }
       const preferences = { ...(get().user?.preferences || {}), ...received,
-        ...(pinned !== undefined ? { sidebarPinnedGroups: ['group_plan', 'group_analytics', 'group_jars'].filter(id => pinned.includes(id)) } : {}),
+        ...(pinned !== undefined ? { sidebarPinnedGroups: normalizePinnedGroups(pinned) } : {}),
         ...(cashFlow !== undefined ? { cashFlow: normalizeCashFlowPreferences(cashFlow) } : {}) };
       set((state) => state.user?.id === userId ? { user: { ...state.user, preferences } } : state);
       hydrateUserPreferences({ preferences });
