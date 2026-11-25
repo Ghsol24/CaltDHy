@@ -30,6 +30,13 @@
   color: var(--color-text, var(--text-primary));
 }
 
+.month-nav-btn:disabled {
+  opacity: .4;
+  cursor: default;
+  background: transparent;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
 .month-current-display {
   font-size: var(--font-sm);
   font-weight: 700;

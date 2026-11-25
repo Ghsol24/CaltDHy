@@ -3,6 +3,7 @@
 // in-memory fixture API (no MongoDB needed).
 //   npm run build --prefix frontEnd-react && node tests/ux-polish-browser.cjs
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const { chromium, expect } = require('@playwright/test');
 const { startUiFixtureServer } = require('./ui-fixture-server.cjs');
 
@@ -361,10 +362,12 @@ check('Goals page on phones: compact list on Tổng quan hũ, full history page 
   await context.close();
 });
 
-check('Desktop sidebar groups start collapsed, preview on hover, collapse on mouse leave, and stay fixed only when clicked', async ({ browser, server }) => {
+check('Desktop sidebar keeps active group open, lingers previews inside rail, and persists pins per account', async ({ browser, server }) => {
+  server.db.user.preferences.sidebarPinnedGroups = [];
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'green', width: 1440 });
-  await open('/spending/analytics/overview');
+  await open('/spending/home');
 
+  const sidebar = page.locator('.app-sidebar-nav');
   const planGroup = page.locator('.sidebar-nav-group').nth(1);
   const analyticsGroup = page.locator('.sidebar-nav-group').nth(2);
   const jarsGroup = page.locator('.sidebar-nav-group').nth(3);
@@ -372,76 +375,143 @@ check('Desktop sidebar groups start collapsed, preview on hover, collapse on mou
   const analyticsToggle = analyticsGroup.locator('.sidebar-group-toggle');
   const jarsToggle = jarsGroup.locator('.sidebar-group-toggle');
 
-  // 1. Default state: every group starts collapsed (even the group holding the active page).
-  await expect(planGroup).toHaveClass(/is-group-collapsed/);
-  await expect(analyticsGroup).toHaveClass(/is-group-collapsed/);
-  await expect(analyticsGroup).toHaveClass(/has-active-item/);
-  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(analyticsToggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
-
-  // 2. Hover into "Kế hoạch" expands it temporarily without pinning.
-  await planToggle.hover();
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(planGroup).not.toHaveClass(/is-group-collapsed/);
-  await expect(planGroup).toHaveClass(/is-hover-open/);
-  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
-
-  // 3. Moving mouse onto a sub-item keeps it open; clicking navigates without pinning.
-  const walletsBtn = planGroup.getByRole('button', { name: 'Ví & Tài khoản', exact: true });
-  await walletsBtn.hover();
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
-  await walletsBtn.click();
-  await page.waitForURL('**/spending/plan/wallets');
-  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
-
-  // 4. Moving mouse away from the sidebar collapses the unpinned group back.
-  await page.mouse.move(720, 300);
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(planGroup).toHaveClass(/is-group-collapsed/);
-  await expect(planGroup).toHaveClass(/has-active-item/);
-
-  // 5. Hovering then clicking the group header pins it open; leaving the sidebar keeps it open.
-  await planToggle.hover();
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
-  await planToggle.click();
-  await expect(planGroup).toHaveAttribute('data-pinned', 'true');
-  await expect(planGroup).toHaveClass(/is-group-pinned/);
-  await page.mouse.move(720, 300);
+  // 1. New user on /spending/home: all three collapsible groups start closed,
+  //    and sweeping the mouse quickly across the entire rail opens none of them.
+  for (const [group, toggle] of [[planGroup, planToggle], [analyticsGroup, analyticsToggle], [jarsGroup, jarsToggle]]) {
+    await expect(group).toHaveClass(/is-group-collapsed/);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    assert.equal(await group.getAttribute('data-open-reason'), null);
+  }
+  await page.mouse.move(120, 120);
+  await page.mouse.move(120, 420, { steps: 8 });
+  await page.mouse.move(720, 420);
   await page.waitForTimeout(220);
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(planGroup).not.toHaveClass(/is-group-collapsed/);
+  for (const group of [planGroup, analyticsGroup, jarsGroup]) {
+    await expect(group).toHaveClass(/is-group-collapsed/);
+  }
 
-  // 6. Reload preserves the pinned group while others remain collapsed.
-  await page.reload({ waitUntil: 'networkidle' });
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(planGroup).toHaveAttribute('data-pinned', 'true');
-  await expect(analyticsToggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
-
-  // 7. Clicking a pinned group header while hovering over it immediately unpins and collapses it.
-  await planToggle.hover();
-  await planToggle.click();
-  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  // 2. Hover "Kế hoạch": closed at 100ms (< 180ms), open as preview by 250ms, unpinned.
+  const planBox = await planToggle.boundingBox();
+  await page.mouse.move(planBox.x + planBox.width / 2, planBox.y + planBox.height / 2);
+  await page.waitForTimeout(100);
   await expect(planGroup).toHaveClass(/is-group-collapsed/);
-  // Staying on the header must not immediately bounce open again.
-  await page.waitForTimeout(180);
   await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
-  // Leaving and re-entering re-enables hover preview.
-  await page.mouse.move(720, 300);
-  await page.waitForTimeout(60);
-  await planToggle.hover();
+  await page.waitForTimeout(150);
   await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
-  await page.mouse.move(720, 300);
-  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(planGroup).toHaveAttribute('data-open-reason', 'preview');
+  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
 
-  // 8. Keyboard Enter toggles pinned open/closed cleanly.
+  // 3. Click "Ví & Tài khoản" -> navigates; leaving sidebar for 400ms keeps "Kế hoạch" open as active.
+  await planGroup.getByRole('button', { name: 'Ví & Tài khoản', exact: true }).click();
+  await page.waitForURL('**/spending/plan/wallets');
+  await page.mouse.move(720, 300);
+  await page.waitForTimeout(400);
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(planGroup).toHaveAttribute('data-open-reason', 'active');
+  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
+
+  // 4. Anti-jump: hover opens "Phân tích"; moving down onto "Hũ tiết kiệm" keeps "Phân tích" open
+  //    so the Y position of "Hũ tiết kiệm" header does not jump up under the pointer.
+  await analyticsToggle.hover();
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'preview');
+  const jarsBefore = await jarsToggle.boundingBox();
+  await page.mouse.move(jarsBefore.x + jarsBefore.width / 2, jarsBefore.y + jarsBefore.height / 2);
+  await page.waitForTimeout(80);
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'preview');
+  const jarsDuring = await jarsToggle.boundingBox();
+  assert.ok(Math.abs(jarsDuring.y - jarsBefore.y) <= 1, `jars toggle must not jump (${jarsBefore.y} -> ${jarsDuring.y})`);
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'preview');
+  // Leaving the sidebar closes both previews while "Kế hoạch" (active) remains open.
+  await page.mouse.move(720, 300);
+  await expect(analyticsGroup).toHaveClass(/is-group-collapsed/);
+  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
+  await expect(planGroup).toHaveAttribute('data-open-reason', 'active');
+
+  // 5. Hover "Phân tích" then click its header -> pins and sends PUT /api/auth/preferences.
+  await analyticsToggle.hover();
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'preview');
+  const pinRequest = page.waitForRequest((req) => req.url().endsWith('/api/auth/preferences') && req.method() === 'PUT');
+  await analyticsToggle.click();
+  const sentPin = JSON.parse((await pinRequest).postData());
+  assert.deepEqual(sentPin, { sidebarPinnedGroups: ['group_analytics'] });
+  await expect(analyticsGroup).toHaveAttribute('data-pinned', 'true');
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
+
+  // 6. Hover "Hũ tiết kiệm", click "Tổng quan hũ" -> previous active group ("Kế hoạch") lingers
+  //    while pointer stays inside sidebar, then closes on sidebar leave.
+  await jarsToggle.hover();
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'preview');
+  await jarsGroup.getByRole('button', { name: 'Tổng quan hũ', exact: true }).click();
+  await page.waitForURL('**/spending/jars/goals');
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
+  await expect(planGroup).toHaveAttribute('data-open-reason', 'preview');
+  await page.mouse.move(720, 300);
+  await expect(planGroup).toHaveClass(/is-group-collapsed/);
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
+
+  // 7. Click "Hũ tiết kiệm" header (active) -> closes immediately and stays closed for 300ms while resting.
+  await jarsToggle.hover();
+  await jarsToggle.click();
+  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
+  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
+  await page.waitForTimeout(300);
+  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
+  // Leaving and hovering back lets the user pick "Lịch sử nạp/rút", restoring active open state.
+  await page.mouse.move(720, 300);
+  await jarsToggle.hover();
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'preview');
+  await jarsGroup.getByRole('button', { name: 'Lịch sử nạp/rút', exact: true }).click();
+  await page.waitForURL('**/spending/jars/history');
+  await page.mouse.move(720, 300);
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
+
+  // 8. Resize sidebar width and reload -> pinned ("Phân tích"), active ("Hũ"), closed ("Kế hoạch"),
+  //    and dragged sidebar width all survive reload.
+  const handle = page.locator('.sidebar-resize-handle');
+  const handleBox = await handle.boundingBox();
+  const handleCenterX = handleBox.x + handleBox.width / 2;
+  const handleCenterY = handleBox.y + 120;
+  await page.mouse.move(handleCenterX, handleCenterY);
+  await page.mouse.down();
+  await page.mouse.move(handleCenterX - 36, handleCenterY, { steps: 4 });
+  await page.mouse.up();
+  const draggedWidth = Math.round((await sidebar.boundingBox()).width);
+  assert.equal(draggedWidth, 224);
+
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
+  await expect(analyticsGroup).toHaveAttribute('data-pinned', 'true');
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
+  await expect(planGroup).toHaveClass(/is-group-collapsed/);
+  assert.equal(Math.round((await sidebar.boundingBox()).width), 224);
+
+  // 9. Logout then login again -> "Phân tích" stays pinned for the account.
+  await page.locator('.tb-settings-btn').click();
+  await page.locator('.settings-nav-logout').click();
+  await page.locator('.confirm-dialog-card').getByRole('button', { name: 'Đăng xuất', exact: true }).click();
+  await page.waitForURL('**/login');
+  await page.locator('#emailIn').fill('fixture@example.com');
+  await page.locator('#pwIn').fill('Fixture-password-1234');
+  await page.locator('#loginForm button[type="submit"]').click();
+  await page.waitForURL('**/spending/home');
+  await expect(analyticsGroup).toHaveAttribute('data-pinned', 'true');
+  await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
+
+  // 10. Click "Phân tích" header (pinned) -> unpins, collapses, and sends PUT [].
+  const unpinRequest = page.waitForRequest((req) => req.url().endsWith('/api/auth/preferences') && req.method() === 'PUT');
+  await analyticsToggle.click();
+  const sentUnpin = JSON.parse((await unpinRequest).postData());
+  assert.deepEqual(sentUnpin, { sidebarPinnedGroups: [] });
+  await expect(analyticsGroup).not.toHaveAttribute('data-pinned', 'true');
+  await expect(analyticsGroup).toHaveClass(/is-group-collapsed/);
+
+  // 11. Keyboard: Enter on a closed header pins it open, Enter again unpins and closes it.
+  await page.mouse.move(720, 300);
   await jarsToggle.focus();
   await page.keyboard.press('Enter');
   await expect(jarsToggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(jarsGroup).toHaveAttribute('data-pinned', 'true');
+  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'pinned');
   await page.keyboard.press('Enter');
   await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
   await expect(jarsGroup).not.toHaveAttribute('data-pinned', 'true');
@@ -455,7 +525,15 @@ module.exports = { check, checks, newPage };
 if (require.main === module) {
   (async () => {
     const server = await startUiFixtureServer({ now: FIXTURE_NOW });
-    const browser = await chromium.launch();
+    const localChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    const browser = await chromium.launch({
+      headless: true,
+      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+        : process.platform === 'darwin' && fs.existsSync(localChrome)
+          ? { executablePath: localChrome }
+          : {})
+    });
     let failed = 0;
     try {
       for (const { name, run } of checks) {

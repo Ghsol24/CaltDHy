@@ -494,6 +494,37 @@ async function check(name, work) {
     await page.emulateMedia({ reducedMotion: 'reduce' });
   });
 
+  await check('card month stepper follows the page month and the colour key explains the bars', async () => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await enter();
+    const thisMonth = page.locator('.analytics-this-month-btn');
+    if (await thisMonth.count()) await thisMonth.click();
+    const cardMonth = page.getByTestId('cashflow-month-trigger');
+    const cardNext = page.getByTestId('cashflow-month-next');
+    const current = (await monthTrigger.innerText()).trim();
+    // Không có tháng tương lai: cả nút ở đầu trang và trong thẻ đều khoá.
+    await expect(cardNext).toBeDisabled();
+    await expect(page.locator('.analytics-month-stepper .month-nav-btn').last()).toBeDisabled();
+    await page.getByTestId('cashflow-month-prev').click();
+    await expect(monthTrigger).not.toHaveText(current);
+    await expect(cardMonth).toHaveText((await monthTrigger.innerText()).trim());
+    await expect(cardNext).toBeEnabled();
+    // Đổi tháng kết thúc ngay trong menu Khoảng xem.
+    await closePopover(); await period.click();
+    await page.getByTestId('cashflow-range-next').click();
+    await expect(monthTrigger).toHaveText(current);
+    await expect(page.getByTestId('cashflow-range-next')).toBeDisabled();
+    await closePopover();
+    // Chú thích màu chỉ hiện khi biểu đồ có từ hai màu trở lên.
+    await selectSeries('expense');
+    const legend = page.getByTestId('cashflow-legend');
+    if (await legend.count()) await expect(legend).toContainText('Cao bất thường');
+    await selectSeries('both');
+    await expect(legend).toContainText('Thu nhập');
+    await expect(legend).toContainText('Chi tiêu');
+    await selectSeries('expense');
+  });
+
   await check('four themes and six content widths fit the panel, menus and touch targets', async () => {
     fs.mkdirSync(evidenceDir, { recursive: true });
     const layouts = [];

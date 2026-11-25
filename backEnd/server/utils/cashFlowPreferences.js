@@ -2,9 +2,21 @@
 
 const modes = new Set(['daily', '3months', '6months']);
 const series = new Set(['expense', 'income', 'both']);
+const SIDEBAR_GROUP_IDS = ['group_plan', 'group_analytics', 'group_jars'];
+const sidebarGroupSet = new Set(SIDEBAR_GROUP_IDS);
 const owns = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 const reminderLocales = new Set(['vi', 'en', 'zh-CN']);
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+function validSidebarPinnedGroups(value) {
+    return Array.isArray(value) && value.length <= 3 &&
+        new Set(value).size === value.length &&
+        value.every(id => typeof id === 'string' && sidebarGroupSet.has(id));
+}
+
+function publicSidebarPinnedGroups(value) {
+    return Array.isArray(value) ? SIDEBAR_GROUP_IDS.filter(id => value.includes(id)) : [];
+}
 
 function validCashFlowView(value) {
     return isObject(value) && Object.keys(value).length === 3 &&
@@ -28,8 +40,9 @@ function publicCashFlowPreferences(value) {
 function validPreferencesUpdate(body) {
     if (!isObject(body)) return false;
     const keys = Object.keys(body);
-    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'notifications'].includes(key))) return false;
+    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'notifications', 'sidebarPinnedGroups'].includes(key))) return false;
     if (owns(body, 'notifications') && !validNotificationsUpdate(body.notifications)) return false;
+    if (owns(body, 'sidebarPinnedGroups') && !validSidebarPinnedGroups(body.sidebarPinnedGroups)) return false;
     if (owns(body, 'analyticsExcludeRecurring') && typeof body.analyticsExcludeRecurring !== 'boolean') return false;
     if (owns(body, 'cashFlow')) {
         if (!isObject(body.cashFlow)) return false;
@@ -59,6 +72,9 @@ function preferenceUpdateFields(body, existing) {
         if (owns(body.cashFlow, 'lastUsed')) {
             fields['preferences.analyticsExcludeRecurring'] = body.cashFlow.lastUsed.excludeRecurring;
         }
+    }
+    if (owns(body, 'sidebarPinnedGroups')) {
+        fields['preferences.sidebarPinnedGroups'] = publicSidebarPinnedGroups(body.sidebarPinnedGroups);
     }
     if (owns(body, 'notifications')) {
         const update = body.notifications;
@@ -105,4 +121,4 @@ function publicNotifications(value) {
     };
 }
 
-module.exports = { publicNotifications, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };
+module.exports = { SIDEBAR_GROUP_IDS, publicSidebarPinnedGroups, publicNotifications, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };

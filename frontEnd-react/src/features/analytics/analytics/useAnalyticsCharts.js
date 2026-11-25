@@ -21,7 +21,7 @@ export function useAnalyticsCharts({ activeMonth, drilldownRevision, isCompactCh
     return {
       theme,
       // Ordinary spending bars are neutral; red marks only unusually high days (CF-05).
-      income: read('--color-success'), expense: read('--color-text-muted'), expenseHover: read('--color-text-secondary'),
+      income: read('--color-success'), expense: read('--chart-expense-bar'), expenseHover: read('--chart-expense-bar-hover'),
       unusual: read('--color-danger'),
       tick: read('--color-text-muted'), grid: read('--color-border'),
       tooltipBg: read('--color-surface'), text: read('--color-text'),

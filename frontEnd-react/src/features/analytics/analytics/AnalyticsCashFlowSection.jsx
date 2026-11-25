@@ -5,12 +5,15 @@ import { Bar } from 'react-chartjs-2';
 import { Icon } from '../../../components/ui/AppIcons';
 import { useTranslation } from '../../../i18n/useTranslation';
 
-export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, barChartData, barChartRef, barOptions, cashFlowActive, changeCashFlowPeriod, chartContext, currentMonthNum, dailyTrend, drilldown, excludeRecurring, hasTrendData, highestSpendingDays, isCompactChart, openDay, periodLabel, pinnedDefault, saveCashFlowChoice, saveCashFlowDefault, savingCashFlowPreferences, savingExpectedDay, selectedWeekIndex, setMobileWeek, today, toggleExpectedDay, trendMode, trendSeries, trendSummary, unusualDays, viewCashFlowHistory, visibleDailyDays, weekCount, weekEnd, weekStart }) {
+export function AnalyticsCashFlowSection({ activeMonth, backToCashFlowPeriod, barChartData, barChartRef, barOptions, cashFlowActive, changeCashFlowMonth, changeCashFlowPeriod, monthLabel, chartContext, currentMonthNum, dailyTrend, drilldown, excludeRecurring, hasTrendData, highestSpendingDays, isCompactChart, openDay, periodLabel, pinnedDefault, saveCashFlowChoice, saveCashFlowDefault, savingCashFlowPreferences, savingExpectedDay, selectedWeekIndex, setMobileWeek, today, toggleExpectedDay, trendMode, trendSeries, trendSummary, unusualDays, viewCashFlowHistory, visibleDailyDays, weekCount, weekEnd, weekStart }) {
   const { intlLocale, lang, t } = useTranslation();
   return (cashFlowActive && <CashFlowPanel
     t={t} lang={lang} intlLocale={intlLocale}
     periodMode={trendMode} series={trendSeries} excludeRecurring={excludeRecurring}
-    activeMonth={activeMonth} periodLabel={periodLabel}
+    activeMonth={activeMonth} periodLabel={periodLabel} monthLabel={monthLabel}
+    onMonthChange={changeCashFlowMonth}
+    showUnusualLegend={trendMode === 'daily' && trendSeries !== 'income'
+      && visibleDailyDays.some((day) => unusualDays.some((unusual) => unusual.date === day.date))}
     summary={trendSummary} topDays={highestSpendingDays} hasData={hasTrendData}
     emptyMessage={trendMode === 'daily' && visibleDailyDays[0]?.date > today
       ? t('analytics.cashflow.futureDays')

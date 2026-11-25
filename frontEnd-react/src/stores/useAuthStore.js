@@ -5,6 +5,7 @@ import { apiFetch, clearApiSession } from '../services/api';
 import { invalidateSession, sessionEpoch, assertSession, sessionChangedError } from '../services/sessionRuntime';
 import { consumeOAuthSignIn } from '../services/oauthReturn.js';
 import { normalizeCashFlowPreferences, isCashFlowView } from '../utils/cashFlowPreferences';
+import { normalizePinnedGroups } from '../components/layout/sidebarGroups';
 import { useTransactionStore } from './useTransactionStore';
 import { useWalletStore } from './useWalletStore';
 import { useJarStore } from './useJarStore';
@@ -30,10 +31,10 @@ function clearPrivateState() {
   preferencesQueue = Promise.resolve();
   try {
     for (const key of Object.keys(localStorage)) {
-      // Device-level display choices (theme, language, currency, folded
-      // sidebar groups) hold no account data, so they survive sign-out.
+      // Device-level display choices (theme, language, currency, sidebar
+      // width) hold no account data, so they survive page loads and sign-out.
       if (key.startsWith('caltdhy_') && !['caltdhy_theme', 'caltdhy_lang', 'caltdhy_curr',
-        'caltdhy_sidebar_collapsed_groups', 'caltdhy_oauth_providers', EVENT_KEY, LOGOUT_KEY].includes(key)) {
+        'caltdhy_sidebar_width', 'caltdhy_oauth_providers', EVENT_KEY, LOGOUT_KEY].includes(key)) {
         localStorage.removeItem(key);
       }
     }
@@ -165,7 +166,10 @@ export const useAuthStore = create((set, get) => ({
       if (get().user?.id !== userId) throw sessionChangedError();
       const received = data.preferences;
       const cashFlow = received?.cashFlow;
+      const pinned = received?.sidebarPinnedGroups;
       if (typeof received?.analyticsExcludeRecurring !== 'boolean' ||
+          (pinned !== undefined && (!Array.isArray(pinned) || new Set(pinned).size !== pinned.length ||
+            normalizePinnedGroups(pinned).length !== pinned.length)) ||
           (cashFlow !== undefined && (!cashFlow || Array.isArray(cashFlow) ||
             Object.keys(cashFlow).length !== 2 ||
             !Object.prototype.hasOwnProperty.call(cashFlow, 'lastUsed') ||
@@ -175,6 +179,7 @@ export const useAuthStore = create((set, get) => ({
         throw new Error('Invalid preferences response.');
       }
       const preferences = { ...(get().user?.preferences || {}), ...received,
+        ...(pinned !== undefined ? { sidebarPinnedGroups: normalizePinnedGroups(pinned) } : {}),
         ...(cashFlow !== undefined ? { cashFlow: normalizeCashFlowPreferences(cashFlow) } : {}) };
       set((state) => state.user?.id === userId ? { user: { ...state.user, preferences } } : state);
       hydrateUserPreferences({ preferences });

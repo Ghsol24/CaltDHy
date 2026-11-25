@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { NavIcon } from '../ui/NavIcons';
 import { scrollToSection } from '../../utils/scrollToSection';
 import { SidebarResizeHandle } from './SidebarResizeHandle';
 import { readSidebarWidth, saveSidebarWidth } from './sidebarWidth';
-import { readPinnedGroups, savePinnedGroups } from './sidebarGroups';
-
+import { groupIdForView, normalizePinnedGroups } from './sidebarGroups';
 import { Icon } from '../../components/ui/AppIcons';
 
-// Nhịp chờ ngắn khi di chuột trên máy tính: lướt ngang qua nhóm không làm menu bung nhầm
-// đẩy các mục bên dưới, và trượt nhẹ ra mép 1–2px rồi quay lại không bị sập đột ngột.
-const HOVER_OPEN_DELAY_MS = 80;
-const HOVER_CLOSE_DELAY_MS = 120;
+// Chờ đủ lâu để lướt chuột dọc qua sidebar không làm nhóm bung nhầm; chỉ thu nhóm xem tạm
+// khi chuột đã rời hẳn sidebar để không làm các mục bên dưới nhảy lên dưới con trỏ (15f).
+const HOVER_OPEN_DELAY_MS = 180;
+const HOVER_CLOSE_DELAY_MS = 200;
 
 function isMousePointer(event) {
   return !event?.pointerType || event.pointerType === 'mouse';
@@ -36,20 +36,31 @@ export function SidebarNav() {
   const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
-  const [pinnedGroups, setPinnedGroups] = useState(readPinnedGroups);
-  const [hoveredGroupId, setHoveredGroupId] = useState(null);
+
+  const [pinnedGroups, setPinnedGroups] = useState(() => (
+    normalizePinnedGroups(useAuthStore.getState().user?.preferences?.sidebarPinnedGroups)
+  ));
+  const [previewGroupIds, setPreviewGroupIds] = useState([]);
+  const [dismissedGroupId, setDismissedGroupId] = useState(null);
   const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth);
 
+  const activeViewGroupId = groupIdForView(activeView);
+  // Thu gọn nhóm đang xem chỉ có hiệu lực tới khi sang nhóm khác; quay lại thì nhóm tự mở như cũ.
+  useEffect(() => { setDismissedGroupId(null); }, [activeViewGroupId]);
+  const effectiveDismissedId = dismissedGroupId === activeViewGroupId ? dismissedGroupId : null;
+
   const pinnedGroupsRef = useRef(pinnedGroups);
-  const hoveredGroupIdRef = useRef(hoveredGroupId);
+  const previewGroupIdsRef = useRef(previewGroupIds);
+  const dismissedGroupIdRef = useRef(effectiveDismissedId);
   const openTimerRef = useRef(null);
   const closeTimerRef = useRef(null);
-  const closingGroupIdRef = useRef(null);
+  const pointerInSidebarRef = useRef(false);
   const pointerInsideGroupRef = useRef(null);
   const suppressedHoverRef = useRef(null);
 
   pinnedGroupsRef.current = pinnedGroups;
-  hoveredGroupIdRef.current = hoveredGroupId;
+  previewGroupIdsRef.current = previewGroupIds;
+  dismissedGroupIdRef.current = effectiveDismissedId;
 
   const clearOpenTimer = () => {
     if (openTimerRef.current !== null) {
@@ -63,24 +74,18 @@ export function SidebarNav() {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
-    closingGroupIdRef.current = null;
   };
 
-  const setHoveredGroup = (nextGroupId) => {
-    hoveredGroupIdRef.current = nextGroupId;
-    setHoveredGroupId(nextGroupId);
+  const updatePreviewGroups = (next) => {
+    previewGroupIdsRef.current = next;
+    setPreviewGroupIds(next);
   };
 
-  const scheduleCloseHover = (groupId) => {
-    clearCloseTimer();
-    closingGroupIdRef.current = groupId;
-    closeTimerRef.current = window.setTimeout(() => {
-      closeTimerRef.current = null;
-      closingGroupIdRef.current = null;
-      if (hoveredGroupIdRef.current === groupId) {
-        setHoveredGroup(null);
-      }
-    }, HOVER_CLOSE_DELAY_MS);
+  const commitPinnedGroups = (next) => {
+    const normalized = normalizePinnedGroups(next);
+    pinnedGroupsRef.current = normalized;
+    setPinnedGroups(normalized);
+    useAuthStore.getState().updatePreferences({ sidebarPinnedGroups: normalized }).catch(() => {});
   };
 
   const commitSidebarWidth = (width) => {
@@ -89,16 +94,12 @@ export function SidebarNav() {
   };
 
   useEffect(() => {
-    savePinnedGroups(pinnedGroups);
-  }, [pinnedGroups]);
-
-  useEffect(() => {
     if (!isSidebarCollapsed) return;
     clearOpenTimer();
     clearCloseTimer();
     pointerInsideGroupRef.current = null;
     suppressedHoverRef.current = null;
-    setHoveredGroup(null);
+    updatePreviewGroups([]);
   }, [isSidebarCollapsed]);
 
   useEffect(() => () => {
@@ -106,21 +107,20 @@ export function SidebarNav() {
     clearCloseTimer();
   }, []);
 
-  // Bấm vào tiêu đề nhóm: ghim cố định mở (kể cả khi đang mở tạm bằng hover),
-  // hoặc bấm lần nữa khi đã ghim để bỏ ghim và thu gọn ngay lập tức dù chuột vẫn đang trên nút.
   const toggleGroup = (groupId) => {
     clearOpenTimer();
-    if (closingGroupIdRef.current === groupId) {
-      clearCloseTimer();
-    }
+    const isPinned = pinnedGroupsRef.current.includes(groupId);
+    const isActive = activeViewGroupId === groupId && dismissedGroupIdRef.current !== groupId;
+    const withoutGroup = previewGroupIdsRef.current.filter((id) => id !== groupId);
 
-    const isCurrentlyPinned = pinnedGroupsRef.current.includes(groupId);
-    if (isCurrentlyPinned) {
-      const next = pinnedGroupsRef.current.filter((id) => id !== groupId);
-      pinnedGroupsRef.current = next;
-      setPinnedGroups(next);
-      if (hoveredGroupIdRef.current === groupId) {
-        setHoveredGroup(null);
+    if (isPinned) {
+      commitPinnedGroups(pinnedGroupsRef.current.filter((id) => id !== groupId));
+      if (activeViewGroupId === groupId) {
+        dismissedGroupIdRef.current = groupId;
+        setDismissedGroupId(groupId);
+      }
+      if (withoutGroup.length !== previewGroupIdsRef.current.length) {
+        updatePreviewGroups(withoutGroup);
       }
       if (pointerInsideGroupRef.current === groupId) {
         suppressedHoverRef.current = groupId;
@@ -128,40 +128,54 @@ export function SidebarNav() {
       return;
     }
 
-    const next = [...pinnedGroupsRef.current, groupId];
-    pinnedGroupsRef.current = next;
-    setPinnedGroups(next);
-    suppressedHoverRef.current = null;
-    if (hoveredGroupIdRef.current === groupId) {
-      setHoveredGroup(null);
+    if (isActive) {
+      dismissedGroupIdRef.current = groupId;
+      setDismissedGroupId(groupId);
+      if (withoutGroup.length !== previewGroupIdsRef.current.length) {
+        updatePreviewGroups(withoutGroup);
+      }
+      if (pointerInsideGroupRef.current === groupId) {
+        suppressedHoverRef.current = groupId;
+      }
+      return;
     }
+
+    commitPinnedGroups([...pinnedGroupsRef.current, groupId]);
+    if (dismissedGroupIdRef.current === groupId) {
+      dismissedGroupIdRef.current = null;
+      setDismissedGroupId(null);
+    }
+    if (withoutGroup.length !== previewGroupIdsRef.current.length) {
+      updatePreviewGroups(withoutGroup);
+    }
+    suppressedHoverRef.current = null;
   };
 
   const handleGroupPointerEnter = (groupId, event) => {
     if (isSidebarCollapsed || !isMousePointer(event)) return;
     if (document.documentElement.classList.contains('is-resizing-sidebar')) return;
 
+    pointerInSidebarRef.current = true;
     pointerInsideGroupRef.current = groupId;
-    if (closingGroupIdRef.current === groupId) {
-      clearCloseTimer();
-    }
+    clearCloseTimer();
     clearOpenTimer();
 
     if (suppressedHoverRef.current === groupId) return;
-    if (pinnedGroupsRef.current.includes(groupId) || hoveredGroupIdRef.current === groupId) return;
+    const isAlreadyOpen = pinnedGroupsRef.current.includes(groupId)
+      || (activeViewGroupId === groupId && dismissedGroupIdRef.current !== groupId)
+      || previewGroupIdsRef.current.includes(groupId);
+    if (isAlreadyOpen) return;
 
     openTimerRef.current = window.setTimeout(() => {
       openTimerRef.current = null;
       if (pointerInsideGroupRef.current !== groupId) return;
-      if (pinnedGroupsRef.current.includes(groupId)) return;
-      clearCloseTimer();
-      setHoveredGroup(groupId);
+      if (pinnedGroupsRef.current.includes(groupId) || previewGroupIdsRef.current.includes(groupId)) return;
+      updatePreviewGroups([...previewGroupIdsRef.current, groupId]);
     }, HOVER_OPEN_DELAY_MS);
   };
 
   const handleGroupPointerLeave = (groupId, event) => {
     if (!isMousePointer(event)) return;
-
     if (pointerInsideGroupRef.current === groupId) {
       pointerInsideGroupRef.current = null;
     }
@@ -169,24 +183,51 @@ export function SidebarNav() {
       suppressedHoverRef.current = null;
     }
     clearOpenTimer();
+  };
 
-    if (hoveredGroupIdRef.current === groupId) {
-      scheduleCloseHover(groupId);
-    }
+  const handleSidebarPointerEnter = (event) => {
+    if (!isMousePointer(event)) return;
+    pointerInSidebarRef.current = true;
+    clearCloseTimer();
   };
 
   const handleSidebarPointerLeave = (event) => {
     if (!isMousePointer(event)) return;
-    clearOpenTimer();
+    pointerInSidebarRef.current = false;
     pointerInsideGroupRef.current = null;
     suppressedHoverRef.current = null;
-    const activeHover = hoveredGroupIdRef.current;
-    if (activeHover && closingGroupIdRef.current !== activeHover) {
-      scheduleCloseHover(activeHover);
+    clearOpenTimer();
+    if (previewGroupIdsRef.current.length > 0 && closeTimerRef.current === null) {
+      closeTimerRef.current = window.setTimeout(() => {
+        closeTimerRef.current = null;
+        if (!pointerInSidebarRef.current && previewGroupIdsRef.current.length > 0) {
+          updatePreviewGroups([]);
+        }
+      }, HOVER_CLOSE_DELAY_MS);
     }
   };
 
   const handleNavClick = (viewId, subTabId, sectionId) => {
+    const nextGroupId = groupIdForView(viewId);
+    const wasPrevActive = Boolean(activeViewGroupId) && dismissedGroupIdRef.current !== activeViewGroupId;
+
+    if (nextGroupId && dismissedGroupIdRef.current === nextGroupId) {
+      dismissedGroupIdRef.current = null;
+      setDismissedGroupId(null);
+    }
+
+    let nextPreviews = previewGroupIdsRef.current.filter((id) => id !== nextGroupId);
+    if (wasPrevActive && activeViewGroupId !== nextGroupId
+      && !pinnedGroupsRef.current.includes(activeViewGroupId)
+      && pointerInSidebarRef.current && !isSidebarCollapsed && window.innerWidth > 900
+      && !nextPreviews.includes(activeViewGroupId)) {
+      nextPreviews = [...nextPreviews, activeViewGroupId];
+    }
+    if (nextPreviews.length !== previewGroupIdsRef.current.length
+      || nextPreviews.some((id, idx) => id !== previewGroupIdsRef.current[idx])) {
+      updatePreviewGroups(nextPreviews);
+    }
+
     // On the long computer "Tóm tắt thu chi" page the block is already here: glide to it
     // (the highlight follows) instead of opening its own screen. Elsewhere it is a page.
     if (sectionId && activeView === 'analytics'
@@ -315,6 +356,7 @@ export function SidebarNav() {
       className={`app-sidebar-nav ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
       style={{ '--sidebar-width': `${sidebarWidth}px` }}
       aria-label={t('nav.mainNavigation')}
+      onPointerEnter={handleSidebarPointerEnter}
       onPointerLeave={handleSidebarPointerLeave}
     >
       {/* Logo + nút thu gọn ở đầu sidebar: máy tính không còn topbar (đợt 15b). Thu gọn thì
@@ -325,7 +367,7 @@ export function SidebarNav() {
           className="sidebar-brand__link"
           aria-label={t('topbar.home')}
           title={isSidebarCollapsed ? t('topbar.home') : undefined}
-          onClick={() => navigateTo('home')}
+          onClick={() => handleNavClick('home')}
         >
           <span className="tb-logo-icon" data-brand-mark="">C</span>
           {!isSidebarCollapsed && (
@@ -356,16 +398,25 @@ export function SidebarNav() {
           }
           // The icon-only rail has no group headers, so every item stays reachable there.
           const isPinned = pinnedGroups.includes(group.id);
-          const isHoverOpen = !isSidebarCollapsed && !isPinned && hoveredGroupId === group.id;
-          const isGroupOpen = isSidebarCollapsed || isPinned || isHoverOpen;
+          const isActive = activeViewGroupId === group.id && effectiveDismissedId !== group.id;
+          const isPreview = previewGroupIds.includes(group.id);
+          const openReason = !isSidebarCollapsed
+            ? (isPinned ? 'pinned' : isActive ? 'active' : isPreview ? 'preview' : null)
+            : null;
+          const isGroupOpen = isSidebarCollapsed || Boolean(openReason);
+          const isHoverOpen = openReason === 'preview';
           const hasActiveItem = group.items.some((item) => item.isActive);
           const itemsId = `sidebar-${group.id}-items`;
+          const headerTitle = openReason === 'pinned' || openReason === 'active'
+            ? t('nav.collapseGroup')
+            : t('nav.keepGroupOpen');
 
           return (
             <div
               key={group.id}
               className={`sidebar-nav-group${isGroupOpen ? '' : ' is-group-collapsed'}${!isSidebarCollapsed && isPinned ? ' is-group-pinned' : ''}${isHoverOpen ? ' is-hover-open' : ''}${hasActiveItem ? ' has-active-item' : ''}`}
               data-pinned={!isSidebarCollapsed && isPinned ? 'true' : undefined}
+              data-open-reason={openReason || undefined}
               onPointerEnter={(event) => handleGroupPointerEnter(group.id, event)}
               onPointerLeave={(event) => handleGroupPointerLeave(group.id, event)}
             >
@@ -377,6 +428,7 @@ export function SidebarNav() {
                     onClick={() => toggleGroup(group.id)}
                     aria-expanded={isGroupOpen}
                     aria-controls={itemsId}
+                    title={headerTitle}
                   >
                     <span className="sidebar-group-label">{group.groupLabel}</span>
                     <Icon name="chevronDownAlt" className="sidebar-group-chevron" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />

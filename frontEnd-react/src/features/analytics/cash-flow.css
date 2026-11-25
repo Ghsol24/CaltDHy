@@ -68,9 +68,9 @@
 .cashflow-unusual { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
 .cashflow-unusual .analytics-unusual-days { margin-top: 0; }
 
-.cashflow-series-swatch { display: inline-flex; width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--color-text-muted); flex-shrink: 0; }
+.cashflow-series-swatch { display: inline-flex; width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--chart-expense-bar); flex-shrink: 0; }
 .cashflow-series-swatch--income { background: var(--color-success); }
-.cashflow-series-swatch--both { width: 18px; background: linear-gradient(to right, var(--color-success) 0 45%, transparent 45% 55%, var(--color-text-muted) 55% 100%); }
+.cashflow-series-swatch--both { width: 18px; background: linear-gradient(to right, var(--color-success) 0 45%, transparent 45% 55%, var(--chart-expense-bar) 55% 100%); }
 .cashflow-overlay { position: fixed; inset: 0; z-index: var(--z-dropdown); pointer-events: none; }
 .cashflow-popover { position: fixed; box-sizing: border-box; width: min(304px, calc(100vw - 32px)); padding: 16px; overflow-y: auto; border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-dialog); pointer-events: auto; }
 .cashflow-popover--display { width: min(344px, calc(100vw - 32px)); }
@@ -164,4 +164,29 @@
   .cashflow-panel *, .cashflow-popover * { transition: none; }
 }
 
-.cashflow-range-hint { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: var(--font-xs); }
+/* Đổi tháng ngay trong thẻ (15g): cùng tháng với bộ chọn ở đầu trang. */
+.cashflow-month-stepper { display: inline-flex; align-items: center; gap: 2px; }
+.cashflow-month-step { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--radius-sm, 6px); background: transparent; color: var(--color-text-secondary, var(--text-secondary)); cursor: pointer; transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease; }
+.cashflow-month-step:hover:not(:disabled) { background: var(--color-surface-muted, var(--surface-subtle)); color: var(--color-text, var(--text-primary)); }
+.cashflow-month-step:disabled { opacity: .4; cursor: default; }
+.cashflow-month-step__icon { width: 16px; height: 16px; }
+.cashflow-month-trigger { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 8px; border: 0; border-radius: var(--radius-sm, 6px); background: transparent; color: var(--color-text, var(--text-primary)); font: inherit; font-size: var(--font-xs); font-weight: 600; white-space: nowrap; cursor: pointer; }
+.cashflow-month-trigger:hover, .cashflow-month-trigger[aria-expanded="true"] { background: var(--color-surface-muted, var(--surface-subtle)); }
+.cashflow-month-trigger svg { color: var(--color-text-secondary, var(--text-secondary)); }
+.cashflow-month-popover { left: 0; right: auto; }
+.cashflow-range-end { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: var(--font-xs); }
+.cashflow-range-end strong { min-width: 0; padding: 0 4px; color: var(--color-text, var(--text-primary)); font-size: var(--font-sm); white-space: nowrap; }
+
+/* Chú thích màu: chỉ hiện khi biểu đồ có từ hai màu trở lên. */
+.cashflow-legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; margin: 0 0 8px; padding: 0; list-style: none; color: var(--color-text-secondary, var(--text-secondary)); font-size: var(--font-xs); line-height: 1.5; }
+.cashflow-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.cashflow-legend__swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.cashflow-legend__swatch--expense { background: var(--chart-expense-bar); }
+.cashflow-legend__swatch--income { background: var(--color-success); }
+.cashflow-legend__swatch--unusual { background: var(--color-danger); }
+
+@media (max-width: 768px) {
+  .cashflow-month-step { width: 44px; height: 44px; }
+  .cashflow-month-trigger { min-height: 44px; }
+  .cashflow-legend { justify-content: flex-start; }
+}

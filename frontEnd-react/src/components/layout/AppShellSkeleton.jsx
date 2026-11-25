@@ -1,14 +1,18 @@
 import React from 'react';
+import { useLocation } from 'react-router';
 import { PageSkeleton } from '../ui/PageSkeleton';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useAuthStore } from '../../stores/useAuthStore';
 import { readSidebarWidth } from './sidebarWidth';
-import { readPinnedGroups } from './sidebarGroups';
+import { groupIdForView, normalizePinnedGroups } from './sidebarGroups';
 
 // Cùng khung với AppShell (đợt 15b): logo trong sidebar, tấm nội dung bo góc, viên kính góc
 // trên-phải trên máy tính; điện thoại vẫn là topbar có logo. Tải xong không nhảy bố cục.
 export function AppShellSkeleton() {
   const { t } = useTranslation();
-  const pinnedGroups = readPinnedGroups();
+  const { pathname } = useLocation();
+  const pinnedGroups = normalizePinnedGroups(useAuthStore.getState().user?.preferences?.sidebarPinnedGroups);
+  const activeGroupId = groupIdForView(pathname.split('/')[2]);
   const groupDefs = [
     { id: 'group_home', labelKey: 'nav.home', standalone: true, items: 1 },
     { id: 'group_plan', labelKey: 'nav.plan', items: 4 },
@@ -37,7 +41,7 @@ export function AppShellSkeleton() {
           </div>
           <div className="sidebar-scrollable-content sidebar-scrollable-content--box">
             {groupDefs.map((group) => {
-              const isOpen = group.standalone || pinnedGroups.includes(group.id);
+              const isOpen = group.standalone || pinnedGroups.includes(group.id) || activeGroupId === group.id;
               return (
                 <div
                   key={group.id}

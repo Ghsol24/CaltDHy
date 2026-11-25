@@ -85,7 +85,7 @@ function buildFixtures({ now = new Date() } = {}) {
   };
   const user = {
     id: '64b7f0c2a1d3e4f5a6b7c8d9', name: 'Trần Gia Huy', email: 'fixture@example.com', avatar: '', emailVerified: true,
-    preferences: { analyticsExcludeRecurring: false, cashFlow: {} }
+    preferences: { analyticsExcludeRecurring: false, cashFlow: { lastUsed: null, pinnedDefault: null }, sidebarPinnedGroups: [] }
   };
   return { wallets, transactions, jars, installments, budgets, user };
 }
@@ -95,14 +95,29 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-function handleApi(req, res, db) {
+function handleApi(req, res, db, body = '') {
   const url = new URL(req.url, 'http://local');
   const p = url.pathname;
   const ok = (data, extra = {}) => json(res, 200, { success: true, data, ...extra });
   if (p === '/api/auth/csrf') return json(res, 200, { success: true, csrfToken: 'fixture-csrf' });
   if (p === '/api/auth/registration') return json(res, 200, { success: true, inviteOnly: false });
-  if (p === '/api/auth/session' || p === '/api/auth/profile') return json(res, 200, { success: true, user: db.user, csrfToken: 'fixture-csrf' });
-  if (p === '/api/auth/preferences') return json(res, 200, { success: true, user: db.user, preferences: db.user.preferences });
+  if (p === '/api/auth/oauth/providers') return ok([]);
+  if (p === '/api/auth/session' || p === '/api/auth/profile' || p === '/api/auth/login') return json(res, 200, { success: true, user: db.user, csrfToken: 'fixture-csrf' });
+  if (p === '/api/auth/preferences') {
+    if (req.method === 'PUT' && body) {
+      try {
+        const patch = JSON.parse(body);
+        if (patch && typeof patch === 'object') {
+          db.user.preferences = {
+            ...db.user.preferences,
+            ...patch,
+            ...(patch.cashFlow ? { cashFlow: { ...db.user.preferences.cashFlow, ...patch.cashFlow } } : {})
+          };
+        }
+      } catch { /* ignore malformed test body */ }
+    }
+    return json(res, 200, { success: true, user: db.user, preferences: db.user.preferences });
+  }
   if (p === '/api/auth/logout') return json(res, 200, { success: true });
   if (p === '/api/wallets' && req.method === 'GET') return ok(db.wallets, { history: [] });
   if (p === '/api/jars' && req.method === 'GET') return ok(db.jars);
@@ -127,7 +142,7 @@ async function startUiFixtureServer({ distDir = path.join(__dirname, '..', 'fron
     if (req.url.startsWith('/api/')) {
       let body = '';
       req.on('data', (chunk) => { body += chunk; });
-      req.on('end', () => handleApi(req, res, db));
+      req.on('end', () => handleApi(req, res, db, body));
       return;
     }
     const clean = decodeURIComponent(new URL(req.url, 'http://local').pathname);

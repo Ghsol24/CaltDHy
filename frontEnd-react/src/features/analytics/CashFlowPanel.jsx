@@ -3,6 +3,8 @@ import { CalendarPanel } from '../../components/ui/CustomDatePicker';
 import { CheckOutlineIcon, ClockOutlineIcon, CloseOutlineIcon, StarOutlineIcon } from '../../components/ui/AppIcons';
 import { NavIcon } from '../../components/ui/NavIcons';
 import { CashFlowPopover } from './CashFlowPopover';
+import { AnalyticsMonthPicker } from './analytics/AnalyticsMonthPicker';
+import { shiftMonth } from '../../utils/budgetPeriod';
 import { formatCurrency, formatDate, getLocalDateString } from '../../utils/formatters';
 import './cash-flow.css';
 
@@ -22,6 +24,10 @@ function ChevronIcon() {
   return <SmallIcon><polyline points="6 9 12 15 18 9" /></SmallIcon>;
 }
 
+function StepIcon({ direction }) {
+  return <SmallIcon className="cashflow-month-step__icon"><path d={direction === 'prev' ? 'm15 18-6-6 6-6' : 'm9 6 6 6-6 6'} /></SmallIcon>;
+}
+
 function SearchIcon() {
   return <SmallIcon><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></SmallIcon>;
 }
@@ -33,6 +39,7 @@ export function CashFlowPanel({
   onPeriodModeChange, onSeriesChange, onExcludeRecurringChange,
   onOpenDay, onViewHistory, onPinDefault, onClearDefault, pinnedDefault,
   savingPreferences = false, drilldownOrigin, onBackToPeriod, currentMonth, preferenceMode = periodMode,
+  monthLabel, onMonthChange, showUnusualLegend = false,
 }) {
   const id = useId();
   const [popover, setPopover] = useState(null);
@@ -59,6 +66,19 @@ export function CashFlowPanel({
   useEffect(() => { setShowAllDays(false); }, [periodLabel, excludeRecurring, series]);
 
   const closePopover = useCallback(() => setPopover(null), []);
+  const atLatestMonth = activeMonth >= currentMonth;
+  // Đổi tháng ngay trong thẻ: cùng một tháng với bộ chọn ở đầu trang (selectedMonth).
+  const monthStep = (direction, testId) => <button type="button" className="cashflow-month-step"
+    data-testid={testId} disabled={direction === 'next' && atLatestMonth}
+    onClick={() => onMonthChange(shiftMonth(activeMonth, direction === 'next' ? 1 : -1))}
+    aria-label={text(direction === 'next' ? 'nextMonth' : 'prevMonth')} title={text(direction === 'next' ? 'nextMonth' : 'prevMonth')}>
+    <StepIcon direction={direction} />
+  </button>;
+  const legendItems = [
+    ...(series !== 'expense' ? ['income'] : []),
+    ...(series !== 'income' ? ['expense'] : []),
+    ...(showUnusualLegend && series !== 'income' ? ['unusual'] : []),
+  ];
 
   const togglePopover = (name) => {
     if (name === 'date' && (!inspectedDate || inspectedDate < dateMin || inspectedDate > dateMax)) {
@@ -91,7 +111,14 @@ export function CashFlowPanel({
               <CheckOutlineIcon className="cashflow-option__check" size={17} />
             </label>)}
           </fieldset>
-          <p className="cashflow-range-hint">{text('rangeHint')}</p>
+          <div className="cashflow-range-end">
+            <span id={`${id}-range-end`}>{text('endMonth')}</span>
+            <div className="cashflow-month-stepper" role="group" aria-labelledby={`${id}-range-end`}>
+              {monthStep('prev', 'cashflow-range-prev')}
+              <strong aria-live="polite">{monthLabel}</strong>
+              {monthStep('next', 'cashflow-range-next')}
+            </div>
+          </div>
         </>}
         {popover === 'display' && <>
           <fieldset className="cashflow-options">
@@ -175,7 +202,15 @@ export function CashFlowPanel({
     </header>
     <div className="cashflow-context">
       <div className="cashflow-current-view" aria-live="polite">
-        <span>{text(series)} · {text(periodMode === 'daily' ? 'byDay' : 'byMonth')} · {periodLabel}</span>
+        <span>{text(series)} · {text(periodMode === 'daily' ? 'byDay' : 'byMonth')}</span>
+        <div className="cashflow-month-stepper" role="group" aria-label={text('monthStepper')}>
+          {monthStep('prev', 'cashflow-month-prev')}
+          <AnalyticsMonthPicker activeMonth={activeMonth} monthLabel={periodLabel} onSelect={onMonthChange}
+            ariaLabel={text(periodMode === 'daily' ? 'pickMonth' : 'pickEndMonth')} prefer="left" idPrefix={`${id}-month`}
+            testId="cashflow-month-trigger" popoverTestId="cashflow-month-popover"
+            triggerClassName="cashflow-month-trigger" popoverClassName="cashflow-month-popover" showCalendarIcon={false} />
+          {monthStep('next', 'cashflow-month-next')}
+        </div>
         <span className="cashflow-scope"><ClockOutlineIcon size={13} />{text(excludeRecurring ? 'recurringExcluded' : 'recurringIncluded')}</span>
         {ongoing && <span className="cashflow-ongoing" title={text('ongoingHint')}>{text('ongoing')}</span>}
       </div>
@@ -193,6 +228,9 @@ export function CashFlowPanel({
     <div className={`cashflow-body${!isIncomeOnly && topDays.length ? ' cashflow-body--with-days' : ''}`}>
       <div className="cashflow-main">
         {weekNavigation}
+        {hasData && legendItems.length > 1 && <ul className="cashflow-legend" data-testid="cashflow-legend" aria-label={text('legend')}>
+          {legendItems.map((item) => <li key={item}><span className={`cashflow-legend__swatch cashflow-legend__swatch--${item}`} aria-hidden="true" />{text(`legend.${item}`)}</li>)}
+        </ul>}
         <div className={`cashflow-chart${!hasData ? ' cashflow-chart--empty' : ''}`} data-testid="cashflow-chart-region">
           {hasData ? chart : <p>{emptyMessage || t('analytics.noChartData')}</p>}
         </div>
