@@ -14,7 +14,7 @@
 }
 
 .tb-logo-link:hover .tb-logo-accent {
-  text-shadow: 0 0 16px color-mix(in srgb, var(--primary) 80%, transparent);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--brand-accent-text) 70%, transparent);
 }
 
 /* LED */
@@ -246,7 +246,7 @@ html.is-resizing-sidebar .app-sidebar-nav {
 }
 
 .sidebar-brand__link:hover .tb-logo-accent {
-  text-shadow: 0 0 16px color-mix(in srgb, var(--primary) 80%, transparent);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--brand-accent-text) 70%, transparent);
 }
 
 .sidebar-brand .tb-logo {
@@ -537,17 +537,18 @@ html.is-resizing-sidebar .app-sidebar-nav {
   opacity: 0.85;
 }
 
+/* Logo chuột trong ví: màu cố định, không đổi theo theme (BrandMark.jsx). */
 .tb-logo-icon {
   width: 32px;
   height: 32px;
-  background: var(--primary-light);
-  color: var(--color-link);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: var(--font-lg);
+  flex: none;
+  display: block;
+}
+
+.tb-logo-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .tb-logo {
@@ -560,7 +561,7 @@ html.is-resizing-sidebar .app-sidebar-nav {
 
 .tb-logo-accent {
   text-shadow: var(--topbar-logo-glow);
-  color: var(--color-accent);
+  color: var(--brand-accent-text);
 }
 
 .tb-badge {

@@ -16,7 +16,7 @@ export default defineConfig({
     manifest: false,
     injectRegister: false,
     registerType: 'prompt',
-    includeAssets: ['push-sw.js', 'manifest.json', 'app-icon.svg', 'app-icon-192.png', 'app-icon-512.png', 'apple-touch-icon.png'],
+    includeAssets: ['push-sw.js', 'manifest.json', 'app-icon.svg', 'favicon-32.png', 'app-icon-192.png', 'app-icon-512.png', 'app-icon-maskable-512.png', 'apple-touch-icon.png'],
     workbox: {
       globPatterns: ['**/*.{js,css,html}'],
       navigateFallback: '/index.html',

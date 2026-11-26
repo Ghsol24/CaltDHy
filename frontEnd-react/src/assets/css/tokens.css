@@ -207,22 +207,20 @@
      không viết selector html.<theme>-theme. */
   /* Khung ứng dụng: topbar, hướng dẫn, chọn theme, màn đăng nhập */
   --guide-panel-shadow: 0 40px 100px rgba(0, 0, 0, .85), 0 0 0 1px rgba(255, 255, 255, .04), inset 0 1px 0 rgba(255, 255, 255, .07);
-  --signature-bar-end: #00F2FE;
-  --signature-bar-side: #1646B5;
-  --signature-bar-start: #2563EB;
   --signature-bg: #090A0F;
-  --signature-glow: rgba(0, 242, 254, .24);
-  --signature-logo-end: #2EC7FF;
-  --signature-logo-start: #2563EB;
+  --signature-glow: rgba(84, 180, 140, .16);
   --signature-muted: #A8B5CE;
-  --signature-particle: #D8F9FF;
+  --signature-plus: #F0B43B;
+  --signature-shadow: rgba(0, 0, 0, .5);
   --signature-text: #F5F8FF;
   --signature-track: rgba(190, 216, 255, .18);
   --theme-card-active-border: var(--primary);
   --topbar-accent-line: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--primary) 40%, transparent) 30%, color-mix(in srgb, var(--primary) 15%, transparent) 70%, transparent 100%);
   --topbar-badge-bg: var(--primary-light);
   --topbar-badge-text: var(--color-link);
-  --topbar-logo-glow: 0 0 12px color-mix(in srgb, var(--primary) 50%, transparent);
+  /* Logo cố định màu thương hiệu (emerald), không theo accent của theme. */
+  --brand-accent-text: #4FBF93;
+  --topbar-logo-glow: 0 0 12px rgba(79, 191, 147, .35);
   --topbar-shadow: 0 1px 2px rgba(16, 27, 54, 0.04);
   --topbar-sheen: linear-gradient(180deg, rgba(255,255,255,.035) 0%, transparent 100%);
   --user-chip-bg: var(--surface-subtle);
@@ -846,20 +844,18 @@ html.light-theme {
   /* ══ Token cấp component ══ */
   /* Khung ứng dụng: topbar, hướng dẫn, chọn theme, màn đăng nhập */
   --guide-panel-shadow: 0 40px 100px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.04);
-  --signature-bar-end: #6366F1;
-  --signature-bar-side: #8386D6;
-  --signature-bar-start: #10B981;
   --signature-bg: #FAFAFB;
-  --signature-glow: rgba(99, 102, 241, .10);
-  --signature-logo-end: #6366F1;
-  --signature-logo-start: #293CB6;
+  --signature-glow: rgba(84, 180, 140, .12);
   --signature-muted: #64748B;
-  --signature-particle: #2563EB;
+  --signature-plus: #A16207;
+  --signature-shadow: rgba(15, 23, 42, .12);
   --signature-text: #101B36;
   --signature-track: rgba(70, 89, 147, .17);
   --theme-card-active-border: var(--primary);
   --topbar-accent-line: linear-gradient(90deg, transparent 0%, rgba(79,70,229,.3) 30%, rgba(79,70,229,.12) 70%, transparent 100%);
-  --topbar-logo-glow: 0 0 16px rgba(79,70,229,.4);
+  /* Logo cố định màu thương hiệu (emerald), không theo accent của theme. */
+  --brand-accent-text: #0F766E;
+  --topbar-logo-glow: 0 0 16px rgba(15, 118, 110, .22);
   --topbar-shadow: 0 1px 6px rgba(0,0,0,.06);
   --topbar-sheen: none;
   --user-chip-bg: var(--color-neutral-bg);
@@ -1072,22 +1068,20 @@ html.cream-theme {
 
   /* ══ Token cấp component ══ */
   /* Khung ứng dụng: topbar, hướng dẫn, chọn theme, màn đăng nhập */
-  --signature-bar-end: #D97706;
-  --signature-bar-side: #A34018;
-  --signature-bar-start: #C0531E;
   --signature-bg: #F5EDE0;
-  --signature-glow: rgba(217, 119, 6, .15);
-  --signature-logo-end: #D97706;
-  --signature-logo-start: #B74719;
+  --signature-glow: rgba(84, 180, 140, .12);
   --signature-muted: #806953;
-  --signature-particle: #E8AB29;
+  --signature-plus: #9A5B12;
+  --signature-shadow: rgba(44, 29, 16, .14);
   --signature-text: #382415;
   --signature-track: rgba(140, 77, 37, .2);
   --theme-card-active-border: var(--primary);
   --topbar-accent-line: linear-gradient(90deg, transparent 0%, rgba(192,83,30,.28) 30%, rgba(192,83,30,.1) 70%, transparent 100%);
   --topbar-badge-bg: var(--color-surface-muted);
   --topbar-badge-text: var(--text-secondary);
-  --topbar-logo-glow: 0 0 14px rgba(192,83,30,.35);
+  /* Logo cố định màu thương hiệu (emerald), không theo accent của theme. */
+  --brand-accent-text: #0F6E56;
+  --topbar-logo-glow: 0 0 14px rgba(15, 110, 86, .2);
   --topbar-shadow: 0 1px 8px rgba(100,60,20,.08);
   --topbar-sheen: none;
   --user-chip-bg: var(--color-surface-muted);
@@ -1365,22 +1359,20 @@ html.green-theme {
 
   /* ══ Token cấp component ══ */
   /* Khung ứng dụng: topbar, hướng dẫn, chọn theme, màn đăng nhập */
-  --signature-bar-end: #10B981;
-  --signature-bar-side: #035D45;
-  --signature-bar-start: #047857;
   --signature-bg: #F0F9F4;
   --signature-glow: rgba(16, 185, 129, .16);
-  --signature-logo-end: #10B981;
-  --signature-logo-start: #047857;
   --signature-muted: #607F71;
-  --signature-particle: #11DDA1;
+  --signature-plus: #A16207;
+  --signature-shadow: rgba(14, 46, 30, .14);
   --signature-text: #103528;
   --signature-track: rgba(4, 120, 87, .19);
   --theme-card-active-border: #059669;
   --topbar-accent-line: linear-gradient(90deg, transparent 0%, rgba(5,150,105,.3) 30%, rgba(5,150,105,.12) 70%, transparent 100%);
   --topbar-badge-bg: #E3F2E9;
   --topbar-badge-text: #4D7A68;
-  --topbar-logo-glow: 0 0 14px rgba(5,150,105,.4);
+  /* Logo cố định màu thương hiệu (emerald), không theo accent của theme. */
+  --brand-accent-text: #0F6E56;
+  --topbar-logo-glow: 0 0 14px rgba(15, 110, 86, .26);
   --topbar-shadow: 0 1px 8px rgba(16,120,80,.07);
   --topbar-sheen: none;
   --user-chip-bg: #E3F2E9;

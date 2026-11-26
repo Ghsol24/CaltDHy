@@ -3,15 +3,17 @@ import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useSignatureLoginStore } from '../../stores/useSignatureLoginStore';
+import { AmbientCoins, CoinRainScene } from './signatureCoinRain';
+import { flyToMark, hideInWallet, landOnMark, lockWallet, startCoinRain } from './signatureCoinMotion';
 import './signature-loader.css';
 
 const CONNECT_MS = 1000;
 const VERIFY_MS = 1400;
 const ASYMPTOTE_TAU_MS = 12000;
 const SNAP_MS = 250;
-const FLIGHT_MS = 560;
-const BAR_COUNT = 9;
-const BOUNCE_MS = 960;
+const FLIGHT_MS = 640;
+// Đăng nhập nhanh vẫn kịp thấy chuột hứng và bỏ đồng xu đầu tiên vào ví.
+const MIN_SHOW_MS = 1000;
 
 function progressAt(elapsed) {
   if (elapsed < CONNECT_MS) return 33 * elapsed / CONNECT_MS;
@@ -22,45 +24,7 @@ function progressAt(elapsed) {
   return Math.min(99, 70 + 29.9 * (1 - Math.exp(-waiting / ASYMPTOTE_TAU_MS)));
 }
 
-const RunnerScene = React.memo(function RunnerScene({ cubeRef }) {
-  return (
-    <div className="signature-login__scene" aria-hidden="true"
-      style={{ '--signature-cycle': `${BOUNCE_MS}ms`, '--signature-run': `${BOUNCE_MS * BAR_COUNT}ms`, '--signature-flight': `${FLIGHT_MS}ms` }}>
-      <svg className="signature-login__svg" viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="signature-bar-gradient" x1="0" y1="1" x2="0" y2="0">
-            <stop className="signature-login__gradient-start" offset="0" />
-            <stop className="signature-login__gradient-end" offset="1" />
-          </linearGradient>
-          <linearGradient id="signature-bar-side" x1="0" y1="0" x2="1" y2="0">
-            <stop className="signature-login__side-start" offset="0" />
-            <stop className="signature-login__side-end" offset="1" />
-          </linearGradient>
-        </defs>
-        <path className="signature-login__floor" d="M26 251H614" />
-        {Array.from({ length: BAR_COUNT }, (_, index) => (
-          <g className="signature-login__bar signature-login__bar--box" key={index}
-            style={{ '--signature-login__bar-animation-delay': `${-(index + 0.5) * BOUNCE_MS}ms`, '--static-x': `${(index - 4) * 62}px`, '--static-height': 1 - Math.abs(index - 4) * 0.18 }}>
-            <g className="signature-login__bar-body">
-              <rect x="298" y="125" width="39" height="125" rx="7" fill="url(#signature-bar-gradient)" />
-              <path d="M337 132Q337 125 330 125L344 131Q350 134 350 140V241Q350 249 343 250H337Z"
-                fill="url(#signature-bar-side)" />
-              <path d="M302 125H331Q337 125 337 132H298Q298 125 302 125Z"
-                className="signature-login__bar-top" />
-            </g>
-          </g>
-        ))}
-        <ellipse className="signature-login__landing-glow" cx="320" cy="125" rx="24" ry="4" />
-        <ellipse className="signature-login__impact-ring" cx="327" cy="125" rx="22" ry="5" />
-        {Array.from({ length: 6 }, (_, index) => (
-          <circle className="signature-login__particle" key={index} cx="320" cy="124" r="2.3"
-            style={{ '--particle-x': `${(index - 2.5) * 15}px`, '--particle-y': `${-18 - (index % 3) * 10}px` }} />
-        ))}
-      </svg>
-      <div ref={cubeRef} className="signature-login__cube">C</div>
-    </div>
-  );
-});
+const motionOff = () => document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function SignatureLoginAttempt({ attemptId, state, startedAt }) {
   const { t } = useTranslation();
@@ -70,10 +34,14 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
   const [progress, setProgress] = useState(0);
   const [arriving, setArriving] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [quiet] = useState(motionOff);
   const progressRef = useRef(0);
   const snapPhaseRef = useRef('idle');
-  const cubeRef = useRef(null);
+  const characterRef = useRef(null);
+  const backdropRef = useRef(null);
   const overlayRef = useRef(null);
+  const rainRef = useRef(null);
+  const lockRef = useRef(null);
 
   useEffect(() => {
     overlayRef.current?.focus();
@@ -86,6 +54,17 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
       document.body.style.overflow = priorOverflow;
     };
   }, []);
+
+  // Mưa xu chạy từ lúc mở overlay; "giảm chuyển động" thì giữ tư thế nghỉ đứng yên.
+  useEffect(() => {
+    if (quiet || !characterRef.current) return undefined;
+    const rain = startCoinRain(characterRef.current);
+    rainRef.current = rain;
+    return () => {
+      rain.stop();
+      rainRef.current = null;
+    };
+  }, [quiet]);
 
   useEffect(() => {
     if (state !== 'pending') return undefined;
@@ -101,9 +80,20 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
 
   useEffect(() => {
     if (state !== 'failure') return undefined;
-    setExiting(true);
-    const timer = window.setTimeout(() => close(attemptId), 180);
-    return () => window.clearTimeout(timer);
+    let cancelled = false;
+    let timer = null;
+    const leave = () => {
+      if (cancelled) return;
+      setExiting(true);
+      timer = window.setTimeout(() => close(attemptId), 180);
+    };
+    const rain = rainRef.current;
+    if (rain && !motionOff()) rain.freeze().then(() => hideInWallet(rain.layer)).then(leave);
+    else leave();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [state, attemptId, close]);
 
   useEffect(() => {
@@ -112,12 +102,18 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
     const from = progressRef.current;
     let frame = null;
     let completed = false;
-    // Let fast desktop logins show one complete bounce, without adding a
-    // second wait to requests that already took longer than a cycle.
-    const skipMotion = document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const delay = Math.max(0, BOUNCE_MS - SNAP_MS - (performance.now() - startedAt));
+    const skipMotion = motionOff();
+    const delay = Math.max(0, MIN_SHOW_MS - SNAP_MS - (performance.now() - startedAt));
     const started = performance.now() + delay;
     let timer = null;
+    const done = () => {
+      completed = true;
+      snapPhaseRef.current = 'done';
+      // Chuột thụt vào và khoá ví trong lúc trang Home đang được dựng phía sau.
+      const rain = rainRef.current;
+      if (rain && !skipMotion) lockRef.current = rain.freeze().then(() => lockWallet(rain.layer));
+      navigate('/spending/home', { replace: true });
+    };
     const step = (now) => {
       const fraction = Math.min(1, (now - started) / SNAP_MS);
       const eased = 1 - (1 - fraction) ** 3;
@@ -125,18 +121,12 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
       progressRef.current = next;
       setProgress(next);
       if (fraction < 1) frame = requestAnimationFrame(step);
-      else {
-        completed = true;
-        snapPhaseRef.current = 'done';
-        navigate('/spending/home', { replace: true });
-      }
+      else done();
     };
     if (skipMotion) {
       progressRef.current = 100;
       setProgress(100);
-      completed = true;
-      snapPhaseRef.current = 'done';
-      navigate('/spending/home', { replace: true });
+      done();
     } else {
       timer = window.setTimeout(() => { frame = requestAnimationFrame(step); }, delay);
     }
@@ -151,54 +141,51 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
 
   useEffect(() => {
     if (state !== 'success' || !location.pathname.startsWith('/spending')) return undefined;
-    const cubeNode = cubeRef.current;
     let observer = null;
     let fallbackTimer = null;
     let closeTimer = null;
-    let animationEndHandler = null;
     let target = null;
     let finished = false;
+    let cancelled = false;
+    let landed = false;
 
     const finish = () => {
-      if (finished) return;
+      if (finished || cancelled) return;
       finished = true;
-      if (target) target.style.opacity = '';
-      if (cubeRef.current) cubeRef.current.style.visibility = 'hidden';
+      if (target) {
+        target.style.opacity = '';
+        if (landed) landOnMark(target);
+      }
+      if (characterRef.current) characterRef.current.style.visibility = 'hidden';
       setExiting(true);
       closeTimer = window.setTimeout(() => close(attemptId), 180);
     };
+    const fly = async () => {
+      await (lockRef.current ?? Promise.resolve());
+      if (cancelled || finished || !characterRef.current) return;
+      target.style.opacity = '0';
+      setArriving(true);
+      await flyToMark({ character: characterRef.current, layer: rainRef.current.layer,
+        backdrop: backdropRef.current, mark: target, duration: FLIGHT_MS });
+      landed = true;
+      finish();
+    };
 
     const findTarget = () => {
-      const cube = cubeNode;
       // Logo đang hiển thị: trong sidebar trên máy tính, trên topbar ở điện thoại (đợt 15b).
       const icon = [...document.querySelectorAll('[data-brand-mark]')]
         .find((node) => node.getClientRects().length > 0);
-      if (!cube || !icon) return;
+      if (!icon || !characterRef.current) return;
       observer?.disconnect();
       window.clearTimeout(fallbackTimer);
       target = icon;
-      if (document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (motionOff() || !rainRef.current) {
         finish();
         return;
       }
-
-      const scene = cube.parentElement.getBoundingClientRect();
-      const destination = icon.getBoundingClientRect();
-      const dx = destination.left + destination.width / 2 - scene.left - scene.width / 2;
-      // The bounce pivots at the feet; use the same anchor for the handoff.
-      const dy = destination.bottom - scene.top - cube.offsetTop - cube.offsetHeight;
-      const scale = destination.width / cube.offsetWidth;
-      target.style.opacity = '0';
-      cube.style.setProperty('--signature-start-transform', getComputedStyle(cube).transform);
-      cube.style.setProperty('--signature-arrival-x', `${dx}px`);
-      cube.style.setProperty('--signature-arrival-y', `${dy}px`);
-      cube.style.setProperty('--signature-arrival-scale', String(scale));
-      animationEndHandler = (event) => {
-        if (event.animationName === 'signature-cube-arrival') finish();
-      };
-      cube.addEventListener('animationend', animationEndHandler);
-      setArriving(true);
-      fallbackTimer = window.setTimeout(finish, FLIGHT_MS + 160);
+      // Lưới an toàn: khoá ví + bay không bao giờ giữ người dùng quá lâu.
+      fallbackTimer = window.setTimeout(finish, 1200 + FLIGHT_MS + 600);
+      fly();
     };
 
     findTarget();
@@ -208,10 +195,10 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
       fallbackTimer = window.setTimeout(finish, 2000);
     }
     return () => {
+      cancelled = true;
       observer?.disconnect();
       window.clearTimeout(fallbackTimer);
       window.clearTimeout(closeTimer);
-      if (animationEndHandler) cubeNode?.removeEventListener('animationend', animationEndHandler);
       if (target) target.style.opacity = '';
     };
   }, [state, location.pathname, attemptId, close]);
@@ -223,9 +210,11 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
     : progress < 70 ? String(Math.floor(progress)) : progress.toFixed(1);
 
   return (
-    <div ref={overlayRef} className={`signature-login${complete ? ' is-success' : ''}${arriving ? ' is-arriving' : ''}${exiting ? ' is-exiting' : ''}`}
+    <div ref={overlayRef} className={`signature-login${complete ? ' is-success' : ''}${state === 'failure' ? ' is-failure' : ''}${arriving ? ' is-arriving' : ''}${exiting ? ' is-exiting' : ''}`}
       role="dialog" aria-modal="true" aria-label={t('auth.signatureTitle')} tabIndex={-1}
       onKeyDown={(event) => { if (event.key === 'Tab') event.preventDefault(); }}>
+      <div ref={backdropRef} className="signature-login__backdrop" aria-hidden="true" />
+      {!quiet && <AmbientCoins />}
       <div className="signature-login__content">
         <header className="signature-login__header">
           <h1>{t('auth.signatureTitle')}</h1>
@@ -234,7 +223,7 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
           </div>
         </header>
 
-        <RunnerScene cubeRef={cubeRef} />
+        <CoinRainScene characterRef={characterRef} />
 
         <div className="signature-login__progress-wrap">
           <div className="signature-login__progress-caption">

@@ -5,6 +5,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { readSidebarWidth } from './sidebarWidth';
 import { groupIdForView, normalizePinnedGroups } from './sidebarGroups';
+import { BrandMark } from '../ui/BrandMark';
 
 // Cùng khung với AppShell (đợt 15b): logo trong sidebar, tấm nội dung bo góc, viên kính góc
 // trên-phải trên máy tính; điện thoại vẫn là topbar có logo. Tải xong không nhảy bố cục.
@@ -21,7 +22,7 @@ export function AppShellSkeleton() {
   ];
   const brand = (
     <>
-      <div className="tb-logo-icon">C</div>
+      <BrandMark />
       <span className="tb-logo">
         Calt<span className="tb-logo-accent">D</span>Hy
       </span>

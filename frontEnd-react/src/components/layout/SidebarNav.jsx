@@ -9,6 +9,7 @@ import { SidebarResizeHandle } from './SidebarResizeHandle';
 import { readSidebarWidth, saveSidebarWidth } from './sidebarWidth';
 import { groupIdForView, normalizePinnedGroups } from './sidebarGroups';
 import { Icon } from '../../components/ui/AppIcons';
+import { BrandMark } from '../ui/BrandMark';
 
 // Chờ đủ lâu để lướt chuột dọc qua sidebar không làm nhóm bung nhầm; chỉ thu nhóm xem tạm
 // khi chuột đã rời hẳn sidebar để không làm các mục bên dưới nhảy lên dưới con trỏ (15f).
@@ -360,7 +361,7 @@ export function SidebarNav() {
       onPointerLeave={handleSidebarPointerLeave}
     >
       {/* Logo + nút thu gọn ở đầu sidebar: máy tính không còn topbar (đợt 15b). Thu gọn thì
-          chỉ còn ô "C", nút mở rộng nằm ngay dưới. */}
+          chỉ còn logo chuột, nút mở rộng nằm ngay dưới. */}
       <div className="sidebar-brand">
         <Link
           to="/spending/home"
@@ -369,7 +370,7 @@ export function SidebarNav() {
           title={isSidebarCollapsed ? t('topbar.home') : undefined}
           onClick={() => handleNavClick('home')}
         >
-          <span className="tb-logo-icon" data-brand-mark="">C</span>
+          <BrandMark data-brand-mark="" />
           {!isSidebarCollapsed && (
             <span className="tb-logo">
               Calt<span className="tb-logo-accent">D</span>Hy

@@ -1,6 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CaltDHy">
-  <rect width="512" height="512" fill="#4F46E5"/>
-  <path d="M346 165c-25-21-57-30-91-30-69 0-121 52-121 121s52 121 121 121c34 0 66-9 91-30"
-    fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="370" cy="256" r="16" fill="#A7F3D0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none" role="img" aria-label="CaltDHy Logo — Minimal Small Size (16-32px)">
+  <!-- Flat High-Contrast Squircle Background (Deep Forest Emerald) -->
+  <rect x="0" y="0" width="512" height="512" rx="116" fill="#105440"/>
+
+  <!-- Optically scaled +8% around center for maximum pixel legibility at 16px-32px -->
+  <g transform="translate(256 256) scale(1.08) translate(-256 -256)">
+    <!-- Layer 1: Wallet Back Pocket Opening -->
+    <path d="M 104 226 L 104 214 Q 104 192 128 192 L 350 192 Q 373 192 373 215 L 373 244 L 104 244 Z"
+          fill="#0B3D2E" stroke="#10281C" stroke-width="18.5" stroke-linejoin="round"/>
+
+    <!-- Layer 2: Mouse Peeking Out (identical silhouette, bolder optical stroke) -->
+    <path d="M 151.5 242 Q 154.5 198 165.5 171.5 A 48 48 0 1 1 213.3 127.8 Q 250.5 113.5 287.7 127.8 A 48 48 0 1 1 335.5 171.5 Q 346.5 198 349.5 242 Z"
+          fill="#F5F1E3" stroke="#10281C" stroke-width="18.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Simplified Small-Size Eyes (bold, crisp even on 16px grid; tiny nose omitted to avoid pixel smudge) -->
+    <circle cx="211.5" cy="193" r="14.5" fill="#10281C"/>
+    <circle cx="289.5" cy="193" r="14.5" fill="#10281C"/>
+
+    <!-- Layer 3: Wallet Front Body (Bright Mint-Emerald) -->
+    <path d="M 104 214 C 104 229 114 238 130 238 L 365 238 Q 390.5 238 390.5 263 L 390.5 398 Q 390.5 436 352.5 436 L 142 436 Q 104 436 104 398 Z"
+          fill="#54B48C" stroke="#10281C" stroke-width="18.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Layer 4: Wallet Clasp Tab -->
+    <path d="M 337 298 L 396 298 Q 410 298 410 312 L 410 364 Q 410 378 396 378 L 337 378 A 40 40 0 0 1 337 298 Z"
+          fill="#358867" stroke="#10281C" stroke-width="18.5" stroke-linejoin="round"/>
+
+    <!-- Layer 5: Prominent Flat Golden Coin (pops clearly even on 16x16 grid) -->
+    <circle cx="337" cy="338" r="27.5" fill="#F5BA3E"/>
+  </g>
 </svg>

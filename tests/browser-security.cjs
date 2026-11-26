@@ -189,7 +189,10 @@ function blendCssColor(color, background) {
           await loginPage.locator('#loginForm button[type=submit]').click();
           const overlay = loginPage.locator('.signature-login');
           await expect(overlay).toBeVisible();
-          await expect(overlay.locator('.signature-login__cube')).toHaveCSS('animation-name', 'signature-cube-bounce');
+          // Mưa xu chạy bằng Web Animations API (không có animation-name CSS để đọc).
+          await expect.poll(() => overlay.evaluate(node => node.getAnimations({ subtree: true })
+            .some(animation => !(animation instanceof CSSTransition) && animation.playState === 'running'))).toBe(true);
+          await expect(overlay.locator('.signature-login__drop')).toHaveCount(4);
           const geometry = await overlay.evaluate(node => {
             const rect = node.getBoundingClientRect();
             return { width: rect.width, height: rect.height, top: rect.top, left: rect.left,
@@ -732,9 +735,11 @@ function blendCssColor(color, background) {
       await page.locator('#loginForm button[type=submit]').click();
       const overlay = page.locator('.signature-login');
       await expect(overlay).toBeVisible();
-      await expect(overlay.locator('.signature-login__particle')).toHaveCount(6);
-      await expect(overlay.locator('.signature-login__bar')).toHaveCount(9);
-      await expect(overlay.locator('.signature-login__cube')).toHaveCSS('animation-name', 'none');
+      await expect(overlay.locator('.signature-login__character')).toBeVisible();
+      await expect(overlay.locator('.signature-login__drop')).toHaveCount(0);
+      assert.equal(await overlay.evaluate(node => node.getAnimations({ subtree: true })
+        .filter(animation => !(animation instanceof CSSTransition) && animation.playState === 'running').length), 0,
+      'Giảm chuyển động: chuột và xu phải đứng yên');
       await page.waitForTimeout(2700);
       const readProgress = async () => Number((await overlay.locator('.signature-login__progress-caption strong')
         .textContent()).replace('%', ''));
@@ -840,25 +845,24 @@ function blendCssColor(color, background) {
   });
   await check('offline logout locks both tabs and remains locked after reload until deliberate login', async () => {
     await page.evaluate(() => {
-      window.__signatureArrivalAnimations = 0;
-      window.__signatureBounceStarted = null;
-      window.__signatureArrivalStarted = null;
-      document.addEventListener('animationstart', event => {
-        if (event.animationName === 'signature-cube-bounce') window.__signatureBounceStarted = performance.now();
-        if (event.animationName === 'signature-cube-arrival') {
-          window.__signatureArrivalAnimations += 1;
-          window.__signatureArrivalStarted = performance.now();
+      window.__signatureShownAt = null;
+      window.__signatureArrivalAt = null;
+      new MutationObserver(() => {
+        const overlay = document.querySelector('.signature-login');
+        if (overlay && window.__signatureShownAt === null) window.__signatureShownAt = performance.now();
+        if (overlay?.classList.contains('is-arriving') && window.__signatureArrivalAt === null) {
+          window.__signatureArrivalAt = performance.now();
         }
-      }, { once: false });
+      }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
     });
     await page.locator('#loginForm button[type=submit]').click();
     await expect(page.locator('.signature-login')).toBeVisible();
     await page.waitForURL('**/spending/home');
     await expect(page.locator('.signature-login')).toHaveCount(0);
-    assert.ok(await page.evaluate(() => window.__signatureArrivalAnimations > 0),
-      'Logo C phải chạy chuyển động keyframe đến Topbar trước khi overlay đóng');
-    assert.ok(await page.evaluate(() => window.__signatureArrivalStarted - window.__signatureBounceStarted >= 880),
-      'Even a fast desktop login must show approximately one complete bounce before arrival');
+    assert.ok(await page.evaluate(() => window.__signatureArrivalAt !== null),
+      'Ví phải khoá lại và bay về logo trước khi overlay đóng');
+    assert.ok(await page.evaluate(() => window.__signatureArrivalAt - window.__signatureShownAt >= 880),
+      'Even a fast desktop login must show the first coin landing in the wallet before the flight');
     await expect(page.locator('.user-chip-name')).toHaveText('Account Alpha');
     await second.goto('/spending');
     await expect(second.locator('.user-chip-name')).toHaveText('Account Alpha');

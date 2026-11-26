@@ -5,6 +5,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { formatDate } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { Icon } from '../ui/AppIcons';
+import { BrandMark } from '../ui/BrandMark';
 
 export function Topbar() {
   const { t } = useTranslation();
@@ -37,7 +38,7 @@ export function Topbar() {
           aria-label={t('topbar.home')}
           onClick={() => navigateTo('home')}
         >
-          <div className="tb-logo-icon" data-brand-mark="">C</div>
+          <BrandMark data-brand-mark="" />
           <span className="tb-logo">
             Calt<span className="tb-logo-accent">D</span>Hy
           </span>
