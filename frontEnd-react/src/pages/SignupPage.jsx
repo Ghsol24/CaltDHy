@@ -4,12 +4,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
-import { Icon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
+import { AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 import { SocialLogin } from '../components/auth/SocialLogin';
 import { LegalLinks } from '../components/auth/LegalLinks';
 import { getCachedOAuthProviders, hasFreshOAuthProviders, loadOAuthProviders } from '../services/oauthFlow';
 import { getCachedRegistrationStatus, loadRegistrationStatus, prefetchLoginRoute } from '../services/authBootstrap';
+import { PublicPageShell } from '../components/layout/PublicPageShell';
+import { getPublicNavCopy } from '../components/layout/publicNavCopy';
 import './auth.css';
 
 function getPasswordStrength(pw, t) {
@@ -25,7 +27,8 @@ function getPasswordStrength(pw, t) {
 }
 
 export const SignupPage = () => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const navCopy = getPublicNavCopy(lang);
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite') || '';
   const invitedEmail = searchParams.get('email') || '';
@@ -131,23 +134,26 @@ export const SignupPage = () => {
   };
 
   if (!ready) {
-    return <div className="auth-page" aria-busy="true" />;
+    return <PublicPageShell ariaBusy />;
   }
 
   return (
-    <div className="auth-page">
-      <main>
-        <IndustrialPanel title={t('auth.createAccount')} titleHighlight="">
-          {registrationStatus === 'checking' && (
-            <p className="signup-invite-message" role="status">{t('auth.registrationChecking')}</p>
-          )}
-          {registrationStatus === 'error' && (
-            <p className="signup-invite-message" role="alert">{t('auth.registrationUnavailable')}</p>
-          )}
-          {registrationStatus === 'invite' && !validInviteLink && (
-            <p className="signup-invite-message" role="status">{t('auth.inviteRequired')}</p>
-          )}
-          {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
+    <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
+      <IndustrialPanel
+        title={navCopy.auth.signupCardTitle}
+        subtitle={navCopy.auth.signupCardSub}
+        headingLevel="h2"
+      >
+        {registrationStatus === 'checking' && (
+          <p className="signup-invite-message" role="status">{t('auth.registrationChecking')}</p>
+        )}
+        {registrationStatus === 'error' && (
+          <p className="signup-invite-message" role="alert">{t('auth.registrationUnavailable')}</p>
+        )}
+        {registrationStatus === 'invite' && !validInviteLink && (
+          <p className="signup-invite-message" role="status">{t('auth.inviteRequired')}</p>
+        )}
+        {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
           <form id="signupForm" onSubmit={handleSubmit} noValidate>
             {registrationStatus === 'invite' && (
               <p className="signup-invite-message">{t('auth.inviteEmail')}</p>
@@ -207,32 +213,21 @@ export const SignupPage = () => {
               <span className="spinner" aria-hidden="true"></span>
               <span className="btn-text">{isSubmitting ? t('auth.creating') : t('auth.createAccount')}</span>
             </button>
-
           </form>
-          )}
-          {/* A new Google/Facebook account follows the same rule as the form: open sign-up, or a valid invite. */}
-          {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
-            <SocialLogin inviteToken={validInviteLink ? inviteToken : ''} providers={socialProviders || []} />
-          )}
+        )}
 
-          <div className="divider">
-            <span>{t('auth.or')}</span>
-          </div>
+        {(registrationStatus === 'open' || (registrationStatus === 'invite' && validInviteLink)) && (
+          <SocialLogin inviteToken={validInviteLink ? inviteToken : ''} providers={socialProviders || []} />
+        )}
 
-          <Link to="/" className="btn-ghost">
-            <Icon name="chevronLeft" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            {t('auth.backHome')}
+        <p className="mod-footer">
+          {t('auth.haveAccount')}{' '}
+          <Link to="/login" className="lnk" onPointerEnter={prefetchLoginRoute} onFocus={prefetchLoginRoute}>
+            {t('auth.login')}
           </Link>
-
-          <p className="mod-footer">
-            {t('auth.haveAccount')}{' '}
-            <Link to="/login" className="lnk" onPointerEnter={prefetchLoginRoute} onFocus={prefetchLoginRoute}>
-              {t('auth.login')}
-            </Link>
-          </p>
-          <LegalLinks />
-        </IndustrialPanel>
-      </main>
-    </div>
+        </p>
+        <LegalLinks />
+      </IndustrialPanel>
+    </PublicPageShell>
   );
 };

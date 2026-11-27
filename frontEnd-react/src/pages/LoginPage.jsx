@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
-import { Icon, ClockOutlineIcon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
+import { ClockOutlineIcon, AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
 import { useTranslation } from '../i18n/useTranslation';
 import { SocialLogin } from '../components/auth/SocialLogin';
 import { LegalLinks } from '../components/auth/LegalLinks';
@@ -13,6 +13,8 @@ import { OAuthConfirm } from '../components/auth/OAuthConfirm';
 import { getSocialCopy, socialErrorText } from '../components/auth/socialLoginCopy';
 import { getCachedOAuthProviders, hasFreshOAuthProviders, loadOAuthProviders } from '../services/oauthFlow';
 import { prefetchSignupRoute } from '../services/authBootstrap';
+import { PublicPageShell } from '../components/layout/PublicPageShell';
+import { getPublicNavCopy } from '../components/layout/publicNavCopy';
 import './auth.css';
 
 const OFFLINE_COPY = {
@@ -34,13 +36,13 @@ const TOTP_COPY = {
 
 export const LoginPage = () => {
   const { t, lang } = useTranslation();
+  const navCopy = getPublicNavCopy(lang);
   const totpCopy = TOTP_COPY[lang] || (String(lang).startsWith('zh') ? TOTP_COPY['zh-CN'] : TOTP_COPY.vi);
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine !== false, () => true);
   const offlineText = OFFLINE_COPY[lang] || (String(lang).startsWith('zh') ? OFFLINE_COPY['zh-CN'] : OFFLINE_COPY.vi);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isExpired = searchParams.get('expired') === '1';
-  // Where a Google/Facebook sign-in landed: done (signed in), link / verify (needs confirmation), or an error code.
   const socialCopy = getSocialCopy(lang);
   const oauthStep = searchParams.get('oauth');
   const oauthErrorCode = searchParams.get('oauth_error');
@@ -105,7 +107,6 @@ export const LoginPage = () => {
   useEffect(() => {
     if (oauthStep !== 'done') return;
     if (authStatus === 'authenticated') navigate('/spending/home', { replace: true });
-    // The server said "signed in" but this browser has no session (for example cookies are blocked).
     else if (authStatus === 'anonymous') setSearchParams({ oauth_error: 'failed' }, { replace: true });
   }, [oauthStep, authStatus, navigate, setSearchParams]);
 
@@ -140,7 +141,6 @@ export const LoginPage = () => {
       attempt.timedOut = true;
       controller.abort();
     }, 25000);
-    // Start fetching the authenticated shell while the server verifies the account.
     void import('./SpendingPage').catch(() => {});
 
     try {
@@ -154,7 +154,6 @@ export const LoginPage = () => {
       window.clearTimeout(attempt.timeout);
       attemptRef.current = null;
       failSignature(id);
-      // The password was right; the account just needs its second step. Not an error to alarm about.
       if (err?.code === 'TOTP_REQUIRED') { setNeedsCode(true); setError(''); }
       else setError(attempt.timedOut ? t('auth.loginTimeout') : getUserErrorMessage(err, 'error.generic'));
       setIsSubmitting(false);
@@ -162,47 +161,57 @@ export const LoginPage = () => {
   };
 
   if (oauthStep === 'link' || oauthStep === 'verify') {
-    return <div className="auth-page"><main><OAuthConfirm onExit={leaveOAuthStep} /></main></div>;
+    return (
+      <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
+        <OAuthConfirm onExit={leaveOAuthStep} />
+      </PublicPageShell>
+    );
   }
   if (oauthStep === 'done') {
     return (
-      <div className="auth-page"><main><IndustrialPanel>
-        <p className="oauth-note" role="status" aria-live="polite">{socialCopy.finishing}</p>
-      </IndustrialPanel></main></div>
+      <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
+        <IndustrialPanel>
+          <p className="oauth-note" role="status" aria-live="polite">{socialCopy.finishing}</p>
+        </IndustrialPanel>
+      </PublicPageShell>
     );
   }
   if (!providersSettled) {
-    return <div className="auth-page" aria-busy="true" />;
+    return <PublicPageShell ariaBusy />;
   }
 
   return (
-    <div className="auth-page">
-      <main>
-        <IndustrialPanel title={t('auth.welcome')} titleHighlight={t('auth.back')}>
-          <form id="loginForm" onSubmit={handleSubmit} noValidate>
-            <FloatingInput
-              id="emailIn"
-              type="email"
-              label={t('auth.email')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              isValid={isEmailValid}
-              autoComplete="email"
-              required
-            />
+    <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
+      <IndustrialPanel
+        title={navCopy.auth.loginCardTitle}
+        subtitle={navCopy.auth.loginCardSub}
+        headingLevel="h2"
+      >
+        <form id="loginForm" onSubmit={handleSubmit} noValidate>
+          <FloatingInput
+            id="emailIn"
+            type="email"
+            label={t('auth.email')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            isValid={isEmailValid}
+            autoComplete="email"
+            required
+          />
 
-            <FloatingInput
-              id="pwIn"
-              type="password"
-              label={t('auth.password')}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              isValid={isPwValid}
-              autoComplete="current-password"
-              required
-            />
+          <FloatingInput
+            id="pwIn"
+            type="password"
+            label={t('auth.password')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            isValid={isPwValid}
+            autoComplete="current-password"
+            required
+          />
 
-            {needsCode && <div className="totp-step">
+          {needsCode && (
+            <div className="totp-step">
               <FloatingInput
                 id="totpIn"
                 type="text"
@@ -214,65 +223,55 @@ export const LoginPage = () => {
                 required
               />
               <p className="totp-hint" role="status">{totpCopy.hint}</p>
-            </div>}
-
-            <div className="forgot-row">
-              <Link to="/reset-password" className="forgot-lnk">
-                {t('auth.forgotPassword')}
-              </Link>
             </div>
+          )}
 
-            {!online && !error && (
-              <div className="form-err form-err--warning form-err--icon show" role="status">
-                <AlertTriangleOutlineIcon size={14} /> {offlineText}
-              </div>
-            )}
-
-            {isExpired && online && !error && (
-              <div className="form-err form-err--warning form-err--icon show" role="status">
-                <ClockOutlineIcon size={14} /> {t('error.authExpired')}
-              </div>
-            )}
-
-            {error && (
-              <div id="formErr" className="form-err form-err--icon show" role="alert">
-                <AlertTriangleOutlineIcon size={14} /> {error}
-              </div>
-            )}
-
-            {oauthError && (
-              <div id="oauthErr" className="form-err form-err--icon show" role="alert">
-                <AlertTriangleOutlineIcon size={14} /> {oauthError}
-              </div>
-            )}
-
-            <button type="submit" className={`btn-cta ${isSubmitting ? 'loading' : ''}`} disabled={isSubmitting}>
-              <span className="spinner" aria-hidden="true"></span>
-              <span className="btn-text">{isSubmitting ? t('auth.loggingIn') : t('auth.login')}</span>
-            </button>
-
-          </form>
-
-          <SocialLogin providers={socialProviders || []} />
-
-          <div className="divider">
-            <span>{t('auth.or')}</span>
+          <div className="forgot-row">
+            <Link to="/reset-password" className="forgot-lnk">
+              {t('auth.forgotPassword')}
+            </Link>
           </div>
 
-          <Link to="/" className="btn-ghost">
-            <Icon name="chevronLeft" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            {t('auth.backHome')}
-          </Link>
+          {!online && !error && (
+            <div className="form-err form-err--warning form-err--icon show" role="status">
+              <AlertTriangleOutlineIcon size={14} /> {offlineText}
+            </div>
+          )}
 
-          <p className="mod-footer">
-            {t('auth.noAccount')}{' '}
-            <Link to="/signup" className="lnk" onPointerEnter={prefetchSignupRoute} onFocus={prefetchSignupRoute}>
-              {t('auth.signup')}
-            </Link>
-          </p>
-          <LegalLinks />
-        </IndustrialPanel>
-      </main>
-    </div>
+          {isExpired && online && !error && (
+            <div className="form-err form-err--warning form-err--icon show" role="status">
+              <ClockOutlineIcon size={14} /> {t('error.authExpired')}
+            </div>
+          )}
+
+          {error && (
+            <div id="formErr" className="form-err form-err--icon show" role="alert">
+              <AlertTriangleOutlineIcon size={14} /> {error}
+            </div>
+          )}
+
+          {oauthError && (
+            <div id="oauthErr" className="form-err form-err--icon show" role="alert">
+              <AlertTriangleOutlineIcon size={14} /> {oauthError}
+            </div>
+          )}
+
+          <button type="submit" className={`btn-cta ${isSubmitting ? 'loading' : ''}`} disabled={isSubmitting}>
+            <span className="spinner" aria-hidden="true"></span>
+            <span className="btn-text">{isSubmitting ? t('auth.loggingIn') : t('auth.login')}</span>
+          </button>
+        </form>
+
+        <SocialLogin providers={socialProviders || []} />
+
+        <p className="mod-footer">
+          {t('auth.noAccount')}{' '}
+          <Link to="/signup" className="lnk" onPointerEnter={prefetchSignupRoute} onFocus={prefetchSignupRoute}>
+            {t('auth.signup')}
+          </Link>
+        </p>
+        <LegalLinks />
+      </IndustrialPanel>
+    </PublicPageShell>
   );
 };

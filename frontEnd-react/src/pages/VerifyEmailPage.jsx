@@ -4,10 +4,13 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { authService } from '../services/authService';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { useTranslation } from '../i18n/useTranslation';
+import { PublicPageShell } from '../components/layout/PublicPageShell';
+import { getPublicNavCopy } from '../components/layout/publicNavCopy';
 import './auth.css';
 
 export function VerifyEmailPage() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const navCopy = getPublicNavCopy(lang);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const email = searchParams.get('email') || '';
@@ -45,16 +48,16 @@ export function VerifyEmailPage() {
   };
 
   return (
-    <div className="auth-page">
-      <main>
-        <IndustrialPanel title={t('auth.verifyEmail')} titleHighlight="">
-          <p className="auth-page__p--verify">{message}</p>
-          {canResend && <button className="btn-cta" type="button" onClick={resend} disabled={isSending}>
+    <PublicPageShell pageTitle={navCopy.auth.verifyHeading}>
+      <IndustrialPanel title={t('auth.verifyEmail')} headingLevel="h2">
+        <p className="auth-page__p--verify">{message}</p>
+        {canResend && (
+          <button className="btn-cta" type="button" onClick={resend} disabled={isSending}>
             {isSending ? t('auth.sending') : t('auth.resend')}
-          </button>}
-          <p className="mod-footer"><Link to="/login" className="lnk">{t('auth.backLogin')}</Link></p>
-        </IndustrialPanel>
-      </main>
-    </div>
+          </button>
+        )}
+        <p className="mod-footer"><Link to="/login" className="lnk">{t('auth.backLogin')}</Link></p>
+      </IndustrialPanel>
+    </PublicPageShell>
   );
 }

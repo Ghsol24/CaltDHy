@@ -1,360 +1,265 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router';
 import { useThemeStore } from '../stores/useThemeStore';
-import { THEME_OPTIONS } from '../utils/themes';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useLangStore } from '../stores/useLangStore';
 import { useCurrencyStore } from '../stores/useCurrencyStore';
-import { formatCurrency, formatDate } from '../utils/formatters';
-import { translate } from '../i18n/translations';
+import { useAuthStore } from '../stores/useAuthStore';
+import { BrandMark } from '../components/ui/BrandMark';
+import { PublicTopbar } from '../components/layout/PublicTopbar';
 import { prefetchOAuthProviders } from '../services/oauthFlow';
-import { prefetchLoginRoute, prefetchRegistrationStatus, prefetchSignupRoute } from '../services/authBootstrap';
+import {
+  getCachedRegistrationStatus,
+  loadRegistrationStatus,
+  prefetchLoginRoute,
+  prefetchSignupRoute,
+} from '../services/authBootstrap';
+import { getLandingCopy } from '../features/landing/landingCopy';
+import { LandingIcon } from '../features/landing/LandingIcons';
+import { LandingAppPreview } from '../features/landing/LandingAppPreview';
+import { LandingSections } from '../features/landing/LandingSections';
+import { cancelSmoothScroll, smoothScrollToHash } from '../utils/smoothScroll';
 import './landing.css';
-import { Icon } from '../components/ui/AppIcons';
-
-const LANDING_KEYS = [
-  'eyebrow', 'tagline', 'totalBalance', 'transactions', 'vsLastMo',
-  'loginBtn', 'signupBtn', 'previewTitle', 'previewLive', 'previewIncome',
-  'previewExpenses', 'previewFood', 'previewTransport', 'previewSalary',
-  'settingsTitle', 'langLabel', 'themeLabel', 'doneBtn',
-];
 
 export function LandingPage() {
+  const { hash } = useLocation();
   const { theme, setTheme } = useThemeStore();
   const lang = useLangStore((state) => state.lang);
   const setLang = useLangStore((state) => state.setLang);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   useCurrencyStore((state) => state.displayCurrency);
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const settingsRef = useRef(null);
-  useFocusTrap(settingsRef, isSettingsOpen);
-  useBodyScrollLock(isSettingsOpen);
-  const deviceWrapRef = useRef(null);
-  const deviceBezelRef = useRef(null);
+  const [registrationMode, setRegistrationMode] = useState(() => getCachedRegistrationStatus());
 
-  const t = Object.fromEntries(LANDING_KEYS.map((key) => [key, translate(lang, `landing.${key}`)]));
+  const copy = getLandingCopy(lang);
+  const isInviteOnly = registrationMode === 'invite';
 
-  // Sync lang change to localStorage and html tag
-  const handleSetLang = (newLang) => {
-    setLang(newLang);
-  };
-
-  // Warm OAuth providers, registration mode, and the login chunk before the user clicks CTA.
+  // Scroll cleanly to hash section when navigating from /login or /signup via Topbar links.
   useEffect(() => {
+    if (!hash || hash === '#top') return undefined;
+    const rafId = window.requestAnimationFrame(() => {
+      smoothScrollToHash(hash, null, { updateHistory: false });
+    });
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      cancelSmoothScroll();
+    };
+  }, [hash]);
+
+  // Warm OAuth providers, registration mode, and login chunk while visitor reads the landing page.
+  useEffect(() => {
+    let active = true;
     prefetchOAuthProviders();
-    prefetchRegistrationStatus();
+    loadRegistrationStatus()
+      .then((status) => {
+        if (active) setRegistrationMode(status);
+      })
+      .catch(() => {});
+
     if (typeof window.requestIdleCallback === 'function') {
       const idleId = window.requestIdleCallback(() => {
         prefetchLoginRoute();
       });
       return () => {
+        active = false;
         window.cancelIdleCallback?.(idleId);
       };
     }
     const timer = window.setTimeout(() => {
       prefetchLoginRoute();
     }, 150);
-    return () => window.clearTimeout(timer);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, []);
 
-  // Close modal on Escape
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isSettingsOpen) {
-        setIsSettingsOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSettingsOpen]);
-
-  // Dynamic month label
-  const now = new Date();
-  const monthStr = formatDate(now, 'month', { locale: lang }).toLocaleUpperCase(lang);
-  const dateLabelText = `${t.previewTitle} // ${monthStr}`;
-
-  // 3D Tilt Effect
-  const handleMouseMove = (e) => {
-    if (!deviceWrapRef.current || !deviceBezelRef.current) return;
-    const rect = deviceWrapRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = (e.clientX - cx) / (rect.width / 2);
-    const dy = (e.clientY - cy) / (rect.height / 2);
-    const rx = -dy * 8;
-    const ry = dx * 8;
-    deviceBezelRef.current.style.animation = 'none';
-    deviceBezelRef.current.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
-  };
-
-  const handleMouseLeave = () => {
-    if (!deviceBezelRef.current) return;
-    deviceBezelRef.current.style.animation = '';
-    deviceBezelRef.current.style.transform = '';
-  };
-
-  // Ripple effect on CTA button click
-  const handleButtonClick = (e) => {
-    const btn = e.currentTarget;
-    const rect = btn.getBoundingClientRect();
-    const ripple = document.createElement('span');
-    ripple.style.cssText = [
-      'position:absolute',
-      'border-radius:50%',
-      'background:rgba(255,255,255,.25)',
-      'width:10px',
-      'height:10px',
-      'pointer-events:none',
-      'animation:ripple 600ms linear',
-      `left:${e.clientX - rect.left - 5}px`,
-      `top:${e.clientY - rect.top - 5}px`
-    ].join(';');
-    btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 650);
-  };
+  const year = new Date().getFullYear();
 
   return (
-    <div className="landing-page landing-page--box">
-      {/* ── ANIMATED BACKGROUND ORBS ── */}
-      <div className="bg-orb bg-orb--1" aria-hidden="true"></div>
-      <div className="bg-orb bg-orb--2" aria-hidden="true"></div>
+    <div className="landing-page">
+      {/* Soft ambient background aura — shared across Landing & Auth */}
+      <div className="pub-aura lp-aura" aria-hidden="true">
+        <div className="pub-aura-blob pub-aura-blob--primary" />
+        <div className="pub-aura-blob pub-aura-blob--secondary" />
+      </div>
 
-      {/* ── CORNER SCREWS ── */}
-      <div className="screw screw-tl" aria-hidden="true"></div>
-      <div className="screw screw-tr" aria-hidden="true"></div>
-      <div className="screw screw-bl" aria-hidden="true"></div>
-      <div className="screw screw-br" aria-hidden="true"></div>
+      {/* ── SHARED LIQUID GLASS FLOATING TOPBAR ── */}
+      <PublicTopbar skipTarget="#landing-main" isInviteOnly={isInviteOnly} />
 
-      {/* ── SETTINGS GEAR BUTTON (top-right) ── */}
-      <button
-        className="idx-settings-btn"
-        id="idxSettingsBtn"
-        onClick={() => setIsSettingsOpen(true)}
-        aria-label={t.settingsTitle}
-        aria-haspopup="dialog"
-      >
-        <Icon name="gearLanding" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-      </button>
+      {/* ── MAIN CONTENT ── */}
+      <main id="top" className="lp-main">
+        {/* HERO SECTION */}
+        <section className="lp-hero">
+          <div className="lp-container lp-hero-inner">
+            <div className="lp-hero-badge">
+              <LandingIcon name="sparkle" size={14} />
+              <span>{copy.hero.badge}</span>
+            </div>
 
-      {/* ── MAIN HERO ── */}
-      <main className="hero-wrapper" role="main">
-        {/* LEFT — COPY & CTA */}
-        <section className="hero-content" aria-labelledby="brand-heading">
-          <div className="brand-lockup">
-            <p className="brand-eyebrow">{t.eyebrow}</p>
-            <h1 className="brand-name" id="brand-heading">
-              Calt<span>D</span>Hy
+            <h1 id="landing-main" tabIndex={-1} className="lp-hero-title">
+              {copy.hero.title}
             </h1>
-            <p className="brand-tagline">{t.tagline}</p>
+
+            <p className="lp-hero-subtitle">{copy.hero.subtitle}</p>
+
+            <div className="lp-hero-actions">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/spending/home" className="lp-btn lp-btn--primary lp-btn--lg">
+                    <span>{copy.hero.ctaOpenApp}</span>
+                    <LandingIcon name="arrowRight" size={16} strokeWidth={2.1} />
+                  </Link>
+                  <a
+                    href="#features"
+                    className="lp-btn lp-btn--secondary lp-btn--lg"
+                    onClick={(event) => smoothScrollToHash('#features', event)}
+                  >
+                    <span>{copy.hero.ctaExplore}</span>
+                  </a>
+                </>
+              ) : isInviteOnly ? (
+                <>
+                  <Link
+                    to="/login"
+                    className="lp-btn lp-btn--primary lp-btn--lg"
+                    onPointerEnter={prefetchLoginRoute}
+                    onFocus={prefetchLoginRoute}
+                    onTouchStart={prefetchLoginRoute}
+                  >
+                    <span>{copy.hero.ctaLogin}</span>
+                    <LandingIcon name="arrowRight" size={16} strokeWidth={2.1} />
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="lp-btn lp-btn--secondary lp-btn--lg"
+                    onPointerEnter={prefetchSignupRoute}
+                    onFocus={prefetchSignupRoute}
+                    onTouchStart={prefetchSignupRoute}
+                  >
+                    <span>{copy.hero.ctaInviteSignup}</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/signup"
+                    className="lp-btn lp-btn--primary lp-btn--lg"
+                    onPointerEnter={prefetchSignupRoute}
+                    onFocus={prefetchSignupRoute}
+                    onTouchStart={prefetchSignupRoute}
+                  >
+                    <span>{copy.hero.ctaSignup}</span>
+                    <LandingIcon name="arrowRight" size={16} strokeWidth={2.1} />
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="lp-btn lp-btn--secondary lp-btn--lg"
+                    onPointerEnter={prefetchLoginRoute}
+                    onFocus={prefetchLoginRoute}
+                    onTouchStart={prefetchLoginRoute}
+                  >
+                    <span>{copy.hero.ctaLogin}</span>
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <p className="lp-hero-note">
+              {isInviteOnly && !isAuthenticated ? copy.hero.noteInvite : copy.hero.note}
+            </p>
           </div>
 
-          {/* Metric badges */}
-          <div className="metric-strip" role="complementary" aria-label="System metrics">
-            <div className="metric-badge">
-              <span className="metric-value">{formatCurrency(24811500)}</span>
-              <span className="metric-label">{t.totalBalance}</span>
-            </div>
-            <div className="metric-badge">
-              <span className="metric-value">312</span>
-              <span className="metric-label">{t.transactions}</span>
-            </div>
-            <div className="metric-badge">
-              <span className="metric-value metric-value--accent">↓ 7,2%</span>
-              <span className="metric-label">{t.vsLastMo}</span>
-            </div>
-          </div>
-
-          {/* Vent slots */}
-          <div className="vent-group" aria-hidden="true">
-            <div className="vent-slot"></div>
-            <div className="vent-slot"></div>
-            <div className="vent-slot"></div>
-          </div>
-
-          {/* PRIMARY CTAs */}
-          <div className="cta-row">
-            <Link to="/login" className="btn-login" role="button" onClick={handleButtonClick}
-              onPointerEnter={prefetchLoginRoute} onFocus={prefetchLoginRoute} onTouchStart={prefetchLoginRoute}>
-              <Icon name="logIn" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
-              <span>{t.loginBtn}</span>
-            </Link>
-            <Link to="/signup" className="btn-signup" role="button" onClick={handleButtonClick}
-              onPointerEnter={prefetchSignupRoute} onFocus={prefetchSignupRoute} onTouchStart={prefetchSignupRoute}>
-              {t.signupBtn}
-            </Link>
+          {/* Interactive Live-Token Product Showcase Window */}
+          <div className="lp-container lp-showcase-wrap">
+            <LandingAppPreview copy={copy} lang={lang} />
           </div>
         </section>
 
-        {/* RIGHT — 3D DEVICE MOCKUP */}
-        <aside
-          className="device-wrap"
-          ref={deviceWrapRef}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          aria-label="App preview"
-          role="complementary"
-        >
-          <div className="device-bezel" ref={deviceBezelRef}>
-            <div className="device-topbar">
-              <div className="device-dots" aria-hidden="true">
-                <div className="device-dot red"></div>
-                <div className="device-dot yellow"></div>
-                <div className="device-dot green"></div>
-              </div>
-              <div className="device-title-bar">CALTDHY // FINANCE_OS</div>
-              <div className="device-signal" aria-hidden="true">
-                <div className="signal-bar"></div>
-                <div className="signal-bar"></div>
-                <div className="signal-bar"></div>
-                <div className="signal-bar"></div>
-              </div>
-            </div>
-
-            <div className="device-screen" role="img" aria-label={translate(lang, 'landing.previewAria')}>
-              <div className="screen-header">
-                <span className="screen-label" id="screenDateLabel">
-                  {dateLabelText}
-                </span>
-                <div className="screen-led">
-                  <div className="screen-led-dot"></div>
-                  <span className="screen-led-text">{t.previewLive}</span>
-                </div>
-              </div>
-
-              <div className="screen-balance">
-                <span className="balance-label">{t.totalBalance}</span>
-                <span className="balance-amount">
-                  {formatCurrency(24811500)}
-                </span>
-              </div>
-
-              <div className="screen-metrics">
-                <div className="screen-metric">
-                  <div className="sm-label">{t.previewIncome}</div>
-                  <div className="sm-value income">{formatCurrency(6200000, { showSign: true, isIncome: true })}</div>
-                </div>
-                <div className="screen-metric">
-                  <div className="sm-label">{t.previewExpenses}</div>
-                  <div className="sm-value expense">{formatCurrency(1843000, { showSign: true })}</div>
-                </div>
-              </div>
-
-              <div className="screen-txns">
-                <div className="screen-txn">
-                  <span className="txn-name">{t.previewFood}</span>
-                  <div className="txn-bar">
-                    <div className="txn-bar-fill txn-bar-fill--box"></div>
-                  </div>
-                  <span className="txn-amount neg">{formatCurrency(340000, { showSign: true })}</span>
-                </div>
-                <div className="screen-txn">
-                  <span className="txn-name">{t.previewTransport}</span>
-                  <div className="txn-bar">
-                    <div className="txn-bar-fill txn-bar-fill--box2"></div>
-                  </div>
-                  <span className="txn-amount neg">{formatCurrency(180000, { showSign: true })}</span>
-                </div>
-                <div className="screen-txn">
-                  <span className="txn-name">{t.previewSalary}</span>
-                  <div className="txn-bar">
-                    <div className="txn-bar-fill txn-bar-fill--box3"></div>
-                  </div>
-                  <span className="txn-amount pos">{formatCurrency(6200000, { showSign: true, isIncome: true })}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
+        {/* FULL PRODUCT SECTIONS */}
+        <LandingSections
+          copy={copy}
+          lang={lang}
+          setLang={setLang}
+          theme={theme}
+          setTheme={setTheme}
+          isAuthenticated={isAuthenticated}
+          isInviteOnly={isInviteOnly}
+          onPrefetchLogin={prefetchLoginRoute}
+          onPrefetchSignup={prefetchSignupRoute}
+        />
       </main>
 
-      {/* ── SETTINGS MODAL ── */}
-      <div
-        className={`idx-modal-overlay ${isSettingsOpen ? 'open' : ''}`}
-        id="idxSettingsModal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="idx-settings-title"
-        onClick={(e) => {
-          if (e.target.id === 'idxSettingsModal') setIsSettingsOpen(false);
-        }}
-      >
-        <div ref={settingsRef} className="idx-modal-card">
-          <div className="idx-screw idx-sc-tl" aria-hidden="true"></div>
-          <div className="idx-screw idx-sc-tr" aria-hidden="true"></div>
-          <div className="idx-screw idx-sc-bl" aria-hidden="true"></div>
-          <div className="idx-screw idx-sc-br" aria-hidden="true"></div>
-
-          <h2 className="idx-modal-title" id="idx-settings-title">
-            {t.settingsTitle}
-          </h2>
-
-          <div className="idx-vents" aria-hidden="true">
-            <div className="idx-vent"></div>
-            <div className="idx-vent"></div>
-            <div className="idx-vent"></div>
-            <div className="idx-vent"></div>
-          </div>
-
-          {/* Language Selection */}
-          <div className="idx-group">
-            <p className="idx-group-label">{t.langLabel}</p>
-            <div className="idx-lang-row" role="group" aria-label={t.langLabel}>
-              <div className="idx-lang-wrap">
-                <button
-                  type="button"
-                  className={`idx-lang-btn ${lang === 'en' ? 'active' : ''}`}
-                  aria-pressed={lang === 'en'}
-                  onClick={() => handleSetLang('en')}
+      {/* ── FLOATING FROSTED FOOTER CARD OVER RISING ORGANIC GRADIENT ── */}
+      <footer className="lp-footer-zone">
+        <div className="lp-footer-glow" aria-hidden="true" />
+        <div className="lp-container">
+          <div className="lp-footer-card lp-glass">
+            <div className="lp-footer-grid">
+              <div className="lp-footer-brand">
+                <a
+                  href="#top"
+                  className="lp-footer-logo"
+                  onClick={(event) => smoothScrollToHash('#top', event)}
                 >
-                  EN
-                </button>
+                  <BrandMark className="lp-brand-mark" />
+                  <span className="lp-brand-wordmark">
+                    Calt<span className="lp-brand-accent">D</span>Hy
+                  </span>
+                </a>
+                <p className="lp-footer-tagline">{copy.footer.tagline}</p>
               </div>
-              <div className="idx-lang-wrap">
-                <button
-                  type="button"
-                  className={`idx-lang-btn ${lang === 'vi' ? 'active' : ''}`}
-                  aria-pressed={lang === 'vi'}
-                  onClick={() => handleSetLang('vi')}
-                >
-                  VI
-                </button>
+
+              <div className="lp-footer-col">
+                <p className="lp-footer-col-title">{copy.footer.colProduct}</p>
+                <a href="#features" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#features', e)}>{copy.footer.features}</a>
+                <a href="#wallet-flow" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#wallet-flow', e)}>{copy.footer.walletFlow}</a>
+                <a href="#themes" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#themes', e)}>{copy.footer.themes}</a>
+                <a href="#security" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#security', e)}>{copy.footer.security}</a>
+                <a href="#faq" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#faq', e)}>{copy.footer.faq}</a>
               </div>
-              <div className="idx-lang-wrap">
-                <button
-                  type="button"
-                  className={`idx-lang-btn ${lang === 'zh-CN' ? 'active' : ''}`}
-                  aria-pressed={lang === 'zh-CN'}
-                  onClick={() => handleSetLang('zh-CN')}
-                >
-                  ZH
-                </button>
+
+              <div className="lp-footer-col">
+                <p className="lp-footer-col-title">{copy.footer.colAccount}</p>
+                {isAuthenticated ? (
+                  <Link to="/spending/home" className="lp-footer-link">{copy.footer.openApp}</Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="lp-footer-link"
+                      onPointerEnter={prefetchLoginRoute}
+                      onFocus={prefetchLoginRoute}
+                    >
+                      {copy.footer.login}
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="lp-footer-link"
+                      onPointerEnter={prefetchSignupRoute}
+                      onFocus={prefetchSignupRoute}
+                    >
+                      {copy.footer.signup}
+                    </Link>
+                    <Link to="/reset-password" className="lp-footer-link">
+                      {copy.footer.reset}
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <div className="lp-footer-col">
+                <p className="lp-footer-col-title">{copy.footer.colLegal}</p>
+                <Link to="/terms" className="lp-footer-link">{copy.footer.terms}</Link>
+                <Link to="/privacy" className="lp-footer-link">{copy.footer.privacy}</Link>
               </div>
             </div>
-          </div>
 
-          {/* Theme Selection */}
-          <div className="idx-group">
-            <p className="idx-group-label">{t.themeLabel}</p>
-            <div className="idx-theme-row" role="group" aria-label={t.themeLabel}>
-              {THEME_OPTIONS.map((option) => (
-                <button key={option.id} type="button"
-                  className={`idx-theme-btn ${theme === option.id ? 'active' : ''}`}
-                  aria-pressed={theme === option.id}
-                  onClick={() => setTheme(option.id)}>
-                  <Icon name={`theme${option.id[0].toUpperCase()}${option.id.slice(1)}`} width="16" height="16" fill="none"
-                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  <span>{translate(lang, option.labelKey)}</span>
-                </button>
-              ))}
+            <div className="lp-footer-bottom">
+              <span>© {year} CaltDHy</span>
             </div>
           </div>
-
-          <button className="idx-done-btn" onClick={() => setIsSettingsOpen(false)}>
-            {t.doneBtn}
-          </button>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
