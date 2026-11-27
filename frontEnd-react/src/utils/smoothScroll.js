@@ -2,8 +2,12 @@ const HEADER_OFFSET_PX = 88;
 
 let activeCancel = null;
 
-function easeOutQuint(t) {
-  return 1 - (1 - t) ** 5;
+/**
+ * Cubic ease-in-out matching tryliner.fun's measured topbar glide:
+ * gentle ramp-up (6.25% at 25% time), smooth midpoint (50% at 50%), soft cushion at landing.
+ */
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
 }
 
 export function cancelSmoothScroll() {
@@ -15,7 +19,7 @@ export function cancelSmoothScroll() {
 
 /**
  * Smoothly glides to an in-page section anchor (#features, #themes, #security, #faq, #top)
- * with distance-aware easing and immediate cancellation on manual user scroll input.
+ * using tryliner.fun's measured duration curve: min(1200, 500 + distance * 0.14) ms.
  */
 export function smoothScrollToHash(hash, event, { updateHistory = true } = {}) {
   if (typeof window === 'undefined' || !hash || !hash.startsWith('#')) return false;
@@ -54,16 +58,20 @@ export function smoothScrollToHash(hash, event, { updateHistory = true } = {}) {
     return true;
   }
 
-  const duration = Math.min(860, Math.max(460, Math.round(360 + Math.abs(delta) * 0.18)));
+  const duration = Math.min(1200, Math.round(500 + Math.abs(delta) * 0.14));
   const startTime = performance.now();
+  const root = document.documentElement;
+  const previousScrollBehavior = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
   let rafId = 0;
 
-  const stopEvents = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+  const stopEvents = ['wheel', 'touchstart', 'mousedown', 'keydown'];
   const cleanup = () => {
     if (rafId) {
       window.cancelAnimationFrame(rafId);
       rafId = 0;
     }
+    root.style.scrollBehavior = previousScrollBehavior;
     stopEvents.forEach((evt) => window.removeEventListener(evt, handleInterrupt));
     if (activeCancel === cleanup) {
       activeCancel = null;
@@ -83,7 +91,7 @@ export function smoothScrollToHash(hash, event, { updateHistory = true } = {}) {
 
   const step = (now) => {
     const progress = Math.min(1, (now - startTime) / duration);
-    const eased = easeOutQuint(progress);
+    const eased = easeInOutCubic(progress);
     window.scrollTo({ top: startY + delta * eased, behavior: 'instant' });
 
     if (progress < 1) {

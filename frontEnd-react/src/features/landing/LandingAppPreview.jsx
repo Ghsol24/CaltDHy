@@ -3,14 +3,23 @@ import { BrandMark } from '../../components/ui/BrandMark';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { LandingIcon } from './LandingIcons';
 
-const TAB_IDS = ['home', 'budgets', 'jars', 'debts'];
+const TAB_IDS = ['home', 'plan', 'analytics', 'jars'];
 
 const TAB_META = {
-  home: { icon: 'home', group: 'overview' },
-  budgets: { icon: 'budgets', group: 'plan' },
-  jars: { icon: 'jars', group: 'savings' },
-  debts: { icon: 'swap', group: 'plan' },
+  home: { icon: 'home' },
+  plan: { icon: 'plan' },
+  analytics: { icon: 'analytics' },
+  jars: { icon: 'jars' },
 };
+
+const TREND_SERIES = [
+  { inH: 64, outH: 38 },
+  { inH: 72, outH: 48 },
+  { inH: 68, outH: 36 },
+  { inH: 82, outH: 46 },
+  { inH: 76, outH: 42 },
+  { inH: 94, outH: 26 },
+];
 
 export function LandingAppPreview({ copy, lang }) {
   const [activeTab, setActiveTab] = useState('home');
@@ -50,7 +59,7 @@ export function LandingAppPreview({ copy, lang }) {
   return (
     <div className="lp-showcase-shell" role="region" aria-label={p.regionLabel}>
       <div className="lp-app-window">
-        {/* Window Topbar — mirrors CaltDHy desktop & mobile header */}
+        {/* Authentic CaltDHy Desktop & Mobile Chrome */}
         <div className="lp-app-chrome">
           <div className="lp-app-chrome-left">
             <div className="lp-window-dots" aria-hidden="true">
@@ -67,18 +76,24 @@ export function LandingAppPreview({ copy, lang }) {
           </div>
 
           <div className="lp-app-chrome-right">
-            <span className="lp-app-month">{monthLabel}</span>
+            <span className="lp-app-date-pill" aria-hidden="true">
+              <LandingIcon name="calendar" size={13} />
+              <span>{monthLabel}</span>
+            </span>
             <span className="lp-sample-pill">
               <span className="lp-sample-full">{p.sampleBadge}</span>
               <span className="lp-sample-short" aria-hidden="true">{p.sampleShort}</span>
             </span>
+            <span className="lp-app-user-chip" aria-hidden="true">
+              <span className="lp-app-user-avatar">MA</span>
+              <span className="lp-app-user-name">{p.userLabel}</span>
+            </span>
           </div>
         </div>
 
-        {/* App Body: Container-query adapts between desktop sidebar + stage and mobile stacked frame */}
+        {/* App Body: Authentic 4-Section CaltDHy SidebarNav + Wide Interactive Workspace */}
         <div className="lp-app-body">
           <aside className="lp-app-sidebar">
-            <div className="lp-app-nav-heading" aria-hidden="true">{p.groups.overview}</div>
             <div
               className="lp-app-tablist"
               role="tablist"
@@ -86,41 +101,58 @@ export function LandingAppPreview({ copy, lang }) {
             >
               {TAB_IDS.map((id, index) => {
                 const selected = activeTab === id;
+                const subs = p.sidebarSub?.[id];
                 return (
-                  <button
-                    key={id}
-                    ref={(el) => { tabRefs.current[id] = el; }}
-                    type="button"
-                    role="tab"
-                    id={tabId(id)}
-                    className="lp-app-tab"
-                    aria-selected={selected}
-                    tabIndex={selected ? 0 : -1}
-                    onClick={() => selectTab(id)}
-                    onKeyDown={(e) => handleTabKeyDown(e, index)}
-                  >
-                    <LandingIcon name={TAB_META[id].icon} size={16} />
-                    <span className="lp-app-tab-full">{p.tabs[id]}</span>
-                    <span className="lp-app-tab-short" aria-hidden="true">{p.tabsShort[id]}</span>
-                  </button>
+                  <div key={id} className={`lp-sidebar-group ${selected ? 'is-open' : ''}`}>
+                    <button
+                      ref={(el) => { tabRefs.current[id] = el; }}
+                      type="button"
+                      role="tab"
+                      id={tabId(id)}
+                      className="lp-app-tab"
+                      aria-selected={selected}
+                      tabIndex={selected ? 0 : -1}
+                      onClick={() => selectTab(id)}
+                      onKeyDown={(e) => handleTabKeyDown(e, index)}
+                    >
+                      <LandingIcon name={TAB_META[id].icon} size={16} />
+                      <span className="lp-app-tab-full">{p.tabs[id]}</span>
+                      <span className="lp-app-tab-short" aria-hidden="true">{p.tabsShort[id]}</span>
+                    </button>
+
+                    {subs && (
+                      <div className="lp-sidebar-sublist" aria-hidden="true">
+                        {subs.map((sub, sIdx) => (
+                          <span
+                            key={sub}
+                            className={`lp-sidebar-subitem ${selected && sIdx === 0 ? 'is-active' : ''}`}
+                          >
+                            {sub}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
           </aside>
 
           <div className="lp-app-stage">
-            {/* TAB 1: HOME */}
+            {/* TAB 1: HOME (Mirrors real CaltDHy HomeView) */}
             <div
               role="tabpanel"
               aria-labelledby={tabId('home')}
               hidden={activeTab !== 'home'}
-              tabIndex={activeTab === 'home' ? 0 : undefined}
+              aria-hidden={activeTab !== 'home' || undefined}
+              tabIndex={activeTab === 'home' ? 0 : -1}
               className="lp-panel"
             >
               <div className="lp-panel-inner">
                 <div className="lp-stage-header">
-                  <div>
+                  <div className="lp-stage-heading-row">
                     <h3 className="lp-stage-title">{p.home.headline}</h3>
+                    <span className="lp-tone-pill lp-tone-pill--success">{p.budgets.statusBadge}</span>
                   </div>
                   <span className="lp-mock-primary-btn" aria-hidden="true">
                     <LandingIcon name="plus" size={14} strokeWidth={2.2} />
@@ -129,8 +161,8 @@ export function LandingAppPreview({ copy, lang }) {
                 </div>
 
                 <div className="lp-home-grid">
+                  {/* Left Main Column: Balance Hero + Recent Transactions */}
                   <div className="lp-home-col-main">
-                    {/* Real CaltDHy signature balance hero card */}
                     <div className="lp-balance-hero">
                       <span className="lp-balance-chip">{p.home.spendableLabel}</span>
                       <div className="lp-balance-amount">{formatCurrency(15095000)}</div>
@@ -151,27 +183,63 @@ export function LandingAppPreview({ copy, lang }) {
                       </div>
                     </div>
 
-                    {/* Forecast strip */}
+                    {/* Real CaltDHy RecentTransactions feed */}
                     <div className="lp-mock-card">
                       <div className="lp-mock-card-head">
-                        <span className="lp-mock-card-title">{p.home.forecastTitle}</span>
+                        <span className="lp-mock-card-title">{p.home.recentTitle}</span>
+                        <span className="lp-muted-caption">{monthLabel}</span>
                       </div>
-                      <div className="lp-forecast-row">
-                        <div className="lp-forecast-stat">
-                          <span className="lp-muted-label">{p.home.forecastBalanceLabel}</span>
-                          <strong className="lp-stat-num">{formatCurrency(11296154)}</strong>
-                        </div>
-                        <div className="lp-forecast-stat">
-                          <span className="lp-muted-label">{p.home.forecastRateLabel}</span>
-                          <strong className="lp-stat-num lp-stat-num--success">84%</strong>
-                        </div>
+                      <div className="lp-recent-list">
+                        {p.home.recentItems.map((tx) => (
+                          <div key={`${tx.title}-${tx.time}`} className="lp-recent-row">
+                            <span className={`lp-recent-ico lp-recent-ico--${tx.type}`} aria-hidden="true">
+                              <LandingIcon name={tx.icon} size={14} />
+                            </span>
+                            <div className="lp-recent-info">
+                              <span className="lp-recent-name">{tx.title}</span>
+                              <span className="lp-recent-meta">{tx.wallet} · {tx.time}</span>
+                            </div>
+                            <span
+                              className={`lp-recent-amount ${
+                                tx.type === 'income'
+                                  ? 'is-pos'
+                                  : tx.type === 'expense'
+                                    ? 'is-neg'
+                                    : 'is-swap'
+                              }`}
+                            >
+                              {tx.type === 'transfer'
+                                ? formatCurrency(tx.amount)
+                                : formatCurrency(tx.amount, { showSign: true, isIncome: tx.type === 'income' })}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                      <p className="lp-muted-caption">{p.home.forecastPaceNote}</p>
                     </div>
                   </div>
 
-                  {/* Plan side card */}
+                  {/* Right Column: Wallets Strip + Monthly Plan + Forecast */}
                   <div className="lp-home-col-side">
+                    {/* Multi-Wallet Balances Strip */}
+                    <div className="lp-mock-card">
+                      <div className="lp-mock-card-head">
+                        <span className="lp-mock-card-title">{p.home.walletsTitle}</span>
+                        <LandingIcon name="wallet" size={15} />
+                      </div>
+                      <div className="lp-wallets-mini">
+                        {p.home.walletsItems.map((w) => (
+                          <div key={w.name} className="lp-wallet-mini-row">
+                            <div className="lp-wallet-mini-left">
+                              <span className="lp-wallet-mini-name">{w.name}</span>
+                              <span className="lp-muted-caption">{w.tag}</span>
+                            </div>
+                            <strong className="lp-wallet-mini-val">{formatCurrency(w.amount)}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* This Month's Budget Plan */}
                     <div className="lp-mock-card">
                       <div className="lp-mock-card-head">
                         <span className="lp-mock-card-title">{p.home.planTitle}</span>
@@ -218,21 +286,35 @@ export function LandingAppPreview({ copy, lang }) {
                       </div>
                     </div>
 
-                    <div className="lp-status-callout lp-status-callout--success">
-                      <LandingIcon name="check" size={15} strokeWidth={2.2} />
-                      <span>{p.home.planStatus}</span>
+                    {/* Month-End Forecast */}
+                    <div className="lp-mock-card">
+                      <div className="lp-mock-card-head">
+                        <span className="lp-mock-card-title">{p.home.forecastTitle}</span>
+                      </div>
+                      <div className="lp-forecast-row">
+                        <div className="lp-forecast-stat">
+                          <span className="lp-muted-label">{p.home.forecastBalanceLabel}</span>
+                          <strong className="lp-stat-num">{formatCurrency(11296154)}</strong>
+                        </div>
+                        <div className="lp-forecast-stat">
+                          <span className="lp-muted-label">{p.home.forecastRateLabel}</span>
+                          <strong className="lp-stat-num lp-stat-num--success">84%</strong>
+                        </div>
+                      </div>
+                      <p className="lp-muted-caption">{p.home.forecastPaceNote}</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* TAB 2: BUDGETS */}
+            {/* TAB 2: PLAN (Budgets + Recurring Bills — mirrors real PlanView) */}
             <div
               role="tabpanel"
-              aria-labelledby={tabId('budgets')}
-              hidden={activeTab !== 'budgets'}
-              tabIndex={activeTab === 'budgets' ? 0 : undefined}
+              aria-labelledby={tabId('plan')}
+              hidden={activeTab !== 'plan'}
+              aria-hidden={activeTab !== 'plan' || undefined}
+              tabIndex={activeTab === 'plan' ? 0 : -1}
               className="lp-panel"
             >
               <div className="lp-panel-inner">
@@ -271,37 +353,160 @@ export function LandingAppPreview({ copy, lang }) {
                   </div>
                 </div>
 
-                <div className="lp-mock-card">
-                  <div className="lp-mock-card-head">
-                    <span className="lp-mock-card-title">{p.budgets.categoriesTitle}</span>
-                  </div>
-                  <div className="lp-budget-rows">
-                    {[
-                      { icon: 'shopping', name: p.home.catShopping, pct: 72, spent: 1430000, limit: 2000000, tone: 'warning' },
-                      { icon: 'transport', name: p.home.catTransport, pct: 65, spent: 650000, limit: 1000000, tone: 'primary' },
-                      { icon: 'food', name: p.home.catFood, pct: 55, spent: 825000, limit: 1500000, tone: 'success' },
-                    ].map((row) => (
-                      <div key={row.name} className="lp-budget-cat-row">
-                        <div className="lp-cat-label">
-                          <LandingIcon name={row.icon} size={15} />
-                          <span>{row.name}</span>
+                <div className="lp-plan-split">
+                  <div className="lp-mock-card">
+                    <div className="lp-mock-card-head">
+                      <span className="lp-mock-card-title">{p.budgets.categoriesTitle}</span>
+                    </div>
+                    <div className="lp-budget-rows">
+                      {[
+                        { icon: 'shopping', name: p.home.catShopping, pct: 72, spent: 1430000, limit: 2000000, tone: 'warning' },
+                        { icon: 'transport', name: p.home.catTransport, pct: 65, spent: 650000, limit: 1000000, tone: 'primary' },
+                        { icon: 'food', name: p.home.catFood, pct: 55, spent: 825000, limit: 1500000, tone: 'success' },
+                      ].map((row) => (
+                        <div key={row.name} className="lp-progress-row">
+                          <div className="lp-progress-top">
+                            <span className="lp-cat-label">
+                              <LandingIcon name={row.icon} size={14} />
+                              <span>{row.name}</span>
+                            </span>
+                            <span className="lp-cat-money">{formatCurrency(row.spent)} / {formatCurrency(row.limit)}</span>
+                          </div>
+                          <div className="lp-track"><span className={`lp-fill lp-fill--${row.tone}`} style={{ width: `${row.pct}%` }} /></div>
                         </div>
-                        <div className="lp-track"><span className={`lp-fill lp-fill--${row.tone}`} style={{ width: `${row.pct}%` }} /></div>
-                        <span className="lp-budget-pct">{row.pct}%</span>
-                        <span className="lp-cat-money">{formatCurrency(row.spent)} / {formatCurrency(row.limit)}</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="lp-mock-card">
+                    <div className="lp-mock-card-head">
+                      <span className="lp-mock-card-title">{p.budgets.recurringTitle}</span>
+                    </div>
+                    <div className="lp-ledger-list">
+                      {p.budgets.itemsRecurring.map((item) => (
+                        <div key={item.name} className="lp-ledger-row">
+                          <div className="lp-ledger-info">
+                            <strong className="lp-ledger-name">{item.name}</strong>
+                            <span className="lp-muted-caption">{item.meta}</span>
+                          </div>
+                          <div className="lp-ledger-right">
+                            <span className={`lp-ledger-amount ${item.isIncome ? 'is-pos' : 'is-neg'}`}>
+                              {formatCurrency(item.amount, { showSign: true, isIncome: item.isIncome })}
+                            </span>
+                            <span className={`lp-tone-pill ${item.done ? 'lp-tone-pill--success' : 'lp-tone-pill--primary'}`}>
+                              {item.done ? p.budgets.paid : p.budgets.oneTap}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* TAB 3: SAVINGS JARS */}
+            {/* TAB 3: ANALYTICS (Mirrors real CaltDHy AnalyticsView) */}
+            <div
+              role="tabpanel"
+              aria-labelledby={tabId('analytics')}
+              hidden={activeTab !== 'analytics'}
+              aria-hidden={activeTab !== 'analytics' || undefined}
+              tabIndex={activeTab === 'analytics' ? 0 : -1}
+              className="lp-panel"
+            >
+              <div className="lp-panel-inner">
+                <div className="lp-stage-header">
+                  <h3 className="lp-stage-title">{p.analytics.headline}</h3>
+                  <span className="lp-tone-pill lp-tone-pill--primary">{p.analytics.periodBadge}</span>
+                </div>
+
+                <div className="lp-analytics-kpis">
+                  {p.analytics.kpis.map((kpi) => (
+                    <div key={kpi.label} className="lp-mock-card lp-kpi-tile">
+                      <span className="lp-muted-label">{kpi.label}</span>
+                      <strong
+                        className={`lp-kpi-amount ${
+                          kpi.tone === 'success'
+                            ? 'is-pos'
+                            : kpi.tone === 'danger'
+                              ? 'is-neg'
+                              : ''
+                        }`}
+                      >
+                        {formatCurrency(kpi.amount)}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="lp-analytics-split">
+                  <div className="lp-mock-card">
+                    <div className="lp-mock-card-head">
+                      <span className="lp-mock-card-title">{p.analytics.trendTitle}</span>
+                      <div className="lp-chart-legend" aria-hidden="true">
+                        <span className="lp-legend-item">
+                          <span className="lp-legend-dot lp-legend-dot--in" />
+                          {p.analytics.legendIn}
+                        </span>
+                        <span className="lp-legend-item">
+                          <span className="lp-legend-dot lp-legend-dot--out" />
+                          {p.analytics.legendOut}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="lp-analytics-bars" aria-hidden="true">
+                      {TREND_SERIES.map((pair, idx) => (
+                        <div key={p.analytics.months[idx]} className="lp-analytics-bar-col">
+                          <div className="lp-analytics-bar-pair">
+                            <span className="lp-bar lp-bar--lg lp-bar--in" style={{ height: `${pair.inH}%` }} />
+                            <span className="lp-bar lp-bar--lg lp-bar--out" style={{ height: `${pair.outH}%` }} />
+                          </div>
+                          <span className="lp-mini-month">{p.analytics.months[idx]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="lp-mock-card">
+                    <div className="lp-mock-card-head">
+                      <span className="lp-mock-card-title">{p.analytics.breakdownTitle}</span>
+                    </div>
+                    <div className="lp-progress-list">
+                      {p.analytics.categories.map((cat) => (
+                        <div key={cat.name} className="lp-progress-row">
+                          <div className="lp-progress-top">
+                            <span className="lp-cat-label">
+                              <LandingIcon name={cat.icon} size={14} />
+                              <span>{cat.name}</span>
+                            </span>
+                            <span className="lp-cat-money">
+                              {formatCurrency(cat.amount)} · {cat.pct}%
+                            </span>
+                          </div>
+                          <div className="lp-track">
+                            <span className={`lp-fill lp-fill--${cat.tone}`} style={{ width: `${cat.pct}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lp-status-callout lp-status-callout--neutral">
+                  <LandingIcon name="chartLine" size={15} />
+                  <span>{p.analytics.reportNote}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* TAB 4: SAVINGS JARS (Mirrors real CaltDHy JarsView) */}
             <div
               role="tabpanel"
               aria-labelledby={tabId('jars')}
               hidden={activeTab !== 'jars'}
-              tabIndex={activeTab === 'jars' ? 0 : undefined}
+              aria-hidden={activeTab !== 'jars' || undefined}
+              tabIndex={activeTab === 'jars' ? 0 : -1}
               className="lp-panel"
             >
               <div className="lp-panel-inner">
@@ -331,92 +536,49 @@ export function LandingAppPreview({ copy, lang }) {
                   ))}
                 </div>
 
+                <div className="lp-mock-card lp-panel-grow">
+                  <div className="lp-mock-card-head">
+                    <span className="lp-mock-card-title">{p.jars.historyTitle}</span>
+                    <span className="lp-muted-caption">{monthLabel}</span>
+                  </div>
+                  <div className="lp-recent-list">
+                    {p.jars.historyItems.map((row) => (
+                      <div key={`${row.title}-${row.meta}`} className="lp-recent-row">
+                        <span className="lp-recent-ico lp-recent-ico--transfer" aria-hidden="true">
+                          <LandingIcon name="jars" size={14} />
+                        </span>
+                        <div className="lp-recent-info">
+                          <span className="lp-recent-name">{row.title}</span>
+                          <span className="lp-recent-meta">{row.meta}</span>
+                        </div>
+                        <span className="lp-recent-amount is-swap">
+                          {formatCurrency(row.amount, { showSign: true, isIncome: row.isDeposit })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="lp-status-callout lp-status-callout--neutral">
                   <LandingIcon name="swap" size={15} />
                   <span>{p.jars.internalNote}</span>
                 </div>
               </div>
             </div>
-
-            {/* TAB 4: RECURRING & DEBTS */}
-            <div
-              role="tabpanel"
-              aria-labelledby={tabId('debts')}
-              hidden={activeTab !== 'debts'}
-              tabIndex={activeTab === 'debts' ? 0 : undefined}
-              className="lp-panel"
-            >
-              <div className="lp-panel-inner">
-                <div className="lp-debts-split">
-                  <div className="lp-mock-card">
-                    <div className="lp-mock-card-head">
-                      <span className="lp-mock-card-title">{p.debts.recurringTitle}</span>
-                    </div>
-                    <div className="lp-ledger-list">
-                      {p.debts.itemsRecurring.map((item) => (
-                        <div key={item.name} className="lp-ledger-row">
-                          <div className="lp-ledger-info">
-                            <strong className="lp-ledger-name">{item.name}</strong>
-                            <span className="lp-muted-caption">{item.meta}</span>
-                          </div>
-                          <div className="lp-ledger-right">
-                            <span className={`lp-ledger-amount ${item.isIncome ? 'is-pos' : 'is-neg'}`}>
-                              {formatCurrency(item.amount, { showSign: true, isIncome: item.isIncome })}
-                            </span>
-                            <span className={`lp-tone-pill ${item.done ? 'lp-tone-pill--success' : 'lp-tone-pill--primary'}`}>
-                              {item.done ? p.debts.paid : p.debts.oneTap}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="lp-mock-card">
-                    <div className="lp-mock-card-head">
-                      <span className="lp-mock-card-title">{p.debts.debtsTitle}</span>
-                    </div>
-                    <div className="lp-ledger-list">
-                      {p.debts.itemsDebts.map((debt) => (
-                        <div key={debt.person} className="lp-ledger-row">
-                          <div className="lp-ledger-info">
-                            <div className="lp-debt-name-row">
-                              <span className={`lp-tone-pill ${debt.type === 'lent' ? 'lp-tone-pill--success' : 'lp-tone-pill--warning'}`}>
-                                {debt.type === 'lent' ? p.debts.lentBadge : p.debts.borrowedBadge}
-                              </span>
-                              <strong className="lp-ledger-name">{debt.person}</strong>
-                            </div>
-                            <span className="lp-muted-caption">{debt.note}</span>
-                          </div>
-                          <div className="lp-ledger-right">
-                            <span className="lp-ledger-amount">{formatCurrency(debt.amount)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lp-status-callout lp-status-callout--neutral">
-                  <LandingIcon name="shield" size={15} />
-                  <span>{p.debts.debtNote}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Mobile frame bottom navigation bar visual hint (visible only in narrow container) */}
+        {/* Mobile frame bottom navigation bar (mirrors real MobilePrimaryNavigation 1-to-1) */}
         <div className="lp-app-mobile-dock" aria-hidden="true">
           <span className={`lp-dock-item ${activeTab === 'home' ? 'is-active' : ''}`}>
             <LandingIcon name="home" size={16} />
             <span>{p.mobileNav.home}</span>
           </span>
-          <span className={`lp-dock-item ${activeTab === 'budgets' || activeTab === 'debts' ? 'is-active' : ''}`}>
+          <span className={`lp-dock-item ${activeTab === 'plan' ? 'is-active' : ''}`}>
             <LandingIcon name="plan" size={16} />
             <span>{p.mobileNav.plan}</span>
           </span>
-          <span className="lp-dock-item">
+          <span className={`lp-dock-item ${activeTab === 'analytics' ? 'is-active' : ''}`}>
             <LandingIcon name="analytics" size={16} />
             <span>{p.mobileNav.analytics}</span>
           </span>

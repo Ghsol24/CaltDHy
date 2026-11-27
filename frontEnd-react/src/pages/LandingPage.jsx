@@ -91,11 +91,6 @@ export function LandingPage() {
         {/* HERO SECTION */}
         <section className="lp-hero">
           <div className="lp-container lp-hero-inner">
-            <div className="lp-hero-badge">
-              <LandingIcon name="sparkle" size={14} />
-              <span>{copy.hero.badge}</span>
-            </div>
-
             <h1 id="landing-main" tabIndex={-1} className="lp-hero-title">
               {copy.hero.title}
             </h1>
@@ -164,13 +159,13 @@ export function LandingPage() {
               )}
             </div>
 
-            <p className="lp-hero-note">
-              {isInviteOnly && !isAuthenticated ? copy.hero.noteInvite : copy.hero.note}
-            </p>
+            {isInviteOnly && !isAuthenticated && (
+              <p className="lp-hero-note">{copy.hero.noteInvite}</p>
+            )}
           </div>
 
-          {/* Interactive Live-Token Product Showcase Window */}
-          <div className="lp-container lp-showcase-wrap">
+          {/* Wide Interactive Live-Token CaltDHy Workspace Showcase */}
+          <div className="lp-showcase-wrap">
             <LandingAppPreview copy={copy} lang={lang} />
           </div>
         </section>
@@ -189,31 +184,24 @@ export function LandingPage() {
         />
       </main>
 
-      {/* ── FLOATING FROSTED FOOTER CARD OVER RISING ORGANIC GRADIENT ── */}
+      {/* ── FULL-BLEED OPEN ATMOSPHERIC FOOTER ── */}
       <footer className="lp-footer-zone">
-        <div className="lp-footer-glow" aria-hidden="true" />
-        <div className="lp-container">
-          <div className="lp-footer-card lp-glass">
-            <div className="lp-footer-grid">
-              <div className="lp-footer-brand">
-                <a
-                  href="#top"
-                  className="lp-footer-logo"
-                  onClick={(event) => smoothScrollToHash('#top', event)}
-                >
-                  <BrandMark className="lp-brand-mark" />
-                  <span className="lp-brand-wordmark">
-                    Calt<span className="lp-brand-accent">D</span>Hy
-                  </span>
-                </a>
-                <p className="lp-footer-tagline">{copy.footer.tagline}</p>
-              </div>
-
+        <div className="lp-footer-horizon" aria-hidden="true" />
+        <div className="lp-footer-wide">
+          <div className="lp-footer-layout">
+            {/* Left Navigation Columns */}
+            <div className="lp-footer-columns">
               <div className="lp-footer-col">
                 <p className="lp-footer-col-title">{copy.footer.colProduct}</p>
                 <a href="#features" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#features', e)}>{copy.footer.features}</a>
                 <a href="#wallet-flow" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#wallet-flow', e)}>{copy.footer.walletFlow}</a>
                 <a href="#themes" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#themes', e)}>{copy.footer.themes}</a>
+                <a href="#devices" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#devices', e)}>{copy.footer.devices}</a>
+              </div>
+
+              <div className="lp-footer-col">
+                <p className="lp-footer-col-title">{copy.footer.colExplore}</p>
+                <a href="#top" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#top', e)}>{copy.footer.previewLink}</a>
                 <a href="#security" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#security', e)}>{copy.footer.security}</a>
                 <a href="#faq" className="lp-footer-link" onClick={(e) => smoothScrollToHash('#faq', e)}>{copy.footer.faq}</a>
               </div>
@@ -254,8 +242,40 @@ export function LandingPage() {
               </div>
             </div>
 
-            <div className="lp-footer-bottom">
-              <span>© {year} CaltDHy</span>
+            {/* Right Brand & Language Block (Open Edge-to-Edge Balance) */}
+            <div className="lp-footer-brand-aside">
+              <a
+                href="#top"
+                className="lp-footer-logo"
+                onClick={(event) => smoothScrollToHash('#top', event)}
+              >
+                <BrandMark className="lp-brand-mark" />
+                <span className="lp-brand-wordmark">
+                  Calt<span className="lp-brand-accent">D</span>Hy
+                </span>
+              </a>
+              <p className="lp-footer-tagline">{copy.footer.tagline}</p>
+
+              <div className="lp-footer-lang-pills" role="group" aria-label={copy.themes.langLabel}>
+                <LandingIcon name="globe" size={14} />
+                {[
+                  { id: 'vi', label: 'VI' },
+                  { id: 'en', label: 'EN' },
+                  { id: 'zh-CN', label: '中文' },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`lp-footer-lang-btn ${lang === opt.id ? 'is-active' : ''}`}
+                    aria-pressed={lang === opt.id}
+                    onClick={() => setLang(opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className="lp-footer-copy">© {year} CaltDHy</p>
             </div>
           </div>
         </div>
