@@ -96,6 +96,8 @@ const userSchema = new mongoose.Schema(
                 pinnedDefault: { type: cashFlowViewSchema, default: null }
             },
             sidebarPinnedGroups: { type: [String], default: undefined },
+            // Đã bấm "Ẩn" thẻ "Bắt đầu trong 3 bước" ở Trang chủ (đợt 16d).
+            homeOnboardingDismissed: { type: Boolean, default: false },
             // Thông báo: mọi loại đều mặc định tắt, người dùng tự bật trong Cài đặt > Thông báo.
             notifications: {
                 dueEmail: { type: Boolean, default: false },         // email khoản định kỳ sắp đến hạn

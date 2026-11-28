@@ -1,5 +1,6 @@
 import React, { useId, useMemo, useRef, useState } from 'react';
 import { BrandMark } from '../../components/ui/BrandMark';
+import { NavIcon } from '../../components/ui/NavIcons';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { LandingIcon } from './LandingIcons';
 import { buildSampleCalendar, fillSample } from './landingSample';
@@ -11,6 +12,15 @@ const TAB_META = {
   plan: { icon: 'plan' },
   analytics: { icon: 'analytics' },
   jars: { icon: 'jars' },
+};
+
+// Mục con đang xem của từng nhóm (pill tô màu như sidebar thật) và icon thật của mỗi mục.
+const ACTIVE_SUB = { plan: 2, analytics: 0, jars: 0 };
+
+const SUB_ICONS = {
+  plan: ['planOverview', 'wallets', 'budgets', 'recurring'],
+  analytics: ['analyticsOverview', 'spending', 'cashFlow', 'reports'],
+  jars: ['goals', 'jarList', 'jarHistory'],
 };
 
 const TREND_SERIES = [
@@ -30,6 +40,7 @@ export function LandingAppPreview({ copy, lang }) {
   const p = useMemo(() => fillSample(copy.preview, sample.tokens), [copy, sample]);
 
   const monthLabel = formatDate(new Date(), 'month', { locale: lang });
+  const todayLabel = formatDate(new Date(), 'weekday-day-month', { locale: lang });
 
   const selectTab = (id, { focus = false } = {}) => {
     setActiveTab(id);
@@ -60,85 +71,129 @@ export function LandingAppPreview({ copy, lang }) {
 
   return (
     <div className="lp-showcase-shell" role="region" aria-label={p.regionLabel}>
+      {/* Khung giống shell thật sau đợt 15: máy tính không có topbar — sidebar hết chiều cao
+          (logo trên đầu), nội dung là tấm bo góc trên-trái, viên kính nổi góc phải. Khung hẹp
+          (≈ điện thoại/tablet ≤ 900px) chuyển sang topbar + thanh dưới như app thật; chính
+          tablist trở thành thanh dưới nên bàn phím vẫn dùng được ở mọi cỡ. */}
       <div className="lp-app-window">
-        {/* Authentic CaltDHy Desktop & Mobile Chrome */}
-        <div className="lp-app-chrome">
-          <div className="lp-app-chrome-left">
-            <div className="lp-window-dots" aria-hidden="true">
-              <span className="lp-window-dot" />
-              <span className="lp-window-dot" />
-              <span className="lp-window-dot" />
-            </div>
-            <div className="lp-app-brand">
+        <div className="lp-app-mtopbar" aria-hidden="true">
+          <span className="lp-app-brand">
+            <BrandMark className="lp-app-brand-mark" />
+            <span className="lp-app-brand-name">
+              Calt<span className="lp-brand-accent">D</span>Hy
+            </span>
+          </span>
+          <span className="lp-app-mtopbar-right">
+            <span className="lp-sample-pill">{p.sampleShort}</span>
+            <span className="lp-glass-icon-btn lp-glass-icon-btn--bordered">
+              <LandingIcon name="gear" size={15} />
+            </span>
+            <span className="lp-app-user-avatar">MA</span>
+          </span>
+        </div>
+
+        <aside className="lp-app-sidebar">
+          <div className="lp-app-sidebar-brand" aria-hidden="true">
+            <span className="lp-app-brand">
               <BrandMark className="lp-app-brand-mark" />
               <span className="lp-app-brand-name">
                 Calt<span className="lp-brand-accent">D</span>Hy
               </span>
-            </div>
-          </div>
-
-          <div className="lp-app-chrome-right">
-            <span className="lp-app-date-pill" aria-hidden="true">
-              <LandingIcon name="calendar" size={13} />
-              <span>{monthLabel}</span>
             </span>
-            <span className="lp-sample-pill">
-              <span className="lp-sample-full">{p.sampleBadge}</span>
-              <span className="lp-sample-short" aria-hidden="true">{p.sampleShort}</span>
-            </span>
-            <span className="lp-app-user-chip" aria-hidden="true">
-              <span className="lp-app-user-avatar">MA</span>
-              <span className="lp-app-user-name">{p.userLabel}</span>
+            <span className="lp-app-sidebar-burger">
+              <LandingIcon name="menu" size={15} />
             </span>
           </div>
-        </div>
 
-        {/* App Body: Authentic 4-Section CaltDHy SidebarNav + Wide Interactive Workspace */}
-        <div className="lp-app-body">
-          <aside className="lp-app-sidebar">
-            <div
-              className="lp-app-tablist"
-              role="tablist"
-              aria-label={p.tablistLabel}
-            >
-              {TAB_IDS.map((id, index) => {
-                const selected = activeTab === id;
-                const subs = p.sidebarSub?.[id];
-                return (
-                  <div key={id} className={`lp-sidebar-group ${selected ? 'is-open' : ''}`}>
+          <div
+            className="lp-app-tablist"
+            role="tablist"
+            aria-label={p.tablistLabel}
+          >
+            {TAB_IDS.map((id, index) => {
+              const selected = activeTab === id;
+              const subs = p.sidebarSub?.[id];
+              const isGroup = Boolean(subs);
+              return (
+                <React.Fragment key={id}>
+                  {index === 2 && (
+                    <span className="lp-dock-add" aria-hidden="true">
+                      <LandingIcon name="plus" size={18} strokeWidth={2.4} />
+                    </span>
+                  )}
+                  <div className={`lp-sidebar-group${isGroup ? '' : ' lp-sidebar-group--standalone'}${selected ? ' is-open' : ''}`}>
                     <button
                       ref={(el) => { tabRefs.current[id] = el; }}
                       type="button"
                       role="tab"
                       id={tabId(id)}
-                      className="lp-app-tab"
+                      className={`lp-app-tab${isGroup ? ' lp-app-tab--group' : ''}`}
                       aria-selected={selected}
                       tabIndex={selected ? 0 : -1}
                       onClick={() => selectTab(id)}
                       onKeyDown={(e) => handleTabKeyDown(e, index)}
                     >
-                      <LandingIcon name={TAB_META[id].icon} size={16} />
+                      <span className="lp-app-tab-icon" aria-hidden="true">
+                        <LandingIcon name={TAB_META[id].icon} size={16} />
+                      </span>
                       <span className="lp-app-tab-full">{p.tabs[id]}</span>
                       <span className="lp-app-tab-short" aria-hidden="true">{p.tabsShort[id]}</span>
+                      {isGroup && (
+                        <span className="lp-app-tab-chevron" aria-hidden="true">
+                          <LandingIcon name="chevronDown" size={13} strokeWidth={2.25} />
+                        </span>
+                      )}
                     </button>
 
-                    {subs && (
+                    {isGroup && (
                       <div className="lp-sidebar-sublist" aria-hidden="true">
                         {subs.map((sub, sIdx) => (
                           <span
                             key={sub}
-                            className={`lp-sidebar-subitem ${selected && sIdx === 0 ? 'is-active' : ''}`}
+                            className={`lp-sidebar-subitem${selected && sIdx === ACTIVE_SUB[id] ? ' is-active' : ''}`}
                           >
-                            {sub}
+                            <NavIcon name={SUB_ICONS[id][sIdx]} size={15} />
+                            <span>{sub}</span>
                           </span>
                         ))}
                       </div>
                     )}
                   </div>
-                );
-              })}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </aside>
+
+        <div className="lp-app-panel">
+          <div className="lp-app-pill-row" aria-hidden="true">
+            <span className="lp-sample-pill">{p.sampleBadge}</span>
+            <span className="lp-glass-pill">
+              <span className="lp-glass-add">
+                <LandingIcon name="plus" size={14} strokeWidth={2.4} />
+                <span>{p.addTxn}</span>
+              </span>
+              <span className="lp-glass-date">
+                <LandingIcon name="calendar" size={13} />
+                <span>{todayLabel}</span>
+              </span>
+              <span className="lp-glass-icon-btn">
+                <LandingIcon name="gear" size={15} />
+              </span>
+              <span className="lp-glass-user">
+                <span className="lp-app-user-avatar">MA</span>
+                <span className="lp-app-user-name">{p.userLabel}</span>
+              </span>
+            </span>
+          </div>
+
+          {p.sidebarSub?.[activeTab] && (
+            <div className="lp-app-section-nav" aria-hidden="true">
+              {p.sidebarSub[activeTab].map((sub, sIdx) => (
+                <span key={sub} className={`lp-section-chip${sIdx === ACTIVE_SUB[activeTab] ? ' is-active' : ''}`}>{sub}</span>
+              ))}
             </div>
-          </aside>
+          )}
 
           <div className="lp-app-stage">
             {/* TAB 1: HOME (Mirrors real CaltDHy HomeView) */}
@@ -156,10 +211,6 @@ export function LandingAppPreview({ copy, lang }) {
                     <h3 className="lp-stage-title">{p.home.headline}</h3>
                     <span className="lp-tone-pill lp-tone-pill--success">{p.budgets.statusBadge}</span>
                   </div>
-                  <span className="lp-mock-primary-btn" aria-hidden="true">
-                    <LandingIcon name="plus" size={14} strokeWidth={2.2} />
-                    <span>{p.addTxn}</span>
-                  </span>
                 </div>
 
                 <div className="lp-home-grid">
@@ -568,26 +619,6 @@ export function LandingAppPreview({ copy, lang }) {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Mobile frame bottom navigation bar (mirrors real MobilePrimaryNavigation 1-to-1) */}
-        <div className="lp-app-mobile-dock" aria-hidden="true">
-          <span className={`lp-dock-item ${activeTab === 'home' ? 'is-active' : ''}`}>
-            <LandingIcon name="home" size={16} />
-            <span>{p.mobileNav.home}</span>
-          </span>
-          <span className={`lp-dock-item ${activeTab === 'plan' ? 'is-active' : ''}`}>
-            <LandingIcon name="plan" size={16} />
-            <span>{p.mobileNav.plan}</span>
-          </span>
-          <span className={`lp-dock-item ${activeTab === 'analytics' ? 'is-active' : ''}`}>
-            <LandingIcon name="analytics" size={16} />
-            <span>{p.mobileNav.analytics}</span>
-          </span>
-          <span className={`lp-dock-item ${activeTab === 'jars' ? 'is-active' : ''}`}>
-            <LandingIcon name="jars" size={16} />
-            <span>{p.mobileNav.jars}</span>
-          </span>
         </div>
       </div>
     </div>

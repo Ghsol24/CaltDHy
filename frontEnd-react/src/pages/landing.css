@@ -4,8 +4,6 @@
    ============================================================ */
 
 .landing-page {
-  --lp-window-bg: var(--color-surface);
-  --lp-window-chrome: color-mix(in srgb, var(--color-surface-muted) 72%, var(--color-surface));
   --lp-window-border: var(--color-border);
   --lp-window-shadow: 0 28px 70px -24px rgba(16, 27, 54, 0.22), 0 6px 20px -8px rgba(16, 27, 54, 0.08);
   --lp-card-bg: var(--color-surface);
@@ -34,8 +32,6 @@
 
 /* ── Per-Theme Window, Halo, Coin & Footer Glow Refinement ── */
 html.dark-theme .landing-page {
-  --lp-window-bg: #12131C;
-  --lp-window-chrome: #161824;
   --lp-window-border: rgba(255, 255, 255, 0.10);
   --lp-window-shadow: 0 36px 88px -20px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --lp-cta-halo-bg: radial-gradient(circle at 50% 34%, rgba(37, 99, 235, 0.20) 0%, rgba(22, 24, 38, 0.68) 54%, transparent 78%);
@@ -302,55 +298,34 @@ html.green-theme .landing-page {
   container-name: showcase;
 }
 
+/* Khung giống shell thật sau đợt 15 (app-shell.css, khối min-width: 901px): máy tính không có
+   topbar — sidebar hết chiều cao với logo trên đầu, nội dung là tấm bo góc trên-trái, Thêm giao
+   dịch · ngày · Cài đặt · tài khoản nằm trong viên kính nổi góc phải. Dùng token --shell-* và
+   --glass-* của app nên đổi theme là khung đổi theo. */
 .lp-app-window {
-  background: var(--lp-window-bg);
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-areas: "side panel";
+  min-height: 604px;
+  background: var(--shell-frame-bg);
   border: 1px solid var(--lp-window-border);
   border-radius: 24px;
   box-shadow: var(--lp-window-shadow);
   overflow: hidden;
 }
 
-/* Window Chrome Bar */
-.lp-app-chrome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 20px;
-  background: var(--lp-window-chrome);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.lp-app-chrome-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.lp-window-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.lp-window-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-border-strong);
-}
-
 .lp-app-brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  min-width: 0;
 }
 
 .lp-app-brand-mark {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   display: block;
+  flex: none;
 }
 
 .lp-app-brand-mark svg {
@@ -360,59 +335,25 @@ html.green-theme .landing-page {
 }
 
 .lp-app-brand-name {
-  font-size: 14px;
-  font-weight: 800;
+  font-family: var(--font-display, var(--font-sans));
+  font-size: 17px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
-}
-
-.lp-app-chrome-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.lp-app-date-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-size: var(--font-xs);
-  font-weight: 500;
-  color: var(--text-secondary);
-  text-transform: capitalize;
-  white-space: nowrap;
-}
-
-.lp-app-user-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 10px 3px 4px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
 }
 
 .lp-app-user-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--primary-light);
   color: var(--color-link);
   font-size: 10px;
   font-weight: 700;
+  flex: none;
 }
 
 .lp-sample-pill {
@@ -428,106 +369,254 @@ html.green-theme .landing-page {
   white-space: nowrap;
 }
 
-.lp-sample-short {
-  display: none;
-}
-
-/* Body Layout: Authentic Desktop SidebarNav + Wide Stage */
-.lp-app-body {
-  display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
-  min-height: 548px;
-}
-
+/* ── Sidebar: logo + nút thu gọn trên đầu, nhóm thu gọn, chỉ nhóm đang xem mở ── */
 .lp-app-sidebar {
-  padding: 18px 14px;
-  border-right: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-canvas));
+  grid-area: side;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px 18px;
+}
+
+/* Cao 68px: tâm logo ngang tâm viên kính bên phải (hàng viên kính 12px + 44px). */
+.lp-app-sidebar-brand {
+  height: 68px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px 0 10px;
+}
+
+.lp-app-sidebar-burger {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
 }
 
 .lp-app-tablist {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  padding-top: 4px;
 }
 
 .lp-sidebar-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  margin-bottom: 8px;
 }
 
-.lp-sidebar-sublist {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 3px 0 6px 32px;
+.lp-sidebar-group--standalone {
+  margin-bottom: 16px;
 }
 
-.lp-sidebar-subitem {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-  padding: 4px 8px;
-  border-radius: 7px;
-}
-
-.lp-sidebar-subitem.is-active {
-  color: var(--color-link);
-  font-weight: 600;
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
+.lp-sidebar-group.is-open:not(.lp-sidebar-group--standalone) {
+  margin-bottom: 18px;
 }
 
 .lp-app-tab {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-height: 42px;
-  padding: 8px 12px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-sans);
-  font-size: var(--font-base);
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
   white-space: nowrap;
-  transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
 }
 
 .lp-app-tab:hover {
   color: var(--text-primary);
-  background: var(--surface-subtle);
+  background: var(--color-surface-muted, var(--surface-subtle));
 }
 
-/* Accessible non-color-only active indicator via border + pseudo-element bar */
-.lp-app-tab[aria-selected="true"] {
-  background: var(--primary-light);
-  border-color: color-mix(in srgb, var(--primary) 32%, transparent);
-  color: var(--color-link);
+.lp-app-tab-icon {
+  display: inline-flex;
+  flex: none;
 }
 
-.lp-app-tab[aria-selected="true"]::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 9px;
-  bottom: 9px;
-  border-left: 3px solid var(--primary);
-  border-radius: 2px;
+/* Mục đang xem: pill tô màu, không vạch dọc (như .sidebar-nav-item.active). */
+.lp-app-tab[aria-selected="true"]:not(.lp-app-tab--group) {
+  background: var(--color-brand-50, var(--primary-light));
+  color: var(--color-active-text);
+  font-weight: 600;
+}
+
+/* Tiêu đề nhóm: chữ nhỏ màu phụ, không viết hoa, mũi tên bên phải (như .sidebar-group-toggle). */
+.lp-app-tab--group {
+  height: 28px;
+  padding: 0 8px 0 12px;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--text-secondary));
+}
+
+.lp-app-tab--group .lp-app-tab-icon {
+  display: none;
+}
+
+.lp-app-tab-chevron {
+  margin-left: auto;
+  display: inline-flex;
+  color: var(--color-text-secondary, var(--text-secondary));
+  transform: rotate(-90deg);
+  transition: transform var(--dur-fast) ease;
+}
+
+.lp-app-tab--group[aria-selected="true"] .lp-app-tab-chevron {
+  transform: none;
 }
 
 .lp-app-tab-short {
   display: none;
 }
 
+.lp-sidebar-sublist {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+}
+
+.lp-sidebar-group.is-open .lp-sidebar-sublist {
+  display: flex;
+}
+
+.lp-sidebar-subitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.lp-sidebar-subitem svg {
+  flex: none;
+}
+
+.lp-sidebar-subitem.is-active {
+  background: var(--color-brand-50, var(--primary-light));
+  color: var(--color-active-text);
+  font-weight: 600;
+}
+
+/* ── Tấm nội dung bo góc trên-trái, sát mép trên (đợt 15c). Viền trên trùng viền cửa sổ nên
+   kéo lên 1px cho viền cửa sổ che, chỉ còn đường cong ở góc. ── */
+.lp-app-panel {
+  grid-area: panel;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: -1px;
+  background: var(--shell-panel-bg);
+  border: 1px solid var(--shell-panel-border);
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: var(--shell-panel-radius);
+}
+
+.lp-app-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 0 24px;
+}
+
+.lp-glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  min-width: 0;
+}
+
+.lp-glass-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 14px 0 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-700, var(--primary));
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lp-glass-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+  border-right: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.lp-glass-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
+
+.lp-glass-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 11px 0 2px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Chỉ có ở khung hẹp (topbar điện thoại, chip mục con, nút + giữa thanh dưới). */
+.lp-app-mtopbar,
+.lp-app-section-nav,
+.lp-dock-add {
+  display: none;
+}
+
 /* Stage Area */
 .lp-app-stage {
-  background: var(--color-canvas);
+  flex: 1;
   min-width: 0;
 }
 
@@ -590,7 +679,7 @@ html.green-theme .landing-page {
 }
 
 .lp-panel-inner {
-  padding: 22px 24px 24px;
+  padding: 10px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -616,20 +705,6 @@ html.green-theme .landing-page {
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
-}
-
-.lp-mock-primary-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 15px;
-  border-radius: 10px;
-  background: var(--primary);
-  color: var(--color-on-action);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex: none;
 }
 
 /* Home Tab Grid (Wider Authentic Workspace) */
@@ -1329,91 +1404,161 @@ html.green-theme .landing-page {
   color: var(--color-danger);
 }
 
-/* Mobile Dock inside Preview (hidden on desktop container) */
-.lp-app-mobile-dock {
-  display: none;
-}
-
-/* ── CONTAINER QUERY: Preview transforms seamlessly into Mobile App Frame below 720px ── */
-@container showcase (max-width: 719px) {
+/* ── Khung hẹp (≈ màn ≤ 900px của app thật): topbar + thanh dưới như điện thoại/tablet.
+   Chính tablist của sidebar trở thành thanh dưới (5 ô, nút + ở giữa) nên phím mũi tên vẫn chạy;
+   chip mục con dưới topbar giống .mobile-section-nav. ── */
+@container showcase (max-width: 860px) {
   .lp-app-window {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "mtop" "panel" "side";
+    min-height: 0;
     border-radius: 22px;
+    background: var(--color-canvas);
   }
 
-  .lp-window-dots,
-  .lp-app-date-pill,
-  .lp-app-user-chip,
+  .lp-app-mtopbar {
+    grid-area: mtop;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    height: 56px;
+    padding: 0 12px 0 14px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .lp-app-mtopbar-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lp-glass-icon-btn--bordered {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .lp-app-panel {
+    margin-top: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-canvas);
+  }
+
+  .lp-app-pill-row,
+  .lp-app-sidebar-brand,
   .lp-sidebar-sublist,
-  .lp-sample-full,
-  .lp-app-tab-full,
-  .lp-mock-primary-btn {
+  .lp-sidebar-group.is-open .lp-sidebar-sublist,
+  .lp-app-tab-chevron,
+  .lp-app-tab-full {
     display: none;
   }
 
-  .lp-sidebar-group {
+  .lp-app-section-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 10px 14px 0;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
+  }
+
+  .lp-app-section-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lp-section-chip {
     flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-surface-muted, var(--surface-subtle));
+    color: var(--color-text-secondary, var(--text-secondary));
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
   }
 
-  .lp-sample-short,
-  .lp-app-tab-short {
-    display: inline;
-  }
-
-  .lp-app-chrome {
-    padding: 12px 14px;
-  }
-
-  .lp-app-body {
-    grid-template-columns: minmax(0, 1fr);
-    min-height: 0;
+  .lp-section-chip.is-active {
+    background: var(--color-brand-50, var(--primary-light));
+    color: var(--color-active-text);
+    border-color: var(--color-action-bg, var(--primary));
   }
 
   .lp-app-sidebar {
-    min-width: 0;
-    overflow: hidden;
-    padding: 8px 10px;
-    border-right: none;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-surface);
+    padding: 6px 8px;
+    background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+    border-top: 1px solid var(--color-border);
   }
 
   .lp-app-tablist {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scroll-snap-type: inline proximity;
-    scroll-padding-inline: 16px;
-    scrollbar-width: none;
-    gap: 6px;
-    padding: 2px 16px 2px 2px;
-    -webkit-mask-image: linear-gradient(to right, black 0%, black 88%, transparent 100%);
-    mask-image: linear-gradient(to right, black 0%, black 88%, transparent 100%);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
+    gap: 4px;
+    padding-top: 0;
   }
 
-  .lp-app-tablist::-webkit-scrollbar {
-    display: none;
+  .lp-sidebar-group,
+  .lp-sidebar-group--standalone,
+  .lp-sidebar-group.is-open:not(.lp-sidebar-group--standalone) {
+    display: contents;
   }
 
-  .lp-app-tab {
-    flex: none;
-    width: auto;
-    min-height: 40px;
-    padding: 7px 12px;
-    font-size: 13px;
-    border-radius: 11px;
-    scroll-snap-align: start;
+  .lp-app-tab,
+  .lp-app-tab--group {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    height: auto;
+    min-height: 50px;
+    padding: 5px 2px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-text-secondary, var(--text-secondary));
+    text-align: center;
   }
 
-  .lp-app-tab[aria-selected="true"]::after {
-    left: 14px;
-    right: 14px;
-    top: auto;
-    bottom: 0;
-    border-left: none;
-    border-bottom: 2.5px solid var(--primary);
-    border-radius: 2px;
+  .lp-app-tab--group .lp-app-tab-icon {
+    display: inline-flex;
   }
 
+  .lp-app-tab-short {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lp-app-tab[aria-selected="true"],
+  .lp-app-tab[aria-selected="true"]:not(.lp-app-tab--group) {
+    background: var(--color-brand-50, var(--primary-light));
+    color: var(--color-active-text);
+    font-weight: 700;
+  }
+
+  .lp-dock-add {
+    display: grid;
+    place-items: center;
+    justify-self: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-full);
+    background: var(--color-brand-700, var(--primary));
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(16, 27, 54, 0.24);
+  }
+}
+
+/* ── Nội dung khung hẹp dưới 720px: các lưới về một cột ── */
+@container showcase (max-width: 719px) {
   .lp-panel-inner {
     padding: 14px;
     gap: 12px;
@@ -1497,29 +1642,6 @@ html.green-theme .landing-page {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-  }
-
-  .lp-app-mobile-dock {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-    padding: 10px 8px;
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-  }
-
-  .lp-dock-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-
-  .lp-dock-item.is-active {
-    color: var(--color-link);
   }
 }
 

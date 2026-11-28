@@ -6,6 +6,8 @@ import { BUDGET_WARN_PERCENT, calculateMonthlyStats, getBudgetStatus } from '../
 import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
 import { useTranslation } from '../../i18n/useTranslation';
+import { HomeOnboardingCard } from './HomeOnboardingCard';
+import { useHomeOnboarding } from './useHomeOnboarding';
 
 export const AttentionPanel = React.memo(function AttentionPanel() {
   const navigateTo = useSpendingStore((s) => s.navigateTo);
@@ -13,6 +15,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   const transactions = useTransactionStore((s) => s.transactions);
   const budgets = useTransactionStore((s) => s.budgets);
   const jars = useJarStore((s) => s.jars);
+  const onboarding = useHomeOnboarding();
 
   const currentMonthPrefix = getLocalMonthString();
 
@@ -115,6 +118,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   if (!hasBudgets && !hasTransactions) {
     calloutConfig = {
       title: 'Chưa thiết lập kế hoạch ngân sách',
+      isSetupNudge: true,
       body: 'Hãy đặt hạn mức chi tiêu cho các danh mục để CaltDHy đồng hành giúp bạn kiểm soát dòng tiền hiệu quả nhất.',
       ctaText: 'Thiết lập ngân sách ngay',
       ctaAction: handleGoToBudgets,
@@ -123,6 +127,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   } else if (hasBudgets && !hasTransactions) {
     calloutConfig = {
       title: 'Kế hoạch tháng đã sẵn sàng',
+      isSetupNudge: true,
       body: `Bạn đã phân bổ ${formatCurrency(totalLimit)} ngân sách cho ${categoryStatusList.length} danh mục. Hãy ghi giao dịch khi phát sinh chi tiêu.`,
       ctaText: 'Xem chi tiết ngân sách',
       ctaAction: handleGoToBudgets,
@@ -131,6 +136,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   } else if (!hasBudgets && monthlyStats.expense > 0) {
     calloutConfig = {
       title: 'Nên đặt hạn mức chi tiêu',
+      isSetupNudge: true,
       body: `Bạn đã chi tiêu ${formatCurrency(monthlyStats.expense)} trong tháng này. Đặt ngân sách giúp bạn chủ động kiểm soát chi tiêu tốt hơn.`,
       ctaText: 'Tạo ngân sách ngay',
       ctaAction: handleGoToBudgets,
@@ -140,6 +146,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     // Income only, no limits yet: still a "set up" nudge, not "your plan looks fine".
     calloutConfig = {
       title: 'Chưa thiết lập kế hoạch ngân sách',
+      isSetupNudge: true,
       body: 'Hãy đặt hạn mức chi tiêu cho các danh mục để CaltDHy đồng hành giúp bạn kiểm soát dòng tiền hiệu quả nhất.',
       ctaText: 'Thiết lập ngân sách ngay',
       ctaAction: handleGoToBudgets,
@@ -183,7 +190,12 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     };
   }
 
-  const callout = (
+  // Thẻ 3 bước đang hiện thì nó đã nói "đặt hạn mức / ghi giao dịch": bỏ lời nhắc trùng ý ở đây,
+  // chỉ giữ cảnh báo thật (vượt / sắp chạm hạn mức, dư tiền…).
+  const showOnboarding = onboarding.visible;
+  const hideCallout = showOnboarding && calloutConfig.isSetupNudge;
+
+  const callout = hideCallout ? null : (
     <div className={`home-callout-warning-card ${calloutConfig.cardClass}`}>
       <h2 className="home-callout-title">
         {calloutConfig.title}
@@ -209,6 +221,13 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   return (
     <aside className="home-sidebar-panel" aria-label="Bảng kế hoạch và cảnh báo">
       {/* Alert first: on phones this sits right under the balance card. */}
+      {showOnboarding && (
+        <HomeOnboardingCard
+          steps={onboarding.steps}
+          doneCount={onboarding.doneCount}
+          onDismiss={onboarding.dismiss}
+        />
+      )}
       {callout}
 
       {!planIsEmpty && (
