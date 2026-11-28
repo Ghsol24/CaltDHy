@@ -2,6 +2,7 @@
 // redirects, so no third-party script is loaded and no token ever reaches this page.
 import { apiFetch } from './api.js';
 import { OAUTH_INTENT_KEY } from './oauthReturn.js';
+import { useLangStore } from '../stores/useLangStore.js';
 
 const OAUTH_PROVIDERS_STORAGE_KEY = 'caltdhy_oauth_providers';
 export const KNOWN_OAUTH_PROVIDERS = ['google', 'facebook'];
@@ -46,12 +47,20 @@ function writeStoredProviders(origin, providers) {
   }
 }
 
-/** Leaves for the provider's sign-in page. Records that this tab chose to do so. */
-export function beginOAuth(provider, inviteToken = '') {
+const OAUTH_LOCALES = ['vi', 'en', 'zh-CN'];
+
+/**
+ * Leaves for the provider's sign-in page. Records that this tab chose to do so. The interface
+ * language goes along so an account created on the way back gets its notices in that language.
+ */
+export function beginOAuth(provider, inviteToken = '', locale = useLangStore.getState().lang) {
   if (provider !== 'google' && provider !== 'facebook') return;
   try { sessionStorage.setItem(OAUTH_INTENT_KEY, String(Date.now())); } catch { /* the flow still works without it */ }
-  const query = /^[a-f0-9]{64}$/.test(inviteToken) ? `?invite=${inviteToken}` : '';
-  window.location.assign(`/api/auth/oauth/${provider}/start${query}`);
+  const params = new URLSearchParams();
+  if (/^[a-f0-9]{64}$/.test(inviteToken)) params.set('invite', inviteToken);
+  if (OAUTH_LOCALES.includes(locale)) params.set('locale', locale);
+  const query = params.toString();
+  window.location.assign(`/api/auth/oauth/${provider}/start${query ? `?${query}` : ''}`);
 }
 
 export const oauthService = {

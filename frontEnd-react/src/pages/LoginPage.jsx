@@ -1,6 +1,6 @@
 import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
@@ -41,7 +41,6 @@ export const LoginPage = () => {
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine !== false, () => true);
   const offlineText = OFFLINE_COPY[lang] || (String(lang).startsWith('zh') ? OFFLINE_COPY['zh-CN'] : OFFLINE_COPY.vi);
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const isExpired = searchParams.get('expired') === '1';
   const socialCopy = getSocialCopy(lang);
   const oauthStep = searchParams.get('oauth');
@@ -66,6 +65,9 @@ export const LoginPage = () => {
   const failSignature = useSignatureLoginStore((state) => state.fail);
   const signatureState = useSignatureLoginStore((state) => state.state);
   const attemptRef = useRef(null);
+  // Màn chào của lượt Google/Facebook vừa quay về (?oauth=done); 0 khi chưa mở.
+  const oauthSignatureRef = useRef(0);
+  const oauthKind = searchParams.get('new') === '1' ? 'signup' : 'login';
 
   useEffect(() => {
     if (oauthStep === 'link' || oauthStep === 'verify' || oauthStep === 'done') return undefined;
@@ -105,11 +107,22 @@ export const LoginPage = () => {
     failSignature(attempt.id);
   }, [failSignature]);
 
+  // Máy chủ đã đăng nhập xong ở bước chuyển hướng: mở màn chào "Mưa xu" ngay, rồi để chính màn chào
+  // đưa người dùng vào Trang chủ khi phiên được xác nhận, giống đăng nhập bằng email.
   useEffect(() => {
     if (oauthStep !== 'done') return;
-    if (authStatus === 'authenticated') navigate('/spending/home', { replace: true });
-    else if (authStatus === 'anonymous') setSearchParams({ oauth_error: 'failed' }, { replace: true });
-  }, [oauthStep, authStatus, navigate, setSearchParams]);
+    if (!oauthSignatureRef.current) {
+      oauthSignatureRef.current = beginSignature(oauthKind);
+      void import('./SpendingPage').catch(() => {});
+    }
+    const id = oauthSignatureRef.current;
+    if (authStatus === 'authenticated') succeedSignature(id);
+    else if (authStatus === 'anonymous') {
+      oauthSignatureRef.current = 0;
+      failSignature(id);
+      setSearchParams({ oauth_error: 'failed' }, { replace: true });
+    }
+  }, [oauthStep, oauthKind, authStatus, beginSignature, succeedSignature, failSignature, setSearchParams]);
 
   const isEmailValid = /\S+@\S+\.\S+/.test(email.trim());
   const isPwValid = password.length >= 1;

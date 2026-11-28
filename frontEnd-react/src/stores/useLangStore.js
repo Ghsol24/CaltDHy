@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { DEFAULT_LOCALE, normalizeLocale } from '../i18n/translations';
-import { setActiveFormattingLocale } from '../utils/formatters';
+import { DEFAULT_LOCALE, normalizeLocale } from '../i18n/translations.js';
+import { setActiveFormattingLocale } from '../utils/formatters.js';
 
 const KEY = 'caltdhy_lang';
 
