@@ -5,7 +5,7 @@ const KEY = 'caltdhy_theme';
 const THEMES = THEME_OPTIONS.map(({ id }) => id);
 const ALL_CLASSES = THEMES.map((theme) => `${theme}-theme`);
 
-const normalizeTheme = (theme) => THEMES.includes(theme) ? theme : 'dark';
+const normalizeTheme = (theme) => THEMES.includes(theme) ? theme : 'light';
 
 const updateThemeColor = () => {
   const root = document.documentElement;
@@ -35,8 +35,8 @@ const getInitialTheme = () => {
       return saved;
     }
   } catch {}
-  applyThemeToDOM('dark');
-  return 'dark';
+  applyThemeToDOM('light');
+  return 'light';
 };
 
 export const useThemeStore = create((set) => ({

@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router';
-import { THEME_OPTIONS } from '../../utils/themes';
-import { translate } from '../../i18n/translations';
 import { formatCurrency } from '../../utils/formatters';
-import { switchThemeWithTransition } from '../../utils/themeTransition';
 import { LandingIcon } from './LandingIcons';
+import { ThemeDomeShowcase } from './ThemeDomeShowcase';
 import { WalletCoinShowcase } from './WalletCoinShowcase';
 import { buildSampleCalendar } from './landingSample';
 
@@ -211,7 +209,7 @@ export function LandingSections({
       {/* ── SECTION 2B: SCROLL-REACTIVE WALLET & COINS SHOWCASE ── */}
       <WalletCoinShowcase copy={copy} />
 
-      {/* ── SECTION 3: INTERACTIVE 4-THEME SHOWCASE ── */}
+      {/* ── SECTION 3: INTERACTIVE 4-THEME SHOWCASE (3D ORBITAL DOME) ── */}
       <section id="themes" className="lp-section lp-section--themes">
         <div className="lp-container">
           <div className="lp-section-head">
@@ -220,63 +218,7 @@ export function LandingSections({
             <p className="lp-section-sub">{th.subtitle}</p>
           </div>
 
-          <div className="lp-theme-grid" role="group" aria-label={th.title}>
-            {THEME_OPTIONS.map((option) => {
-              const active = theme === option.id;
-              const pv = option.preview;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`lp-theme-card ${active ? 'is-active' : ''}`}
-                  aria-pressed={active}
-                  onClick={(event) => switchThemeWithTransition(option.id, setTheme, event)}
-                >
-                  {/* Live miniature surface preview using exact verified palette colors */}
-                  <div
-                    className="lp-theme-thumb"
-                    style={{ background: pv.canvas, borderColor: pv.border }}
-                    aria-hidden="true"
-                  >
-                    <div
-                      className="lp-theme-thumb-sidebar"
-                      style={{ background: pv.surface, borderColor: pv.border }}
-                    >
-                      <span className="lp-thumb-dot" style={{ background: pv.accent }} />
-                      <span className="lp-thumb-line" style={{ background: pv.muted, opacity: 0.4 }} />
-                      <span className="lp-thumb-line" style={{ background: pv.muted, opacity: 0.25 }} />
-                    </div>
-                    <div className="lp-theme-thumb-main">
-                      <div className="lp-thumb-hero" style={{ background: pv.accent }} />
-                      <div
-                        className="lp-thumb-card"
-                        style={{ background: pv.surface, borderColor: pv.border }}
-                      >
-                        <span className="lp-thumb-bar" style={{ background: pv.text, opacity: 0.75 }} />
-                        <span className="lp-thumb-bar lp-thumb-bar--sm" style={{ background: pv.muted, opacity: 0.45 }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="lp-theme-card-foot">
-                    <div className="lp-theme-card-head">
-                      <span className="lp-theme-card-title">
-                        <LandingIcon name={option.id} size={15} />
-                        <span>{translate(lang, option.labelKey)}</span>
-                      </span>
-                      {active && (
-                        <span className="lp-theme-active-pill">
-                          <LandingIcon name="check" size={12} strokeWidth={2.4} />
-                          <span>{th.activeTag}</span>
-                        </span>
-                      )}
-                    </div>
-                    <p className="lp-theme-card-desc">{th.descriptions[option.id]}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <ThemeDomeShowcase copy={th} lang={lang} theme={theme} setTheme={setTheme} />
         </div>
       </section>
 

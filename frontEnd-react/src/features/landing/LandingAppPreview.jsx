@@ -88,7 +88,7 @@ export function LandingAppPreview({ copy, lang }) {
             <span className="lp-glass-icon-btn lp-glass-icon-btn--bordered">
               <LandingIcon name="gear" size={15} />
             </span>
-            <span className="lp-app-user-avatar">MA</span>
+            <span className="lp-app-user-avatar">Soli</span>
           </span>
         </div>
 
@@ -196,7 +196,7 @@ export function LandingAppPreview({ copy, lang }) {
                 <LandingIcon name="gear" size={15} />
               </span>
               <span className="lp-glass-user">
-                <span className="lp-app-user-avatar">MA</span>
+                <span className="lp-app-user-avatar">Soli</span>
                 <span className="lp-app-user-name">{p.userLabel}</span>
               </span>
             </span>

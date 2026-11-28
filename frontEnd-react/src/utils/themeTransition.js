@@ -1,7 +1,7 @@
 import { flushSync } from 'react-dom';
 
-const LIGHT_THEMES = ['green', 'light', 'cream'];
-let lastLightTheme = 'green';
+const LIGHT_THEMES = ['light', 'green', 'cream'];
+let lastLightTheme = 'light';
 
 /**
  * Remember the user's most recent non-dark palette so the Quick Sun/Moon pill

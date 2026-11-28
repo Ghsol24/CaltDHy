@@ -1,22 +1,5 @@
 /* Sets canvas and cold-start boot splash before the main CSS/JS bundles load. */
-html {
-  --theme-bootstrap-background: #090A0F;
-  --boot-aura: rgba(59, 130, 246, 0.16);
-  --boot-halo-bg: rgba(59, 130, 246, 0.10);
-  --boot-halo-shadow: 0 0 36px rgba(59, 130, 246, 0.20);
-  --boot-wave-color: rgba(96, 165, 250, 0.58);
-  --boot-wave-accent: rgba(52, 211, 153, 0.44);
-  --boot-text: #F8FAFC;
-  --boot-text-muted: #94A3B8;
-  --boot-accent-d: #34D399;
-  --boot-track: rgba(255, 255, 255, 0.10);
-  --boot-bar-from: #3B82F6;
-  --boot-bar-to: #34D399;
-  min-height: 100%;
-  background-color: var(--theme-bootstrap-background);
-  color-scheme: dark;
-}
-
+html,
 html.light-theme {
   --theme-bootstrap-background: #FAFAFB;
   --boot-aura: rgba(79, 70, 229, 0.09);
@@ -30,7 +13,25 @@ html.light-theme {
   --boot-track: #E2E8F0;
   --boot-bar-from: #4F46E5;
   --boot-bar-to: #10B981;
+  min-height: 100%;
+  background-color: var(--theme-bootstrap-background);
   color-scheme: light;
+}
+
+html.dark-theme {
+  --theme-bootstrap-background: #090A0F;
+  --boot-aura: rgba(59, 130, 246, 0.16);
+  --boot-halo-bg: rgba(59, 130, 246, 0.10);
+  --boot-halo-shadow: 0 0 36px rgba(59, 130, 246, 0.20);
+  --boot-wave-color: rgba(96, 165, 250, 0.58);
+  --boot-wave-accent: rgba(52, 211, 153, 0.44);
+  --boot-text: #F8FAFC;
+  --boot-text-muted: #94A3B8;
+  --boot-accent-d: #34D399;
+  --boot-track: rgba(255, 255, 255, 0.10);
+  --boot-bar-from: #3B82F6;
+  --boot-bar-to: #34D399;
+  color-scheme: dark;
 }
 
 html.cream-theme {

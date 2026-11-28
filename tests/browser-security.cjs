@@ -80,8 +80,8 @@ function blendCssColor(color, background) {
   await check('PWA manifest and service worker install without caching private API responses', async () => {
     const manifest = await (await context.request.get('/manifest.json')).json();
     assert.equal(manifest.display, 'standalone');
-    assert.equal(manifest.background_color, '#090A0F');
-    assert.equal(manifest.theme_color, '#090A0F');
+    assert.equal(manifest.background_color, '#FAFAFB');
+    assert.equal(manifest.theme_color, '#FAFAFB');
     assert.ok(manifest.icons.some(icon => icon.sizes === '192x192'));
     assert.ok(manifest.icons.some(icon => icon.sizes === '512x512'));
     const sw = await context.request.get('/sw.js');
@@ -139,8 +139,8 @@ function blendCssColor(color, background) {
       }
       await bootPage.evaluate(() => localStorage.setItem('caltdhy_theme', 'invalid'));
       await bootPage.reload();
-      assert.equal(await bootPage.locator('html').getAttribute('class'), 'dark-theme');
-      assert.equal(await bootPage.locator('meta[name="theme-color"]').getAttribute('content'), '#090A0F');
+      assert.equal(await bootPage.locator('html').getAttribute('class'), 'light-theme');
+      assert.equal(await bootPage.locator('meta[name="theme-color"]').getAttribute('content'), '#FAFAFB');
     } finally {
       await bootContext.close();
     }

@@ -1,7 +1,7 @@
 /* Restore the saved theme before the React bundle and application CSS load. */
 (() => {
   const themes = ['dark', 'light', 'cream', 'green'];
-  let theme = 'dark';
+  let theme = 'light';
 
   try {
     const saved = localStorage.getItem('caltdhy_theme');
