@@ -367,6 +367,26 @@ check('Consolidated Jars page on phones: inline tab switch and full History Draw
   await context.close();
 });
 
+check('Fresh account starts with Desktop sidebar groups expanded (Kế hoạch & Phân tích pinned)', async ({ browser, server }) => {
+  server.db.user.preferences.sidebarPinnedGroups = ['group_plan', 'group_analytics'];
+  const { context, page, errors, open } = await newPage(browser, server, { theme: 'green', width: 1440 });
+  await open('/spending/home');
+
+  const planGroup = page.locator('.sidebar-nav-group').nth(1);
+  const analyticsGroup = page.locator('.sidebar-nav-group').nth(2);
+  const jarsStandalone = page.locator('.sidebar-nav-group').nth(3);
+
+  for (const group of [planGroup, analyticsGroup]) {
+    await expect(group).not.toHaveClass(/is-group-collapsed/);
+    await expect(group).toHaveAttribute('data-pinned', 'true');
+    await expect(group).toHaveAttribute('data-open-reason', 'pinned');
+    await expect(group.locator('.sidebar-group-toggle')).toHaveAttribute('aria-expanded', 'true');
+  }
+  await expect(jarsStandalone.getByRole('button', { name: 'Hũ tiết kiệm', exact: true })).toBeVisible();
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 check('Desktop sidebar keeps active group open, lingers previews inside rail, and persists pins per account', async ({ browser, server }) => {
   server.db.user.preferences.sidebarPinnedGroups = [];
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'green', width: 1440 });

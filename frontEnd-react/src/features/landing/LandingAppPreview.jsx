@@ -15,12 +15,12 @@ const TAB_META = {
 };
 
 // Mục con đang xem của từng nhóm (pill tô màu như sidebar thật) và icon thật của mỗi mục.
-const ACTIVE_SUB = { plan: 2, analytics: 0, jars: 0 };
+// Hũ tiết kiệm là mục độc lập cuối sidebar ngang hàng Trang chủ (giống SidebarNav.jsx).
+const ACTIVE_SUB = { plan: 2, analytics: 0 };
 
 const SUB_ICONS = {
   plan: ['planOverview', 'wallets', 'budgets', 'recurring'],
-  analytics: ['analyticsOverview', 'spending', 'cashFlow', 'reports'],
-  jars: ['goals', 'jarList', 'jarHistory'],
+  analytics: ['analyticsOverview', 'spending', 'cashFlow', 'reports', 'transactions'],
 };
 
 const TREND_SERIES = [
@@ -114,6 +114,8 @@ export function LandingAppPreview({ copy, lang }) {
               const selected = activeTab === id;
               const subs = p.sidebarSub?.[id];
               const isGroup = Boolean(subs);
+              const isStandaloneBottom = id === 'jars';
+              const badge = isStandaloneBottom ? String(p.jars.items.length) : null;
               return (
                 <React.Fragment key={id}>
                   {index === 2 && (
@@ -121,7 +123,13 @@ export function LandingAppPreview({ copy, lang }) {
                       <LandingIcon name="plus" size={18} strokeWidth={2.4} />
                     </span>
                   )}
-                  <div className={`lp-sidebar-group${isGroup ? '' : ' lp-sidebar-group--standalone'}${selected ? ' is-open' : ''}`}>
+                  <div
+                    className={`lp-sidebar-group${
+                      isGroup
+                        ? ' is-open'
+                        : ` lp-sidebar-group--standalone${isStandaloneBottom ? ' lp-sidebar-group--standalone-bottom' : ''}`
+                    }`}
+                  >
                     <button
                       ref={(el) => { tabRefs.current[id] = el; }}
                       type="button"
@@ -134,10 +142,17 @@ export function LandingAppPreview({ copy, lang }) {
                       onKeyDown={(e) => handleTabKeyDown(e, index)}
                     >
                       <span className="lp-app-tab-icon" aria-hidden="true">
-                        <LandingIcon name={TAB_META[id].icon} size={16} />
+                        {isStandaloneBottom ? (
+                          <NavIcon name="jarList" size={16} />
+                        ) : (
+                          <LandingIcon name={TAB_META[id].icon} size={16} />
+                        )}
                       </span>
                       <span className="lp-app-tab-full">{p.tabs[id]}</span>
                       <span className="lp-app-tab-short" aria-hidden="true">{p.tabsShort[id]}</span>
+                      {badge && (
+                        <span className="lp-app-tab-badge" aria-hidden="true">{badge}</span>
+                      )}
                       {isGroup && (
                         <span className="lp-app-tab-chevron" aria-hidden="true">
                           <LandingIcon name="chevronDown" size={13} strokeWidth={2.25} />
@@ -146,7 +161,7 @@ export function LandingAppPreview({ copy, lang }) {
                     </button>
 
                     {isGroup && (
-                      <div className="lp-sidebar-sublist" aria-hidden="true">
+                      <div className="lp-sidebar-sublist" aria-hidden="true" onClick={() => selectTab(id)}>
                         {subs.map((sub, sIdx) => (
                           <span
                             key={sub}
@@ -598,7 +613,7 @@ export function LandingAppPreview({ copy, lang }) {
                     {p.jars.historyItems.map((row) => (
                       <div key={`${row.title}-${row.meta}`} className="lp-recent-row">
                         <span className="lp-recent-ico lp-recent-ico--transfer" aria-hidden="true">
-                          <LandingIcon name="jars" size={14} />
+                          <NavIcon name="jarList" size={14} />
                         </span>
                         <div className="lp-recent-info">
                           <span className="lp-recent-name">{row.title}</span>

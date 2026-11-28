@@ -3,6 +3,7 @@
 const modes = new Set(['daily', '3months', '6months']);
 const series = new Set(['expense', 'income', 'both']);
 const SIDEBAR_GROUP_IDS = ['group_plan', 'group_analytics', 'group_jars'];
+const DEFAULT_SIDEBAR_PINNED_GROUPS = ['group_plan', 'group_analytics'];
 const sidebarGroupSet = new Set(SIDEBAR_GROUP_IDS);
 const owns = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 const reminderLocales = new Set(['vi', 'en', 'zh-CN']);
@@ -15,6 +16,7 @@ function validSidebarPinnedGroups(value) {
 }
 
 function publicSidebarPinnedGroups(value) {
+    if (value === undefined) return [...DEFAULT_SIDEBAR_PINNED_GROUPS];
     return Array.isArray(value) ? SIDEBAR_GROUP_IDS.filter(id => value.includes(id)) : [];
 }
 
@@ -126,4 +128,4 @@ function publicNotifications(value) {
     };
 }
 
-module.exports = { SIDEBAR_GROUP_IDS, publicSidebarPinnedGroups, publicNotifications, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };
+module.exports = { SIDEBAR_GROUP_IDS, DEFAULT_SIDEBAR_PINNED_GROUPS, publicSidebarPinnedGroups, publicNotifications, validCashFlowView, publicCashFlowPreferences, validPreferencesUpdate, preferenceUpdateFields };

@@ -12,7 +12,7 @@ const { issueCsrf, createSession, setSession, revokeSession, clearSession } = re
 const { validEmail, normalizeEmail } = require('../utils/emailAddress');
 const { configuredProvider, sendAccountEmail } = require('../utils/accountEmail');
 const { publicPreferences, publicUser } = require('../utils/publicUser');
-const { validPreferencesUpdate, preferenceUpdateFields } = require('../utils/cashFlowPreferences');
+const { DEFAULT_SIDEBAR_PINNED_GROUPS, validPreferencesUpdate, preferenceUpdateFields } = require('../utils/cashFlowPreferences');
 const PushSubscription = require('../models/PushSubscription');
 const { validPushEndpoint, vapidConfig } = require('../utils/webPush');
 const { applyReminderChoice } = require('../utils/reminders');
@@ -141,7 +141,10 @@ router.post('/register', async (req, res) => {
             }
             const [user] = await User.create([{
                 name: name.trim(), email: normalizeEmail(email), password: passwordHash, emailVerified: false,
-                preferences: { notifications: { locale: notificationLocale } }
+                preferences: {
+                    sidebarPinnedGroups: [...DEFAULT_SIDEBAR_PINNED_GROUPS],
+                    notifications: { locale: notificationLocale }
+                }
             }], { session });
             await Wallet.create([{ userId: user._id, name: 'Tiền mặt', type: 'cash',
                 icon: '💵', initialBalance: 0, isDefault: true }], { session });

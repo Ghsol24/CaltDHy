@@ -85,7 +85,7 @@ function buildFixtures({ now = new Date(), empty = false } = {}) {
   };
   const user = {
     id: '64b7f0c2a1d3e4f5a6b7c8d9', name: 'Trần Gia Huy', email: 'fixture@example.com', avatar: '', emailVerified: true,
-    preferences: { analyticsExcludeRecurring: false, cashFlow: { lastUsed: null, pinnedDefault: null }, sidebarPinnedGroups: [] }
+    preferences: { analyticsExcludeRecurring: false, cashFlow: { lastUsed: null, pinnedDefault: null }, sidebarPinnedGroups: ['group_plan', 'group_analytics'] }
   };
   // `empty`: tài khoản vừa đăng ký — chỉ có ví "Tiền mặt" 0 đ server tự tạo, chưa có gì khác
   // (dùng để xem thẻ "Bắt đầu trong 3 bước" ở Trang chủ).

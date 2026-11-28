@@ -24,7 +24,6 @@ export function LandingPage() {
   const { hash } = useLocation();
   const { theme, setTheme } = useThemeStore();
   const lang = useLangStore((state) => state.lang);
-  const setLang = useLangStore((state) => state.setLang);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   useCurrencyStore((state) => state.displayCurrency);
 
@@ -174,7 +173,6 @@ export function LandingPage() {
         <LandingSections
           copy={copy}
           lang={lang}
-          setLang={setLang}
           theme={theme}
           setTheme={setTheme}
           isAuthenticated={isAuthenticated}
@@ -242,7 +240,7 @@ export function LandingPage() {
               </div>
             </div>
 
-            {/* Right Brand & Language Block (Open Edge-to-Edge Balance) */}
+            {/* Right Brand Block (Open Edge-to-Edge Balance) */}
             <div className="lp-footer-brand-aside">
               <a
                 href="#top"
@@ -255,26 +253,6 @@ export function LandingPage() {
                 </span>
               </a>
               <p className="lp-footer-tagline">{copy.footer.tagline}</p>
-
-              <div className="lp-footer-lang-pills" role="group" aria-label={copy.themes.langLabel}>
-                <LandingIcon name="globe" size={14} />
-                {[
-                  { id: 'vi', label: 'VI' },
-                  { id: 'en', label: 'EN' },
-                  { id: 'zh-CN', label: '中文' },
-                ].map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className={`lp-footer-lang-btn ${lang === opt.id ? 'is-active' : ''}`}
-                    aria-pressed={lang === opt.id}
-                    onClick={() => setLang(opt.id)}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
               <p className="lp-footer-copy">© {year} CaltDHy</p>
             </div>
           </div>

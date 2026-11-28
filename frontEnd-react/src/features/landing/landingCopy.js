@@ -46,8 +46,7 @@ export const LANDING_COPY = {
       },
       sidebarSub: {
         plan: ['Tổng quan', 'Ví & Tài khoản', 'Ngân sách', 'Khoản định kỳ'],
-        analytics: ['Tóm tắt thu chi', 'Chi tiêu', 'Dòng tiền', 'Báo cáo'],
-        jars: ['Tổng quan hũ', 'Danh sách hũ', 'Lịch sử nạp/rút'],
+        analytics: ['Tóm tắt thu chi', 'Chi tiêu', 'Dòng tiền', 'Báo cáo', 'Lịch sử giao dịch'],
       },
       mobileNav: {
         home: 'Trang chủ',
@@ -186,11 +185,9 @@ export const LANDING_COPY = {
     },
     themes: {
       eyebrow: 'CÁ NHÂN HÓA TRẢI NGHIỆM',
-      title: 'Giao diện chuẩn gu, linh hoạt ngôn ngữ. Trải nghiệm ngay.',
+      title: '4 giao diện chuẩn gu. Trải nghiệm ngay.',
       subtitle: 'Từng bảng màu đều được kiểm định độ tương phản đọc rõ lâu dài. Lựa chọn của bạn được giữ liền mạch sang màn đăng nhập và toàn bộ ứng dụng.',
       activeTag: 'Đang dùng',
-      langLabel: 'Ngôn ngữ hiển thị',
-      currencyHint: 'Số tiền hiển thị bằng VND, chính xác đến từng đồng.',
       descriptions: {
         dark: 'Nền Obsidian dịu mắt, tương phản rõ khi làm việc buổi tối.',
         light: 'Tối giản hiện đại, sạch thoáng và sắc nét ban ngày.',
@@ -365,8 +362,7 @@ export const LANDING_COPY = {
       },
       sidebarSub: {
         plan: ['Overview', 'Wallets & Accounts', 'Budgets', 'Recurring items'],
-        analytics: ['Summary', 'Spending', 'Cash flow', 'Reports'],
-        jars: ['Jar overview', 'Jar list', 'Jar activity'],
+        analytics: ['Summary', 'Spending', 'Cash flow', 'Reports', 'Transaction history'],
       },
       mobileNav: {
         home: 'Dashboard',
@@ -505,11 +501,9 @@ export const LANDING_COPY = {
     },
     themes: {
       eyebrow: 'TAILORED TO YOUR EYES',
-      title: 'Themes tuned to your taste, languages built for you. Try it now.',
+      title: 'Four themes tuned to your taste. Try them now.',
       subtitle: 'Every palette is verified for comfortable reading contrast. Your choice carries seamlessly into sign-in and the full application.',
       activeTag: 'Active',
-      langLabel: 'Interface language',
-      currencyHint: 'Amounts are shown in VND, exact with no rounding.',
       descriptions: {
         dark: 'Obsidian surfaces with calm cobalt highlights for late-night focus.',
         light: 'Clean, airy screens for easy reading in daylight.',
@@ -684,8 +678,7 @@ export const LANDING_COPY = {
       },
       sidebarSub: {
         plan: ['总览', '钱包与账户', '预算', '周期项目'],
-        analytics: ['收支概要', '支出', '现金流', '报告'],
-        jars: ['储蓄罐总览', '储蓄罐列表', '存取记录'],
+        analytics: ['收支概要', '支出', '现金流', '报告', '交易记录'],
       },
       mobileNav: {
         home: '首页',
@@ -824,11 +817,9 @@ export const LANDING_COPY = {
     },
     themes: {
       eyebrow: '个性化外观',
-      title: '合拍的主题风格，灵活的多语言体验。立即试用。',
+      title: '四套合拍主题风格，立即体验。',
       subtitle: '每套配色均经过高对比度可读性校准，切换后将无缝同步到登录页与整个应用。',
       activeTag: '当前使用',
-      langLabel: '界面语言',
-      currencyHint: '金额以越南盾 (VND) 显示，精确无四舍五入。',
       descriptions: {
         dark: '深邃曜石暗底配钴蓝点缀，夜间记账舒适护眼。',
         light: '清爽极简浅色界面，日间阅读利落通透。',

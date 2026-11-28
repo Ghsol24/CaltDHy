@@ -21,6 +21,7 @@ const app = require('../server');
 const User = require('../models/User');
 const {
     SIDEBAR_GROUP_IDS,
+    DEFAULT_SIDEBAR_PINNED_GROUPS,
     publicSidebarPinnedGroups,
     validPreferencesUpdate,
     preferenceUpdateFields
@@ -96,8 +97,10 @@ describe('Sidebar pinned group preferences', { concurrency: false }, () => {
             assert.equal(validPreferencesUpdate({ sidebarPinnedGroups: bad }), false, JSON.stringify(bad));
         }
 
-        assert.deepEqual(publicPreferences({}).sidebarPinnedGroups, []);
-        assert.deepEqual(publicPreferences(undefined).sidebarPinnedGroups, []);
+        assert.deepEqual(DEFAULT_SIDEBAR_PINNED_GROUPS, ['group_plan', 'group_analytics']);
+        assert.deepEqual(publicPreferences({}).sidebarPinnedGroups, ['group_plan', 'group_analytics']);
+        assert.deepEqual(publicPreferences(undefined).sidebarPinnedGroups, ['group_plan', 'group_analytics']);
+        assert.deepEqual(publicSidebarPinnedGroups([]), []);
         assert.deepEqual(publicSidebarPinnedGroups('not-an-array'), []);
         assert.deepEqual(
             publicSidebarPinnedGroups(['group_jars', 'bad', 42, 'group_plan', 'group_jars']),
@@ -121,11 +124,11 @@ describe('Sidebar pinned group preferences', { concurrency: false }, () => {
     it('persists sidebarPinnedGroups per account without touching cashFlow or notifications', async () => {
         const owner = await account();
         const other = await account();
-        assert.deepEqual(owner.response.body.user.preferences.sidebarPinnedGroups, []);
+        assert.deepEqual(owner.response.body.user.preferences.sidebarPinnedGroups, ['group_plan', 'group_analytics']);
 
-        // Legacy account missing the field still normalizes to [].
+        // Legacy account missing the field still defaults to expanded sidebar groups.
         await User.updateOne({ _id: owner.userId }, { $unset: { 'preferences.sidebarPinnedGroups': '' } });
-        assert.deepEqual((await owner.agent.get('/api/auth/session')).body.user.preferences.sidebarPinnedGroups, []);
+        assert.deepEqual((await owner.agent.get('/api/auth/session')).body.user.preferences.sidebarPinnedGroups, ['group_plan', 'group_analytics']);
 
         const view = { mode: '6months', series: 'both', excludeRecurring: true };
         assert.equal((await owner.send('put', 'preferences', {
@@ -152,12 +155,21 @@ describe('Sidebar pinned group preferences', { concurrency: false }, () => {
             assert.equal((await owner.send('put', 'preferences', { sidebarPinnedGroups: invalid })).status, 400);
         }
 
-        // Survives logout + login, while the second account remains isolated.
+        // Survives logout + login, while the second account remains isolated at default.
         assert.equal((await owner.send('post', 'logout', {})).status, 200);
         const relogin = await (await anonymous()).send('post', 'login', { email: owner.email, password });
         assert.equal(relogin.status, 200);
         assert.deepEqual(relogin.body.user.preferences.sidebarPinnedGroups, ['group_analytics', 'group_jars']);
-        assert.deepEqual((await other.agent.get('/api/auth/session')).body.user.preferences.sidebarPinnedGroups, []);
+        assert.deepEqual((await other.agent.get('/api/auth/session')).body.user.preferences.sidebarPinnedGroups, ['group_plan', 'group_analytics']);
+
+        // Explicitly unpinning all groups persists [] across logout + login (does not revert to default).
+        const emptyRes = await other.send('put', 'preferences', { sidebarPinnedGroups: [] });
+        assert.equal(emptyRes.status, 200);
+        assert.deepEqual(emptyRes.body.preferences.sidebarPinnedGroups, []);
+        assert.equal((await other.send('post', 'logout', {})).status, 200);
+        const otherRelogin = await (await anonymous()).send('post', 'login', { email: other.email, password });
+        assert.equal(otherRelogin.status, 200);
+        assert.deepEqual(otherRelogin.body.user.preferences.sidebarPinnedGroups, []);
     });
 
     it('starts reminder emails in the language chosen at sign-up, falling back to vi', async () => {

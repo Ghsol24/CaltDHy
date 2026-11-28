@@ -23,6 +23,7 @@ const { protect } = require('../middleware/authMiddleware');
 const { runWithTransaction } = require('../utils/mongoTransaction');
 const { createSession, setSession, revokeSession } = require('../utils/sessionSecurity');
 const { publicUser } = require('../utils/publicUser');
+const { DEFAULT_SIDEBAR_PINNED_GROUPS } = require('../utils/cashFlowPreferences');
 const { PROVIDERS, providerConfig, enabledProviders, redirectBase, newAttempt, authorizationUrl, fetchProfile } = require('../utils/oauthProviders');
 const { writeTicket, readTicket, clearTicket } = require('../utils/oauthTickets');
 
@@ -187,7 +188,10 @@ module.exports = function oauthRoutes({ consumeSecondFactor, TWO_FACTOR_FIELDS }
                 const [user] = await User.create([{
                     name: profile.name, email: profile.email, emailVerified: profile.emailVerified,
                     oauth: { [provider + 'Id']: profile.sub },
-                    preferences: { notifications: { locale: LOCALES.includes(attempt.locale) ? attempt.locale : 'vi' } }
+                    preferences: {
+                        sidebarPinnedGroups: [...DEFAULT_SIDEBAR_PINNED_GROUPS],
+                        notifications: { locale: LOCALES.includes(attempt.locale) ? attempt.locale : 'vi' }
+                    }
                 }], { session });
                 await Wallet.create([{ userId: user._id, name: 'Tiền mặt', type: 'cash', icon: '💵', initialBalance: 0, isDefault: true }], { session });
                 await revokeSession(req, session);

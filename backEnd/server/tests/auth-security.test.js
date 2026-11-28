@@ -22,7 +22,7 @@ const defaultNotifications = { dueEmail: false, inactivityEmail: false, dailyRem
     locale: 'vi', emailPausedUntil: null, promptDismissed: false };
 const defaultPreferences = analyticsExcludeRecurring => ({
     analyticsExcludeRecurring, cashFlow: { lastUsed: null, pinnedDefault: null },
-    sidebarPinnedGroups: [], homeOnboardingDismissed: false, notifications: defaultNotifications
+    sidebarPinnedGroups: ['group_plan', 'group_analytics'], homeOnboardingDismissed: false, notifications: defaultNotifications
 });
 
 async function anonymous() {
@@ -275,7 +275,7 @@ describe('Account security regressions', { concurrency: false }, () => {
         const changed = await owner.send('put', 'preferences', { cashFlow: { lastUsed: remembered } });
         assert.equal(changed.status, 200);
         const expected = { analyticsExcludeRecurring: false,
-            cashFlow: { lastUsed: remembered, pinnedDefault: pinned }, sidebarPinnedGroups: [], homeOnboardingDismissed: false, notifications: defaultNotifications };
+            cashFlow: { lastUsed: remembered, pinnedDefault: pinned }, sidebarPinnedGroups: ['group_plan', 'group_analytics'], homeOnboardingDismissed: false, notifications: defaultNotifications };
         assert.deepEqual(changed.body.preferences, expected);
         assert.deepEqual((await owner.agent.get('/api/auth/profile')).body.user.preferences, expected);
 
@@ -300,7 +300,7 @@ describe('Account security regressions', { concurrency: false }, () => {
         const changed = await c.send('put', 'preferences', { analyticsExcludeRecurring: true });
         assert.equal(changed.status, 200);
         assert.deepEqual(changed.body.preferences, { analyticsExcludeRecurring: true,
-            cashFlow: { lastUsed: { ...view, excludeRecurring: true }, pinnedDefault: view }, sidebarPinnedGroups: [], homeOnboardingDismissed: false, notifications: defaultNotifications });
+            cashFlow: { lastUsed: { ...view, excludeRecurring: true }, pinnedDefault: view }, sidebarPinnedGroups: ['group_plan', 'group_analytics'], homeOnboardingDismissed: false, notifications: defaultNotifications });
     });
 
     it('rejects malformed cash-flow preferences and inconsistent recurring flags atomically', async () => {
@@ -308,7 +308,7 @@ describe('Account security regressions', { concurrency: false }, () => {
         const view = { mode: 'daily', series: 'expense', excludeRecurring: false };
         assert.equal((await c.send('put', 'preferences', { cashFlow: { lastUsed: view } })).status, 200);
         const expected = { analyticsExcludeRecurring: false,
-            cashFlow: { lastUsed: view, pinnedDefault: null }, sidebarPinnedGroups: [], homeOnboardingDismissed: false, notifications: defaultNotifications };
+            cashFlow: { lastUsed: view, pinnedDefault: null }, sidebarPinnedGroups: ['group_plan', 'group_analytics'], homeOnboardingDismissed: false, notifications: defaultNotifications };
         for (const cashFlow of [null, [], {}, { unknown: view }, { lastUsed: null }, { lastUsed: [] },
             { pinnedDefault: [] }, { lastUsed: { ...view, mode: 'monthly' } },
             { lastUsed: { ...view, series: 'all' } }, { lastUsed: { ...view, excludeRecurring: 'false' } },

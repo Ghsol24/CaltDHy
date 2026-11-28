@@ -369,13 +369,13 @@ html.green-theme .landing-page {
   white-space: nowrap;
 }
 
-/* ── Sidebar: logo + nút thu gọn trên đầu, nhóm thu gọn, chỉ nhóm đang xem mở ── */
+/* ── Sidebar: logo + nút thu gọn trên đầu, hai nhóm mở sẵn, Hũ tiết kiệm độc lập cuối thanh ── */
 .lp-app-sidebar {
   grid-area: side;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 12px 18px;
+  padding: 0 12px 16px;
 }
 
 /* Cao 68px: tâm logo ngang tâm viên kính bên phải (hàng viên kính 12px + 44px). */
@@ -412,11 +412,17 @@ html.green-theme .landing-page {
 }
 
 .lp-sidebar-group--standalone {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .lp-sidebar-group.is-open:not(.lp-sidebar-group--standalone) {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+}
+
+.lp-sidebar-group--standalone-bottom {
+  margin-bottom: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
 }
 
 .lp-app-tab {
@@ -449,6 +455,19 @@ html.green-theme .landing-page {
   flex: none;
 }
 
+.lp-app-tab-badge {
+  margin-inline-start: auto;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted, var(--surface-subtle));
+  color: var(--color-text-secondary, var(--text-secondary));
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Mục đang xem: pill tô màu, không vạch dọc (như .sidebar-nav-item.active). */
 .lp-app-tab[aria-selected="true"]:not(.lp-app-tab--group) {
   background: var(--color-brand-50, var(--primary-light));
@@ -456,9 +475,15 @@ html.green-theme .landing-page {
   font-weight: 600;
 }
 
+.lp-app-tab[aria-selected="true"]:not(.lp-app-tab--group) .lp-app-tab-badge {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-active-text);
+}
+
 /* Tiêu đề nhóm: chữ nhỏ màu phụ, không viết hoa, mũi tên bên phải (như .sidebar-group-toggle). */
 .lp-app-tab--group {
-  height: 28px;
+  height: 26px;
   padding: 0 8px 0 12px;
   font-size: var(--font-xs);
   font-weight: 600;
@@ -477,6 +502,7 @@ html.green-theme .landing-page {
   transition: transform var(--dur-fast) ease;
 }
 
+.lp-sidebar-group.is-open .lp-app-tab-chevron,
 .lp-app-tab--group[aria-selected="true"] .lp-app-tab-chevron {
   transform: none;
 }
@@ -489,7 +515,7 @@ html.green-theme .landing-page {
   display: none;
   flex-direction: column;
   gap: 2px;
-  padding-top: 4px;
+  padding-top: 3px;
 }
 
 .lp-sidebar-group.is-open .lp-sidebar-sublist {
@@ -500,7 +526,7 @@ html.green-theme .landing-page {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 36px;
+  height: 34px;
   padding: 0 12px;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
@@ -508,6 +534,13 @@ html.green-theme .landing-page {
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
+  cursor: pointer;
+  transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+
+.lp-sidebar-subitem:hover:not(.is-active) {
+  color: var(--text-primary);
+  background: var(--color-surface-muted, var(--surface-subtle));
 }
 
 .lp-sidebar-subitem svg {
@@ -1451,6 +1484,7 @@ html.green-theme .landing-page {
   .lp-sidebar-sublist,
   .lp-sidebar-group.is-open .lp-sidebar-sublist,
   .lp-app-tab-chevron,
+  .lp-app-tab-badge,
   .lp-app-tab-full {
     display: none;
   }
@@ -1506,8 +1540,11 @@ html.green-theme .landing-page {
 
   .lp-sidebar-group,
   .lp-sidebar-group--standalone,
+  .lp-sidebar-group--standalone-bottom,
   .lp-sidebar-group.is-open:not(.lp-sidebar-group--standalone) {
     display: contents;
+    padding-top: 0;
+    border-top: 0;
   }
 
   .lp-app-tab,
@@ -2454,66 +2491,6 @@ html.dark-theme .lp-wallet-layer--front {
   color: var(--text-secondary);
 }
 
-/* Inline Locale Strip */
-.lp-locale-bar {
-  margin-top: 20px;
-  padding: 16px 20px;
-  border-radius: 18px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
-.lp-locale-bar-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-size: var(--font-base);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.lp-locale-pills {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.lp-locale-pill {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: var(--radius-full);
-  background: var(--surface-subtle);
-  border: 1px solid var(--color-border);
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease, background-color var(--dur-fast) ease;
-}
-
-.lp-locale-pill:hover {
-  color: var(--text-primary);
-  border-color: var(--color-border-strong);
-}
-
-.lp-locale-pill.is-active {
-  background: var(--primary-light);
-  border-color: var(--primary);
-  color: var(--color-link);
-}
-
-.lp-locale-hint {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
 /* ============================================================
    SECURITY & PRECISION SECTION
    ============================================================ */
@@ -3081,41 +3058,6 @@ html.dark-theme .lp-wallet-layer--front {
   max-width: 280px;
 }
 
-.lp-footer-lang-pills {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 6px 4px 10px;
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-surface) 74%, transparent);
-  border: 1px solid var(--color-border-strong);
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-
-.lp-footer-lang-btn {
-  min-height: 28px;
-  padding: 0 9px;
-  border: none;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease;
-}
-
-.lp-footer-lang-btn:hover {
-  color: var(--text-primary);
-}
-
-.lp-footer-lang-btn.is-active {
-  background: var(--primary-light);
-  color: var(--color-link);
-}
-
 .lp-footer-copy {
   margin-top: 6px;
   font-size: var(--font-xs);
@@ -3292,10 +3234,6 @@ html.dark-theme .lp-wallet-layer--front {
 
   .lp-theme-card-desc {
     font-size: 12px;
-  }
-
-  .lp-locale-bar {
-    padding: 14px 16px;
   }
 
   .lp-security-card {

@@ -8,12 +8,6 @@ import { LandingIcon } from './LandingIcons';
 import { WalletCoinShowcase } from './WalletCoinShowcase';
 import { buildSampleCalendar } from './landingSample';
 
-const LANGUAGES = [
-  { id: 'vi', label: 'Tiếng Việt' },
-  { id: 'en', label: 'English' },
-  { id: 'zh-CN', label: '简体中文' },
-];
-
 const FLOW_BARS = [
   { inH: 66, outH: 42 },
   { inH: 72, outH: 50 },
@@ -26,7 +20,6 @@ const FLOW_BARS = [
 export function LandingSections({
   copy,
   lang,
-  setLang,
   theme,
   setTheme,
   isAuthenticated,
@@ -218,7 +211,7 @@ export function LandingSections({
       {/* ── SECTION 2B: SCROLL-REACTIVE WALLET & COINS SHOWCASE ── */}
       <WalletCoinShowcase copy={copy} />
 
-      {/* ── SECTION 3: INTERACTIVE 4-THEME & LANGUAGE SHOWCASE ── */}
+      {/* ── SECTION 3: INTERACTIVE 4-THEME SHOWCASE ── */}
       <section id="themes" className="lp-section lp-section--themes">
         <div className="lp-container">
           <div className="lp-section-head">
@@ -283,28 +276,6 @@ export function LandingSections({
                 </button>
               );
             })}
-          </div>
-
-          {/* Inline quick language switcher strip */}
-          <div className="lp-locale-bar">
-            <div className="lp-locale-bar-left">
-              <LandingIcon name="globe" size={17} />
-              <span className="lp-locale-bar-label">{th.langLabel}</span>
-            </div>
-            <div className="lp-locale-pills" role="group" aria-label={th.langLabel}>
-              {LANGUAGES.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`lp-locale-pill ${lang === item.id ? 'is-active' : ''}`}
-                  aria-pressed={lang === item.id}
-                  onClick={() => setLang(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <span className="lp-locale-hint">{th.currencyHint}</span>
           </div>
         </div>
       </section>
