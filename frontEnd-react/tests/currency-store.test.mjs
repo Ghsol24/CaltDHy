@@ -13,6 +13,7 @@ globalThis.localStorage = {
 
 const { useCurrencyStore } = await import('../src/stores/useCurrencyStore.js');
 const { formatCompactCurrency } = await import('../src/utils/compactFormatters.js');
+const { formatCurrency } = await import('../src/utils/formatters.js');
 const store = () => useCurrencyStore.getState();
 
 test('without a usable exchange rate the display currency stays VND, even if USD was saved', () => {
@@ -36,4 +37,60 @@ test('blocked storage does not break switching currency', () => {
     assert.equal(store().setDisplayCurrency('VND'), true);
     assert.equal(store().displayCurrency, 'VND');
   } finally { storageWorks = true; }
+});
+
+// The server's /api/fx/usd snapshot, as a fetch stand-in.
+const DAY = 24 * 60 * 60 * 1000;
+const serverRate = (asOf, extra = {}) => async (url) => {
+  assert.equal(url, '/api/fx/usd');
+  return { ok: true, json: async () => ({ success: true, vndPerUsd: 26000, source: 'ExchangeRate-API', sourceUrl: 'https://www.exchangerate-api.com', asOf, ...extra }) };
+};
+
+test('a failing or garbage server answer keeps USD locked', async () => {
+  const down = async () => { throw new TypeError('offline'); };
+  assert.equal(await store().loadExchangeRate({ fetchImpl: down }), false);
+  assert.equal(store().rateStatus, 'unavailable');
+  assert.equal(await store().loadExchangeRate({ fetchImpl: async () => ({ ok: false, json: async () => ({}) }) }), false);
+  assert.equal(await store().loadExchangeRate({ fetchImpl: serverRate(new Date().toISOString(), { vndPerUsd: 'many' }) }), false);
+  assert.equal(await store().loadExchangeRate({ fetchImpl: serverRate(new Date().toISOString(), { success: false }) }), false);
+  assert.equal(store().usdAvailable, false);
+  assert.equal(saved.get('caltdhy_fx_usd'), undefined, 'nothing invalid is remembered');
+});
+
+test('a rate older than 7 days is not usable', async () => {
+  assert.equal(await store().loadExchangeRate({ fetchImpl: serverRate(new Date(Date.now() - 8 * DAY).toISOString()) }), false);
+  assert.equal(store().usdAvailable, false);
+  assert.equal(store().setDisplayCurrency('USD'), false);
+});
+
+test('a fresh server rate unlocks USD for display only', async () => {
+  const asOf = new Date(Date.now() - DAY).toISOString();
+  assert.equal(await store().loadExchangeRate({ fetchImpl: serverRate(asOf) }), true);
+  assert.equal(store().rateStatus, 'ready');
+  assert.equal(store().usdAvailable, true);
+  assert.equal(store().exchangeRate.source, 'ExchangeRate-API');
+  assert.equal(store().exchangeRate.asOf, asOf);
+  assert.equal(store().displayCurrency, 'VND', 'loading a rate does not switch currency by itself');
+  assert.equal(JSON.parse(saved.get('caltdhy_fx_usd')).vndPerUsd, 26000, 'remembered for the next visit');
+
+  assert.equal(store().setDisplayCurrency('USD'), true);
+  assert.equal(saved.get('caltdhy_curr'), 'USD');
+  assert.equal(formatCurrency(2_600_000, { locale: 'en' }), '$100.00');
+  assert.equal(formatCurrency(2_600_000, { locale: 'en', currency: 'VND' }), '₫2,600,000', 'amounts stay VND underneath');
+  store().setDisplayCurrency('VND');
+});
+
+test('a saved USD choice comes back once a rate arrives, and steps aside when it goes stale', async () => {
+  useCurrencyStore.setState({ preferredCurrency: 'USD', displayCurrency: 'VND' });
+  await store().loadExchangeRate({ force: true, fetchImpl: serverRate(new Date().toISOString()) });
+  assert.equal(store().displayCurrency, 'USD');
+  // Same snapshot, but the clock moved on past the 7-day limit.
+  const realNow = Date.now;
+  Date.now = () => realNow() + 8 * DAY;
+  try {
+    await store().loadExchangeRate({ force: true, fetchImpl: async () => { throw new Error('offline'); } });
+    assert.equal(store().usdAvailable, false);
+    assert.equal(store().displayCurrency, 'VND');
+    assert.equal(store().preferredCurrency, 'USD', 'the choice is kept for when a fresh rate returns');
+  } finally { Date.now = realNow; }
 });

@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LOCALE_META, SUPPORTED_LOCALES } from '../../../i18n/translations';
-import { formatDate } from '../../../utils/formatters';
+import { formatDate, formatNumber } from '../../../utils/formatters';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { useCurrencyStore } from '../../../stores/useCurrencyStore';
+
+// "Nguồn: X · Cập nhật: Y" với X là liên kết tới nhà cung cấp khi có (điều khoản nguồn yêu cầu ghi nguồn).
+function ExchangeRateMeta({ exchangeRate, lang, t }) {
+  const asOf = formatDate(exchangeRate.asOf, 'short', { locale: lang });
+  const marker = '\u0000';
+  const [before, after = ''] = t('settings.exchangeRateMeta', { source: marker, asOf }).split(marker);
+  const source = exchangeRate.sourceUrl
+    ? <a href={exchangeRate.sourceUrl} target="_blank" rel="noopener noreferrer">{exchangeRate.source}</a>
+    : exchangeRate.source;
+  return <>{before}{source}{after}</>;
+}
 
 export function SettingsGeneralTab({ activeTab, displayCurrency, exchangeRate, setDisplayCurrency, setLang, usdAvailable }) {
   const { lang, t } = useTranslation();
-  return (activeTab === 'general' && (
+  const rateStatus = useCurrencyStore((state) => state.rateStatus);
+  const loadExchangeRate = useCurrencyStore((state) => state.loadExchangeRate);
+  const isGeneral = activeTab === 'general';
+  useEffect(() => {
+    if (isGeneral) void loadExchangeRate();
+  }, [isGeneral, loadExchangeRate]);
+  return (isGeneral && (
     <div className="account-tab-pane">
       <div className="account-tab-intro">
         <h3 className="account-tab-intro-title">{t('settings.languageRegion')}</h3>
@@ -49,11 +67,13 @@ export function SettingsGeneralTab({ activeTab, displayCurrency, exchangeRate, s
       </div>
   
       {!usdAvailable ? (
-        <div id="usd-rate-unavailable" className="settings-info-note" role="note">{t('settings.usdUnavailable')}</div>
+        <div id="usd-rate-unavailable" className="settings-info-note" role="note" aria-live="polite">
+          {t(rateStatus === 'loading' ? 'settings.exchangeRateLoading' : 'settings.usdUnavailable')}
+        </div>
       ) : (
         <div className="settings-info-note" role="note">
-          {t('settings.exchangeRate', { rate: exchangeRate.vndPerUsd })}<br />
-          {t('settings.exchangeRateMeta', { source: exchangeRate.source, asOf: formatDate(exchangeRate.asOf, 'short', { locale: lang }) })}
+          {t('settings.exchangeRate', { rate: formatNumber(exchangeRate.vndPerUsd, { locale: lang }) })}<br />
+          <ExchangeRateMeta exchangeRate={exchangeRate} lang={lang} t={t} />
         </div>
       )}
     </div>

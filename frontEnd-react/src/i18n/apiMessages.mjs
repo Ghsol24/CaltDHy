@@ -181,6 +181,11 @@ export const apiMessages = {
     "Too many requests. Try again in 15 minutes.",
     "请求过多，请在 15 分钟后重试。"
   ],
+  "Chưa có tỷ giá tham chiếu. Vui lòng thử lại sau.": [
+    "Chưa có tỷ giá tham chiếu. Vui lòng thử lại sau.",
+    "No reference exchange rate is available yet. Please try again later.",
+    "暂无参考汇率，请稍后重试。"
+  ],
   "Dịch vụ dữ liệu chưa sẵn sàng. Vui lòng thử lại sau.": [
     "Dịch vụ dữ liệu chưa sẵn sàng. Vui lòng thử lại sau.",
     "The data service is not ready. Please try again later.",
