@@ -119,6 +119,7 @@ async function store(snapshot) {
     }
 }
 
+// Bằng nhau thì giữ bản đang có trong bộ nhớ, để mọi request nhận cùng một object.
 const newer = (a, b) => (!a ? b : !b ? a : (b.fetchedAt > a.fetchedAt ? b : a));
 const isFresh = (snapshot, now) => Boolean(snapshot) && now - snapshot.fetchedAt.getTime() < REFRESH_MS;
 
@@ -143,8 +144,10 @@ async function getUsdRate({ now = Date.now(), fetchImpl = globalThis.fetch } = {
     const fixed = fixedOverride();
     if (fixed) return fixed;
     if (isFresh(latest, now)) return latest;
-    // Một instance khác (hoặc lần chạy trước) có thể đã làm mới và lưu vào Mongo.
-    latest = newer(latest, await readStored());
+    // Một instance khác (hoặc lần chạy trước) có thể đã làm mới và lưu vào Mongo. Đọc `latest`
+    // SAU khi chờ Mongo: trong lúc chờ, một request khác có thể đã lấy bản mới từ nguồn.
+    const stored = await readStored();
+    latest = newer(latest, stored);
     if (isFresh(latest, now) || process.env.FX_AUTO_REFRESH === 'false') return latest;
     if (inflight) return inflight;
     if (now - lastAttemptAt < RETRY_MS) return latest;

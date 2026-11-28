@@ -99,6 +99,19 @@ describe('USD reference rate', { concurrency: false }, () => {
         assert.equal(a, b);
     });
 
+    it('a late Mongo read never replaces the snapshot another request just fetched', async () => {
+        // Many callers race: one fetches and stores while the others are still reading Mongo.
+        for (let round = 0; round < 25; round += 1) {
+            resetExchangeRateCache();
+            await ExchangeRate.deleteMany({});
+            const fetchImpl = fakeFetch(ok(payload()));
+            const results = await Promise.all(Array.from({ length: 8 }, () => getUsdRate({ now, fetchImpl })));
+            assert.equal(fetchImpl.calls.length, 1, 'round ' + round);
+            for (const result of results) assert.equal(result, results[0], 'round ' + round);
+            assert.equal(await getUsdRate({ now, fetchImpl }), results[0], 'round ' + round);
+        }
+    });
+
     it('keeps the last known rate when the provider fails, and backs off', async () => {
         await getUsdRate({ now, fetchImpl: fakeFetch(ok(payload())) });
         const stale = now + REFRESH_MS + 1;
