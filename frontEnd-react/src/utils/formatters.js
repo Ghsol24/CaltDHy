@@ -1,5 +1,5 @@
 import { getIntlLocale, normalizeLocale, translate } from '../i18n/translations.js';
-import { exchangeRateConfig, hasUsableUsdRate } from './exchangeRate.js';
+import { getActiveUsdRate, hasUsableUsdRate } from './exchangeRate.js';
 
 const LANG_KEY = 'caltdhy_lang';
 const CURRENCY_KEY = 'caltdhy_curr';
@@ -34,7 +34,8 @@ function getDateFormatter(locale, options) {
 }
 
 function configuredRate() {
-  return hasUsableUsdRate() ? exchangeRateConfig.vndPerUsd : null;
+  const rate = getActiveUsdRate();
+  return hasUsableUsdRate(rate) ? rate.vndPerUsd : null;
 }
 
 function getActiveLocale() {

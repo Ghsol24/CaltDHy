@@ -195,6 +195,8 @@ app.use('/api/spending', checkDbReady, require('./routes/spending'));
 app.use('/api/debts', checkDbReady, require('./routes/debts'));
 app.use('/api/jars', checkDbReady, require('./routes/jars'));
 app.use('/api/wallets', checkDbReady, require('./routes/wallets'));
+// Không dùng checkDbReady: khi Mongo chưa sẵn sàng vẫn trả được bản tỷ giá trong bộ nhớ.
+app.use('/api/fx', require('./routes/fx'));
 app.use('/api', (req, res) => {
     res.status(404).json({ success: false, message: 'API không tồn tại.' });
 });
@@ -344,6 +346,8 @@ if (require.main === module) {
         });
         console.log('[server] ready');
         startReminders();
+        // Lấy sẵn tỷ giá ở nền; lỗi hay chậm cũng không ảnh hưởng việc phục vụ request.
+        require('./utils/exchangeRate').getUsdRate().catch(() => console.error('[fx] warmup_failed'));
     }
 
     void start().catch(() => {

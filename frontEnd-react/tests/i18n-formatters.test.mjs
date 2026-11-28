@@ -42,9 +42,11 @@ test('date, number and currency output follows each locale', () => {
 });
 
 test('USD conversion is display-only and requires an explicitly supplied rate', () => {
-  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: 'Provider', asOf: '2026-09-23' }), true);
-  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: '', asOf: '2026-09-23' }), false);
-  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: 'Provider', asOf: '2026-02-30' }), false);
+  const now = Date.parse('2026-09-24T00:00:00Z');
+  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: 'Provider', asOf: '2026-09-23' }, { now }), true);
+  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: '', asOf: '2026-09-23' }, { now }), false);
+  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: 'Provider', asOf: '2026-02-30' }, { now }), false);
+  assert.equal(hasUsableUsdRate({ vndPerUsd: 27000, source: 'Provider', asOf: '2026-09-16' }, { now }), false, 'older than 7 days');
   assert.equal(convertVndForDisplay(27000, { currency: 'USD', vndPerUsd: 27000 }), 1);
   assert.equal(formatCurrency(27000, { locale: 'en', currency: 'USD', vndPerUsd: 27000 }), '$1.00');
 
