@@ -12,7 +12,7 @@ import { useBudgetCopy } from './budgetCopy';
 import { useTranslation } from '../../i18n/useTranslation';
 import { DEFAULT_EXPENSE_CATEGORIES, getCategoryIcon } from '../../utils/categories';
 import { AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
-import { calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/financeMath';
+import { BUDGET_WARN_PERCENT, calculateAvailableToSpend, calculateMonthlyStats } from '../../utils/financeMath';
 import { formatCurrency, formatDate, formatInputNumber, formatPercent, getLocalMonthString } from '../../utils/formatters';
 import { BREAKPOINTS } from '../../hooks/useMediaQuery';
 
@@ -455,7 +455,7 @@ export function BudgetEditModal({ isOpen, onClose, initialCategory = null }) {
                 const limit = parseAmount(row.input);
                 const spent = spentByCategory[row.name] || 0;
                 const percent = limit ? Math.round((spent * 100) / limit) : 0;
-                const tone = limit && spent > limit ? 'over' : limit && percent >= 80 ? 'warn' : 'normal';
+                const tone = limit && spent > limit ? 'over' : limit && percent >= BUDGET_WARN_PERCENT ? 'warn' : 'normal';
                 const isDeleting = deletingName === row.name;
                 const spentId = safeDomId('blimit-spent', row.name);
                 const confirmId = safeDomId('blimit-confirm', row.name);

@@ -26,15 +26,15 @@ function BudgetPill({ cat }) {
   const { isOver, isMaxed, isWarning } = budgetState(cat);
   if (!cat.limit) return <span className="budget-status-pill budget-status-pill--unset">Chưa đặt</span>;
   if (isOver) {
-    return <span className="budget-status-pill budget-status-pill--danger"><AlertTriangleOutlineIcon size={12} />Vượt ({cat.budgetStatus.percent}%)</span>;
+    return <span className="budget-status-pill budget-status-pill--danger"><AlertTriangleOutlineIcon size={12} />{`Vượt (${cat.budgetStatus.percent}%)`}</span>;
   }
   if (isMaxed) {
-    return <span className="budget-status-pill budget-status-pill--warning"><ZapOutlineIcon size={12} />Chạm ({cat.budgetStatus.percent}%)</span>;
+    return <span className="budget-status-pill budget-status-pill--warning"><ZapOutlineIcon size={12} />{`Chạm (${cat.budgetStatus.percent}%)`}</span>;
   }
   if (isWarning) {
-    return <span className="budget-status-pill budget-status-pill--warning"><ZapOutlineIcon size={12} />Cận trần ({cat.budgetStatus.percent}%)</span>;
+    return <span className="budget-status-pill budget-status-pill--warning"><ZapOutlineIcon size={12} />{`Cận trần (${cat.budgetStatus.percent}%)`}</span>;
   }
-  return <span className="budget-status-pill budget-status-pill--safe"><CheckOutlineIcon size={12} />An toàn ({cat.budgetStatus.percent}%)</span>;
+  return <span className="budget-status-pill budget-status-pill--safe"><CheckOutlineIcon size={12} />{`An toàn (${cat.budgetStatus.percent}%)`}</span>;
 }
 
 /**
@@ -144,7 +144,7 @@ export function ReportCategoryTable({ activeMonth, curQuarterMonths, reportData,
                 <td>
                   <div className="table-delta-cell">
                     <span className={`delta-badge ${DELTA_CLASS[delta.type] || 'delta-badge--neutral'}`}>{delta.text}</span>
-                    <span className="table-delta-sub">Kỳ trước: {formatCurrency(cat.spentPrev)}</span>
+                    <span className="table-delta-sub">{`Kỳ trước: ${formatCurrency(cat.spentPrev)}`}</span>
                   </div>
                 </td>
 

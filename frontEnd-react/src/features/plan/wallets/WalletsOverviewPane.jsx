@@ -46,7 +46,7 @@ export function WalletsOverviewPane({ wallets, transactions, walletMap, included
           <dt>Chuyển giữa các ví</dt>
           <dd>
             {formatCurrency(flow.transferAmount)}
-            <span className="wallet-pane-stat-sub">{flow.transferCount} lần</span>
+            <span className="wallet-pane-stat-sub">{`${flow.transferCount} lần`}</span>
           </dd>
         </div>
       </dl>

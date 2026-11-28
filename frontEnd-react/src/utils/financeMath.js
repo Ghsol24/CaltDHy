@@ -176,6 +176,9 @@ export function calculateMonthlyStats(transactions = [], monthPrefix = '') {
  * @param {number} limit - Hạn mức ngân sách
  * @returns {{ percent: number, remaining: number, status: 'normal'|'warning'|'danger', isOver: boolean }}
  */
+/** Share of a budget limit at which the app starts warning (Home, Plan, Budgets, landing copy). */
+export const BUDGET_WARN_PERCENT = 80;
+
 export function getBudgetStatus(spent = 0, limit = 0) {
   const numSpent = Number(spent) || 0;
   const numLimit = Number(limit) || 0;
@@ -196,7 +199,7 @@ export function getBudgetStatus(spent = 0, limit = 0) {
   let status = 'normal';
   if (percent >= 100) {
     status = 'danger';
-  } else if (percent >= 75) {
+  } else if (percent >= BUDGET_WARN_PERCENT) {
     status = 'warning';
   }
 

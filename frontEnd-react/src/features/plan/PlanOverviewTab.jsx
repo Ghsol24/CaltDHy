@@ -7,7 +7,7 @@ import { useJarStore } from '../../stores/useJarStore';
 import { WalletModal } from './WalletModal';
 import { BudgetEditModal } from './BudgetEditModal';
 import { RecurringModal } from './RecurringModal';
-import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
+import { BUDGET_WARN_PERCENT, calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, formatPercent, getRecurringTier, getCalendarDateParts, getLocalMonthString } from '../../utils/formatters';
 import { getCategoryIcon } from '../../utils/categories';
 import { WalletOutlineIcon } from '../../components/ui/WalletOutlineIcon';
@@ -285,9 +285,9 @@ export function PlanOverviewTab() {
           </div>
 
           <div className="metric-card-bottom-row">
-            <span className="metric-sub-left">{wallets.length} tài khoản</span>
+            <span className="metric-sub-left">{`${wallets.length} tài khoản`}</span>
             <span className="metric-sub-trend">
-              <span className="trend-note">{wallets.filter((w) => !w.archived).length} đang hoạt động</span>
+              <span className="trend-note">{`${wallets.filter((w) => !w.archived).length} đang hoạt động`}</span>
             </span>
           </div>
         </div>
@@ -315,9 +315,9 @@ export function PlanOverviewTab() {
           </div>
 
           <div className="metric-card-bottom-row">
-            <span className="metric-sub-left">Trong tháng {currentMonthNum}</span>
+            <span className="metric-sub-left">{`Trong tháng ${currentMonthNum}`}</span>
             {hasAnyBudgetLimit && totalBudgetLimit > 0 ? (
-              <span className={`metric-sub-trend ${budgetUsagePercent >= 100 ? 'trend-down' : budgetUsagePercent >= 80 ? 'plan-trend-warning' : 'trend-positive'}`}>
+              <span className={`metric-sub-trend ${budgetUsagePercent >= 100 ? 'trend-down' : budgetUsagePercent >= BUDGET_WARN_PERCENT ? 'plan-trend-warning' : 'trend-positive'}`}>
                 {Math.round(budgetUsagePercent)}% <span className="trend-note">đã dùng</span>
               </span>
             ) : (
@@ -337,13 +337,13 @@ export function PlanOverviewTab() {
             <div className="metric-titles">
               <span className="plan-metric-label">Chi phí định kỳ (ước tính)</span>
               <strong className="plan-metric-value">
-                ~{formatCurrency(Math.round(monthlyEstimatedCost))} / tháng
+                {`~${formatCurrency(Math.round(monthlyEstimatedCost))} / tháng`}
               </strong>
             </div>
           </div>
 
           <div className="metric-card-bottom-row">
-            <span className="metric-sub-left">{activeInstallments.length} khoản đang theo dõi</span>
+            <span className="metric-sub-left">{`${activeInstallments.length} khoản đang theo dõi`}</span>
             <span className="metric-sub-trend">
               <span className="trend-note">Ước tính tháng</span>
             </span>
@@ -439,7 +439,7 @@ export function PlanOverviewTab() {
         {/* ── CỘT 2: Ngân sách tháng [X] ── */}
         <div className="plan-column-card">
           <div className="column-card-header">
-            <h2 className="column-card-title">Ngân sách tháng {currentMonthNum}</h2>
+            <h2 className="column-card-title">{`Ngân sách tháng ${currentMonthNum}`}</h2>
             <button
               type="button"
               className="column-card-view-all"
@@ -468,7 +468,7 @@ export function PlanOverviewTab() {
                 {topBudgetCategories.map((cat) => {
                   const percent = cat.hasLimit ? cat.percent : 0;
                   const isDanger = percent >= 100;
-                  const isWarning = percent >= 80 && percent < 100;
+                  const isWarning = percent >= BUDGET_WARN_PERCENT && percent < 100;
                   const barWidth = Math.min(100, percent);
 
                   return (

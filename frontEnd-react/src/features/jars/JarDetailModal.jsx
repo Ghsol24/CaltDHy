@@ -157,7 +157,7 @@ export function JarDetailModal({
                 <span>Kế hoạch tích lũy gợi ý</span>
               </div>
               <p className="jar-detail-roadmap-box__p--text">
-                Còn <strong className="jar-detail-roadmap-box__strong--tone">{daysRemaining} ngày</strong> nữa để về đích. Bạn có thể phân bổ:
+                <strong className="jar-detail-roadmap-box__strong--tone">{`${daysRemaining} ngày`}</strong>{' nữa là đến hạn. Bạn có thể phân bổ:'}
               </p>
               <div className="jar-detail-roadmap-box__div--layout2">
                 <div className="jar-detail-roadmap-box__div--box">
@@ -186,7 +186,7 @@ export function JarDetailModal({
           <div className="jar-detail-body__div--layout3">
             <div className="jar-detail-body__div--layout4">
               <h4 className="jar-detail-body__h4--text">
-                Lịch sử nạp / rút ({history.length})
+                {`Lịch sử nạp / rút (${history.length})`}
               </h4>
             </div>
 

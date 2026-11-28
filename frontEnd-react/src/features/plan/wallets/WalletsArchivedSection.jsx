@@ -26,7 +26,7 @@ export function WalletsArchivedSection({ archivedWallets, handleUnarchive, isArc
             <Icon name="archive" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </div>
           <div className="wallet-archived-section__div--text">
-            <strong className="wallet-archived-section__strong--text">Ví đã lưu trữ ({archivedWallets.length})</strong>
+            <strong className="wallet-archived-section__strong--text">{`Ví đã lưu trữ (${archivedWallets.length})`}</strong>
             <div className="wallet-archived-section__div--text2">
               Các ví đã đóng không còn sử dụng nhưng vẫn bảo toàn lịch sử giao dịch
             </div>

@@ -1,6 +1,6 @@
 import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
@@ -64,6 +64,7 @@ export const LoginPage = () => {
   const beginSignature = useSignatureLoginStore((state) => state.begin);
   const succeedSignature = useSignatureLoginStore((state) => state.succeed);
   const failSignature = useSignatureLoginStore((state) => state.fail);
+  const signatureState = useSignatureLoginStore((state) => state.state);
   const attemptRef = useRef(null);
 
   useEffect(() => {
@@ -160,6 +161,12 @@ export const LoginPage = () => {
     }
   };
 
+  // Already signed in (another tab, back button, bookmark): skip the form. Not
+  // while this page's own sign-in animation runs; that one navigates by itself.
+  if (authStatus === 'authenticated' && !oauthStep && !isSubmitting && signatureState === 'idle') {
+    return <Navigate to="/spending/home" replace />;
+  }
+
   if (oauthStep === 'link' || oauthStep === 'verify') {
     return (
       <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
@@ -181,11 +188,10 @@ export const LoginPage = () => {
   }
 
   return (
-    <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
+    <PublicPageShell>
       <IndustrialPanel
         title={navCopy.auth.loginCardTitle}
         subtitle={navCopy.auth.loginCardSub}
-        headingLevel="h2"
       >
         <form id="loginForm" onSubmit={handleSubmit} noValidate>
           <FloatingInput

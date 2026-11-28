@@ -4,6 +4,7 @@ import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { BudgetEditModal } from './BudgetEditModal';
 import { formatCurrency, formatPercent, formatDate, formatMonthYear, getLocalMonthString } from '../../utils/formatters';
+import { BUDGET_WARN_PERCENT } from '../../utils/financeMath';
 import { monthPeriod, shiftMonth } from '../../utils/budgetPeriod';
 import { buildBudgetModel } from '../../utils/budgetModel';
 import { BulbOutlineIcon, AlertTriangleOutlineIcon } from '../../utils/categoryIcons';
@@ -16,7 +17,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { useCommandRequest } from '../../hooks/useCommandRequest';
 // Colour follows how much of a limit is used, never the category itself.
-const WARN_PERCENT = 80;
+const WARN_PERCENT = BUDGET_WARN_PERCENT;
 // How far (in percentage points) spending may run ahead of the calendar before
 // the month is flagged as "spending faster than planned".
 const PACE_TOLERANCE = 10;

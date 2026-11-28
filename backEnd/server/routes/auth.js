@@ -114,7 +114,9 @@ router.post('/logout', async (req, res) => {
 
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, inviteToken } = req.body || {};
+        const { name, email, password, inviteToken, locale } = req.body || {};
+        // Language picked on the landing/sign-up page; reminder emails start in it.
+        const notificationLocale = ['vi', 'en', 'zh-CN'].includes(locale) ? locale : 'vi';
         if (typeof name !== 'string' || !name.trim() || name.trim().length > 100 ||
             !validEmail(email) || !validPassword(password)) {
             return res.status(400).json({ success: false,
@@ -138,7 +140,8 @@ router.post('/register', async (req, res) => {
                 }
             }
             const [user] = await User.create([{
-                name: name.trim(), email: normalizeEmail(email), password: passwordHash, emailVerified: false
+                name: name.trim(), email: normalizeEmail(email), password: passwordHash, emailVerified: false,
+                preferences: { notifications: { locale: notificationLocale } }
             }], { session });
             await Wallet.create([{ userId: user._id, name: 'Tiền mặt', type: 'cash',
                 icon: '💵', initialBalance: 0, isDefault: true }], { session });

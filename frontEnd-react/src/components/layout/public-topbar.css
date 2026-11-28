@@ -742,6 +742,11 @@ html[data-scrolling] .lp-glass {
 
 /* ── Tablet & Mobile Responsive Liquid Glass Header ── */
 @media (max-width: 1080px) {
+  /* Narrow headers keep one account action; the hero and the mobile menu offer sign-up. */
+  .lp-nav-cta--signup {
+    display: none;
+  }
+
   .lp-header-inner {
     grid-template-columns: auto auto auto;
     justify-content: space-between;

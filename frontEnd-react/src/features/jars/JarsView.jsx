@@ -340,7 +340,7 @@ export function JarsView() {
         {!isLoading && pageCount > 1 && (
           <nav className="jars-pagination" aria-label="Phân trang danh sách hũ">
             <span className="jars-pagination__summary">
-              {Math.min((currentPage - 1) * JARS_PER_PAGE + 1, jars.length)}–{Math.min(currentPage * JARS_PER_PAGE, jars.length)} / {jars.length} hũ
+              {`${Math.min((currentPage - 1) * JARS_PER_PAGE + 1, jars.length)}–${Math.min(currentPage * JARS_PER_PAGE, jars.length)} / ${jars.length} hũ`}
             </span>
             <div className="jars-pagination__controls">
               <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} aria-label="Trang hũ trước">‹</button>

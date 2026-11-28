@@ -1,7 +1,8 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useId, useMemo, useRef, useState } from 'react';
 import { BrandMark } from '../../components/ui/BrandMark';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { LandingIcon } from './LandingIcons';
+import { buildSampleCalendar, fillSample } from './landingSample';
 
 const TAB_IDS = ['home', 'plan', 'analytics', 'jars'];
 
@@ -25,7 +26,8 @@ export function LandingAppPreview({ copy, lang }) {
   const [activeTab, setActiveTab] = useState('home');
   const tabRefs = useRef({});
   const baseId = useId();
-  const p = copy.preview;
+  const sample = useMemo(() => buildSampleCalendar(lang), [lang]);
+  const p = useMemo(() => fillSample(copy.preview, sample.tokens), [copy, sample]);
 
   const monthLabel = formatDate(new Date(), 'month', { locale: lang });
 
@@ -334,7 +336,7 @@ export function LandingAppPreview({ copy, lang }) {
                     </div>
                     <div className="lp-track lp-track--lg">
                       <span className="lp-fill lp-fill--success" style={{ width: '65%' }} />
-                      <span className="lp-today-marker" style={{ left: '43%' }} aria-hidden="true" />
+                      <span className="lp-today-marker" style={{ left: `${sample.todayPercent}%` }} aria-hidden="true" />
                     </div>
                     <div className="lp-today-caption">{p.budgets.todayMarker}</div>
                   </div>
@@ -342,13 +344,13 @@ export function LandingAppPreview({ copy, lang }) {
                   <div className="lp-budget-kpis">
                     <div className="lp-budget-kpi">
                       <span className="lp-muted-label">{p.budgets.dailyLimitLabel}</span>
-                      <strong className="lp-stat-num">{formatCurrency(88000)}</strong>
+                      <strong className="lp-stat-num">{formatCurrency(sample.dailyCap)}</strong>
                       <span className="lp-muted-caption">{p.budgets.dailyLimitSub}</span>
                     </div>
                     <div className="lp-budget-kpi">
-                      <span className="lp-muted-label">{p.budgets.rolloverLabel}</span>
-                      <strong className="lp-stat-num lp-stat-num--success">{p.budgets.rolloverOn}</strong>
-                      <span className="lp-muted-caption">{p.budgets.rolloverSub}</span>
+                      <span className="lp-muted-label">{p.budgets.daysLeftLabel}</span>
+                      <strong className="lp-stat-num">{p.budgets.daysLeftValue}</strong>
+                      <span className="lp-muted-caption">{p.budgets.prevNote}</span>
                     </div>
                   </div>
                 </div>
@@ -457,12 +459,12 @@ export function LandingAppPreview({ copy, lang }) {
 
                     <div className="lp-analytics-bars" aria-hidden="true">
                       {TREND_SERIES.map((pair, idx) => (
-                        <div key={p.analytics.months[idx]} className="lp-analytics-bar-col">
+                        <div key={sample.months[idx]} className="lp-analytics-bar-col">
                           <div className="lp-analytics-bar-pair">
                             <span className="lp-bar lp-bar--lg lp-bar--in" style={{ height: `${pair.inH}%` }} />
                             <span className="lp-bar lp-bar--lg lp-bar--out" style={{ height: `${pair.outH}%` }} />
                           </div>
-                          <span className="lp-mini-month">{p.analytics.months[idx]}</span>
+                          <span className="lp-mini-month">{sample.months[idx]}</span>
                         </div>
                       ))}
                     </div>

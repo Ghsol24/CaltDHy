@@ -4,13 +4,15 @@ const initialState = {
   attemptId: 0,
   state: 'idle',
   startedAt: 0,
+  // 'login' or 'signup': same animation, different words.
+  kind: 'login',
 };
 
 export const useSignatureLoginStore = create((set, get) => ({
   ...initialState,
-  begin: () => {
+  begin: (kind = 'login') => {
     const attemptId = get().attemptId + 1;
-    set({ attemptId, state: 'pending', startedAt: performance.now() });
+    set({ attemptId, state: 'pending', startedAt: performance.now(), kind });
     return attemptId;
   },
   succeed: (attemptId) => {

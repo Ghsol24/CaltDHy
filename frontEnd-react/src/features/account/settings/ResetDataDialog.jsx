@@ -26,7 +26,7 @@ export function ResetDataDialog({ handleConfirmResetData, isResetDialogOpen, isR
           </p>
     
           <ul className="account-reset-list">
-            <li>Toàn bộ {transactions?.length || 0} giao dịch đã ghi nhận</li>
+            <li>{`Toàn bộ ${transactions?.length || 0} giao dịch đã ghi nhận`}</li>
             <li>Tất cả cấu hình hạn mức ngân sách tháng</li>
             <li>Lịch sử thống kê và phân tích dòng tiền</li>
           </ul>

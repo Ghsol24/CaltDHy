@@ -26,8 +26,14 @@ function progressAt(elapsed) {
 
 const motionOff = () => document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function SignatureLoginAttempt({ attemptId, state, startedAt }) {
+const COPY_KEYS = {
+  login: { title: 'auth.signatureTitle', connecting: 'auth.signatureConnecting', verifying: 'auth.signatureVerifying', success: 'auth.signatureSuccess' },
+  signup: { title: 'auth.signatureTitleNew', connecting: 'auth.signatureCreating', verifying: 'auth.signaturePreparing', success: 'auth.signatureSuccessNew' },
+};
+
+function SignatureLoginAttempt({ attemptId, state, startedAt, kind }) {
   const { t } = useTranslation();
+  const keys = COPY_KEYS[kind] || COPY_KEYS.login;
   const navigate = useNavigate();
   const location = useLocation();
   const close = useSignatureLoginStore((store) => store.close);
@@ -204,20 +210,20 @@ function SignatureLoginAttempt({ attemptId, state, startedAt }) {
   }, [state, location.pathname, attemptId, close]);
 
   const complete = state === 'success';
-  const message = complete ? t('auth.signatureSuccess')
-    : progress < 33 ? t('auth.signatureConnecting') : t('auth.signatureVerifying');
+  const message = complete ? t(keys.success)
+    : progress < 33 ? t(keys.connecting) : t(keys.verifying);
   const shownProgress = complete && progress >= 99.95 ? '100'
     : progress < 70 ? String(Math.floor(progress)) : progress.toFixed(1);
 
   return (
     <div ref={overlayRef} className={`signature-login${complete ? ' is-success' : ''}${state === 'failure' ? ' is-failure' : ''}${arriving ? ' is-arriving' : ''}${exiting ? ' is-exiting' : ''}`}
-      role="dialog" aria-modal="true" aria-label={t('auth.signatureTitle')} tabIndex={-1}
+      role="dialog" aria-modal="true" aria-label={t(keys.title)} tabIndex={-1}
       onKeyDown={(event) => { if (event.key === 'Tab') event.preventDefault(); }}>
       <div ref={backdropRef} className="signature-login__backdrop" aria-hidden="true" />
       {!quiet && <AmbientCoins />}
       <div className="signature-login__content">
         <header className="signature-login__header">
-          <h1>{t('auth.signatureTitle')}</h1>
+          <h1>{t(keys.title)}</h1>
           <div className="signature-login__beats" aria-hidden="true">
             {Array.from({ length: 5 }, (_, index) => <span key={index} />)}
           </div>
@@ -245,8 +251,9 @@ export function SignatureLoginOverlay() {
   const attemptId = useSignatureLoginStore((store) => store.attemptId);
   const state = useSignatureLoginStore((store) => store.state);
   const startedAt = useSignatureLoginStore((store) => store.startedAt);
+  const kind = useSignatureLoginStore((store) => store.kind);
   if (state === 'idle') return null;
   // Keep the full-screen layer independent of route layout and stacking contexts.
   return createPortal(<SignatureLoginAttempt key={attemptId} attemptId={attemptId}
-    state={state} startedAt={startedAt} />, document.body);
+    state={state} startedAt={startedAt} kind={kind} />, document.body);
 }

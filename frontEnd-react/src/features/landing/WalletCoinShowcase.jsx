@@ -50,11 +50,16 @@ export function WalletCoinShowcase({ copy }) {
 
     // Bidirectional threshold observer (no once: true) so coins fan out when entering
     // and smoothly suck back into the mouse's wallet when scrolling past or back up.
+    // A tap overrides scrolling until the section actually enters or leaves view;
+    // crossing the in-between thresholds must not undo it.
+    let wasVisible = null;
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (!entry) return;
         const visible = entry.isIntersecting && entry.intersectionRatio >= 0.35;
+        if (visible === wasVisible) return;
+        wasVisible = visible;
         setInView(visible);
         setManualState(null);
       },
@@ -213,6 +218,7 @@ export function WalletCoinShowcase({ copy }) {
             </svg>
           </button>
         </div>
+        <p className="lp-wallet-hint" aria-hidden="true">{w.hint}</p>
       </div>
     </section>
   );

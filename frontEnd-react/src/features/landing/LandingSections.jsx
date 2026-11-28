@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { THEME_OPTIONS } from '../../utils/themes';
 import { translate } from '../../i18n/translations';
@@ -6,6 +6,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { switchThemeWithTransition } from '../../utils/themeTransition';
 import { LandingIcon } from './LandingIcons';
 import { WalletCoinShowcase } from './WalletCoinShowcase';
+import { buildSampleCalendar } from './landingSample';
 
 const LANGUAGES = [
   { id: 'vi', label: 'Tiếng Việt' },
@@ -34,6 +35,7 @@ export function LandingSections({
   onPrefetchSignup,
 }) {
   const f = copy.features;
+  const sampleMonths = useMemo(() => buildSampleCalendar(lang).months, [lang]);
   const th = copy.themes;
   const sec = copy.security;
   const dev = copy.devices;
@@ -154,7 +156,7 @@ export function LandingSections({
               </div>
             </article>
 
-            {/* Card 4: Recurring & personal debts */}
+            {/* Card 4: Recurring bills and income */}
             <article className="lp-bento-card">
               <div className="lp-bento-copy">
                 <span className="lp-feature-icon">
@@ -173,8 +175,8 @@ export function LandingSections({
                     <span className="lp-tone-pill lp-tone-pill--primary">{f.debts.billAction}</span>
                   </div>
                   <div className="lp-mini-debt-strip">
-                    <LandingIcon name="swap" size={14} />
-                    <span>{f.debts.debtLabel}</span>
+                    <LandingIcon name="check" size={14} />
+                    <span>{f.debts.incomeLabel}</span>
                   </div>
                 </div>
               </div>
@@ -193,12 +195,12 @@ export function LandingSections({
                 <div className="lp-mini-chart">
                   <div className="lp-mini-bars">
                     {FLOW_BARS.map((pair, idx) => (
-                      <div key={f.analytics.months[idx]} className="lp-mini-bar-col">
+                      <div key={sampleMonths[idx]} className="lp-mini-bar-col">
                         <div className="lp-mini-bar-pair">
                           <span className="lp-bar lp-bar--in" style={{ height: `${pair.inH}%` }} />
                           <span className="lp-bar lp-bar--out" style={{ height: `${pair.outH}%` }} />
                         </div>
-                        <span className="lp-mini-month">{f.analytics.months[idx]}</span>
+                        <span className="lp-mini-month">{sampleMonths[idx]}</span>
                       </div>
                     ))}
                   </div>

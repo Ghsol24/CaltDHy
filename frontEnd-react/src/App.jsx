@@ -69,8 +69,8 @@ function SignatureLoginHost() {
   const [{ Component: Overlay, failed }, setOverlay] = useState({});
 
   useEffect(() => {
-    if (Overlay || failed || pathname !== '/login') return;
-    // Fetch the animation alongside the login page, without charging returning
+    if (Overlay || failed || (pathname !== '/login' && pathname !== '/signup')) return;
+    // Fetch the animation alongside the login and signup pages, without charging returning
     // sessions or visitors for an effect they never display.
     import('./components/ui/SignatureLoginOverlay').then(
       (module) => setOverlay({ Component: module.SignatureLoginOverlay }),

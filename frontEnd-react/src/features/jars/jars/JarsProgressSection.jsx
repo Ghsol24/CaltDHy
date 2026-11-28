@@ -86,7 +86,7 @@ export function JarsProgressSection({ handleDeposit, navigateTo, progressOvervie
             </div>
             {progressOverview.onTrack.length > 0 && (
               <span className="jars-status-tag jars-status-tag--ontrack">
-                {progressOverview.onTrack.length} mục tiêu
+                {`${progressOverview.onTrack.length} mục tiêu`}
               </span>
             )}
           </div>
@@ -145,7 +145,7 @@ export function JarsProgressSection({ handleDeposit, navigateTo, progressOvervie
             </div>
             {progressOverview.needsAttention.length > 0 && (
               <span className="jars-status-tag jars-status-tag--attention">
-                {progressOverview.needsAttention.length} mục tiêu
+                {`${progressOverview.needsAttention.length} mục tiêu`}
               </span>
             )}
           </div>
