@@ -65,8 +65,9 @@ async function browser() {
             return response;
         },
         // Clicks "Continue with <provider>", signs in at the provider as `identity`, and follows the redirect back.
-        async social(provider, identity, { invite, state } = {}) {
-            const start = await agent.get('/api/auth/oauth/' + provider + '/start' + (invite ? '?invite=' + invite : ''));
+        async social(provider, identity, { invite, state, locale } = {}) {
+            const start = await agent.get('/api/auth/oauth/' + provider + '/start')
+                .query({ ...(invite ? { invite } : {}), ...(locale !== undefined ? { locale } : {}) });
             assert.equal(start.status, 303);
             const target = new URL(start.headers.location);
             next = { ...identity, nonce: target.searchParams.get('nonce') };
@@ -155,7 +156,7 @@ describe('Google / Facebook sign-in', { concurrency: false }, () => {
     it('creates a passwordless account for a new Google user and signs the same person in next time', async () => {
         const c = await browser(), email = newEmail(), sub = newSub();
         const first = await c.social('google', { sub, email: email.toUpperCase(), name: 'New Person' });
-        assert.equal(first.location, '/login?oauth=done');
+        assert.equal(first.location, '/login?oauth=done&new=1');
         const exchange = providerCalls.at(-1);
         assert.match(exchange.body, /code_verifier=/);
         assert.match(exchange.body, /client_secret=synthetic-google-secret/);
@@ -173,6 +174,31 @@ describe('Google / Facebook sign-in', { concurrency: false }, () => {
         assert.equal((await again.social('google', { sub, email, name: 'Renamed At Google' })).location, '/login?oauth=done');
         assert.equal((await again.session()).body.user.id, session.body.user.id);
         assert.equal(await User.countDocuments({ email }), 1);
+    });
+
+    it('gives a new social account the interface language it started from, and never changes an existing one', async () => {
+        const localeOf = async email => (await User.findOne({ email }).lean()).preferences?.notifications?.locale;
+        for (const [provider, locale, expected] of [['google', 'en', 'en'], ['facebook', 'zh-CN', 'zh-CN'],
+            ['google', 'fr', 'vi'], ['google', 'zh', 'vi'], ['facebook', undefined, 'vi']]) {
+            const email = newEmail();
+            const back = await (await browser()).social(provider, { sub: newSub(), email, name: 'Locale ' + locale }, { locale });
+            assert.equal(back.location, '/login?oauth=done&new=1', String(locale));
+            assert.equal(await localeOf(email), expected, String(locale));
+        }
+        // Signing in again from another language is a returning member: no "new" greeting, settings untouched.
+        const email = newEmail(), sub = newSub();
+        await (await browser()).social('google', { sub, email, name: 'Returning' }, { locale: 'en' });
+        const again = await (await browser()).social('google', { sub, email, name: 'Returning' }, { locale: 'zh-CN' });
+        assert.equal(again.location, '/login?oauth=done');
+        assert.equal(await localeOf(email), 'en');
+        // Linking into an existing password account keeps that account's own language too.
+        const ownerEmail = newEmail();
+        assert.equal((await (await browser()).send('post', 'register', { name: 'Owner', email: ownerEmail, password, locale: 'en' })).status, 201);
+        const c = await browser();
+        assert.equal((await c.social('google', { sub: newSub(), email: ownerEmail, name: 'Owner' }, { locale: 'zh-CN' })).location,
+            '/login?oauth=link');
+        assert.equal((await c.send('post', 'oauth/complete', { password })).status, 200);
+        assert.equal(await localeOf(ownerEmail), 'en');
     });
 
     it('treats a passwordless account safely everywhere a password used to be assumed', async () => {
@@ -268,7 +294,7 @@ describe('Google / Facebook sign-in', { concurrency: false }, () => {
         const c = await browser();
         assert.equal((await c.social('facebook', { sub: newSub(), name: 'Phone Only' })).location, '/login?oauth_error=no_email');
         const email = newEmail(), sub = newSub();
-        assert.equal((await c.social('facebook', { sub, email, name: 'Facebook Person' })).location, '/login?oauth=done');
+        assert.equal((await c.social('facebook', { sub, email, name: 'Facebook Person' })).location, '/login?oauth=done&new=1');
         const me = (await c.session()).body.user;
         // Facebook does not vouch for the address, so it stays unverified.
         assert.deepEqual([me.emailVerified, me.hasPassword, me.linkedProviders], [false, false, ['facebook']]);
@@ -410,7 +436,7 @@ describe('Google / Facebook sign-in', { concurrency: false }, () => {
             assert.equal(await User.countDocuments({ email }), 0);
             assert.equal((await Invitation.findOne({ email }).lean()).usedAt, null);
             const sub = newSub();
-            assert.equal((await c.social('google', { sub, email, name: 'Invited' }, { invite: token })).location, '/login?oauth=done');
+            assert.equal((await c.social('google', { sub, email, name: 'Invited' }, { invite: token })).location, '/login?oauth=done&new=1');
             assert.ok((await Invitation.findOne({ email }).lean()).usedAt);
             // Existing members keep signing in without an invite.
             assert.equal((await (await browser()).social('google', { sub, email, name: 'Invited' })).location, '/login?oauth=done');

@@ -28,6 +28,8 @@ const { writeTicket, readTicket, clearTicket } = require('../utils/oauthTickets'
 
 const USER_FIELDS = '+password +authVersion +oauth.googleId +oauth.facebookId';
 const EXPIRED = 'Phiên liên kết đã hết hạn. Hãy đăng nhập lại bằng Google hoặc Facebook.';
+// Ngôn ngữ giao diện lúc bấm nút: tài khoản mới tạo qua Google/Facebook nhận thông báo bằng đúng ngôn ngữ đó.
+const LOCALES = ['vi', 'en', 'zh-CN'];
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 const field = provider => 'oauth.' + provider + 'Id';
 const sameText = (a, b) => typeof a === 'string' && typeof b === 'string' && a.length === b.length &&
@@ -106,8 +108,9 @@ module.exports = function oauthRoutes({ consumeSecondFactor, TWO_FACTOR_FIELDS }
         try {
             const attempt = newAttempt();
             const invite = typeof req.query.invite === 'string' && /^[a-f0-9]{64}$/.test(req.query.invite) ? req.query.invite : null;
+            const locale = LOCALES.includes(req.query.locale) ? req.query.locale : 'vi';
             clearTicket(res, 'pending');
-            writeTicket(res, 'attempt', { provider: config.provider, ...attempt, invite });
+            writeTicket(res, 'attempt', { provider: config.provider, ...attempt, invite, locale });
             return res.redirect(303, authorizationUrl(config, attempt));
         } catch {
             console.error('[auth] oauth_start_failed');
@@ -183,14 +186,16 @@ module.exports = function oauthRoutes({ consumeSecondFactor, TWO_FACTOR_FIELDS }
                 }
                 const [user] = await User.create([{
                     name: profile.name, email: profile.email, emailVerified: profile.emailVerified,
-                    oauth: { [provider + 'Id']: profile.sub }
+                    oauth: { [provider + 'Id']: profile.sub },
+                    preferences: { notifications: { locale: LOCALES.includes(attempt.locale) ? attempt.locale : 'vi' } }
                 }], { session });
                 await Wallet.create([{ userId: user._id, name: 'Tiền mặt', type: 'cash', icon: '💵', initialBalance: 0, isDefault: true }], { session });
                 await revokeSession(req, session);
                 return createSession(user, session, req);
             });
             setSession(req, res, issued);
-            return backToLogin(res, 'oauth=done');
+            // new=1 chỉ đổi lời chào ("Tạo tài khoản…") trên màn chào; người dùng tự biết điều này nên không lộ gì thêm.
+            return backToLogin(res, 'oauth=done&new=1');
         } catch (error) {
             if (error?.code === 'INVITE_INVALID') return fail(res, 'invite_required');
             console.error('[auth] oauth_callback_failed');

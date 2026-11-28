@@ -30,12 +30,25 @@ function fakeBrowser(search = '', origin = 'https://app.example.test') {
 
 test('starting a social sign-in stays on this app and only forwards a well-formed invite', () => {
   const browser = fakeBrowser();
-  beginOAuth('google');
-  beginOAuth('facebook', 'a'.repeat(64));
-  beginOAuth('google', '../../evil?x=1');
+  beginOAuth('google', '', 'vi');
+  beginOAuth('facebook', 'a'.repeat(64), 'en');
+  beginOAuth('google', '../../evil?x=1', 'zh-CN');
+  beginOAuth('google', '', 'fr&next=//evil.example');
   beginOAuth('https://evil.example');
-  assert.deepEqual(browser.visited, ['/api/auth/oauth/google/start',
-    `/api/auth/oauth/facebook/start?invite=${'a'.repeat(64)}`, '/api/auth/oauth/google/start']);
+  assert.deepEqual(browser.visited, ['/api/auth/oauth/google/start?locale=vi',
+    `/api/auth/oauth/facebook/start?invite=${'a'.repeat(64)}&locale=en`, '/api/auth/oauth/google/start?locale=zh-CN',
+    '/api/auth/oauth/google/start']);
+});
+
+test('the sign-in carries the current interface language by default', async () => {
+  const browser = fakeBrowser();
+  const { useLangStore } = await import('../src/stores/useLangStore.js');
+  const before = useLangStore.getState().lang;
+  try {
+    useLangStore.setState({ lang: 'zh-CN' });
+    beginOAuth('google');
+    assert.deepEqual(browser.visited, ['/api/auth/oauth/google/start?locale=zh-CN']);
+  } finally { useLangStore.setState({ lang: before }); }
 });
 
 test('only a sign-in this tab started, and that the server finished, counts as a deliberate login', () => {

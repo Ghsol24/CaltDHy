@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { oauthService } from '../../services/oauthFlow';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useSignatureLoginStore } from '../../stores/useSignatureLoginStore';
 import { IndustrialPanel } from '../ui/IndustrialPanel';
 import { FloatingInput } from '../ui/FloatingInput';
 import { AlertTriangleOutlineIcon } from '../ui/AppIcons';
@@ -18,8 +18,10 @@ import { getSocialCopy } from './socialLoginCopy';
 export function OAuthConfirm({ onExit }) {
   const { lang } = useTranslation();
   const copy = getSocialCopy(lang);
-  const navigate = useNavigate();
   const completeOAuth = useAuthStore((state) => state.completeOAuth);
+  const beginSignature = useSignatureLoginStore((state) => state.begin);
+  const succeedSignature = useSignatureLoginStore((state) => state.succeed);
+  const failSignature = useSignatureLoginStore((state) => state.fail);
   const [pending, setPending] = useState(undefined); // undefined: loading, null: nothing to confirm
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -50,14 +52,17 @@ export function OAuthConfirm({ onExit }) {
     if (pending.kind === 'link' && !password) { setError(copy.needPassword); return; }
     if (needsCode && !code.trim()) { setError(copy.needCode); return; }
     setBusy(true);
+    // Both steps end in an account that already existed: the sign-in greeting, which then opens Home itself.
+    const id = beginSignature('login');
     void import('../../pages/SpendingPage').catch(() => {});
     try {
       await completeOAuth({
         ...(pending.kind === 'link' ? { password } : {}),
         ...(needsCode ? { totpCode: code.trim() } : {}),
       });
-      navigate('/spending/home', { replace: true });
+      succeedSignature(id);
     } catch (cause) {
+      failSignature(id);
       // The password was right; the account just needs its second step.
       if (cause?.code === 'TOTP_REQUIRED') setNeedsCode(true);
       else if (cause?.code === 'OAUTH_EXPIRED') setPending(null);
