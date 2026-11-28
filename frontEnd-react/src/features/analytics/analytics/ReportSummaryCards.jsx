@@ -31,8 +31,8 @@ export function ReportSummaryCards({ reportData }) {
           {formatCurrency(reportData.curStats.income)}
         </strong>
         <div className="report-summary-card__meta">
-          <span>Kỳ trước: {formatCurrency(reportData.prevStats.income)}</span>
-          <span>{reportData.curStats.incomeCount} giao dịch</span>
+          <span>{`Kỳ trước: ${formatCurrency(reportData.prevStats.income)}`}</span>
+          <span>{`${reportData.curStats.incomeCount} giao dịch`}</span>
         </div>
       </div>
     
@@ -68,8 +68,8 @@ export function ReportSummaryCards({ reportData }) {
           {formatCurrency(reportData.curStats.expense)}
         </strong>
         <div className="report-summary-card__meta">
-          <span>Kỳ trước: {formatCurrency(reportData.prevStats.expense)}</span>
-          <span>{reportData.curStats.expenseCount} giao dịch</span>
+          <span>{`Kỳ trước: ${formatCurrency(reportData.prevStats.expense)}`}</span>
+          <span>{`${reportData.curStats.expenseCount} giao dịch`}</span>
         </div>
       </div>
     
@@ -93,7 +93,7 @@ export function ReportSummaryCards({ reportData }) {
           {formatCurrency(reportData.curStats.net)}
         </strong>
         <div className="report-summary-card__meta">
-          <span>Kỳ trước: {formatCurrency(reportData.prevStats.net)}</span>
+          <span>{`Kỳ trước: ${formatCurrency(reportData.prevStats.net)}`}</span>
           <span>{reportData.netDelta >= 0 ? `+${formatCurrency(reportData.netDelta)}` : formatCurrency(reportData.netDelta)}</span>
         </div>
       </div>
@@ -130,7 +130,7 @@ export function ReportSummaryCards({ reportData }) {
           {formatPercent(reportData.curStats.savingsRate)}
         </strong>
         <div className="report-summary-card__meta">
-          <span>Kỳ trước: {formatPercent(reportData.prevStats.savingsRate)}</span>
+          <span>{`Kỳ trước: ${formatPercent(reportData.prevStats.savingsRate)}`}</span>
           <span>Mục tiêu: ≥ 20%</span>
         </div>
       </div>

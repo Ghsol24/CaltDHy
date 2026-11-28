@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import '../../i18n/homeTranslations';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
-import { calculateMonthlyStats } from '../../utils/financeMath';
+import { BUDGET_WARN_PERCENT, calculateMonthlyStats } from '../../utils/financeMath';
 import { formatMonthYear, getLocalMonthString } from '../../utils/formatters';
 import { AvailableToSpendCard } from './AvailableToSpendCard';
 import { RecentTransactions } from './RecentTransactions';
@@ -57,7 +57,7 @@ export function HomeView() {
           hasAnyBudget = true;
           const spent = monthlyStats.byCategory[category] || 0;
           if (spent >= numLimit) overCount += 1;
-          else if (spent >= numLimit * 0.75) nearCount += 1;
+          else if (spent * 100 >= numLimit * BUDGET_WARN_PERCENT) nearCount += 1;
         }
       });
     }

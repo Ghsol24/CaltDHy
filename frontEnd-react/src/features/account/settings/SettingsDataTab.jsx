@@ -44,13 +44,13 @@ export function SettingsDataTab({ activeTab, budgets, copyError, copySuccess, ex
   
         <div className="account-card-panel-row">
           <span className="account-panel-label">Giao dịch đã lưu</span>
-          <span className="account-panel-val">{transactions?.length || 0} giao dịch</span>
+          <span className="account-panel-val">{`${transactions?.length || 0} giao dịch`}</span>
         </div>
   
         <div className="account-card-panel-row">
           <span className="account-panel-label">Hạn mức ngân sách</span>
           <span className="account-panel-val">
-            {Object.keys(budgets || {}).length} danh mục
+            {`${Object.keys(budgets || {}).length} danh mục`}
           </span>
         </div>
       </div>

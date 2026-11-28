@@ -1,7 +1,8 @@
 import { getUserErrorMessage } from '../utils/userErrors.js';
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useSignatureLoginStore } from '../stores/useSignatureLoginStore';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { FloatingInput } from '../components/ui/FloatingInput';
 import { AlertTriangleOutlineIcon } from '../components/ui/AppIcons';
@@ -45,6 +46,11 @@ export const SignupPage = () => {
   );
 
   const register = useAuthStore((state) => state.register);
+  const authStatus = useAuthStore((state) => state.status);
+  const beginSignature = useSignatureLoginStore((state) => state.begin);
+  const succeedSignature = useSignatureLoginStore((state) => state.succeed);
+  const failSignature = useSignatureLoginStore((state) => state.fail);
+  const signatureState = useSignatureLoginStore((state) => state.state);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -121,28 +127,41 @@ export const SignupPage = () => {
     }
 
     setIsSubmitting(true);
+    // Same welcome as signing in: coin rain, then the wallet flies into the app logo.
+    const id = beginSignature('signup');
+    void import('./SpendingPage').catch(() => {});
+    // A slow server (cold start) must not keep the full-screen welcome up forever.
+    // The request itself is not aborted: the account may already exist server-side.
+    const slow = window.setTimeout(() => failSignature(id), 25000);
 
     try {
-      await register(name.trim(), email.trim(), password, inviteToken);
-      setTimeout(() => {
-        navigate('/spending/home');
-      }, 300);
+      await register(name.trim(), email.trim(), password, inviteToken, lang);
+      window.clearTimeout(slow);
+      const signature = useSignatureLoginStore.getState();
+      if (signature.attemptId === id && signature.state === 'pending') succeedSignature(id);
+      else navigate('/spending/home', { replace: true });
     } catch (err) {
+      window.clearTimeout(slow);
+      failSignature(id);
       setError(getUserErrorMessage(err, 'error.generic'));
       setIsSubmitting(false);
     }
   };
+
+  // Already signed in: skip the form (not while this page's own welcome animation runs).
+  if (authStatus === 'authenticated' && !isSubmitting && signatureState === 'idle') {
+    return <Navigate to="/spending/home" replace />;
+  }
 
   if (!ready) {
     return <PublicPageShell ariaBusy />;
   }
 
   return (
-    <PublicPageShell pageTitle={navCopy.auth.accountHeading}>
+    <PublicPageShell>
       <IndustrialPanel
         title={navCopy.auth.signupCardTitle}
         subtitle={navCopy.auth.signupCardSub}
-        headingLevel="h2"
       >
         {registrationStatus === 'checking' && (
           <p className="signup-invite-message" role="status">{t('auth.registrationChecking')}</p>

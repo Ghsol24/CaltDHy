@@ -52,7 +52,7 @@ const sections = [
     [['Hồ sơ và bảo mật', 'Profile and security', '个人资料与安全'],
       ['Bấm tên/ảnh đại diện để mở Hồ sơ. Đổi email hoặc mật khẩu cần mật khẩu hiện tại; các phiên đăng nhập cũ sẽ hết hiệu lực.', 'Select your name/avatar to open Profile. Changing email or password requires the current password and invalidates old sessions.', '点击姓名或头像打开个人资料。更改邮箱或密码需要当前密码，旧登录会话将失效。'], 'profile'],
     [['Xuất và đặt lại dữ liệu', 'Export and reset data', '导出及重置数据'],
-      ['Trong Dữ liệu & Quyền riêng tư, Xuất JSON tải dữ liệu về máy. Đặt lại dữ liệu yêu cầu nhập RESET và xóa dữ liệu tài chính của tài khoản. Nên xuất trước; hiện chưa có thao tác nhập lại JSON trong giao diện.', 'In Data & privacy, Export JSON downloads your data. Reset requires typing RESET and removes the account’s financial data. Export first; the interface currently has no JSON import action.', '在数据与隐私中，导出JSON可下载数据。重置需输入RESET并删除账户财务数据。建议先导出；当前界面没有JSON导入功能。'], 'data']
+      ['Trong Dữ liệu & Quyền riêng tư, Xuất JSON tải bản sao lưu về máy; Khôi phục từ file sao lưu nạp lại file đó và thay toàn bộ dữ liệu hiện tại. Đặt lại dữ liệu yêu cầu nhập RESET và xóa dữ liệu tài chính của tài khoản, nên xuất bản sao lưu trước.', 'In Data & privacy, Export JSON downloads a backup; Restore from backup loads that file back and replaces all current data. Reset requires typing RESET and removes the account’s financial data, so export a backup first.', '在数据与隐私中，导出JSON可下载备份；“从备份文件恢复”可重新载入该文件并替换当前全部数据。重置需输入RESET并删除账户财务数据，建议先导出备份。'], 'data']
   ]]
 ];
 

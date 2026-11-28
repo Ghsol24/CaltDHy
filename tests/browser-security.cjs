@@ -1520,7 +1520,7 @@ function blendCssColor(color, background) {
       ['/spending/plan/wallets', 'Plan · Wallets & Accounts', '计划 · 钱包与账户'],
       ['/spending/plan/budgets', 'Plan · Budgets', '计划 · 预算'],
       ['/spending/plan/recurring', 'Plan · Recurring items', '计划 · 周期项目'],
-      ['/spending/analytics/overview', 'Analytics · Income & spending summary', '分析 · 收支概要'],
+      ['/spending/analytics/overview', 'Analytics · Summary', '分析 · 收支概要'],
       ['/spending/jars/list', 'Savings jars · Jar list', '储蓄罐 · 储蓄罐列表']
     ];
     for (const [locale, column, homeLabel, transactionLabel] of [

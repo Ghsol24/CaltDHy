@@ -13,7 +13,7 @@ export function SettingsGuideTab({ activeTab, closeSettingsModal, openHelpModal 
         <div>
           <strong>Hướng dẫn CaltDHy</strong>
           {typeof __APP_VERSION__ === 'string' && (
-            <p className="settings-guide-card__version">Phiên bản {__APP_VERSION__}</p>
+            <p className="settings-guide-card__version">{`Phiên bản ${__APP_VERSION__}`}</p>
           )}
         </div>
         <Button

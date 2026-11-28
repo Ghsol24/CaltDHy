@@ -57,6 +57,14 @@ export function PublicTopbar({ skipTarget = '#main-content', isInviteOnly = fals
     rememberLightTheme(theme);
   }, [theme]);
 
+  // Every public page renders this bar, so it owns the tab title (the app's
+  // /spending routes set their own). Without it, signing out kept the last
+  // dashboard title and other languages kept the Vietnamese one from index.html.
+  useEffect(() => {
+    const title = copy.titles?.[pathname];
+    if (title) document.title = title;
+  }, [copy, pathname]);
+
   useEffect(() => {
     setIsMobileNavOpen(false);
   }, [pathname]);
@@ -190,7 +198,8 @@ export function PublicTopbar({ skipTarget = '#main-content', isInviteOnly = fals
               aria-label={copy.nav.settingsAria}
               aria-haspopup="dialog"
             >
-              <LandingIcon name={theme} size={15} className="lp-settings-theme-ico" />
+              {/* Globe, not the theme icon: the sun/moon pill beside it already shows the theme. */}
+              <LandingIcon name="globe" size={15} className="lp-settings-theme-ico" />
               <span className="lp-settings-lang-code" aria-hidden="true">
                 {LANG_SHORT[lang] || 'VI'}
               </span>
@@ -201,18 +210,42 @@ export function PublicTopbar({ skipTarget = '#main-content', isInviteOnly = fals
                 <span>{copy.nav.openApp}</span>
                 <LandingIcon name="arrowRight" size={14} strokeWidth={2.2} />
               </Link>
-            ) : (
+            ) : isLoginRoute && !isInviteOnly ? (
+              // Already on the sign-in form: offer the other way in instead.
               <Link
-                to="/login"
-                className={`lp-nav-cta lp-glass ${isLoginRoute ? 'is-current' : ''}`}
-                aria-current={isLoginRoute ? 'page' : undefined}
-                onPointerEnter={prefetchLoginRoute}
-                onFocus={prefetchLoginRoute}
-                onTouchStart={prefetchLoginRoute}
+                to="/signup"
+                className="lp-nav-cta lp-glass"
+                onPointerEnter={prefetchSignupRoute}
+                onFocus={prefetchSignupRoute}
+                onTouchStart={prefetchSignupRoute}
               >
-                <LandingIcon name="logIn" size={14} strokeWidth={2} className="lp-nav-cta-icon" />
-                <span>{copy.nav.login}</span>
+                <span>{copy.nav.signup}</span>
               </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className={`lp-nav-cta lp-glass ${isLoginRoute ? 'is-current' : ''}`}
+                  aria-current={isLoginRoute ? 'page' : undefined}
+                  onPointerEnter={prefetchLoginRoute}
+                  onFocus={prefetchLoginRoute}
+                  onTouchStart={prefetchLoginRoute}
+                >
+                  <LandingIcon name="logIn" size={14} strokeWidth={2} className="lp-nav-cta-icon" />
+                  <span>{copy.nav.login}</span>
+                </Link>
+                {!isSignupRoute && !isLoginRoute && !isInviteOnly && (
+                  <Link
+                    to="/signup"
+                    className="lp-nav-cta lp-nav-cta--primary lp-nav-cta--signup"
+                    onPointerEnter={prefetchSignupRoute}
+                    onFocus={prefetchSignupRoute}
+                    onTouchStart={prefetchSignupRoute}
+                  >
+                    <span>{copy.nav.signup}</span>
+                  </Link>
+                )}
+              </>
             )}
 
             <button

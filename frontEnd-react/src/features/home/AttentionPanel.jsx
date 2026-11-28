@@ -2,9 +2,8 @@ import React from 'react';
 import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useJarStore } from '../../stores/useJarStore';
-import { calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
+import { BUDGET_WARN_PERCENT, calculateMonthlyStats, getBudgetStatus } from '../../utils/financeMath';
 import { formatCurrency, getLocalMonthString, getDueStatus } from '../../utils/formatters';
-import { TargetOutlineIcon } from '../../components/ui/AppIcons';
 import { isInstallmentEnded, isRecurringIncome } from '../../utils/installmentTerm';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -72,7 +71,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
 
     const warningCat = [...catList]
       .sort((a, b) => b.percent - a.percent)
-      .find((c) => c.percent >= 75 && c.percent < 100);
+      .find((c) => c.percent >= BUDGET_WARN_PERCENT && c.percent < 100);
 
     const now = new Date();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -137,6 +136,15 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
       ctaAction: handleGoToBudgets,
       cardClass: 'is-warning'
     };
+  } else if (!hasBudgets) {
+    // Income only, no limits yet: still a "set up" nudge, not "your plan looks fine".
+    calloutConfig = {
+      title: 'Chưa thiết lập kế hoạch ngân sách',
+      body: 'Hãy đặt hạn mức chi tiêu cho các danh mục để CaltDHy đồng hành giúp bạn kiểm soát dòng tiền hiệu quả nhất.',
+      ctaText: 'Thiết lập ngân sách ngay',
+      ctaAction: handleGoToBudgets,
+      cardClass: 'is-info'
+    };
   } else if (dangerCategory) {
     const others = overCount - 1;
     calloutConfig = {
@@ -194,38 +202,25 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
     </div>
   );
 
+  // With no limits and no jars, the callout above already asks the user to set a
+  // budget; a second empty "plan" card saying the same thing is left out.
+  const planIsEmpty = topCategories.length === 0 && !topJar;
+
   return (
     <aside className="home-sidebar-panel" aria-label="Bảng kế hoạch và cảnh báo">
       {/* Alert first: on phones this sits right under the balance card. */}
       {callout}
 
+      {!planIsEmpty && (
       <div className="home-plan-card">
         <h2 className="home-plan-card-title">Kế hoạch tháng này</h2>
-
-        {topCategories.length === 0 && !topJar && (
-          <div className="home-plan-empty-state">
-            <span className="home-plan-empty-icon home-plan-empty-icon--layout" aria-hidden="true">
-              <TargetOutlineIcon size={24} color="currentColor" />
-            </span>
-            <p className="home-plan-empty-text">
-              Chưa có hạn mức ngân sách hoặc hũ tiết kiệm nào được thiết lập.
-            </p>
-            <button
-              type="button"
-              className="home-plan-empty-btn"
-              onClick={handleGoToBudgets}
-            >
-              + Thiết lập ngay
-            </button>
-          </div>
-        )}
 
         {topCategories.length > 0 && (
           <div className="home-plan-group">
             <h3 className="home-plan-group-title">Ngân sách</h3>
             <div className="home-plan-items-list">
               {topCategories.map((item, idx) => {
-                const isWarning = item.percent >= 75 && item.percent < 100;
+                const isWarning = item.percent >= BUDGET_WARN_PERCENT && item.percent < 100;
                 const isDanger = item.percent >= 100;
                 const barClass = isDanger ? 'is-danger' : isWarning ? 'is-warning' : 'is-healthy';
 
@@ -272,6 +267,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
           </div>
         )}
       </div>
+      )}
     </aside>
   );
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { IndustrialPanel } from '../components/ui/IndustrialPanel';
 import { useTranslation } from '../i18n/useTranslation';
 import { PublicPageShell } from '../components/layout/PublicPageShell';
@@ -7,11 +7,12 @@ import { getPublicNavCopy } from '../components/layout/publicNavCopy';
 import { CONTACT_EMAIL, LEGAL_COPY } from './legalCopy';
 import './auth.css';
 
-// Trang công khai (không cần đăng nhập): /privacy và /terms. Bản zh-CN dùng tạm bản tiếng Anh.
+// Trang công khai (không cần đăng nhập): /privacy và /terms.
 export function LegalPage() {
   const { lang } = useTranslation();
   const navCopy = getPublicNavCopy(lang);
-  const { pathname } = useLocation();
+  const { pathname, key } = useLocation();
+  const navigate = useNavigate();
   const copy = LEGAL_COPY[lang] || LEGAL_COPY.en;
   const kind = pathname.startsWith('/terms') ? 'terms' : 'privacy';
   const doc = copy[kind];
@@ -36,7 +37,19 @@ export function LegalPage() {
           </section>
         )}
         <p className="mod-footer">
-          <Link to="/login" className="lnk">{copy.back}</Link>{' · '}
+          {/* Back to wherever the reader came from (landing footer, sign-up form…);
+              opened directly, there is no in-app history, so go to the landing page. */}
+          <Link
+            to="/"
+            className="lnk"
+            onClick={(event) => {
+              if (key === 'default') return;
+              event.preventDefault();
+              navigate(-1);
+            }}
+          >
+            {copy.back}
+          </Link>{' · '}
           <Link to={other} className="lnk">{copy.otherDoc[kind]}</Link>
         </p>
       </IndustrialPanel>

@@ -839,8 +839,9 @@ html.green-theme .landing-page {
   color: #FFFFFF;
 }
 
+/* Same as the real Home card: white on indigo, the "−" sign marks spending. */
 .lp-balance-sub-val--out {
-  color: #FFD6DA;
+  color: #FFFFFF;
 }
 
 .lp-balance-sub-val--in {
@@ -1847,7 +1848,7 @@ html.green-theme .landing-page {
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
   color: var(--text-secondary);
-  font-family: var(--font-mono);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -1980,6 +1981,13 @@ html.dark-theme .lp-coin-node--featured .lp-coin-tile {
 /* Interactive Layered CaltDHy Mascot Wallet
    NOTE: z-index stays auto with no transform on the button itself so its child layers
    interleave cleanly with .lp-coin-arc (z-index: 3) in .lp-wallet-stage! */
+.lp-wallet-hint {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
 .lp-mascot-wallet {
   position: absolute;
   left: 50%;

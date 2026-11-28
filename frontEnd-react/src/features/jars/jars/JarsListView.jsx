@@ -41,7 +41,7 @@ export function JarsListView({ handleCreateNew, handleDeposit, handleEdit, handl
                   </span>
                 </div>
                 <span className="jar-list-sub">
-                  Còn thiếu: {formatCurrency(remaining)}
+                  {`Còn thiếu: ${formatCurrency(remaining)}`}
                 </span>
               </div>
             </div>

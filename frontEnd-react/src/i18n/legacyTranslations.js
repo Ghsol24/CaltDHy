@@ -1,5 +1,6 @@
 import { legacyAdditionalEntries } from './legacyAdditionalTranslations.js';
 import { part6Entries, part6Templates } from './legacyPart6Translations.js';
+import { splitTextEntries, splitTextTemplates } from './legacySplitTextTranslations.js';
 
 // Compatibility catalog for legacy views while their source strings are moved to
 // semantic keys. Every rendered text/accessible attribute still passes through
@@ -7,6 +8,7 @@ import { part6Entries, part6Templates } from './legacyPart6Translations.js';
 const entries = [
   ...legacyAdditionalEntries,
   ...part6Entries,
+  ...splitTextEntries,
   ['Cài đặt', 'Settings', '设置'],
   ['Điều hướng cài đặt', 'Settings navigation', '设置导航'],
   ['Hồ sơ cá nhân', 'Personal profile', '个人资料'],
@@ -464,6 +466,7 @@ const catalogs = {
 };
 
 const templates = [
+  ...splitTextTemplates,
   ...part6Templates,
   [/^Còn (\d+) ngày$/, (locale, count) => locale === 'en' ? `${count} days left` : `还剩 ${count} 天`],
   [/^Quá hạn (\d+) ngày$/, (locale, count) => locale === 'en' ? `${count} days overdue` : `已逾期 ${count} 天`],

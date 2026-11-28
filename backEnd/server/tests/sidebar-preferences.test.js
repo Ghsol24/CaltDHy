@@ -159,4 +159,15 @@ describe('Sidebar pinned group preferences', { concurrency: false }, () => {
         assert.deepEqual(relogin.body.user.preferences.sidebarPinnedGroups, ['group_analytics', 'group_jars']);
         assert.deepEqual((await other.agent.get('/api/auth/session')).body.user.preferences.sidebarPinnedGroups, []);
     });
+
+    it('starts reminder emails in the language chosen at sign-up, falling back to vi', async () => {
+        for (const [locale, expected] of [['en', 'en'], ['zh-CN', 'zh-CN'], ['fr', 'vi'], [undefined, 'vi']]) {
+            const c = await anonymous();
+            const email = crypto.randomUUID() + '@example.test';
+            const response = await c.send('post', 'register', { name: 'Locale User', email, password, locale });
+            assert.equal(response.status, 201);
+            const stored = await User.findById(response.body.user.id).lean();
+            assert.equal(stored.preferences.notifications.locale, expected, String(locale));
+        }
+    });
 });

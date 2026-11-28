@@ -97,19 +97,19 @@ export function WalletDetailPane({
             <span style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} />
           </div>
           <p>
-            Đã dùng <strong>{formatCurrency(used)}</strong> / {formatCurrency(limit)} hạn mức
-            {' · '}còn <strong>{formatCurrency(Math.max(0, limit - used))}</strong>
+            {'Đã dùng '}<strong>{formatCurrency(used)}</strong>{` / ${formatCurrency(limit)}`}
+            {' · '}{'còn lại '}<strong>{formatCurrency(Math.max(0, limit - used))}</strong>
           </p>
         </div>
       )}
 
       <dl className="wallet-pane-stats">
         <div>
-          <dt>Tiền vào {monthName}</dt>
+          <dt>{`Tiền vào ${monthName}`}</dt>
           <dd className={flow.inflow > 0 ? 'is-positive' : undefined}>{flow.inflow > 0 ? '+' : ''}{formatCurrency(flow.inflow)}</dd>
         </div>
         <div>
-          <dt>Tiền ra {monthName}</dt>
+          <dt>{`Tiền ra ${monthName}`}</dt>
           <dd>{flow.outflow > 0 ? '−' : ''}{formatCurrency(flow.outflow)}</dd>
         </div>
         <div>

@@ -83,7 +83,7 @@ export function AnalyticsCategorySection({ visible, monthData, monthLabel, openA
           <Icon name="pieChart" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </div>
         <strong className="empty-heading-caps">
-          Chưa có dữ liệu chi tiêu trong {monthLabel}
+          {`Chưa có dữ liệu chi tiêu trong ${monthLabel}`}
         </strong>
         <p className="empty-body-desc">
           Thêm các giao dịch chi tiêu mới để hệ thống tự động phân loại và trực quan hóa tỷ trọng từng nhóm chi phí.
