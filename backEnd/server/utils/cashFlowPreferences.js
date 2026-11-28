@@ -40,10 +40,11 @@ function publicCashFlowPreferences(value) {
 function validPreferencesUpdate(body) {
     if (!isObject(body)) return false;
     const keys = Object.keys(body);
-    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'notifications', 'sidebarPinnedGroups'].includes(key))) return false;
+    if (!keys.length || keys.some(key => !['analyticsExcludeRecurring', 'cashFlow', 'homeOnboardingDismissed', 'notifications', 'sidebarPinnedGroups'].includes(key))) return false;
     if (owns(body, 'notifications') && !validNotificationsUpdate(body.notifications)) return false;
     if (owns(body, 'sidebarPinnedGroups') && !validSidebarPinnedGroups(body.sidebarPinnedGroups)) return false;
     if (owns(body, 'analyticsExcludeRecurring') && typeof body.analyticsExcludeRecurring !== 'boolean') return false;
+    if (owns(body, 'homeOnboardingDismissed') && typeof body.homeOnboardingDismissed !== 'boolean') return false;
     if (owns(body, 'cashFlow')) {
         if (!isObject(body.cashFlow)) return false;
         const flowKeys = Object.keys(body.cashFlow);
@@ -75,6 +76,10 @@ function preferenceUpdateFields(body, existing) {
     }
     if (owns(body, 'sidebarPinnedGroups')) {
         fields['preferences.sidebarPinnedGroups'] = publicSidebarPinnedGroups(body.sidebarPinnedGroups);
+    }
+    // Thẻ "Bắt đầu trong 3 bước" ở Trang chủ đã bị ẩn (đợt 16d).
+    if (owns(body, 'homeOnboardingDismissed')) {
+        fields['preferences.homeOnboardingDismissed'] = body.homeOnboardingDismissed;
     }
     if (owns(body, 'notifications')) {
         const update = body.notifications;

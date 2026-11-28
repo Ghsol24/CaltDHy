@@ -6,6 +6,7 @@ function publicPreferences(preferences) {
         analyticsExcludeRecurring: preferences?.analyticsExcludeRecurring === true,
         cashFlow: publicCashFlowPreferences(preferences?.cashFlow),
         sidebarPinnedGroups: publicSidebarPinnedGroups(preferences?.sidebarPinnedGroups),
+        homeOnboardingDismissed: preferences?.homeOnboardingDismissed === true,
         notifications: publicNotifications(preferences?.notifications)
     };
 }

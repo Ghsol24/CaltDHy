@@ -23,7 +23,7 @@ function monthDateAt(monthOffset, day, now = new Date()) {
   return `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(Math.min(day, last))}`;
 }
 
-function buildFixtures({ now = new Date() } = {}) {
+function buildFixtures({ now = new Date(), empty = false } = {}) {
   const monthDate = (monthOffset, day) => monthDateAt(monthOffset, day, now);
   // Keep fixture days in the past so "today" logic stays meaningful.
   const pastDay = (day) => Math.max(1, Math.min(day, now.getDate()));
@@ -87,6 +87,14 @@ function buildFixtures({ now = new Date() } = {}) {
     id: '64b7f0c2a1d3e4f5a6b7c8d9', name: 'Trần Gia Huy', email: 'fixture@example.com', avatar: '', emailVerified: true,
     preferences: { analyticsExcludeRecurring: false, cashFlow: { lastUsed: null, pinnedDefault: null }, sidebarPinnedGroups: [] }
   };
+  // `empty`: tài khoản vừa đăng ký — chỉ có ví "Tiền mặt" 0 đ server tự tạo, chưa có gì khác
+  // (dùng để xem thẻ "Bắt đầu trong 3 bước" ở Trang chủ).
+  if (empty) {
+    return {
+      wallets: [{ _id: 'w-cash', name: 'Tiền mặt', type: 'cash', initialBalance: 0, isDefault: true }],
+      transactions: [], jars: [], installments: [], budgets: {}, user
+    };
+  }
   return { wallets, transactions, jars, installments, budgets, user };
 }
 
@@ -130,12 +138,12 @@ function handleApi(req, res, db, body = '') {
   return ok(null);
 }
 
-async function startUiFixtureServer({ distDir = path.join(__dirname, '..', 'frontEnd-react', 'dist'), now } = {}) {
+async function startUiFixtureServer({ distDir = path.join(__dirname, '..', 'frontEnd-react', 'dist'), now, empty = false } = {}) {
   if (!fs.existsSync(path.join(distDir, 'index.html'))) {
     throw new Error(`Missing build at ${distDir}. Run "npm run build --prefix frontEnd-react" first.`);
   }
   const fixtureNow = now ? new Date(now) : null;
-  const db = buildFixtures({ now: fixtureNow || new Date() });
+  const db = buildFixtures({ now: fixtureNow || new Date(), empty });
   // "Hôm nay" (YYYY-MM-DD) theo cùng mốc với dữ liệu mẫu.
   const today = () => { const d = fixtureNow || new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   const server = http.createServer((req, res) => {
