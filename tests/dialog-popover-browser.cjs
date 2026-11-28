@@ -125,7 +125,7 @@ for (const viewport of VIEWPORTS) {
 
   check(`${size}: create-jar and transfer calendars stay on screen`, async ({ browser, server }) => {
     const { context, page, errors, open } = await newPage(browser, server, viewport);
-    await open('/spending/jars/list');
+    await open('/spending/jars');
     await page.locator('button', { hasText: 'Tạo hũ mới' }).first().click();
     await expect(page.locator('[role="dialog"] .calt-date-input')).toBeVisible();
     await checkPopover(page, { trigger: '[role="dialog"] .calt-date-input', popover: '.calt-date-popover', name: 'jar goal calendar' });

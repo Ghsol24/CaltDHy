@@ -1,15 +1,15 @@
 import { getUserErrorMessage } from '../../utils/userErrors.js';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router';
 import { useJarStore } from '../../stores/useJarStore';
 import { useConfirmStore } from '../../stores/useConfirmStore';
 import { useToastStore } from '../../stores/useToastStore';
-import { useSpendingStore } from '../../stores/useSpendingStore';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import { useCommandRequest } from '../../hooks/useCommandRequest';
 import { JarModal } from './JarModal';
 import { JarTransactionModal } from './JarTransactionModal';
 import { JarDetailModal } from './JarDetailModal';
-import { JarHistoryPage } from './JarHistoryPage';
+import { JarHistoryDrawer } from './JarHistoryDrawer';
 import { formatCurrency, formatMonthYear, getLocalDateString } from '../../utils/formatters';
 import { useTranslation } from '../../i18n/useTranslation';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -17,19 +17,15 @@ import { JarActivityCalendar } from './JarActivityCalendar';
 import { JarRecentActivity } from './JarRecentActivity';
 import { JarNextStepStrip } from './JarNextStepStrip';
 import { monthOf } from './jarActivity';
-import { Icon, AlertTriangleOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
-import './jars.css';
-
+import { AlertTriangleOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
 import { Button } from '../../components/ui/Button';
 import { JarsListView } from './jars/JarsListView';
 import { JarsGridView } from './jars/JarsGridView';
 import { JarsListToolbar } from './jars/JarsListToolbar';
-import { JarsProgressSection } from './jars/JarsProgressSection';
 import { JarsOverviewSection } from './jars/JarsOverviewSection';
 import { JarsPageHeader } from './jars/JarsPageHeader';
-import { useJarsOverview } from './jars/useJarsOverview';
-import { JARS_PER_PAGE } from './jars/useJarsOverview';
-const PROGRESS_OVERVIEW_MIN_JARS = 4;
+import { useJarsOverview, JARS_PER_PAGE } from './jars/useJarsOverview';
+import './jars.css';
 
 // Display preference only. The hyphenated name keeps it out of the sign-in
 // cleanup that clears private `caltdhy_*` data, without growing the first-load bundle.
@@ -38,8 +34,15 @@ const readCalendarView = () => {
   try { return localStorage.getItem(CALENDAR_VIEW_KEY) === 'year' ? 'year' : 'month'; } catch { return 'month'; }
 };
 
+const MOBILE_TABS_COPY = {
+  vi: { jars: 'Các hũ của bạn', activity: 'Nhịp tiết kiệm' },
+  en: { jars: 'Your jars', activity: 'Savings activity' },
+  'zh-CN': { jars: '我的储蓄罐', activity: '储蓄动态' },
+};
+
 export function JarsView() {
   const { lang, intlLocale, t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const jars = useJarStore((s) => s.jars);
   const isLoading = useJarStore((s) => s.isLoading);
   const hasLoaded = useJarStore((s) => s.hasLoaded);
@@ -48,9 +51,30 @@ export function JarsView() {
   const deleteJar = useJarStore((s) => s.deleteJar);
   const confirm = useConfirmStore((s) => s.confirm);
   const addToast = useToastStore((s) => s.addToast);
-  const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
-  const navigateTo = useSpendingStore((s) => s.navigateTo);
   const isMobile = useIsMobile();
+
+  // Slide-over History Drawer synchronized with `?drawer=history`
+  const isHistoryDrawerOpen = searchParams.get('drawer') === 'history';
+  const openHistoryDrawer = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('drawer', 'history');
+      return next;
+    }, { replace: false });
+  }, [setSearchParams]);
+
+  const closeHistoryDrawer = useCallback(() => {
+    setSearchParams((prev) => {
+      if (prev.get('drawer') !== 'history') return prev;
+      const next = new URLSearchParams(prev);
+      next.delete('drawer');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  // Mobile inline tab switch: keeps jars immediately above the fold and avoids long mobile scroll
+  const [mobileSection, setMobileSection] = useState('jars'); // 'jars' | 'activity'
+  const mobileCopy = MOBILE_TABS_COPY[lang] || (String(lang).startsWith('zh') ? MOBILE_TABS_COPY['zh-CN'] : MOBILE_TABS_COPY.vi);
 
   // Modals state
   const [isJarModalOpen, setIsJarModalOpen] = useState(false);
@@ -65,17 +89,15 @@ export function JarsView() {
   const [selectedDetailJar, setSelectedDetailJar] = useState(null);
 
   // Toolbar & view settings
-  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'progress_desc' | 'deadline_asc' | 'name_asc'
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [sortBy, setSortBy] = useState('newest');
+  const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuJarId, setActiveMenuJarId] = useState(null);
-  // Nút ⋮ đã mở menu thẻ hũ: nhận lại focus khi đóng hộp thoại xác nhận xoá.
   const menuTriggerRef = useRef(null);
   const [deletingJarId, setDeletingJarId] = useState(null);
   const [recomIndex, setRecomIndex] = useState(0);
 
-  // Savings calendar (replaces the old line chart): month/year view and the day
-  // picked on it, which also filters the recent-activity list.
+  // Savings calendar state
   const today = getLocalDateString();
   const [calendarMonth, setCalendarMonth] = useState(() => monthOf(getLocalDateString()));
   const [calendarView, setCalendarView] = useState(readCalendarView);
@@ -100,15 +122,30 @@ export function JarsView() {
     return months;
   }, [intlLocale]);
 
-  // Close card menu on outside click
   useEffect(() => {
     const handleWindowClick = () => setActiveMenuJarId(null);
     window.addEventListener('click', handleWindowClick);
     return () => window.removeEventListener('click', handleWindowClick);
   }, []);
 
-  // ── 1. Aggregate Financial Metrics ──
-  const { currentSuggestion, datedJarsCount, jarDays, jarEvents, jarStatuses, pageCount, progressOverview, smartSuggestions, splitSuggestion, suggestionCopy, suggestionPercent, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget, visibleJars } = useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, today });
+  const {
+    currentSuggestion,
+    datedJarsCount,
+    jarDays,
+    jarEvents,
+    jarStatuses,
+    pageCount,
+    smartSuggestions,
+    splitSuggestion,
+    suggestionCopy,
+    suggestionPercent,
+    thisMonthNet,
+    totalCurrent,
+    totalPercent,
+    totalRemaining,
+    totalTarget,
+    visibleJars,
+  } = useJarsOverview({ currentPage, jars, lang, recomIndex, sortBy, today });
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, pageCount));
@@ -118,7 +155,6 @@ export function JarsView() {
     setCurrentPage(Math.min(pageCount, Math.max(1, page)));
     requestAnimationFrame(() => document.getElementById('jars-section-list')?.scrollIntoView({ behavior: 'auto', block: 'start' }));
   };
-
 
   // Handlers
   const handleCreateNew = () => {
@@ -137,9 +173,14 @@ export function JarsView() {
     setTxInitialAmount(typeof initialAmount === 'number' && Number.isFinite(initialAmount) && initialAmount > 0 ? initialAmount : null);
     setIsTxModalOpen(true);
   };
+
   useCommandRequest('jar-deposit', ({ jarId }) => {
     const jar = jars.find((item) => item.id === jarId);
     if (jar) handleDeposit(jar);
+  }, hasLoaded);
+
+  useCommandRequest('jar-history', () => {
+    openHistoryDrawer();
   }, hasLoaded);
 
   const handleWithdraw = (jar) => {
@@ -204,19 +245,10 @@ export function JarsView() {
   }
 
   if (jars.length === 0) {
-    const emptySectionId = jarsSubTab === 'jars'
-      ? 'jars-section-list'
-      : jarsSubTab === 'history'
-        ? 'jars-section-history'
-        : 'jars-section-goals';
-    // Tiêu đề trống cũng đúng tên mục menu đang sáng.
-    const emptyHeading = t(jarsSubTab === 'jars' ? 'nav.jarList' : jarsSubTab === 'history' ? 'nav.history' : 'nav.goals');
-    const emptyIcon = jarsSubTab === 'jars' ? 'jarList' : jarsSubTab === 'history' ? 'jarHistory' : 'goals';
     return (
       <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
-        {/* Tiêu đề nằm ngoài thẻ như mọi trang; nút tạo hũ là nút của trạng thái trống. */}
-        <JarsPageHeader icon={emptyIcon} title={emptyHeading} />
-        <section id={emptySectionId} className="jars-hero-overview-card jars-first-run-card" aria-label={emptyHeading}>
+        <JarsPageHeader icon="jarList" title={t('nav.jars')} />
+        <section id="jars-section-goals" className="jars-hero-overview-card jars-first-run-card" aria-label={t('nav.jars')}>
           <EmptyState
             icon={<JarOutlineIcon size={36} />}
             title="Bạn chưa có hũ tiết kiệm"
@@ -231,16 +263,18 @@ export function JarsView() {
             isOpen={isJarModalOpen}
             onClose={() => setIsJarModalOpen(false)}
             jarToEdit={editingJar}
-          returnFocusRef={menuTriggerRef}
+            returnFocusRef={menuTriggerRef}
           />
         )}
       </div>
     );
   }
 
+  const showListSection = !isMobile || mobileSection === 'jars';
+  const showActivitySection = !isMobile || mobileSection === 'activity';
+
   return (
     <div className="jars-page-root" role="region" aria-label="Quản lý hũ tiết kiệm">
-      {/* ── ERROR STATE BANNER ── */}
       {error && (
         <div className="jars-load-error" role="alert">
           <span>{getUserErrorMessage(error, 'error.load')}</span>
@@ -248,119 +282,165 @@ export function JarsView() {
         </div>
       )}
 
-      {/* Mỗi mục menu là một màn hình riêng, trên điện thoại lẫn máy tính (NAV-05, JLS-01):
-          URL, tiêu đề tab, mục menu sáng và nội dung luôn cùng một mục. */}
-      {jarsSubTab === 'goals' && (
-        <>
-      {/* ── SECTION 1: HEADER & OVERVIEW (#jars-section-goals) ── */}
-      <JarsOverviewSection datedJarsCount={datedJarsCount} handleCreateNew={handleCreateNew} jarsCount={jars.length} thisMonthNet={thisMonthNet} totalCurrent={totalCurrent} totalPercent={totalPercent} totalRemaining={totalRemaining} totalTarget={totalTarget} />
-
-      {/* ── SECTIONS 2 & 3: LỊCH TIẾT KIỆM + HOẠT ĐỘNG GẦN ĐÂY, rồi MỐC KẾ TIẾP ── */}
-      <section className="jars-insights-grid jars-insights-grid--calendar">
-        <JarActivityCalendar
-          days={jarDays}
-          month={calendarMonth}
-          monthOptions={availableMonths}
-          onMonthChange={changeCalendarMonth}
-          view={calendarView}
-          onViewChange={changeCalendarView}
-          selectedDay={selectedDay}
-          onSelectDay={setSelectedDay}
-          today={today}
-        />
-        {/* Bản xem nhanh; lịch sử đầy đủ là trang "Lịch sử nạp/rút". */}
-        <JarRecentActivity
-          events={jarEvents}
-          selectedDay={selectedDay}
-          onClearDay={() => setSelectedDay(null)}
-          onViewAll={() => navigateTo('jars', 'history')}
-          limit={isMobile ? 3 : 6}
-          compact={isMobile}
-        />
-      </section>
-
-      <JarNextStepStrip
-        suggestion={currentSuggestion}
-        copy={suggestionCopy}
-        percent={suggestionPercent}
-        splitText={currentSuggestion.kind === 'milestone' ? splitSuggestion : ''}
-        canSwitch={smartSuggestions.length > 1}
-        onSwitch={() => setRecomIndex((index) => index + 1)}
-        onDeposit={handleDeposit}
-        onEditTarget={handleEdit}
+      {/* ── 1. SINGLE UNIFIED PAGE HEADER + SUMMARY CARD ── */}
+      <JarsPageHeader
+        icon="jarList"
+        title={t('nav.jars')}
+        onOpenHistory={openHistoryDrawer}
+        historyOpen={isHistoryDrawerOpen}
         onCreate={handleCreateNew}
       />
 
-      {/* ── SECTION 4: TỔNG QUAN TIẾN ĐỘ (#jars-section-progress) ──
-          Chỉ hiện khi có từ 4 hũ: ít hơn thì nó nhắc lại đúng các hũ ngay bên dưới. */}
-      {jars.length >= PROGRESS_OVERVIEW_MIN_JARS && (
-        <JarsProgressSection handleDeposit={handleDeposit} navigateTo={navigateTo} progressOverview={progressOverview} />
+      <JarsOverviewSection
+        datedJarsCount={datedJarsCount}
+        jarsCount={jars.length}
+        thisMonthNet={thisMonthNet}
+        totalCurrent={totalCurrent}
+        totalPercent={totalPercent}
+        totalRemaining={totalRemaining}
+        totalTarget={totalTarget}
+      />
+
+      {/* Mobile inline view switch: keeps Jars immediately actionable without endless scrolling */}
+      {isMobile && (
+        <div className="jars-mobile-view-switch" role="tablist" aria-label={t('nav.jars')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileSection === 'jars'}
+            className={`jars-mobile-view-tab${mobileSection === 'jars' ? ' is-active' : ''}`}
+            onClick={() => setMobileSection('jars')}
+          >
+            <span>{mobileCopy.jars}</span>
+            <span className="jars-mobile-view-count">{jars.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileSection === 'activity'}
+            className={`jars-mobile-view-tab${mobileSection === 'activity' ? ' is-active' : ''}`}
+            onClick={() => setMobileSection('activity')}
+          >
+            <span>{mobileCopy.activity}</span>
+          </button>
+        </div>
       )}
+
+      {/* ── 2. CÁC HŨ CỦA BẠN (ABOVE THE FOLD — primary daily actions first) ── */}
+      {showListSection && (
+        <section id="jars-section-list" className="jars-list-section">
+          <JarsListToolbar
+            jars={jars}
+            setCurrentPage={setCurrentPage}
+            setSortBy={setSortBy}
+            setViewMode={setViewMode}
+            sortBy={sortBy}
+            viewMode={viewMode}
+          />
+
+          <JarsGridView
+            activeMenuJarId={activeMenuJarId}
+            deletingJarId={deletingJarId}
+            handleCreateNew={handleCreateNew}
+            handleDelete={handleDelete}
+            handleDeposit={handleDeposit}
+            handleEdit={handleEdit}
+            handleOpenDetail={handleOpenDetail}
+            handleWithdraw={handleWithdraw}
+            isLoading={isLoading}
+            jarStatuses={jarStatuses}
+            jars={jars}
+            menuTriggerRef={menuTriggerRef}
+            setActiveMenuJarId={setActiveMenuJarId}
+            viewMode={viewMode}
+            visibleJars={visibleJars}
+          />
+
+          <JarsListView
+            handleCreateNew={handleCreateNew}
+            handleDeposit={handleDeposit}
+            handleEdit={handleEdit}
+            handleOpenDetail={handleOpenDetail}
+            handleWithdraw={handleWithdraw}
+            isLoading={isLoading}
+            jars={jars}
+            viewMode={viewMode}
+            visibleJars={visibleJars}
+          />
+
+          {!isLoading && pageCount > 1 && (
+            <nav className="jars-pagination" aria-label="Phân trang danh sách hũ">
+              <span className="jars-pagination__summary">
+                {`${Math.min((currentPage - 1) * JARS_PER_PAGE + 1, jars.length)}–${Math.min(currentPage * JARS_PER_PAGE, jars.length)} / ${jars.length} hũ`}
+              </span>
+              <div className="jars-pagination__controls">
+                <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} aria-label="Trang hũ trước">‹</button>
+                {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    className={page === currentPage ? 'is-active' : ''}
+                    onClick={() => changePage(page)}
+                    aria-current={page === currentPage ? 'page' : undefined}
+                    aria-label={`Trang hũ ${page}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button type="button" onClick={() => changePage(currentPage + 1)} disabled={currentPage === pageCount} aria-label="Trang hũ sau">›</button>
+              </div>
+            </nav>
+          )}
+        </section>
+      )}
+
+      {/* ── 3. NHỊP TIẾT KIỆM & HOẠT ĐỘNG GẦN ĐÂY ── */}
+      {showActivitySection && (
+        <>
+          <section className="jars-insights-grid jars-insights-grid--calendar">
+            <JarActivityCalendar
+              days={jarDays}
+              month={calendarMonth}
+              monthOptions={availableMonths}
+              onMonthChange={changeCalendarMonth}
+              view={calendarView}
+              onViewChange={changeCalendarView}
+              selectedDay={selectedDay}
+              onSelectDay={setSelectedDay}
+              today={today}
+            />
+            <JarRecentActivity
+              events={jarEvents}
+              selectedDay={selectedDay}
+              onClearDay={() => setSelectedDay(null)}
+              onViewAll={openHistoryDrawer}
+              limit={isMobile ? 3 : 6}
+              compact={isMobile}
+            />
+          </section>
+
+          <JarNextStepStrip
+            suggestion={currentSuggestion}
+            copy={suggestionCopy}
+            percent={suggestionPercent}
+            splitText={currentSuggestion.kind === 'milestone' ? splitSuggestion : ''}
+            canSwitch={smartSuggestions.length > 1}
+            onSwitch={() => setRecomIndex((index) => index + 1)}
+            onDeposit={handleDeposit}
+            onEditTarget={handleEdit}
+            onCreate={handleCreateNew}
+          />
         </>
       )}
 
-      {/* ── SECTION 5: CÁC HŨ CỦA BẠN (#jars-section-list) ── */}
-      {jarsSubTab === 'jars' && (
-      <>
-      <section id="jars-section-list" className="jars-list-section">
-        {/* Điện thoại: dải mục ở trên đã nói tên trang, thẻ "Tạo hũ mới" nằm trong lưới;
-            H1 vẫn còn cho trình đọc màn hình. */}
-        <JarsPageHeader icon="jarList" title={t('nav.jarList')} onCreate={isMobile ? undefined : handleCreateNew} hideTitle={isMobile} />
+      {/* ── 4. SLIDE-OVER HISTORY DRAWER (native modal <dialog>) ── */}
+      <JarHistoryDrawer
+        isOpen={isHistoryDrawerOpen}
+        onClose={closeHistoryDrawer}
+        jars={jars}
+      />
 
-        {/* Toolbar Header */}
-        <JarsListToolbar jars={jars} setCurrentPage={setCurrentPage} setSortBy={setSortBy} setViewMode={setViewMode} sortBy={sortBy} viewMode={viewMode} />
-
-        {/* LOADING STATE */}
-        {isLoading && jars.length === 0 && (
-          <div className="jars-list-section__div--box">
-            <span className="spinner spinner--box" />
-            <p className="jars-list-section__p--box">Đang tải danh sách hũ tiết kiệm...</p>
-          </div>
-        )}
-
-        {/* EMPTY STATE */}
-        {!isLoading && jars.length === 0 && (
-          <EmptyState
-            icon={
-              <Icon name="packageBox" width="48" height="48" fill="none" stroke="#5356F1" strokeWidth="1.5" />
-            }
-            title="Chưa có hũ tiết kiệm nào"
-            description="Tạo hũ đầu tiên và nhập số tiền mục tiêu để theo dõi tiến độ."
-            actionLabel="+ Tạo hũ tiết kiệm đầu tiên"
-            onAction={handleCreateNew}
-          />
-        )}
-
-        {/* LOADED STATE: GRID VIEW */}
-        {<JarsGridView activeMenuJarId={activeMenuJarId} deletingJarId={deletingJarId} handleCreateNew={handleCreateNew} handleDelete={handleDelete} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jarStatuses={jarStatuses} jars={jars} menuTriggerRef={menuTriggerRef} setActiveMenuJarId={setActiveMenuJarId} viewMode={viewMode} visibleJars={visibleJars} />}
-
-        {/* LOADED STATE: LIST VIEW */}
-        {<JarsListView handleCreateNew={handleCreateNew} handleDeposit={handleDeposit} handleEdit={handleEdit} handleOpenDetail={handleOpenDetail} handleWithdraw={handleWithdraw} isLoading={isLoading} jars={jars} viewMode={viewMode} visibleJars={visibleJars} />}
-
-        {!isLoading && pageCount > 1 && (
-          <nav className="jars-pagination" aria-label="Phân trang danh sách hũ">
-            <span className="jars-pagination__summary">
-              {`${Math.min((currentPage - 1) * JARS_PER_PAGE + 1, jars.length)}–${Math.min(currentPage * JARS_PER_PAGE, jars.length)} / ${jars.length} hũ`}
-            </span>
-            <div className="jars-pagination__controls">
-              <button type="button" onClick={() => changePage(currentPage - 1)} disabled={currentPage === 1} aria-label="Trang hũ trước">‹</button>
-              {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
-                <button key={page} type="button" className={page === currentPage ? 'is-active' : ''} onClick={() => changePage(page)} aria-current={page === currentPage ? 'page' : undefined} aria-label={`Trang hũ ${page}`}>
-                  {page}
-                </button>
-              ))}
-              <button type="button" onClick={() => changePage(currentPage + 1)} disabled={currentPage === pageCount} aria-label="Trang hũ sau">›</button>
-            </div>
-          </nav>
-        )}
-      </section>
-      </>
-      )}
-
-      {/* ── SECTION 6: LỊCH SỬ NẠP/RÚT (#jars-section-history): toàn bộ lịch sử, trang thật (JHS-01) ── */}
-      {jarsSubTab === 'history' && <JarHistoryPage jars={jars} />}
-
-      {/* ── MODALS ── */}
+      {/* ── 5. MODALS ── */}
       {isJarModalOpen && (
         <JarModal
           isOpen={isJarModalOpen}
@@ -397,7 +477,6 @@ export function JarsView() {
           onEdit={handleEdit}
         />
       )}
-
     </div>
   );
 }

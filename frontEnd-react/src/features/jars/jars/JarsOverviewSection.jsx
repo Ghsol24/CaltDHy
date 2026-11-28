@@ -1,16 +1,14 @@
 import React from 'react';
-import { JarsPageHeader } from './JarsPageHeader';
 import { formatCurrency, formatPercent } from '../../../utils/formatters';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 /**
- * Trang "Tổng quan hũ": tiêu đề nằm ngoài thẻ (cùng mẫu các trang khác), thẻ bên dưới có 3 ô số
- * và một thanh tiến độ tổng. So sánh với tháng trước chỉ hiện ở đầu lịch tiết kiệm.
+ * Thẻ tóm tắt tổng của trang Hũ tiết kiệm hợp nhất: 3 ô chỉ số gọn + 1 thanh tiến độ tổng.
  */
-export function JarsOverviewSection({ datedJarsCount, handleCreateNew, jarsCount, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget }) {
+export function JarsOverviewSection({ datedJarsCount, jarsCount, thisMonthNet, totalCurrent, totalPercent, totalRemaining, totalTarget }) {
+  const { t } = useTranslation();
   return (
-    <section id="jars-section-goals" className="jars-overview">
-      <JarsPageHeader icon="goals" title="Tổng quan hũ" onCreate={handleCreateNew} />
-
+    <section id="jars-section-goals" className="jars-overview" aria-label={t('nav.jars')}>
       <div className="jars-hero-overview-card jars-summary-card">
         <div className="jars-hero-metrics-grid">
           <div className="jars-metric-card">

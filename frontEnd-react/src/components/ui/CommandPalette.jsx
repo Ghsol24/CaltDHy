@@ -29,9 +29,7 @@ const PAGES = [
   ['analytics', 'cash-flow', 'nav.cashFlow', 'nav.analytics', 'cashFlow'],
   ['analytics', 'reports', 'nav.reports', 'nav.analytics', 'reports'],
   ['analytics', 'transactions', 'nav.transactionHistory', 'nav.analytics', 'transactions'],
-  ['jars', 'goals', 'nav.goals', 'nav.jars', 'goals'],
-  ['jars', 'jars', 'nav.jarList', 'nav.jars', 'jarList'],
-  ['jars', 'history', 'nav.history', 'nav.jars', 'jarHistory'],
+  ['jars', null, 'nav.jars', null, 'jarList'],
 ];
 const MAX_CATEGORY_RESULTS = 3;
 const HISTORY_PATH = '/spending/analytics/transactions';
@@ -55,7 +53,6 @@ export function CommandPalette({ onClose }) {
   const view = useSpendingStore((s) => s.activeView);
   const planSubTab = useSpendingStore((s) => s.planSubTab);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
-  const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
   const selectedMonth = useSpendingStore((s) => s.selectedMonth);
   const storeCategories = useTransactionStore((s) => s.categories);
   const transactions = useTransactionStore((s) => s.transactions);
@@ -76,7 +73,7 @@ export function CommandPalette({ onClose }) {
       spending.navigateTo(target, subTab);
       if (action) spending.requestCommand(action, payload);
     };
-    const subTabOf = { plan: planSubTab, analytics: analyticsSubTab, jars: jarsSubTab };
+    const subTabOf = { plan: planSubTab, analytics: analyticsSubTab };
     const commands = [];
     const add = (command) => commands.push(command);
 
@@ -103,16 +100,16 @@ export function CommandPalette({ onClose }) {
     const depositKeywords = [t('cmdk.deposit'), t('cmdk.keywords.deposit')];
     if (jars.length === 1) {
       add({ id: 'deposit', group: 'record', icon: glyph('jarGoal'), label: t('cmdk.depositInto', { name: jars[0].name }),
-        keywords: depositKeywords, run: request('jars', 'jars', 'jar-deposit', { jarId: jars[0].id }) });
+        keywords: depositKeywords, run: request('jars', null, 'jar-deposit', { jarId: jars[0].id }) });
     } else {
-      // No jar yet: open the jar list, where "Tạo hũ" is. Several: typing narrows to one row per jar.
+      // No jar yet: open Jars where "Tạo hũ" is. Several: typing narrows to one row per jar.
       add({ id: 'deposit', group: 'record', icon: glyph('jarGoal'), label: t('cmdk.deposit'), keywords: depositKeywords,
         emptyOnly: jars.length > 1,
-        run: jars.length > 1 ? () => { setQuery(`${t('cmdk.deposit')} `); return true; } : request('jars', 'jars') });
+        run: jars.length > 1 ? () => { setQuery(`${t('cmdk.deposit')} `); return true; } : request('jars', null) });
       if (jars.length > 1) {
         jars.forEach((jar) => add({ id: `deposit-${jar.id}`, group: 'record', icon: glyph('jarGoal'), queryOnly: true,
           label: t('cmdk.depositInto', { name: jar.name }), keywords: depositKeywords,
-          run: request('jars', 'jars', 'jar-deposit', { jarId: jar.id }) }));
+          run: request('jars', null, 'jar-deposit', { jarId: jar.id }) }));
       }
     }
 
@@ -136,6 +133,15 @@ export function CommandPalette({ onClose }) {
       add({ id: `goto-${target}-${subTab || 'home'}`, group: 'goto', icon: <NavIcon name={icon} size={16} />,
         label: t(titleKey), detail: current ? t('cmdk.current') : groupKey ? t(groupKey) : '',
         keywords: groupKey ? [t(groupKey)] : [], run: request(target, subTab) });
+    });
+    add({
+      id: 'goto-jars-history',
+      group: 'goto',
+      icon: <NavIcon name="jarHistory" size={16} />,
+      label: t('nav.history'),
+      detail: t('nav.jars'),
+      keywords: [t('nav.jars')],
+      run: request('jars', null, 'jar-history'),
     });
 
     // Kỳ: only where the page follows the shared month (Phân tích, Ngân sách, Khoản định kỳ).
@@ -173,7 +179,7 @@ export function CommandPalette({ onClose }) {
       keywords: [t('cmdk.keywords.help')], run: () => spending.openHelpModal() });
 
     return filterCommands(commands, query);
-  }, [query, t, label, navigate, view, planSubTab, analyticsSubTab, jarsSubTab, selectedMonth, categoryNames, jars, theme]);
+  }, [query, t, label, navigate, view, planSubTab, analyticsSubTab, selectedMonth, categoryNames, jars, theme]);
 
   const items = useMemo(() => groups.flatMap((group) => group.items), [groups]);
   const active = items[Math.min(activeIndex, items.length - 1)];

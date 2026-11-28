@@ -301,11 +301,11 @@ async function readableRouteHeading(selector, label, headerSelector = selector) 
     await page.getByRole('button', { name: 'Bỏ thay đổi', exact: true }).click();
   });
 
-  await check('plan shows the two most severe alerts and opens the rest in a sheet without moving the page', async () => {
+  await check('plan shows a compact alert strip and opens all alerts in a sheet without moving the page', async () => {
     await goPlan();
     const alerts = page.getByTestId('plan-attention');
     await expect(alerts.locator('.plan-attention-count')).toHaveText('4');
-    await expect(alerts.locator('.plan-alert-card')).toHaveCount(2);
+    await expect(alerts.locator('.plan-attention-lead-detail')).toBeVisible();
     const before = await alerts.boundingBox();
     await alerts.getByRole('button', { name: 'Xem tất cả 4 việc' }).click();
     const sheet = page.getByTestId('plan-attention-sheet');

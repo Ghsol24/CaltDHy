@@ -47,7 +47,7 @@ check('Ctrl/Cmd+K opens a combobox over grouped commands; arrows, Enter and Esc 
   await expect(input).toHaveAttribute('aria-expanded', 'true');
   const listbox = page.getByRole('listbox');
   for (const group of ['Ghi chép', 'Đi tới', 'Khác']) await expect(listbox.getByRole('group', { name: group })).toBeVisible();
-  await expect(listbox.getByRole('group', { name: 'Đi tới' }).getByRole('option')).toHaveCount(13);
+  await expect(listbox.getByRole('group', { name: 'Đi tới' }).getByRole('option')).toHaveCount(12);
   // The first row is active and named by aria-activedescendant; arrows move and wrap.
   const first = await activeOption(page).getAttribute('id');
   assert.equal(await input.getAttribute('aria-activedescendant'), first);
@@ -147,7 +147,7 @@ check('Commands open the transfer form, a jar deposit, the CSV export and switch
   await input.fill('nạp sức');
   await expect(activeOption(page)).toContainText('Nạp tiền vào hũ Sức khoẻ');
   await page.keyboard.press('Enter');
-  await page.waitForURL('**/spending/jars/list');
+  await page.waitForURL('**/spending/jars');
   await expect(page.locator('.jar-transaction-dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('.jar-transaction-dialog')).toHaveCount(0);

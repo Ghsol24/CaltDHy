@@ -46,10 +46,12 @@ export function SpendingRouteSync() {
       activeView: route.view,
       planSubTab: route.view === 'plan' ? route.subTab : 'overview',
       analyticsSubTab: route.view === 'analytics' ? route.subTab : 'overview',
-      jarsSubTab: route.view === 'jars' ? route.subTab : 'goals'
     });
     if (canonicalPath !== location.pathname) {
-      navigate(canonicalPath, { replace: true });
+      const nextSearch = route.openDrawer === 'history'
+        ? '?drawer=history'
+        : location.search;
+      navigate(`${canonicalPath}${nextSearch}`, { replace: true });
       return undefined;
     }
     applyingLocation.current = true;
@@ -65,7 +67,7 @@ export function SpendingRouteSync() {
       window.clearTimeout(timerId);
       applyingLocation.current = false;
     };
-  }, [location.pathname, navigate, route?.view, route?.subTab, syncFromRoute, t, lang]);
+  }, [location.pathname, location.search, navigate, route?.view, route?.subTab, route?.openDrawer, syncFromRoute, t, lang]);
 
   useEffect(() => {
     if (applyingLocation.current || routeRevision === 0) return;

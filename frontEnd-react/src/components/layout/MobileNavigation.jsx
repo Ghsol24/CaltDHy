@@ -24,16 +24,11 @@ const SECTION_ITEMS = {
     { id: 'cash-flow', labelKey: 'nav.cashFlow', target: 'analytics-cashflow' },
     { id: 'reports', labelKey: 'nav.reports', target: 'analytics-reports' },
     { id: 'transactions', labelKey: 'nav.transactionHistory', target: 'transaction-history-title' }
-  ],
-  jars: [
-    { id: 'goals', labelKey: 'nav.goals', target: 'jars-section-goals' },
-    { id: 'jars', labelKey: 'nav.jarList', target: 'jars-section-list' },
-    { id: 'history', labelKey: 'nav.history', target: 'jars-section-history' }
   ]
 };
 
 const SECTION_LABELS = {
-  plan: 'nav.plan', analytics: 'nav.analytics', jars: 'nav.jarShort'
+  plan: 'nav.plan', analytics: 'nav.analytics'
 };
 
 export function MobilePrimaryNavigation() {
@@ -74,10 +69,9 @@ export function MobileSectionNavigation() {
   const activeView = useSpendingStore((state) => state.activeView);
   const planSubTab = useSpendingStore((state) => state.planSubTab);
   const analyticsSubTab = useSpendingStore((state) => state.analyticsSubTab);
-  const jarsSubTab = useSpendingStore((state) => state.jarsSubTab);
   const navigateTo = useSpendingStore((state) => state.navigateTo);
   const items = SECTION_ITEMS[activeView];
-  const activeTab = activeView === 'plan' ? planSubTab : activeView === 'analytics' ? analyticsSubTab : jarsSubTab;
+  const activeTab = activeView === 'plan' ? planSubTab : analyticsSubTab;
   const scrollerRef = useRef(null);
   const centeredViewRef = useRef(null);
   const [scrollEdges, setScrollEdges] = useState({ left: false, right: false });

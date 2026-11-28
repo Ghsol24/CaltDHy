@@ -507,7 +507,7 @@ function blendCssColor(color, background) {
         cream: 'rgb(253, 248, 242)', green: 'rgb(255, 255, 255)'
       };
       for (const theme of ['dark', 'light', 'cream', 'green']) {
-        await jarPage.goto('/spending/jars/list');
+        await jarPage.goto('/spending/jars');
         await jarPage.evaluate(value => localStorage.setItem('caltdhy_theme', value), theme);
         await jarPage.reload();
         await jarPage.getByRole('button', { name: 'Tạo hũ đầu tiên' }).click();
@@ -1259,8 +1259,8 @@ function blendCssColor(color, background) {
     await analyticsNav.getByRole('button', { name: 'Chi tiêu' }).click();
     await mobilePage.waitForURL('**/spending/analytics/spending');
     await primaryNav.getByRole('button', { name: 'Hũ' }).click();
-    await mobilePage.waitForURL('**/spending/jars/goals');
-    await expect(mobilePage.getByRole('navigation', { name: 'Điều hướng Hũ' })).toBeVisible();
+    await mobilePage.waitForURL('**/spending/jars');
+    await expect(mobilePage.getByRole('navigation', { name: 'Điều hướng Hũ' })).toHaveCount(0);
     await expect(mobilePage.getByText('Bạn chưa có hũ tiết kiệm')).toBeVisible();
     const emptyJarsDomCount = await mobilePage.locator('.jars-page-root *').count();
     assert.ok(emptyJarsDomCount < 80, `Hũ rỗng không được dựng dashboard nặng (${emptyJarsDomCount} node)`);
@@ -1270,7 +1270,7 @@ function blendCssColor(color, background) {
     await expect(mobilePage.locator('#analytics-spending')).toBeVisible();
     await expect(mobilePage.getByRole('navigation', { name: 'Điều hướng Phân tích' })).toBeVisible();
     await mobilePage.goForward();
-    await mobilePage.waitForURL('**/spending/jars/goals');
+    await mobilePage.waitForURL('**/spending/jars');
     await expect(mobilePage.getByText('Bạn chưa có hũ tiết kiệm')).toBeVisible();
 
     await backend('./models/Jar').insertMany(Array.from({ length: 20 }, (_, index) => ({
@@ -1282,11 +1282,7 @@ function blendCssColor(color, background) {
       color: '#5356F1'
     })));
     await mobilePage.reload();
-    const jarsNav = mobilePage.getByRole('navigation', { name: 'Điều hướng Hũ' });
-    await jarsNav.getByRole('button', { name: 'Danh sách hũ' }).click();
-    await mobilePage.waitForURL('**/spending/jars/list');
     await expect(mobilePage.locator('#jars-section-list')).toBeVisible();
-    await expect(mobilePage.locator('#jars-section-goals, #jars-section-history')).toHaveCount(0);
     await expect(mobilePage.locator('.jar-premium-card')).toHaveCount(12);
     await expect(mobilePage.getByRole('navigation', { name: 'Phân trang danh sách hũ' })).toBeVisible();
     const fullJarsDomCount = await mobilePage.locator('.jars-page-root *').count();
@@ -1295,10 +1291,11 @@ function blendCssColor(color, background) {
     await mobilePage.getByRole('button', { name: 'Trang hũ sau' }).click();
     await expect(mobilePage.locator('.jar-premium-card')).toHaveCount(8);
     await expect(mobilePage.getByRole('button', { name: 'Trang hũ 2' })).toHaveAttribute('aria-current', 'page');
-    await jarsNav.getByRole('button', { name: 'Lịch sử' }).click();
-    await mobilePage.waitForURL('**/spending/jars/history');
-    await expect(mobilePage.locator('#jars-section-history')).toBeVisible();
-    await expect(mobilePage.locator('#jars-section-goals, #jars-section-list')).toHaveCount(0);
+    await mobilePage.locator('.jars-history-trigger-btn').click();
+    await mobilePage.waitForURL('**/spending/jars?drawer=history');
+    await expect(mobilePage.locator('#jar-history-drawer')).toBeVisible();
+    await mobilePage.keyboard.press('Escape');
+    await expect(mobilePage.locator('#jar-history-drawer')).toBeHidden();
 
     const hasHorizontalOverflow = await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
     assert.equal(hasHorizontalOverflow, false, 'Trang mobile không được tràn ngang');
@@ -1437,20 +1434,18 @@ function blendCssColor(color, background) {
     await mobilePage.keyboard.press('Escape');
 
     await mobilePage.goto('/spending/jars/list');
+    await mobilePage.waitForURL('**/spending/jars');
     await expect(mobilePage.locator('#jars-section-list')).toBeVisible();
-    await expect(mobilePage.locator('#jars-section-list h1')).toHaveText('Danh sách hũ');
-    await expect(mobilePage.locator('#jars-section-goals, #jars-section-history')).toHaveCount(0);
+    await expect(mobilePage.locator('.jars-hero-heading')).toHaveText('Hũ tiết kiệm');
     await expect(mobilePage.locator('.jar-premium-card')).toHaveCount(12);
-    await expect(mobilePage.locator('button.sidebar-nav-item.active')).toHaveText('Danh sách hũ');
-    const jarsGroupToggle = mobilePage.locator('.sidebar-group-toggle', { hasText: 'Hũ tiết kiệm' });
-    if (await jarsGroupToggle.getAttribute('aria-expanded') !== 'true') await jarsGroupToggle.click();
-    await mobilePage.getByRole('button', { name: 'Lịch sử nạp/rút', exact: true }).click();
-    await mobilePage.waitForURL('**/spending/jars/history');
-    await expect(mobilePage.locator('#jars-section-history h1')).toHaveText('Lịch sử nạp/rút');
-    await expect(mobilePage.locator('#jars-section-goals, #jars-section-list')).toHaveCount(0);
-    await expect(mobilePage.locator('button.sidebar-nav-item.active')).toHaveText('Lịch sử nạp/rút');
+    await expect(mobilePage.locator('button.sidebar-nav-item.active')).toHaveText('Hũ tiết kiệm');
+    await mobilePage.locator('.jars-history-trigger-btn').click();
+    await mobilePage.waitForURL('**/spending/jars?drawer=history');
+    await expect(mobilePage.locator('#jar-history-drawer h1')).toHaveText('Lịch sử nạp/rút');
     assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1), false,
-      'Trang desktop Lịch sử nạp/rút không được tràn ngang');
+      'Drawer desktop Lịch sử nạp/rút không được tràn ngang');
+    await mobilePage.keyboard.press('Escape');
+    await expect(mobilePage.locator('#jar-history-drawer')).toBeHidden();
 
     const themeVisuals = new Map();
     for (const theme of ['dark', 'cream', 'green', 'light']) {
@@ -1521,7 +1516,7 @@ function blendCssColor(color, background) {
       ['/spending/plan/budgets', 'Plan · Budgets', '计划 · 预算'],
       ['/spending/plan/recurring', 'Plan · Recurring items', '计划 · 周期项目'],
       ['/spending/analytics/overview', 'Analytics · Summary', '分析 · 收支概要'],
-      ['/spending/jars/list', 'Savings jars · Jar list', '储蓄罐 · 储蓄罐列表']
+      ['/spending/jars', 'Savings jars', '储蓄罐']
     ];
     for (const [locale, column, homeLabel, transactionLabel] of [
       ['en', 1, 'Dashboard', 'Add transaction'],

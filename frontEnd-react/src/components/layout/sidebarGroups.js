@@ -1,9 +1,8 @@
-export const SIDEBAR_GROUP_IDS = ['group_plan', 'group_analytics', 'group_jars'];
+export const SIDEBAR_GROUP_IDS = ['group_plan', 'group_analytics'];
 
 const VIEW_TO_GROUP = {
   plan: 'group_plan',
   analytics: 'group_analytics',
-  jars: 'group_jars',
 };
 
 export function normalizePinnedGroups(value) {

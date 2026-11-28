@@ -470,6 +470,33 @@ html.is-resizing-sidebar .app-sidebar-nav {
   font-weight: 600;
 }
 
+/* Mục độc lập đặt ở cuối sidebar (Hũ tiết kiệm): ngăn cách nhẹ bằng 1 đường mảnh. */
+.sidebar-nav-group--standalone-bottom {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Huy hiệu đếm số lượng (vẽ bằng ::after để giữ textContent sạch cho trình đọc màn hình). */
+.sidebar-nav-item[data-badge]::after {
+  content: attr(data-badge) / "";
+  margin-inline-start: auto;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar-nav-item.active[data-badge]::after {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-active-text);
+}
+
 /* Long "Tóm tắt thu chi" page: while a block below is read, the highlight
    moves to that block's item (Chi tiêu / Dòng tiền / Báo cáo) and the page item
    fades back to a plain item, so only one item looks selected. The page item

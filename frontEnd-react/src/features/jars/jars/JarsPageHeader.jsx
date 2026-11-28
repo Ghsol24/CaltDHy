@@ -1,14 +1,23 @@
 import React from 'react';
 import { PageHeader } from '../../../components/ui/PageHeader';
 import { Icon } from '../../../components/ui/AppIcons';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 /**
- * Hàng tiêu đề của một trang Hũ: hàng tiêu đề dùng chung (PageHeader) với icon + H1
- * đúng tên mục menu, và nút "Tạo hũ mới" khi trang cần.
- * `hideTitle`: H1 chỉ để trình đọc màn hình (Danh sách hũ trên điện thoại, nơi dải mục
- * ở trên đã nói tên trang).
+ * Hàng tiêu đề duy nhất của trang Hũ tiết kiệm: icon + H1 + nút phụ mở Drawer lịch sử
+ * và nút chính "Tạo hũ mới".
  */
-export function JarsPageHeader({ icon, title, onCreate, hideTitle = false }) {
+export function JarsPageHeader({
+  icon = 'jarList',
+  title,
+  onCreate,
+  onOpenHistory,
+  historyOpen = false,
+  hideTitle = false,
+}) {
+  const { t } = useTranslation();
+  const hasActions = Boolean(onCreate || onOpenHistory);
+
   return (
     <PageHeader
       icon={icon}
@@ -16,11 +25,27 @@ export function JarsPageHeader({ icon, title, onCreate, hideTitle = false }) {
       title={title}
       titleClassName="jars-hero-heading"
       hideTitle={hideTitle}
-      actions={onCreate && (
-        <button type="button" className="jars-hero-cta-btn" onClick={onCreate}>
-          <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <span>Tạo hũ mới</span>
-        </button>
+      actions={hasActions && (
+        <div className="jars-header-actions">
+          {onOpenHistory && (
+            <button
+              type="button"
+              className="jars-history-trigger-btn"
+              onClick={onOpenHistory}
+              aria-expanded={historyOpen}
+              aria-controls="jar-history-drawer"
+            >
+              <Icon name="history" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <span>{t('nav.history')}</span>
+            </button>
+          )}
+          {onCreate && (
+            <button type="button" className="jars-hero-cta-btn" onClick={onCreate}>
+              <Icon name="plus" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <span>Tạo hũ mới</span>
+            </button>
+          )}
+        </div>
       )}
     />
   );

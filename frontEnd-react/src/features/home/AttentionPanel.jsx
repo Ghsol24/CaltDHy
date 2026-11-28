@@ -102,7 +102,7 @@ export const AttentionPanel = React.memo(function AttentionPanel() {
   };
 
   const handleGoToJars = () => {
-    navigateTo('jars', 'goals');
+    navigateTo('jars');
   };
 
   // Dynamic context-aware Callout Card configuration
@@ -322,7 +322,7 @@ export const HomeQuickLinks = React.memo(function HomeQuickLinks() {
         <span>{upcomingCount > 0 ? `${upcomingCount} khoản định kỳ sắp đến hạn` : 'Không có khoản định kỳ sắp đến hạn'}</span>
         <span className="home-quick-link-chevron" aria-hidden="true">›</span>
       </button>
-      <button type="button" className="home-quick-link" onClick={() => navigateTo('jars', 'goals')}>
+      <button type="button" className="home-quick-link" onClick={() => navigateTo('jars')}>
         <span>{jarsCount > 0 ? `${jarsCount} hũ tiết kiệm` : 'Chưa có hũ tiết kiệm'}</span>
         <span className="home-quick-link-chevron" aria-hidden="true">›</span>
       </button>

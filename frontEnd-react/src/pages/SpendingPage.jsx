@@ -28,7 +28,6 @@ export function SpendingPage() {
   const activeView = useSpendingStore((s) => s.activeView);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const planSubTab = useSpendingStore((s) => s.planSubTab);
-  const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
   const fetchTransactions = useTransactionStore((s) => s.fetchTransactions);
   const fetchBudgets = useTransactionStore((s) => s.fetchBudgets);
   const fetchWallets = useWalletStore((s) => s.fetchWallets);
@@ -63,7 +62,7 @@ export function SpendingPage() {
     <>
       <SpendingRouteSync />
       <AppShell key={`${lang}-${displayCurrency}`}>
-      <ErrorBoundary resetKey={`${activeView}:${analyticsSubTab}:${planSubTab}:${jarsSubTab}`}>
+      <ErrorBoundary resetKey={`${activeView}:${analyticsSubTab}:${planSubTab}`}>
         <MoneyDisplayGuard>
         {loadFailed ? (
           <>

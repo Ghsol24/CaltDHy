@@ -2,13 +2,13 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from './stores/useAuthStore';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { AppShellSkeleton } from './components/layout/AppShellSkeleton';
 import { useTranslation } from './i18n/useTranslation';
 import { LocalizationObserver } from './i18n/LocalizationObserver';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { useSignatureLoginStore } from './stores/useSignatureLoginStore';
 
 const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
+const AppShellSkeleton = lazyNamed(() => import('./components/layout/AppShellSkeleton'), 'AppShellSkeleton');
 const LandingPage = lazyNamed(() => import('./pages/LandingPage'), 'LandingPage');
 const LoginPage = lazyNamed(() => import('./pages/LoginPage'), 'LoginPage');
 const SignupPage = lazyNamed(() => import('./pages/SignupPage'), 'SignupPage');
@@ -51,10 +51,11 @@ function AuthExpirationListener() {
 function RouteLoadingFallback() {
   const { t } = useTranslation();
   const location = useLocation();
+  const plainFallback = <div className="route-loading" role="status" aria-live="polite">{t('common.loading')}</div>;
   if (location.pathname.startsWith('/spending')) {
-    return <AppShellSkeleton />;
+    return <Suspense fallback={plainFallback}><AppShellSkeleton /></Suspense>;
   }
-  return <div className="route-loading" role="status" aria-live="polite">{t('common.loading')}</div>;
+  return plainFallback;
 }
 
 function RouteErrorBoundary({ children }) {

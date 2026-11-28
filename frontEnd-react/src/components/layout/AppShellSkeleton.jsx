@@ -7,6 +7,13 @@ import { readSidebarWidth } from './sidebarWidth';
 import { groupIdForView, normalizePinnedGroups } from './sidebarGroups';
 import { BrandMark } from '../ui/BrandMark';
 
+const GROUP_DEFS = [
+  { id: 'group_home', standalone: true, items: 1 },
+  { id: 'group_plan', labelKey: 'nav.plan', items: 4 },
+  { id: 'group_analytics', labelKey: 'nav.analytics', items: 5 },
+  { id: 'group_jars', standalone: true, items: 1 },
+];
+
 // Cùng khung với AppShell (đợt 15b): logo trong sidebar, tấm nội dung bo góc, viên kính góc
 // trên-phải trên máy tính; điện thoại vẫn là topbar có logo. Tải xong không nhảy bố cục.
 export function AppShellSkeleton() {
@@ -14,12 +21,7 @@ export function AppShellSkeleton() {
   const { pathname } = useLocation();
   const pinnedGroups = normalizePinnedGroups(useAuthStore.getState().user?.preferences?.sidebarPinnedGroups);
   const activeGroupId = groupIdForView(pathname.split('/')[2]);
-  const groupDefs = [
-    { id: 'group_home', labelKey: 'nav.home', standalone: true, items: 1 },
-    { id: 'group_plan', labelKey: 'nav.plan', items: 4 },
-    { id: 'group_analytics', labelKey: 'nav.analytics', items: 5 },
-    { id: 'group_jars', labelKey: 'nav.jars', items: 3 },
-  ];
+  const groupDefs = GROUP_DEFS;
   const brand = (
     <>
       <BrandMark />

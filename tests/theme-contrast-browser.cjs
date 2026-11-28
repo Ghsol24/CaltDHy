@@ -23,7 +23,7 @@ const ROUTES = [
   '/spending/plan/overview', '/spending/plan/wallets', '/spending/plan/budgets', '/spending/plan/recurring',
   '/spending/analytics/overview', '/spending/analytics/spending', '/spending/analytics/cash-flow',
   '/spending/analytics/reports', '/spending/analytics/transactions',
-  '/spending/jars/goals', '/spending/jars/list', '/spending/jars/history'
+  '/spending/jars', '/spending/jars?drawer=history'
 ];
 
 // Each scenario opens one floating surface. `open` is clicked, then every text
@@ -35,11 +35,11 @@ const MENUS = [
   { route: '/spending/plan/recurring', open: ['.recurring-menu-wrapper button'], menu: '.recurring-actions-dropdown' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=0 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },
   { route: '/spending/analytics/transactions', open: ['.transaction-filter-dropdown >> nth=1 >> .transaction-filter-trigger'], menu: '.transaction-filter-menu' },
-  { route: '/spending/jars/goals', open: ['.jar-cal-card .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
-  { route: '/spending/jars/list', open: ['.jars-toolbar-right .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
-  { route: '/spending/jars/history', open: ['.jm-history-jar-select .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
-  { route: '/spending/jars/list', open: ['.jar-card-menu-btn'], menu: '.jar-card-dropdown-menu' },
-  { route: '/spending/jars/list', open: ['button:has-text("Nạp tiền")', '.jar-transfer-wallet-box .custom-wallet-trigger'], menu: '.custom-wallet-menu' },
+  { route: '/spending/jars', open: ['.jar-cal-card .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
+  { route: '/spending/jars', open: ['.jars-toolbar-right .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
+  { route: '/spending/jars?drawer=history', open: ['.jm-history-jar-select .calt-custom-select-trigger'], menu: '.calt-custom-select-menu' },
+  { route: '/spending/jars', open: ['.jar-card-menu-btn'], menu: '.jar-card-dropdown-menu' },
+  { route: '/spending/jars', open: ['button:has-text("Nạp tiền")', '.jar-transfer-wallet-box .custom-wallet-trigger'], menu: '.custom-wallet-menu' },
   { route: '/spending/plan/recurring', open: ['.recurring-add-btn, button:has-text("Thêm khoản định kỳ")', '.modal-custom-dropdown-btn'], menu: '.modal-custom-dropdown-menu', optional: true }
 ];
 
@@ -151,7 +151,7 @@ async function openPage(browser, url, theme, width = 1440) {
   const report = { pages: [], menus: [], skipped: [] };
   try {
     for (const theme of THEMES) {
-      for (const [route, width] of [...ROUTES.map((r) => [r, 1440]), ['/spending/home', 390], ['/spending/jars/goals', 390], ['/spending/plan/budgets', 390]]) {
+      for (const [route, width] of [...ROUTES.map((r) => [r, 1440]), ['/spending/home', 390], ['/spending/plan/overview', 390], ['/spending/jars', 390], ['/spending/plan/budgets', 390]]) {
         const { context, page } = await openPage(browser, server.url + route, theme, width);
         const result = await page.evaluate(scanScript, { rootSelector: null, minimum: PAGE_MIN });
         report.pages.push({ theme, route, width, checked: result.checked, failures: result.failures });

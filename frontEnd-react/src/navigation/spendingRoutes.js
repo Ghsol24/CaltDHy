@@ -1,7 +1,7 @@
 const PLAN_TABS = new Set(['overview', 'wallets', 'budgets', 'recurring']);
 const ANALYTICS_TABS = new Set(['overview', 'spending', 'cash-flow', 'reports', 'transactions']);
-const JARS_PATH_TO_TAB = { goals: 'goals', list: 'jars', history: 'history' };
-const JARS_TAB_TO_PATH = { goals: 'goals', jars: 'list', history: 'history' };
+// Legacy sub-paths under /spending/jars/* stay valid bookmarks and redirect cleanly to /spending/jars.
+const LEGACY_JARS_PATHS = new Set(['goals', 'list', 'history']);
 
 // groupKey names the sidebar group so both "Tổng quan" pages get distinct tab titles.
 const ROUTE_META = {
@@ -15,9 +15,7 @@ const ROUTE_META = {
   'analytics:cash-flow': { groupKey: 'nav.analytics', titleKey: 'nav.cashFlow', focus: '#analytics-cashflow' },
   'analytics:reports': { groupKey: 'nav.analytics', titleKey: 'nav.reports', focus: '#analytics-reports' },
   'analytics:transactions': { groupKey: 'nav.analytics', titleKey: 'nav.transactionHistory', focus: '#transaction-history-title' },
-  'jars:goals': { groupKey: 'nav.jars', titleKey: 'nav.goals', focus: '#jars-section-goals' },
-  'jars:jars': { groupKey: 'nav.jars', titleKey: 'nav.jarList', focus: '#jars-section-list' },
-  'jars:history': { groupKey: 'nav.jars', titleKey: 'nav.history', focus: '#jars-section-history' }
+  jars: { titleKey: 'nav.jars', focus: '.jars-hero-heading' },
 };
 
 export function parseSpendingPath(pathname) {
@@ -25,18 +23,28 @@ export function parseSpendingPath(pathname) {
   if (segments[0] !== 'spending') return null;
   if (segments.length === 1 || segments[1] === 'home') return { view: 'home', subTab: null };
 
-  const [view, rawSubTab] = [segments[1], segments[2] || 'overview'];
+  const view = segments[1];
   if (segments.length > 3) return null;
+
+  if (view === 'jars') {
+    if (segments.length === 2) return { view: 'jars', subTab: null };
+    const legacy = segments[2];
+    if (LEGACY_JARS_PATHS.has(legacy)) {
+      return { view: 'jars', subTab: null, openDrawer: legacy === 'history' ? 'history' : null };
+    }
+    return null;
+  }
+
+  const rawSubTab = segments[2] || 'overview';
   if (view === 'plan' && PLAN_TABS.has(rawSubTab)) return { view, subTab: rawSubTab };
   if (view === 'analytics' && ANALYTICS_TABS.has(rawSubTab)) return { view, subTab: rawSubTab };
-  if (view === 'jars' && JARS_PATH_TO_TAB[rawSubTab]) return { view, subTab: JARS_PATH_TO_TAB[rawSubTab] };
   return null;
 }
 
-export function buildSpendingPath({ activeView, planSubTab, analyticsSubTab, jarsSubTab }) {
+export function buildSpendingPath({ activeView, planSubTab, analyticsSubTab }) {
   if (activeView === 'plan') return `/spending/plan/${PLAN_TABS.has(planSubTab) ? planSubTab : 'overview'}`;
   if (activeView === 'analytics') return `/spending/analytics/${ANALYTICS_TABS.has(analyticsSubTab) ? analyticsSubTab : 'overview'}`;
-  if (activeView === 'jars') return `/spending/jars/${JARS_TAB_TO_PATH[jarsSubTab] || 'goals'}`;
+  if (activeView === 'jars') return '/spending/jars';
   return '/spending/home';
 }
 

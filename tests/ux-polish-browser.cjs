@@ -32,7 +32,7 @@ const check = (name, run) => checks.push({ name, run });
 
 check('jar deposit dialog uses the themed wallet dropdown', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server);
-  await open('/spending/jars/list');
+  await open('/spending/jars');
   await page.locator('button', { hasText: 'Nạp tiền' }).first().click();
   const dialog = page.locator('.jar-transaction-dialog');
   await expect(dialog).toBeVisible();
@@ -65,7 +65,7 @@ check('jar deposit dialog uses the themed wallet dropdown', async ({ browser, se
 
 check('jar goal date uses the themed date picker (typing, calendar, keyboard, clear)', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'cream' });
-  await open('/spending/jars/list');
+  await open('/spending/jars');
   await page.getByRole('button', { name: /Tạo hũ mới/ }).first().click();
   const dialog = page.locator('.jar-management-dialog');
   await expect(dialog).toBeVisible();
@@ -257,45 +257,38 @@ check('on phones the quick filters and the full "Bộ lọc" list open as sheets
   await context.close();
 });
 
-check('"Cần chú ý" grades each alert and puts the worst first', async ({ browser, server }) => {
+check('"Cần chú ý" grades each alert in a compact actionable strip and expands on demand', async ({ browser, server }) => {
   for (const theme of ['green', 'dark']) {
     const { context, page, errors, open } = await newPage(browser, server, { theme });
     await open('/spending/plan/overview');
     const card = page.getByTestId('plan-attention');
     await expect(card).toHaveClass(/is-critical/);
     await expect(card.locator('.plan-attention-count')).toHaveText('6');
-    const bell = await card.locator('.plan-attention-bell').evaluate((node) => getComputedStyle(node).backgroundColor);
-    const [r, g, b] = bell.match(/\d+/g).map(Number);
-    assert.ok(r > 180 && g < 90 && b < 110, `${theme}: the bell is solid red (${bell})`);
-    // The frame no longer floods red; severity lives on the cards.
-    const frame = await card.evaluate((node) => getComputedStyle(node).backgroundImage);
-    assert.equal(frame, 'none', `${theme}: no red gradient on the frame`);
-    const cards = card.locator('.plan-alert-card');
-    await expect(cards.first()).toHaveClass(/is-critical/);
-    // Desktop shows one full row of cards; "show more" counts exactly the hidden ones.
-    const shown = await cards.count();
-    assert.ok(shown >= 2 && shown < 6, `${theme}: ${shown} cards fill one row`);
+    // Collapsed by default: single calm strip with direct action and on-demand expand button.
+    await expect(card.locator('#plan-alert-list')).toHaveCount(0);
     const more = card.locator('.plan-attention-more');
-    await expect(more).toHaveText(`Xem thêm ${6 - shown} việc`);
+    await expect(more).toHaveText('Xem 6 mục');
     await more.click();
-    await expect(cards).toHaveCount(6);
-    const tops = await cards.evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
-    assert.equal(new Set(tops.slice(0, shown)).size, 1, `${theme}: the first row is one line`);
+    const rows = card.locator('.plan-alert-row');
+    await expect(rows).toHaveCount(6);
+    await expect(rows.first()).toHaveClass(/is-critical/);
+    await expect(more).toHaveText('Thu gọn');
+    await more.click();
+    await expect(card.locator('#plan-alert-list')).toHaveCount(0);
     assert.deepEqual(errors, []);
     await context.close();
   }
 });
 
-check('Goals page: savings calendar beside recent activity, no invented figures', async ({ browser, server }) => {
+check('Consolidated Jars page: jars above the fold, calendar beside activity, history in slide-over drawer', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'green' });
-  await open('/spending/jars/goals');
+  await open('/spending/jars');
   await expect(page.locator('.jars-saving-trend-card, .jar-next-step-card')).toHaveCount(0);
+  await expect(page.locator('#jars-section-list .jar-premium-card')).toHaveCount(2);
   const calendar = page.locator('.jar-cal-card');
   const activity = page.locator('.jars-insights-grid--calendar .jar-activity-card');
   await expect(calendar).toBeVisible();
   await expect(activity).toBeVisible();
-  // Bản xem nhanh: lịch sử đầy đủ là trang riêng (#jars-section-history), không nằm ở đây.
-  await expect(page.locator('#jars-section-history')).toHaveCount(0);
   // Calendar and list sit side by side on desktop.
   const [a, b] = await Promise.all([calendar.boundingBox(), activity.boundingBox()]);
   assert.ok(b.x > a.x + a.width - 1 && Math.abs(a.y - b.y) < 2, 'activity sits to the right of the calendar');
@@ -332,30 +325,42 @@ check('Goals page: savings calendar beside recent activity, no invented figures'
   await expect(calendar.locator('.jar-cal-title')).toHaveText('12 tháng qua bạn đã tiết kiệm');
   await page.reload({ waitUntil: 'networkidle' });
   await expect(page.locator('.jar-cal-card .jar-cal-months, .jar-cal-card .jar-cal-year')).toBeVisible();
-  // "Xem tất cả" mở trang Lịch sử nạp/rút (URL, menu, tiêu đề tab cùng một mục), không mở hộp thoại.
+  // "Xem tất cả" opens the native <dialog> slide-over History Drawer and syncs ?drawer=history.
   await page.locator('.jar-activity-card .jar-activity-view-all').click();
-  await page.waitForURL('**/spending/jars/history');
-  await expect(page.locator('[role="dialog"]')).toHaveCount(0);
-  await expect(page.locator('#jars-section-history h1')).toHaveText('Lịch sử nạp/rút');
-  await expect(page).toHaveTitle('Hũ tiết kiệm · Lịch sử nạp/rút – CaltDHy');
-  await expect(page.locator('.app-sidebar-nav [aria-current="page"]')).toHaveText('Lịch sử nạp/rút');
-  await expect(page.locator('#jars-section-history .jm-history-row')).toHaveCount(6);
-  await expect(page.locator('.jar-cal-card, #jars-section-list')).toHaveCount(0);
+  await page.waitForURL('**/spending/jars?drawer=history');
+  const drawer = page.getByTestId('jar-history-drawer');
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator('h1')).toHaveText('Lịch sử nạp/rút');
+  await expect(page).toHaveTitle('Hũ tiết kiệm – CaltDHy');
+  await expect(page.locator('.app-sidebar-nav [aria-current="page"]')).toHaveText('Hũ tiết kiệm');
+  await expect(drawer.locator('.jm-history-row')).toHaveCount(6);
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await page.waitForURL('**/spending/jars');
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-check('Goals page on phones: compact list on Tổng quan hũ, full history page on Lịch sử', async ({ browser, server }) => {
+check('Consolidated Jars page on phones: inline tab switch and full History Drawer', async ({ browser, server }) => {
   const { context, page, errors, open } = await newPage(browser, server, { theme: 'light', width: 390 });
-  await open('/spending/jars/goals');
+  await open('/spending/jars');
+  // Jars are visible immediately above the fold without a sticky sub-nav bar.
+  await expect(page.locator('.mobile-section-nav')).toHaveCount(0);
+  await expect(page.locator('#jars-section-list .jar-premium-card')).toHaveCount(2);
+  // Switching to "Nhịp tiết kiệm" reveals the calendar and compact recent activity.
+  await page.getByRole('tab', { name: 'Nhịp tiết kiệm' }).click();
   const calendar = page.locator('.jar-cal-card');
   await expect(calendar).toHaveClass(/is-narrow/);
-  await expect(calendar.locator('.jar-cal-view-switch')).toHaveCount(0); // year view needs a wider screen
+  await expect(calendar.locator('.jar-cal-view-switch')).toHaveCount(0);
   await expect(page.locator('.jar-activity-card .jar-activity-row')).toHaveCount(3);
   await page.locator('.jar-activity-card .jar-activity-view-all').click();
-  await page.waitForURL('**/spending/jars/history');
-  await expect(page.locator('#jars-section-history .jm-history-row')).toHaveCount(6);
-  await expect(page.locator('#jars-section-history .jm-history-search input')).toBeVisible();
+  await page.waitForURL('**/spending/jars?drawer=history');
+  const drawer = page.getByTestId('jar-history-drawer');
+  await expect(drawer).toBeVisible();
+  await expect(drawer.locator('.jm-history-row')).toHaveCount(6);
+  await expect(drawer.locator('.jm-history-search input')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   assert.equal(overflows, false, 'no sideways scrolling on a phone');
   assert.deepEqual(errors, []);
@@ -370,23 +375,23 @@ check('Desktop sidebar keeps active group open, lingers previews inside rail, an
   const sidebar = page.locator('.app-sidebar-nav');
   const planGroup = page.locator('.sidebar-nav-group').nth(1);
   const analyticsGroup = page.locator('.sidebar-nav-group').nth(2);
-  const jarsGroup = page.locator('.sidebar-nav-group').nth(3);
+  const jarsStandalone = page.locator('.sidebar-nav-group').nth(3);
   const planToggle = planGroup.locator('.sidebar-group-toggle');
   const analyticsToggle = analyticsGroup.locator('.sidebar-group-toggle');
-  const jarsToggle = jarsGroup.locator('.sidebar-group-toggle');
+  const jarsButton = jarsStandalone.getByRole('button', { name: 'Hũ tiết kiệm', exact: true });
 
-  // 1. New user on /spending/home: all three collapsible groups start closed,
-  //    and sweeping the mouse quickly across the entire rail opens none of them.
-  for (const [group, toggle] of [[planGroup, planToggle], [analyticsGroup, analyticsToggle], [jarsGroup, jarsToggle]]) {
+  // 1. New user on /spending/home: both collapsible groups start closed, Jars is standalone.
+  for (const [group, toggle] of [[planGroup, planToggle], [analyticsGroup, analyticsToggle]]) {
     await expect(group).toHaveClass(/is-group-collapsed/);
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     assert.equal(await group.getAttribute('data-open-reason'), null);
   }
+  await expect(jarsButton).toBeVisible();
   await page.mouse.move(120, 120);
   await page.mouse.move(120, 420, { steps: 8 });
   await page.mouse.move(720, 420);
   await page.waitForTimeout(220);
-  for (const group of [planGroup, analyticsGroup, jarsGroup]) {
+  for (const group of [planGroup, analyticsGroup]) {
     await expect(group).toHaveClass(/is-group-collapsed/);
   }
 
@@ -410,21 +415,19 @@ check('Desktop sidebar keeps active group open, lingers previews inside rail, an
   await expect(planGroup).toHaveAttribute('data-open-reason', 'active');
   await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
 
-  // 4. Anti-jump: hover opens "Phân tích"; moving down onto "Hũ tiết kiệm" keeps "Phân tích" open
-  //    so the Y position of "Hũ tiết kiệm" header does not jump up under the pointer.
+  // 4. Anti-jump: hover opens "Phân tích"; moving down onto standalone "Hũ tiết kiệm" keeps "Phân tích" open
+  //    so the Y position of "Hũ tiết kiệm" does not jump up under the pointer.
   await analyticsToggle.hover();
   await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'preview');
-  const jarsBefore = await jarsToggle.boundingBox();
+  const jarsBefore = await jarsButton.boundingBox();
   await page.mouse.move(jarsBefore.x + jarsBefore.width / 2, jarsBefore.y + jarsBefore.height / 2);
   await page.waitForTimeout(80);
   await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'preview');
-  const jarsDuring = await jarsToggle.boundingBox();
-  assert.ok(Math.abs(jarsDuring.y - jarsBefore.y) <= 1, `jars toggle must not jump (${jarsBefore.y} -> ${jarsDuring.y})`);
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'preview');
-  // Leaving the sidebar closes both previews while "Kế hoạch" (active) remains open.
+  const jarsDuring = await jarsButton.boundingBox();
+  assert.ok(Math.abs(jarsDuring.y - jarsBefore.y) <= 1, `jars item must not jump (${jarsBefore.y} -> ${jarsDuring.y})`);
+  // Leaving the sidebar closes preview while "Kế hoạch" (active) remains open.
   await page.mouse.move(720, 300);
   await expect(analyticsGroup).toHaveClass(/is-group-collapsed/);
-  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
   await expect(planGroup).toHaveAttribute('data-open-reason', 'active');
 
   // 5. Hover "Phân tích" then click its header -> pins and sends PUT /api/auth/preferences.
@@ -437,37 +440,17 @@ check('Desktop sidebar keeps active group open, lingers previews inside rail, an
   await expect(analyticsGroup).toHaveAttribute('data-pinned', 'true');
   await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
 
-  // 6. Hover "Hũ tiết kiệm", click "Tổng quan hũ" -> previous active group ("Kế hoạch") lingers
-  //    while pointer stays inside sidebar, then closes on sidebar leave.
-  await jarsToggle.hover();
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'preview');
-  await jarsGroup.getByRole('button', { name: 'Tổng quan hũ', exact: true }).click();
-  await page.waitForURL('**/spending/jars/goals');
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
+  // 6. Click standalone "Hũ tiết kiệm" -> previous active group ("Kế hoạch") lingers while pointer stays inside sidebar.
+  await jarsButton.click();
+  await page.waitForURL('**/spending/jars');
+  await expect(jarsButton).toHaveAttribute('aria-current', 'page');
   await expect(planGroup).toHaveAttribute('data-open-reason', 'preview');
   await page.mouse.move(720, 300);
   await expect(planGroup).toHaveClass(/is-group-collapsed/);
   await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
 
-  // 7. Click "Hũ tiết kiệm" header (active) -> closes immediately and stays closed for 300ms while resting.
-  await jarsToggle.hover();
-  await jarsToggle.click();
-  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
-  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
-  await page.waitForTimeout(300);
-  await expect(jarsGroup).toHaveClass(/is-group-collapsed/);
-  // Leaving and hovering back lets the user pick "Lịch sử nạp/rút", restoring active open state.
-  await page.mouse.move(720, 300);
-  await jarsToggle.hover();
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'preview');
-  await jarsGroup.getByRole('button', { name: 'Lịch sử nạp/rút', exact: true }).click();
-  await page.waitForURL('**/spending/jars/history');
-  await page.mouse.move(720, 300);
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
-
-  // 8. Resize sidebar width and reload -> pinned ("Phân tích"), active ("Hũ"), closed ("Kế hoạch"),
-  //    and dragged sidebar width all survive reload.
+  // 7. Resize sidebar width and reload -> pinned ("Phân tích"), closed ("Kế hoạch"),
+  //    active standalone ("Hũ tiết kiệm") and dragged sidebar width all survive reload.
   const handle = page.locator('.sidebar-resize-handle');
   const handleBox = await handle.boundingBox();
   const handleCenterX = handleBox.x + handleBox.width / 2;
@@ -482,11 +465,11 @@ check('Desktop sidebar keeps active group open, lingers previews inside rail, an
   await page.reload({ waitUntil: 'networkidle' });
   await expect(analyticsGroup).toHaveAttribute('data-open-reason', 'pinned');
   await expect(analyticsGroup).toHaveAttribute('data-pinned', 'true');
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'active');
+  await expect(jarsButton).toHaveAttribute('aria-current', 'page');
   await expect(planGroup).toHaveClass(/is-group-collapsed/);
   assert.equal(Math.round((await sidebar.boundingBox()).width), 224);
 
-  // 9. Logout then login again -> "Phân tích" stays pinned for the account.
+  // 8. Logout then login again -> "Phân tích" stays pinned for the account.
   await page.locator('.tb-settings-btn').click();
   await page.locator('.settings-nav-logout').click();
   await page.locator('.confirm-dialog-card').getByRole('button', { name: 'Đăng xuất', exact: true }).click();
@@ -508,13 +491,13 @@ check('Desktop sidebar keeps active group open, lingers previews inside rail, an
 
   // 11. Keyboard: Enter on a closed header pins it open, Enter again unpins and closes it.
   await page.mouse.move(720, 300);
-  await jarsToggle.focus();
+  await planToggle.focus();
   await page.keyboard.press('Enter');
-  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(jarsGroup).toHaveAttribute('data-open-reason', 'pinned');
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(planGroup).toHaveAttribute('data-open-reason', 'pinned');
   await page.keyboard.press('Enter');
-  await expect(jarsToggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(jarsGroup).not.toHaveAttribute('data-pinned', 'true');
+  await expect(planToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(planGroup).not.toHaveAttribute('data-pinned', 'true');
 
   assert.deepEqual(errors, []);
   await context.close();

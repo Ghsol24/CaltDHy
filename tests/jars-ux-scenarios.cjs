@@ -26,8 +26,8 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
       { type: 'deposit', amount: 120000, reason: 'UX nạp riêng ngày khác', date: new Date('2026-09-17T05:00:00Z') },
     ] });
   const dialog = page.locator('.jar-dialog');
-  // "Lịch sử nạp/rút" là một trang (đợt 11, JHS-01), không còn là hộp thoại.
-  const historyPage = page.locator('#jars-section-history');
+  // "Lịch sử nạp/rút" mở dạng Slide-over Drawer (native <dialog>) ngay trên trang /spending/jars?drawer=history.
+  const historyDrawer = page.locator('#jar-history-drawer');
   const amountInput = () => dialog.locator('.jar-transfer-amount-box input');
   const noteInput = () => dialog.locator('.jar-transfer-note textarea');
   const card = () => page.locator('.jar-premium-card').filter({ has: page.locator('.jar-name-title', { hasText: name }) });
@@ -42,19 +42,18 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     }, { theme, locale });
   }
   async function open(kind) {
-    if (kind === 'history') {
-      // Lối vào từ bản xem nhanh ở Tổng quan hũ: "Xem tất cả" đi tới trang, có URL riêng.
-      await page.goto('/spending/jars/goals');
-      const viewAll = page.locator('.jar-activity-card .jar-activity-view-all');
-      await viewAll.click();
-      await page.waitForURL('**/spending/jars/history');
-      await expect(historyPage.locator('.jm-history')).toBeVisible();
-      await expect(dialog).toHaveCount(0);
-      return { page: true };
-    }
-    const section = kind === 'create' ? 'goals' : 'list';
-    await page.goto('/spending/jars/' + section);
+    await page.goto('/spending/jars');
     await expect(page.locator('.jars-page-root')).toBeVisible();
+    if (kind === 'history') {
+      const trigger = page.locator('.jars-history-trigger-btn');
+      await expect(trigger).toBeVisible();
+      await trigger.click();
+      await page.waitForURL('**/spending/jars?drawer=history');
+      await expect(historyDrawer).toBeVisible();
+      await expect(historyDrawer.locator('.jm-history')).toBeVisible();
+      await expect(dialog).toHaveCount(0);
+      return { drawer: true, trigger };
+    }
     let trigger;
     if (kind === 'create') trigger = page.locator('.jars-hero-cta-btn');
     else {
@@ -73,7 +72,12 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     return { trigger: kind === 'edit' ? card().locator('.jar-card-menu-btn') : trigger, backgroundScroll };
   }
   async function close(opened, verifyFocus = false) {
-    if (opened.page) return;
+    if (opened.drawer) {
+      await page.keyboard.press('Escape');
+      await expect(historyDrawer).toBeHidden();
+      if (verifyFocus) await expect(opened.trigger).toBeFocused();
+      return;
+    }
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
@@ -121,26 +125,26 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
     await layout(label + ' with note visible');
   }
   async function verifyHistory(label) {
-    await fit(historyPage, label + ' history page');
-    const filters = historyPage.locator('.jm-history-type-button');
+    await fit(historyDrawer, label + ' history drawer');
+    const filters = historyDrawer.locator('.jm-history-type-button');
     await expect(filters).toHaveCount(3);
     const widths = await filters.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().width));
     assert.ok(Math.max(...widths) - Math.min(...widths) <= 1, label + ': type filters have equal width');
     for (let index = 0; index < 3; index++) {
       await filters.nth(index).click();
       await expect(filters.nth(index)).toHaveAttribute('aria-pressed', 'true');
-      await expect(historyPage.locator('.jm-history-type-button[aria-pressed="true"]')).toHaveCount(1);
-      const emptyGroups = await historyPage.locator('.jm-history-day').evaluateAll(groups => groups.filter(group => !group.querySelector('.jm-history-row')).length);
+      await expect(historyDrawer.locator('.jm-history-type-button[aria-pressed="true"]')).toHaveCount(1);
+      const emptyGroups = await historyDrawer.locator('.jm-history-day').evaluateAll(groups => groups.filter(group => !group.querySelector('.jm-history-row')).length);
       assert.equal(emptyGroups, 0, label + ': filtered dates never have empty groups');
-      if (index === 1) await expect(historyPage.locator('.jm-history-row.is-withdraw')).toHaveCount(0);
-      if (index === 2) await expect(historyPage.locator('.jm-history-row.is-deposit')).toHaveCount(0);
+      if (index === 1) await expect(historyDrawer.locator('.jm-history-row.is-withdraw')).toHaveCount(0);
+      if (index === 2) await expect(historyDrawer.locator('.jm-history-row.is-deposit')).toHaveCount(0);
     }
     await filters.first().click();
   }
 
   await check('jars UX transfers are confirmed once and create/edit preserve wallet and existing balances', async () => {
     await configure('green', 'vi', 1440, 1000);
-    await page.goto('/spending/jars/goals');
+    await page.goto('/spending/jars');
     await expect(page.locator('.jar-next-strip')).toHaveAttribute('data-suggestion-amount', '250000');
     const beforeJar = await Jar.findById(health._id).lean();
     const beforeWallet = await getWalletBalance(user._id, wallet._id);
@@ -264,7 +268,7 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
         await configure('green', locale, width, height);
         for (const [index, kind] of ['create', 'deposit', 'history'].entries()) {
           const opened = await open(kind);
-          if (kind === 'history') await expect(historyPage.locator('h1')).toHaveText(titles[locale][index]);
+          if (kind === 'history') await expect(historyDrawer.locator('h1')).toHaveText(titles[locale][index]);
           else {
             await expect(dialog.locator('.txn-modal-title')).toHaveText(titles[locale][index]);
             await layout(`${locale}/${width}/${kind}`);
@@ -272,11 +276,11 @@ module.exports = async function runJarsUxScenarios({ page, check, backend, user,
           if (kind === 'deposit') await verifyNote(`${locale}/${width}`);
           if (kind === 'history') {
             await verifyHistory(`${locale}/${width}`);
-            await historyPage.locator('.jm-history-search input').fill('UX chỉ có rút ngày này');
-            await expect(historyPage.locator('.jm-history-row')).toHaveCount(1);
-            await historyPage.locator('.jm-history-type-button').nth(1).click();
-            await expect(historyPage.locator('.jm-history-day')).toHaveCount(0);
-            await expect(historyPage.locator('.jm-history-empty')).toBeVisible();
+            await historyDrawer.locator('.jm-history-search input').fill('UX chỉ có rút ngày này');
+            await expect(historyDrawer.locator('.jm-history-row')).toHaveCount(1);
+            await historyDrawer.locator('.jm-history-type-button').nth(1).click();
+            await expect(historyDrawer.locator('.jm-history-day')).toHaveCount(0);
+            await expect(historyDrawer.locator('.jm-history-empty')).toBeVisible();
           }
           if (saveEvidence && width === 390) await page.screenshot({ path: path.join(evidence, `jars-${kind}-${locale}-390.png`) });
           await close(opened);

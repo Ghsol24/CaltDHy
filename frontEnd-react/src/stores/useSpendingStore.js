@@ -10,7 +10,6 @@ export const useSpendingStore = create((set) => ({
   // 'cash-flow' | 'reports' | null). Only a secondary sidebar cue: it never
   // changes analyticsSubTab, the URL or the current page (đợt 13b).
   analyticsInViewSection: null,
-  jarsSubTab: 'goals', // 'goals' | 'jars' | 'history'
   isSidebarCollapsed: false,
   selectedMonth: getLocalMonthString(), // 'YYYY-MM' theo giờ địa phương
 
@@ -58,7 +57,6 @@ export const useSpendingStore = create((set) => ({
       activeView: view,
       ...(view === 'plan' ? { planSubTab: subTab || 'overview' } : {}),
       ...(view === 'analytics' ? { analyticsSubTab: subTab || 'overview' } : {}),
-      ...(view === 'jars' ? { jarsSubTab: subTab || 'goals' } : {}),
       routeRevision: state.routeRevision + 1,
       routeMode: options.replace ? 'replace' : 'push'
     })),
@@ -67,7 +65,6 @@ export const useSpendingStore = create((set) => ({
       activeView: view,
       ...(view === 'plan' ? { planSubTab: subTab || 'overview' } : {}),
       ...(view === 'analytics' ? { analyticsSubTab: subTab || 'overview' } : {}),
-      ...(view === 'jars' ? { jarsSubTab: subTab || 'goals' } : {}),
       routeMode: state.routeMode
     })),
   setSidebarCollapsed: (collapsed) =>

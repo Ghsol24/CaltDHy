@@ -268,8 +268,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 520px;
 }
 
 /* Section 2: Tháng này bạn đã tiết kiệm (Financial Analytics Card) */
@@ -1739,4 +1737,118 @@
 /* Trạng thái chưa có hũ: tiêu đề ngoài thẻ, sát thẻ như các trang khác (7e) */
 .jars-page-root > .jars-overview-header + .jars-first-run-card {
   margin-top: -12px;
+}
+
+/* ── Header actions (nút phụ Lịch sử nạp/rút + nút chính Tạo hũ mới) ── */
+.jars-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.jars-history-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.jars-history-trigger-btn:hover {
+  background: var(--color-surface-muted);
+  border-color: var(--color-action-bg);
+  color: var(--color-link);
+}
+
+.jars-history-trigger-btn:focus-visible {
+  outline: 2px solid var(--color-brand-700, var(--color-link));
+  outline-offset: 2px;
+}
+
+/* ── Mobile inline tab switch (Các hũ của bạn | Nhịp tiết kiệm) ── */
+.jars-mobile-view-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+.jars-mobile-view-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.jars-mobile-view-tab.is-active {
+  background: var(--color-surface);
+  color: var(--color-link);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.jars-mobile-view-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-brand-50);
+  color: var(--color-link);
+  font-size: var(--font-xs);
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .jars-overview-header {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .jars-overview-header .page-header__lead {
+    flex: 1 0 100%;
+  }
+
+  .jars-overview-header .page-header__actions {
+    width: 100%;
+    margin-inline-start: 0;
+  }
+
+  .jars-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .jars-history-trigger-btn,
+  .jars-hero-cta-btn {
+    min-height: 44px;
+    width: 100%;
+    justify-content: center;
+    padding-inline: 10px;
+    white-space: nowrap;
+  }
 }

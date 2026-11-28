@@ -68,30 +68,23 @@
   .plan-feature-view :is(.plan-dropdown-item, .wallet-popover-action,
     .actions-dropdown-item) { font-size: var(--font-sm); }
 
-  /* Three compact rows retain amounts and their supporting context. */
+  /* Three compact rows inside unified summary strip on small phones. */
   .plan-feature-view .plan-metrics-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
   }
   .plan-feature-view .plan-metric-card {
-    border: 0;
-    border-radius: 0;
-    padding: 12px;
-    gap: 5px;
-    background: transparent;
-    box-shadow: none;
-    transform: none;
+    padding: 12px 14px;
+    gap: 6px;
     min-width: 0;
   }
-  .plan-feature-view .plan-metric-card + .plan-metric-card { border-top: 1px solid var(--color-border); }
-  .plan-feature-view .metric-icon-circle { display: none; }
-  .plan-feature-view .metric-card-top-row { display: block; }
+  .plan-feature-view .plan-metric-card + .plan-metric-card {
+    border-inline-start: 0;
+    border-top: 1px solid var(--color-border);
+  }
   .plan-feature-view .metric-titles {
     display: grid;
-    grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
     align-items: baseline;
     gap: 10px;
   }
@@ -99,59 +92,39 @@
   .plan-feature-view .plan-metric-value { font-size: var(--font-xl); text-align: end; }
   .plan-feature-view .plan-metric-value.is-unset { font-size: var(--font-base); }
   .plan-feature-view .metric-card-bottom-row {
-    border: 0;
-    padding: 0;
     gap: 8px;
     flex-wrap: wrap;
   }
   .plan-feature-view :is(.metric-sub-left, .metric-sub-trend) { font-size: var(--font-xs); }
 
-  /* Summary sections use separators rather than cards nested inside cards. */
-  .plan-feature-view .plan-columns-container { gap: 14px; min-width: 0; }
-  .plan-feature-view .column-card-header { padding: 8px 12px; gap: 8px; }
-  .plan-feature-view .column-card-body { padding: 0 12px; min-height: 0; }
-  .plan-feature-view .column-items-list { gap: 0; }
-  .plan-feature-view .plan-item-box {
-    padding: 10px 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .plan-feature-view .plan-item-box + .plan-item-box { border-top: 1px solid var(--color-border); }
-  .plan-feature-view .column-card-footer { padding: 6px 12px; }
+  /* Asymmetric overview sections stack cleanly on phones with generous touch targets. */
+  .plan-feature-view .plan-overview-grid { gap: 14px; min-width: 0; }
+  .plan-feature-view .plan-col-main,
+  .plan-feature-view .plan-col-side { gap: 14px; }
+  .plan-feature-view .column-card-header { padding: 10px 14px; gap: 8px; }
+  .plan-feature-view .column-card-body { padding: 6px 14px 12px; }
+  .plan-feature-view .column-card-footer { padding: 8px 14px 12px; }
   .plan-feature-view .column-empty-state { padding: 16px 0; }
-  .plan-feature-view :is(.wallet-name-text, .budget-item-name, .recurring-name-text) {
+  .plan-feature-view .plan-budget-row {
+    padding: 10px 0;
+    gap: 8px 10px;
+  }
+  .plan-feature-view .plan-wallet-row {
+    padding: 10px 0;
+  }
+  .plan-feature-view .plan-rec-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .plan-feature-view .plan-side-status-card {
+    padding: 14px;
+  }
+  .plan-feature-view :is(.wallet-name-text, .budget-item-name, .plan-rec-name) {
     white-space: normal;
     overflow-wrap: anywhere;
   }
   .plan-feature-view .item-box-right { margin-left: auto; max-width: 100%; }
   .plan-feature-view :is(.wallet-amount-val, .budget-item-amounts) { overflow-wrap: anywhere; }
-  .plan-feature-view .plan-insight-banner-card { padding: 12px; gap: 10px; }
-  .plan-feature-view .plan-overview-container .plan-insight-banner-card {
-    background: var(--color-surface);
-    border-color: var(--color-border);
-  }
-  .plan-feature-view .insight-banner-left {
-    min-width: 0;
-    width: 100%;
-    flex-basis: 100%;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  .plan-feature-view .insight-banner-text { min-width: 0; overflow-wrap: anywhere; }
-  .plan-feature-view .insight-3d-icon-box {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: var(--color-neutral-bg);
-    color: var(--color-link);
-    box-shadow: none;
-  }
-  .plan-feature-view .insight-3d-icon-box svg { width: 20px; height: 20px; }
-  .plan-feature-view .insight-banner-btn { max-width: 100%; white-space: normal; }
 
   /* Wallets: header buttons wrap; long names wrap instead of truncating. */
   /* Two header buttons share one full row under the title. */

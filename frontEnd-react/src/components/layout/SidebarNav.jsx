@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useSpendingStore } from '../../stores/useSpendingStore';
+import { useJarStore } from '../../stores/useJarStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { NavIcon } from '../ui/NavIcons';
 import { scrollToSection } from '../../utils/scrollToSection';
@@ -33,7 +34,7 @@ export function SidebarNav() {
   const planSubTab = useSpendingStore((s) => s.planSubTab);
   const analyticsSubTab = useSpendingStore((s) => s.analyticsSubTab);
   const analyticsInViewSection = useSpendingStore((s) => s.analyticsInViewSection);
-  const jarsSubTab = useSpendingStore((s) => s.jarsSubTab);
+  const jarsCount = useJarStore((s) => (s.jars || []).length);
   const isSidebarCollapsed = useSpendingStore((s) => s.isSidebarCollapsed);
   const setSidebarCollapsed = useSpendingStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useSpendingStore((s) => s.toggleSidebar);
@@ -317,18 +318,17 @@ export function SidebarNav() {
     {
       id: 'group_jars',
       groupLabel: t('nav.jars'),
+      // Gom thành 1 trang độc lập ngang hàng Trang chủ (không cần nhóm 3 mục con).
+      standalone: true,
+      standaloneBottom: true,
       items: [
         {
-          id: 'jars_goals', viewId: 'jars', subTabId: 'goals', label: t('nav.goals'), icon: 'goals',
-          isActive: activeView === 'jars' && (jarsSubTab === 'goals' || !jarsSubTab)
-        },
-        {
-          id: 'jars_list', viewId: 'jars', subTabId: 'jars', label: t('nav.jarList'), icon: 'jarList',
-          isActive: activeView === 'jars' && jarsSubTab === 'jars'
-        },
-        {
-          id: 'jars_history', viewId: 'jars', subTabId: 'history', label: t('nav.history'), icon: 'jarHistory',
-          isActive: activeView === 'jars' && jarsSubTab === 'history'
+          id: 'jars_main',
+          viewId: 'jars',
+          label: t('nav.jars'),
+          icon: 'jarList',
+          isActive: activeView === 'jars',
+          badge: jarsCount > 0 ? String(jarsCount) : undefined,
         }
       ]
     }
@@ -341,7 +341,9 @@ export function SidebarNav() {
       className={`sidebar-nav-item ${item.isActive ? 'active' : ''}${item.isInView ? ' is-in-view' : ''}${item.isShadowed ? ' is-shadowed' : ''}`}
       onClick={() => handleNavClick(item.viewId, item.subTabId, item.sectionId)}
       aria-current={item.isActive ? 'page' : undefined}
+      aria-label={!isSidebarCollapsed && item.badge ? item.label : undefined}
       title={isSidebarCollapsed ? item.label : undefined}
+      data-badge={!isSidebarCollapsed && item.badge ? item.badge : undefined}
     >
       <span className="sidebar-item-icon" aria-hidden="true">
         <NavIcon name={item.icon} />
@@ -392,7 +394,10 @@ export function SidebarNav() {
         {navGroups.map((group) => {
           if (group.standalone && !isSidebarCollapsed) {
             return (
-              <div key={group.id} className="sidebar-nav-group sidebar-nav-group--standalone">
+              <div
+                key={group.id}
+                className={`sidebar-nav-group sidebar-nav-group--standalone${group.standaloneBottom ? ' sidebar-nav-group--standalone-bottom' : ''}`}
+              >
                 <div className="sidebar-group-items">{group.items.map(renderItem)}</div>
               </div>
             );
