@@ -1,10 +1,17 @@
 import React from 'react';
 import { useToastStore } from '../../stores/useToastStore';
 import { useTranslation } from '../../i18n/useTranslation';
-
+import { BrandMark } from './BrandMark';
 import { Icon } from './AppIcons';
+
 function ToastIcon({ type }) {
   switch (type) {
+    case 'milestone':
+      return (
+        <span className="toast-milestone-halo" aria-hidden="true">
+          <BrandMark variant="full" className="toast-milestone-mark" />
+        </span>
+      );
     case 'success':
       return (
         <Icon name="checkPath" className="toast-icon toast-icon--success" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
@@ -41,6 +48,7 @@ export function ToastRegion() {
     >
       {toasts.map((toast) => {
         const isAlert = toast.type === 'error' || toast.type === 'warning';
+        const isMilestone = toast.type === 'milestone';
         return (
           <div
             key={toast.id}
@@ -51,6 +59,13 @@ export function ToastRegion() {
             <div className="toast-item__lead">
               <ToastIcon type={toast.type} />
               <div className="toast-item__content">
+                {isMilestone && toast.badge && (
+                  <span className="toast-milestone-badge">
+                    <Icon name="sparkle" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" />
+                    <span>{toast.badge}</span>
+                  </span>
+                )}
+                {toast.title && <p className="toast-item__title">{toast.title}</p>}
                 <p className="toast-item__message">{toast.message}</p>
               </div>
             </div>

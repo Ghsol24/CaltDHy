@@ -1,6 +1,17 @@
-/* This tiny stylesheet sets the canvas before the application CSS is available. */
+/* Sets canvas and cold-start boot splash before the main CSS/JS bundles load. */
 html {
   --theme-bootstrap-background: #090A0F;
+  --boot-aura: rgba(59, 130, 246, 0.16);
+  --boot-halo-bg: rgba(59, 130, 246, 0.10);
+  --boot-halo-shadow: 0 0 36px rgba(59, 130, 246, 0.20);
+  --boot-wave-color: rgba(96, 165, 250, 0.58);
+  --boot-wave-accent: rgba(52, 211, 153, 0.44);
+  --boot-text: #F8FAFC;
+  --boot-text-muted: #94A3B8;
+  --boot-accent-d: #34D399;
+  --boot-track: rgba(255, 255, 255, 0.10);
+  --boot-bar-from: #3B82F6;
+  --boot-bar-to: #34D399;
   min-height: 100%;
   background-color: var(--theme-bootstrap-background);
   color-scheme: dark;
@@ -8,20 +19,193 @@ html {
 
 html.light-theme {
   --theme-bootstrap-background: #FAFAFB;
+  --boot-aura: rgba(79, 70, 229, 0.09);
+  --boot-halo-bg: rgba(79, 70, 229, 0.07);
+  --boot-halo-shadow: 0 10px 28px rgba(79, 70, 229, 0.12);
+  --boot-wave-color: rgba(99, 102, 241, 0.48);
+  --boot-wave-accent: rgba(16, 185, 129, 0.36);
+  --boot-text: #0F172A;
+  --boot-text-muted: #64748B;
+  --boot-accent-d: #008B57;
+  --boot-track: #E2E8F0;
+  --boot-bar-from: #4F46E5;
+  --boot-bar-to: #10B981;
   color-scheme: light;
 }
 
 html.cream-theme {
   --theme-bootstrap-background: #F5EDE0;
+  --boot-aura: rgba(194, 89, 43, 0.12);
+  --boot-halo-bg: rgba(194, 89, 43, 0.08);
+  --boot-halo-shadow: 0 10px 28px rgba(154, 52, 18, 0.12);
+  --boot-wave-color: rgba(194, 89, 43, 0.48);
+  --boot-wave-accent: rgba(21, 105, 75, 0.36);
+  --boot-text: #2D1E14;
+  --boot-text-muted: #78604E;
+  --boot-accent-d: #15694B;
+  --boot-track: #E4D5C3;
+  --boot-bar-from: #C2592B;
+  --boot-bar-to: #D97706;
   color-scheme: light;
 }
 
 html.green-theme {
   --theme-bootstrap-background: #F0F9F4;
+  --boot-aura: rgba(0, 139, 87, 0.12);
+  --boot-halo-bg: rgba(0, 139, 87, 0.08);
+  --boot-halo-shadow: 0 10px 28px rgba(0, 117, 71, 0.14);
+  --boot-wave-color: rgba(5, 150, 105, 0.48);
+  --boot-wave-accent: rgba(52, 211, 153, 0.42);
+  --boot-text: #0D281E;
+  --boot-text-muted: #476B5C;
+  --boot-accent-d: #008B57;
+  --boot-track: #D1EAE0;
+  --boot-bar-from: #007547;
+  --boot-bar-to: #34D399;
   color-scheme: light;
 }
 
 body {
   min-height: 100vh;
+  margin: 0;
   background-color: var(--theme-bootstrap-background);
+}
+
+/* ── Cold-Start Boot Splash & Route Loading (shared with BrandLoadingState) ── */
+.calt-boot-splash {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 50% 44%, var(--boot-aura) 0%, transparent 56%),
+    var(--theme-bootstrap-background);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  text-align: center;
+  user-select: none;
+}
+
+.calt-boot-stage {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+}
+
+.calt-boot-wave {
+  position: absolute;
+  inset: 10px;
+  border-radius: 26px;
+  border: 1.5px solid var(--boot-wave-color);
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: caltBootWave 2.4s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+}
+
+.calt-boot-wave--2 {
+  border-color: var(--boot-wave-accent);
+  animation-delay: 1.2s;
+}
+
+.calt-boot-core {
+  position: relative;
+  z-index: 1;
+  width: 84px;
+  height: 84px;
+  border-radius: 24px;
+  background: var(--boot-halo-bg);
+  box-shadow: var(--boot-halo-shadow);
+  display: grid;
+  place-items: center;
+}
+
+.calt-boot-core svg {
+  width: 60px;
+  height: 60px;
+  display: block;
+}
+
+.calt-boot-wordmark {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--boot-text);
+}
+
+.calt-boot-wordmark span {
+  color: var(--boot-accent-d);
+}
+
+.calt-boot-track {
+  width: 132px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--boot-track);
+  overflow: hidden;
+  position: relative;
+}
+
+.calt-boot-bar {
+  width: 56px;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--boot-bar-from), var(--boot-bar-to));
+  will-change: transform;
+  animation: caltBootSlide 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.calt-boot-status {
+  margin: 12px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--boot-text-muted);
+}
+
+@keyframes caltBootWave {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.64;
+  }
+  60% {
+    opacity: 0.24;
+  }
+  100% {
+    transform: scale(1.64);
+    opacity: 0;
+  }
+}
+
+@keyframes caltBootSlide {
+  0% {
+    transform: translateX(-60px);
+  }
+  100% {
+    transform: translateX(140px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calt-boot-wave {
+    animation: none;
+    transform: scale(1.08);
+    opacity: 0.36;
+  }
+  .calt-boot-wave--2 {
+    transform: scale(1.22);
+    opacity: 0.18;
+  }
+  .calt-boot-bar {
+    animation: none;
+    width: 64px;
+    transform: translateX(34px);
+  }
 }

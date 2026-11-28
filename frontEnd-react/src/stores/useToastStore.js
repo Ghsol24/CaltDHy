@@ -39,6 +39,8 @@ export const useToastStore = create((set, get) => ({
         ? { id, message: toast, type: 'success', duration: 4000 }
         : {
             id,
+            title: toast.title || '',
+            badge: toast.badge || '',
             message: toast.type === 'error' ? getUserErrorMessage(toast.message) : toast.message || '',
             type: toast.type || 'success',
             action: toast.action || null,

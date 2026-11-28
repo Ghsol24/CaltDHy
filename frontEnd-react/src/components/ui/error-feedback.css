@@ -9,16 +9,38 @@
   color: var(--text-primary);
   text-align: center;
 }
-.display-error__icon {
+.display-error__emblem {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3rem;
-  height: 3rem;
+  width: 60px;
+  height: 60px;
   margin-bottom: 1rem;
+}
+
+.display-error__brand {
+  width: 52px;
+  height: 52px;
+  display: block;
+  opacity: 0.88;
+  filter: saturate(0.75);
+}
+
+.display-error__badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  color: var(--color-danger);
-  background: var(--color-danger-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 2px solid var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .display-error h2 { margin: 0 0 .5rem; font-size: var(--font-xl); line-height: 1.4; }
 .display-error p { margin: 0 0 1.25rem; color: var(--text-secondary); line-height: 1.5; font-size: var(--font-lg); }

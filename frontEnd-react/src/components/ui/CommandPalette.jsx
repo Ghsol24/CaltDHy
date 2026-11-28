@@ -13,6 +13,7 @@ import { formatInputNumber, formatMonthYear, getLocalMonthString } from '../../u
 import { shiftMonth } from '../../utils/budgetPeriod';
 import { Icon } from './AppIcons';
 import { NavIcon } from './NavIcons';
+import { BrandMark } from './BrandMark';
 import { filterCommands, moveIndex, normalizeSearch, parseRecordIntent } from './commandPaletteFilter';
 import './commandPaletteTranslations';
 import './command-palette.css';
@@ -278,6 +279,10 @@ export function CommandPalette({ onClose }) {
           <span><kbd className="cmdk-kbd">↑</kbd><kbd className="cmdk-kbd">↓</kbd>{t('cmdk.footerMove')}</span>
           <span><kbd className="cmdk-kbd">↵</kbd>{t('cmdk.footerRun')}</span>
           <span><kbd className="cmdk-kbd">Esc</kbd>{t('cmdk.footerClose')}</span>
+          <span className="cmdk-footer-brand">
+            <BrandMark className="cmdk-footer-brand__mark" />
+            <span>CaltDHy</span>
+          </span>
         </div>
       </div>
     </div>,

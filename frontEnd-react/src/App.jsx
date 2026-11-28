@@ -2,9 +2,9 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from './stores/useAuthStore';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { useTranslation } from './i18n/useTranslation';
 import { LocalizationObserver } from './i18n/LocalizationObserver';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { BrandLoadingState } from './components/ui/BrandLoadingState';
 import { useSignatureLoginStore } from './stores/useSignatureLoginStore';
 
 const lazyNamed = (loader, name) => lazy(() => loader().then((module) => ({ default: module[name] })));
@@ -49,13 +49,12 @@ function AuthExpirationListener() {
 }
 
 function RouteLoadingFallback() {
-  const { t } = useTranslation();
   const location = useLocation();
-  const plainFallback = <div className="route-loading" role="status" aria-live="polite">{t('common.loading')}</div>;
+  const brandedFallback = <BrandLoadingState />;
   if (location.pathname.startsWith('/spending')) {
-    return <Suspense fallback={plainFallback}><AppShellSkeleton /></Suspense>;
+    return <Suspense fallback={brandedFallback}><AppShellSkeleton /></Suspense>;
   }
-  return plainFallback;
+  return brandedFallback;
 }
 
 function RouteErrorBoundary({ children }) {

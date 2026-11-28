@@ -116,10 +116,25 @@ export function JarTransactionModal({ isOpen, onClose, jar, initialAction = 'dep
     try {
       const result = await updateJarBalance(jar.id, action, enteredAmount, reason.trim(), selectedWallet.id);
       if (!result?.success) throw Object.assign(new Error('INVALID_RESPONSE'), { code: 'INVALID_RESPONSE' });
+      const targetAmount = Number(jar.target || 0);
+      const crossedGoal = isDeposit
+        && targetAmount > 0
+        && currentBalance < targetAmount
+        && (currentBalance + enteredAmount) >= targetAmount;
       onClose();
-      addToast({ type: 'success', message: isDeposit
-        ? copy.depositSuccess(money(enteredAmount), jar.name)
-        : copy.withdrawSuccess(money(enteredAmount), jar.name), duration: 4000 });
+      if (crossedGoal) {
+        addToast({
+          type: 'milestone',
+          badge: copy.milestoneBadge,
+          title: copy.milestoneTitle(jar.name),
+          message: copy.milestoneMessage(money(targetAmount)),
+          duration: 6000,
+        });
+      } else {
+        addToast({ type: 'success', message: isDeposit
+          ? copy.depositSuccess(money(enteredAmount), jar.name)
+          : copy.withdrawSuccess(money(enteredAmount), jar.name), duration: 4000 });
+      }
     } catch (error) {
       setErrorMsg(getUserErrorMessage(error, 'error.save', lang));
     } finally {

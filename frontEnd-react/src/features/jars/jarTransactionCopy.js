@@ -17,6 +17,9 @@ const copy = {
     depositAmount: (amount) => `Nạp ${amount}`, withdrawAmount: (amount) => `Rút ${amount}`,
     depositSuccess: (amount, name) => `Đã nạp ${amount} vào hũ “${name}”.`,
     withdrawSuccess: (amount, name) => `Đã rút ${amount} từ hũ “${name}”.`,
+    milestoneBadge: 'Đạt mục tiêu 100%',
+    milestoneTitle: (name) => `Chúc mừng! Hũ “${name}” đã cán đích`,
+    milestoneMessage: (target) => `Bạn đã tích lũy đủ ${target}. Tiếp tục giữ nhịp tiết kiệm tuyệt vời này nhé!`,
   },
   en: {
     depositTitle: 'Add money to jar', withdrawTitle: 'Withdraw from jar',
@@ -36,6 +39,9 @@ const copy = {
     depositAmount: (amount) => `Add ${amount}`, withdrawAmount: (amount) => `Withdraw ${amount}`,
     depositSuccess: (amount, name) => `Added ${amount} to “${name}”.`,
     withdrawSuccess: (amount, name) => `Withdrew ${amount} from “${name}”.`,
+    milestoneBadge: 'Goal reached · 100%',
+    milestoneTitle: (name) => `Congrats! “${name}” hit its goal`,
+    milestoneMessage: (target) => `You saved the full ${target}. Keep this great momentum going!`,
   },
   'zh-CN': {
     depositTitle: '存入储蓄罐', withdrawTitle: '从储蓄罐取款',
@@ -55,6 +61,9 @@ const copy = {
     depositAmount: (amount) => `存入 ${amount}`, withdrawAmount: (amount) => `取出 ${amount}`,
     depositSuccess: (amount, name) => `已向“${name}”存入 ${amount}。`,
     withdrawSuccess: (amount, name) => `已从“${name}”取出 ${amount}。`,
+    milestoneBadge: '达成 100% 目标',
+    milestoneTitle: (name) => `恭喜！“${name}”已达成目标`,
+    milestoneMessage: (target) => `你已成功存满 ${target}，继续保持这份储蓄节奏！`,
   },
 };
 

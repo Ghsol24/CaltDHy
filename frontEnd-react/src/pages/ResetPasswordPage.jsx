@@ -100,6 +100,7 @@ export const ResetPasswordPage = () => {
   return (
     <PublicPageShell pageTitle={navCopy.auth.resetHeading}>
       <IndustrialPanel
+        showBrandMark
         title={t(isResetMode ? 'auth.resetTitle' : 'auth.forgotTitle')}
         subtitle={isResetMode ? t('auth.resetHint') : t('auth.forgotHint')}
         headingLevel="h2"

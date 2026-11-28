@@ -17,7 +17,7 @@ import { JarActivityCalendar } from './JarActivityCalendar';
 import { JarRecentActivity } from './JarRecentActivity';
 import { JarNextStepStrip } from './JarNextStepStrip';
 import { monthOf } from './jarActivity';
-import { AlertTriangleOutlineIcon, JarOutlineIcon } from '../../components/ui/AppIcons';
+import { AlertTriangleOutlineIcon } from '../../components/ui/AppIcons';
 import { Button } from '../../components/ui/Button';
 import { JarsListView } from './jars/JarsListView';
 import { JarsGridView } from './jars/JarsGridView';
@@ -250,7 +250,7 @@ export function JarsView() {
         <JarsPageHeader icon="jarList" title={t('nav.jars')} />
         <section id="jars-section-goals" className="jars-hero-overview-card jars-first-run-card" aria-label={t('nav.jars')}>
           <EmptyState
-            icon={<JarOutlineIcon size={36} />}
+            branded
             title="Bạn chưa có hũ tiết kiệm"
             description="Tạo hũ đầu tiên và nhập số tiền mục tiêu để theo dõi tiến độ."
             actionLabel="Tạo hũ đầu tiên"

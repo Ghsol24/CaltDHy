@@ -68,6 +68,121 @@
     display: block !important;
   }
 
+  /* ── Branded Print / PDF Letterhead & Footer ── */
+  .report-print-letterhead {
+    margin-bottom: 16px !important;
+    padding-bottom: 14px !important;
+    border-bottom: 2px solid #0E4D3A !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .report-print-letterhead__row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+  }
+
+  .report-print-letterhead__brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .report-print-logo {
+    display: inline-flex !important;
+    width: 42px !important;
+    height: 42px !important;
+    flex-shrink: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .report-print-logo svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+
+  .report-print-brand-name {
+    font-size: var(--font-2xl) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #0F172A !important;
+  }
+
+  .report-print-brand-accent {
+    color: #007547 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .report-print-brand-sub {
+    margin-top: 2px;
+    font-size: var(--font-xs) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #007547 !important;
+  }
+
+  .report-print-meta {
+    text-align: right;
+    font-size: var(--font-xs) !important;
+    line-height: 1.55;
+    color: #334155 !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .report-print-meta strong {
+    color: #0F172A !important;
+  }
+
+  .report-print-footer {
+    margin-top: 20px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #CBD5E1 !important;
+    font-size: var(--font-xs) !important;
+    color: #475569 !important;
+  }
+
+  .report-print-footer__row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  .report-print-footer__brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-weight: 600 !important;
+    color: #1E293B !important;
+  }
+
+  .report-print-footer-logo {
+    display: inline-flex !important;
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .report-print-footer-logo svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+
+  .analytics-report-section > .panel-header,
+  .analytics-report-section > .analytics-section-panel__div--layout {
+    display: none !important;
+  }
+
   .report-table-wrapper {
     border: 1px solid #CCCCCC !important;
     box-shadow: none !important;

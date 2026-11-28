@@ -1,15 +1,18 @@
 import React from 'react';
 import { useTranslation } from '../../i18n/useTranslation';
-
+import { BrandMark } from './BrandMark';
 import { Button } from './Button';
 import { Icon } from './AppIcons';
+
 /**
  * EmptyState Primitive Component
- * Hiển thị trạng thái rỗng thân thiện, có icon/minh họa, title, description và action CTA tùy chọn.
+ * Hiển thị trạng thái rỗng thân thiện, có icon nét rỗng (hoặc logo thương hiệu cho first-run),
+ * tiêu đề, mô tả và CTA tùy chọn.
  *
  * @param {Object} props
  * @param {React.ReactNode} [props.icon]
- * @param {string} [props.title='Chưa có dữ liệu']
+ * @param {boolean} [props.branded=false] - Bật dấu ấn mascot CaltDHy cho trạng thái chào lần đầu.
+ * @param {string} [props.title]
  * @param {string} [props.description]
  * @param {string} [props.actionLabel]
  * @param {Function} [props.onAction]
@@ -17,6 +20,7 @@ import { Icon } from './AppIcons';
  */
 export function EmptyState({
   icon,
+  branded = false,
   title,
   description,
   actionLabel,
@@ -25,10 +29,17 @@ export function EmptyState({
 }) {
   const { t } = useTranslation();
   return (
-    <div className={`empty-state ${className}`}>
-      <div className="empty-state__icon-wrapper" aria-hidden="true">
-        {icon || (
-          <Icon name="mail" width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="empty-state__default-icon" />
+    <div className={`empty-state${branded ? ' empty-state--branded' : ''} ${className}`.trim()}>
+      <div
+        className={`empty-state__icon-wrapper${branded ? ' empty-state__icon-wrapper--branded' : ''}`}
+        aria-hidden="true"
+      >
+        {branded ? (
+          <BrandMark className="empty-state__brand-mark" />
+        ) : (
+          icon || (
+            <Icon name="sparkle" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="empty-state__default-icon" />
+          )
         )}
       </div>
 

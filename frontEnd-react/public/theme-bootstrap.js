@@ -15,4 +15,18 @@
 
   const color = getComputedStyle(root).getPropertyValue('--theme-bootstrap-background').trim();
   if (color) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
+
+  // Sync cold-start boot caption with saved display language before React mounts.
+  try {
+    const savedLang = localStorage.getItem('caltdhy_lang');
+    const bootLabels = { en: 'Loading data…', 'zh-CN': '正在加载数据…' };
+    if (savedLang && bootLabels[savedLang]) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const statusEl = document.getElementById('calt-boot-status');
+        if (statusEl) statusEl.textContent = bootLabels[savedLang];
+      }, { once: true });
+    }
+  } catch {
+    // Ignore storage errors in restricted contexts.
+  }
 })();

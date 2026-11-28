@@ -92,6 +92,79 @@
   border-left: 4px solid var(--text-secondary);
 }
 
+/* ── Branded Jar 100% Milestone Toast (4-theme semantic tokens) ── */
+.toast-item--milestone {
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-success-border);
+  border-left: 4px solid var(--color-success);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.toast-item--milestone .toast-item__lead {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.toast-milestone-halo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.toast-milestone-mark {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+}
+
+.toast-milestone-mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.toast-milestone-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.toast-item__title {
+  margin: 0 0 2px;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.toast-item--milestone .toast-item__message {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item {
+    animation: none;
+  }
+}
+
 .toast-item__content {
   flex: 1;
   min-width: 0;

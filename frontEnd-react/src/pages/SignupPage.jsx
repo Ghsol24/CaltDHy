@@ -160,6 +160,7 @@ export const SignupPage = () => {
   return (
     <PublicPageShell>
       <IndustrialPanel
+        showBrandMark
         title={navCopy.auth.signupCardTitle}
         subtitle={navCopy.auth.signupCardSub}
       >

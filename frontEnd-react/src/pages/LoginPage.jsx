@@ -203,6 +203,7 @@ export const LoginPage = () => {
   return (
     <PublicPageShell>
       <IndustrialPanel
+        showBrandMark
         title={navCopy.auth.loginCardTitle}
         subtitle={navCopy.auth.loginCardSub}
       >
